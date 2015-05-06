@@ -17,7 +17,8 @@ static RTCPeerConnectionDependencyFactory *sharedFactory;
 @synthesize nativePeerConnectionDependencyFactory=_nativePeerConnectionDependencyFactory;
 
 -(id)init {
-  _nativePeerConnectionDependencyFactory=woogeen::PeerConnectionDependencyFactory::Create();
+  _nativePeerConnectionDependencyFactory=woogeen::PeerConnectionDependencyFactory::Get();
+  NSLog(@"Init RTCPCDependencyFactory");
   return self;
 }
 

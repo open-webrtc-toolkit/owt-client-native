@@ -5,7 +5,6 @@
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/videosourceinterface.h"
 #include "webrtc/base/bind.h"
-#include "peerconnectionhandler.h"
 
 #ifndef WOOGEEN_NATIVE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #define WOOGEEN_NATIVE_PEERCONNECTIONDEPENDENCYFACTORY_H_
@@ -31,12 +30,14 @@ class PeerConnectionThread : public rtc::Thread {
 // Object factory for WebRTC PeerConnections.
 class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   public:
-    static rtc::scoped_refptr<PeerConnectionDependencyFactory> Create();
-    PeerConnectionHandler* CreatePeerConnectionHandler();
+    // Get a PeerConnectionDependencyFactory instance. It doesn't create a new instance. It always return the same instance.
+    static PeerConnectionDependencyFactory* Get();
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> CreatePeerConnection(const webrtc::PeerConnectionInterface::RTCConfiguration& config, const webrtc::MediaConstraintsInterface* constraints, webrtc::PeerConnectionObserver* observer);
     rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(const std::string &label, cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints);
+    ~PeerConnectionDependencyFactory();
+
   protected:
     explicit PeerConnectionDependencyFactory();
-    ~PeerConnectionDependencyFactory();
     virtual const rtc::scoped_refptr<PeerConnectionFactoryInterface>& GetPeerConnectionFactory();
 
     rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(const std::string &label);
@@ -45,10 +46,14 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
     rtc::scoped_refptr<VideoSourceInterface> CreateVideoSource(cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints);
 
   private:
+    // Create a PeerConnectionDependencyFactory instance.
+    //static rtc::scoped_refptr<PeerConnectionDependencyFactory> Create();
     void CreatePeerConnectionFactory();
     void CreatePeerConnectionFactoryOnCurrentThread();
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> CreatePeerConnectionOnCurrentThread(const webrtc::PeerConnectionInterface::RTCConfiguration& config, const webrtc::MediaConstraintsInterface* constraints, webrtc::PeerConnectionObserver* observer);
 
     scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
+    static scoped_refptr<PeerConnectionDependencyFactory> dependency_factory_;  // Get() always return this instance.
     Thread* pc_thread_;  // This thread performs all operations on pcfactory and pc.
     Thread* callback_thread_;  // This thread performs all callbacks.
 };
