@@ -37,9 +37,14 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     void Invite(std::function<void()> success, std::function<void(int)> failure);
 
   protected:
+    bool InitializePeerConnection();
+    void CreateOffer();
+
+    // Received messages from remote client.
     void OnMessageInvitation();
     void OnMessageAcceptance();
     void OnMessageStop();
+    void OnMessageSignal(Json::Value& signal);
 
     // PeerConnectionObserver
     virtual void OnSignalingChange(PeerConnectionInterface::SignalingState new_state);
@@ -51,12 +56,19 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     virtual void OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state);
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
 
+    // CreateSessionDescriptionObserver
+    virtual void OnCreateSessionDescriptionSuccess(webrtc::SessionDescriptionInterface* desc);
+    virtual void OnCreateSessionDescriptionFailure(const std::string& error);
+
+    // SetSessionDescriptionObserver
+    virtual void OnSetSessionDescriptionSuccess();
+    virtual void OnSetSessionDescriptionFailure(const std::string& error);
+
     enum State : int;
 
   private:
     void ChangeState(State state);
     void SendSignalingMessage(const Json::Value& data, std::function<void()> success, std::function<void(int)> failure);
-    bool InitializePeerConnection();
 
     SignalingSenderInterface* signaling_sender_;
     std::string remote_id_;

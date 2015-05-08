@@ -4,6 +4,7 @@
 
 #include "webrtc/base/thread.h"
 #include "webrtc/base/bind.h"
+#include "webrtc/base/ssladapter.h"
 #include "peerconnectiondependencyfactory.h"
 
 namespace woogeen {
@@ -52,6 +53,9 @@ const scoped_refptr<PeerConnectionFactoryInterface>& PeerConnectionDependencyFac
 }
 
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactoryOnCurrentThread() {
+  if (!rtc::InitializeSSL()) {
+    LOG(LS_ERROR) << "Failed to initialize SSL.";
+  }
   pc_factory_ = webrtc::CreatePeerConnectionFactory();
 }
 
