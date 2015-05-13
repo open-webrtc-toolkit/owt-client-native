@@ -8,7 +8,9 @@
 #import "RTCStream.h"
 
 /// This class represent a local stream.
-@interface RTCLocalStream:RTCStream
+@interface RTCLocalStream : RTCStream
+
+
 @end
 
 #endif

@@ -73,7 +73,7 @@ void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
 
 scoped_refptr<webrtc::MediaStreamInterface> PeerConnectionDependencyFactory::CreateLocalMediaStream(const std::string &label) {
   CHECK(pc_thread_);
-  return pc_thread_->Invoke<scoped_refptr<webrtc::MediaStreamInterface>>(Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream, pc_factory_.get(), label)).get();
+  return pc_thread_->Invoke<scoped_refptr<webrtc::MediaStreamInterface>>(Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream, pc_factory_.get(), label));
 }
 
 scoped_refptr<webrtc::VideoSourceInterface> PeerConnectionDependencyFactory::CreateVideoSource(cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints) {

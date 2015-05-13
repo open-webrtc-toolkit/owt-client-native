@@ -11,13 +11,20 @@ namespace woogeen {
 
 using std::string;
 
-enum P2PPeerConnectionChannel::State : int {
-  kReady = 1,  // Indicate the channel is ready. This is the initial state.
-  kOffered,  // Indicates local client has sent an invitation and waiting for an acceptance.
-  kPending,  // Indicates local client received an invitation and waiting for user's response.
-  kMatched,  // Indicates both sides agreed to start a WebRTC session. One of them will send an offer soon.
-  kConnecting,  // Indicates both sides are trying to connect to the other side.
-  kConnected,  // Indicates PeerConnection has been established.
+enum P2PPeerConnectionChannel::SessionState : int {
+  kSessionStateReady = 1,  // Indicate the channel is ready. This is the initial state.
+  kSessionStateOffered,  // Indicates local client has sent an invitation and waiting for an acceptance.
+  kSessionStatePending,  // Indicates local client received an invitation and waiting for user's response.
+  kSessionStateMatched,  // Indicates both sides agreed to start a WebRTC session. One of them will send an offer soon.
+  kSessionStateConnecting,  // Indicates both sides are trying to connect to the other side.
+  kSessionStateConnected,  // Indicates PeerConnection has been established.
+};
+
+enum P2PPeerConnectionChannel::NegotiationState : int {
+  kNegotiationStateNone = 1,  // Indicates not in renegotiation.
+  kNegotiationStateSent,  // Indicates a negotiation request has been sent to remote user.
+  kNegotiationStateReceived,  // Indicates local side has received a negotiation request from remote user.
+  kNegotiationStateAccepted,  // Indicates local side has accepted remote user's negotiation request.
 };
 
 // Signaling message type
@@ -28,7 +35,13 @@ const string kChatAccept = "chat-accepted";
 const string kChatDeny = "chat-denied";
 const string kChatStop = "chat-closed";
 const string kChatSignal = "chat-signal";
+const string kChatNegotiationNeeded = "chat-negotiation-needed";
+const string kChatNegotiationAccepted = "chat-negotiation-accepted";
 const string kStreamType = "stream-type";
+
+// Stream type member key
+const string kStreamIdKey = "streamId";
+const string kStreamTypeKey = "type";
 
 // Session description member key
 const string kSessionDescriptionTypeKey = "type";
@@ -42,7 +55,7 @@ const string kIceCandidateSdpNameKey = "candidate";
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(const std::string& remote_id, SignalingSenderInterface* sender)
     :signaling_sender_(sender),
      remote_id_(remote_id),
-     state_(kReady),
+     session_state_(kSessionStateReady),
      peer_connection_(nullptr),
      factory_(nullptr),
      pc_thread_(new PeerConnectionThread),
@@ -62,7 +75,7 @@ void P2PPeerConnectionChannel::OnIncomingMessage(const std::string& message) {
   Json::Reader reader;
   Json::Value jsonMessage;
   if(!reader.parse(message, jsonMessage)){
-    LOG(WARNING) << "Received unknown message";
+    LOG(LS_WARNING) << "Received unknown message";
     return;
   }
   std::string messageType;
@@ -85,14 +98,17 @@ void P2PPeerConnectionChannel::OnIncomingMessage(const std::string& message) {
     GetValueFromJsonObject(jsonMessage,kMessageDataKey, &signal);
     OnMessageSignal(signal);
   }
+  else if(messageType==kChatNegotiationAccepted){
+    OnMessageNegotiationAcceptance();
+  }
   else{
     LOG(LS_WARNING) << "Received unknown message type "<<messageType;
     return;
   }
 }
 
-void P2PPeerConnectionChannel::ChangeState(State state) {
-  state_=state;
+void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
+  session_state_=state;
 }
 
 void P2PPeerConnectionChannel::AddObserver(P2PPeerConnectionChannelObserver* observer) {
@@ -108,7 +124,8 @@ bool P2PPeerConnectionChannel::InitializePeerConnection() {
   if(factory_.get()==nullptr)
     factory_=PeerConnectionDependencyFactory::Get();
   webrtc::PeerConnectionInterface::RTCConfiguration config;
-  peer_connection_=(factory_->CreatePeerConnection(config, nullptr, this)).get();
+  media_constraints_.AddOptional(MediaConstraintsInterface::kEnableDtlsSrtp, true);
+  peer_connection_=(factory_->CreatePeerConnection(config, &media_constraints_, this)).get();
   if(!peer_connection_.get()) {
     LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
     return false;
@@ -123,7 +140,9 @@ bool P2PPeerConnectionChannel::InitializePeerConnection() {
 void P2PPeerConnectionChannel::CreateOffer() {
   LOG(LS_INFO) << "Create offer";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer=FunctionalCreateSessionDescriptionObserver::Create(std::bind(&P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess, this, std::placeholders::_1), std::bind(&P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure, this, std::placeholders::_1));
-  peer_connection_->CreateOffer(observer, nullptr);
+  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
+  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
+  peer_connection_->CreateOffer(observer, &media_constraints_);
   // pc_thread_->Invoke<int>(Bind(&PeerConnectionInterface::CreateOffer, peer_connection_.get(), observer));
 }
 
@@ -134,14 +153,14 @@ void P2PPeerConnectionChannel::SendSignalingMessage(const Json::Value& data, std
 }
 
 void P2PPeerConnectionChannel::OnMessageInvitation() {
-  ChangeState(kPending);
+  ChangeSessionState(kSessionStatePending);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
     (*it)->OnInvited(remote_id_);
   }
 }
 
 void P2PPeerConnectionChannel::OnMessageAcceptance() {
-  ChangeState(kConnecting);
+  ChangeSessionState(kSessionStateConnecting);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
     (*it)->OnAccepted(remote_id_);
   }
@@ -152,14 +171,14 @@ void P2PPeerConnectionChannel::OnMessageAcceptance() {
 void P2PPeerConnectionChannel::OnMessageStop() {
 }
 
+void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
+}
+
+void P2PPeerConnectionChannel::OnMessageNegotiationAcceptance() {
+  pc_thread_->Invoke<void>(Bind(&P2PPeerConnectionChannel::CreateOffer, this));
+}
+
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
-  /*
-  Json::Reader reader;
-  Json::Value message;
-  if (!reader.parse(signal, message)) {
-    LOG(LS_WARNING) << "Received unkown signaling message: " << signal;
-    return;
-  }*/
   string type;
   string desc;
   GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
@@ -200,7 +219,9 @@ void P2PPeerConnectionChannel::OnDataChannel(webrtc::DataChannelInterface* data_
 }
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
-  // TODO:
+  Json::Value json;
+  json[kMessageTypeKey] = kChatNegotiationNeeded;
+  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::IceConnectionState new_state) {
@@ -214,17 +235,20 @@ void P2PPeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterface::Ice
 
 void P2PPeerConnectionChannel::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
   LOG(LS_INFO) << "On ice candidate";
-  Json::Value message;
-  message[kSessionDescriptionTypeKey] = "candidates";
-  message[kIceCandidateSdpMLineIndexKey] = candidate->sdp_mline_index();
-  message[kIceCandidateSdpMidKey] = candidate->sdp_mid();
+  Json::Value signal;
+  signal[kSessionDescriptionTypeKey] = "candidates";
+  signal[kIceCandidateSdpMLineIndexKey] = candidate->sdp_mline_index();
+  signal[kIceCandidateSdpMidKey] = candidate->sdp_mid();
   string sdp;
   if(!candidate->ToString(&sdp)){
     LOG(LS_ERROR)<<"Failed to serialize candidate";
     return;
   }
-  message[kIceCandidateSdpNameKey] = sdp;
-  SendSignalingMessage(message, nullptr, nullptr);
+  signal[kIceCandidateSdpNameKey] = sdp;
+  Json::Value json;
+  json[kMessageTypeKey]=kChatSignal;
+  json[kMessageDataKey]=signal;
+  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(webrtc::SessionDescriptionInterface* desc) {
@@ -254,5 +278,22 @@ void P2PPeerConnectionChannel::OnSetSessionDescriptionSuccess() {
 
 void P2PPeerConnectionChannel::OnSetSessionDescriptionFailure(const std::string& error) {
   LOG(LS_INFO) << "Set sdp failed";
+}
+
+void P2PPeerConnectionChannel::Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(int)> on_failure) {
+  scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
+  Json::Value json;
+  json[kMessageTypeKey] = kStreamType;
+  Json::Value stream_info;
+  stream_info[kStreamIdKey] = media_stream->label();
+  stream_info[kStreamTypeKey] = "video";
+  json[kMessageDataKey] = stream_info;
+  SendSignalingMessage(json, nullptr, nullptr);
+  if(peer_connection_->AddStream(media_stream)){
+    LOG(LS_ERROR)<<"Failed to add stream.";
+    if(on_failure){
+      on_failure(0);
+    }
+  }
 }
 }

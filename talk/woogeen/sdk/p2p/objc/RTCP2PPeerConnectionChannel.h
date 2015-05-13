@@ -4,15 +4,17 @@
 
 #import <Foundation/Foundation.h>
 
-#include "talk/woogeen/sdk/base/objc/RTCSignalingSenderProtocol.h"
-#include "talk/woogeen/sdk/base/objc/RTCSignalingReceiverProtocol.h"
-#include "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
-#include "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannelObserver.h"
+#import "talk/woogeen/sdk/base/objc/RTCSignalingSenderProtocol.h"
+#import "talk/woogeen/sdk/base/objc/RTCSignalingReceiverProtocol.h"
+#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
+#import "talk/woogeen/sdk/base/objc/public/RTCLocalStream.h"
+#import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannelObserver.h"
 
 @interface RTCP2PPeerConnectionChannel : NSObject<RTCSignalingReceiverProtocol>
 
 -(instancetype)initWithRemoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender;
--(void)inviteWithSuccess:(void (^)())success failure:(void (^)(NSError *))failure;
+-(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
+-(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 -(void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 -(NSString*)getRemoteUserId;

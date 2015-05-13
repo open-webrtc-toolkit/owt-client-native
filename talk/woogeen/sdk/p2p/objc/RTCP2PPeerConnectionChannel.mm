@@ -7,6 +7,7 @@
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannelObserver.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCSignalingSenderObjcImpl.h"
+#import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 
@@ -24,8 +25,13 @@
   return self;
 }
 
--(void)inviteWithSuccess:(void (^)())success failure:(void (^)(NSError *))failure{
+-(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  // TODO(jianjun):correct nullptr.
   _nativeChannel->Invite(nullptr,nullptr);
+}
+
+-(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  _nativeChannel->Publish([stream nativeLocalStream], nullptr, nullptr);
 }
 
 -(void)onIncomingMessage:(NSString *)message{

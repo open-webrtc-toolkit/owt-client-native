@@ -8,6 +8,8 @@
 #include "talk/woogeen/sdk/base/signalingsenderinterface.h"
 #include "talk/woogeen/sdk/base/signalingreceiverinterface.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+#include "talk/woogeen/sdk/base/stream.h"
 #include "webrtc/base/json.h"
 
 namespace woogeen {
@@ -24,6 +26,8 @@ class P2PPeerConnectionChannelObserver {
     virtual void OnAccepted(std::string remote_id) = 0;
     // Triggered when the WebRTC session is ended.
     virtual void OnStopped(std::string remote_id) = 0;
+    // Triggered when a new stream is added.
+   // virtual void OnStreamAdded(std::string remote_id, woogeen::RemoteStream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.
@@ -31,10 +35,16 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
                                  public webrtc::PeerConnectionObserver {
   public:
     explicit P2PPeerConnectionChannel(const std::string& remote_id, SignalingSenderInterface* sender);
+    // Add a P2PPeerConnectionChannel observer so it will be notified when this object have some events.
     void AddObserver(P2PPeerConnectionChannelObserver* observer);
+    // Remove a P2PPeerConnectionChannel observer. If the observer doesn't exist, it will do nothing.
     void RemoveObserver(P2PPeerConnectionChannelObserver *observer);
+    // Implementation of SignalingReceiverInterface. Handle signaling message received from remote side.
     void OnIncomingMessage(const std::string& message) override;
-    void Invite(std::function<void()> success, std::function<void(int)> failure);
+    // Invite a remote client to start a WebRTC session.
+    void Invite(std::function<void()> on_success, std::function<void(int)> on_failure);
+    // Publish a local stream to remote user.
+    void Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(int)> on_failure);
 
   protected:
     bool InitializePeerConnection();
@@ -45,6 +55,8 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     void OnMessageAcceptance();
     void OnMessageStop();
     void OnMessageSignal(Json::Value& signal);
+    void OnMessageNegotiationNeeded();
+    void OnMessageNegotiationAcceptance();
 
     // PeerConnectionObserver
     virtual void OnSignalingChange(PeerConnectionInterface::SignalingState new_state);
@@ -64,19 +76,21 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     virtual void OnSetSessionDescriptionSuccess();
     virtual void OnSetSessionDescriptionFailure(const std::string& error);
 
-    enum State : int;
+    enum SessionState : int;
+    enum NegotiationState : int;
 
   private:
-    void ChangeState(State state);
+    void ChangeSessionState(SessionState state);
     void SendSignalingMessage(const Json::Value& data, std::function<void()> success, std::function<void(int)> failure);
 
     SignalingSenderInterface* signaling_sender_;
     std::string remote_id_;
-    State state_;
+    SessionState session_state_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
     // |factory_| is got from PeerConnectionDependencyFactory::Get() which is shared among all PeerConnectionChannels.
     rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
+    woogeen::MediaConstraintsImpl media_constraints_;
     Thread* pc_thread_;  // All operations on PeerConnection will be performed on this thread.
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };

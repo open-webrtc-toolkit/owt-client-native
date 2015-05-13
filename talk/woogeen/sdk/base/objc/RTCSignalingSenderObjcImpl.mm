@@ -12,9 +12,9 @@ RTCSignalingSenderObjcImpl::RTCSignalingSenderObjcImpl(id<RTCSignalingSenderProt
 }
 
 void RTCSignalingSenderObjcImpl::Send(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure) {
-  [_sender send:[NSString stringWithUTF8String:message.c_str()] to:[NSString stringWithUTF8String:remote_id.c_str()] success:^(){
+  [_sender send:[NSString stringWithUTF8String:message.c_str()] to:[NSString stringWithUTF8String:remote_id.c_str()] onSuccess:^(){
     NSLog(@"success");
-  } failure:^(NSError* err){
+  } onFailure:^(NSError* err){
     NSLog(@"failure");
   }];
 }
