@@ -28,9 +28,7 @@
   RTCVideoCapturer *capturer=[RTCVideoCapturer capturerWithDeviceName:cameraId];
   NSAssert(cameraId, @"Unable to get the camera ID");
   rtc::scoped_refptr<woogeen::LocalCameraStream> local_stream = woogeen::LocalCameraStream::Create([capturer takeNativeCapturer]);
-  NSLog(@"Got native local stream.");
   [super setNativeLocalStream: local_stream];
-  NSLog(@"Set native local stream");
   // consider double reference.
   rtc::scoped_refptr<webrtc::MediaStreamInterface> native_media_stream = super.nativeLocalStream->MediaStream();
   super.mediaStream = [[RTCMediaStream alloc] initWithMediaStream:native_media_stream];

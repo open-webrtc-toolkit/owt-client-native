@@ -19,6 +19,7 @@ class P2PPeerConnectionChannelObserverObjcImpl : public P2PPeerConnectionChannel
     void OnInvited(std::string remote_id);
     void OnAccepted(std::string remote_id);
     void OnStopped(std::string remote_id);
+    void OnStreamAdded(std::string remote_id, woogeen::RemoteStream* stream);
 
   private:
     id<RTCP2PPeerConnectionChannelObserver> _observer;

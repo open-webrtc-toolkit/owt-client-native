@@ -27,7 +27,7 @@ class P2PPeerConnectionChannelObserver {
     // Triggered when the WebRTC session is ended.
     virtual void OnStopped(std::string remote_id) = 0;
     // Triggered when a new stream is added.
-   // virtual void OnStreamAdded(std::string remote_id, woogeen::RemoteStream) = 0;
+    virtual void OnStreamAdded(std::string remote_id, woogeen::RemoteStream* stream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.
@@ -43,6 +43,8 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     void OnIncomingMessage(const std::string& message) override;
     // Invite a remote client to start a WebRTC session.
     void Invite(std::function<void()> on_success, std::function<void(int)> on_failure);
+    // Accept a remote client's invitation.
+    //void Accept(std::function<void()> on_success, std::function<void(int)> on_failure);
     // Publish a local stream to remote user.
     void Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(int)> on_failure);
 

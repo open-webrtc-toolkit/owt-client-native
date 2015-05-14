@@ -101,6 +101,9 @@ void P2PPeerConnectionChannel::OnIncomingMessage(const std::string& message) {
   else if(messageType==kChatNegotiationAccepted){
     OnMessageNegotiationAcceptance();
   }
+  else if(messageType==kChatNegotiationNeeded){
+    OnMessageNegotiationNeeded();
+  }
   else{
     LOG(LS_WARNING) << "Received unknown message type "<<messageType;
     return;
@@ -172,6 +175,10 @@ void P2PPeerConnectionChannel::OnMessageStop() {
 }
 
 void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
+  // TODO: Check if local client ready to accept negotiation.
+  Json::Value json;
+  json[kMessageTypeKey]=kChatNegotiationAccepted;
+  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnMessageNegotiationAcceptance() {
@@ -207,7 +214,11 @@ void P2PPeerConnectionChannel::OnSignalingChange(PeerConnectionInterface::Signal
 }
 
 void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
-  // TODO:
+  scoped_refptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
+  remote_stream->MediaStream(stream);
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
+    (*it)->OnStreamAdded(remote_id_, remote_stream);
+  }
 }
 
 void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
@@ -226,11 +237,11 @@ void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
 
 void P2PPeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::IceConnectionState new_state) {
   LOG(LS_INFO) << "Ice connection state changed: " << new_state;
+  // TOOD: set channel state
 }
 
 void P2PPeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state) {
   LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
-  // TODO:
 }
 
 void P2PPeerConnectionChannel::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {

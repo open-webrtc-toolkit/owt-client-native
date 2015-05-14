@@ -12,15 +12,13 @@
 
 @end
 
-@implementation RTCLocalStream(Internal)
+@implementation RTCLocalStream (Internal)
 
 -(void)setNativeLocalStream:(rtc::scoped_refptr<woogeen::LocalStream>)stream {
-  NSLog(@"setNativeLocalStream");
   _nativeLocalStream=stream;
 }
 
 -(rtc::scoped_refptr<woogeen::LocalStream>)nativeLocalStream{
-  NSLog(@"nativeLocalStream");
   return _nativeLocalStream;
 }
 
