@@ -16,12 +16,13 @@
   NSString* _remoteId;
 }
 
--(instancetype)initWithRemoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender{
+-(instancetype)initWithLocalId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender{
   self=[super init];
   woogeen::SignalingSenderInterface* sender = new woogeen::RTCSignalingSenderObjcImpl(signalingSender);
   _remoteId=remoteId;
   const std::string nativeRemoteId=[remoteId UTF8String];
-  _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeRemoteId, sender);
+  const std::string nativeLocalId=[localId UTF8String];
+  _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeLocalId, nativeRemoteId, sender);
   return self;
 }
 

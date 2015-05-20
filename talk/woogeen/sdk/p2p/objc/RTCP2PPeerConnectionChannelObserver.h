@@ -14,7 +14,7 @@
 - (void)onChatStoppedFrom:(NSString*)remoteUserId;
 - (void)onChatStartedFrom:(NSString*)remoteUserId;
 - (void)onDataReceivedFrom:(NSString*)remoteUserId withData:(NSString*)data;
-- (void)onStreamAddedFrom:(NSString*)remoteUserId withStream:(RTCRemoteStream*)stream;
-- (void)onStreamRemovedFrom:(NSString*)remoteUserId withStream:(RTCRemoteStream*)stream;
+- (void)onStreamAdded:(RTCRemoteStream*)stream;
+- (void)onStreamRemoved:(RTCRemoteStream*)stream;
 
 @end

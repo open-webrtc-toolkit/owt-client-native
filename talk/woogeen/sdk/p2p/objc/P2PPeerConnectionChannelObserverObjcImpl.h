@@ -16,10 +16,12 @@ class P2PPeerConnectionChannelObserverObjcImpl : public P2PPeerConnectionChannel
     P2PPeerConnectionChannelObserverObjcImpl(id<RTCP2PPeerConnectionChannelObserver> observer);
 
   protected:
-    void OnInvited(std::string remote_id);
-    void OnAccepted(std::string remote_id);
-    void OnStopped(std::string remote_id);
-    void OnStreamAdded(std::string remote_id, woogeen::RemoteStream* stream);
+    void OnInvited(const std::string& remote_id) override;
+    void OnAccepted(const std::string& remote_id) override;
+    void OnDenied(const std::string& remote_id) override;
+    void OnStopped(const std::string& remote_id) override;
+    void OnStreamAdded(woogeen::RemoteStream* stream) override;
+    void OnStreamRemoved(woogeen::RemoteStream* stream) override;
 
   private:
     id<RTCP2PPeerConnectionChannelObserver> _observer;

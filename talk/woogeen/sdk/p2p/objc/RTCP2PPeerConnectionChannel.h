@@ -12,7 +12,7 @@
 
 @interface RTCP2PPeerConnectionChannel : NSObject<RTCSignalingReceiverProtocol>
 
--(instancetype)initWithRemoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender;
+-(instancetype)initWithLocalId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender;
 -(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;

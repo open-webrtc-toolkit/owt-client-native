@@ -12,20 +12,28 @@ P2PPeerConnectionChannelObserverObjcImpl::P2PPeerConnectionChannelObserverObjcIm
   _observer = observer;
 }
 
-void P2PPeerConnectionChannelObserverObjcImpl::OnInvited(std::string remote_id) {
+void P2PPeerConnectionChannelObserverObjcImpl::OnInvited(const std::string& remote_id) {
   [_observer onInvitedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
-void P2PPeerConnectionChannelObserverObjcImpl::OnAccepted(std::string remote_id) {
+void P2PPeerConnectionChannelObserverObjcImpl::OnAccepted(const std::string& remote_id) {
 }
 
-void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(std::string remote_id) {
+void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(const std::string& remote_id) {
 }
 
-void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(std::string remote_id, woogeen::RemoteStream* stream) {
+void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(const std::string& remote_id) {
+}
+
+void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(woogeen::RemoteStream* stream) {
   RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeRemoteStream: stream];
-  [_observer onStreamAddedFrom:[NSString stringWithUTF8String: remote_id.c_str()] withStream: remote_stream];
+  [_observer onStreamAdded: remote_stream];
   NSLog(@"On stream added.");
 }
 
+void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(woogeen::RemoteStream* stream) {
+  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeRemoteStream: stream];
+  [_observer onStreamRemoved: remote_stream];
+  NSLog(@"On stream removed.");
+}
 }
