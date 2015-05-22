@@ -12,7 +12,7 @@ namespace woogeen {
 class SignalingReceiverInterface {
   public:
     // Received signaling message.
-    virtual void OnIncomingMessage(const std::string& message) = 0;
+    virtual void OnIncomingSignalingMessage(const std::string& message) = 0;
 };
 }
 

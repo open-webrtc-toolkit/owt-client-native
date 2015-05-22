@@ -15,7 +15,7 @@ namespace woogeen {
 class SignalingSenderInterface {
   public:
     // Send a signaling message.
-    virtual void Send(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure) = 0;
+    virtual void SendSignalingMessage(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure) = 0;
 };
 }
 

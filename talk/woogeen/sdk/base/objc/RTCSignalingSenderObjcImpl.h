@@ -15,7 +15,7 @@ class RTCSignalingSenderObjcImpl : public SignalingSenderInterface {
 
   public:
     RTCSignalingSenderObjcImpl(id<RTCSignalingSenderProtocol> sender);
-    virtual void Send(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure);
+    virtual void SendSignalingMessage(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure);
 
   private:
     id<RTCSignalingSenderProtocol> _sender;

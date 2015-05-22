@@ -7,6 +7,6 @@
 // RTCSignalingReceiverInterface is an ObjectiveC wrapper for SignalingReceiverInterface.
 @protocol RTCSignalingReceiverProtocol <NSObject>
 
-- (void)onIncomingMessage:(NSString *)message;
+- (void)onIncomingSignalingMessage:(NSString *)message;
 
 @end

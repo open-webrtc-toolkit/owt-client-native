@@ -31,12 +31,26 @@
   _nativeChannel->Invite(nullptr,nullptr);
 }
 
+-(void)denyWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  // TODO(jianjun):correct nullptr.
+  _nativeChannel->Deny(nullptr,nullptr);
+}
+
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   _nativeChannel->Publish([stream nativeLocalStream], nullptr, nullptr);
 }
 
--(void)onIncomingMessage:(NSString *)message{
-  _nativeChannel->OnIncomingMessage([message UTF8String]);
+-(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  NSLog(@"RTCP2PPeerConnectionChannel unpublish stream.");
+  _nativeChannel->Unpublish([stream nativeLocalStream], nullptr, nullptr);
+}
+
+-(void)stopWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure {
+  _nativeChannel->Stop(nullptr, nullptr);
+}
+
+-(void)onIncomingSignalingMessage:(NSString *)message{
+  _nativeChannel->OnIncomingSignalingMessage([message UTF8String]);
 }
 
 -(void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer{

@@ -13,12 +13,12 @@
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/stream.h"
+#include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/p2p/p2pexception.h"
 #include "webrtc/base/json.h"
+#include "webrtc/base/messagehandler.h"
 
 namespace woogeen {
-
-using webrtc::PeerConnectionInterface;
 
 // P2PPeerConnectionChannel callback interface.
 // Usually, PeerClient should implement these methods and notify application.
@@ -40,7 +40,7 @@ class P2PPeerConnectionChannelObserver {
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.
 class P2PPeerConnectionChannel : public SignalingReceiverInterface,
-                                 public webrtc::PeerConnectionObserver {
+                                 public PeerConnectionChannel {
   public:
     explicit P2PPeerConnectionChannel(const std::string& local_id, const std::string& remote_id, SignalingSenderInterface* sender);
     // Add a P2PPeerConnectionChannel observer so it will be notified when this object have some events.
@@ -48,11 +48,13 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     // Remove a P2PPeerConnectionChannel observer. If the observer doesn't exist, it will do nothing.
     void RemoveObserver(P2PPeerConnectionChannelObserver *observer);
     // Implementation of SignalingReceiverInterface. Handle signaling message received from remote side.
-    void OnIncomingMessage(const std::string& message) override;
+    void OnIncomingSignalingMessage(const std::string& message) override;
     // Invite a remote client to start a WebRTC session.
     void Invite(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Accept a remote client's invitation.
     void Accept(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
+    // Deny a remote client's invitation.
+    void Deny(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Publish a local stream to remote user.
     void Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Unpublish a local stream to remote user.
@@ -61,8 +63,8 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   protected:
-    bool InitializePeerConnection();
     void CreateOffer();
+    void CreateAnswer();
 
     // Received messages from remote client.
     void OnMessageInvitation();
@@ -89,8 +91,10 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     virtual void OnCreateSessionDescriptionFailure(const std::string& error);
 
     // SetSessionDescriptionObserver
-    virtual void OnSetSessionDescriptionSuccess();
-    virtual void OnSetSessionDescriptionFailure(const std::string& error);
+    virtual void OnSetLocalSessionDescriptionSuccess();
+    virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
+    virtual void OnSetRemoteSessionDescriptionSuccess();
+    virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
 
     enum SessionState : int;
     enum NegotiationState : int;
@@ -105,6 +109,7 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     void SendNegotiationAccepted();
     void SendAcceptance(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     void SendStop(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
+    void SendDeny(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     void ClosePeerConnection();  // Stop session and clean up.
     // Returns true if |pointer| is not nullptr. Otherwise, return false and execute |on_failure|.
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<P2PException>)>on_failure);
@@ -121,12 +126,7 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     std::mutex pending_publish_streams_mutex_;
     std::mutex pending_unpublish_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
-    // |factory_| is got from PeerConnectionDependencyFactory::Get() which is shared among all PeerConnectionChannels.
-    rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
-    woogeen::MediaConstraintsImpl media_constraints_;
     std::chrono::time_point<std::chrono::system_clock> last_disconnect_;  // Last time |peer_connection_| changes its state to "disconnect"
-    Thread* pc_thread_;  // All operations on PeerConnection will be performed on this thread.
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
 
