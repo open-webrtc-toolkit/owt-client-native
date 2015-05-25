@@ -1,0 +1,318 @@
+//
+//  sio_message.h
+//
+//  Created by Melo Yao on 3/25/15.
+//
+
+#ifndef __SIO_MESSAGE_H__
+#define __SIO_MESSAGE_H__
+#include <string>
+#include <memory>
+#include <vector>
+#include <map>
+#include <cassert>
+namespace sio
+{
+    using namespace std;
+    
+    class message
+    {
+    public:
+        enum flag
+        {
+            flag_integer,
+            flag_double,
+            flag_string,
+            flag_binary,
+            flag_array,
+            flag_object
+        };
+        
+        class list;
+
+        flag get_flag() const
+        {
+            return _flag;
+        }
+        
+        typedef shared_ptr<message> ptr;
+        
+        virtual int64_t get_int() const
+        {
+            assert(false);
+            return 0;
+        }
+        
+        virtual double get_double() const
+        {
+            assert(false);
+            return 0;
+        }
+        
+        virtual string const& get_string() const
+        {
+            assert(false);
+            static string s_empty_string;
+            s_empty_string.clear();
+            return s_empty_string;
+        }
+        
+        virtual shared_ptr<const string> const& get_binary() const
+        {
+            assert(false);
+            static shared_ptr<const string> s_empty_binary;
+            s_empty_binary = nullptr;
+            return s_empty_binary;
+        }
+        
+        virtual const vector<ptr>& get_vector() const
+        {
+            assert(false);
+            static vector<ptr> s_empty_vector;
+            s_empty_vector.clear();
+            return s_empty_vector;
+        }
+
+        virtual vector<ptr>& get_vector()
+        {
+            assert(false);
+            static vector<ptr> s_empty_vector;
+            s_empty_vector.clear();
+            return s_empty_vector;
+        }
+        
+        virtual const map<string,message::ptr>& get_map() const
+        {
+            assert(false);
+            static map<string,message::ptr> s_empty_map;
+            s_empty_map.clear();
+            return s_empty_map;
+        }
+        
+        virtual map<string,message::ptr>& get_map()
+        {
+            assert(false);
+            static map<string,message::ptr> s_empty_map;
+            s_empty_map.clear();
+            return s_empty_map;
+        }
+    private:
+        flag _flag;
+        
+    protected:
+        message(flag f):_flag(f){}
+    };
+    
+    class int_message : public message
+    {
+        int64_t _v;
+    protected:
+        int_message(int64_t v)
+            :message(flag_integer),_v(v)
+        {
+        }
+        
+    public:
+        static message::ptr create(int64_t v)
+        {
+            return ptr(new int_message(v));
+        }
+        
+        int64_t get_int() const
+        {
+            return _v;
+        }
+    };
+    
+    class double_message : public message
+    {
+        double _v;
+        double_message(double v)
+            :message(flag_double),_v(v)
+        {
+        }
+        
+    public:
+        static message::ptr create(double v)
+        {
+            return ptr(new double_message(v));
+        }
+        
+        double get_double() const
+        {
+            return _v;
+        }
+    };
+    
+    class string_message : public message
+    {
+        string _v;
+        string_message(string const& v)
+            :message(flag_string),_v(v)
+        {
+        }
+    public:
+        static message::ptr create(string const& v)
+        {
+            return ptr(new string_message(v));
+        }
+        
+        string const& get_string() const
+        {
+            return _v;
+        }
+    };
+    
+    class binary_message : public message
+    {
+        shared_ptr<const string> _v;
+        binary_message(shared_ptr<const string> const& v)
+            :message(flag_binary),_v(v)
+        {
+        }
+    public:
+        static message::ptr create(shared_ptr<const string> const& v)
+        {
+            return ptr(new binary_message(v));
+        }
+        
+        shared_ptr<const string> const& get_binary() const
+        {
+            return _v;
+        }
+    };
+    
+    class array_message : public message
+    {
+        vector<message::ptr> _v;
+        array_message():message(flag_array)
+        {
+        }
+        
+    public:
+        static message::ptr create()
+        {
+            return ptr(new array_message());
+        }
+        
+        vector<ptr>& get_vector()
+        {
+            return _v;
+        }
+        
+        const vector<ptr>& get_vector() const
+        {
+            return _v;
+        }
+    };
+    
+    class object_message : public message
+    {
+        map<string,message::ptr> _v;
+        object_message() : message(flag_object)
+        {
+        }
+    public:
+        static message::ptr create()
+        {
+            return ptr(new object_message());
+        }
+        
+        map<string,message::ptr>& get_map()
+        {
+            return _v;
+        }
+        
+        const map<string,message::ptr>& get_map() const
+        {
+            return _v;
+        }
+    };
+
+    class message::list
+    {
+    public:
+        list()
+        {
+        }
+
+        list(nullptr_t)
+        {
+        }
+
+        list(message::list&& rhs):
+            m_vector(std::move(rhs.m_vector))
+        {
+
+        }
+
+        list(message::list const& rhs):
+            m_vector(rhs.m_vector)
+        {
+
+        }
+
+        list(message::ptr const& message)
+        {
+            if(message)
+                m_vector.push_back(message);
+        }
+
+        list(string& text)
+        {
+            m_vector.push_back(string_message::create(text));
+        }
+
+        list(const char* text)
+        {
+            if(text)
+                m_vector.push_back(string_message::create(text));
+        }
+
+        list(shared_ptr<const string> const& binary)
+        {
+            if(binary)
+                m_vector.push_back(binary_message::create(binary));
+        }
+
+        void push(message::ptr const& message)
+        {
+            if(message)
+                m_vector.push_back(message);
+
+        }
+
+        void insert(size_t pos,message::ptr const& message)
+        {
+            m_vector.insert(m_vector.begin()+pos, message);
+        }
+
+        size_t size() const
+        {
+            return m_vector.size();
+        }
+
+        const message::ptr& at(size_t i) const
+        {
+            return m_vector[i];
+        }
+
+        const message::ptr& operator[] (size_t i) const
+        {
+            return m_vector[i];
+        }
+
+        message::ptr to_array_message(string const& event_name) const
+        {
+            message::ptr arr = array_message::create();
+            arr->get_vector().push_back(string_message::create(event_name));
+            arr->get_vector().insert(arr->get_vector().end(),m_vector.begin(),m_vector.end());
+            return arr;
+        }
+
+    private:
+        vector<message::ptr> m_vector;
+    };
+}
+
+#endif
