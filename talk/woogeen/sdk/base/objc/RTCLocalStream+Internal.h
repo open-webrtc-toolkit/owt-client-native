@@ -7,12 +7,12 @@
 
 #import "talk/woogeen/sdk/base/objc/public/RTCLocalStream.h"
 
-#include "webrtc/base/scoped_ref_ptr.h"
+#include <memory>
 #include "talk/woogeen/sdk/base/stream.h"
 
 @interface RTCLocalStream (Internal)
 
-@property(nonatomic, readwrite) rtc::scoped_refptr<woogeen::LocalStream> nativeLocalStream;
+@property(nonatomic, readwrite) std::shared_ptr<woogeen::LocalStream> nativeLocalStream;
 
 @end
 

@@ -7,18 +7,18 @@
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 
 @implementation RTCLocalStream {
-  rtc::scoped_refptr<woogeen::LocalStream> _nativeLocalStream;
+  std::shared_ptr<woogeen::LocalStream> _nativeLocalStream;
 }
 
 @end
 
 @implementation RTCLocalStream (Internal)
 
--(void)setNativeLocalStream:(rtc::scoped_refptr<woogeen::LocalStream>)stream {
+-(void)setNativeLocalStream:(std::shared_ptr<woogeen::LocalStream>)stream {
   _nativeLocalStream=stream;
 }
 
--(rtc::scoped_refptr<woogeen::LocalStream>)nativeLocalStream{
+-(std::shared_ptr<woogeen::LocalStream>)nativeLocalStream{
   return _nativeLocalStream;
 }
 

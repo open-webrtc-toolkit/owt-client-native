@@ -12,9 +12,9 @@
 
 @interface RTCRemoteStream (Internal)
 
-@property(nonatomic, readwrite) rtc::scoped_refptr<woogeen::RemoteStream> nativeRemoteStream;
+@property(nonatomic, readwrite) std::shared_ptr<woogeen::RemoteStream> nativeRemoteStream;
 
--(instancetype)initWithNativeRemoteStream:(rtc::scoped_refptr<woogeen::RemoteStream>)nativeStream;
+-(instancetype)initWithNativeRemoteStream:(std::shared_ptr<woogeen::RemoteStream>)nativeStream;
 
 @end
 

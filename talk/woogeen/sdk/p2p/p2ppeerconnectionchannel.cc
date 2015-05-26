@@ -300,7 +300,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(PeerConnectionInterface::Signal
 void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
   if(remote_stream_type_.find(stream->label())==remote_stream_type_.end())  // This stream is invalid.
     return;
-  scoped_refptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
+  std::shared_ptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
   remote_stream->MediaStream(stream);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnStreamAdded(remote_stream);
@@ -310,7 +310,7 @@ void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
 void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
   if(remote_stream_type_.find(stream->label())==remote_stream_type_.end())  // This stream is invalid.
     return;
-  scoped_refptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
+  std::shared_ptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
   remote_stream->MediaStream(stream);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnStreamRemoved(remote_stream);
@@ -424,7 +424,7 @@ bool P2PPeerConnectionChannel::CheckNullPointer(uintptr_t pointer, std::function
   return false;
 }
 
-void P2PPeerConnectionChannel::Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+void P2PPeerConnectionChannel::Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
   if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
@@ -441,7 +441,7 @@ void P2PPeerConnectionChannel::Publish(scoped_refptr<LocalStream> stream, std::f
     DrainPendingStreams();
 }
 
-void P2PPeerConnectionChannel::Unpublish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+void P2PPeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
@@ -483,7 +483,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Draining pending stream";
   pending_publish_streams_mutex_.lock();
   for (auto it = pending_publish_streams_.begin(); it != pending_publish_streams_.end(); ++it) {
-    scoped_refptr<LocalStream> stream = *it;
+    std::shared_ptr<LocalStream> stream = *it;
     scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
     Json::Value json;
     json[kMessageTypeKey] = kStreamType;
@@ -502,7 +502,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Get unpublish stream lock.";
   for (auto it = pending_unpublish_streams_.begin(); it != pending_unpublish_streams_.end(); ++it) {
     LOG(LS_INFO) << "Remove a stream from peer connection.";
-    scoped_refptr<LocalStream> stream = *it;
+    std::shared_ptr<LocalStream> stream = *it;
     scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
     rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
     LOG(LS_INFO) << "Post remove stream";

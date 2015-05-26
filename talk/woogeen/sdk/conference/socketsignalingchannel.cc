@@ -51,11 +51,17 @@ namespace woogeen {
           stream["id"]=(*it)->get_map()["id"]->get_string();
           // Very ugly code for video type because MCU sends unconsistent messages :(
           if((*it)->get_map()["video"]!=nullptr){
-            Json::Value video;
-            if((*it)->get_map()["video"]->get_flag()==sio::message::flag_object){;
-              video["category"]=(*it)->get_map()["video"]->get_map()["category"]->get_string();
+            Json::Value video_json;
+            if((*it)->get_map()["video"]->get_flag()==sio::message::flag_object){
+              auto video = (*it)->get_map()["video"]->get_map();
+              if(video.find("category")!=video.end())
+                video_json["category"]=video["category"]->get_string();
+              if(video.find("device")!=video.end())
+                video_json["device"]=video["device"]->get_string();
+              if(video.find("resolution")!=video.end())
+                video_json["resolution"]=video["resolution"]->get_string();
             }
-            stream["video"]=video;
+            stream["video"]=video_json;
           }
           streams.push_back(stream);
         }

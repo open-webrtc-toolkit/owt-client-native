@@ -8,7 +8,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 
 @implementation RTCRemoteStream {
-  rtc::scoped_refptr<woogeen::RemoteStream> _nativeRemoteStream;
+  std::shared_ptr<woogeen::RemoteStream> _nativeRemoteStream;
 }
 
 @end
@@ -16,16 +16,16 @@
 
 @implementation RTCRemoteStream (Internal)
 
--(void)setNativeRemoteStream:(rtc::scoped_refptr<woogeen::RemoteStream>)stream {
+-(void)setNativeRemoteStream:(std::shared_ptr<woogeen::RemoteStream>)stream {
   NSLog(@"Set native remote stream.");
   _nativeRemoteStream=stream;
 }
 
--(rtc::scoped_refptr<woogeen::RemoteStream>)nativeRemoteStream{
+-(std::shared_ptr<woogeen::RemoteStream>)nativeRemoteStream{
   return _nativeRemoteStream;
 }
 
--(instancetype)initWithNativeRemoteStream:(rtc::scoped_refptr<woogeen::RemoteStream>)nativeStream{
+-(instancetype)initWithNativeRemoteStream:(std::shared_ptr<woogeen::RemoteStream>)nativeStream{
   NSLog(@"Init with native remote stream");
   self=[super init];
   [self setNativeRemoteStream: nativeStream];

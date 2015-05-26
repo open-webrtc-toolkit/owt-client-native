@@ -11,8 +11,8 @@ ConferenceClient::ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInt
 }
 
 void ConferenceClient::Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  signaling_channel_->Connect(token, [&](Json::Value room_info){
-    if(on_success!=nullptr){
+  signaling_channel_->Connect(token, [=](Json::Value room_info){
+    if(on_success){
       on_success();
     }
   }, on_failure);

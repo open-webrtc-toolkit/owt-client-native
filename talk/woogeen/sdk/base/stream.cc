@@ -17,8 +17,8 @@ void Stream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream) {
   media_stream_=media_stream;
 }
 
-scoped_refptr<LocalCameraStream> LocalCameraStream::Create(cricket::VideoCapturer* capturer) {
-  rtc::RefCountedObject<LocalCameraStream>* local_camera_stream = new rtc::RefCountedObject<LocalCameraStream>(capturer);
+std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(cricket::VideoCapturer* capturer) {
+  std::shared_ptr<LocalCameraStream> local_camera_stream(new LocalCameraStream(capturer));
   return local_camera_stream;
 }
 
@@ -27,8 +27,8 @@ LocalCameraStream::LocalCameraStream(cricket::VideoCapturer* capturer) {
   media_stream_=factory->CreateLocalMediaStream("mediastream", capturer, nullptr);
 }
 
-scoped_refptr<RemoteStream> RemoteStream::Create() {
-  rtc::RefCountedObject<RemoteStream>* remote_stream = new rtc::RefCountedObject<RemoteStream>();
+std::shared_ptr<RemoteStream> RemoteStream::Create() {
+  std::shared_ptr<RemoteStream> remote_stream(new RemoteStream());
   return remote_stream;
 }
 

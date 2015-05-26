@@ -27,7 +27,7 @@
   }
   RTCVideoCapturer *capturer=[RTCVideoCapturer capturerWithDeviceName:cameraId];
   NSAssert(cameraId, @"Unable to get the camera ID");
-  rtc::scoped_refptr<woogeen::LocalCameraStream> local_stream = woogeen::LocalCameraStream::Create([capturer takeNativeCapturer]);
+  std::shared_ptr<woogeen::LocalCameraStream> local_stream = woogeen::LocalCameraStream::Create([capturer takeNativeCapturer]);
   [super setNativeLocalStream: local_stream];
   // consider double reference.
   rtc::scoped_refptr<webrtc::MediaStreamInterface> native_media_stream = super.nativeLocalStream->MediaStream();

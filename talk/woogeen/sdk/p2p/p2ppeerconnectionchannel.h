@@ -33,9 +33,9 @@ class P2PPeerConnectionChannelObserver {
     // Triggered when remote user denied the invitation.
     virtual void OnDenied(const std::string& remote_id) = 0;
     // Triggered when a new stream is added.
-    virtual void OnStreamAdded(woogeen::RemoteStream* stream) = 0;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
     // Triggered when a remote stream is removed.
-    virtual void OnStreamRemoved(woogeen::RemoteStream* stream) = 0;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.
@@ -56,9 +56,9 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     // Deny a remote client's invitation.
     void Deny(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Publish a local stream to remote user.
-    void Publish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
+    void Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Unpublish a local stream to remote user.
-    void Unpublish(scoped_refptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
+    void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Stop current WebRTC session.
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
@@ -121,8 +121,8 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     NegotiationState negotiation_state_;
     bool negotiation_needed_;  // Indicates if negotiation needed event is triggered but haven't send out negotiation request.
     std::unordered_map<std::string, std::string> remote_stream_type_;  // Key is remote media stream's label, value is type.
-    std::vector<scoped_refptr<LocalStream>> pending_publish_streams_;  // Streams need to be published.
-    std::vector<scoped_refptr<LocalStream>> pending_unpublish_streams_;  // Streams need to be unpublished.
+    std::vector<std::shared_ptr<LocalStream>> pending_publish_streams_;  // Streams need to be published.
+    std::vector<std::shared_ptr<LocalStream>> pending_unpublish_streams_;  // Streams need to be unpublished.
     std::mutex pending_publish_streams_mutex_;
     std::mutex pending_unpublish_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
