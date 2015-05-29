@@ -92,10 +92,37 @@ void SocketSignalingChannel::Publish(Json::Value &options, std::string &sdp, std
   sio::message::list message_list;
   message_list.push(options_message);
   message_list.push(sdp_message);
-  socket_client_->socket()->emit("publish", message_list, [&](sio::message::ptr const& msg){
-    if(msg->get_flag()== sio::message::flag_string){
-      LOG(LS_INFO) << "Publish ack: "<<msg->get_string();
+  socket_client_->socket()->emit("publish", message_list, [=](sio::message::ptr const& msg){
+    if(on_success==nullptr){
+      LOG(LS_WARNING) << "Does not implement success callback. Make sure it is what you want.";
+      return;
     }
+    if(msg->get_flag()!= sio::message::flag_array){
+      LOG(LS_WARNING) << "Received unknown ack after publish stream";
+      if(on_failure){
+        // TODO(jianjun): Trigger on_failure;
+      }
+      return;
+    }
+    sio::message::ptr message = msg->get_vector()[0];
+    if(message->get_flag()!=sio::message::flag_string){
+      LOG(LS_WARNING) << "The first element of publish ack is not a string.";
+      if(on_failure){
+        // TODO(jianjun): Trigger on_failure;
+      }
+      return;
+    }
+    LOG(LS_INFO) << "Answer: "<< message->get_string();
+    Json::Reader reader;
+    Json::Value ack_json;
+    if(!reader.parse(message->get_string(), ack_json)){
+      LOG(LS_WARNING) << "Cannot parse answer.";
+      if(on_failure){
+        // TODO(jianjun): Trigger on_failure;
+      }
+      return;
+    }
+    on_success(ack_json);
   });
 }
 }

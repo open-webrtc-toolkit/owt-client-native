@@ -91,6 +91,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     // Returns true if |pointer| is not nullptr. Otherwise, return false and execute |on_failure|.
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     int RandomInt(int lower_bound, int upper_bound);
+    void SetRemoteDescription(const std::string& type, const std::string& sdp);
 
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     int session_id_;

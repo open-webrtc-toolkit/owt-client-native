@@ -148,7 +148,7 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
     sdp_info[kSessionDescriptionSdpKey]=sdp_string;
     sdp_info[kSessionDescriptionOfferSessionIdKey]=session_id_;
     sdp_info[kSessionDescriptionSeqKey]=message_seq_;
-    sdp_info[kSessionDescriptionTiebreakerKey]= 89884208;
+    sdp_info[kSessionDescriptionTiebreakerKey]= 89884208;  // TODO(jianjun): use random number instead.
     Json::Value options;
     options[kStreamOptionStateKey]=local_desc->type();
     // TODO(jianjun): set correct options.
@@ -156,7 +156,16 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
     options[kStreamOptionAudioKey]=true;
     options[kStreamOptionVideoKey]=true;
     std::string sdp_message=JsonValueToString(sdp_info);
-    signaling_channel_->Publish(options, sdp_message, nullptr, nullptr);
+    signaling_channel_->Publish(options, sdp_message, [&](Json::Value &ack) {
+      std::string sdp;
+      std::string type;
+      if(!GetStringFromJsonObject(ack, kSessionDescriptionSdpKey, &sdp)||!(GetStringFromJsonObject(ack, kSessionDescriptionMessageTypeKey, &type))) {
+        LOG(LS_WARNING) << "Cannot parse received sdp.";
+        return;
+      }
+      SetRemoteDescription(type, sdp);
+      LOG(LS_INFO) << "Set remote sdp";
+    }, nullptr);
   }
 }
 
@@ -192,6 +201,21 @@ void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 
 void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(const std::string& error) {
   LOG(LS_INFO) << "Set remote sdp failed.";
+}
+
+void ConferencePeerConnectionChannel::SetRemoteDescription(const std::string& type, const std::string& sdp){
+  webrtc::SessionDescriptionInterface* desc(
+      webrtc::CreateSessionDescription("answer", sdp));  // TODO(jianjun): change answer to type.toLowerCase.
+  if(!desc){
+    LOG(LS_ERROR) << "Failed to create session description.";
+    return;
+  }
+  scoped_refptr<FunctionalSetSessionDescriptionObserver> observer=FunctionalSetSessionDescriptionObserver::Create(
+    std::bind(&ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess, this),
+    std::bind(&ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure, this, std::placeholders::_1));
+  SetSessionDescriptionMessage* msg = new SetSessionDescriptionMessage(observer.get(), desc);
+  LOG(LS_INFO) << "Post set remote desc";
+  pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
 }
 
 bool ConferencePeerConnectionChannel::CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure) {
