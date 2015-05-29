@@ -31,6 +31,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
 
   protected:
     bool InitializePeerConnection();
+    const webrtc::SessionDescriptionInterface* LocalDescription();
 
     // Subclasses should prepare observers for these two functions and post message to PeerConnectionChannel.
     virtual void CreateOffer() = 0;

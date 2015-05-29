@@ -27,6 +27,11 @@ enum ConferencePeerConnectionChannel::NegotiationState : int {
   kNegotiationStateAccepted,  // Indicates local side has accepted remote user's negotiation request.
 };
 
+// Const value for messages
+const int kSessionIdBase = 104;  // Not sure why it should be 104, just according to JavaScript SDK.
+const int kMessageSeqBase = 1;
+const int kTiebreakerUpperBound = 429496723;  // ditto
+
 // Signaling message type
 const string kMessageTypeKey = "type";
 const string kMessageDataKey = "data";
@@ -39,13 +44,21 @@ const string kChatNegotiationNeeded = "chat-negotiation-needed";
 const string kChatNegotiationAccepted = "chat-negotiation-accepted";
 const string kStreamType = "stream-type";
 
-// Stream type member key
-const string kStreamIdKey = "streamId";
-const string kStreamTypeKey = "type";
+// Stream option member key
+const string kStreamOptionStateKey = "state";
+const string kStreamOptionDataKey = "type";
+const string kStreamOptionAudioKey = "audio";
+const string kStreamOptionVideoKey = "video";
+const string kStreamOptionScreenKey = "screen";
+const string kStreamOptionAttributesKey = "attributes";
 
 // Session description member key
-const string kSessionDescriptionTypeKey = "type";
+const string kSessionDescriptionMessageTypeKey = "messageType";
 const string kSessionDescriptionSdpKey = "sdp";
+const string kSessionDescriptionOfferSessionIdKey = "offererSessionId";
+const string kSessionDescriptionAnswerSessionIdKey = "answerSessionId";
+const string kSessionDescriptionSeqKey = "seq";
+const string kSessionDescriptionTiebreakerKey = "tiebreaker";
 
 // ICE candidate member key
 const string kIceCandidateSdpMidKey = "sdpMid";
@@ -54,10 +67,13 @@ const string kIceCandidateSdpNameKey = "candidate";
 
 ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
     :signaling_channel_(signaling_channel),
+     session_id_(kSessionIdBase),
+     message_seq_(kMessageSeqBase),
      session_state_(kSessionStateReady),
      negotiation_state_(kNegotiationStateNone),
      callback_thread_(new PeerConnectionThread) {
   callback_thread_->Start();
+  InitializePeerConnection();
   CHECK(signaling_channel_);
 }
 
@@ -121,6 +137,27 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterf
 
 void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state) {
   LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
+  if(new_state==PeerConnectionInterface::kIceGatheringComplete){
+    auto local_desc = LocalDescription();
+    Json::Value sdp_info;
+    std::string sdp_string;
+    if(!local_desc->ToString(&sdp_string)){
+      LOG(LS_ERROR)<<"Error parsing local description.";
+    }
+    sdp_info[kSessionDescriptionMessageTypeKey]="OFFER";
+    sdp_info[kSessionDescriptionSdpKey]=sdp_string;
+    sdp_info[kSessionDescriptionOfferSessionIdKey]=session_id_;
+    sdp_info[kSessionDescriptionSeqKey]=message_seq_;
+    sdp_info[kSessionDescriptionTiebreakerKey]= 89884208;
+    Json::Value options;
+    options[kStreamOptionStateKey]=local_desc->type();
+    // TODO(jianjun): set correct options.
+    options[kStreamOptionDataKey]=true;
+    options[kStreamOptionAudioKey]=true;
+    options[kStreamOptionVideoKey]=true;
+    std::string sdp_message=JsonValueToString(sdp_info);
+    signaling_channel_->Publish(options, sdp_message, nullptr, nullptr);
+  }
 }
 
 void ConferencePeerConnectionChannel::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
@@ -135,14 +172,6 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(webrtc::
   SetSessionDescriptionMessage* msg = new SetSessionDescriptionMessage(observer.get(), desc);
   LOG(LS_INFO) << "Post set local desc";
   pc_thread_->Post(this, kMessageTypeSetLocalDescription, msg);
-  string sdp;
-  desc->ToString(&sdp);
-  Json::Value signal;
-  signal[kSessionDescriptionTypeKey] = desc->type();
-  signal[kSessionDescriptionSdpKey] = sdp;
-  Json::Value json;
-  json[kMessageTypeKey]=kChatSignal;
-  json[kMessageDataKey]=signal;
 }
 
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(const std::string& error) {
@@ -181,6 +210,9 @@ void ConferencePeerConnectionChannel::Publish(std::shared_ptr<LocalStream> strea
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
+  rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(stream->MediaStream());
+  pc_thread_->Post(this, kMessageTypeAddStream, param);
+  CreateOffer();
 }
 
 void ConferencePeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -192,6 +224,13 @@ void ConferencePeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> str
 
 void ConferencePeerConnectionChannel::Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Stop session.";
+}
+
+int ConferencePeerConnectionChannel::RandomInt(int lower_bound, int upper_bound) {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<int> dist(1, kTiebreakerUpperBound);
+  return dist(mt);
 }
 
 }

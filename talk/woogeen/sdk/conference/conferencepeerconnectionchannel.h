@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <chrono>
+#include <random>
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/stream.h"
@@ -89,8 +90,11 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     void ClosePeerConnection();  // Stop session and clean up.
     // Returns true if |pointer| is not nullptr. Otherwise, return false and execute |on_failure|.
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
+    int RandomInt(int lower_bound, int upper_bound);
 
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
+    int session_id_;
+    int message_seq_;
     SessionState session_state_;
     NegotiationState negotiation_state_;
     std::vector<ConferencePeerConnectionChannelObserver*> observers_;

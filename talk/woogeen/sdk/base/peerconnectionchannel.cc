@@ -30,7 +30,14 @@ bool PeerConnectionChannel::InitializePeerConnection(){
     pc_thread_=new rtc::Thread();
     pc_thread_->Start();
   }
+  CHECK(peer_connection_);
+  CHECK(pc_thread_);
   return true;
+}
+
+const webrtc::SessionDescriptionInterface* PeerConnectionChannel::LocalDescription(){
+  CHECK(peer_connection_);
+  return peer_connection_->local_description();
 }
 
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {

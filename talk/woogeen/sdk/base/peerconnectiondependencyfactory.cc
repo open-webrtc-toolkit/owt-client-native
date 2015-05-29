@@ -84,12 +84,19 @@ scoped_refptr<VideoTrackInterface> PeerConnectionDependencyFactory::CreateLocalV
   return pc_thread_->Invoke<scoped_refptr<VideoTrackInterface>>(Bind(&PeerConnectionFactoryInterface::CreateVideoTrack, pc_factory_.get(), id, video_source)).get();
 }
 
+scoped_refptr<AudioTrackInterface> PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string &id) {
+  return pc_thread_->Invoke<scoped_refptr<AudioTrackInterface>>(Bind(&PeerConnectionFactoryInterface::CreateAudioTrack, pc_factory_.get(), id, nullptr)).get();
+}
+
 scoped_refptr<webrtc::MediaStreamInterface> PeerConnectionDependencyFactory::CreateLocalMediaStream(const std::string &label, cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints) {
   scoped_refptr<MediaStreamInterface> stream = this->CreateLocalMediaStream(label);
   scoped_refptr<VideoSourceInterface> source = this->CreateVideoSource(capturer, constraints);
   std::string video_track_label = "VideoTrack";
   scoped_refptr<VideoTrackInterface> video_track = this->CreateLocalVideoTrack(video_track_label, source);
   stream->AddTrack(video_track);
+  std::string audio_track_label = "AudioTrack";
+  scoped_refptr<AudioTrackInterface> audio_track = this->CreateLocalAudioTrack(audio_track_label);
+  stream->AddTrack(audio_track);
   return stream;
 }
 }
