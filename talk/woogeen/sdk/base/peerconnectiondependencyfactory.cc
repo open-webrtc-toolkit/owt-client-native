@@ -5,7 +5,7 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
-#include "peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 
 namespace woogeen {
 void PeerConnectionThread::Run() {

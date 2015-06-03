@@ -7,6 +7,7 @@
 
 #include <memory>
 #include "talk/app/webrtc/mediastreaminterface.h"
+#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "webrtc/base/logging.h"
 
 namespace woogeen {
@@ -26,6 +27,8 @@ class Stream {
 };
 
 class LocalStream : public Stream {
+  protected:
+    woogeen::MediaConstraintsImpl media_constraints_;
 };
 
 class RemoteStream : public Stream {
