@@ -6,7 +6,7 @@
 
 namespace woogeen {
 
-P2PException::P2PException() : P2PException(Type::kUnkown) {
+P2PException::P2PException() : P2PException(kUnkown) {
 }
 
 P2PException::P2PException(enum Type type) : P2PException(type, "Unkown P2P exception.") {

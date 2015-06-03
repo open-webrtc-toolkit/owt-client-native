@@ -6,8 +6,10 @@
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_
 
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <chrono>
+
 #include "talk/woogeen/sdk/base/signalingsenderinterface.h"
 #include "talk/woogeen/sdk/base/signalingreceiverinterface.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"

@@ -253,7 +253,7 @@ void ConferencePeerConnectionChannel::Stop(std::function<void()> on_success, std
 int ConferencePeerConnectionChannel::RandomInt(int lower_bound, int upper_bound) {
   std::random_device rd;
   std::mt19937 mt(rd());
-  std::uniform_real_distribution<int> dist(1, kTiebreakerUpperBound);
+  std::uniform_int_distribution<int> dist(1, kTiebreakerUpperBound);
   return dist(mt);
 }
 

@@ -5,6 +5,7 @@
 #ifndef conference_SocketSignalingChannel_h
 #define conference_SocketSignalingChannel_h
 
+#include <memory>
 #include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #include "talk/woogeen/include/sio_client.h"
 #include "talk/woogeen/include/sio_message.h"
