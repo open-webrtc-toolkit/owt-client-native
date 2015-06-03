@@ -96,7 +96,7 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(const std::string& mes
     return;
   }
   std::string messageType;
-  GetStringFromJsonObject(jsonMessage, kMessageTypeKey, &messageType);
+  rtc::GetStringFromJsonObject(jsonMessage, kMessageTypeKey, &messageType);
   if(messageType.empty()){
     LOG(LS_WARNING) << "Cannot get type from incoming message.";
     return;
@@ -112,7 +112,7 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(const std::string& mes
   }
   else if(messageType==kChatSignal){
     Json::Value signal;
-    GetValueFromJsonObject(jsonMessage,kMessageDataKey, &signal);
+    rtc::GetValueFromJsonObject(jsonMessage,kMessageDataKey, &signal);
     OnMessageSignal(signal);
   }
   else if(messageType==kChatNegotiationAccepted){
@@ -123,7 +123,7 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(const std::string& mes
   }
   else if(messageType==kStreamType){
     Json::Value type_info;
-    GetValueFromJsonObject(jsonMessage, kMessageDataKey, &type_info);
+    rtc::GetValueFromJsonObject(jsonMessage, kMessageDataKey, &type_info);
     OnMessageStreamType(type_info);
   }
   else{
@@ -175,7 +175,7 @@ void P2PPeerConnectionChannel::SendNegotiationAccepted(){
 
 void P2PPeerConnectionChannel::SendSignalingMessage(const Json::Value& data, std::function<void()> success, std::function<void(std::unique_ptr<P2PException>)> failure) {
   CHECK(signaling_sender_);
-  std::string jsonString=JsonValueToString(data);
+  std::string jsonString=rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(jsonString, remote_id_, success, nullptr);  // TODO: handle failure
 }
 
@@ -252,10 +252,10 @@ void P2PPeerConnectionChannel::OnMessageNegotiationAcceptance() {
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   string type;
   string desc;
-  GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
+  rtc::GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
   if(type=="offer"||type=="answer"){
     string sdp;
-    if(!GetStringFromJsonObject(message, kSessionDescriptionSdpKey, &sdp)) {
+    if(!rtc::GetStringFromJsonObject(message, kSessionDescriptionSdpKey, &sdp)) {
       LOG(LS_WARNING) << "Cannot parse received sdp.";
       return;
     }
@@ -277,8 +277,8 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
 void P2PPeerConnectionChannel::OnMessageStreamType(Json::Value& stream_info) {
   string id;
   string type;
-  GetStringFromJsonObject(stream_info, kStreamIdKey, &id);
-  GetStringFromJsonObject(stream_info, kStreamTypeKey, &type);
+  rtc::GetStringFromJsonObject(stream_info, kStreamIdKey, &id);
+  rtc::GetStringFromJsonObject(stream_info, kStreamTypeKey, &type);
   std::pair<std::string, std::string> stream_type_element;
   stream_type_element=std::make_pair(id, type);
   remote_stream_type_.insert(stream_type_element);

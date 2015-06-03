@@ -25,14 +25,14 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
     }
     // Trigger OnStreamAdded for existed remote streams.
     std::vector<Json::Value> streams;
-    JsonArrayToValueVector(room_info["streams"], &streams);
+    rtc::JsonArrayToValueVector(room_info["streams"], &streams);
     for(auto it=streams.begin();it!=streams.end();++it){  // TODO(jianjun): Only trigger OnStreamAdded for mixed stream for testing.
       LOG(LS_INFO) << "Find streams in the conference.";
       std::string id;
-      GetStringFromJsonObject((*it), "id", &id);
+      rtc::GetStringFromJsonObject((*it), "id", &id);
       Json::Value video=(*it)["video"];
       std::string category;
-      if(!GetStringFromJsonObject(video, "category", &category))
+      if(!rtc::GetStringFromJsonObject(video, "category", &category))
         return;
       if(category=="mix"){
         LOG(LS_INFO) << "Detected mixed stream";

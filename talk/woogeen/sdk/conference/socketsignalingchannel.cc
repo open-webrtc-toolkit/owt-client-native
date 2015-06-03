@@ -20,9 +20,9 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
   std::string host;
   std::string signature;
   std::string token_id;
-  GetStringFromJsonObject(jsonToken, "host", &host);
-  GetStringFromJsonObject(jsonToken, "tokenId", &token_id);
-  GetStringFromJsonObject(jsonToken, "signature", &signature);
+  rtc::GetStringFromJsonObject(jsonToken, "host", &host);
+  rtc::GetStringFromJsonObject(jsonToken, "tokenId", &token_id);
+  rtc::GetStringFromJsonObject(jsonToken, "signature", &signature);
   std::cout<<signature<<std::endl;
   socket_client_->socket();
   socket_client_->set_open_listener([=](void){
@@ -68,7 +68,7 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
         }
         streams.push_back(stream);
       }
-      room_info["streams"]=ValueVectorToJsonArray(streams);
+      room_info["streams"]=rtc::ValueVectorToJsonArray(streams);
       std::cout<<"Room info: "<<room_info;
       on_success(room_info);
     });
@@ -82,10 +82,10 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
   std::string audio;
   std::string video;
   std::string stream_id;
-  GetStringFromJsonObject(options, "state", &state);
-  GetStringFromJsonObject(options, "audio", &audio);
-  GetStringFromJsonObject(options, "video", &video);  // TODO(jianjun): include more information.
-  GetStringFromJsonObject(options, "streamId", &stream_id);
+  rtc::GetStringFromJsonObject(options, "state", &state);
+  rtc::GetStringFromJsonObject(options, "audio", &audio);
+  rtc::GetStringFromJsonObject(options, "video", &video);  // TODO(jianjun): include more information.
+  rtc::GetStringFromJsonObject(options, "streamId", &stream_id);
   sio::message::ptr options_message = sio::object_message::create();
   options_message->get_map()["audio"]=sio::string_message::create(audio);
   options_message->get_map()["video"]=sio::string_message::create(video);

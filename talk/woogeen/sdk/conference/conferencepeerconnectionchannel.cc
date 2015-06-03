@@ -155,12 +155,12 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
       options[kStreamOptionStreamIdKey]=subscribed_stream_->Id();
       is_publish_=false;
     }
-    std::string sdp_message=JsonValueToString(sdp_info);
+    std::string sdp_message=rtc::JsonValueToString(sdp_info);
     LOG(LS_INFO) << "Send sdp from pc channel.";
     signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack) {
       std::string sdp;
       std::string type;
-      if(!GetStringFromJsonObject(ack, kSessionDescriptionSdpKey, &sdp)||!(GetStringFromJsonObject(ack, kSessionDescriptionMessageTypeKey, &type))) {
+      if(!rtc::GetStringFromJsonObject(ack, kSessionDescriptionSdpKey, &sdp)||!(rtc::GetStringFromJsonObject(ack, kSessionDescriptionMessageTypeKey, &type))) {
         LOG(LS_WARNING) << "Cannot parse received sdp.";
         return;
       }
