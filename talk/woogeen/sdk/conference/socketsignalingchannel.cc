@@ -76,23 +76,32 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
   socket_client_->connect(scheme.append(host));
 }
 
-void SocketSignalingChannel::Publish(Json::Value &options, std::string &sdp, std::function<void(Json::Value &ack)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Send publish event.";
   std::string state;
   std::string audio;
   std::string video;
+  std::string stream_id;
   GetStringFromJsonObject(options, "state", &state);
   GetStringFromJsonObject(options, "audio", &audio);
   GetStringFromJsonObject(options, "video", &video);  // TODO(jianjun): include more information.
+  GetStringFromJsonObject(options, "streamId", &stream_id);
   sio::message::ptr options_message = sio::object_message::create();
   options_message->get_map()["audio"]=sio::string_message::create(audio);
   options_message->get_map()["video"]=sio::string_message::create(video);
   options_message->get_map()["state"]=sio::string_message::create(state);
+  options_message->get_map()["streamId"]=sio::string_message::create(stream_id);
   sio::message::ptr sdp_message = sio::string_message::create(sdp);
   sio::message::list message_list;
   message_list.push(options_message);
   message_list.push(sdp_message);
-  socket_client_->socket()->emit("publish", message_list, [=](sio::message::ptr const& msg){
+  std::string event_name;
+  if(is_publish)
+    event_name="publish";
+  else
+    event_name="subscribe";
+  socket_client_->socket()->emit(event_name, message_list, [=](sio::message::ptr const& msg){
+    LOG(LS_INFO) << "Received ack from server.";
     if(on_success==nullptr){
       LOG(LS_WARNING) << "Does not implement success callback. Make sure it is what you want.";
       return;

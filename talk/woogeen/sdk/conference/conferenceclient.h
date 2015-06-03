@@ -7,15 +7,29 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 
 namespace woogeen {
 
+class ConferenceClientObserver {
+  public:
+    // Triggered when a new stream is added.
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    // Triggered when a remote stream is removed.
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    // TODO(jianjun): add other events.
+};
+
 class ConferenceClient {
   public:
     ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+    // Add an observer for conferenc client.
+    void AddObserver(std::shared_ptr<ConferenceClientObserver> observer);
+    // Remove an object from conference client.
+    void RemoveObserver(std::shared_ptr<ConferenceClientObserver> observer);
     // Join a conference.
     void Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Publish a stream to the conference.
@@ -29,6 +43,7 @@ class ConferenceClient {
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> publish_pcs_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> subscribe_pcs_;
+    std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;
 };
 
 }

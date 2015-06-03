@@ -51,6 +51,8 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     void Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Unpublish a local stream to remote user.
     void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Subscribe a stream from the conference.
+    void Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Stop current WebRTC session.
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
@@ -96,6 +98,17 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     int session_id_;
     int message_seq_;
+
+    // If this pc is used for publishing, |local_stream_| will be the stream to be published.
+    // Otherwise, |remote_stream_| will be the stream to be subscribed.
+    std::shared_ptr<RemoteStream> subscribed_stream_;
+    std::shared_ptr<LocalStream> published_stream_;
+
+    // Callbacks for publish or subscribe.
+    std::function<void(std::shared_ptr<RemoteStream> stream)> subscribe_success_callback_;
+    std::function<void()> publish_success_callback_;
+    std::function<void(std::unique_ptr<ConferenceException>)> failure_callback_;
+
     SessionState session_state_;
     NegotiationState negotiation_state_;
     std::vector<ConferencePeerConnectionChannelObserver*> observers_;

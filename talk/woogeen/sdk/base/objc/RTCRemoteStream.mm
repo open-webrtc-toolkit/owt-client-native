@@ -19,6 +19,9 @@
 -(void)setNativeRemoteStream:(std::shared_ptr<woogeen::RemoteStream>)stream {
   NSLog(@"Set native remote stream.");
   _nativeRemoteStream=stream;
+  if(stream->MediaStream()!=nullptr){
+    [super setMediaStream:[[RTCMediaStream alloc]initWithMediaStream:stream->MediaStream()]];
+  }
 }
 
 -(std::shared_ptr<woogeen::RemoteStream>)nativeRemoteStream{
@@ -29,7 +32,6 @@
   NSLog(@"Init with native remote stream");
   self=[super init];
   [self setNativeRemoteStream: nativeStream];
-  [super setMediaStream:[[RTCMediaStream alloc]initWithMediaStream:nativeStream->MediaStream()]];
   return self;
 }
 

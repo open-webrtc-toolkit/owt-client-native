@@ -32,19 +32,8 @@ const int kSessionIdBase = 104;  // Not sure why it should be 104, just accordin
 const int kMessageSeqBase = 1;
 const int kTiebreakerUpperBound = 429496723;  // ditto
 
-// Signaling message type
-const string kMessageTypeKey = "type";
-const string kMessageDataKey = "data";
-const string kChatInvitation = "chat-invitation";
-const string kChatAccept = "chat-accepted";
-const string kChatDeny = "chat-denied";
-const string kChatStop = "chat-closed";
-const string kChatSignal = "chat-signal";
-const string kChatNegotiationNeeded = "chat-negotiation-needed";
-const string kChatNegotiationAccepted = "chat-negotiation-accepted";
-const string kStreamType = "stream-type";
-
 // Stream option member key
+const string kStreamOptionStreamIdKey = "streamId";
 const string kStreamOptionStateKey = "state";
 const string kStreamOptionDataKey = "type";
 const string kStreamOptionAudioKey = "audio";
@@ -119,6 +108,12 @@ void ConferencePeerConnectionChannel::OnSignalingChange(PeerConnectionInterface:
 }
 
 void ConferencePeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
+  LOG(LS_INFO) << "On add stream.";
+  if(subscribed_stream_!=nullptr)
+    subscribed_stream_->MediaStream(stream);
+  if(subscribe_success_callback_!=nullptr){
+    subscribe_success_callback_(subscribed_stream_);
+  }
 }
 
 void ConferencePeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
@@ -155,8 +150,14 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
     options[kStreamOptionDataKey]=true;
     options[kStreamOptionAudioKey]=true;
     options[kStreamOptionVideoKey]=true;
+    bool is_publish_=true;
+    if(subscribed_stream_!=nullptr){
+      options[kStreamOptionStreamIdKey]=subscribed_stream_->Id();
+      is_publish_=false;
+    }
     std::string sdp_message=JsonValueToString(sdp_info);
-    signaling_channel_->Publish(options, sdp_message, [&](Json::Value &ack) {
+    LOG(LS_INFO) << "Send sdp from pc channel.";
+    signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack) {
       std::string sdp;
       std::string type;
       if(!GetStringFromJsonObject(ack, kSessionDescriptionSdpKey, &sdp)||!(GetStringFromJsonObject(ack, kSessionDescriptionMessageTypeKey, &type))) {
@@ -230,12 +231,24 @@ bool ConferencePeerConnectionChannel::CheckNullPointer(uintptr_t pointer, std::f
 
 void ConferencePeerConnectionChannel::Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
+  published_stream_=stream;
   if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
   rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(stream->MediaStream());
   pc_thread_->Post(this, kMessageTypeAddStream, param);
+  CreateOffer();
+}
+
+void ConferencePeerConnectionChannel::Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  LOG(LS_INFO) << "Subscribe a remote stream.";
+  subscribed_stream_=stream;
+  if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
+    LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    return;
+  }
+  subscribe_success_callback_=on_success;
   CreateOffer();
 }
 

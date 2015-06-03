@@ -15,7 +15,7 @@ namespace woogeen {
   public:
     explicit SocketSignalingChannel();
     virtual void Connect(const std::string& token, std::function<void(Json::Value &room_info)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-    virtual void Publish(Json::Value &options, std::string &sdp, std::function<void(Json::Value &ack)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    virtual void SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   private:
     sio::client *socket_client_;
   };

@@ -14,6 +14,7 @@ void PeerConnectionThread::Run() {
 }
 
 PeerConnectionThread::~PeerConnectionThread() {
+  LOG(LS_INFO) << "Quit a PeerConnectionThread.";
   Stop();
 }
 
