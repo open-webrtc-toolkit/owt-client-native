@@ -39,19 +39,19 @@ namespace sio
         
         virtual int64_t get_int() const
         {
-            assert(false);
+            //assert(false);
             return 0;
         }
         
         virtual double get_double() const
         {
-            assert(false);
+            //assert(false);
             return 0;
         }
         
         virtual string const& get_string() const
         {
-            assert(false);
+            //assert(false);
             static string s_empty_string;
             s_empty_string.clear();
             return s_empty_string;
@@ -59,7 +59,7 @@ namespace sio
         
         virtual shared_ptr<const string> const& get_binary() const
         {
-            assert(false);
+            //assert(false);
             static shared_ptr<const string> s_empty_binary;
             s_empty_binary = nullptr;
             return s_empty_binary;
@@ -67,7 +67,7 @@ namespace sio
         
         virtual const vector<ptr>& get_vector() const
         {
-            assert(false);
+            //assert(false);
             static vector<ptr> s_empty_vector;
             s_empty_vector.clear();
             return s_empty_vector;
@@ -75,7 +75,7 @@ namespace sio
 
         virtual vector<ptr>& get_vector()
         {
-            assert(false);
+           //assert(false);
             static vector<ptr> s_empty_vector;
             s_empty_vector.clear();
             return s_empty_vector;
@@ -83,7 +83,7 @@ namespace sio
         
         virtual const map<string,message::ptr>& get_map() const
         {
-            assert(false);
+            //assert(false);
             static map<string,message::ptr> s_empty_map;
             s_empty_map.clear();
             return s_empty_map;
@@ -91,7 +91,7 @@ namespace sio
         
         virtual map<string,message::ptr>& get_map()
         {
-            assert(false);
+            //assert(false);
             static map<string,message::ptr> s_empty_map;
             s_empty_map.clear();
             return s_empty_map;
