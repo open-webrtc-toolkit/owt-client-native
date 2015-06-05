@@ -26,13 +26,13 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(const std::string& remot
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) {
-  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeRemoteStream: stream];
+  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeStream: stream];
   [_observer onStreamAdded: remote_stream];
   NSLog(@"On stream added.");
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) {
-  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeRemoteStream: stream];
+  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeStream: stream];
   [_observer onStreamRemoved: remote_stream];
   NSLog(@"On stream removed.");
 }

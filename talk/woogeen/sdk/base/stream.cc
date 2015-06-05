@@ -7,6 +7,12 @@
 
 namespace woogeen {
 
+Stream::Stream() : id_(""){
+}
+
+Stream::Stream(std::string& id) : id_(id){
+}
+
 scoped_refptr<MediaStreamInterface> Stream::MediaStream() {
   CHECK(media_stream_);
   return media_stream_;
@@ -33,18 +39,11 @@ LocalCameraStream::LocalCameraStream(cricket::VideoCapturer* capturer) {
   media_stream_=factory->CreateLocalMediaStream("mediastream", capturer, &media_constraints_);
 }
 
-RemoteStream::RemoteStream(std::string& id) {
-  id_=id;
+RemoteStream::RemoteStream(MediaStreamInterface* media_stream) {
+  media_stream_=media_stream;
 }
 
-std::shared_ptr<RemoteStream> RemoteStream::Create() {
-  std::string id("");
-  return RemoteStream::Create(id);
-}
-
-std::shared_ptr<RemoteStream> RemoteStream::Create(std::string& id) {
-  std::shared_ptr<RemoteStream> remote_stream(new RemoteStream(id));
-  return remote_stream;
+RemoteStream::RemoteStream(std::string& id):Stream(id) {
 }
 
 void RemoteStream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream){

@@ -3,8 +3,7 @@
 //
 
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
-#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
-@interface RTCRemoteStream (Internal)
-
+/// This class represent a remote stream captured from screen sharing.
+@interface RTCRemoteScreenStream:RTCStream
 @end

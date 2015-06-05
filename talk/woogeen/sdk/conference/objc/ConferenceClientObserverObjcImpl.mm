@@ -13,12 +13,12 @@ ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(id<RTCConfere
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(std::shared_ptr<RemoteStream> stream){
-  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc] initWithNativeRemoteStream: stream];
+  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc] initWithNativeStream: stream];
   [observer_ onStreamAdded: remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(std::shared_ptr<RemoteStream> stream){
-  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc] initWithNativeRemoteStream: stream];
+  RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc] initWithNativeStream: stream];
   [observer_ onStreamRemoved: remote_stream];
 }
 

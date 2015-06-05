@@ -30,6 +30,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     PeerConnectionChannel();
 
   protected:
+    virtual ~PeerConnectionChannel(){};
     bool InitializePeerConnection();
     const webrtc::SessionDescriptionInterface* LocalDescription();
 

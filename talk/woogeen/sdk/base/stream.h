@@ -21,8 +21,13 @@ class Stream {
     std::string& Id();
 
   protected:
+    Stream(std::string& id);
+    Stream();
+    virtual ~Stream(){};
     void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
     scoped_refptr<MediaStreamInterface> media_stream_;
+
+  private:
     std::string id_;
 };
 
@@ -33,14 +38,17 @@ class LocalStream : public Stream {
 
 class RemoteStream : public Stream {
   public:
-    static std::shared_ptr<RemoteStream> Create();
-    static std::shared_ptr<RemoteStream> Create(std::string& id);
+    explicit RemoteStream(std::string& id);
+    explicit RemoteStream(MediaStreamInterface* media_stream);
 
     scoped_refptr<MediaStreamInterface> MediaStream();
     void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
+};
 
-  protected:
-    explicit RemoteStream(std::string& id);
+class RemoteCameraStream : public RemoteStream {
+};
+
+class RemoteScreenStream : public RemoteStream {
 };
 
 class LocalCameraStream : public LocalStream {

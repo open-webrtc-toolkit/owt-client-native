@@ -300,8 +300,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(PeerConnectionInterface::Signal
 void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
   if(remote_stream_type_.find(stream->label())==remote_stream_type_.end())  // This stream is invalid.
     return;
-  std::shared_ptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
-  remote_stream->MediaStream(stream);
+  std::shared_ptr<woogeen::RemoteStream> remote_stream(new woogeen::RemoteStream(stream));
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnStreamAdded(remote_stream);
   }
@@ -310,8 +309,7 @@ void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
 void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
   if(remote_stream_type_.find(stream->label())==remote_stream_type_.end())  // This stream is invalid.
     return;
-  std::shared_ptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create();
-  remote_stream->MediaStream(stream);
+  std::shared_ptr<woogeen::RemoteStream> remote_stream(new woogeen::RemoteStream(stream));
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnStreamRemoved(remote_stream);
   }

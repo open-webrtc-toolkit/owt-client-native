@@ -36,7 +36,7 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
         return;
       if(category=="mix"){
         LOG(LS_INFO) << "Detected mixed stream";
-        std::shared_ptr<woogeen::RemoteStream> remote_stream = woogeen::RemoteStream::Create(id);
+        std::shared_ptr<woogeen::RemoteStream> remote_stream(new woogeen::RemoteStream(id));
         for (auto its=observers_.begin();its!=observers_.end();++its){
           (*its)->OnStreamAdded(remote_stream);
         }

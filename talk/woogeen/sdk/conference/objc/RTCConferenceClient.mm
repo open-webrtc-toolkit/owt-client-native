@@ -8,6 +8,7 @@
 #import "talk/woogeen/sdk/conference/socketsignalingchannel.h"
 #import "talk/woogeen/sdk/conference/conferenceclient.h"
 #import "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
+#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
@@ -39,16 +40,16 @@
 }
 
 -(void)publish:(RTCLocalStream *)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  auto nativeStreamRefPtr=[stream nativeLocalStream];
-  std::shared_ptr<woogeen::LocalStream> nativeStream(nativeStreamRefPtr.get());
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::LocalStream> nativeStream(static_cast<woogeen::LocalStream*>(nativeStreamRefPtr.get()));
   _nativeConferenceClient->Publish(nativeStream, nullptr, nullptr);
 }
 
 -(void)subscribe:(RTCRemoteStream*)stream onSuccess:(void (^)(RTCRemoteStream*))onSuccess onFailure:(void (^)(NSError *))onFailure{
-  auto nativeStreamRefPtr=[stream nativeRemoteStream];
-  std::shared_ptr<woogeen::RemoteStream> nativeStream(nativeStreamRefPtr.get());
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::RemoteStream> nativeStream(static_cast<woogeen::RemoteStream*>(nativeStreamRefPtr.get()));
   _nativeConferenceClient->Subscribe(nativeStream, [=](std::shared_ptr<woogeen::RemoteStream> stream){
-    RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeRemoteStream: stream];
+    RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeStream: stream];
     onSuccess(remote_stream);
   }, nullptr);
 }

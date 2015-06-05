@@ -8,6 +8,7 @@
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCSignalingSenderObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
+#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 
@@ -37,12 +38,13 @@
 }
 
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  _nativeChannel->Publish([stream nativeLocalStream], nullptr, nullptr);
+  NSLog(@"RTCP2PPeerConnectionChannel publish stream.");
+  _nativeChannel->Publish(std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]), nullptr, nullptr);
 }
 
 -(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   NSLog(@"RTCP2PPeerConnectionChannel unpublish stream.");
-  _nativeChannel->Unpublish([stream nativeLocalStream], nullptr, nullptr);
+  _nativeChannel->Unpublish(std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]), nullptr, nullptr);
 }
 
 -(void)stopWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure {
