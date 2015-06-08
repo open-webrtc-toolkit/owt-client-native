@@ -16,8 +16,12 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
     ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer);
 
   protected:
-    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) override;
-    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) override;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteMixedStream> stream) override;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteMixedStream> stream) override;
 
   private:
     id<RTCConferenceClientObserver> observer_;

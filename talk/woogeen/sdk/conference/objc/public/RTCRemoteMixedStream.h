@@ -4,6 +4,6 @@
 
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
 
-/// This class represent a remote stream captured from a camera and/or mic.
-@interface RTCRemoteCameraStream:RTCStream
+/// This class represent a mixed remote stream.
+@interface RTCRemoteMixedStream : RTCRemoteStream
 @end

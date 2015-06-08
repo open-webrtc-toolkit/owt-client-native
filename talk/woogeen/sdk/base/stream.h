@@ -46,9 +46,13 @@ class RemoteStream : public Stream {
 };
 
 class RemoteCameraStream : public RemoteStream {
+  public:
+    explicit RemoteCameraStream(std::string& id);
 };
 
 class RemoteScreenStream : public RemoteStream {
+  public:
+    explicit RemoteScreenStream(std::string& id);
 };
 
 class LocalCameraStream : public LocalStream {

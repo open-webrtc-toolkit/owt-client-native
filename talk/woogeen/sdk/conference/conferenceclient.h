@@ -11,19 +11,24 @@
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
+#include "talk/woogeen/sdk/conference/remotemixedstream.h"
 
 namespace woogeen {
 
 class ConferenceClientObserver {
   public:
     // Triggered when a new stream is added.
-    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) {};
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) {};
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteMixedStream> stream) {};
     // Triggered when a remote stream is removed.
-    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteCameraStream> stream) {};
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteScreenStream> stream) {};
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteMixedStream> stream) {};
     // TODO(jianjun): add other events.
 };
 
-class ConferenceClient {
+class ConferenceClient final {
   public:
     ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
     // Add an observer for conferenc client.

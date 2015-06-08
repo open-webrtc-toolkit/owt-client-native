@@ -43,7 +43,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream) {
   media_stream_=media_stream;
 }
 
-RemoteStream::RemoteStream(std::string& id):Stream(id) {
+RemoteStream::RemoteStream(std::string& id) : Stream(id) {
 }
 
 void RemoteStream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream){
@@ -52,6 +52,12 @@ void RemoteStream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream)
 
 scoped_refptr<MediaStreamInterface> RemoteStream::MediaStream() {
   return media_stream_;
+}
+
+RemoteCameraStream::RemoteCameraStream(std::string& id) : RemoteStream(id) {
+}
+
+RemoteScreenStream::RemoteScreenStream(std::string& id) : RemoteStream(id) {
 }
 
 }

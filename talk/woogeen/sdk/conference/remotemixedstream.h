@@ -9,7 +9,9 @@
 
 namespace woogeen {
 class RemoteMixedStream : public RemoteStream {
-}
+  public:
+    RemoteMixedStream(std::string& id);
+};
 }
 
 #endif  // WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_

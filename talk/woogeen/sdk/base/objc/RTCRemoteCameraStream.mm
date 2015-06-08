@@ -4,8 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #import "talk/app/webrtc/objc/RTCMediaStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
+#import "talk/woogeen/sdk/base/objc/public/RTCRemoteCameraStream.h"
 
-@implementation RTCRemoteStream
+@implementation RTCRemoteCameraStream
 
 @end

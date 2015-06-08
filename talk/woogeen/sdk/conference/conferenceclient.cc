@@ -2,6 +2,7 @@
  * Intel License
  */
 
+#include "talk/woogeen/sdk/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/conferenceclient.h"
 
 namespace woogeen {
@@ -32,11 +33,14 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
       rtc::GetStringFromJsonObject((*it), "id", &id);
       Json::Value video=(*it)["video"];
       std::string category;
-      if(!rtc::GetStringFromJsonObject(video, "category", &category))
-        return;
-      if(category=="mix"){
-        LOG(LS_INFO) << "Detected mixed stream";
-        std::shared_ptr<woogeen::RemoteStream> remote_stream(new woogeen::RemoteStream(id));
+      if(!rtc::GetStringFromJsonObject(video, "category", &category)||category!="mix"){
+        auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id);
+        for (auto its=observers_.begin();its!=observers_.end();++its){
+          (*its)->OnStreamAdded(remote_stream);
+        }
+      }
+      else {
+        auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(id);
         for (auto its=observers_.begin();its!=observers_.end();++its){
           (*its)->OnStreamAdded(remote_stream);
         }
