@@ -52,6 +52,7 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       for(auto it=stream_messages.begin();it!=stream_messages.end();++it){
         Json::Value stream;
         stream["id"]=(*it)->get_map()["id"]->get_string();
+        stream["from"]=(*it)->get_map()["from"]->get_string();
         // Very ugly code for video type because MCU sends unconsistent messages :(
         if((*it)->get_map()["video"]!=nullptr){
           Json::Value video_json;

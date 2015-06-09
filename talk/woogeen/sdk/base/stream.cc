@@ -39,11 +39,17 @@ LocalCameraStream::LocalCameraStream(cricket::VideoCapturer* capturer) {
   media_stream_=factory->CreateLocalMediaStream("mediastream", capturer, &media_constraints_);
 }
 
-RemoteStream::RemoteStream(MediaStreamInterface* media_stream) {
+RemoteStream::RemoteStream(MediaStreamInterface* media_stream, std::string& from)
+    : remote_user_id_(from){
   media_stream_=media_stream;
 }
 
-RemoteStream::RemoteStream(std::string& id) : Stream(id) {
+RemoteStream::RemoteStream(std::string& id, std::string& from)
+    : Stream(id),
+      remote_user_id_(from) {
+}
+std::string& RemoteStream::From(){
+  return remote_user_id_;
 }
 
 void RemoteStream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream){
@@ -54,10 +60,16 @@ scoped_refptr<MediaStreamInterface> RemoteStream::MediaStream() {
   return media_stream_;
 }
 
-RemoteCameraStream::RemoteCameraStream(std::string& id) : RemoteStream(id) {
+RemoteCameraStream::RemoteCameraStream(std::string& id, std::string& from) : RemoteStream(id, from) {
 }
 
-RemoteScreenStream::RemoteScreenStream(std::string& id) : RemoteStream(id) {
+RemoteCameraStream::RemoteCameraStream(MediaStreamInterface* media_stream, std::string& from) : RemoteStream(media_stream, from) {
+}
+
+RemoteScreenStream::RemoteScreenStream(std::string& id, std::string& from) : RemoteStream(id, from) {
+}
+
+RemoteScreenStream::RemoteScreenStream(MediaStreamInterface* media_stream, std::string& from) : RemoteStream(media_stream, from) {
 }
 
 }

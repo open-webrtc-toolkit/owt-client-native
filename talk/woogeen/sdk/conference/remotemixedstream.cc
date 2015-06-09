@@ -6,7 +6,7 @@
 
 namespace woogeen {
 
-RemoteMixedStream::RemoteMixedStream(std::string& id) : RemoteStream(id){
+RemoteMixedStream::RemoteMixedStream(std::string& id, std::string& from) : RemoteStream(id, from){
 
 }
 

@@ -37,22 +37,33 @@ class LocalStream : public Stream {
 };
 
 class RemoteStream : public Stream {
+  friend class ConferencePeerConnectionChannel;
+
   public:
-    explicit RemoteStream(std::string& id);
-    explicit RemoteStream(MediaStreamInterface* media_stream);
+    // Return the remote user ID, indicates who published this stream.
+    std::string& From();
+
+  protected:
+    explicit RemoteStream(std::string& id, std::string& from);
+    explicit RemoteStream(MediaStreamInterface* media_stream, std::string& from);
 
     scoped_refptr<MediaStreamInterface> MediaStream();
     void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
+
+  private:
+    std::string& remote_user_id_;
 };
 
 class RemoteCameraStream : public RemoteStream {
   public:
-    explicit RemoteCameraStream(std::string& id);
+    explicit RemoteCameraStream(std::string& id, std::string& from);
+    explicit RemoteCameraStream(MediaStreamInterface* media_stream, std::string& from);
 };
 
 class RemoteScreenStream : public RemoteStream {
   public:
-    explicit RemoteScreenStream(std::string& id);
+    explicit RemoteScreenStream(std::string& id, std::string& from);
+    explicit RemoteScreenStream(MediaStreamInterface* media_stream, std::string& from);
 };
 
 class LocalCameraStream : public LocalStream {

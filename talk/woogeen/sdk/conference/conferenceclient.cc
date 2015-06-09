@@ -33,14 +33,16 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
       rtc::GetStringFromJsonObject((*it), "id", &id);
       Json::Value video=(*it)["video"];
       std::string category;
+      std::string remote_id;
+      rtc::GetStringFromJsonObject((*it), "from", &remote_id);
       if(!rtc::GetStringFromJsonObject(video, "category", &category)||category!="mix"){
-        auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id);
+        auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
         for (auto its=observers_.begin();its!=observers_.end();++its){
           (*its)->OnStreamAdded(remote_stream);
         }
       }
       else {
-        auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(id);
+        auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(id, remote_id);
         for (auto its=observers_.begin();its!=observers_.end();++its){
           (*its)->OnStreamAdded(remote_stream);
         }

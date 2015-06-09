@@ -10,12 +10,12 @@
 #include <unordered_map>
 #include <chrono>
 
+#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/base/signalingsenderinterface.h"
 #include "talk/woogeen/sdk/base/signalingreceiverinterface.h"
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/stream.h"
-#include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/p2p/p2pexception.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/messagehandler.h"
@@ -35,9 +35,11 @@ class P2PPeerConnectionChannelObserver {
     // Triggered when remote user denied the invitation.
     virtual void OnDenied(const std::string& remote_id) = 0;
     // Triggered when a new stream is added.
-    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) = 0;
+    virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) = 0;
     // Triggered when a remote stream is removed.
-    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) = 0;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteCameraStream> stream) = 0;
+    virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteScreenStream> stream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.

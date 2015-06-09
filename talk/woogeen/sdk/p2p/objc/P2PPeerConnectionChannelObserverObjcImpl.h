@@ -20,8 +20,10 @@ class P2PPeerConnectionChannelObserverObjcImpl : public P2PPeerConnectionChannel
     void OnAccepted(const std::string& remote_id) override;
     void OnDenied(const std::string& remote_id) override;
     void OnStopped(const std::string& remote_id) override;
-    void OnStreamAdded(std::shared_ptr<woogeen::RemoteStream> stream) override;
-    void OnStreamRemoved(std::shared_ptr<woogeen::RemoteStream> stream) override;
+    void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+    void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
+    void OnStreamRemoved(std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+    void OnStreamRemoved(std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
 
   private:
     id<RTCP2PPeerConnectionChannelObserver> _observer;

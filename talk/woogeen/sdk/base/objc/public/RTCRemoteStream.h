@@ -4,6 +4,9 @@
 
 #import "talk/woogeen/sdk/base/objc/public/RTCStream.h"
 
-/// This class represent a local stream.
-@interface RTCRemoteStream:RTCStream
+/// This class represents a local stream.
+@interface RTCRemoteStream : RTCStream
+
+-(NSString*)getRemoteUserId;
+
 @end
