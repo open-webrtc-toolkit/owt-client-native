@@ -8,6 +8,7 @@
 #include <memory>
 #include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+#include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
 #include "webrtc/base/logging.h"
 
 namespace woogeen {
@@ -68,10 +69,7 @@ class RemoteScreenStream : public RemoteStream {
 
 class LocalCameraStream : public LocalStream {
   public:
-    static std::shared_ptr<LocalCameraStream> Create(cricket::VideoCapturer* capturer);
-
-  protected:
-    explicit LocalCameraStream(cricket::VideoCapturer* capturer);
+    explicit LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters);
 };
 }
 

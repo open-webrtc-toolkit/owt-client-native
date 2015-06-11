@@ -27,12 +27,7 @@ std::string& Stream::Id(){
   return id_;
 }
 
-std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(cricket::VideoCapturer* capturer) {
-  std::shared_ptr<LocalCameraStream> local_camera_stream(new LocalCameraStream(capturer));
-  return local_camera_stream;
-}
-
-LocalCameraStream::LocalCameraStream(cricket::VideoCapturer* capturer) {
+LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
   scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, "320");
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, "240");
