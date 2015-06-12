@@ -5,8 +5,8 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTOBSERVER_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTOBSERVER_H_
 
-#import "talk/woogeen/sdk/base/objc/public/RTCLocalStream.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
+#import "RTCLocalStream.h"
+#import "RTCRemoteStream.h"
 
 @protocol RTCConferenceClientObserver <NSObject>
 

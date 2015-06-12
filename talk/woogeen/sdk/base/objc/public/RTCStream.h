@@ -4,7 +4,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "talk/app/webrtc/objc/public/RTCVideoRenderer.h"
+#import "RTCVideoRenderer.h"
 
 /// Base class of all streams in the SDK
 @interface RTCStream : NSObject

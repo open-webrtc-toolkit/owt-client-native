@@ -3,10 +3,10 @@
  */
 
 #import "Foundation/Foundation.h"
+#import "RTCP2PPeerConnectionChannelObserver.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
-#import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannelObserver.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
-#import "talk/woogeen/sdk/base/objc/RTCSignalingSenderObjcImpl.h"
+#import "talk/woogeen/sdk/p2p/objc/RTCSignalingSenderObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 

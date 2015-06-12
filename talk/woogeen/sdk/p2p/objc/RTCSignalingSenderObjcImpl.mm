@@ -4,7 +4,7 @@
 
 #import <Foundation/Foundation.h>
 
-#include "RTCSignalingSenderObjcImpl.h"
+#include "talk/woogeen/sdk/p2p/objc/RTCSignalingSenderObjcImpl.h"
 
 namespace woogeen {
 RTCSignalingSenderObjcImpl::RTCSignalingSenderObjcImpl(id<RTCSignalingSenderProtocol> sender) {

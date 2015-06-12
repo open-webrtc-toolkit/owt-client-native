@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#import "talk/woogeen/sdk/base/objc/RTCSignalingSenderProtocol.h"
+#import "RTCSignalingSenderProtocol.h"
 
 #include <string>
 #include <functional>

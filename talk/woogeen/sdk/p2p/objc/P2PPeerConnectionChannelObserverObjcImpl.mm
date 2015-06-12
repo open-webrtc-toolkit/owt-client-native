@@ -4,8 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteCameraStream.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteScreenStream.h"
+#import "RTCRemoteCameraStream.h"
+#import "RTCRemoteScreenStream.h"
 
 #include "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 

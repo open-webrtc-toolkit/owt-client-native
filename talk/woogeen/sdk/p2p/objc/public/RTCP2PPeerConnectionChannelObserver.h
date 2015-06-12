@@ -3,7 +3,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
+#import "RTCRemoteStream.h"
 
 // RTCP2PPeerConnectionChannelObserver is an ObjectiveC wrapper for P2PPeerConnectionChannelObserver.
 @protocol RTCP2PPeerConnectionChannelObserver <NSObject>
