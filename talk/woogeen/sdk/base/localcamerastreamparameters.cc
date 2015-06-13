@@ -2,6 +2,7 @@
  * Intel License
  */
 
+#include <random>
 #include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
 
 namespace woogeen {
@@ -14,8 +15,7 @@ LocalCameraStreamParameters::LocalCameraStreamParameters(bool video_enabled, boo
       fps_(30) {
    std::random_device rd;
    std::string random_number=std::to_string(rd());
-   std::string stream_name("WooGeen-Stream-"+random_number);
-   stream_name_=std::make_shared<std::string>(stream_name);
+   stream_name_="WooGeen-Stream-"+random_number;
 }
 
 void LocalCameraStreamParameters::Fps(int fps){

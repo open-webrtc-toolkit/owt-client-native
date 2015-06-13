@@ -2,6 +2,8 @@
  * Intel License
  */
 
+#include "talk/media/base/videocapturer.h"
+#include "talk/media/devices/devicemanager.h"
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 
@@ -29,9 +31,17 @@ std::string& Stream::Id(){
 
 LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
   scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
+  rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(cricket::DeviceManagerFactory::Create());
+  bool initialized = device_manager->Init();
+  cricket::Device device;
+  if (!device_manager->GetVideoCaptureDevice(parameters->CameraId(), &device)) {
+    LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
+    return;
+  }
+  rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, "320");
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, "240");
-  media_stream_=factory->CreateLocalMediaStream("mediastream", capturer, &media_constraints_);
+  media_stream_=factory->CreateLocalMediaStream("mediastream", capturer.get(), &media_constraints_);
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream, std::string& from)

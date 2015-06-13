@@ -9,7 +9,6 @@
 
 namespace woogeen {
 class LocalCameraStreamParameters final {
-  friend class LocalCameraStream;
 
   public:
     LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
@@ -17,10 +16,17 @@ class LocalCameraStreamParameters final {
     void StreamName(std::string& stream_name);
     void Resolution(int width, int height);
     void Fps(int fps);
+    std::string CameraId() {return camera_id_;}
+    std::string StreamName() {return stream_name_;}
+    int ResolutionWidth() {return resolution_width_;}
+    int ResolutionHeight() {return resolution_height_;}
+    int Fps() {return fps_;}
+    bool VideoEnabled() {return video_enabled_;}
+    bool AudioEnabled() {return audio_enabled_;}
 
   private:
-    std::shared_ptr<std::string> camera_id_;
-    std::shared_ptr<std::string> stream_name_;
+    std::string camera_id_;
+    std::string stream_name_;
     int resolution_width_;
     int resolution_height_;
     int fps_;

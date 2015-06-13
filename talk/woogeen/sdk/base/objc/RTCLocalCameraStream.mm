@@ -17,18 +17,10 @@
 
 @implementation RTCLocalCameraStream
 
--(id)init{
+-(instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters{
   self=[super init];
-  NSString *cameraId=nil;
-  for (AVCaptureDevice *captureDevice in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
-    if(captureDevice.position==AVCaptureDevicePositionFront){
-      cameraId=[captureDevice localizedName];
-      break;
-    }
-  }
-  RTCVideoCapturer *capturer=[RTCVideoCapturer capturerWithDeviceName:cameraId];
-  NSAssert(cameraId, @"Unable to get the camera ID");
-  std::shared_ptr<woogeen::LocalCameraStream> local_stream = woogeen::LocalCameraStream::Create([capturer takeNativeCapturer]);
+  std::shared_ptr<woogeen::LocalCameraStreamParameters> local_parameters = std::make_shared<woogeen::LocalCameraStreamParameters>(true, true);
+  std::shared_ptr<woogeen::LocalCameraStream> local_stream = std::make_shared<woogeen::LocalCameraStream>(local_parameters);  // TODO:
   [super setNativeStream: local_stream];
   return self;
 }
