@@ -6,7 +6,9 @@
 #define WOOGEEN_BASE_STREAM_H_
 
 #include <memory>
+#include "base/scoped_ptr.h"
 #include "talk/app/webrtc/mediastreaminterface.h"
+#include "talk/media/base/videocapturer.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
 #include "webrtc/base/logging.h"
@@ -70,6 +72,8 @@ class RemoteScreenStream : public RemoteStream {
 class LocalCameraStream : public LocalStream {
   public:
     explicit LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters);
+  private:
+    rtc::scoped_ptr<cricket::VideoCapturer> capturer_;
 };
 }
 

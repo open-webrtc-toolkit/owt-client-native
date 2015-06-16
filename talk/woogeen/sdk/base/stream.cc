@@ -39,9 +39,10 @@ LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters
     return;
   }
   rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
-  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, "320");
-  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, "240");
+  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, std::to_string(parameters->ResolutionWidth()));
+  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, std::to_string(parameters->ResolutionHeight()));
   media_stream_=factory->CreateLocalMediaStream("mediastream", capturer.get(), &media_constraints_);
+  capturer_.reset(capturer.release());
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream, std::string& from)
