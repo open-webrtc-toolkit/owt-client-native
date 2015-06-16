@@ -30,8 +30,8 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
     token_message->get_map()["host"]=sio::string_message::create(host);
     token_message->get_map()["tokenId"]=sio::string_message::create(token_id);
     token_message->get_map()["signature"]=sio::string_message::create(signature);
-    socket_client_->socket()->emit("token", token_message, [&](sio::message::ptr const& msg){
-      if(msg->get_flag()!=sio::message::flag_array||msg->get_vector().size()<2){
+    socket_client_->socket()->emit("token", token_message, [&](sio::message::list const& msg){
+      if(msg.size()<2){
         std::cout<<"Received unkown message while sending token."<<std::endl;
         if(on_failure!=nullptr){
           // TODO: invoke on_failure
@@ -40,7 +40,7 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       }
       if(on_success==nullptr)
         return;
-      sio::message::ptr message=msg->get_vector()[1];
+      sio::message::ptr message=msg.at(1);  // The second element is room info, please refer to MCU erizoController's implementation for detailed message format.
       Json::Value room_info;
       if(message->get_map()["p2p"]==nullptr)
         room_info["p2p"]=false;
@@ -101,20 +101,13 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     event_name="publish";
   else
     event_name="subscribe";
-  socket_client_->socket()->emit(event_name, message_list, [=](sio::message::ptr const& msg){
+  socket_client_->socket()->emit(event_name, message_list, [=](sio::message::list const& msg){
     LOG(LS_INFO) << "Received ack from server.";
     if(on_success==nullptr){
       LOG(LS_WARNING) << "Does not implement success callback. Make sure it is what you want.";
       return;
     }
-    if(msg->get_flag()!= sio::message::flag_array){
-      LOG(LS_WARNING) << "Received unknown ack after publish stream";
-      if(on_failure){
-        // TODO(jianjun): Trigger on_failure;
-      }
-      return;
-    }
-    sio::message::ptr message = msg->get_vector()[0];
+    sio::message::ptr message = msg.at(0);
     if(message->get_flag()!=sio::message::flag_string){
       LOG(LS_WARNING) << "The first element of publish ack is not a string.";
       if(on_failure){

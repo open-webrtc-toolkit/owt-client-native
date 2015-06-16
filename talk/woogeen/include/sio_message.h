@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <cassert>
+#include <type_traits>
 namespace sio
 {
     using namespace std;
@@ -27,6 +28,8 @@ namespace sio
             flag_array,
             flag_object
         };
+
+		virtual ~message(){};
         
         class list;
 
@@ -75,7 +78,7 @@ namespace sio
 
         virtual vector<ptr>& get_vector()
         {
-           //assert(false);
+            //assert(false);
             static vector<ptr> s_empty_vector;
             s_empty_vector.clear();
             return s_empty_vector;
@@ -121,6 +124,11 @@ namespace sio
         int64_t get_int() const
         {
             return _v;
+        }
+        
+        double get_double() const//add double accessor for integer.
+        {
+            return static_cast<double>(_v);
         }
     };
     
@@ -254,6 +262,13 @@ namespace sio
             m_vector(std::move(rhs.m_vector))
         {
 
+        }
+
+		template <typename T>
+		list(T&& content,
+			typename enable_if<is_same<vector<message::ptr>,typename remove_reference<T>::type>::value>::type* = 0):
+			m_vector(std::forward<T>(content))
+        {
         }
 
         list(message::list const& rhs):
