@@ -10,6 +10,14 @@ namespace woogeen {
 SocketSignalingChannel::SocketSignalingChannel() : socket_client_(new sio::client()) {
 }
 
+void SocketSignalingChannel::AddObserver(std::shared_ptr<ConferenceSignalingChannelObserver> observer){
+  observers_.push_back(observer);
+}
+
+void SocketSignalingChannel::RemoveObserver(std::shared_ptr<ConferenceSignalingChannelObserver> observer){
+  // TODO:
+}
+
 void SocketSignalingChannel::Connect(const std::string &token, std::function<void (Json::Value &room_info)> on_success, std::function<void (std::unique_ptr<ConferenceException>)> on_failure){
   Json::Value jsonToken;
   Json::Reader reader;
@@ -50,23 +58,7 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       std::vector<Json::Value> streams;
       auto stream_messages=message->get_map()["streams"]->get_vector();
       for(auto it=stream_messages.begin();it!=stream_messages.end();++it){
-        Json::Value stream;
-        stream["id"]=(*it)->get_map()["id"]->get_string();
-        stream["from"]=(*it)->get_map()["from"]->get_string();
-        // Very ugly code for video type because MCU sends unconsistent messages :(
-        if((*it)->get_map()["video"]!=nullptr){
-          Json::Value video_json;
-          if((*it)->get_map()["video"]->get_flag()==sio::message::flag_object){
-            auto video = (*it)->get_map()["video"]->get_map();
-            if(video.find("category")!=video.end())
-              video_json["category"]=video["category"]->get_string();
-            if(video.find("device")!=video.end())
-              video_json["device"]=video["device"]->get_string();
-            if(video.find("resolution")!=video.end())
-              video_json["resolution"]=video["resolution"]->get_string();
-          }
-          stream["video"]=video_json;
-        }
+        Json::Value stream = ParseStream(*it);
         streams.push_back(stream);
       }
       room_info["streams"]=rtc::ValueVectorToJsonArray(streams);
@@ -74,6 +66,12 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       on_success(room_info);
     });
   });
+  socket_client_->socket()->on("OnAddStream", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+    Json::Value stream=ParseStream(data);
+    for(auto it=observers_.begin();it!=observers_.end();++it){
+      (*it)->OnStreamAdded(stream);
+    }
+  }));
   socket_client_->connect(scheme.append(host));
 }
 
@@ -127,5 +125,26 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     }
     on_success(ack_json);
   });
+}
+
+Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr stream_message){
+  Json::Value stream;
+  stream["id"]=stream_message->get_map()["id"]->get_string();
+  stream["from"]=stream_message->get_map()["from"]->get_string();
+  // Very ugly code for video type because MCU sends unconsistent messages :(
+  if(stream_message->get_map()["video"]!=nullptr){
+    Json::Value video_json;
+    if(stream_message->get_map()["video"]->get_flag()==sio::message::flag_object){
+      auto video = stream_message->get_map()["video"]->get_map();
+      if(video.find("category")!=video.end())
+        video_json["category"]=video["category"]->get_string();
+      if(video.find("device")!=video.end())
+        video_json["device"]=video["device"]->get_string();
+      if(video.find("resolution")!=video.end())
+        video_json["resolution"]=video["resolution"]->get_string();
+    }
+    stream["video"]=video_json;
+  }
+  return stream;
 }
 }

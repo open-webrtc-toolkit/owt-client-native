@@ -28,7 +28,7 @@ class ConferenceClientObserver {
     // TODO(jianjun): add other events.
 };
 
-class ConferenceClient final {
+class ConferenceClient final : ConferenceSignalingChannelObserver{
   public:
     ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
     // Add an observer for conferenc client.
@@ -42,8 +42,12 @@ class ConferenceClient final {
     // Subscribe a stream from the conference.
     void Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
+  protected:
+    virtual void OnStreamAdded(Json::Value stream);
+
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
+    void TriggerOnStreamAdded(const Json::Value& stream_info);
 
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> publish_pcs_;

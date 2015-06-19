@@ -27,26 +27,9 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
     // Trigger OnStreamAdded for existed remote streams.
     std::vector<Json::Value> streams;
     rtc::JsonArrayToValueVector(room_info["streams"], &streams);
-    for(auto it=streams.begin();it!=streams.end();++it){  // TODO(jianjun): Only trigger OnStreamAdded for mixed stream for testing.
+    for(auto it=streams.begin();it!=streams.end();++it){
       LOG(LS_INFO) << "Find streams in the conference.";
-      std::string id;
-      rtc::GetStringFromJsonObject((*it), "id", &id);
-      Json::Value video=(*it)["video"];
-      std::string category;
-      std::string remote_id;
-      rtc::GetStringFromJsonObject((*it), "from", &remote_id);
-      if(!rtc::GetStringFromJsonObject(video, "category", &category)||category!="mix"){
-        auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
-        for (auto its=observers_.begin();its!=observers_.end();++its){
-          (*its)->OnStreamAdded(remote_stream);
-        }
-      }
-      else {
-        auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(id, remote_id);
-        for (auto its=observers_.begin();its!=observers_.end();++its){
-          (*its)->OnStreamAdded(remote_stream);
-        }
-      }
+      TriggerOnStreamAdded(*it);
     }
   }, on_failure);
 }
@@ -78,6 +61,10 @@ void ConferenceClient::Subscribe(std::shared_ptr<RemoteStream> stream, std::func
   pcc->Subscribe(stream, on_success, on_failure);
 }
 
+void ConferenceClient::OnStreamAdded(Json::Value stream){
+  TriggerOnStreamAdded(stream);
+}
+
 bool ConferenceClient::CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure) {
   if(pointer)
     return true;
@@ -88,4 +75,24 @@ bool ConferenceClient::CheckNullPointer(uintptr_t pointer, std::function<void(st
   return false;
 }
 
+void ConferenceClient::TriggerOnStreamAdded(const Json::Value& stream_info){
+  std::string id;
+  rtc::GetStringFromJsonObject(stream_info, "id", &id);
+  Json::Value video=stream_info["video"];
+  std::string category;
+  std::string remote_id;
+  rtc::GetStringFromJsonObject(stream_info, "from", &remote_id);
+  if(!rtc::GetStringFromJsonObject(video, "category", &category)||category!="mix"){
+    auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
+    for (auto its=observers_.begin();its!=observers_.end();++its){
+      (*its)->OnStreamAdded(remote_stream);
+    }
+  }
+  else {
+    auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(id, remote_id);
+    for (auto its=observers_.begin();its!=observers_.end();++its){
+      (*its)->OnStreamAdded(remote_stream);
+    }
+  }
+}
 }
