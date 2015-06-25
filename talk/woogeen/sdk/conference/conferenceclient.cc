@@ -57,7 +57,7 @@ void ConferenceClient::Subscribe(std::shared_ptr<RemoteStream> stream, std::func
   }
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(signaling_channel_));
   auto pc_pair = std::make_pair(stream->Id(), pcc);
-  publish_pcs_.insert(pc_pair);
+  subscribe_pcs_.insert(pc_pair);
   pcc->Subscribe(stream, on_success, on_failure);
 }
 
@@ -79,8 +79,11 @@ void ConferenceClient::Unpublish(std::shared_ptr<LocalStream> stream, std::funct
     }
   }
   else{
-    pcc_it->second->Unpublish(stream, on_success, on_failure);
-    //publish_pcs_.erase(pcc_it);
+    pcc_it->second->Unpublish(stream, [=](){
+      publish_pcs_.erase(pcc_it);
+      if(on_success!=nullptr)
+        on_success();
+    }, on_failure);
   }
 }
 
@@ -89,6 +92,7 @@ void ConferenceClient::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::fu
     LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
   }
+  LOG(LS_INFO) << "About to unsubscribe stream "<<stream->Id();
   auto pcc_it=subscribe_pcs_.find(stream->Id());
   if(pcc_it==subscribe_pcs_.end()){
     LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
@@ -97,8 +101,11 @@ void ConferenceClient::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::fu
       on_failure(std::move(e));
     }
   } else {
-    pcc_it->second->Unsubscribe(stream, on_success, on_failure);
-    //publish_pcs_.erase(pcc_it);
+    pcc_it->second->Unsubscribe(stream, [=](){
+      subscribe_pcs_.erase(pcc_it);
+      if(on_success!=nullptr)
+        on_success();
+    }, on_failure);
   }
 }
 

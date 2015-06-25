@@ -269,6 +269,7 @@ void ConferencePeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> str
       std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream to be unpublished."));
       on_failure(std::move(e));
     }
+    return;
   }
   signaling_channel_->SendStreamEvent("unpublish", stream->Id(), on_success, on_failure);
 }
@@ -278,12 +279,13 @@ void ConferencePeerConnectionChannel::Unsubscribe(std::shared_ptr<RemoteStream> 
     LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
   }
-  if(published_stream_==nullptr||stream->MediaStream()->label()!=published_stream_->Id()){
+  if(subscribed_stream_==nullptr||stream->Id()!=subscribed_stream_->Id()){
     LOG(LS_ERROR) << "Stream ID doesn't match subscribed stream.";
     if(on_failure!=nullptr){
       std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream to be unsubscribed."));
       on_failure(std::move(e));
     }
+    return;
   }
   signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(), on_success, on_failure);
 }

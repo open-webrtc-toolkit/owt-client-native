@@ -60,4 +60,10 @@
   _nativeConferenceClient->Unpublish(nativeStream, nullptr, nullptr);
 }
 
+-(void)unsubscribe:(RTCRemoteStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::RemoteStream> nativeStream(std::static_pointer_cast<woogeen::RemoteStream>(nativeStreamRefPtr));
+  _nativeConferenceClient->Unsubscribe(nativeStream, nullptr, nullptr);
+}
+
 @end
