@@ -66,6 +66,10 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(std::shared_ptr
   CHECK(signaling_channel_);
 }
 
+ConferencePeerConnectionChannel::~ConferencePeerConnectionChannel(){
+  LOG(LS_INFO)<< "Deconstruct conference peer connection channel";
+}
+
 void ConferencePeerConnectionChannel::ChangeSessionState(SessionState state) {
   LOG(LS_INFO) << "PeerConnectionChannel change session state : " << state;
   session_state_ = state;
@@ -157,7 +161,7 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
     }
     std::string sdp_message=rtc::JsonValueToString(sdp_info);
     LOG(LS_INFO) << "Send sdp from pc channel.";
-    signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack) {
+    signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack, std::string& stream_id) {
       std::string sdp;
       std::string type;
       if(!rtc::GetStringFromJsonObject(ack, kSessionDescriptionSdpKey, &sdp)||!(rtc::GetStringFromJsonObject(ack, kSessionDescriptionMessageTypeKey, &type))) {
@@ -166,6 +170,8 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
       }
       SetRemoteDescription(type, sdp);
       LOG(LS_INFO) << "Set remote sdp";
+      if(published_stream_!=nullptr)
+        published_stream_->Id(stream_id);
     }, nullptr);
   }
 }
@@ -245,7 +251,7 @@ void ConferencePeerConnectionChannel::Subscribe(std::shared_ptr<RemoteStream> st
   LOG(LS_INFO) << "Subscribe a remote stream.";
   subscribed_stream_=stream;
   if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
-    LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
   subscribe_success_callback_=on_success;
@@ -254,9 +260,32 @@ void ConferencePeerConnectionChannel::Subscribe(std::shared_ptr<RemoteStream> st
 
 void ConferencePeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
-    LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
+  if(published_stream_==nullptr||stream->Id()!=published_stream_->Id()){
+    LOG(LS_ERROR) << "Stream ID doesn't match published stream.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream to be unpublished."));
+      on_failure(std::move(e));
+    }
+  }
+  signaling_channel_->SendStreamEvent("unpublish", stream->Id(), on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
+    LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    return;
+  }
+  if(published_stream_==nullptr||stream->MediaStream()->label()!=published_stream_->Id()){
+    LOG(LS_ERROR) << "Stream ID doesn't match subscribed stream.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream to be unsubscribed."));
+      on_failure(std::move(e));
+    }
+  }
+  signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(), on_success, on_failure);
 }
 
 void ConferencePeerConnectionChannel::Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {

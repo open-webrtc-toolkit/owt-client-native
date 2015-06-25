@@ -14,6 +14,12 @@ PeerConnectionChannel::PeerConnectionChannel()
       pc_thread_(nullptr) {
 }
 
+PeerConnectionChannel::~PeerConnectionChannel(){
+  if(peer_connection_!=nullptr){
+    peer_connection_->Close();
+  }
+}
+
 bool PeerConnectionChannel::InitializePeerConnection(){
   if(factory_.get()==nullptr)
     factory_=PeerConnectionDependencyFactory::Get();

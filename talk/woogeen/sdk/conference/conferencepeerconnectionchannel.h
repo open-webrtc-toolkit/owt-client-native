@@ -43,16 +43,19 @@ class ConferencePeerConnectionChannelObserver {
 class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   public:
     explicit ConferencePeerConnectionChannel(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+    ~ConferencePeerConnectionChannel();
     // Add a ConferencePeerConnectionChannel observer so it will be notified when this object have some events.
     void AddObserver(ConferencePeerConnectionChannelObserver* observer);
     // Remove a ConferencePeerConnectionChannel observer. If the observer doesn't exist, it will do nothing.
     void RemoveObserver(ConferencePeerConnectionChannelObserver *observer);
-    // Publish a local stream to remote user.
+    // Publish a local stream to the conference.
     void Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-    // Unpublish a local stream to remote user.
+    // Unpublish a local stream to the conference.
     void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Subscribe a stream from the conference.
     void Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Unsubscribe a remote stream from the conference.
+    void Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Stop current WebRTC session.
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 

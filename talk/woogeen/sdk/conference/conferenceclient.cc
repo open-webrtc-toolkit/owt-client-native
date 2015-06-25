@@ -61,6 +61,51 @@ void ConferenceClient::Subscribe(std::shared_ptr<RemoteStream> stream, std::func
   pcc->Subscribe(stream, on_success, on_failure);
 }
 
+void ConferenceClient::Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
+    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
+    return;
+  }
+  if(!CheckNullPointer((uintptr_t)stream->MediaStream().get(), on_failure)){
+    LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
+    return;
+  }
+  auto pcc_it=publish_pcs_.find(stream->MediaStream()->label());
+  if (pcc_it==publish_pcs_.end()){
+    LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream."));
+      on_failure(std::move(e));
+    }
+  }
+  else{
+    pcc_it->second->Unpublish(stream, on_success, on_failure);
+    //publish_pcs_.erase(pcc_it);
+  }
+}
+
+void ConferenceClient::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  if(!CheckNullPointer((uintptr_t)stream.get(), on_failure)){
+    LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    return;
+  }
+  auto pcc_it=subscribe_pcs_.find(stream->Id());
+  if(pcc_it==subscribe_pcs_.end()){
+    LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid stream."));
+      on_failure(std::move(e));
+    }
+  } else {
+    pcc_it->second->Unsubscribe(stream, on_success, on_failure);
+    //publish_pcs_.erase(pcc_it);
+  }
+}
+
+void ConferenceClient::Leave(){
+  // TODO: leave
+}
+
 void ConferenceClient::OnStreamAdded(Json::Value stream){
   TriggerOnStreamAdded(stream);
 }

@@ -41,6 +41,12 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     void Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Subscribe a stream from the conference.
     void Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Unpublish a stream to the conference.
+    void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Unsubscribe a stream from the conference.
+    void Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Leave this conference.
+    void Leave();
 
   protected:
     virtual void OnStreamAdded(Json::Value stream);

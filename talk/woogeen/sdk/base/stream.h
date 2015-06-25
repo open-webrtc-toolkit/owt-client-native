@@ -19,6 +19,7 @@ using webrtc::MediaStreamInterface;
 using rtc::scoped_refptr;
 
 class Stream {
+  friend class ConferencePeerConnectionChannel;
   public:
     scoped_refptr<MediaStreamInterface> MediaStream();
     std::string& Id();
@@ -27,6 +28,7 @@ class Stream {
     Stream(std::string& id);
     Stream();
     virtual ~Stream(){};
+    void Id(std::string& id);
     void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
     scoped_refptr<MediaStreamInterface> media_stream_;
 
@@ -72,6 +74,7 @@ class RemoteScreenStream : public RemoteStream {
 class LocalCameraStream : public LocalStream {
   public:
     explicit LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters);
+    ~LocalCameraStream();
   private:
     rtc::scoped_ptr<cricket::VideoCapturer> capturer_;
 };

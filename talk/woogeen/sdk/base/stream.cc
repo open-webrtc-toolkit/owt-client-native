@@ -29,6 +29,14 @@ std::string& Stream::Id(){
   return id_;
 }
 
+void Stream::Id(std::string& id){
+  id_=id;
+}
+
+LocalCameraStream::~LocalCameraStream(){
+  LOG(LS_INFO) << "Deconstruct LocalCameraStream.";
+}
+
 LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
   scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
   rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(cricket::DeviceManagerFactory::Create());

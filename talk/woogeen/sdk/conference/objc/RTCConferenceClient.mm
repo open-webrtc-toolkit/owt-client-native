@@ -41,17 +41,23 @@
 
 -(void)publish:(RTCLocalStream *)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   auto nativeStreamRefPtr=[stream nativeStream];
-  std::shared_ptr<woogeen::LocalStream> nativeStream(static_cast<woogeen::LocalStream*>(nativeStreamRefPtr.get()));
+  std::shared_ptr<woogeen::LocalStream> nativeStream(std::static_pointer_cast<woogeen::LocalStream>(nativeStreamRefPtr));
   _nativeConferenceClient->Publish(nativeStream, nullptr, nullptr);
 }
 
 -(void)subscribe:(RTCRemoteStream*)stream onSuccess:(void (^)(RTCRemoteStream*))onSuccess onFailure:(void (^)(NSError *))onFailure{
   auto nativeStreamRefPtr=[stream nativeStream];
-  std::shared_ptr<woogeen::RemoteStream> nativeStream(static_cast<woogeen::RemoteStream*>(nativeStreamRefPtr.get()));
+  std::shared_ptr<woogeen::RemoteStream> nativeStream(std::static_pointer_cast<woogeen::RemoteStream>(nativeStreamRefPtr));
   _nativeConferenceClient->Subscribe(nativeStream, [=](std::shared_ptr<woogeen::RemoteStream> stream){
     RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeStream: stream];
     onSuccess(remote_stream);
   }, nullptr);
+}
+
+-(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::LocalStream> nativeStream(std::static_pointer_cast<woogeen::LocalStream>(nativeStreamRefPtr));
+  _nativeConferenceClient->Unpublish(nativeStream, nullptr, nullptr);
 }
 
 @end

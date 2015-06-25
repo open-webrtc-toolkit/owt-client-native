@@ -75,7 +75,11 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
   socket_client_->connect(scheme.append(host));
 }
 
-void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+void SocketSignalingChannel::Disconnect() {
+  socket_client_->close();
+}
+
+void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack, std::string& stream_id)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Send publish event.";
   std::string state;
   std::string audio;
@@ -113,7 +117,6 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
       }
       return;
     }
-    LOG(LS_INFO) << "Answer: "<< message->get_string();
     Json::Reader reader;
     Json::Value ack_json;
     if(!reader.parse(message->get_string(), ack_json)){
@@ -123,7 +126,40 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
       }
       return;
     }
-    on_success(ack_json);
+    std::string sid=stream_id;
+    if(event_name=="publish"){
+      sio::message::ptr id = msg.at(1);
+      if(id->get_flag()!=sio::message::flag_string){
+        LOG(LS_WARNING) << "The second element of publish ack is not a string. (Expected to be stream ID)";
+        return;
+      }
+      sid = id->get_string();
+    }
+    on_success(ack_json, sid);
+  });
+}
+
+void SocketSignalingChannel::SendStreamEvent(const std::string& event, const std::string& stream_id, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)>on_failure){
+  sio::message::ptr message = sio::string_message::create(stream_id);
+  socket_client_->socket()->emit(event, message, [=](sio::message::list const& msg){
+    sio::message::ptr ack = msg.at(0);
+    if(ack->get_flag()!=sio::message::flag_string){
+      LOG(LS_WARNING) << "The first element of stream event ack is not a string.";
+      if(on_failure){
+        // TODO(jianjun): Trigger on_failure;
+      }
+      return;
+    }
+    if(ack->get_string()=="success"){
+      if(on_success!=nullptr)
+        on_success();
+    }
+    else {
+      LOG(LS_WARNING) << "Send stream event received negative ack.";
+      if(on_failure!=nullptr){
+        // TODO(jianjun): Trigger on_failure;
+      }
+    }
   });
 }
 
