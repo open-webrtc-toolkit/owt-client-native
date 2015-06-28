@@ -8,10 +8,16 @@
 #import "RTCLocalStream.h"
 #import "RTCRemoteStream.h"
 #import "RTCConferenceClientObserver.h"
+#import "RTCConferenceClientConfiguration.h"
 
 // An asynchronous class for app to communicate with a conference in MCU
 @interface RTCConferenceClient : NSObject
 
+/**
+  Initialize a RTCConferenceClient with configuration
+  @param config Configuration for creating the RTCConferenceClient.
+*/
+-(instancetype)initWithConfiguration:(RTCConferenceClientConfiguration*)config;
 /**
   Connect to the specified room to join a conference.
   @param token Includes the room info which is encrypted.

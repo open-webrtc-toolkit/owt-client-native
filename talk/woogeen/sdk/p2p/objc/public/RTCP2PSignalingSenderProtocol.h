@@ -5,7 +5,7 @@
 #import <Foundation/Foundation.h>
 
 // RTCSignalingSenderInterface is an ObjectiveC wrapper for SignalingSenderInterface.
-@protocol RTCSignalingSenderProtocol <NSObject>
+@protocol RTCP2PSignalingSenderProtocol <NSObject>
 
 - (void)sendSignalingMessage:(NSString *)message to:(NSString*)targetId onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 

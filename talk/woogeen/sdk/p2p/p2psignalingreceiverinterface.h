@@ -9,7 +9,7 @@ namespace woogeen {
 
 // Interface for signaling receiver.
 // The receiver may be a peerconnection instance which can deal with the message received.
-class SignalingReceiverInterface {
+class P2PSignalingReceiverInterface {
   public:
     // Received signaling message.
     virtual void OnIncomingSignalingMessage(const std::string& message) = 0;

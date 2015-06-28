@@ -8,10 +8,11 @@
 
 namespace woogeen {
 
-PeerConnectionChannel::PeerConnectionChannel()
+PeerConnectionChannel::PeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration)
     : peer_connection_(nullptr),
       factory_(nullptr),
-      pc_thread_(nullptr) {
+      pc_thread_(nullptr),
+      configuration_(configuration) {
 }
 
 PeerConnectionChannel::~PeerConnectionChannel(){
@@ -23,11 +24,10 @@ PeerConnectionChannel::~PeerConnectionChannel(){
 bool PeerConnectionChannel::InitializePeerConnection(){
   if(factory_.get()==nullptr)
     factory_=PeerConnectionDependencyFactory::Get();
-  webrtc::PeerConnectionInterface::RTCConfiguration config;
   media_constraints_.AddOptional(MediaConstraintsInterface::kEnableDtlsSrtp, true);
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
   media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
-  peer_connection_=(factory_->CreatePeerConnection(config, &media_constraints_, this)).get();
+  peer_connection_=(factory_->CreatePeerConnection(configuration_, &media_constraints_, this)).get();
   if(!peer_connection_.get()) {
     LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
     return false;

@@ -7,8 +7,9 @@
 
 namespace woogeen {
 
-ConferenceClient::ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
-    : signaling_channel_(signaling_channel) {
+ConferenceClient::ConferenceClient(ConferenceClientConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
+    : configuration_(configuration),
+      signaling_channel_(signaling_channel){
 }
 
 void ConferenceClient::AddObserver(std::shared_ptr<ConferenceClientObserver> observer) {
@@ -43,7 +44,9 @@ void ConferenceClient::Publish(std::shared_ptr<LocalStream> stream, std::functio
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
-  std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(signaling_channel_));
+  webrtc::PeerConnectionInterface::RTCConfiguration config;
+  config.servers=configuration_.ice_servers;
+  std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(config,signaling_channel_));
   auto pc_pair = std::make_pair(stream->MediaStream()->label(), pcc);
   publish_pcs_.insert(pc_pair);
   pcc->Publish(stream, on_success, on_failure);
@@ -55,7 +58,9 @@ void ConferenceClient::Subscribe(std::shared_ptr<RemoteStream> stream, std::func
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
-  std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(signaling_channel_));
+  webrtc::PeerConnectionInterface::RTCConfiguration config;
+  config.servers=configuration_.ice_servers;
+  std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(config, signaling_channel_));
   auto pc_pair = std::make_pair(stream->Id(), pcc);
   subscribe_pcs_.insert(pc_pair);
   pcc->Subscribe(stream, on_success, on_failure);

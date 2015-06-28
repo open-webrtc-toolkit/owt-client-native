@@ -12,7 +12,7 @@ namespace woogeen {
 
 // Interface for signaling sender.
 // The sender may be a PeerClient/ConferenceClient instance which can send out signaling messages created from peerconnection.
-class SignalingSenderInterface {
+class P2PSignalingSenderInterface {
   public:
     // Send a signaling message.
     virtual void SendSignalingMessage(const std::string& message, const std::string& remote_id, std::function<void()> success, std::function<void(int)> failure) = 0;

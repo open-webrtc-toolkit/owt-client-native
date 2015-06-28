@@ -54,13 +54,14 @@ const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 const string kIceCandidateSdpNameKey = "candidate";
 
-ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
-    :signaling_channel_(signaling_channel),
+ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
+   : PeerConnectionChannel(configuration),
+     signaling_channel_(signaling_channel),
      session_id_(kSessionIdBase),
      message_seq_(kMessageSeqBase),
      session_state_(kSessionStateReady),
      negotiation_state_(kNegotiationStateNone),
-     callback_thread_(new PeerConnectionThread) {
+     callback_thread_(new PeerConnectionThread){
   callback_thread_->Start();
   InitializePeerConnection();
   CHECK(signaling_channel_);

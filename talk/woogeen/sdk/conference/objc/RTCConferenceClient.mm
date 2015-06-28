@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #import <string>
+#import "talk/app/webrtc/objc/RTCICEServer+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClient.h"
 #import "talk/woogeen/sdk/conference/socketsignalingchannel.h"
 #import "talk/woogeen/sdk/conference/conferenceclient.h"
@@ -17,10 +18,16 @@
   std::unique_ptr<woogeen::ConferenceClient> _nativeConferenceClient;
 }
 
--(instancetype)init{
+-(instancetype)initWithConfiguration:(RTCConferenceClientConfiguration*)config {
   self=[super init];
-  std::unique_ptr<woogeen::ConferenceSignalingChannelInterface> socketSignalingChannel(new woogeen::SocketSignalingChannel());
-  std::unique_ptr<woogeen::ConferenceClient> nativeConferenceClient(new woogeen::ConferenceClient(std::move(socketSignalingChannel)));
+  woogeen::ConferenceClientConfiguration* nativeConfig = new woogeen::ConferenceClientConfiguration();
+  webrtc::PeerConnectionInterface::IceServers iceServers;
+  for(RTCICEServer* server in config.ICEServers){
+    iceServers.push_back(server.iceServer);
+  }
+  nativeConfig->ice_servers=iceServers;
+  std::shared_ptr<woogeen::ConferenceSignalingChannelInterface> socketSignalingChannel(new woogeen::SocketSignalingChannel());
+  std::unique_ptr<woogeen::ConferenceClient> nativeConferenceClient(new woogeen::ConferenceClient(*nativeConfig, socketSignalingChannel));
   _nativeConferenceClient=std::move(nativeConferenceClient);
   return self;
 }

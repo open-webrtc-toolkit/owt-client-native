@@ -4,9 +4,10 @@
 
 #import "Foundation/Foundation.h"
 #import "RTCP2PPeerConnectionChannelObserver.h"
+#import "talk/app/webrtc/objc/RTCICEServer+Internal.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
-#import "talk/woogeen/sdk/p2p/objc/RTCSignalingSenderObjcImpl.h"
+#import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
@@ -17,13 +18,21 @@
   NSString* _remoteId;
 }
 
--(instancetype)initWithLocalId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender{
+-(instancetype)initWithICEServers:(NSArray*)iceServers localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender{
   self=[super init];
-  woogeen::SignalingSenderInterface* sender = new woogeen::RTCSignalingSenderObjcImpl(signalingSender);
+  woogeen::P2PSignalingSenderInterface* sender = new woogeen::RTCP2PSignalingSenderObjcImpl(signalingSender);
   _remoteId=remoteId;
   const std::string nativeRemoteId=[remoteId UTF8String];
   const std::string nativeLocalId=[localId UTF8String];
-  _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeLocalId, nativeRemoteId, sender);
+  webrtc::PeerConnectionInterface::IceServers nativeIceServers;
+  for (RTCICEServer* server in iceServers) {
+    nativeIceServers.push_back(server.iceServer);
+  }
+  NSLog(@"Init P2P peerconnection ice size: %lu", nativeIceServers.size());
+  LOG(LS_INFO) << "Init P2P peerconnectionchannel ice size: "<<nativeIceServers.size();
+  webrtc::PeerConnectionInterface::RTCConfiguration* config = new webrtc::PeerConnectionInterface::RTCConfiguration();
+  config->servers=nativeIceServers;
+  _nativeChannel = new woogeen::P2PPeerConnectionChannel(*config, nativeLocalId, nativeRemoteId, sender);
   return self;
 }
 

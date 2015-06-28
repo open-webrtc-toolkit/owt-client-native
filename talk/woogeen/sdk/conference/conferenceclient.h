@@ -15,6 +15,10 @@
 
 namespace woogeen {
 
+struct ConferenceClientConfiguration {
+  std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
+};
+
 class ConferenceClientObserver {
   public:
     // Triggered when a new stream is added.
@@ -30,7 +34,7 @@ class ConferenceClientObserver {
 
 class ConferenceClient final : ConferenceSignalingChannelObserver{
   public:
-    ConferenceClient(std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+    ConferenceClient(ConferenceClientConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
     // Add an observer for conferenc client.
     void AddObserver(std::shared_ptr<ConferenceClientObserver> observer);
     // Remove an object from conference client.
@@ -55,6 +59,7 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     void TriggerOnStreamAdded(const Json::Value& stream_info);
 
+    ConferenceClientConfiguration& configuration_;
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> publish_pcs_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> subscribe_pcs_;

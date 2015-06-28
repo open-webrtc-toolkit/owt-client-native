@@ -27,7 +27,7 @@ struct SetSessionDescriptionMessage : public rtc::MessageData {
 class PeerConnectionChannel : public rtc::MessageHandler,
                               public webrtc::PeerConnectionObserver {
   public:
-    PeerConnectionChannel();
+    PeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration);
 
   protected:
     virtual ~PeerConnectionChannel();
@@ -77,6 +77,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
     woogeen::MediaConstraintsImpl media_constraints_;
+    webrtc::PeerConnectionInterface::RTCConfiguration& configuration_;
 };
 
 }

@@ -13,10 +13,10 @@
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
-#include "talk/woogeen/sdk/base/signalingsenderinterface.h"
-#include "talk/woogeen/sdk/base/signalingreceiverinterface.h"
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/p2p/p2pexception.h"
+#include "talk/woogeen/sdk/p2p/p2psignalingsenderinterface.h"
+#include "talk/woogeen/sdk/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/messagehandler.h"
 
@@ -43,15 +43,15 @@ class P2PPeerConnectionChannelObserver {
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified remote client.
-class P2PPeerConnectionChannel : public SignalingReceiverInterface,
+class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                  public PeerConnectionChannel {
   public:
-    explicit P2PPeerConnectionChannel(const std::string& local_id, const std::string& remote_id, SignalingSenderInterface* sender);
+    explicit P2PPeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender);
     // Add a P2PPeerConnectionChannel observer so it will be notified when this object have some events.
     void AddObserver(P2PPeerConnectionChannelObserver* observer);
     // Remove a P2PPeerConnectionChannel observer. If the observer doesn't exist, it will do nothing.
     void RemoveObserver(P2PPeerConnectionChannelObserver *observer);
-    // Implementation of SignalingReceiverInterface. Handle signaling message received from remote side.
+    // Implementation of P2PSignalingReceiverInterface. Handle signaling message received from remote side.
     void OnIncomingSignalingMessage(const std::string& message) override;
     // Invite a remote client to start a WebRTC session.
     void Invite(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
@@ -118,7 +118,7 @@ class P2PPeerConnectionChannel : public SignalingReceiverInterface,
     // Returns true if |pointer| is not nullptr. Otherwise, return false and execute |on_failure|.
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<P2PException>)>on_failure);
 
-    SignalingSenderInterface* signaling_sender_;
+    P2PSignalingSenderInterface* signaling_sender_;
     std::string local_id_;
     std::string remote_id_;
     SessionState session_state_;

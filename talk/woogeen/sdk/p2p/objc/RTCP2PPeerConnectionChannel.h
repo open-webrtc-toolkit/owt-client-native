@@ -5,13 +5,13 @@
 #import <Foundation/Foundation.h>
 
 #import "RTCLocalStream.h"
-#import "RTCSignalingSenderProtocol.h"
-#import "RTCSignalingReceiverProtocol.h"
+#import "RTCP2PSignalingSenderProtocol.h"
+#import "RTCP2PSignalingReceiverProtocol.h"
 #import "RTCP2PPeerConnectionChannelObserver.h"
 
-@interface RTCP2PPeerConnectionChannel : NSObject<RTCSignalingReceiverProtocol>
+@interface RTCP2PPeerConnectionChannel : NSObject<RTCP2PSignalingReceiverProtocol>
 
--(instancetype)initWithLocalId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCSignalingSenderProtocol>)signalingSender;
+-(instancetype)initWithICEServers:(NSArray*)iceServers localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender;
 -(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)denyWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
