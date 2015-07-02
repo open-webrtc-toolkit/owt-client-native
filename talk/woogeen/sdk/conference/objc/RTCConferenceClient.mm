@@ -5,13 +5,15 @@
 #import <Foundation/Foundation.h>
 #import <string>
 #import "talk/app/webrtc/objc/RTCICEServer+Internal.h"
-#import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClient.h"
-#import "talk/woogeen/sdk/conference/socketsignalingchannel.h"
-#import "talk/woogeen/sdk/conference/conferenceclient.h"
-#import "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
+#import "talk/woogeen/sdk/base/objc/public/RTCErrors.h"
+#import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClient.h"
+#import "talk/woogeen/sdk/conference/objc/public/RTCConferenceErrors.h"
+#import "talk/woogeen/sdk/conference/socketsignalingchannel.h"
+#import "talk/woogeen/sdk/conference/conferenceclient.h"
+#import "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 
 @implementation RTCConferenceClient{
@@ -43,13 +45,29 @@
 
 -(void)join:(NSString *)token onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   const std::string nativeToken=[token UTF8String];
-  _nativeConferenceClient->Join(nativeToken, nullptr, nullptr);
+  _nativeConferenceClient->Join(nativeToken, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
 }
 
 -(void)publish:(RTCLocalStream *)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   auto nativeStreamRefPtr=[stream nativeStream];
   std::shared_ptr<woogeen::LocalStream> nativeStream(std::static_pointer_cast<woogeen::LocalStream>(nativeStreamRefPtr));
-  _nativeConferenceClient->Publish(nativeStream, nullptr, nullptr);
+  _nativeConferenceClient->Publish(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
 }
 
 -(void)subscribe:(RTCRemoteStream*)stream onSuccess:(void (^)(RTCRemoteStream*))onSuccess onFailure:(void (^)(NSError *))onFailure{
@@ -58,19 +76,52 @@
   _nativeConferenceClient->Subscribe(nativeStream, [=](std::shared_ptr<woogeen::RemoteStream> stream){
     RTCRemoteStream* remote_stream = [[RTCRemoteStream alloc]initWithNativeStream: stream];
     onSuccess(remote_stream);
-  }, nullptr);
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
 }
 
 -(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
   auto nativeStreamRefPtr=[stream nativeStream];
   std::shared_ptr<woogeen::LocalStream> nativeStream(std::static_pointer_cast<woogeen::LocalStream>(nativeStreamRefPtr));
-  _nativeConferenceClient->Unpublish(nativeStream, nullptr, nullptr);
+  _nativeConferenceClient->Unpublish(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
 }
 
 -(void)unsubscribe:(RTCRemoteStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
   auto nativeStreamRefPtr=[stream nativeStream];
   std::shared_ptr<woogeen::RemoteStream> nativeStream(std::static_pointer_cast<woogeen::RemoteStream>(nativeStreamRefPtr));
-  _nativeConferenceClient->Unsubscribe(nativeStream, nullptr, nullptr);
+  _nativeConferenceClient->Unsubscribe(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
+-(void)leaveWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
+  _nativeConferenceClient->Leave([=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
 }
 
 @end

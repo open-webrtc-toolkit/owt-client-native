@@ -50,7 +50,7 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     // Unsubscribe a stream from the conference.
     void Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Leave this conference.
-    void Leave();
+    void Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   protected:
     virtual void OnStreamAdded(Json::Value stream);

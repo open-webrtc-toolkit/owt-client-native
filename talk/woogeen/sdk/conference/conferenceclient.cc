@@ -2,6 +2,7 @@
  * Intel License
  */
 
+#include <thread>
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/conferenceclient.h"
 
@@ -23,7 +24,8 @@ void ConferenceClient::RemoveObserver(std::shared_ptr<ConferenceClientObserver> 
 void ConferenceClient::Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   signaling_channel_->Connect(token, [=](Json::Value room_info){
     if(on_success){
-      on_success();
+      std::thread t(on_success);
+      t.detach();
     }
     // Trigger OnStreamAdded for existed remote streams.
     std::vector<Json::Value> streams;
@@ -114,8 +116,8 @@ void ConferenceClient::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::fu
   }
 }
 
-void ConferenceClient::Leave(){
-  // TODO: leave
+void ConferenceClient::Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  signaling_channel_->Disconnect(on_success, on_failure);
 }
 
 void ConferenceClient::OnStreamAdded(Json::Value stream){

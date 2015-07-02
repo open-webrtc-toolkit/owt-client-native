@@ -3,11 +3,16 @@
 //
 
 #include <iostream>
+#include <thread>
 #include "talk/woogeen/sdk/conference/socketsignalingchannel.h"
 #include "webrtc/base/logging.h"
 
 namespace woogeen {
 SocketSignalingChannel::SocketSignalingChannel() : socket_client_(new sio::client()) {
+}
+
+SocketSignalingChannel::~SocketSignalingChannel(){
+  delete socket_client_;
 }
 
 void SocketSignalingChannel::AddObserver(std::shared_ptr<ConferenceSignalingChannelObserver> observer){
@@ -38,11 +43,12 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
     token_message->get_map()["host"]=sio::string_message::create(host);
     token_message->get_map()["tokenId"]=sio::string_message::create(token_id);
     token_message->get_map()["signature"]=sio::string_message::create(signature);
-    socket_client_->socket()->emit("token", token_message, [&](sio::message::list const& msg){
+    socket_client_->socket()->emit("token", token_message, [=](sio::message::list const& msg){
       if(msg.size()<2){
         std::cout<<"Received unkown message while sending token."<<std::endl;
         if(on_failure!=nullptr){
-          // TODO: invoke on_failure
+          std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
+          std::thread t(on_failure, std::move(e));
         }
         return;
       }
@@ -75,8 +81,10 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
   socket_client_->connect(scheme.append(host));
 }
 
-void SocketSignalingChannel::Disconnect() {
+void SocketSignalingChannel::Disconnect(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)>on_failure){
   socket_client_->close();
+  std::thread t(on_success);  // TODO: Check if socket client is connected.
+  t.detach();
 }
 
 void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack, std::string& stream_id)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -113,7 +121,9 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     if(message->get_flag()!=sio::message::flag_string){
       LOG(LS_WARNING) << "The first element of publish ack is not a string.";
       if(on_failure){
-        // TODO(jianjun): Trigger on_failure;
+        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
+        std::thread t(on_failure, std::move(e));
+        t.detach();
       }
       return;
     }
@@ -122,7 +132,9 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     if(!reader.parse(message->get_string(), ack_json)){
       LOG(LS_WARNING) << "Cannot parse answer.";
       if(on_failure){
-        // TODO(jianjun): Trigger on_failure;
+        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
+        std::thread t(on_failure, std::move(e));
+        t.detach();
       }
       return;
     }
@@ -146,18 +158,24 @@ void SocketSignalingChannel::SendStreamEvent(const std::string& event, const std
     if(ack->get_flag()!=sio::message::flag_string){
       LOG(LS_WARNING) << "The first element of stream event ack is not a string.";
       if(on_failure){
-        // TODO(jianjun): Trigger on_failure;
+        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
+        std::thread t(on_failure, std::move(e));
+        t.detach();
       }
       return;
     }
     if(ack->get_string()=="success"){
-      if(on_success!=nullptr)
-        on_success();
+      if(on_success!=nullptr){
+        std::thread t(on_success);
+        t.detach();
+      }
     }
     else {
       LOG(LS_WARNING) << "Send stream event received negative ack.";
       if(on_failure!=nullptr){
-        // TODO(jianjun): Trigger on_failure;
+        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Negative acknowledgement for stream event."));
+        std::thread t(on_failure, std::move(e));
+        t.detach();
       }
     }
   });

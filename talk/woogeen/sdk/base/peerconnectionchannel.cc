@@ -19,6 +19,8 @@ PeerConnectionChannel::~PeerConnectionChannel(){
   if(peer_connection_!=nullptr){
     peer_connection_->Close();
   }
+  if (pc_thread_!=nullptr)
+    delete pc_thread_;
 }
 
 bool PeerConnectionChannel::InitializePeerConnection(){

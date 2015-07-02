@@ -3,6 +3,7 @@
  */
 
 #include <vector>
+#include <thread>
 #include "webrtc/base/logging.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
@@ -432,8 +433,10 @@ void P2PPeerConnectionChannel::Publish(std::shared_ptr<LocalStream> stream, std:
   pending_publish_streams_mutex_.lock();
   pending_publish_streams_.push_back(stream);
   pending_publish_streams_mutex_.unlock();
-  if(on_success)
-    on_success();
+  if(on_success){
+    std::thread t(on_success);
+    t.detach();
+  }
   LOG(LS_INFO) << "Session state: "<<session_state_;
   LOG(LS_INFO) << "Negotiation state: "<<negotiation_state_;
   if(session_state_==SessionState::kSessionStateConnected&&negotiation_state_==NegotiationState::kNegotiationStateNone)
@@ -448,8 +451,10 @@ void P2PPeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, st
   pending_unpublish_streams_mutex_.lock();
   pending_unpublish_streams_.push_back(stream);
   pending_unpublish_streams_mutex_.unlock();
-  if(on_success)
-    on_success();
+  if(on_success){
+    std::thread t(on_success);
+    t.detach();
+  }
   if(session_state_==SessionState::kSessionStateConnected&&negotiation_state_==NegotiationState::kNegotiationStateNone)
     DrainPendingStreams();
 }
@@ -459,9 +464,6 @@ void P2PPeerConnectionChannel::Stop(std::function<void()> on_success, std::funct
   switch(session_state_){
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      LOG(LS_INFO) << "P2PPeerConnectionChannel::Stop close pc.";
-      LOG(LS_INFO) << "pc_thread_ running: " << pc_thread_->RunningForTest();
-      LOG(LS_INFO) << "Post close pc";
       pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
       SendStop(on_success, on_failure);
@@ -475,6 +477,11 @@ void P2PPeerConnectionChannel::Stop(std::function<void()> on_success, std::funct
         std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidState, "Cannot stop a session haven't started."));
         on_failure(std::move(e));
       }
+      return;
+  }
+  if(on_success!=nullptr){
+    std::thread t(on_success);
+    t.detach();
   }
 }
 

@@ -3,6 +3,7 @@
  */
 
 #include <vector>
+#include <thread>
 #include "webrtc/base/logging.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
@@ -133,6 +134,10 @@ void ConferencePeerConnectionChannel::OnRenegotiationNeeded() {
 
 void ConferencePeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::IceConnectionState new_state) {
   LOG(LS_INFO) << "Ice connection state changed: " << new_state;
+  if((new_state==PeerConnectionInterface::kIceConnectionConnected||new_state==PeerConnectionInterface::kIceConnectionCompleted)&&publish_success_callback_!=nullptr){
+    std::thread t(publish_success_callback_);
+    t.detach();
+  }
 }
 
 void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state) {
@@ -243,6 +248,8 @@ void ConferencePeerConnectionChannel::Publish(std::shared_ptr<LocalStream> strea
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
+  publish_success_callback_=on_success;
+  failure_callback_=on_failure;
   rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(stream->MediaStream());
   pc_thread_->Post(this, kMessageTypeAddStream, param);
   CreateOffer();
@@ -256,6 +263,7 @@ void ConferencePeerConnectionChannel::Subscribe(std::shared_ptr<RemoteStream> st
     return;
   }
   subscribe_success_callback_=on_success;
+  failure_callback_=on_failure;
   CreateOffer();
 }
 

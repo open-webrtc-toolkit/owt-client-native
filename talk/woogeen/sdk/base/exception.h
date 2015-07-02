@@ -15,7 +15,7 @@ class Exception {
     Exception();
     Exception(const std::string& message);
 
-    std::string& Message();
+    std::string Message();
 
 
   private:

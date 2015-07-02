@@ -13,4 +13,8 @@ Exception::Exception(const std::string& message)
     : message_(message) {
 }
 
+std::string Exception::Message(){
+  return message_;
+}
+
 }
