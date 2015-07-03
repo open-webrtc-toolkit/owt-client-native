@@ -33,17 +33,16 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
     // Get a PeerConnectionDependencyFactory instance. It doesn't create a new instance. It always return the same instance.
     static PeerConnectionDependencyFactory* Get();
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> CreatePeerConnection(const webrtc::PeerConnectionInterface::RTCConfiguration& config, const webrtc::MediaConstraintsInterface* constraints, webrtc::PeerConnectionObserver* observer);
-    rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(const std::string &label, cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints);
+    rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(const std::string &label);
+    rtc::scoped_refptr<AudioTrackInterface> CreateLocalAudioTrack(const std::string &id);
+    rtc::scoped_refptr<VideoTrackInterface> CreateLocalVideoTrack(const std::string &id, webrtc::VideoSourceInterface* video_source);
+    rtc::scoped_refptr<VideoSourceInterface> CreateVideoSource(cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints);
+
     ~PeerConnectionDependencyFactory();
 
   protected:
     explicit PeerConnectionDependencyFactory();
     virtual const rtc::scoped_refptr<PeerConnectionFactoryInterface>& GetPeerConnectionFactory();
-
-    rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(const std::string &label);
-    rtc::scoped_refptr<AudioTrackInterface> CreateLocalAudioTrack(const std::string &id);
-    rtc::scoped_refptr<VideoTrackInterface> CreateLocalVideoTrack(const std::string &id, webrtc::VideoSourceInterface* video_source);
-    rtc::scoped_refptr<VideoSourceInterface> CreateVideoSource(cricket::VideoCapturer* capturer, const MediaConstraintsInterface* constraints);
 
   private:
     // Create a PeerConnectionDependencyFactory instance.

@@ -38,19 +38,35 @@ LocalCameraStream::~LocalCameraStream(){
 }
 
 LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
-  scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
-  rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(cricket::DeviceManagerFactory::Create());
-  bool initialized = device_manager->Init();
-  cricket::Device device;
-  if (!device_manager->GetVideoCaptureDevice(parameters->CameraId(), &device)) {
-    LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
-    return;
+  if(!parameters->VideoEnabled()&&!parameters->AudioEnabled()){
+    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
-  rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
-  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, std::to_string(parameters->ResolutionWidth()));
-  media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, std::to_string(parameters->ResolutionHeight()));
-  media_stream_=factory->CreateLocalMediaStream("mediastream", capturer.get(), &media_constraints_);
-  capturer_.reset(capturer.release());
+  scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
+  std::string media_stream_label = "MediaStream";
+  scoped_refptr<MediaStreamInterface> stream = factory->CreateLocalMediaStream(media_stream_label);
+  if(parameters->VideoEnabled()){
+    rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(cricket::DeviceManagerFactory::Create());
+    bool initialized = device_manager->Init();
+    cricket::Device device;
+    if (!device_manager->GetVideoCaptureDevice(parameters->CameraId(), &device)) {
+      LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
+      return;
+    }
+    rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
+    media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, std::to_string(parameters->ResolutionWidth()));
+    media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, std::to_string(parameters->ResolutionHeight()));
+    scoped_refptr<VideoSourceInterface> source = factory->CreateVideoSource(capturer.get(), &media_constraints_);
+    std::string video_track_label = "VideoTrack";
+    scoped_refptr<VideoTrackInterface> video_track = factory->CreateLocalVideoTrack(video_track_label, source);
+    stream->AddTrack(video_track);
+    capturer_.reset(capturer.release());
+  }
+  if(parameters->AudioEnabled()){
+    std::string audio_track_label = "AudioTrack";
+    scoped_refptr<AudioTrackInterface> audio_track = factory->CreateLocalAudioTrack(audio_track_label);
+    stream->AddTrack(audio_track);
+  }
+  media_stream_=stream;
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream, std::string& from)
