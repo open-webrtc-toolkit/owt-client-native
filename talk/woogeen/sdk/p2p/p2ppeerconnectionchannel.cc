@@ -77,6 +77,7 @@ void P2PPeerConnectionChannel::Invite(std::function<void()> success, std::functi
 void P2PPeerConnectionChannel::Accept(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if(session_state_!=kSessionStatePending)
     return;
+  InitializePeerConnection();
   SendAcceptance(on_success, on_failure);
   ChangeSessionState(kSessionStateMatched);
 }
@@ -273,6 +274,16 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
     SetSessionDescriptionMessage* msg = new SetSessionDescriptionMessage(observer.get(), desc);
     LOG(LS_INFO) << "Post set remote desc";
     pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
+  } else if (type=="candidates"){
+    string sdp_mid;
+    string candidate;
+    int sdp_mline_index;
+    rtc::GetStringFromJsonObject(message, kIceCandidateSdpMidKey, &sdp_mid);
+    rtc::GetStringFromJsonObject(message, kIceCandidateSdpNameKey, &candidate);
+    rtc::GetIntFromJsonObject(message, kIceCandidateSdpMLineIndexKey, &sdp_mline_index);
+    webrtc::IceCandidateInterface *ice_candidate = webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate);
+    rtc::TypedMessageData<webrtc::IceCandidateInterface*>* param = new rtc::TypedMessageData<webrtc::IceCandidateInterface*>(ice_candidate);
+    pc_thread_->Post(this, kMessageTypeSetRemoteIceCandidate, param);
   }
 }
 

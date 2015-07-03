@@ -49,7 +49,6 @@
 }
 
 -(void)denyWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  // TODO(jianjun):correct nullptr.
   _nativeChannel->Deny([=](){
     if(onSuccess!=nil)
       onSuccess();
@@ -61,6 +60,17 @@
   });
 }
 
+-(void)acceptWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  _nativeChannel->Accept([=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  },[=](std::unique_ptr<woogeen::P2PException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
   NSLog(@"RTCP2PPeerConnectionChannel publish stream.");
   _nativeChannel->Publish(std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]), [=](){

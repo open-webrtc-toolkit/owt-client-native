@@ -57,13 +57,13 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
     case kMessageTypeCreateOffer: {
       rtc::TypedMessageData<scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* param = static_cast<rtc::TypedMessageData<scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(msg->pdata);
       peer_connection_->CreateOffer(param->data(), &media_constraints_);
+      delete param;
       break;
     }
     case kMessageTypeCreateAnswer: {
       rtc::TypedMessageData<scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* param = static_cast<rtc::TypedMessageData<scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(msg->pdata);
-      LOG(LS_INFO) << "About create answer";
       peer_connection_->CreateAnswer(param->data(), nullptr);
-      LOG(LS_INFO) << "Created answer";
+      delete param;
       break;
     }
     case kMessageTypeSetLocalDescription: {
@@ -78,14 +78,22 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       delete param;
       break;
     }
+    case kMessageTypeSetRemoteIceCandidate: {
+      rtc::TypedMessageData<webrtc::IceCandidateInterface*>* param = static_cast<rtc::TypedMessageData<webrtc::IceCandidateInterface*>*>(msg->pdata);
+      peer_connection_->AddIceCandidate(param->data());
+      delete param;
+      break;
+    }
     case kMessageTypeAddStream: {
       rtc::TypedMessageData<MediaStreamInterface*>* param = static_cast<rtc::TypedMessageData<MediaStreamInterface*>*>(msg->pdata);
       peer_connection_->AddStream(param->data());
+      delete param;
       break;
     }
     case kMessageTypeRemoveStream: {
       rtc::TypedMessageData<MediaStreamInterface*>* param = static_cast<rtc::TypedMessageData<MediaStreamInterface*>*>(msg->pdata);
       peer_connection_->RemoveStream(param->data());
+      delete param;
       break;
     }
     default:
