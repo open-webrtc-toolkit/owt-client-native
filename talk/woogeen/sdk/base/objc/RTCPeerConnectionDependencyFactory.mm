@@ -31,8 +31,8 @@ static RTCPeerConnectionDependencyFactory *sharedFactory;
   return sharedFactory;
 }
 
--(RTCMediaStream *)localMediaStreamWithLabel:(NSString*)label capturer:(RTCVideoCapturer *)capturer constraints:(RTCMediaConstraints*)constraints {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream=self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream([label UTF8String], [capturer takeNativeCapturer], constraints.constraints);
+-(RTCMediaStream *)localMediaStreamWithLabel:(NSString*)label {
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream=self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream([label UTF8String]);
   return [[RTCMediaStream alloc] initWithMediaStream:nativeMediaStream];
 }
 

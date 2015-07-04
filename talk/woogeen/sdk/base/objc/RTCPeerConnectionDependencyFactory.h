@@ -10,6 +10,6 @@
 
 + (id)sharedRTCPeerConnectionDependencyFactory;
 
-- (RTCMediaStream *)localMediaStreamWithLabel:(NSString *)label capturer:(RTCVideoCapturer *)capturer constraints:(RTCMediaConstraints*)constraints;
+- (RTCMediaStream *)localMediaStreamWithLabel:(NSString *)label;
 
 @end
