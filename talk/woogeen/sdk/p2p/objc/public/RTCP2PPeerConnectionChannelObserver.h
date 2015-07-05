@@ -11,6 +11,7 @@
 - (void)onInvitedFrom:(NSString*)remoteUserId;
 - (void)onAcceptedFrom:(NSString*)remoteUserId;
 - (void)onDeniedFrom:(NSString*)remoteUserId;
+- (void)onStoppedFrom:(NSString*)remoteUserId;
 - (void)onChatStoppedFrom:(NSString*)remoteUserId;
 - (void)onChatStartedFrom:(NSString*)remoteUserId;
 - (void)onDataReceivedFrom:(NSString*)remoteUserId withData:(NSString*)data;

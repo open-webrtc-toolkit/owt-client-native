@@ -19,12 +19,15 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnInvited(const std::string& remo
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnAccepted(const std::string& remote_id) {
+  [_observer onAcceptedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(const std::string& remote_id) {
+  [_observer onStoppedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(const std::string& remote_id) {
+  [_observer onDeniedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) {
