@@ -138,10 +138,10 @@ void ConferenceClient::TriggerOnStreamAdded(const Json::Value& stream_info){
   std::string id;
   rtc::GetStringFromJsonObject(stream_info, "id", &id);
   Json::Value video=stream_info["video"];
-  std::string category;
+  std::string device;
   std::string remote_id;
   rtc::GetStringFromJsonObject(stream_info, "from", &remote_id);
-  if(!rtc::GetStringFromJsonObject(video, "category", &category)||category!="mix"){
+  if(!rtc::GetStringFromJsonObject(video, "device", &device)||device!="mcu"){
     auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
     for (auto its=observers_.begin();its!=observers_.end();++its){
       (*its)->OnStreamAdded(remote_stream);

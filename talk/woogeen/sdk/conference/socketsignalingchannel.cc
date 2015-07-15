@@ -190,8 +190,6 @@ Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr stream_m
     Json::Value video_json;
     if(stream_message->get_map()["video"]->get_flag()==sio::message::flag_object){
       auto video = stream_message->get_map()["video"]->get_map();
-      if(video.find("category")!=video.end())
-        video_json["category"]=video["category"]->get_string();
       if(video.find("device")!=video.end())
         video_json["device"]=video["device"]->get_string();
       if(video.find("resolution")!=video.end())
