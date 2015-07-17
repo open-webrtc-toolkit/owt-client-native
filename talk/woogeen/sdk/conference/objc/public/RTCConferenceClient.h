@@ -10,50 +10,50 @@
 #import "RTCConferenceClientObserver.h"
 #import "RTCConferenceClientConfiguration.h"
 
-// An asynchronous class for app to communicate with a conference in MCU
+/// An asynchronous class for app to communicate with a conference in MCU
 @interface RTCConferenceClient : NSObject
 
 /**
-  Initialize a RTCConferenceClient with configuration
+  @brief Initialize a RTCConferenceClient with configuration
   @param config Configuration for creating the RTCConferenceClient.
 */
 -(instancetype)initWithConfiguration:(RTCConferenceClientConfiguration*)config;
 /**
-  Connect to the specified room to join a conference.
+  @brief Connect to the specified room to join a conference.
   @param token Includes the room info which is encrypted.
 */
 -(void)join:(NSString*)token onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Publish the stream to the current room.
+  @brief Publish the stream to the current room.
   @param stream The stream to be published.
 */
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Un-publish the stream from the current room.
+  @brief Un-publish the stream from the current room.
   @param stream The stream to be unpublished.
 */
 -(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Subscribe a stream from the current room.
+  @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
   @param onSuccess Success callback with a stream that contains media stream.
 */
 -(void)subscribe:(RTCRemoteStream*)stream onSuccess:(void (^)(RTCRemoteStream*))onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Un-subscribe the stream from the current room.
+  @brief Un-subscribe the stream from the current room.
   @param stream The stream to be unsubscribed.
 */
 -(void)unsubscribe:(RTCRemoteStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Leave current conference.
+  @brief Leave current conference.
 */
 -(void)leaveWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
-  Add an observer for ConferenceClient.
+  @brief Add an observer for ConferenceClient.
 */
 -(void)addObserver:(id<RTCConferenceClientObserver>)observer;
 /**
-  Remove an observer from the ConferenceClient.
+  @brief Remove an observer from the ConferenceClient.
 */
 -(void)removeObserver:(id<RTCConferenceClientObserver>)observer;
 

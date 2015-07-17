@@ -4,7 +4,7 @@
 
 #import "RTCStream.h"
 
-// This class represents a remote stream.
+/// This class represents a remote stream.
 @interface RTCRemoteStream : RTCStream
 
 /**

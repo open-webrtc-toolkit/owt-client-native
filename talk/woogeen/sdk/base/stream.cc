@@ -34,7 +34,7 @@ void Stream::Id(std::string& id){
 }
 
 LocalCameraStream::~LocalCameraStream(){
-  LOG(LS_INFO) << "Deconstruct LocalCameraStream.";
+  LOG(LS_INFO) << "Destory LocalCameraStream.";
 }
 
 LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
