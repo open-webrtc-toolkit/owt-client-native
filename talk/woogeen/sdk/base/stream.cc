@@ -55,6 +55,8 @@ LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters
     rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, std::to_string(parameters->ResolutionWidth()));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, std::to_string(parameters->ResolutionHeight()));
+    media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinWidth, std::to_string(parameters->ResolutionWidth()));
+    media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinHeight, std::to_string(parameters->ResolutionHeight()));
     scoped_refptr<VideoSourceInterface> source = factory->CreateVideoSource(capturer.get(), &media_constraints_);
     std::string video_track_label = "VideoTrack";
     scoped_refptr<VideoTrackInterface> video_track = factory->CreateLocalVideoTrack(video_track_label, source);
