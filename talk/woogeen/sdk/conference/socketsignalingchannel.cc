@@ -72,7 +72,8 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       on_success(room_info);
     });
   });
-  socket_client_->socket()->on("OnAddStream", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on("onAddStream", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+    std::cout<<"Received on add stream."<<std::endl;
     Json::Value stream=ParseStream(data);
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnStreamAdded(stream);
