@@ -93,44 +93,47 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(const std::string& mes
   LOG(LS_INFO)<<"OnIncomingMessage: "<<message;
   ASSERT(!message.empty());
   Json::Reader reader;
-  Json::Value jsonMessage;
-  if(!reader.parse(message, jsonMessage)){
+  Json::Value json_message;
+  if(!reader.parse(message, json_message)){
     LOG(LS_WARNING) << "Cannot parse incoming message.";
     return;
   }
-  std::string messageType;
-  rtc::GetStringFromJsonObject(jsonMessage, kMessageTypeKey, &messageType);
-  if(messageType.empty()){
+  std::string message_type;
+  rtc::GetStringFromJsonObject(json_message, kMessageTypeKey, &message_type);
+  if(message_type.empty()){
     LOG(LS_WARNING) << "Cannot get type from incoming message.";
     return;
   }
-  if(messageType==kChatInvitation){
+  if(message_type==kChatInvitation){
     OnMessageInvitation();
   }
-  else if(messageType==kChatStop){
+  else if(message_type==kChatStop){
     OnMessageStop();
   }
-  else if(messageType==kChatAccept){
+  else if(message_type==kChatAccept){
     OnMessageAcceptance();
   }
-  else if(messageType==kChatSignal){
+  else if(message_type==kChatDeny){
+    OnMessageDeny();
+  }
+  else if(message_type==kChatSignal){
     Json::Value signal;
-    rtc::GetValueFromJsonObject(jsonMessage,kMessageDataKey, &signal);
+    rtc::GetValueFromJsonObject(json_message,kMessageDataKey, &signal);
     OnMessageSignal(signal);
   }
-  else if(messageType==kChatNegotiationAccepted){
+  else if(message_type==kChatNegotiationAccepted){
     OnMessageNegotiationAcceptance();
   }
-  else if(messageType==kChatNegotiationNeeded){
+  else if(message_type==kChatNegotiationNeeded){
     OnMessageNegotiationNeeded();
   }
-  else if(messageType==kStreamType){
+  else if(message_type==kStreamType){
     Json::Value type_info;
-    rtc::GetValueFromJsonObject(jsonMessage, kMessageDataKey, &type_info);
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &type_info);
     OnMessageStreamType(type_info);
   }
   else{
-    LOG(LS_WARNING) << "Received unknown message type : "<<messageType;
+    LOG(LS_WARNING) << "Received unknown message type : "<<message_type;
     return;
   }
 }
