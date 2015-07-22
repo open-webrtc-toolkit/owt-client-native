@@ -206,7 +206,7 @@ void P2PPeerConnectionChannel::OnMessageAcceptance() {
   LOG(LS_INFO) << "Remote user accepted invitation.";
   if(session_state_!=kSessionStateOffered&&session_state_!=kSessionStateMatched)
     return;
-  ChangeSessionState(kSessionStateConnecting);
+  ChangeSessionState(kSessionStateMatched);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnAccepted(remote_id_);
   }
@@ -220,9 +220,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
     case kSessionStateConnected:
       pc_thread_->Send(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
-      for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
-        (*it)->OnStopped(remote_id_);
-      }
       ChangeSessionState(kSessionStateReady);
       break;
     default:
@@ -344,6 +341,11 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::Ic
   switch(new_state){
     case webrtc::PeerConnectionInterface::kIceConnectionConnected:
     case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
+      if(session_state_==kSessionStateMatched){
+        for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
+          (*it)->OnStarted(remote_id_);
+        }
+      }
       ChangeSessionState(kSessionStateConnected);
       CheckWaitedList();
       // reset |last_disconnect_|
@@ -354,6 +356,9 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::Ic
       // TODO(jianjun): Check state after a few seconds.
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
+      for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
+        (*it)->OnStopped(remote_id_);
+      }
       Stop(nullptr, nullptr);
       break;
     default:
@@ -478,9 +483,6 @@ void P2PPeerConnectionChannel::Stop(std::function<void()> on_success, std::funct
       pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
       SendStop(on_success, on_failure);
-      for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); it++){
-        (*it)->OnStopped(remote_id_);
-      }
       ChangeSessionState(kSessionStateReady);
       break;
     default:

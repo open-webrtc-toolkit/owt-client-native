@@ -30,6 +30,8 @@ class P2PPeerConnectionChannelObserver {
     virtual void OnInvited(const std::string& remote_id) = 0;
     // Triggered when remote user accepted the invitation.
     virtual void OnAccepted(const std::string& remote_id) = 0;
+    // Triggered when the WebRTC session is started.
+    virtual void OnStarted(const std::string& remote_id) = 0;
     // Triggered when the WebRTC session is ended.
     virtual void OnStopped(const std::string& remote_id) = 0;
     // Triggered when remote user denied the invitation.

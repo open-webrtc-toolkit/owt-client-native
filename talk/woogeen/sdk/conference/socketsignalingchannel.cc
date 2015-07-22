@@ -49,11 +49,23 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
         if(on_failure!=nullptr){
           std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
           std::thread t(on_failure, std::move(e));
+          t.detach();
         }
         return;
       }
       if(on_success==nullptr)
         return;
+      sio::message::ptr ack=msg.at(0);  // The first element indicates the state.
+      std::string state=ack->get_string();
+      if(state=="error"||state=="timeout"){
+        std::cout<<"Server returns "<<state<<" while joining a conference."<<std::endl;
+        if(on_failure!=nullptr){
+          std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received error message from server."));
+          std::thread t(on_failure, std::move(e));
+          t.detach();
+        }
+        return;
+      }
       sio::message::ptr message=msg.at(1);  // The second element is room info, please refer to MCU erizoController's implementation for detailed message format.
       Json::Value room_info;
       if(message->get_map()["p2p"]==nullptr)
@@ -123,8 +135,7 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
       LOG(LS_WARNING) << "The first element of publish ack is not a string.";
       if(on_failure){
         std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
-        std::thread t(on_failure, std::move(e));
-        t.detach();
+        on_failure(std::move(e));
       }
       return;
     }
@@ -134,8 +145,7 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
       LOG(LS_WARNING) << "Cannot parse answer.";
       if(on_failure){
         std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
-        std::thread t(on_failure, std::move(e));
-        t.detach();
+        on_failure(std::move(e));
       }
       return;
     }

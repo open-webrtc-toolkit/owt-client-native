@@ -19,6 +19,7 @@ class P2PPeerConnectionChannelObserverObjcImpl : public P2PPeerConnectionChannel
     void OnInvited(const std::string& remote_id) override;
     void OnAccepted(const std::string& remote_id) override;
     void OnDenied(const std::string& remote_id) override;
+    void OnStarted(const std::string& remote_id) override;
     void OnStopped(const std::string& remote_id) override;
     void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
     void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) override;

@@ -22,6 +22,10 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnAccepted(const std::string& rem
   [_observer onAcceptedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
+void P2PPeerConnectionChannelObserverObjcImpl::OnStarted(const std::string& remote_id) {
+  [_observer onStartedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
+}
+
 void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(const std::string& remote_id) {
   [_observer onStoppedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
