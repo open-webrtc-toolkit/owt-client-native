@@ -35,6 +35,17 @@ void Stream::Id(std::string& id){
 
 LocalCameraStream::~LocalCameraStream(){
   LOG(LS_INFO) << "Destory LocalCameraStream.";
+  if(media_stream_!=nullptr){
+    // Remove all tracks before dispose stream.
+    auto audio_tracks=media_stream_->GetAudioTracks();
+    for(auto it=audio_tracks.begin();it!=audio_tracks.end();++it){
+      media_stream_->RemoveTrack(*it);
+    }
+    auto video_tracks=media_stream_->GetVideoTracks();
+    for(auto it=video_tracks.begin();it!=video_tracks.end();++it){
+      media_stream_->RemoveTrack(*it);
+    }
+  }
 }
 
 LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters) {
@@ -53,15 +64,15 @@ LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters
       return;
     }
     rtc::scoped_ptr<cricket::VideoCapturer> capturer(device_manager->CreateVideoCapturer(device));
+    cricket::VideoCapturer* capturer_ptr=capturer.release();
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, std::to_string(parameters->ResolutionWidth()));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, std::to_string(parameters->ResolutionHeight()));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinWidth, std::to_string(parameters->ResolutionWidth()));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinHeight, std::to_string(parameters->ResolutionHeight()));
-    scoped_refptr<VideoSourceInterface> source = factory->CreateVideoSource(capturer.get(), &media_constraints_);
+    scoped_refptr<VideoSourceInterface> source = factory->CreateVideoSource(capturer_ptr, &media_constraints_);
     std::string video_track_label = "VideoTrack";
     scoped_refptr<VideoTrackInterface> video_track = factory->CreateLocalVideoTrack(video_track_label, source);
     stream->AddTrack(video_track);
-    capturer_.reset(capturer.release());
   }
   if(parameters->AudioEnabled()){
     std::string audio_track_label = "AudioTrack";

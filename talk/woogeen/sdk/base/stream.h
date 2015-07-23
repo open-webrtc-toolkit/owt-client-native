@@ -75,8 +75,6 @@ class LocalCameraStream : public LocalStream {
   public:
     explicit LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters> parameters);
     ~LocalCameraStream();
-  private:
-    rtc::scoped_ptr<cricket::VideoCapturer> capturer_;
 };
 }
 

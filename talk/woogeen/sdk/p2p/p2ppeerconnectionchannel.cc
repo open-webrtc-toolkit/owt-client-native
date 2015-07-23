@@ -68,6 +68,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(webrtc::PeerConnectionInterfa
 }
 
 void P2PPeerConnectionChannel::Invite(std::function<void()> success, std::function<void(std::unique_ptr<P2PException>)> failure) {
+  SendStop(nullptr, nullptr);  // Just try to clean up remote side. No callback is needed.
   Json::Value json;
   json[kMessageTypeKey]=kChatInvitation;
   SendSignalingMessage(json, success, failure);
@@ -182,7 +183,12 @@ void P2PPeerConnectionChannel::SendNegotiationAccepted(){
 void P2PPeerConnectionChannel::SendSignalingMessage(const Json::Value& data, std::function<void()> success, std::function<void(std::unique_ptr<P2PException>)> failure) {
   CHECK(signaling_sender_);
   std::string jsonString=rtc::JsonValueToString(data);
-  signaling_sender_->SendSignalingMessage(jsonString, remote_id_, success, nullptr);  // TODO: handle failure
+  signaling_sender_->SendSignalingMessage(jsonString, remote_id_, success, [=](int){
+    if(failure==nullptr)
+      return;
+    std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidArgument, "Send signaling message failed."));
+    failure(std::move(e));
+  });
 }
 
 void P2PPeerConnectionChannel::OnMessageInvitation() {
