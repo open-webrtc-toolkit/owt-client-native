@@ -52,10 +52,12 @@
   @brief Add an observer for ConferenceClient.
 */
 -(void)addObserver:(id<RTCConferenceClientObserver>)observer;
+/// @cond
 /**
   @brief Remove an observer from the ConferenceClient.
 */
 -(void)removeObserver:(id<RTCConferenceClientObserver>)observer;
+/// @endcond
 
 @end
 
