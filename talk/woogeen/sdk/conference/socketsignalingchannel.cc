@@ -142,7 +142,7 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     Json::Reader reader;
     Json::Value ack_json;
     if(!reader.parse(message->get_string(), ack_json)){
-      LOG(LS_WARNING) << "Cannot parse answer.";
+      LOG(LS_WARNING) << "Cannot parse answer: " << message->get_string();
       if(on_failure){
         std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
         on_failure(std::move(e));

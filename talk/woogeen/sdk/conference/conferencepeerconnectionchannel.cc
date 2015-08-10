@@ -218,7 +218,7 @@ void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(const
 
 void ConferencePeerConnectionChannel::SetRemoteDescription(const std::string& type, const std::string& sdp){
   webrtc::SessionDescriptionInterface* desc(
-      webrtc::CreateSessionDescription("answer", sdp));  // TODO(jianjun): change answer to type.toLowerCase.
+      webrtc::CreateSessionDescription("answer", sdp, nullptr));  // TODO(jianjun): change answer to type.toLowerCase.
   if(!desc){
     LOG(LS_ERROR) << "Failed to create session description.";
     return;

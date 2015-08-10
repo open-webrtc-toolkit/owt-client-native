@@ -24,6 +24,7 @@ PeerConnectionChannel::~PeerConnectionChannel(){
 }
 
 bool PeerConnectionChannel::InitializePeerConnection(){
+  LOG(LS_INFO) << "Initialize PeerConnection.";
   if(factory_.get()==nullptr)
     factory_=PeerConnectionDependencyFactory::Get();
   media_constraints_.AddOptional(MediaConstraintsInterface::kEnableDtlsSrtp, true);
