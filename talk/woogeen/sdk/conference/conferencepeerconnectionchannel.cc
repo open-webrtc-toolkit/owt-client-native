@@ -136,6 +136,7 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterf
   LOG(LS_INFO) << "Ice connection state changed: " << new_state;
   if((new_state==PeerConnectionInterface::kIceConnectionConnected||new_state==PeerConnectionInterface::kIceConnectionCompleted)&&publish_success_callback_!=nullptr){
     std::thread t(publish_success_callback_);
+    publish_success_callback_ = nullptr;
     t.detach();
   }
 }
