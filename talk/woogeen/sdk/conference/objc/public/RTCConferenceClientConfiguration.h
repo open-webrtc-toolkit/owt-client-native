@@ -6,6 +6,7 @@
 #define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
 
 #import <Foundation/Foundation.h>
+#import "RTCMediaCodec.h"
 
 /// Configuration for creating a RTCConferenceClient
 /**
@@ -14,6 +15,7 @@
 @interface RTCConferenceClientConfiguration : NSObject
 
 @property (nonatomic, strong, readwrite) NSArray* ICEServers;
+@property (nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 
 @end
 

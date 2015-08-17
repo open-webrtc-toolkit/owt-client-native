@@ -53,7 +53,7 @@ const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 const string kIceCandidateSdpNameKey = "candidate";
 
-P2PPeerConnectionChannel::P2PPeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender)
+P2PPeerConnectionChannel::P2PPeerConnectionChannel(PeerConnectionChannelConfiguration configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender)
    : PeerConnectionChannel(configuration),
      signaling_sender_(sender),
      local_id_(local_id),

@@ -8,11 +8,12 @@
 
 namespace woogeen {
 
-PeerConnectionChannel::PeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration)
+PeerConnectionChannel::PeerConnectionChannel(PeerConnectionChannelConfiguration configuration)
     : peer_connection_(nullptr),
       factory_(nullptr),
       pc_thread_(nullptr),
       configuration_(configuration) {
+  LOG(LS_INFO) << "PeerConnectionChannel video codec: " << configuration_.media_codec.video_codec;
 }
 
 PeerConnectionChannel::~PeerConnectionChannel(){

@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include "talk/woogeen/sdk/base/clientconfiguration.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
@@ -15,8 +16,7 @@
 
 namespace woogeen {
 
-struct ConferenceClientConfiguration {
-  std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
+struct ConferenceClientConfiguration : ClientConfiguration{
 };
 
 class ConferenceClientObserver {
@@ -58,8 +58,9 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     void TriggerOnStreamAdded(const Json::Value& stream_info);
+    PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration() const;
 
-    ConferenceClientConfiguration& configuration_;
+    ConferenceClientConfiguration configuration_;
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> publish_pcs_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> subscribe_pcs_;

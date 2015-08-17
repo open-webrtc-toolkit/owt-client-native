@@ -7,6 +7,7 @@
 
 #include "webrtc/base/messagehandler.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/mediacodec.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 
@@ -24,10 +25,18 @@ struct SetSessionDescriptionMessage : public rtc::MessageData {
   webrtc::SessionDescriptionInterface* description;
 };
 
+struct PeerConnectionChannelConfiguration : public webrtc::PeerConnectionInterface::RTCConfiguration {
+  public:
+    explicit PeerConnectionChannelConfiguration()
+        : RTCConfiguration() {
+    }
+    MediaCodec media_codec;
+};
+
 class PeerConnectionChannel : public rtc::MessageHandler,
                               public webrtc::PeerConnectionObserver {
   public:
-    PeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration);
+    PeerConnectionChannel(PeerConnectionChannelConfiguration configuration);
 
   protected:
     virtual ~PeerConnectionChannel();
@@ -72,13 +81,13 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     };
 
     Thread* pc_thread_;
+    PeerConnectionChannelConfiguration configuration_;
 
   private:
     // |factory_| is got from PeerConnectionDependencyFactory::Get() which is shared among all PeerConnectionChannels.
     rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
     woogeen::MediaConstraintsImpl media_constraints_;
-    webrtc::PeerConnectionInterface::RTCConfiguration& configuration_;
 };
 
 }

@@ -46,8 +46,7 @@ void ConferenceClient::Publish(std::shared_ptr<LocalStream> stream, std::functio
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
-  webrtc::PeerConnectionInterface::RTCConfiguration config;
-  config.servers=configuration_.ice_servers;
+  PeerConnectionChannelConfiguration config = GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(config,signaling_channel_));
   auto pc_pair = std::make_pair(stream->MediaStream()->label(), pcc);
   publish_pcs_.insert(pc_pair);
@@ -60,8 +59,7 @@ void ConferenceClient::Subscribe(std::shared_ptr<RemoteStream> stream, std::func
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
-  webrtc::PeerConnectionInterface::RTCConfiguration config;
-  config.servers=configuration_.ice_servers;
+  PeerConnectionChannelConfiguration config = GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(new ConferencePeerConnectionChannel(config, signaling_channel_));
   auto pc_pair = std::make_pair(stream->Id(), pcc);
   subscribe_pcs_.insert(pc_pair);
@@ -160,4 +158,12 @@ void ConferenceClient::TriggerOnStreamAdded(const Json::Value& stream_info){
     }
   }
 }
+
+PeerConnectionChannelConfiguration ConferenceClient::GetPeerConnectionChannelConfiguration() const {
+  PeerConnectionChannelConfiguration config;
+  config.servers=configuration_.ice_servers;
+  config.media_codec=configuration_.media_codec;
+  return config;
+}
+
 }

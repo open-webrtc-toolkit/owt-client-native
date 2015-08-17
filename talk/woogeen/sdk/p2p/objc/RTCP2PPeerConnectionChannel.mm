@@ -20,19 +20,20 @@
   NSString* _remoteId;
 }
 
--(instancetype)initWithICEServers:(NSArray*)iceServers localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender{
+-(instancetype)initWithConfiguration:(RTCPeerClientConfiguration*)config localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender{
   self=[super init];
   woogeen::P2PSignalingSenderInterface* sender = new woogeen::RTCP2PSignalingSenderObjcImpl(signalingSender);
   _remoteId=remoteId;
   const std::string nativeRemoteId=[remoteId UTF8String];
   const std::string nativeLocalId=[localId UTF8String];
   webrtc::PeerConnectionInterface::IceServers nativeIceServers;
-  for (RTCICEServer* server in iceServers) {
+  for (RTCICEServer* server in config.ICEServers) {
     nativeIceServers.push_back(server.iceServer);
   }
-  webrtc::PeerConnectionInterface::RTCConfiguration* config = new webrtc::PeerConnectionInterface::RTCConfiguration();
-  config->servers=nativeIceServers;
-  _nativeChannel = new woogeen::P2PPeerConnectionChannel(*config, nativeLocalId, nativeRemoteId, sender);
+  woogeen::PeerConnectionChannelConfiguration nativeConfig;
+  nativeConfig.servers=nativeIceServers;
+  nativeConfig.media_codec=woogeen::MediaCodec();
+  _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;
 }
 

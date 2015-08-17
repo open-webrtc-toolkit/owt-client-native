@@ -55,7 +55,7 @@ const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 const string kIceCandidateSdpNameKey = "candidate";
 
-ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
+ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(PeerConnectionChannelConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel)
    : PeerConnectionChannel(configuration),
      signaling_channel_(signaling_channel),
      session_id_(kSessionIdBase),
@@ -167,6 +167,14 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
       is_publish_=false;
     }
     std::string sdp_message=rtc::JsonValueToString(sdp_info);
+    // Set codec preference
+    if(configuration_.media_codec.video_codec==MediaCodec::VideoCodec::H264){
+      LOG(LS_INFO) << "H.264 preferred.";
+      std::size_t pos = sdp_message.find("100 107");
+      if(pos!=std::string::npos){
+        sdp_message.replace(pos, 7, "107 100");
+      }
+    }
     LOG(LS_INFO) << "Send sdp from pc channel.";
     signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack, std::string& stream_id) {
       std::string sdp;

@@ -28,6 +28,10 @@
     iceServers.push_back(server.iceServer);
   }
   nativeConfig->ice_servers=iceServers;
+  LOG(LS_INFO) << "Video codec preference: "<< config.mediaCodec.videoCodec;
+  if(config.mediaCodec.videoCodec==VideoCodecVP8){
+    nativeConfig->media_codec.video_codec=woogeen::MediaCodec::VideoCodec::VP8;
+  }
   std::shared_ptr<woogeen::ConferenceSignalingChannelInterface> socketSignalingChannel(new woogeen::SocketSignalingChannel());
   std::unique_ptr<woogeen::ConferenceClient> nativeConferenceClient(new woogeen::ConferenceClient(*nativeConfig, socketSignalingChannel));
   _nativeConferenceClient=std::move(nativeConferenceClient);

@@ -42,7 +42,7 @@ class ConferencePeerConnectionChannelObserver {
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with MCU.
 class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   public:
-    explicit ConferencePeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+    explicit ConferencePeerConnectionChannel(PeerConnectionChannelConfiguration& configuration, std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
     ~ConferencePeerConnectionChannel();
     // Add a ConferencePeerConnectionChannel observer so it will be notified when this object have some events.
     void AddObserver(ConferencePeerConnectionChannelObserver* observer);

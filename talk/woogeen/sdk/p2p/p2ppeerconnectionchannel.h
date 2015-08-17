@@ -48,7 +48,7 @@ class P2PPeerConnectionChannelObserver {
 class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                  public PeerConnectionChannel {
   public:
-    explicit P2PPeerConnectionChannel(webrtc::PeerConnectionInterface::RTCConfiguration& configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender);
+    explicit P2PPeerConnectionChannel(PeerConnectionChannelConfiguration configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender);
     // Add a P2PPeerConnectionChannel observer so it will be notified when this object have some events.
     void AddObserver(P2PPeerConnectionChannelObserver* observer);
     // Remove a P2PPeerConnectionChannel observer. If the observer doesn't exist, it will do nothing.

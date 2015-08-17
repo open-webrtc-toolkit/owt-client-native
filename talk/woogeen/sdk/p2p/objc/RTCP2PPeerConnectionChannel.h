@@ -8,10 +8,11 @@
 #import "RTCP2PSignalingSenderProtocol.h"
 #import "RTCP2PSignalingReceiverProtocol.h"
 #import "RTCP2PPeerConnectionChannelObserver.h"
+#import "RTCPeerClientConfiguration.h"
 
 @interface RTCP2PPeerConnectionChannel : NSObject<RTCP2PSignalingReceiverProtocol>
 
--(instancetype)initWithICEServers:(NSArray*)iceServers localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender;
+-(instancetype)initWithConfiguration:(RTCPeerClientConfiguration*)config localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender;
 -(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)denyWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)acceptWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
