@@ -8,6 +8,11 @@
 #include "webrtc/base/logging.h"
 
 namespace woogeen {
+
+const std::string kCustomMessageEventName = "customMessage";
+const std::string kOnCustomMessageEventName = "onCustomMessage";
+const std::string kOnAddStreamEventName = "onAddStream";
+
 SocketSignalingChannel::SocketSignalingChannel() : socket_client_(new sio::client()) {
 }
 
@@ -15,11 +20,11 @@ SocketSignalingChannel::~SocketSignalingChannel(){
   delete socket_client_;
 }
 
-void SocketSignalingChannel::AddObserver(std::shared_ptr<ConferenceSignalingChannelObserver> observer){
-  observers_.push_back(observer);
+void SocketSignalingChannel::AddObserver(ConferenceSignalingChannelObserver& observer){
+  observers_.push_back(&observer);
 }
 
-void SocketSignalingChannel::RemoveObserver(std::shared_ptr<ConferenceSignalingChannelObserver> observer){
+void SocketSignalingChannel::RemoveObserver(ConferenceSignalingChannelObserver& observer){
   // TODO:
 }
 
@@ -84,11 +89,19 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       on_success(room_info);
     });
   });
-  socket_client_->socket()->on("onAddStream", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kOnAddStreamEventName, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
     std::cout<<"Received on add stream."<<std::endl;
     Json::Value stream=ParseStream(data);
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnStreamAdded(stream);
+    }
+  }));
+  socket_client_->socket()->on(kOnCustomMessageEventName, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+    std::cout<<"Received custom message."<<std::endl;
+    std::string from=data->get_map()["from"]->get_string();
+    std::string message=data->get_map()["data"]->get_string();
+    for(auto it=observers_.begin();it!=observers_.end();++it){
+      (*it)->OnCustomMessage(from, message);
     }
   }));
   socket_client_->connect(scheme.append(host));
@@ -151,13 +164,13 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
     }
     std::string sid=stream_id;
     if(event_name=="publish"){
-      sio::message::ptr id = msg.at(1);
-      if(id->get_flag()!=sio::message::flag_string){
-        LOG(LS_WARNING) << "The second element of publish ack is not a string. (Expected to be stream ID)";
-        return;
+        sio::message::ptr id = msg.at(1);
+        if(id->get_flag()!=sio::message::flag_string){
+            LOG(LS_WARNING) << "The second element of publish ack is not a string. (Expected to be stream ID)";
+            return;
+          }
+        sid = id->get_string();
       }
-      sid = id->get_string();
-    }
     on_success(ack_json, sid);
   });
 }
@@ -165,30 +178,22 @@ void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, boo
 void SocketSignalingChannel::SendStreamEvent(const std::string& event, const std::string& stream_id, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)>on_failure){
   sio::message::ptr message = sio::string_message::create(stream_id);
   socket_client_->socket()->emit(event, message, [=](sio::message::list const& msg){
-    sio::message::ptr ack = msg.at(0);
-    if(ack->get_flag()!=sio::message::flag_string){
-      LOG(LS_WARNING) << "The first element of stream event ack is not a string.";
-      if(on_failure){
-        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
-        std::thread t(on_failure, std::move(e));
-        t.detach();
-      }
-      return;
-    }
-    if(ack->get_string()=="success"){
-      if(on_success!=nullptr){
-        std::thread t(on_success);
-        t.detach();
-      }
-    }
-    else {
-      LOG(LS_WARNING) << "Send stream event received negative ack.";
-      if(on_failure!=nullptr){
-        std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Negative acknowledgement for stream event."));
-        std::thread t(on_failure, std::move(e));
-        t.detach();
-      }
-    }
+    OnEmitAck(msg, on_success, on_failure);
+  });
+}
+
+void SocketSignalingChannel::Send(const std::string& message, const std::string& receiver, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  sio::message::ptr send_message = sio::object_message::create();
+  // If receiver is empty string, it means send this message to all participants of the conference.
+  if(receiver==""){
+    send_message->get_map()["receiver"]=sio::string_message::create("all");
+  } else {
+    send_message->get_map()["receiver"]=sio::string_message::create(receiver);
+  }
+  send_message->get_map()["type"]=sio::string_message::create("data");
+  send_message->get_map()["data"]=sio::string_message::create(message);
+  socket_client_->socket()->emit(kCustomMessageEventName, send_message, [=](sio::message::list const& msg){
+    OnEmitAck(msg, on_success, on_failure);
   });
 }
 
@@ -210,4 +215,32 @@ Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr stream_m
   }
   return stream;
 }
+
+void SocketSignalingChannel::OnEmitAck(sio::message::list const& msg, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  sio::message::ptr ack = msg.at(0);
+  if(ack->get_flag()!=sio::message::flag_string){
+    LOG(LS_WARNING) << "The first element of emit ack is not a string.";
+    if(on_failure){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Received unkown message from server."));
+      std::thread t(on_failure, std::move(e));
+      t.detach();
+    }
+    return;
+  }
+  if(ack->get_string()=="success"){
+    if(on_success!=nullptr){
+      std::thread t(on_success);
+      t.detach();
+    }
+  }
+  else {
+    LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Negative acknowledgement from server."));
+      std::thread t(on_failure, std::move(e));
+      t.detach();
+    }
+  }
+}
+
 }

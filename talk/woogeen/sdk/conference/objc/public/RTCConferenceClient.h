@@ -45,6 +45,11 @@
 */
 -(void)unsubscribe:(RTCRemoteStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;
 /**
+  @brief Send messsage to all participants in the conference.
+  @param message The message to be sent.
+*/
+-(void)send:(NSString*)message onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure;
+/**
   @brief Leave current conference.
 */
 -(void)leaveWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure;

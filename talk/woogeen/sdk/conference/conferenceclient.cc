@@ -22,6 +22,7 @@ void ConferenceClient::RemoveObserver(std::shared_ptr<ConferenceClientObserver> 
 }
 
 void ConferenceClient::Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  signaling_channel_->AddObserver(*this);
   signaling_channel_->Connect(token, [=](Json::Value room_info){
     if(on_success){
       std::thread t(on_success);
@@ -114,12 +115,36 @@ void ConferenceClient::Unsubscribe(std::shared_ptr<RemoteStream> stream, std::fu
   }
 }
 
+void ConferenceClient::Send(const std::string& message, std::function<void()>on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  std::string receiver("");
+  Send(message, receiver, on_success, on_failure);
+}
+
+void ConferenceClient::Send(const std::string& message, const std::string& receiver, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  if(message==""){
+    LOG(LS_WARNING) << "Cannot send empty message.";
+    if(on_failure!=nullptr){
+      std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Invalid message."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  signaling_channel_->Send(message, receiver, on_success, on_failure);
+}
+
 void ConferenceClient::Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 
 void ConferenceClient::OnStreamAdded(Json::Value stream){
   TriggerOnStreamAdded(stream);
+}
+
+void ConferenceClient::OnCustomMessage(std::string& from, std::string& message){
+  LOG(LS_INFO) << "ConferenceClient OnCustomMessage";
+  for (auto its=observers_.begin();its!=observers_.end();++its){
+    (*its)->OnMessageReceived(from, message);
+  }
 }
 
 bool ConferenceClient::CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure) {

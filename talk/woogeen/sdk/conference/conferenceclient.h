@@ -29,6 +29,8 @@ class ConferenceClientObserver {
     virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteCameraStream> stream) {};
     virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteScreenStream> stream) {};
     virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteMixedStream> stream) {};
+    // Triggered when received a message.
+    virtual void OnMessageReceived(std::string& sender_id, std::string& message) {};
     // TODO(jianjun): add other events.
 };
 
@@ -49,11 +51,16 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Unsubscribe a stream from the conference.
     void Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Send a message to all participants in the conference.
+    void Send(const std::string& message, std::function<void()>on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Send a message to a specified participant.
+    void Send(const std::string& message, const std::string& receiver, std::function<void()>on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Leave this conference.
     void Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   protected:
-    virtual void OnStreamAdded(Json::Value stream);
+    virtual void OnStreamAdded(Json::Value stream) override;
+    virtual void OnCustomMessage(std::string& from, std::string& message) override;
 
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);

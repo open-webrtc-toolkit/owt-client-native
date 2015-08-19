@@ -25,6 +25,12 @@
   @param stream The stream which is removed.
 */
 -(void)onStreamRemoved:(RTCRemoteStream*)stream;
+/**
+  @brief Triggers when a message is received.
+  @param senderId Sender's ID.
+  @param message Message received.
+*/
+-(void)onMessageReceivedFrom:(NSString*) senderId message:(NSString*)message;
 // TODO(jianjun): Enable user events
 //-(void)onUserJoined:(User*)user;
 //-(void)onUserLeft:(User*)user;

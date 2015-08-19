@@ -46,4 +46,8 @@ void ConferenceClientObserverObjcImpl::OnStreamRemoved(std::shared_ptr<RemoteMix
   [observer_ onStreamRemoved: remote_stream];
 }
 
+void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id, std::string& message) {
+  [observer_ onMessageReceivedFrom:[NSString stringWithCString:sender_id.c_str() encoding: [NSString defaultCStringEncoding]] message:[NSString stringWithCString:message.c_str() encoding: [NSString defaultCStringEncoding]]];
+}
+
 }

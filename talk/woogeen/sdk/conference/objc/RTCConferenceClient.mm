@@ -116,6 +116,18 @@
   });
 }
 
+-(void)send:(NSString*)message onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure{
+  _nativeConferenceClient->Send([message UTF8String], [=]{
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
 -(void)leaveWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
   _nativeConferenceClient->Leave([=](){
     if(onSuccess!=nil)
