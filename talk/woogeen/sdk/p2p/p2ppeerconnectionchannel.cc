@@ -491,7 +491,7 @@ void P2PPeerConnectionChannel::Stop(std::function<void()> on_success, std::funct
     case kSessionStateConnected:
       pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
-      SendStop(on_success, on_failure);
+      SendStop(nullptr, nullptr);
       ChangeSessionState(kSessionStateReady);
       break;
     default:
