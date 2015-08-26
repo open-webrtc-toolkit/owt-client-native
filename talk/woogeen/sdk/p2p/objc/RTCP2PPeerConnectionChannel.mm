@@ -32,7 +32,15 @@
   }
   woogeen::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers=nativeIceServers;
-  nativeConfig.media_codec=woogeen::MediaCodec();
+  LOG(LS_INFO) << "Video codec preference: "<< config.mediaCodec.videoCodec;
+  if(config.mediaCodec.videoCodec==VideoCodecVP8){
+    nativeConfig.media_codec.video_codec=woogeen::MediaCodec::VideoCodec::VP8;
+  } else if (config.mediaCodec.videoCodec==VideoCodecH264){
+    nativeConfig.media_codec.video_codec=woogeen::MediaCodec::VideoCodec::H264;
+  } else {
+    LOG(LS_ERROR) << "Weird video codec preference.";
+    ASSERT(false);
+  }
   _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;
 }

@@ -405,15 +405,6 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(webrtc::Session
   SetSessionDescriptionMessage* msg = new SetSessionDescriptionMessage(observer.get(), desc);
   LOG(LS_INFO) << "Post set local desc";
   pc_thread_->Post(this, kMessageTypeSetLocalDescription, msg);
-  string sdp;
-  desc->ToString(&sdp);
-  Json::Value signal;
-  signal[kSessionDescriptionTypeKey] = desc->type();
-  signal[kSessionDescriptionSdpKey] = sdp;
-  Json::Value json;
-  json[kMessageTypeKey]=kChatSignal;
-  json[kMessageDataKey]=signal;
-  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(const std::string& error) {
@@ -423,6 +414,16 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(const std::stri
 
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   LOG(LS_INFO) << "Set local sdp success.";
+  auto desc = LocalDescription();
+  string sdp;
+  desc->ToString(&sdp);
+  Json::Value signal;
+  signal[kSessionDescriptionTypeKey] = desc->type();
+  signal[kSessionDescriptionSdpKey] = sdp;
+  Json::Value json;
+  json[kMessageTypeKey]=kChatSignal;
+  json[kMessageDataKey]=signal;
+  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(const std::string& error) {

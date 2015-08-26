@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import "RTCICEServer.h"
+#import "RTCMediaCodec.h"
 
 /**
  @brief Configuration for RTCPeerClient
@@ -16,6 +17,7 @@
 @interface RTCPeerClientConfiguration : NSObject
 
 @property (nonatomic, strong, readwrite) NSArray* ICEServers;
+@property (nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 
 @end
 
