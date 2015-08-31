@@ -56,6 +56,18 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     void Subscribe(std::shared_ptr<RemoteStream> stream, std::function<void(std::shared_ptr<RemoteStream> stream)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Unsubscribe a remote stream from the conference.
     void Unsubscribe(std::shared_ptr<RemoteStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Continue to transmit specified stream's audio data.
+    // If |stream| is a remote stream, MCU will continue to send audio data to client. If |stream| is a local stream, client will continue to send audio data to MCU. This method is expected to be called after |DisableAudio|.
+    void PlayAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Stop transmitting specified stream's audio data.
+    // If |stream| is a remote stream, MCU will stop sending audio data to client. If |stream| is a local stream, client will stop sending audio data to MCU.
+    void PauseAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Continue to transmit specified stream's video data.
+    // If |stream| is a remote stream, MCU will continue to send video data to client. If |stream| is a local stream, client will continue to send video data to MCU. This method is expected to be called after |DisableVideo|.
+    void PlayVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Stop transmitting specified stream's video data.
+    // If |stream| is a remote stream, MCU will stop sending video data to client. If |stream| is a local stream, client will stop sending video data to MCU.
+    void PauseVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Stop current WebRTC session.
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
@@ -97,6 +109,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     int RandomInt(int lower_bound, int upper_bound);
     void SetRemoteDescription(const std::string& type, const std::string& sdp);
+    void SendStreamControlMessage(const std::shared_ptr<Stream> stream, const std::string& in_action, const std::string& out_action, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) const;
 
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     int session_id_;
@@ -118,6 +131,6 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
 
-}
+};
 
 #endif // WOOGEEN_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_

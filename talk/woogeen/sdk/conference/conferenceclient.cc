@@ -129,7 +129,39 @@ void ConferenceClient::Send(const std::string& message, const std::string& recei
     }
     return;
   }
-  signaling_channel_->Send(message, receiver, on_success, on_failure);
+  signaling_channel_->SendCustomMessage(message, receiver, on_success, on_failure);
+}
+
+void ConferenceClient::PlayAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  auto pc=GetConferencePeerConnectionChannel(stream);
+  if(!CheckNullPointer((uintptr_t)pc.get(), on_failure)){
+    return;
+  }
+  pc->PlayAudio(stream, on_success, on_failure);
+}
+
+void ConferenceClient::PauseAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  auto pc=GetConferencePeerConnectionChannel(stream);
+  if(!CheckNullPointer((uintptr_t)pc.get(), on_failure)){
+    return;
+  }
+  pc->PauseAudio(stream, on_success, on_failure);
+}
+
+void ConferenceClient::PlayVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  auto pc=GetConferencePeerConnectionChannel(stream);
+  if(!CheckNullPointer((uintptr_t)pc.get(), on_failure)){
+    return;
+  }
+  pc->PlayVideo(stream, on_success, on_failure);
+}
+
+void ConferenceClient::PauseVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  auto pc=GetConferencePeerConnectionChannel(stream);
+  if(!CheckNullPointer((uintptr_t)pc.get(), on_failure)){
+    return;
+  }
+  pc->PauseVideo(stream, on_success, on_failure);
 }
 
 void ConferenceClient::Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
@@ -182,6 +214,27 @@ void ConferenceClient::TriggerOnStreamAdded(const Json::Value& stream_info){
       (*its)->OnStreamAdded(remote_stream);
     }
   }
+}
+
+std::shared_ptr<ConferencePeerConnectionChannel> ConferenceClient::GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const {
+  if(stream==nullptr){
+    LOG(LS_ERROR) << "Cannot get PeerConnectionChannel for a null stream.";
+    return nullptr;
+  }
+  auto pcc_it=subscribe_pcs_.find(stream->Id());
+  if(pcc_it!=subscribe_pcs_.end()){
+    return pcc_it->second;
+  }
+  if(stream->MediaStream()==nullptr){
+    LOG(LS_ERROR) << "Cannot find publish PeerConnectionChannel for a stream without media stream.";
+    return nullptr;
+  }
+  pcc_it=publish_pcs_.find(stream->MediaStream()->label());
+  if(pcc_it!=publish_pcs_.end()){
+    return pcc_it->second;
+  }
+  LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific stream.";
+  return nullptr;
 }
 
 PeerConnectionChannelConfiguration ConferenceClient::GetPeerConnectionChannelConfiguration() const {

@@ -167,14 +167,6 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(PeerConnectionInterfa
       is_publish_=false;
     }
     std::string sdp_message=rtc::JsonValueToString(sdp_info);
-    // Set codec preference
-    if(configuration_.media_codec.video_codec==MediaCodec::VideoCodec::H264){
-      LOG(LS_INFO) << "H.264 preferred.";
-      std::size_t pos = sdp_message.find("100 107");
-      if(pos!=std::string::npos){
-        sdp_message.replace(pos, 7, "107 100");
-      }
-    }
     LOG(LS_INFO) << "Send sdp from pc channel.";
     signaling_channel_->SendSdp(options, sdp_message, is_publish_, [&](Json::Value &ack, std::string& stream_id) {
       std::string sdp;
@@ -306,6 +298,33 @@ void ConferencePeerConnectionChannel::Unsubscribe(std::shared_ptr<RemoteStream> 
     return;
   }
   signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(), on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::SendStreamControlMessage(const std::shared_ptr<Stream> stream, const std::string& in_action, const std::string& out_action, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) const {
+  std::string action="";
+  if(stream==published_stream_)
+    action=out_action;
+  else if(stream==subscribed_stream_)
+    action=in_action;
+  else
+    ASSERT(false);
+  signaling_channel_->SendStreamControlMessage(stream->Id(), action, on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::PlayAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  SendStreamControlMessage(stream, "audio-in-on", "audio-out-on", on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::PauseAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  SendStreamControlMessage(stream, "audio-in-off", "audio-out-off", on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::PlayVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  SendStreamControlMessage(stream, "video-in-on", "video-out-on", on_success, on_failure);
+}
+
+void ConferencePeerConnectionChannel::PauseVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  SendStreamControlMessage(stream, "video-in-off", "video-out-off", on_success, on_failure);
 }
 
 void ConferencePeerConnectionChannel::Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {

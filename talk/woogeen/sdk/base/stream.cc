@@ -15,7 +15,7 @@ Stream::Stream() : id_(""){
 Stream::Stream(std::string& id) : id_(id){
 }
 
-scoped_refptr<MediaStreamInterface> Stream::MediaStream() {
+scoped_refptr<MediaStreamInterface> Stream::MediaStream() const{
   CHECK(media_stream_);
   return media_stream_;
 }
@@ -25,12 +25,46 @@ void Stream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream) {
   media_stream_=media_stream;
 }
 
-std::string& Stream::Id(){
+const std::string& Stream::Id() const{
   return id_;
 }
 
 void Stream::Id(std::string& id){
   id_=id;
+}
+
+void Stream::DisableVideo(){
+  SetVideoTracksEnabled(false);
+}
+
+void Stream::EnableVideo(){
+  SetVideoTracksEnabled(true);
+}
+
+void Stream::DisableAudio(){
+  SetAudioTracksEnabled(false);
+}
+
+void Stream::EnableAudio(){
+  SetAudioTracksEnabled(true);
+}
+
+void Stream::SetVideoTracksEnabled(bool enabled){
+  if(media_stream_==nullptr)
+    return;
+  auto video_tracks=media_stream_->GetVideoTracks();
+  for(auto it=video_tracks.begin();it!=video_tracks.end();++it){
+    (*it)->set_enabled(enabled);
+  }
+}
+
+void Stream::SetAudioTracksEnabled(bool enabled){
+  if(media_stream_==nullptr)
+    return;
+  auto audio_tracks=media_stream_->GetAudioTracks();
+  for(auto it=audio_tracks.begin();it!=audio_tracks.end();++it){
+    (*it)->set_enabled(enabled);
+  }
 }
 
 LocalCameraStream::~LocalCameraStream(){

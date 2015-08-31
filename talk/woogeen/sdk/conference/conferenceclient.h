@@ -55,6 +55,18 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     void Send(const std::string& message, std::function<void()>on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Send a message to a specified participant.
     void Send(const std::string& message, const std::string& receiver, std::function<void()>on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Continue to transmit specified stream's audio data.
+    // If |stream| is a remote stream, MCU will continue to send audio data to client. If |stream| is a local stream, client will continue to send audio data to MCU. This method is expected to be called after |DisableAudio|.
+    void PlayAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Stop transmitting specified stream's audio data.
+    // If |stream| is a remote stream, MCU will stop sending audio data to client. If |stream| is a local stream, client will stop sending audio data to MCU.
+    void PauseAudio(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Continue to transmit specified stream's video data.
+    // If |stream| is a remote stream, MCU will continue to send video data to client. If |stream| is a local stream, client will continue to send video data to MCU. This method is expected to be called after |DisableVideo|.
+    void PlayVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // Stop transmitting specified stream's video data.
+    // If |stream| is a remote stream, MCU will stop sending video data to client. If |stream| is a local stream, client will stop sending video data to MCU.
+    void PauseVideo(std::shared_ptr<Stream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     // Leave this conference.
     void Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
@@ -66,6 +78,8 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     void TriggerOnStreamAdded(const Json::Value& stream_info);
     PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration() const;
+    // Get the |ConferencePeerConnectionChannel| instance associated with specific |stream|. Return |nullptr| if not found.
+    std::shared_ptr<ConferencePeerConnectionChannel> GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
 
     ConferenceClientConfiguration configuration_;
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;

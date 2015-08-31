@@ -11,6 +11,7 @@ namespace woogeen {
 
 const std::string kCustomMessageEventName = "customMessage";
 const std::string kOnCustomMessageEventName = "onCustomMessage";
+const std::string kStreamControlEventName = "control";
 const std::string kOnAddStreamEventName = "onAddStream";
 
 SocketSignalingChannel::SocketSignalingChannel() : socket_client_(new sio::client()) {
@@ -182,7 +183,7 @@ void SocketSignalingChannel::SendStreamEvent(const std::string& event, const std
   });
 }
 
-void SocketSignalingChannel::Send(const std::string& message, const std::string& receiver, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+void SocketSignalingChannel::SendCustomMessage(const std::string& message, const std::string& receiver, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
   sio::message::ptr send_message = sio::object_message::create();
   // If receiver is empty string, it means send this message to all participants of the conference.
   if(receiver==""){
@@ -192,6 +193,17 @@ void SocketSignalingChannel::Send(const std::string& message, const std::string&
   }
   send_message->get_map()["type"]=sio::string_message::create("data");
   send_message->get_map()["data"]=sio::string_message::create(message);
+  socket_client_->socket()->emit(kCustomMessageEventName, send_message, [=](sio::message::list const& msg){
+    OnEmitAck(msg, on_success, on_failure);
+  });
+}
+void SocketSignalingChannel::SendStreamControlMessage(const std::string& stream_id, const std::string& action, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  sio::message::ptr send_message = sio::object_message::create();
+  sio::message::ptr payload = sio::object_message::create();
+  payload->get_map()["action"]=sio::string_message::create(action);
+  payload->get_map()["streamId"]=sio::string_message::create(stream_id);
+  send_message->get_map()["type"]=sio::string_message::create("control");
+  send_message->get_map()["payload"]=payload;
   socket_client_->socket()->emit(kCustomMessageEventName, send_message, [=](sio::message::list const& msg){
     OnEmitAck(msg, on_success, on_failure);
   });
@@ -235,6 +247,12 @@ void SocketSignalingChannel::OnEmitAck(sio::message::list const& msg, std::funct
   }
   else {
     LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+    if(msg.size()>1){
+      sio::message::ptr error_ptr=msg.at(1);
+      if(error_ptr->get_flag()==sio::message::flag_string){
+        LOG(LS_WARNING) << "Detail negative ack message: "<<error_ptr->get_string();
+      }
+    }
     if(on_failure!=nullptr){
       std::unique_ptr<ConferenceException> e(new ConferenceException(ConferenceException::kUnkown, "Negative acknowledgement from server."));
       std::thread t(on_failure, std::move(e));

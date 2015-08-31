@@ -128,6 +128,62 @@
   });
 }
 
+-(void)playAudio:(RTCStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::Stream> nativeStream(std::static_pointer_cast<woogeen::Stream>(nativeStreamRefPtr));
+  _nativeConferenceClient->PlayAudio(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
+-(void)pauseAudio:(RTCStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::Stream> nativeStream(std::static_pointer_cast<woogeen::Stream>(nativeStreamRefPtr));
+  _nativeConferenceClient->PauseAudio(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
+-(void)playVideo:(RTCStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::Stream> nativeStream(std::static_pointer_cast<woogeen::Stream>(nativeStreamRefPtr));
+  _nativeConferenceClient->PlayVideo(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
+-(void)pauseVideo:(RTCStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void(^)(NSError*))onFailure{
+  auto nativeStreamRefPtr=[stream nativeStream];
+  std::shared_ptr<woogeen::Stream> nativeStream(std::static_pointer_cast<woogeen::Stream>(nativeStreamRefPtr));
+  _nativeConferenceClient->PauseVideo(nativeStream, [=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  }, [=](std::unique_ptr<woogeen::ConferenceException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenConferenceErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
 -(void)leaveWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError*))onFailure{
   _nativeConferenceClient->Leave([=](){
     if(onSuccess!=nil)

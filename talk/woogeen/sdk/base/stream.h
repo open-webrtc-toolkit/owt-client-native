@@ -21,8 +21,12 @@ using rtc::scoped_refptr;
 class Stream {
   friend class ConferencePeerConnectionChannel;
   public:
-    scoped_refptr<MediaStreamInterface> MediaStream();
-    std::string& Id();
+    scoped_refptr<MediaStreamInterface> MediaStream() const;
+    const std::string& Id() const;
+    virtual void DisableAudio();
+    virtual void DisableVideo();
+    virtual void EnableAudio();
+    virtual void EnableVideo();
 
   protected:
     Stream(std::string& id);
@@ -33,6 +37,8 @@ class Stream {
     scoped_refptr<MediaStreamInterface> media_stream_;
 
   private:
+    void SetAudioTracksEnabled(bool enabled);
+    void SetVideoTracksEnabled(bool enabled);
     std::string id_;
 };
 

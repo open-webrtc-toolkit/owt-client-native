@@ -30,6 +30,30 @@
   NSLog(@"Attached stream.");
 }
 
+-(void)disableAudio{
+  if(_nativeStream==nullptr)
+    return;
+  _nativeStream->DisableAudio();
+}
+
+-(void)disableVideo{
+  if(_nativeStream==nullptr)
+    return;
+  _nativeStream->DisableVideo();
+}
+
+-(void)enableAudio{
+  if(_nativeStream==nullptr)
+    return;
+  _nativeStream->EnableAudio();
+}
+
+-(void)enableVideo{
+  if(_nativeStream==nullptr)
+    return;
+  _nativeStream->EnableVideo();
+}
+
 @end
 
 @implementation RTCStream (Internal)
