@@ -47,22 +47,7 @@ bool PeerConnectionChannel::InitializePeerConnection(){
 
 const webrtc::SessionDescriptionInterface* PeerConnectionChannel::LocalDescription(){
   CHECK(peer_connection_);
-  auto desc = peer_connection_->local_description();
-  // Codec preference.
-  std::string sdp_string;
-  if(!desc->ToString(&sdp_string)){
-    LOG(LS_ERROR)<<"Error parsing local description.";
-    ASSERT(false);
-  }
-  if(configuration_.media_codec.video_codec==MediaCodec::VideoCodec::H264){
-    std::size_t pos = sdp_string.find("100 107");
-    if(pos!=std::string::npos){
-      sdp_string.replace(pos, 7, "107 100");
-    }
-  }
-  webrtc::SessionDescriptionInterface* local_desc(
-      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-  return local_desc;
+  return peer_connection_->local_description();
 }
 
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
@@ -85,7 +70,23 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
     }
     case kMessageTypeSetLocalDescription: {
       SetSessionDescriptionMessage* param = static_cast<SetSessionDescriptionMessage*>(msg->pdata);
-      peer_connection_->SetLocalDescription(param->observer, param->description);
+      // Set codec preference.
+      webrtc::SessionDescriptionInterface *desc = param->description;
+      std::string sdp_string;
+      if(!desc->ToString(&sdp_string)){
+        LOG(LS_ERROR)<<"Error parsing local description.";
+        ASSERT(false);
+      }
+      if(configuration_.media_codec.video_codec==MediaCodec::VideoCodec::H264){
+        std::size_t pos = sdp_string.find("100 107");
+        if(pos!=std::string::npos){
+          sdp_string.replace(pos, 7, "107 100");
+        }
+      }
+      webrtc::SessionDescriptionInterface* new_desc(
+          webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+
+      peer_connection_->SetLocalDescription(param->observer, new_desc);
       delete param;
       break;
     }
