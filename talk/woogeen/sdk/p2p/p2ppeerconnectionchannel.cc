@@ -335,7 +335,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
 }
 
 void P2PPeerConnectionChannel::OnDataChannel(webrtc::DataChannelInterface* data_channel) {
-  // TODO:
+  data_channel->RegisterObserver(this);
 }
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
@@ -576,5 +576,18 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
   }
 }
 
+void P2PPeerConnectionChannel::OnDataChannelStateChange(){
+}
+
+void P2PPeerConnectionChannel::OnDataChannelMessage(const webrtc::DataBuffer& buffer){
+  if(buffer.binary){
+    LOG(LS_WARNING) << "Binary data is not supported.";
+    return;
+  }
+  std::string message = std::string(buffer.data.data<char>());
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
+    (*it)->OnData(remote_id_, message);
+  }
+}
 
 }

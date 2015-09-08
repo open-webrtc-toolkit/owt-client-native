@@ -36,6 +36,9 @@ class P2PPeerConnectionChannelObserver {
     virtual void OnStopped(const std::string& remote_id) = 0;
     // Triggered when remote user denied the invitation.
     virtual void OnDenied(const std::string& remote_id) = 0;
+    // Triggered when remote user send data via data channel.
+    // Currently, data is string.
+    virtual void OnData(const std::string& remote_id, const std::string& message) = 0;
     // Triggered when a new stream is added.
     virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) = 0;
     virtual void OnStreamAdded(std::shared_ptr<woogeen::RemoteScreenStream> stream) = 0;
@@ -92,6 +95,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     virtual void OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state);
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
 
+    // DataChannelObserver
+    virtual void OnDataChannelStateChange();
+    virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer);
+
     // CreateSessionDescriptionObserver
     virtual void OnCreateSessionDescriptionSuccess(webrtc::SessionDescriptionInterface* desc);
     virtual void OnCreateSessionDescriptionFailure(const std::string& error);
@@ -133,6 +140,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     std::mutex pending_unpublish_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
     std::chrono::time_point<std::chrono::system_clock> last_disconnect_;  // Last time |peer_connection_| changes its state to "disconnect"
+    //webrtc::DataChannelInterface* data_channel_;  // Use this data channel to send p2p messages.
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
 

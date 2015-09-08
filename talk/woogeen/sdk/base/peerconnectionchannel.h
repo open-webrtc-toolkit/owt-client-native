@@ -34,7 +34,8 @@ struct PeerConnectionChannelConfiguration : public webrtc::PeerConnectionInterfa
 };
 
 class PeerConnectionChannel : public rtc::MessageHandler,
-                              public webrtc::PeerConnectionObserver {
+                              public webrtc::PeerConnectionObserver,
+                              public webrtc::DataChannelObserver {
   public:
     PeerConnectionChannel(PeerConnectionChannelConfiguration configuration);
 
@@ -47,9 +48,11 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     virtual void CreateOffer() = 0;
     virtual void CreateAnswer() = 0;
 
+    // Message looper event
     virtual void OnMessage(rtc::Message* msg);
 
     // PeerConnectionObserver
+    virtual void OnStateChange(StateType state_changed) {};
     virtual void OnSignalingChange(PeerConnectionInterface::SignalingState new_state);
     virtual void OnAddStream(MediaStreamInterface* stream);
     virtual void OnRemoveStream(MediaStreamInterface* stream);
@@ -58,6 +61,11 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     virtual void OnIceConnectionChange(PeerConnectionInterface::IceConnectionState new_state);
     virtual void OnIceGatheringChange(PeerConnectionInterface::IceGatheringState new_state);
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
+
+    // DataChannelObserver proxy
+    // Data channel events will be bridged to these methods to avoid name conflict.
+    virtual void OnDataChannelStateChange() {};
+    virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {};
 
     // CreateSessionDescriptionObserver
     virtual void OnCreateSessionDescriptionSuccess(webrtc::SessionDescriptionInterface* desc);
@@ -84,6 +92,10 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     PeerConnectionChannelConfiguration configuration_;
 
   private:
+    // DataChannelObserver
+    virtual void OnStateChange() { OnDataChannelStateChange(); }
+    virtual void OnMessage(const webrtc::DataBuffer& buffer) { OnDataChannelMessage(buffer); };
+
     // |factory_| is got from PeerConnectionDependencyFactory::Get() which is shared among all PeerConnectionChannels.
     rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;

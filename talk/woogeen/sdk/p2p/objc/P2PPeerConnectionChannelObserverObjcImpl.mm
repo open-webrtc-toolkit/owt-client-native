@@ -34,6 +34,10 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(const std::string& remot
   [_observer onDeniedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
+void P2PPeerConnectionChannelObserverObjcImpl::OnData(const std::string& remote_id, const std::string& message) {
+  [_observer onDataReceivedFrom:[NSString stringWithUTF8String:remote_id.c_str()] withData:[NSString stringWithUTF8String:message.c_str()]];
+}
+
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(std::shared_ptr<woogeen::RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[[RTCRemoteCameraStream alloc]initWithNativeStream: stream];
   [_observer onStreamAdded: remote_stream];
