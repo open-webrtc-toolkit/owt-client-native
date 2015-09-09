@@ -18,6 +18,7 @@
 -(void)acceptWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
+-(void)send:(NSString*) message withOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)stopWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure;
 -(void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 -(void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;

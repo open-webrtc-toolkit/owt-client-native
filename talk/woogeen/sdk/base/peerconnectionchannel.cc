@@ -68,6 +68,15 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       delete param;
       break;
     }
+    case kMessageTypeCreateDataChannel: {
+      rtc::TypedMessageData<std::string>* param = static_cast<rtc::TypedMessageData<std::string>*>(msg->pdata);
+      webrtc::DataChannelInit config;
+      data_channel_=peer_connection_->CreateDataChannel(param->data(), &config);
+      data_channel_->RegisterObserver(this);
+      LOG(LS_INFO) << "Created data channel.";
+      delete param;
+      break;
+    }
     case kMessageTypeSetLocalDescription: {
       SetSessionDescriptionMessage* param = static_cast<SetSessionDescriptionMessage*>(msg->pdata);
       // Set codec preference.

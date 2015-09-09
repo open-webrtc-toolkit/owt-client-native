@@ -80,6 +80,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     enum MessageType : int {
       kMessageTypeCreateOffer = 101,
       kMessageTypeCreateAnswer,
+      kMessageTypeCreateDataChannel,
       kMessageTypeSetLocalDescription,
       kMessageTypeSetRemoteDescription,
       kMessageTypeSetRemoteIceCandidate,
@@ -90,6 +91,10 @@ class PeerConnectionChannel : public rtc::MessageHandler,
 
     Thread* pc_thread_;
     PeerConnectionChannelConfiguration configuration_;
+    // Use this data channel to send p2p messages.
+    // Use a map if we need more than one data channels for a PeerConnection in
+    // the future.
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 
   private:
     // DataChannelObserver

@@ -68,6 +68,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     void Publish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Unpublish a local stream to remote user.
     void Unpublish(std::shared_ptr<LocalStream> stream, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
+    // Send message to remote user.
+    void Send(const std::string& message, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
     // Stop current WebRTC session.
     void Stop(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
@@ -126,6 +128,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     void ClosePeerConnection();  // Stop session and clean up.
     // Returns true if |pointer| is not nullptr. Otherwise, return false and execute |on_failure|.
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<P2PException>)>on_failure);
+    webrtc::DataBuffer CreateDataBuffer(const std::string& data);
+    void CreateDataChannel(const std::string& label);
+    // Send all messages in pending message list.
+    void DrainPendingMessages();
 
     P2PSignalingSenderInterface* signaling_sender_;
     std::string local_id_;
@@ -140,7 +146,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     std::mutex pending_unpublish_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
     std::chrono::time_point<std::chrono::system_clock> last_disconnect_;  // Last time |peer_connection_| changes its state to "disconnect"
-    //webrtc::DataChannelInterface* data_channel_;  // Use this data channel to send p2p messages.
+    std::vector<std::string> pending_messages_;  // Messages need to be sent once data channel is ready.
+    std::mutex pending_messages_mutex_;
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
 

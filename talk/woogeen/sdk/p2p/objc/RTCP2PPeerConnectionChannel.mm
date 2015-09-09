@@ -106,6 +106,18 @@
   });
 }
 
+-(void)send:(NSString*) message withOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+  _nativeChannel->Send([message UTF8String],[=](){
+    if(onSuccess!=nil)
+      onSuccess();
+  },[=](std::unique_ptr<woogeen::P2PException> e){
+    if(onFailure==nil)
+      return;
+    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
+    onFailure(err);
+  });
+}
+
 -(void)stopWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure {
   _nativeChannel->Stop([=](){
     if(onSuccess!=nil)

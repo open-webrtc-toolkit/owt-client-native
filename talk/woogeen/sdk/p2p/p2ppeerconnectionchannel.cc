@@ -53,6 +53,8 @@ const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 const string kIceCandidateSdpNameKey = "candidate";
 
+const string kDataChannelLabelForTextMessage = "message";
+
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(PeerConnectionChannelConfiguration configuration, const std::string& local_id, const std::string& remote_id, P2PSignalingSenderInterface* sender)
    : PeerConnectionChannel(configuration),
      signaling_sender_(sender),
@@ -335,7 +337,15 @@ void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
 }
 
 void P2PPeerConnectionChannel::OnDataChannel(webrtc::DataChannelInterface* data_channel) {
-  data_channel->RegisterObserver(this);
+  // If a new data channel is create, delete the old one to save resource.
+  // Currently only one data channel for one connection. If we are going to
+  // support multiple data channels(one for text, one for large files), replace
+  // |data_channel_| with a map.
+  if(data_channel_)
+    data_channel_=nullptr;
+  data_channel_=data_channel;
+  data_channel_->RegisterObserver(this);
+  DrainPendingMessages();
 }
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
@@ -577,6 +587,10 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
 }
 
 void P2PPeerConnectionChannel::OnDataChannelStateChange(){
+  CHECK(data_channel_);
+  if(data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen){
+    DrainPendingMessages();
+  }
 }
 
 void P2PPeerConnectionChannel::OnDataChannelMessage(const webrtc::DataBuffer& buffer){
@@ -587,6 +601,45 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(const webrtc::DataBuffer& bu
   std::string message = std::string(buffer.data.data<char>());
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnData(remote_id_, message);
+  }
+}
+
+void P2PPeerConnectionChannel::CreateDataChannel(const std::string& label){
+  rtc::TypedMessageData<std::string>* data = new rtc::TypedMessageData<std::string>(label);
+  pc_thread_->Post(this, kMessageTypeCreateDataChannel, data);
+}
+
+void P2PPeerConnectionChannel::Send(const std::string& message, std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure){
+  if(data_channel_!=nullptr &&
+      data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen){
+    data_channel_->Send(CreateDataBuffer(message));
+    LOG(LS_INFO) << "Send message "<<message;
+    return;
+  }
+  {
+    std::lock_guard<std::mutex> lock(pending_messages_mutex_);
+    pending_messages_.push_back(message);
+  }
+  if(data_channel_==nullptr){  // Otherwise, wait for data channel ready.
+    CreateDataChannel(kDataChannelLabelForTextMessage);
+  }
+}
+
+webrtc::DataBuffer P2PPeerConnectionChannel::CreateDataBuffer(const std::string& data){
+  rtc::Buffer buffer(data.c_str(), data.length());
+  webrtc::DataBuffer data_buffer(buffer, false);
+  return data_buffer;
+}
+
+void P2PPeerConnectionChannel::DrainPendingMessages(){
+  LOG(LS_INFO) << "Draining pending messages. Message queue size: " << pending_messages_.size();
+  CHECK(data_channel_);
+  {
+    std::lock_guard<std::mutex> lock(pending_messages_mutex_);
+    for (auto it = pending_messages_.begin(); it != pending_messages_.end(); ++it) {
+      data_channel_->Send(CreateDataBuffer(*it));
+    }
+    pending_messages_.clear();
   }
 }
 
