@@ -18,7 +18,10 @@ namespace woogeen {
 
     virtual void AddObserver(ConferenceSignalingChannelObserver& observer);
     virtual void RemoveObserver(ConferenceSignalingChannelObserver& observer);
-    virtual void Connect(const std::string& token, std::function<void(Json::Value &room_info)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    // |users| is part of |room_info|, but we can better performance if provide
+    // |users| separately, because sio::message -> User is shorter than
+    // sio::message -> Json::Value -> User.
+    virtual void Connect(const std::string& token, std::function<void(Json::Value &room_info, std::vector<const conference::User> users)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     virtual void SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack, std::string& stream_id)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
     virtual void SendStreamEvent(const std::string& event, const std::string& stream_id, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
     virtual void SendCustomMessage(const std::string& message, const std::string& receiver, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
@@ -29,7 +32,8 @@ namespace woogeen {
     virtual void OnEmitAck(sio::message::list const& msg, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   private:
-    Json::Value ParseStream(const sio::message::ptr stream);
+    Json::Value ParseStream(const sio::message::ptr& stream);
+    conference::User ParseUser(const sio::message::ptr& user_message);
     sio::client *socket_client_;
     std::vector<ConferenceSignalingChannelObserver*> observers_;
   };

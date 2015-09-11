@@ -31,6 +31,8 @@ class ConferenceClientObserver {
     virtual void OnStreamRemoved(std::shared_ptr<woogeen::RemoteMixedStream> stream) {};
     // Triggered when received a message.
     virtual void OnMessageReceived(std::string& sender_id, std::string& message) {};
+    virtual void OnUserJoined(std::shared_ptr<const conference::User>) {};
+    virtual void OnUserLeft(std::shared_ptr<const conference::User>) {};
     // TODO(jianjun): add other events.
 };
 
@@ -73,6 +75,8 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
   protected:
     virtual void OnStreamAdded(Json::Value stream) override;
     virtual void OnCustomMessage(std::string& from, std::string& message) override;
+    virtual void OnUserJoined(std::shared_ptr<const conference::User> user) override;
+    virtual void OnUserLeft(std::shared_ptr<const conference::User> user) override;
 
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);

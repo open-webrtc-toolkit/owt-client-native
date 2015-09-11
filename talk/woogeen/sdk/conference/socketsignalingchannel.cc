@@ -9,10 +9,12 @@
 
 namespace woogeen {
 
-const std::string kCustomMessageEventName = "customMessage";
-const std::string kOnCustomMessageEventName = "onCustomMessage";
-const std::string kStreamControlEventName = "control";
-const std::string kOnAddStreamEventName = "onAddStream";
+const std::string kEventNameCustomMessage = "customMessage";
+const std::string kEventNameOnCustomMessage = "onCustomMessage";
+const std::string kEventNameStreamControl = "control";
+const std::string kEventNameOnAddStream = "onAddStream";
+const std::string kEventNameOnUserJoin = "onUserJoin";
+const std::string kEventNameOnUserLeave = "onUserLeave";
 
 SocketSignalingChannel::SocketSignalingChannel() : socket_client_(new sio::client()) {
 }
@@ -29,7 +31,7 @@ void SocketSignalingChannel::RemoveObserver(ConferenceSignalingChannelObserver& 
   // TODO:
 }
 
-void SocketSignalingChannel::Connect(const std::string &token, std::function<void (Json::Value &room_info)> on_success, std::function<void (std::unique_ptr<ConferenceException>)> on_failure){
+void SocketSignalingChannel::Connect(const std::string &token, std::function<void (Json::Value &room_info, std::vector<const conference::User> users)> on_success, std::function<void (std::unique_ptr<ConferenceException>)> on_failure){
   Json::Value jsonToken;
   Json::Reader reader;
   if(!reader.parse(token, jsonToken)){
@@ -87,22 +89,42 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       }
       room_info["streams"]=rtc::ValueVectorToJsonArray(streams);
       std::cout<<"Room info: "<<room_info;
-      on_success(room_info);
+      // Users in the room
+      std::vector<const conference::User> users;
+      auto user_messages=message->get_map()["users"]->get_vector();
+      for(auto it=user_messages.begin(); it!=user_messages.end(); ++it){
+        users.push_back(ParseUser(*it));
+      }
+      on_success(room_info, users);
     });
   });
-  socket_client_->socket()->on(kOnAddStreamEventName, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kEventNameOnAddStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
     std::cout<<"Received on add stream."<<std::endl;
     Json::Value stream=ParseStream(data);
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnStreamAdded(stream);
     }
   }));
-  socket_client_->socket()->on(kOnCustomMessageEventName, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kEventNameOnCustomMessage, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
     std::cout<<"Received custom message."<<std::endl;
     std::string from=data->get_map()["from"]->get_string();
     std::string message=data->get_map()["data"]->get_string();
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnCustomMessage(from, message);
+    }
+  }));
+  socket_client_->socket()->on(kEventNameOnUserJoin, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr& ack_resp){
+    std::cout<<"Received user join message."<<std::endl;
+    auto user = std::make_shared<const conference::User>(ParseUser(data->get_map()["user"]));
+    for(auto it=observers_.begin();it!=observers_.end();++it){
+      (*it)->OnUserJoined(user);
+    }
+  }));
+  socket_client_->socket()->on(kEventNameOnUserLeave, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr& ack_resp){
+    std::cout<<"Received user leave message."<<std::endl;
+    auto user = std::make_shared<const conference::User>(ParseUser(data->get_map()["user"]));
+    for(auto it=observers_.begin();it!=observers_.end();++it){
+      (*it)->OnUserLeft(user);
     }
   }));
   socket_client_->connect(scheme.append(host));
@@ -193,7 +215,7 @@ void SocketSignalingChannel::SendCustomMessage(const std::string& message, const
   }
   send_message->get_map()["type"]=sio::string_message::create("data");
   send_message->get_map()["data"]=sio::string_message::create(message);
-  socket_client_->socket()->emit(kCustomMessageEventName, send_message, [=](sio::message::list const& msg){
+  socket_client_->socket()->emit(kEventNameCustomMessage, send_message, [=](sio::message::list const& msg){
     OnEmitAck(msg, on_success, on_failure);
   });
 }
@@ -204,12 +226,12 @@ void SocketSignalingChannel::SendStreamControlMessage(const std::string& stream_
   payload->get_map()["streamId"]=sio::string_message::create(stream_id);
   send_message->get_map()["type"]=sio::string_message::create("control");
   send_message->get_map()["payload"]=payload;
-  socket_client_->socket()->emit(kCustomMessageEventName, send_message, [=](sio::message::list const& msg){
+  socket_client_->socket()->emit(kEventNameCustomMessage, send_message, [=](sio::message::list const& msg){
     OnEmitAck(msg, on_success, on_failure);
   });
 }
 
-Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr stream_message){
+Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr& stream_message){
   Json::Value stream;
   stream["id"]=stream_message->get_map()["id"]->get_string();
   stream["from"]=stream_message->get_map()["from"]->get_string();
@@ -226,6 +248,19 @@ Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr stream_m
     stream["video"]=video_json;
   }
   return stream;
+}
+
+conference::User SocketSignalingChannel::ParseUser(const sio::message::ptr& user_message){
+  std::string id=user_message->get_map()["id"]->get_string();
+  std::string user_name=user_message->get_map()["name"]->get_string();
+  std::string role=user_message->get_map()["role"]->get_string();
+  auto permission_message=user_message->get_map()["permissions"]->get_map();
+  bool publish=permission_message["publish"]->get_bool();
+  bool subscribe=permission_message["subscribe"]->get_bool();
+  bool record=permission_message["record"]->get_bool();
+  conference::Permission permission(publish, subscribe, record);
+  conference::User user(id, user_name, role, permission);
+  return user;
 }
 
 void SocketSignalingChannel::OnEmitAck(sio::message::list const& msg, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){

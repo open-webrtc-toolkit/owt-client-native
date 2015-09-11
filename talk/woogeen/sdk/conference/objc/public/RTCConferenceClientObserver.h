@@ -7,6 +7,7 @@
 
 #import "RTCLocalStream.h"
 #import "RTCRemoteStream.h"
+#import "RTCConferenceUser.h"
 
 /// Observer for RTCConferenceClient.
 @protocol RTCConferenceClientObserver <NSObject>
@@ -31,9 +32,16 @@
   @param message Message received.
 */
 -(void)onMessageReceivedFrom:(NSString*) senderId message:(NSString*)message;
-// TODO(jianjun): Enable user events
-//-(void)onUserJoined:(User*)user;
-//-(void)onUserLeft:(User*)user;
+/**
+  @brief Triggers when a user joined conference.
+  @param user The user joined.
+*/
+-(void)onUserJoined:(RTCConferenceUser*)user;
+/**
+  @brief Triggers when a user left conference.
+  @param user The user left.
+*/
+-(void)onUserLeft:(RTCConferenceUser*)user;
 
 @end
 

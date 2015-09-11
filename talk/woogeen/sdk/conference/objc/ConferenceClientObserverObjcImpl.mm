@@ -9,6 +9,7 @@
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteScreenStream.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteCameraStream.h"
 #import "talk/woogeen/sdk/conference/objc/public/RTCRemoteMixedStream.h"
+#import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 
 namespace woogeen {
 
@@ -49,5 +50,14 @@ void ConferenceClientObserverObjcImpl::OnStreamRemoved(std::shared_ptr<RemoteMix
 void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id, std::string& message) {
   [observer_ onMessageReceivedFrom:[NSString stringWithCString:sender_id.c_str() encoding: [NSString defaultCStringEncoding]] message:[NSString stringWithCString:message.c_str() encoding: [NSString defaultCStringEncoding]]];
 }
+
+void ConferenceClientObserverObjcImpl::OnUserJoined(std::shared_ptr<const woogeen::conference::User> user){
+  [observer_ onUserJoined:[[RTCConferenceUser alloc] initWithNativeUser: user]];
+}
+
+void ConferenceClientObserverObjcImpl::OnUserLeft(std::shared_ptr<const woogeen::conference::User> user){
+  [observer_ onUserLeft:[[RTCConferenceUser alloc] initWithNativeUser: user]];
+}
+
 
 }

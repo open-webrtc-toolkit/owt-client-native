@@ -23,7 +23,7 @@ void ConferenceClient::RemoveObserver(std::shared_ptr<ConferenceClientObserver> 
 
 void ConferenceClient::Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   signaling_channel_->AddObserver(*this);
-  signaling_channel_->Connect(token, [=](Json::Value room_info){
+  signaling_channel_->Connect(token, [=](Json::Value room_info, std::vector<const conference::User> users){
     if(on_success){
       std::thread t(on_success);
       t.detach();
@@ -34,6 +34,13 @@ void ConferenceClient::Join(const std::string& token, std::function<void()> on_s
     for(auto it=streams.begin();it!=streams.end();++it){
       LOG(LS_INFO) << "Find streams in the conference.";
       TriggerOnStreamAdded(*it);
+    }
+    // Trigger OnUserJoin for existed users.
+    for(auto it=users.begin();it!=users.end();++it){
+      for (auto its=observers_.begin();its!=observers_.end();++its){
+        auto user=std::make_shared<const conference::User>(*it);
+        (*its)->OnUserJoined(user);
+      }
     }
   }, on_failure);
 }
@@ -242,6 +249,18 @@ PeerConnectionChannelConfiguration ConferenceClient::GetPeerConnectionChannelCon
   config.servers=configuration_.ice_servers;
   config.media_codec=configuration_.media_codec;
   return config;
+}
+
+void ConferenceClient::OnUserJoined(std::shared_ptr<const conference::User> user) {
+  for (auto its=observers_.begin();its!=observers_.end();++its){
+    (*its)->OnUserJoined(user);
+  }
+}
+
+void ConferenceClient::OnUserLeft(std::shared_ptr<const conference::User> user) {
+  for (auto its=observers_.begin();its!=observers_.end();++its){
+    (*its)->OnUserLeft(user);
+  }
 }
 
 }
