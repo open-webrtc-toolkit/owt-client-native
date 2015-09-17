@@ -33,6 +33,8 @@ class ConferenceClientObserver {
     virtual void OnMessageReceived(std::string& sender_id, std::string& message) {};
     virtual void OnUserJoined(std::shared_ptr<const conference::User>) {};
     virtual void OnUserLeft(std::shared_ptr<const conference::User>) {};
+    // Triggered when server is disconnected.
+    virtual void OnServerDisconnected() {};
     // TODO(jianjun): add other events.
 };
 
@@ -77,6 +79,8 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     virtual void OnCustomMessage(std::string& from, std::string& message) override;
     virtual void OnUserJoined(std::shared_ptr<const conference::User> user) override;
     virtual void OnUserLeft(std::shared_ptr<const conference::User> user) override;
+    virtual void OnStreamRemoved(Json::Value stream);
+    virtual void OnServerDisconnected();
 
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);
@@ -84,11 +88,13 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration() const;
     // Get the |ConferencePeerConnectionChannel| instance associated with specific |stream|. Return |nullptr| if not found.
     std::shared_ptr<ConferencePeerConnectionChannel> GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
+    void TriggerOnStreamRemoved(const Json::Value& stream_info);
 
     ConferenceClientConfiguration configuration_;
     std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> publish_pcs_;
     std::unordered_map<std::string, std::shared_ptr<ConferencePeerConnectionChannel>> subscribe_pcs_;
+    std::unordered_map<std::string, std::shared_ptr<woogeen::RemoteStream>> added_streams_;
     std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;
 };
 

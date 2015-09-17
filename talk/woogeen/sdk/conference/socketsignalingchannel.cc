@@ -13,6 +13,7 @@ const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameOnCustomMessage = "onCustomMessage";
 const std::string kEventNameStreamControl = "control";
 const std::string kEventNameOnAddStream = "onAddStream";
+const std::string kEventNameOnRemoveStream = "onRemoveStream";
 const std::string kEventNameOnUserJoin = "onUserJoin";
 const std::string kEventNameOnUserLeave = "onUserLeave";
 
@@ -28,7 +29,7 @@ void SocketSignalingChannel::AddObserver(ConferenceSignalingChannelObserver& obs
 }
 
 void SocketSignalingChannel::RemoveObserver(ConferenceSignalingChannelObserver& observer){
-  // TODO:
+  observers_.erase(std::remove(observers_.begin(), observers_.end(), &observer), observers_.end());
 }
 
 void SocketSignalingChannel::Connect(const std::string &token, std::function<void (Json::Value &room_info, std::vector<const conference::User> users)> on_success, std::function<void (std::unique_ptr<ConferenceException>)> on_failure){
@@ -127,6 +128,13 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       (*it)->OnUserLeft(user);
     }
   }));
+  socket_client_->socket()->on(kEventNameOnRemoveStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+    std::cout<<"Received on remove stream."<<std::endl;
+    Json::Value stream=ParseStream(data);
+    for(auto it=observers_.begin();it!=observers_.end();++it){
+      (*it)->OnStreamRemoved(stream);
+    }
+  }));
   socket_client_->connect(scheme.append(host));
 }
 
@@ -134,6 +142,9 @@ void SocketSignalingChannel::Disconnect(std::function<void()> on_success, std::f
   socket_client_->close();
   std::thread t(on_success);  // TODO: Check if socket client is connected.
   t.detach();
+  for(auto it=observers_.begin();it!=observers_.end();++it){
+    (*it)->OnServerDisconnected();
+  }
 }
 
 void SocketSignalingChannel::SendSdp(Json::Value &options, std::string &sdp, bool is_publish, std::function<void(Json::Value &ack, std::string& stream_id)> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -234,7 +245,11 @@ void SocketSignalingChannel::SendStreamControlMessage(const std::string& stream_
 Json::Value SocketSignalingChannel::ParseStream(const sio::message::ptr& stream_message){
   Json::Value stream;
   stream["id"]=stream_message->get_map()["id"]->get_string();
-  stream["from"]=stream_message->get_map()["from"]->get_string();
+
+  // ugly due to the inconsistency
+  if (stream_message->get_map().find("from") != stream_message->get_map().end()) {
+    stream["from"]=stream_message->get_map()["from"]->get_string();
+  }
   // Very ugly code for video type because MCU sends unconsistent messages :(
   if(stream_message->get_map()["video"]!=nullptr){
     Json::Value video_json;

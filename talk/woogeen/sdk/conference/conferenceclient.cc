@@ -18,7 +18,7 @@ void ConferenceClient::AddObserver(std::shared_ptr<ConferenceClientObserver> obs
 }
 
 void ConferenceClient::RemoveObserver(std::shared_ptr<ConferenceClientObserver> observer) {
-  // TODO(jianjun): implement it.
+  observers_.erase(std::remove(observers_.begin(), observers_.end(), observer), observers_.end());
 }
 
 void ConferenceClient::Join(const std::string& token, std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -186,6 +186,16 @@ void ConferenceClient::OnCustomMessage(std::string& from, std::string& message){
   }
 }
 
+void ConferenceClient::OnStreamRemoved(Json::Value stream){
+  TriggerOnStreamRemoved(stream);
+}
+
+void ConferenceClient::OnServerDisconnected(){
+  for (auto its=observers_.begin();its!=observers_.end();++its){
+    (*its)->OnServerDisconnected();
+  }
+}
+
 bool ConferenceClient::CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure) {
   if(pointer)
     return true;
@@ -208,20 +218,27 @@ void ConferenceClient::TriggerOnStreamAdded(const Json::Value& stream_info){
     for (auto its=observers_.begin();its!=observers_.end();++its){
       (*its)->OnStreamAdded(remote_stream);
     }
+    auto stream_pair = std::make_pair(id, remote_stream);
+    added_streams_.insert(stream_pair);
   }
   else if (rtc::GetStringFromJsonObject(video, "device", &device)&&device=="screen"){
     auto remote_stream = std::make_shared<woogeen::RemoteScreenStream>(id, remote_id);
     for (auto its=observers_.begin();its!=observers_.end();++its){
       (*its)->OnStreamAdded(remote_stream);
     }
+    auto stream_pair = std::make_pair(id, remote_stream);
+    added_streams_.insert(stream_pair);
   }
   else {
     auto remote_stream = std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
     for (auto its=observers_.begin();its!=observers_.end();++its){
       (*its)->OnStreamAdded(remote_stream);
     }
+    auto stream_pair = std::make_pair(id, remote_stream);
+    added_streams_.insert(stream_pair);
   }
 }
+
 
 std::shared_ptr<ConferencePeerConnectionChannel> ConferenceClient::GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const {
   if(stream==nullptr){
@@ -261,6 +278,35 @@ void ConferenceClient::OnUserLeft(std::shared_ptr<const conference::User> user) 
   for (auto its=observers_.begin();its!=observers_.end();++its){
     (*its)->OnUserLeft(user);
   }
+}
+
+void ConferenceClient::TriggerOnStreamRemoved(const Json::Value& stream_info){
+  std::string id;
+  rtc::GetStringFromJsonObject(stream_info, "id", &id);
+  Json::Value video=stream_info["video"];
+  std::string device;
+  std::string remote_id;
+  rtc::GetStringFromJsonObject(stream_info, "from", &remote_id);
+  auto stream_it=added_streams_.find(id);
+  if(rtc::GetStringFromJsonObject(video, "device", &device)&&device=="mcu"){
+    std::shared_ptr<RemoteMixedStream> stream = std::static_pointer_cast<RemoteMixedStream>(stream_it->second);
+    for (auto its=observers_.begin();its!=observers_.end();++its){
+      (*its)->OnStreamRemoved(stream);
+    }
+  }
+  else if (rtc::GetStringFromJsonObject(video, "device", &device)&&device=="screen"){
+    std::shared_ptr<RemoteScreenStream> stream = std::static_pointer_cast<RemoteScreenStream>(stream_it->second);
+    for (auto its=observers_.begin();its!=observers_.end();++its){
+      (*its)->OnStreamRemoved(stream);
+    }
+  }
+  else {
+    std::shared_ptr<RemoteCameraStream> stream = std::static_pointer_cast<RemoteCameraStream>(stream_it->second);
+    for (auto its=observers_.begin();its!=observers_.end();++its){
+      (*its)->OnStreamRemoved(stream);
+    }
+  }
+  added_streams_.erase(stream_it);
 }
 
 }

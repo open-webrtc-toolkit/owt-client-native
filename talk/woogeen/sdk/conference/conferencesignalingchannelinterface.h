@@ -17,6 +17,8 @@ class ConferenceSignalingChannelObserver {
     virtual void OnStreamAdded(Json::Value stream) = 0;
     virtual void OnUserJoined(std::shared_ptr<const woogeen::conference::User> user) = 0;
     virtual void OnUserLeft(std::shared_ptr<const woogeen::conference::User> user) = 0;
+    virtual void OnStreamRemoved(Json::Value stream) = 0;
+    virtual void OnServerDisconnected();
     virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
 };
 

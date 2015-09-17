@@ -39,7 +39,6 @@
 }
 
 -(void)addObserver:(id<RTCConferenceClientObserver>)observer {
-  woogeen::ConferenceClientObserver *nb=new woogeen::ConferenceClientObserverObjcImpl(observer);
   std::shared_ptr<woogeen::ConferenceClientObserver> nativeObserver(new woogeen::ConferenceClientObserverObjcImpl(observer));
   _nativeConferenceClient->AddObserver(nativeObserver);
 }
