@@ -7,6 +7,7 @@
 
 typedef NS_ENUM(NSInteger, WoogeenP2PErrors){
   WoogeenP2PErrorUnknown=2000,
+  WoogeenP2PErrorClientIllegalArgument=2402,
   WoogeenP2PErrorClientInvalidState=2403
 };
 
