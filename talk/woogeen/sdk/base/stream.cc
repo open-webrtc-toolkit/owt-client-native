@@ -2,6 +2,8 @@
  * Intel License
  */
 
+#include <random>
+
 #include "talk/media/base/videocapturer.h"
 #include "talk/media/devices/devicemanager.h"
 #include "talk/woogeen/sdk/base/stream.h"
@@ -87,7 +89,10 @@ LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> factory = PeerConnectionDependencyFactory::Get();
-  std::string media_stream_label = "MediaStream";
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(1, 99999999);
+  std::string media_stream_label = "MediaStream-"+std::to_string(dis(gen));  // TODO: use UUID.
   scoped_refptr<MediaStreamInterface> stream = factory->CreateLocalMediaStream(media_stream_label);
   if(parameters->VideoEnabled()){
     rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(cricket::DeviceManagerFactory::Create());
@@ -104,12 +109,12 @@ LocalCameraStream::LocalCameraStream(std::shared_ptr<LocalCameraStreamParameters
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinWidth, std::to_string(parameters->ResolutionWidth()));
     media_constraints_.SetMandatory(webrtc::MediaConstraintsInterface::kMinHeight, std::to_string(parameters->ResolutionHeight()));
     scoped_refptr<VideoSourceInterface> source = factory->CreateVideoSource(capturer_ptr, &media_constraints_);
-    std::string video_track_label = "VideoTrack";
+    std::string video_track_label = "VideoTrack-"+std::to_string(dis(gen));  // TODO: use UUID.
     scoped_refptr<VideoTrackInterface> video_track = factory->CreateLocalVideoTrack(video_track_label, source);
     stream->AddTrack(video_track);
   }
   if(parameters->AudioEnabled()){
-    std::string audio_track_label = "AudioTrack";
+    std::string audio_track_label = "AudioTrack-"+std::to_string(dis(gen));  // TODO: use UUID.
     scoped_refptr<AudioTrackInterface> audio_track = factory->CreateLocalAudioTrack(audio_track_label);
     stream->AddTrack(audio_track);
   }
