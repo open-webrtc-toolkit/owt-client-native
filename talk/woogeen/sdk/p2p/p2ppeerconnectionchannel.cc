@@ -353,6 +353,7 @@ void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
   Json::Value json;
   json[kMessageTypeKey] = kChatNegotiationNeeded;
   SendSignalingMessage(json, nullptr, nullptr);
+  ChangeNegotiationState(kNegotiationStateSent);
 }
 
 void P2PPeerConnectionChannel::OnIceConnectionChange(PeerConnectionInterface::IceConnectionState new_state) {
