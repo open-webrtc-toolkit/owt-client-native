@@ -172,6 +172,8 @@ void ConferenceClient::PauseVideo(std::shared_ptr<Stream> stream, std::function<
 }
 
 void ConferenceClient::Leave(std::function<void()> on_success, std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  publish_pcs_.clear();
+  subscribe_pcs_.clear();
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 

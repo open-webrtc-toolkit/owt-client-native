@@ -70,6 +70,10 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(PeerConnectionC
 
 ConferencePeerConnectionChannel::~ConferencePeerConnectionChannel(){
   LOG(LS_INFO)<< "Deconstruct conference peer connection channel";
+  if(published_stream_)
+    Unpublish(published_stream_, nullptr, nullptr);
+  if(subscribed_stream_)
+    Unsubscribe(subscribed_stream_, nullptr, nullptr);
 }
 
 void ConferencePeerConnectionChannel::ChangeSessionState(SessionState state) {
