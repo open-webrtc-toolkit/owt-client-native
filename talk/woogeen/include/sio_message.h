@@ -27,7 +27,8 @@ namespace sio
             flag_binary,
             flag_array,
             flag_object,
-			flag_boolean
+			flag_boolean,
+			flag_null
         };
 
 		virtual ~message(){};
@@ -43,25 +44,25 @@ namespace sio
 
 		virtual bool get_bool() const
 		{
-			//assert(false);
+			assert(false);
 			return false;
 		}
         
         virtual int64_t get_int() const
         {
-            //assert(false);
+            assert(false);
             return 0;
         }
         
         virtual double get_double() const
         {
-            //assert(false);
+            assert(false);
             return 0;
         }
         
         virtual string const& get_string() const
         {
-            //assert(false);
+            assert(false);
             static string s_empty_string;
             s_empty_string.clear();
             return s_empty_string;
@@ -69,7 +70,7 @@ namespace sio
         
         virtual shared_ptr<const string> const& get_binary() const
         {
-            //assert(false);
+            assert(false);
             static shared_ptr<const string> s_empty_binary;
             s_empty_binary = nullptr;
             return s_empty_binary;
@@ -77,7 +78,7 @@ namespace sio
         
         virtual const vector<ptr>& get_vector() const
         {
-            //assert(false);
+            assert(false);
             static vector<ptr> s_empty_vector;
             s_empty_vector.clear();
             return s_empty_vector;
@@ -85,7 +86,7 @@ namespace sio
 
         virtual vector<ptr>& get_vector()
         {
-            //assert(false);
+            assert(false);
             static vector<ptr> s_empty_vector;
             s_empty_vector.clear();
             return s_empty_vector;
@@ -93,7 +94,7 @@ namespace sio
         
         virtual const map<string,message::ptr>& get_map() const
         {
-            //assert(false);
+            assert(false);
             static map<string,message::ptr> s_empty_map;
             s_empty_map.clear();
             return s_empty_map;
@@ -101,7 +102,7 @@ namespace sio
         
         virtual map<string,message::ptr>& get_map()
         {
-            //assert(false);
+            assert(false);
             static map<string,message::ptr> s_empty_map;
             s_empty_map.clear();
             return s_empty_map;
@@ -112,6 +113,21 @@ namespace sio
     protected:
         message(flag f):_flag(f){}
     };
+
+	class null_message : public message
+	{
+	protected:
+        null_message()
+			:message(flag_null)
+        {
+        }
+
+	public:
+        static message::ptr create()
+        {
+            return ptr(new null_message());
+        }
+	};
 
 	class bool_message : public message
 	{
@@ -293,6 +309,12 @@ namespace sio
 
         }
 
+        list & operator= (const message::list && rhs)
+        {
+            m_vector = std::move(rhs.m_vector);
+            return *this;
+        }
+
 		template <typename T>
 		list(T&& content,
 			typename enable_if<is_same<vector<message::ptr>,typename remove_reference<T>::type>::value>::type* = 0):
@@ -365,6 +387,13 @@ namespace sio
         {
             message::ptr arr = array_message::create();
             arr->get_vector().push_back(string_message::create(event_name));
+            arr->get_vector().insert(arr->get_vector().end(),m_vector.begin(),m_vector.end());
+            return arr;
+        }
+
+        message::ptr to_array_message() const
+        {
+            message::ptr arr = array_message::create();
             arr->get_vector().insert(arr->get_vector().end(),m_vector.begin(),m_vector.end());
             return arr;
         }

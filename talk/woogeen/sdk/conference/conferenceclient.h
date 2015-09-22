@@ -79,8 +79,8 @@ class ConferenceClient final : ConferenceSignalingChannelObserver{
     virtual void OnCustomMessage(std::string& from, std::string& message) override;
     virtual void OnUserJoined(std::shared_ptr<const conference::User> user) override;
     virtual void OnUserLeft(std::shared_ptr<const conference::User> user) override;
-    virtual void OnStreamRemoved(Json::Value stream);
-    virtual void OnServerDisconnected();
+    virtual void OnStreamRemoved(Json::Value stream) override;
+    virtual void OnServerDisconnected() override;
 
   private:
     bool CheckNullPointer(uintptr_t pointer, std::function<void(std::unique_ptr<ConferenceException>)>on_failure);

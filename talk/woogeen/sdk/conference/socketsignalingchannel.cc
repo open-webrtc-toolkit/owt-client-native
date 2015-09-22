@@ -99,14 +99,14 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       on_success(room_info, users);
     });
   });
-  socket_client_->socket()->on(kEventNameOnAddStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kEventNameOnAddStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::list &ack_resp){
     std::cout<<"Received on add stream."<<std::endl;
     Json::Value stream=ParseStream(data);
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnStreamAdded(stream);
     }
   }));
-  socket_client_->socket()->on(kEventNameOnCustomMessage, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kEventNameOnCustomMessage, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::list &ack_resp){
     std::cout<<"Received custom message."<<std::endl;
     std::string from=data->get_map()["from"]->get_string();
     std::string message=data->get_map()["data"]->get_string();
@@ -114,21 +114,21 @@ void SocketSignalingChannel::Connect(const std::string &token, std::function<voi
       (*it)->OnCustomMessage(from, message);
     }
   }));
-  socket_client_->socket()->on(kEventNameOnUserJoin, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr& ack_resp){
+  socket_client_->socket()->on(kEventNameOnUserJoin, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::list& ack_resp){
     std::cout<<"Received user join message."<<std::endl;
     auto user = std::make_shared<const conference::User>(ParseUser(data->get_map()["user"]));
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnUserJoined(user);
     }
   }));
-  socket_client_->socket()->on(kEventNameOnUserLeave, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr& ack_resp){
+  socket_client_->socket()->on(kEventNameOnUserLeave, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::list& ack_resp){
     std::cout<<"Received user leave message."<<std::endl;
     auto user = std::make_shared<const conference::User>(ParseUser(data->get_map()["user"]));
     for(auto it=observers_.begin();it!=observers_.end();++it){
       (*it)->OnUserLeft(user);
     }
   }));
-  socket_client_->socket()->on(kEventNameOnRemoveStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::ptr &ack_resp){
+  socket_client_->socket()->on(kEventNameOnRemoveStream, sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool is_ack, sio::message::list &ack_resp){
     std::cout<<"Received on remove stream."<<std::endl;
     Json::Value stream=ParseStream(data);
     for(auto it=observers_.begin();it!=observers_.end();++it){
