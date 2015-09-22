@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <chrono>
 
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
@@ -142,8 +143,12 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     std::unordered_map<std::string, std::string> remote_stream_type_;  // Key is remote media stream's label, value is type.
     std::vector<std::shared_ptr<LocalStream>> pending_publish_streams_;  // Streams need to be published.
     std::vector<std::shared_ptr<LocalStream>> pending_unpublish_streams_;  // Streams need to be unpublished.
+    // A set of labels for streams published or will be publish to remote side.
+    // |Publish| adds its argument to this vector, |Unpublish| removes it.
+    std::unordered_set<std::string> published_streams_;
     std::mutex pending_publish_streams_mutex_;
     std::mutex pending_unpublish_streams_mutex_;
+    std::mutex published_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
     std::chrono::time_point<std::chrono::system_clock> last_disconnect_;  // Last time |peer_connection_| changes its state to "disconnect"
     std::vector<std::string> pending_messages_;  // Messages need to be sent once data channel is ready.

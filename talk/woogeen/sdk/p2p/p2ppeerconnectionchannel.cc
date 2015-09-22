@@ -69,11 +69,19 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(PeerConnectionChannelConfigur
   CHECK(signaling_sender_);
 }
 
-void P2PPeerConnectionChannel::Invite(std::function<void()> success, std::function<void(std::unique_ptr<P2PException>)> failure) {
+void P2PPeerConnectionChannel::Invite(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  if(session_state_!=kSessionStateReady&&session_state_!=kSessionStateOffered){
+    if(on_failure){
+      LOG(LS_WARNING) << "Cannot send invitation in this state: " << session_state_;
+      std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidState, "Cannot send invitation in this state."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   SendStop(nullptr, nullptr);  // Just try to clean up remote side. No callback is needed.
   Json::Value json;
   json[kMessageTypeKey]=kChatInvitation;
-  SendSignalingMessage(json, success, failure);
+  SendSignalingMessage(json, on_success, on_failure);
   ChangeSessionState(kSessionStateOffered);
 }
 
@@ -467,9 +475,22 @@ void P2PPeerConnectionChannel::Publish(std::shared_ptr<LocalStream> stream, std:
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
-  pending_publish_streams_mutex_.lock();
-  pending_publish_streams_.push_back(stream);
-  pending_publish_streams_mutex_.unlock();
+  CHECK(stream->MediaStream());
+  if(published_streams_.find(stream->MediaStream()->label())!=published_streams_.end()){
+    if(on_failure){
+        std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidArgument, "The stream is already published."));
+        on_failure(std::move(e));
+    }
+    return;
+  }
+  {
+    std::lock_guard<std::mutex> lock(published_streams_mutex_);
+    published_streams_.insert(stream->MediaStream()->label());
+  }
+  {
+    std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
+    pending_publish_streams_.push_back(stream);
+  }
   if(on_success){
     std::thread t(on_success);
     t.detach();
@@ -485,9 +506,24 @@ void P2PPeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, st
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
-  pending_unpublish_streams_mutex_.lock();
-  pending_unpublish_streams_.push_back(stream);
-  pending_unpublish_streams_mutex_.unlock();
+  CHECK(stream->MediaStream());
+  {
+    std::lock_guard<std::mutex> lock(published_streams_mutex_);
+    auto it = published_streams_.find(stream->MediaStream()->label());
+    if(it==published_streams_.end()){
+      if(on_failure){
+        std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidArgument, "The stream is not published."));
+        std::thread t(on_failure, std::move(e));
+        t.detach();
+      }
+      return;
+    }
+    published_streams_.erase(it);
+  }
+  {
+    std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
+    pending_unpublish_streams_.push_back(stream);
+  }
   if(on_success){
     std::thread t(on_success);
     t.detach();
@@ -521,35 +557,37 @@ void P2PPeerConnectionChannel::Stop(std::function<void()> on_success, std::funct
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Draining pending stream";
-  pending_publish_streams_mutex_.lock();
-  for (auto it = pending_publish_streams_.begin(); it != pending_publish_streams_.end(); ++it) {
-    std::shared_ptr<LocalStream> stream = *it;
-    scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
-    Json::Value json;
-    json[kMessageTypeKey] = kStreamType;
-    Json::Value stream_info;
-    stream_info[kStreamIdKey] = media_stream->label();
-    stream_info[kStreamTypeKey] = "video";
-    json[kMessageDataKey] = stream_info;
-    SendSignalingMessage(json, nullptr, nullptr);
-    rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
-    LOG(LS_INFO) << "Post add stream";
-    pc_thread_->Post(this, kMessageTypeAddStream, param);
+  {
+    std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
+    for (auto it = pending_publish_streams_.begin(); it != pending_publish_streams_.end(); ++it) {
+      std::shared_ptr<LocalStream> stream = *it;
+      scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
+      Json::Value json;
+      json[kMessageTypeKey] = kStreamType;
+      Json::Value stream_info;
+      stream_info[kStreamIdKey] = media_stream->label();
+      stream_info[kStreamTypeKey] = "video";
+      json[kMessageDataKey] = stream_info;
+      SendSignalingMessage(json, nullptr, nullptr);
+      rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
+      LOG(LS_INFO) << "Post add stream";
+      pc_thread_->Post(this, kMessageTypeAddStream, param);
+    }
+    pending_publish_streams_.clear();
   }
-  pending_publish_streams_.clear();
-  pending_publish_streams_mutex_.unlock();
-  pending_unpublish_streams_mutex_.lock();
-  LOG(LS_INFO) << "Get unpublish stream lock.";
-  for (auto it = pending_unpublish_streams_.begin(); it != pending_unpublish_streams_.end(); ++it) {
-    LOG(LS_INFO) << "Remove a stream from peer connection.";
-    std::shared_ptr<LocalStream> stream = *it;
-    scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
-    rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
-    LOG(LS_INFO) << "Post remove stream";
-    pc_thread_->Post(this, kMessageTypeRemoveStream, param);
+  {
+    std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
+    LOG(LS_INFO) << "Get unpublish stream lock.";
+    for (auto it = pending_unpublish_streams_.begin(); it != pending_unpublish_streams_.end(); ++it) {
+      LOG(LS_INFO) << "Remove a stream from peer connection.";
+      std::shared_ptr<LocalStream> stream = *it;
+      scoped_refptr<webrtc::MediaStreamInterface> media_stream = stream->MediaStream();
+      rtc::TypedMessageData<MediaStreamInterface*>* param = new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
+      LOG(LS_INFO) << "Post remove stream";
+      pc_thread_->Post(this, kMessageTypeRemoveStream, param);
+    }
+    pending_unpublish_streams_.clear();
   }
-  pending_unpublish_streams_.clear();
-  pending_unpublish_streams_mutex_.unlock();
 }
 
 void P2PPeerConnectionChannel::SendAcceptance(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure){
