@@ -151,7 +151,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
     std::mutex published_streams_mutex_;
     std::vector<P2PPeerConnectionChannelObserver*> observers_;
     std::chrono::time_point<std::chrono::system_clock> last_disconnect_;  // Last time |peer_connection_| changes its state to "disconnect"
-    std::vector<std::string> pending_messages_;  // Messages need to be sent once data channel is ready.
+    std::vector<std::shared_ptr<std::string>> pending_messages_;  // Messages need to be sent once data channel is ready.
     std::mutex pending_messages_mutex_;
     Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };

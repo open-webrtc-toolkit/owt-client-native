@@ -637,7 +637,7 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(const webrtc::DataBuffer& bu
     LOG(LS_WARNING) << "Binary data is not supported.";
     return;
   }
-  std::string message = std::string(buffer.data.data<char>());
+  std::string message = std::string(buffer.data.data<char>(), buffer.data.size());
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it=observers_.begin(); it!=observers_.end(); ++it){
     (*it)->OnData(remote_id_, message);
   }
@@ -653,14 +653,19 @@ void P2PPeerConnectionChannel::Send(const std::string& message, std::function<vo
       data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen){
     data_channel_->Send(CreateDataBuffer(message));
     LOG(LS_INFO) << "Send message "<<message;
-    return;
   }
-  {
-    std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-    pending_messages_.push_back(message);
+  else {
+    {
+      std::lock_guard<std::mutex> lock(pending_messages_mutex_);
+      std::shared_ptr<std::string> message_copy(std::make_shared<std::string>(message));
+      pending_messages_.push_back(message_copy);
+    }
+    if(data_channel_==nullptr){  // Otherwise, wait for data channel ready.
+      CreateDataChannel(kDataChannelLabelForTextMessage);
+    }
   }
-  if(data_channel_==nullptr){  // Otherwise, wait for data channel ready.
-    CreateDataChannel(kDataChannelLabelForTextMessage);
+  if(on_success){
+    on_success();  // TODO(jianjunz): run on new thread.
   }
 }
 
@@ -676,7 +681,7 @@ void P2PPeerConnectionChannel::DrainPendingMessages(){
   {
     std::lock_guard<std::mutex> lock(pending_messages_mutex_);
     for (auto it = pending_messages_.begin(); it != pending_messages_.end(); ++it) {
-      data_channel_->Send(CreateDataBuffer(*it));
+      data_channel_->Send(CreateDataBuffer(**it));
     }
     pending_messages_.clear();
   }
