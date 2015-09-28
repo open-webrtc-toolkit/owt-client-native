@@ -6,6 +6,7 @@
 
 #include "talk/woogeen/sdk/conference/conferenceuser.h"
 
+/*
 // This class represent a user's permission
 @interface RTCConferencePermission (Internal)
 
@@ -14,6 +15,7 @@
 -(std::shared_ptr<const woogeen::conference::Permission>)nativePermission;
 
 @end
+*/
 
 /// This class represent an attendee in a conference.
 @interface RTCConferenceUser (Internal)

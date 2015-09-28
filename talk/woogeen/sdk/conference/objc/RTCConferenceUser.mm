@@ -4,6 +4,7 @@
 
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 
+/*
 @implementation RTCConferencePermission {
   std::shared_ptr<const woogeen::conference::Permission> _nativePermission;
 }
@@ -39,6 +40,7 @@
 }
 
 @end
+*/
 
 @implementation RTCConferenceUser {
   std::shared_ptr<const woogeen::conference::User> _nativeUser;
@@ -56,9 +58,10 @@
   return [NSString stringWithCString:_nativeUser->Role().c_str() encoding: [NSString defaultCStringEncoding]];
 }
 
+/*
 -(RTCConferencePermission*)getPermissions{
   return [[RTCConferencePermission alloc] initWithNativePermission: std::make_shared<woogeen::conference::Permission>(_nativeUser->Permissions())];
-}
+}*/
 
 @end
 

@@ -269,11 +269,13 @@ conference::User SocketSignalingChannel::ParseUser(const sio::message::ptr& user
   std::string id=user_message->get_map()["id"]->get_string();
   std::string user_name=user_message->get_map()["name"]->get_string();
   std::string role=user_message->get_map()["role"]->get_string();
-  auto permission_message=user_message->get_map()["permissions"]->get_map();
-  bool publish=permission_message["publish"]->get_bool();
-  bool subscribe=permission_message["subscribe"]->get_bool();
-  bool record=permission_message["record"]->get_bool();
+  // TODO(jianjunz): Parse permission info when server side better designed
+  // permission structure.
+  bool publish=true;
+  bool subscribe=true;
+  bool record=true;
   conference::Permission permission(publish, subscribe, record);
+
   conference::User user(id, user_name, role, permission);
   return user;
 }
