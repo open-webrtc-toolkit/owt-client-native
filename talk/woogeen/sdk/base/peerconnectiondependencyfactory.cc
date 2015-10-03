@@ -49,7 +49,7 @@ PeerConnectionDependencyFactory* PeerConnectionDependencyFactory::Get() {
 const scoped_refptr<PeerConnectionFactoryInterface>& PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
   if (!pc_factory_.get())
     CreatePeerConnectionFactory();
-  CHECK(pc_factory_.get());
+  RTC_CHECK(pc_factory_.get());
   return pc_factory_;
 }
 
@@ -65,15 +65,15 @@ scoped_refptr<webrtc::PeerConnectionInterface> PeerConnectionDependencyFactory::
 }
 
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
-  DCHECK(!pc_factory_.get());
+  RTC_CHECK(!pc_factory_.get());
   LOG(LS_INFO) << "PeerConnectionDependencyFactory::CreatePeerConnectionFactory()";
-  CHECK(pc_thread_);
+  RTC_CHECK(pc_thread_);
   pc_thread_->Invoke<void>(Bind(&PeerConnectionDependencyFactory::CreatePeerConnectionFactoryOnCurrentThread, this));
-  CHECK(pc_factory_.get());
+  RTC_CHECK(pc_factory_.get());
 }
 
 scoped_refptr<webrtc::MediaStreamInterface> PeerConnectionDependencyFactory::CreateLocalMediaStream(const std::string &label) {
-  CHECK(pc_thread_);
+  RTC_CHECK(pc_thread_);
   return pc_thread_->Invoke<scoped_refptr<webrtc::MediaStreamInterface>>(Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream, pc_factory_.get(), label));
 }
 

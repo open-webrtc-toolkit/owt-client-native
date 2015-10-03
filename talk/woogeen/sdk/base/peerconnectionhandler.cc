@@ -23,13 +23,13 @@ namespace woogeen {
   };
 
   void CreateSessionDescriptionRequest::OnSuccess(SessionDescriptionInterface* desc) {
-    CHECK(callback_thread_);
+    RTC_CHECK(callback_thread_);
     rtc::TypedMessageData<SessionDescriptionInterface*>* message = new rtc::TypedMessageData<SessionDescriptionInterface*>(desc);
     callback_thread_->Send(this, MSG_CREATESESSIONDESCRIPTION_SUCCESS, message);
   }
 
   void CreateSessionDescriptionRequest::OnFailure(const std::string& error) {
-    CHECK(callback_thread_);
+    RTC_CHECK(callback_thread_);
     rtc::TypedMessageData<std::string>* message = new rtc::TypedMessageData<std::string>(error);
     callback_thread_->Send(this, MSG_CREATESESSIONDESCRIPTION_FAILURE, message);
   }
@@ -53,9 +53,9 @@ namespace woogeen {
     : peer_connection_(peer_connection),
       pc_thread_(pc_thread),
       callback_thread_(callback_thread) {
-    CHECK(peer_connection_);
-    CHECK(pc_thread_);
-    CHECK(callback_thread_);
+    RTC_CHECK(peer_connection_);
+    RTC_CHECK(pc_thread_);
+    RTC_CHECK(callback_thread_);
   }
 
   void PeerConnectionHandler::OnMessage(Message* msg) {
@@ -68,9 +68,9 @@ namespace woogeen {
   }
 
   void PeerConnectionHandler::CreateOffer(CreateSessionDescriptionRequest* request, const webrtc::MediaConstraintsInterface* constrants) {
-    CHECK(pc_thread_);
-    CHECK(request);
-    CHECK(constrants);
+    RTC_CHECK(pc_thread_);
+    RTC_CHECK(request);
+    RTC_CHECK(constrants);
     CreateSessionDescriptionMessageData* data = new CreateSessionDescriptionMessageData(request, constrants);
     pc_thread_->Send(this, MSG_CREATEOFFER, data);
   }

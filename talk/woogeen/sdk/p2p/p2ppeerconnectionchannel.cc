@@ -66,7 +66,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(PeerConnectionChannelConfigur
      last_disconnect_(std::chrono::time_point<std::chrono::system_clock>::max()),
      callback_thread_(new PeerConnectionThread){
   callback_thread_->Start();
-  CHECK(signaling_sender_);
+  RTC_CHECK(signaling_sender_);
 }
 
 void P2PPeerConnectionChannel::Invite(std::function<void()> on_success, std::function<void(std::unique_ptr<P2PException>)> on_failure) {
@@ -191,7 +191,7 @@ void P2PPeerConnectionChannel::SendNegotiationAccepted(){
 }
 
 void P2PPeerConnectionChannel::SendSignalingMessage(const Json::Value& data, std::function<void()> success, std::function<void(std::unique_ptr<P2PException>)> failure) {
-  CHECK(signaling_sender_);
+  RTC_CHECK(signaling_sender_);
   std::string jsonString=rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(jsonString, remote_id_, success, [=](int){
     if(failure==nullptr)
@@ -475,7 +475,7 @@ void P2PPeerConnectionChannel::Publish(std::shared_ptr<LocalStream> stream, std:
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
-  CHECK(stream->MediaStream());
+  RTC_CHECK(stream->MediaStream());
   if(published_streams_.find(stream->MediaStream()->label())!=published_streams_.end()){
     if(on_failure){
         std::unique_ptr<P2PException> e(new P2PException(P2PException::kClientInvalidArgument, "The stream is already published."));
@@ -506,7 +506,7 @@ void P2PPeerConnectionChannel::Unpublish(std::shared_ptr<LocalStream> stream, st
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
-  CHECK(stream->MediaStream());
+  RTC_CHECK(stream->MediaStream());
   {
     std::lock_guard<std::mutex> lock(published_streams_mutex_);
     auto it = published_streams_.find(stream->MediaStream()->label());
@@ -611,7 +611,7 @@ void P2PPeerConnectionChannel::SendDeny(std::function<void()> on_success, std::f
 
 void P2PPeerConnectionChannel::ClosePeerConnection() {
   LOG(LS_INFO) << "Close peer connection.";
-  CHECK(pc_thread_);
+  RTC_CHECK(pc_thread_);
   pc_thread_->Send(this, kMessageTypeClosePeerConnection, nullptr);
   ChangeSessionState(kSessionStateReady);
 }
@@ -626,7 +626,7 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
 }
 
 void P2PPeerConnectionChannel::OnDataChannelStateChange(){
-  CHECK(data_channel_);
+  RTC_CHECK(data_channel_);
   if(data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen){
     DrainPendingMessages();
   }
@@ -677,7 +677,7 @@ webrtc::DataBuffer P2PPeerConnectionChannel::CreateDataBuffer(const std::string&
 
 void P2PPeerConnectionChannel::DrainPendingMessages(){
   LOG(LS_INFO) << "Draining pending messages. Message queue size: " << pending_messages_.size();
-  CHECK(data_channel_);
+  RTC_CHECK(data_channel_);
   {
     std::lock_guard<std::mutex> lock(pending_messages_mutex_);
     for (auto it = pending_messages_.begin(); it != pending_messages_.end(); ++it) {

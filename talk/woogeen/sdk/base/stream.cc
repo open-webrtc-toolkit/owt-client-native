@@ -18,12 +18,12 @@ Stream::Stream(std::string& id) : id_(id){
 }
 
 scoped_refptr<MediaStreamInterface> Stream::MediaStream() const{
-  CHECK(media_stream_);
+  RTC_CHECK(media_stream_);
   return media_stream_;
 }
 
 void Stream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream) {
-  CHECK(media_stream);
+  RTC_CHECK(media_stream);
   media_stream_=media_stream;
 }
 

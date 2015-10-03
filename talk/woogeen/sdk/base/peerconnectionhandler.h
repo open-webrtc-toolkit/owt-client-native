@@ -24,7 +24,7 @@ class PeerConnectionHandlerRequest : public rtc::MessageHandler {
     virtual void OnMessage(Message* msg) = 0;
 
     void SetCallbackThread(Thread* callback_thread) {
-      CHECK(callback_thread);
+      RTC_CHECK(callback_thread);
       callback_thread_ = callback_thread;
     }
     Thread* callback_thread_;

@@ -65,7 +65,7 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(PeerConnectionC
      callback_thread_(new PeerConnectionThread){
   callback_thread_->Start();
   InitializePeerConnection();
-  CHECK(signaling_channel_);
+  RTC_CHECK(signaling_channel_);
 }
 
 ConferencePeerConnectionChannel::~ConferencePeerConnectionChannel(){
