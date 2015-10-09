@@ -24,7 +24,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef p2p_PeerClientObserver_h
 #define p2p_PeerClientObserver_h
 
@@ -33,55 +32,60 @@
 #import "RTCRemoteStream.h"
 
 /// Observer for RTCPeerClient
-@protocol RTCPeerClientObserver <NSObject>
+@protocol RTCPeerClientObserver<NSObject>
 
 /**
- @brief This function will be invoked when client is disconnected from signaling server.
+ @brief This function will be invoked when client is disconnected from signaling
+ server.
  */
--(void)onServerDisconnected;
+- (void)onServerDisconnected;
 /**
  @brief This function will be invoked when received a invitation.
  @param remoteUserId Remote user’s ID
  */
--(void)onInvited:(NSString*)remoteUserId;
+- (void)onInvited:(NSString*)remoteUserId;
 /**
- @brief This function will be invoked when a remote user denied current user's invitation.
+ @brief This function will be invoked when a remote user denied current user's
+ invitation.
  @param remoteUserId Remote user’s ID
  */
--(void)onDenied:(NSString*)remoteUserId;
+- (void)onDenied:(NSString*)remoteUserId;
 /**
- @brief This function will be invoked when a remote user accepted current user's invitation.
+ @brief This function will be invoked when a remote user accepted current user's
+ invitation.
  @param remoteUserId Remote user’s ID
  */
--(void)onAccepted:(NSString*)remoteUserId;
+- (void)onAccepted:(NSString*)remoteUserId;
 /**
- @brief This function will be invoked when a chat is stopped. (This event haven't been implemented yet)
+ @brief This function will be invoked when a chat is stopped. (This event
+ haven't been implemented yet)
  @param remoteUserId Remote user’s ID
  */
--(void)onChatStopped:(NSString*)remoteUserId;
+- (void)onChatStopped:(NSString*)remoteUserId;
 /**
- @brief This function will be invoked when a chat is started. (This event haven't been implemented yet)
+ @brief This function will be invoked when a chat is started. (This event
+ haven't been implemented yet)
  @param remoteUserId Remote user’s ID
  */
--(void)onChatStarted:(NSString*)remoteUserId;
+- (void)onChatStarted:(NSString*)remoteUserId;
 /**
- @brief This function will be invoked when received data from a remote user. (This event haven't been implemented yet)
+ @brief This function will be invoked when received data from a remote user.
+ (This event haven't been implemented yet)
  @param remoteUserId Remote user’s ID
  @param message Message received
  */
--(void)onDataReceived:(NSString*)remoteUserId message:(NSString*)message;
+- (void)onDataReceived:(NSString*)remoteUserId message:(NSString*)message;
 /**
  @brief This function will be invoked when a remote stream is available.
  @param stream The remote stream added.
  */
--(void)onStreamAdded:(RTCRemoteStream*)stream;
+- (void)onStreamAdded:(RTCRemoteStream*)stream;
 /**
  @brief This function will be invoked when a remote stream is removed.
  @param stream The remote stream removed.
  */
--(void)onStreamRemoved:(RTCRemoteStream*)stream;
+- (void)onStreamRemoved:(RTCRemoteStream*)stream;
 
 @end
-
 
 #endif

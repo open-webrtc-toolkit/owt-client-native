@@ -32,22 +32,22 @@
 
 /// @cond
 // Init a RTCStream instance.
--(id)init;
+- (id)init;
 /// @endcond
 
 /// Attach the stream to a renderer. The render doesn't retain this stream.
--(void)attach:(NSObject<RTCVideoRenderer>*)renderer;
+- (void)attach:(NSObject<RTCVideoRenderer>*)renderer;
 
 /// Enable audio tracks
--(void)disableAudio;
+- (void)disableAudio;
 
 /// Disable audio tracks
--(void)disableVideo;
+- (void)disableVideo;
 
 /// Enable video tracks
--(void)enableAudio;
+- (void)enableAudio;
 
 /// Disable video tracks
--(void)enableVideo;
+- (void)enableVideo;
 
 @end

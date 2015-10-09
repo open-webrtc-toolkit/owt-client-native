@@ -13,43 +13,44 @@
   RTCMediaStream* _mediaStream;
 }
 
--(instancetype)init{
+- (instancetype)init {
   return self;
 }
 
--(void)attach:(NSObject<RTCVideoRenderer>*)renderer{
+- (void)attach:(NSObject<RTCVideoRenderer>*)renderer {
   auto nativeStream = [self nativeStream];
-  if(nativeStream==nullptr||nativeStream->MediaStream()==nullptr){
+  if (nativeStream == nullptr || nativeStream->MediaStream() == nullptr) {
     NSLog(@"Attached stream without media stream");
     return;
   }
-  _mediaStream = [[RTCMediaStream alloc]initWithMediaStream:nativeStream->MediaStream()];
-  if([_mediaStream.videoTracks count]==0)
+  _mediaStream =
+      [[RTCMediaStream alloc] initWithMediaStream:nativeStream->MediaStream()];
+  if ([_mediaStream.videoTracks count] == 0)
     return;
   [[_mediaStream.videoTracks objectAtIndex:0] addRenderer:renderer];
   NSLog(@"Attached stream.");
 }
 
--(void)disableAudio{
-  if(_nativeStream==nullptr)
+- (void)disableAudio {
+  if (_nativeStream == nullptr)
     return;
   _nativeStream->DisableAudio();
 }
 
--(void)disableVideo{
-  if(_nativeStream==nullptr)
+- (void)disableVideo {
+  if (_nativeStream == nullptr)
     return;
   _nativeStream->DisableVideo();
 }
 
--(void)enableAudio{
-  if(_nativeStream==nullptr)
+- (void)enableAudio {
+  if (_nativeStream == nullptr)
     return;
   _nativeStream->EnableAudio();
 }
 
--(void)enableVideo{
-  if(_nativeStream==nullptr)
+- (void)enableVideo {
+  if (_nativeStream == nullptr)
     return;
   _nativeStream->EnableVideo();
 }
@@ -58,17 +59,17 @@
 
 @implementation RTCStream (Internal)
 
--(instancetype)initWithNativeStream:(std::shared_ptr<woogeen::Stream>)stream {
-  self=[super init];
-  [self setNativeStream: stream];
+- (instancetype)initWithNativeStream:(std::shared_ptr<woogeen::Stream>)stream {
+  self = [super init];
+  [self setNativeStream:stream];
   return self;
 }
 
--(void)setNativeStream:(std::shared_ptr<woogeen::Stream>)stream{
-  _nativeStream=stream;
+- (void)setNativeStream:(std::shared_ptr<woogeen::Stream>)stream {
+  _nativeStream = stream;
 }
 
--(std::shared_ptr<woogeen::Stream>)nativeStream{
+- (std::shared_ptr<woogeen::Stream>)nativeStream {
   return _nativeStream;
 }
 

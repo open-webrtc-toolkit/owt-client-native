@@ -7,8 +7,8 @@
 @implementation RTCP2PPeerClientConfiguration {
 }
 
--(instancetype)init{
-  _mediaCodec = [[RTCMediaCodec alloc]init];
+- (instancetype)init {
+  _mediaCodec = [[RTCMediaCodec alloc] init];
 }
 
 @end

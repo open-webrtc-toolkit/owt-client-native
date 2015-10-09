@@ -4,12 +4,11 @@
 
 #import <Foundation/Foundation.h>
 
-
 @interface RTCP2PPeerConnectionChannelConfiguration : NSObject
 
-@property (strong, nonatomic) RTCICEServer *iceServers;
-@property (strong, nonatomic) MediaCodec* mediaCodec;
+@property(strong, nonatomic) RTCICEServer* iceServers;
+@property(strong, nonatomic) MediaCodec* mediaCodec;
 
--(instancetype)init;
+- (instancetype)init;
 
 @end

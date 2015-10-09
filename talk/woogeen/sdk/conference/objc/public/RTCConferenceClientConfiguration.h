@@ -10,12 +10,13 @@
 
 /// Configuration for creating a RTCConferenceClient
 /**
-  This configuration is used while creating RTCConferenceClient. Changing this configuration does NOT impact RTCConferenceClient already created.
+  This configuration is used while creating RTCConferenceClient. Changing this
+  configuration does NOT impact RTCConferenceClient already created.
 */
 @interface RTCConferenceClientConfiguration : NSObject
 
-@property (nonatomic, strong, readwrite) NSArray* ICEServers;
-@property (nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
+@property(nonatomic, strong, readwrite) NSArray* ICEServers;
+@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 
 @end
 

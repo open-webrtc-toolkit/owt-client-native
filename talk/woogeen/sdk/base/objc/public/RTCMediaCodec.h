@@ -31,12 +31,13 @@
 
 /*
   @brief An instance of this class indicates preference for codecs.
-  @detail It is not guaranteed to use preferred codec, if remote side doesn't support preferred codec, it will use other codec.
+  @detail It is not guaranteed to use preferred codec, if remote side doesn't
+  support preferred codec, it will use other codec.
 */
 @interface RTCMediaCodec : NSObject
 
 /// Preference for video codec. Default is H.264.
-@property (nonatomic, readwrite) NSInteger videoCodec;
+@property(nonatomic, readwrite) NSInteger videoCodec;
 
 @end
 

@@ -18,4 +18,4 @@ struct ClientConfiguration {
 };
 }
 
-#endif // WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_

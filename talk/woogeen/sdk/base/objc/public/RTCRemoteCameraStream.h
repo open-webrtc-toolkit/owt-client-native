@@ -27,5 +27,5 @@
 #import "RTCRemoteStream.h"
 
 /// This class represent a remote stream captured from a camera and/or mic.
-@interface RTCRemoteCameraStream:RTCRemoteStream
+@interface RTCRemoteCameraStream : RTCRemoteStream
 @end

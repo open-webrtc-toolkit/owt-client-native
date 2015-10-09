@@ -30,10 +30,10 @@
 @interface RTCConferenceUser : NSObject
 
 // Get user's ID.
--(NSString*)getUserId;
+- (NSString*)getUserId;
 // Get user's name.
--(NSString*)getName;
+- (NSString*)getName;
 // Get user's role.
--(NSString*)getRole;
+- (NSString*)getRole;
 
 @end

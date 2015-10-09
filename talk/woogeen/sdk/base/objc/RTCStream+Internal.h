@@ -11,8 +11,8 @@
 
 @property(nonatomic, readwrite) std::shared_ptr<woogeen::Stream> nativeStream;
 
--(instancetype)initWithNativeStream:(std::shared_ptr<woogeen::Stream>)stream;
--(void)setNativeStream:(std::shared_ptr<woogeen::Stream>)stream;
--(std::shared_ptr<woogeen::Stream>)nativeStream;
+- (instancetype)initWithNativeStream:(std::shared_ptr<woogeen::Stream>)stream;
+- (void)setNativeStream:(std::shared_ptr<woogeen::Stream>)stream;
+- (std::shared_ptr<woogeen::Stream>)nativeStream;
 
 @end

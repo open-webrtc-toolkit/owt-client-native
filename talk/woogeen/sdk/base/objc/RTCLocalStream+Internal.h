@@ -8,5 +8,4 @@
 
 @interface RTCLocalStream (Internal)
 
-
 @end

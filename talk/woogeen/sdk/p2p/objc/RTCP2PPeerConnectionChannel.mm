@@ -20,129 +20,241 @@
   NSString* _remoteId;
 }
 
--(instancetype)initWithConfiguration:(RTCPeerClientConfiguration*)config localId:(NSString*)localId remoteId:(NSString*)remoteId signalingSender:(id<RTCP2PSignalingSenderProtocol>)signalingSender{
-  self=[super init];
-  woogeen::P2PSignalingSenderInterface* sender = new woogeen::RTCP2PSignalingSenderObjcImpl(signalingSender);
-  _remoteId=remoteId;
-  const std::string nativeRemoteId=[remoteId UTF8String];
-  const std::string nativeLocalId=[localId UTF8String];
+- (instancetype)initWithConfiguration:(RTCPeerClientConfiguration*)config
+                              localId:(NSString*)localId
+                             remoteId:(NSString*)remoteId
+                      signalingSender:
+                          (id<RTCP2PSignalingSenderProtocol>)signalingSender {
+  self = [super init];
+  woogeen::P2PSignalingSenderInterface* sender =
+      new woogeen::RTCP2PSignalingSenderObjcImpl(signalingSender);
+  _remoteId = remoteId;
+  const std::string nativeRemoteId = [remoteId UTF8String];
+  const std::string nativeLocalId = [localId UTF8String];
   webrtc::PeerConnectionInterface::IceServers nativeIceServers;
   for (RTCICEServer* server in config.ICEServers) {
     nativeIceServers.push_back(server.iceServer);
   }
   woogeen::PeerConnectionChannelConfiguration nativeConfig;
-  nativeConfig.servers=nativeIceServers;
-  LOG(LS_INFO) << "Video codec preference: "<< config.mediaCodec.videoCodec;
-  if(config.mediaCodec.videoCodec==VideoCodecVP8){
-    nativeConfig.media_codec.video_codec=woogeen::MediaCodec::VideoCodec::VP8;
-  } else if (config.mediaCodec.videoCodec==VideoCodecH264){
-    nativeConfig.media_codec.video_codec=woogeen::MediaCodec::VideoCodec::H264;
+  nativeConfig.servers = nativeIceServers;
+  LOG(LS_INFO) << "Video codec preference: " << config.mediaCodec.videoCodec;
+  if (config.mediaCodec.videoCodec == VideoCodecVP8) {
+    nativeConfig.media_codec.video_codec = woogeen::MediaCodec::VideoCodec::VP8;
+  } else if (config.mediaCodec.videoCodec == VideoCodecH264) {
+    nativeConfig.media_codec.video_codec =
+        woogeen::MediaCodec::VideoCodec::H264;
   } else {
     LOG(LS_ERROR) << "Weird video codec preference.";
     ASSERT(false);
   }
-  _nativeChannel = new woogeen::P2PPeerConnectionChannel(nativeConfig, nativeLocalId, nativeRemoteId, sender);
+  _nativeChannel = new woogeen::P2PPeerConnectionChannel(
+      nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;
 }
 
--(void)inviteWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  _nativeChannel->Invite([=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+- (void)inviteWithOnSuccess:(void (^)())onSuccess
+                  onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->Invite(
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)denyWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  _nativeChannel->Deny([=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+- (void)denyWithOnSuccess:(void (^)())onSuccess
+                onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->Deny(
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)acceptWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  _nativeChannel->Accept([=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+- (void)acceptWithOnSuccess:(void (^)())onSuccess
+                  onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->Accept(
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
--(void)publish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+- (void)publish:(RTCLocalStream*)stream
+      onSuccess:(void (^)())onSuccess
+      onFailure:(void (^)(NSError*))onFailure {
   NSLog(@"RTCP2PPeerConnectionChannel publish stream.");
-  _nativeChannel->Publish(std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]), [=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+  _nativeChannel->Publish(
+      std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]),
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)unpublish:(RTCLocalStream*)stream onSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
+- (void)unpublish:(RTCLocalStream*)stream
+        onSuccess:(void (^)())onSuccess
+        onFailure:(void (^)(NSError*))onFailure {
   NSLog(@"RTCP2PPeerConnectionChannel unpublish stream.");
-  _nativeChannel->Unpublish(std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]), [=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+  _nativeChannel->Unpublish(
+      std::static_pointer_cast<woogeen::LocalStream>([stream nativeStream]),
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)send:(NSString*) message withOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure{
-  _nativeChannel->Send([message UTF8String],[=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+- (void)send:(NSString*)message
+    withOnSuccess:(void (^)())onSuccess
+        onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->Send(
+      [message UTF8String],
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)stopWithOnSuccess:(void (^)())onSuccess onFailure:(void (^)(NSError *))onFailure {
-  _nativeChannel->Stop([=](){
-    if(onSuccess!=nil)
-      onSuccess();
-  },[=](std::unique_ptr<woogeen::P2PException> e){
-    if(onFailure==nil)
-      return;
-    NSError *err=[[NSError alloc]initWithDomain:RTCErrorDomain code:WoogeenP2PErrorUnknown userInfo:[[NSDictionary alloc]initWithObjectsAndKeys:[NSString stringWithCString:e->Message().c_str() encoding: [NSString defaultCStringEncoding]], NSLocalizedDescriptionKey, nil]];
-    onFailure(err);
-  });
+- (void)stopWithOnSuccess:(void (^)())onSuccess
+                onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->Stop(
+      [=]() {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
--(void)onIncomingSignalingMessage:(NSString *)message{
+- (void)onIncomingSignalingMessage:(NSString*)message {
   _nativeChannel->OnIncomingSignalingMessage([message UTF8String]);
 }
 
--(void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer{
-  woogeen::P2PPeerConnectionChannelObserver* nativeObserver=new woogeen::P2PPeerConnectionChannelObserverObjcImpl(observer);
+- (void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer {
+  woogeen::P2PPeerConnectionChannelObserver* nativeObserver =
+      new woogeen::P2PPeerConnectionChannelObserverObjcImpl(observer);
   _nativeChannel->AddObserver(nativeObserver);
 }
 
--(void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer{
+- (void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer {
 }
 
--(NSString*)getRemoteUserId{
+- (NSString*)getRemoteUserId {
   return _remoteId;
 }
 

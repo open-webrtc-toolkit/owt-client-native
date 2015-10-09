@@ -24,4 +24,4 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-NSString * const RTCErrorDomain=@"com.intel.webrtc";
+NSString* const RTCErrorDomain = @"com.intel.webrtc";

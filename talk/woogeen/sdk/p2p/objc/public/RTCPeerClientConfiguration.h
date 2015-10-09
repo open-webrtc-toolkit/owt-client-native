@@ -34,12 +34,13 @@
 /**
  @brief Configuration for RTCPeerClient
 
- This configuration is used while creating RTCPeerClient. Changing this configuration does NOT impact RTCPeerClient already created.
+ This configuration is used while creating RTCPeerClient. Changing this
+ configuration does NOT impact RTCPeerClient already created.
  */
 @interface RTCPeerClientConfiguration : NSObject
 
-@property (nonatomic, strong, readwrite) NSArray* ICEServers;
-@property (nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
+@property(nonatomic, strong, readwrite) NSArray* ICEServers;
+@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 
 @end
 

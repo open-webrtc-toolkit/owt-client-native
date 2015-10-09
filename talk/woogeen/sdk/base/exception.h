@@ -11,16 +11,15 @@ namespace woogeen {
 
 // Exception for base SDK
 class Exception {
-  public:
-    Exception();
-    Exception(const std::string& message);
+ public:
+  Exception();
+  Exception(const std::string& message);
 
-    std::string Message();
+  std::string Message();
 
-
-  private:
-    const std::string& message_;
+ private:
+  const std::string& message_;
 };
 }
 
-#endif // WOOGEEN_BASE_EXCEPTION_H_
+#endif  // WOOGEEN_BASE_EXCEPTION_H_

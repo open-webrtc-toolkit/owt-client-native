@@ -6,33 +6,39 @@
 
 @interface RTCPeerConnectionDependencyFactory ()
 
-@property(nonatomic, assign) rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> nativePeerConnectionDependencyFactory;
+@property(nonatomic, assign)
+    rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory>
+        nativePeerConnectionDependencyFactory;
 
 @end
 
 @implementation RTCPeerConnectionDependencyFactory
 
-static RTCPeerConnectionDependencyFactory *sharedFactory;
+static RTCPeerConnectionDependencyFactory* sharedFactory;
 
-@synthesize nativePeerConnectionDependencyFactory=_nativePeerConnectionDependencyFactory;
+@synthesize nativePeerConnectionDependencyFactory =
+    _nativePeerConnectionDependencyFactory;
 
--(id)init {
-  _nativePeerConnectionDependencyFactory=woogeen::PeerConnectionDependencyFactory::Get();
+- (id)init {
+  _nativePeerConnectionDependencyFactory =
+      woogeen::PeerConnectionDependencyFactory::Get();
   NSLog(@"Init RTCPCDependencyFactory");
   return self;
 }
 
-+(id)sharedRTCPeerConnectionDependencyFactory{
-  @synchronized(self){
-    if(sharedFactory==nil) {
-      sharedFactory=[[self alloc] init];
++ (id)sharedRTCPeerConnectionDependencyFactory {
+  @synchronized(self) {
+    if (sharedFactory == nil) {
+      sharedFactory = [[self alloc] init];
     }
   }
   return sharedFactory;
 }
 
--(RTCMediaStream *)localMediaStreamWithLabel:(NSString*)label {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream=self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream([label UTF8String]);
+- (RTCMediaStream*)localMediaStreamWithLabel:(NSString*)label {
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream =
+      self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream(
+          [label UTF8String]);
   return [[RTCMediaStream alloc] initWithMediaStream:nativeMediaStream];
 }
 

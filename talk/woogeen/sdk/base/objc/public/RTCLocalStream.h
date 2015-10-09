@@ -29,5 +29,4 @@
 /// This class represent a local stream.
 @interface RTCLocalStream : RTCStream
 
-
 @end

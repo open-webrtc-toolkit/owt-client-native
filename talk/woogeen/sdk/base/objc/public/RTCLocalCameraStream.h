@@ -32,8 +32,9 @@
 
 /**
   Initialize a RTCLocalCameraStream with parameters.
-  @param parameters Parameters for creating the stream. The stream will not be impacted if chaning parameters after it is created.
+  @param parameters Parameters for creating the stream. The stream will not be
+  impacted if chaning parameters after it is created.
 */
--(instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters;
+- (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters;
 
 @end

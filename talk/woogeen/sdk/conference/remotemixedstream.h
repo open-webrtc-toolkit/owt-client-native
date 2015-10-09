@@ -9,8 +9,8 @@
 
 namespace woogeen {
 class RemoteMixedStream : public RemoteStream {
-  public:
-    RemoteMixedStream(std::string& id, std::string& from);
+ public:
+  RemoteMixedStream(std::string& id, std::string& from);
 };
 }
 

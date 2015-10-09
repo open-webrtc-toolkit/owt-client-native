@@ -9,21 +9,21 @@
 
 namespace woogeen {
 
-class ConferenceException : public Exception{
-  public:
-    enum Type : int {
-      kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
-    };
+class ConferenceException : public Exception {
+ public:
+  enum Type : int {
+    kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
+  };
 
-    ConferenceException();
-    ConferenceException(Type type);
-    ConferenceException(Type type, const std::string& message);
+  ConferenceException();
+  ConferenceException(Type type);
+  ConferenceException(Type type, const std::string& message);
 
-    enum Type Type();
+  enum Type Type();
 
-  private:
-    enum Type type_;
+ private:
+  enum Type type_;
 };
 }
 
-#endif // WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
+#endif  // WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_

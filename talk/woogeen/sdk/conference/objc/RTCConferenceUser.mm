@@ -25,13 +25,15 @@
 
 @implementation RTCConferencePermission (Internal)
 
--(instancetype)initWithNativePermission:(std::shared_ptr<const woogeen::conference::Permission>)permission {
+-(instancetype)initWithNativePermission:(std::shared_ptr<const
+woogeen::conference::Permission>)permission {
   self=[super init];
   [self setNativePermission: permission];
   return self;
 }
 
--(void)setNativePermission:(std::shared_ptr<const woogeen::conference::Permission>)permission {
+-(void)setNativePermission:(std::shared_ptr<const
+woogeen::conference::Permission>)permission {
   _nativePermission=permission;
 }
 
@@ -46,38 +48,43 @@
   std::shared_ptr<const woogeen::conference::User> _nativeUser;
 }
 
--(NSString*)getUserId{
-  return [NSString stringWithCString:_nativeUser->Id().c_str() encoding: [NSString defaultCStringEncoding]];
+- (NSString*)getUserId {
+  return [NSString stringWithCString:_nativeUser->Id().c_str()
+                            encoding:[NSString defaultCStringEncoding]];
 }
 
--(NSString*)getName{
-  return [NSString stringWithCString:_nativeUser->Name().c_str() encoding: [NSString defaultCStringEncoding]];
+- (NSString*)getName {
+  return [NSString stringWithCString:_nativeUser->Name().c_str()
+                            encoding:[NSString defaultCStringEncoding]];
 }
 
--(NSString*)getRole{
-  return [NSString stringWithCString:_nativeUser->Role().c_str() encoding: [NSString defaultCStringEncoding]];
+- (NSString*)getRole {
+  return [NSString stringWithCString:_nativeUser->Role().c_str()
+                            encoding:[NSString defaultCStringEncoding]];
 }
 
 /*
 -(RTCConferencePermission*)getPermissions{
-  return [[RTCConferencePermission alloc] initWithNativePermission: std::make_shared<woogeen::conference::Permission>(_nativeUser->Permissions())];
+  return [[RTCConferencePermission alloc] initWithNativePermission:
+std::make_shared<woogeen::conference::Permission>(_nativeUser->Permissions())];
 }*/
 
 @end
 
 @implementation RTCConferenceUser (Internal)
 
--(instancetype)initWithNativeUser:(std::shared_ptr<const woogeen::conference::User>)user{
-  self=[super init];
-  [self setNativeUser: user];
+- (instancetype)initWithNativeUser:
+    (std::shared_ptr<const woogeen::conference::User>)user {
+  self = [super init];
+  [self setNativeUser:user];
   return self;
 }
 
--(void)setNativeUser:(std::shared_ptr<const woogeen::conference::User>)user{
-  _nativeUser=user;
+- (void)setNativeUser:(std::shared_ptr<const woogeen::conference::User>)user {
+  _nativeUser = user;
 }
 
--(std::shared_ptr<const woogeen::conference::User>)nativeUser{
+- (std::shared_ptr<const woogeen::conference::User>)nativeUser {
   return _nativeUser;
 }
 

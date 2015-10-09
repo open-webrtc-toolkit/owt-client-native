@@ -5,5 +5,5 @@
 #import "RTCRemoteStream.h"
 
 /// This class represent a remote stream captured from screen sharing.
-@interface RTCRemoteScreenStream:RTCRemoteStream
+@interface RTCRemoteScreenStream : RTCRemoteStream
 @end
