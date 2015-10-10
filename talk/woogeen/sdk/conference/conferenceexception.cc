@@ -6,14 +6,12 @@
 
 namespace woogeen {
 
-ConferenceException::ConferenceException() : ConferenceException(kUnkown) {
-}
+ConferenceException::ConferenceException() : ConferenceException(kUnkown) {}
 
-ConferenceException::ConferenceException(enum Type type) : ConferenceException(type, "Unkown P2P exception.") {
-}
+ConferenceException::ConferenceException(enum Type type)
+    : ConferenceException(type, "Unkown P2P exception.") {}
 
-ConferenceException::ConferenceException(enum Type type, const std::string& message)
-    : Exception(message),
-      type_(type) {
-}
+ConferenceException::ConferenceException(enum Type type,
+                                         const std::string& message)
+    : Exception(message), type_(type) {}
 }

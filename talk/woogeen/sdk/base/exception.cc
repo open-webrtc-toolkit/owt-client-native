@@ -6,15 +6,11 @@
 
 namespace woogeen {
 
-Exception::Exception() : Exception ("Unknown exception.") {
-}
+Exception::Exception() : Exception("Unknown exception.") {}
 
-Exception::Exception(const std::string& message)
-    : message_(message) {
-}
+Exception::Exception(const std::string& message) : message_(message) {}
 
-std::string Exception::Message(){
+std::string Exception::Message() {
   return message_;
 }
-
 }
