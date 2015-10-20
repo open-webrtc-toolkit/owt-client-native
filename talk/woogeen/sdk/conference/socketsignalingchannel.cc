@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <thread>
+#include <algorithm>
 #include "talk/woogeen/sdk/conference/socketsignalingchannel.h"
 #include "webrtc/base/logging.h"
 

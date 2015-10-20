@@ -108,7 +108,9 @@ LocalCameraStream::LocalCameraStream(
     }
     rtc::scoped_ptr<cricket::VideoCapturer> capturer(
         device_manager->CreateVideoCapturer(device));
+    ASSERT(capturer);
     cricket::VideoCapturer* capturer_ptr = capturer.release();
+    ASSERT(capturer_ptr);
     media_constraints_.SetMandatory(
         webrtc::MediaConstraintsInterface::kMaxWidth,
         std::to_string(parameters->ResolutionWidth()));
