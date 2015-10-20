@@ -628,8 +628,7 @@ void P2PPeerConnectionChannel::Unpublish(
         std::unique_ptr<P2PException> e(
             new P2PException(P2PException::kClientInvalidArgument,
                              "The stream is not published."));
-        std::thread t(on_failure, std::move(e));
-        t.detach();
+        on_failure(std::move(e));
       }
       return;
     }
