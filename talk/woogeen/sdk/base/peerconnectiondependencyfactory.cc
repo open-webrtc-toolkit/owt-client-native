@@ -25,7 +25,6 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
       callback_thread_(new PeerConnectionThread) {
   pc_thread_->Start();
-  this->CreatePeerConnectionFactory();
 }
 
 PeerConnectionDependencyFactory::~PeerConnectionDependencyFactory() {}
@@ -51,9 +50,11 @@ PeerConnectionDependencyFactory::CreatePeerConnection(
 }
 
 PeerConnectionDependencyFactory* PeerConnectionDependencyFactory::Get() {
-  if (!dependency_factory_.get())
+  if (!dependency_factory_.get()) {
     dependency_factory_ =
         new rtc::RefCountedObject<PeerConnectionDependencyFactory>();
+    dependency_factory_->CreatePeerConnectionFactory();
+  }
   return dependency_factory_.get();
 }
 
