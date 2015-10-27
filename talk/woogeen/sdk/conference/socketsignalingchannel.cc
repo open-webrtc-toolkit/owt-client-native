@@ -70,8 +70,7 @@ void SocketSignalingChannel::Connect(
               std::unique_ptr<ConferenceException> e(new ConferenceException(
                   ConferenceException::kUnkown,
                   "Received unkown message from server."));
-              std::thread t(on_failure, std::move(e));
-              t.detach();
+              on_failure(std::move(e));
             }
             return;
           }
@@ -87,8 +86,7 @@ void SocketSignalingChannel::Connect(
               std::unique_ptr<ConferenceException> e(new ConferenceException(
                   ConferenceException::kUnkown,
                   "Received error message from server."));
-              std::thread t(on_failure, std::move(e));
-              t.detach();
+              on_failure(std::move(e));
             }
             return;
           }
@@ -372,8 +370,7 @@ void SocketSignalingChannel::OnEmitAck(
       std::unique_ptr<ConferenceException> e(
           new ConferenceException(ConferenceException::kUnkown,
                                   "Received unkown message from server."));
-      std::thread t(on_failure, std::move(e));
-      t.detach();
+      on_failure(std::move(e));
     }
     return;
   }
@@ -395,8 +392,7 @@ void SocketSignalingChannel::OnEmitAck(
       std::unique_ptr<ConferenceException> e(
           new ConferenceException(ConferenceException::kUnkown,
                                   "Negative acknowledgement from server."));
-      std::thread t(on_failure, std::move(e));
-      t.detach();
+      on_failure(std::move(e));
     }
   }
 }
