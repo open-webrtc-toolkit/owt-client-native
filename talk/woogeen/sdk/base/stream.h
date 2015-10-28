@@ -33,7 +33,7 @@ class Stream {
   Stream(std::string& id);
   Stream();
   virtual ~Stream(){};
-  void Id(std::string& id);
+  void Id(const std::string& id);
   void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
   scoped_refptr<MediaStreamInterface> media_stream_;
 

@@ -10,7 +10,7 @@
 #include <vector>
 #include "talk/woogeen/sdk/base/clientconfiguration.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
-#include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
+#include "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 
@@ -44,11 +44,11 @@ class ConferenceClientObserver {
   // TODO(jianjun): add other events.
 };
 
-class ConferenceClient final : ConferenceSignalingChannelObserver {
+class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
  public:
   ConferenceClient(
       ConferenceClientConfiguration& configuration,
-      std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+      std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel);
   // Add an observer for conferenc client.
   void AddObserver(std::shared_ptr<ConferenceClientObserver> observer);
   // Remove an object from conference client.
@@ -125,37 +125,48 @@ class ConferenceClient final : ConferenceSignalingChannelObserver {
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  protected:
-  virtual void OnStreamAdded(Json::Value stream) override;
+  virtual void OnStreamAdded(sio::message::ptr stream) override;
   virtual void OnCustomMessage(std::string& from,
                                std::string& message) override;
+  virtual void OnSignalingMessage(sio::message::ptr stream) override;
   virtual void OnUserJoined(
       std::shared_ptr<const conference::User> user) override;
   virtual void OnUserLeft(
       std::shared_ptr<const conference::User> user) override;
-  virtual void OnStreamRemoved(Json::Value stream) override;
+  virtual void OnStreamRemoved(sio::message::ptr stream) override;
   virtual void OnServerDisconnected() override;
+  virtual void OnStreamId(const std::string& id,
+                          const std::string& publish_stream_label) override;
 
  private:
   bool CheckNullPointer(
       uintptr_t pointer,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  void TriggerOnStreamAdded(const Json::Value& stream_info);
+  void TriggerOnStreamAdded(sio::message::ptr stream_info);
   PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration()
       const;
   // Get the |ConferencePeerConnectionChannel| instance associated with specific
   // |stream|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
-  void TriggerOnStreamRemoved(const Json::Value& stream_info);
+  std::shared_ptr<ConferencePeerConnectionChannel>
+  GetConferencePeerConnectionChannel(const std::string& stream_id) const;
+  void TriggerOnStreamRemoved(sio::message::ptr stream_info);
+  conference::User ParseUser(sio::message::ptr user_info) const;
 
   ConferenceClientConfiguration configuration_;
-  std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
+  std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
+  // Key woogeen::Stream's ID, value is MediaStream's label
+  std::unordered_map<std::string, std::string> publish_id_label_map_;
+  // Key is woogeen::Stream's ID.
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       publish_pcs_;
+  // Key is woogeen::Stream's ID
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       subscribe_pcs_;
+  // Key is woogeen::Stream's ID
   std::unordered_map<std::string, std::shared_ptr<woogeen::RemoteStream>>
       added_streams_;
   std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;

@@ -29,7 +29,7 @@ const std::string& Stream::Id() const {
   return id_;
 }
 
-void Stream::Id(std::string& id) {
+void Stream::Id(const std::string& id) {
   id_ = id;
 }
 

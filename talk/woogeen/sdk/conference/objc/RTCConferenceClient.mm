@@ -11,9 +11,9 @@
 #import "talk/woogeen/sdk/base/objc/public/RTCErrors.h"
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClient.h"
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceErrors.h"
-#import "talk/woogeen/sdk/conference/socketsignalingchannel.h"
+#import "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #import "talk/woogeen/sdk/conference/conferenceclient.h"
-#import "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
+#import "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 
 @implementation RTCConferenceClient {
@@ -35,8 +35,8 @@
     nativeConfig->media_codec.video_codec =
         woogeen::MediaCodec::VideoCodec::VP8;
   }
-  std::shared_ptr<woogeen::ConferenceSignalingChannelInterface>
-      socketSignalingChannel(new woogeen::SocketSignalingChannel());
+  std::shared_ptr<woogeen::ConferenceSocketSignalingChannel>
+      socketSignalingChannel(new woogeen::ConferenceSocketSignalingChannel());
   std::unique_ptr<woogeen::ConferenceClient> nativeConferenceClient(
       new woogeen::ConferenceClient(*nativeConfig, socketSignalingChannel));
   _nativeConferenceClient = std::move(nativeConferenceClient);

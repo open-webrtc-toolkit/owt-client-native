@@ -14,7 +14,7 @@
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
-#include "talk/woogeen/sdk/conference/conferencesignalingchannelinterface.h"
+#include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/messagehandler.h"
 
@@ -41,12 +41,12 @@ class ConferencePeerConnectionChannelObserver {
 };
 
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with
-// MCU.
+// MCU as well as it's signaling through Socket.IO.
 class ConferencePeerConnectionChannel : public PeerConnectionChannel {
  public:
   explicit ConferencePeerConnectionChannel(
       PeerConnectionChannelConfiguration& configuration,
-      std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel);
+      std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel);
   ~ConferencePeerConnectionChannel();
   // Add a ConferencePeerConnectionChannel observer so it will be notified when
   // this object have some events.
@@ -109,6 +109,13 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
+  // Set published stream's ID. This ID is assgined by MCU.
+  // This is the reason why a local stream cannot publish twice.
+  void SetStreamId(const std::string& id);
+
+  // Socket.IO event
+  virtual void OnSignalingMessage(sio::message::ptr message);
+
  protected:
   void CreateOffer();
   void CreateAnswer();
@@ -141,8 +148,6 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   enum NegotiationState : int;
 
  private:
-  void ChangeSessionState(SessionState state);
-  void ChangeNegotiationState(NegotiationState state);
   void SendSignalingMessage(
       const Json::Value& data,
       std::function<void()> success,
@@ -164,10 +169,17 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
       const;
+  void DrainIceCandidates();
+  // Get published or subscribed stream ID.
+  // Currently, a ConferencePeerConnectionChannel manages only one stream, this
+  // method is a shortcut to check whether this channel is used to publish or
+  // subscribe a stream, and returns the stream's ID.
+  std::string GetStreamId() const;
 
-  std::shared_ptr<ConferenceSignalingChannelInterface> signaling_channel_;
+  std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   int session_id_;
   int message_seq_;
+  webrtc::PeerConnectionInterface::SignalingState signaling_state_;
 
   // If this pc is used for publishing, |local_stream_| will be the stream to be
   // published.
@@ -181,8 +193,11 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::function<void()> publish_success_callback_;
   std::function<void(std::unique_ptr<ConferenceException>)> failure_callback_;
 
-  SessionState session_state_;
-  NegotiationState negotiation_state_;
+  // Stored candidates, will be send out after setting remote description.
+  // Use sio::message::ptr instead of IceCandidateInterface* to avoid one more
+  // deep copy
+  std::vector<sio::message::ptr> ice_candidates_;
+  std::mutex candidates_mutex_;
   std::vector<ConferencePeerConnectionChannelObserver*> observers_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
