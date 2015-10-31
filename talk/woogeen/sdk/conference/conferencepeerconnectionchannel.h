@@ -6,6 +6,7 @@
 #define WOOGEEN_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_
 
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <chrono>
 #include <random>

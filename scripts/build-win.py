@@ -16,6 +16,7 @@ import argparse
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_LIB = 'woogeen.lib'
+LIB_BLACK_LIST = ['video_capture']
 
 def _getlibs(scheme):
   '''Returns an array contains all .lib files' path
@@ -25,8 +26,11 @@ def _getlibs(scheme):
   for root, dirs, files in os.walk(root_path):
     for file in files:
       name, ext = os.path.splitext(file)
-      if(ext=='.lib'):
+      if(ext=='.lib' and name not in LIB_BLACK_LIST and 'test' not in name):
         result.append(os.path.abspath(os.path.join(root, file)))
+        print 'Merged %s.lib'%name
+      elif (ext=='.lib'):
+        print 'Skip %s.lib'%name
   return result
 
 def _mergelibs(scheme):
