@@ -2,11 +2,11 @@
  * Intel License
  */
 
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "webrtc/base/stringencode.h"
-
 #ifndef WOOGEEN_BASE_MEDIACONSTRAINTSIMPL_H_
 #define WOOGEEN_BASE_MEDIACONSTRAINTSIMPL_H_
+
+#include "talk/app/webrtc/mediaconstraintsinterface.h"
+#include "webrtc/base/stringencode.h"
 
 namespace woogeen {
 class MediaConstraintsImpl : public webrtc::MediaConstraintsInterface {

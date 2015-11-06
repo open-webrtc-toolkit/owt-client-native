@@ -8,6 +8,8 @@
 #include "talk/media/devices/devicemanager.h"
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+
 
 namespace woogeen {
 
@@ -15,14 +17,23 @@ Stream::Stream() : id_("") {}
 
 Stream::Stream(std::string& id) : id_(id) {}
 
-scoped_refptr<MediaStreamInterface> Stream::MediaStream() const {
+MediaStreamInterface* Stream::MediaStream() const {
   RTC_CHECK(media_stream_);
   return media_stream_;
 }
 
-void Stream::MediaStream(scoped_refptr<MediaStreamInterface> media_stream) {
+Stream::~Stream(){
+  if(media_stream_)
+    media_stream_->Release();
+}
+
+void Stream::MediaStream(MediaStreamInterface* media_stream) {
   RTC_CHECK(media_stream);
+  if(media_stream_!=nullptr){
+    media_stream_->Release();
+  }
   media_stream_ = media_stream;
+  media_stream_->AddRef();
 }
 
 const std::string& Stream::Id() const {
@@ -65,6 +76,13 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
     (*it)->set_enabled(enabled);
   }
+}
+
+LocalStream::LocalStream():media_constraints_(new MediaConstraintsImpl){
+}
+
+LocalStream::~LocalStream(){
+  delete media_constraints_;
 }
 
 LocalCameraStream::~LocalCameraStream() {
@@ -111,20 +129,20 @@ LocalCameraStream::LocalCameraStream(
     ASSERT(capturer);
     cricket::VideoCapturer* capturer_ptr = capturer.release();
     ASSERT(capturer_ptr);
-    media_constraints_.SetMandatory(
+    media_constraints_->SetMandatory(
         webrtc::MediaConstraintsInterface::kMaxWidth,
         std::to_string(parameters->ResolutionWidth()));
-    media_constraints_.SetMandatory(
+    media_constraints_->SetMandatory(
         webrtc::MediaConstraintsInterface::kMaxHeight,
         std::to_string(parameters->ResolutionHeight()));
-    media_constraints_.SetMandatory(
+    media_constraints_->SetMandatory(
         webrtc::MediaConstraintsInterface::kMinWidth,
         std::to_string(parameters->ResolutionWidth()));
-    media_constraints_.SetMandatory(
+    media_constraints_->SetMandatory(
         webrtc::MediaConstraintsInterface::kMinHeight,
         std::to_string(parameters->ResolutionHeight()));
     scoped_refptr<VideoSourceInterface> source =
-        factory->CreateVideoSource(capturer_ptr, &media_constraints_);
+        factory->CreateVideoSource(capturer_ptr, media_constraints_);
     std::string video_track_label =
         "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
     scoped_refptr<VideoTrackInterface> video_track =
@@ -139,12 +157,14 @@ LocalCameraStream::LocalCameraStream(
     stream->AddTrack(audio_track);
   }
   media_stream_ = stream;
+  media_stream_->AddRef();
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            std::string& from)
     : remote_user_id_(from) {
   media_stream_ = media_stream;
+  media_stream_->AddRef();
 }
 
 RemoteStream::RemoteStream(std::string& id, std::string& from)
@@ -154,11 +174,11 @@ std::string& RemoteStream::From() {
 }
 
 void RemoteStream::MediaStream(
-    scoped_refptr<MediaStreamInterface> media_stream) {
-  media_stream_ = media_stream;
+    MediaStreamInterface* media_stream) {
+  Stream::MediaStream(media_stream);
 }
 
-scoped_refptr<MediaStreamInterface> RemoteStream::MediaStream() {
+MediaStreamInterface* RemoteStream::MediaStream() {
   return media_stream_;
 }
 

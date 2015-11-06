@@ -1,28 +1,50 @@
 /*
- * Intel License
+ * Copyright © 2015 Intel Corporation. All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef WOOGEEN_BASE_STREAM_H_
 #define WOOGEEN_BASE_STREAM_H_
 
 #include <memory>
-#include "talk/app/webrtc/mediastreaminterface.h"
-#include "talk/media/base/videocapturer.h"
-#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-#include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "localcamerastreamparameters.h"
+
+namespace webrtc {
+  class MediaStreamInterface;
+}
 
 namespace woogeen {
 
+class MediaConstraintsImpl;
+
 using webrtc::MediaStreamInterface;
-using rtc::scoped_refptr;
 
 class Stream {
   friend class ConferencePeerConnectionChannel;
 
  public:
-  scoped_refptr<MediaStreamInterface> MediaStream() const;
+  MediaStreamInterface* MediaStream() const;
   const std::string& Id() const;
   virtual void DisableAudio();
   virtual void DisableVideo();
@@ -32,10 +54,10 @@ class Stream {
  protected:
   Stream(std::string& id);
   Stream();
-  virtual ~Stream(){};
+  virtual ~Stream();
   void Id(const std::string& id);
-  void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
-  scoped_refptr<MediaStreamInterface> media_stream_;
+  void MediaStream(MediaStreamInterface* media_stream);
+  MediaStreamInterface* media_stream_;
 
  private:
   void SetAudioTracksEnabled(bool enabled);
@@ -44,8 +66,11 @@ class Stream {
 };
 
 class LocalStream : public Stream {
+ public:
+  LocalStream();
+  virtual ~LocalStream();
  protected:
-  woogeen::MediaConstraintsImpl media_constraints_;
+  woogeen::MediaConstraintsImpl* media_constraints_;
 };
 
 class RemoteStream : public Stream {
@@ -59,8 +84,8 @@ class RemoteStream : public Stream {
   explicit RemoteStream(std::string& id, std::string& from);
   explicit RemoteStream(MediaStreamInterface* media_stream, std::string& from);
 
-  scoped_refptr<MediaStreamInterface> MediaStream();
-  void MediaStream(scoped_refptr<MediaStreamInterface> media_stream);
+  MediaStreamInterface* MediaStream();
+  void MediaStream(MediaStreamInterface* media_stream);
 
  private:
   std::string& remote_user_id_;

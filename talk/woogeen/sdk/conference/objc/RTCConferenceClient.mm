@@ -25,9 +25,13 @@
   self = [super init];
   woogeen::ConferenceClientConfiguration* nativeConfig =
       new woogeen::ConferenceClientConfiguration();
-  webrtc::PeerConnectionInterface::IceServers iceServers;
+  std::vector<woogeen::IceServer> iceServers;
   for (RTCICEServer* server in config.ICEServers) {
-    iceServers.push_back(server.iceServer);
+    woogeen::IceServer iceServer;
+    iceServer.urls.push_back(server.iceServer.uri);
+    iceServer.username=server.iceServer.username;
+    iceServer.password=server.iceServer.password;
+    iceServers.push_back(iceServer);
   }
   nativeConfig->ice_servers = iceServers;
   LOG(LS_INFO) << "Video codec preference: " << config.mediaCodec.videoCodec;

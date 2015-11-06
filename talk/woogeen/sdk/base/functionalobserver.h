@@ -2,12 +2,12 @@
  * Intel License
  */
 
+#ifndef WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
+#define WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
+
 #include <functional>
 #include "talk/app/webrtc/jsep.h"
 #include "webrtc/base/scoped_ref_ptr.h"
-
-#ifndef WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
-#define WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
 
 namespace woogeen {
 // A webrtc::CreateSessionDescriptionObserver implementation used to invoke user

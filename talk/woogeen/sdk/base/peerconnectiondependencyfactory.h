@@ -2,12 +2,12 @@
  * Intel License
  */
 
+#ifndef WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
+#define WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
+
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/videosourceinterface.h"
 #include "webrtc/base/bind.h"
-
-#ifndef WOOGEEN_NATIVE_PEERCONNECTIONDEPENDENCYFACTORY_H_
-#define WOOGEEN_NATIVE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 
 namespace woogeen {
 using webrtc::MediaStreamInterface;
@@ -82,4 +82,4 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #endif
 };
 }  // namespace woogeen
-#endif  // WOOGEEN_NATIVE_PEERCONNECTIONDEPENDENCYFACTORY_H_
+#endif  // WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_

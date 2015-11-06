@@ -3,6 +3,7 @@
  */
 
 #include <thread>
+#include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/conferenceclient.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
@@ -20,12 +21,13 @@ ConferenceClient::ConferenceClient(
     ConferenceClientConfiguration& configuration,
     std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel)
     : configuration_(configuration), signaling_channel_(signaling_channel) {
-    //optionally enabling HW accleration
+  //optionally enabling HW accleration
+/*
 #if defined(WEBRTC_WIN)
-    if (configuration.hardware_acceleration_ && (configuration.decoder_win_ != nullptr)){
-        PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.decoder_win_);
-    }
-#endif
+  if (configuration.hardware_acceleration_ && (configuration.decoder_win_ != nullptr)){
+      PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.decoder_win_);
+  }
+#endif*/
 }
 
 void ConferenceClient::AddObserver(
@@ -120,7 +122,7 @@ void ConferenceClient::Unpublish(
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
-  if (!CheckNullPointer((uintptr_t)stream->MediaStream().get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure)) {
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
@@ -410,7 +412,15 @@ ConferenceClient::GetConferencePeerConnectionChannel(
 PeerConnectionChannelConfiguration
 ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   PeerConnectionChannelConfiguration config;
-  config.servers = configuration_.ice_servers;
+  std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
+  for(auto it = configuration_.ice_servers.begin(); it!=configuration_.ice_servers.end();++it){
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.urls=(*it).urls;
+    ice_server.username=(*it).username;
+    ice_server.password=(*it).password;
+    ice_servers.push_back(ice_server);
+  }
+  config.servers = ice_servers;
   config.media_codec = configuration_.media_codec;
   return config;
 }

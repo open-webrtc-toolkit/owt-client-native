@@ -2,7 +2,9 @@
  * Intel License
  */
 
+#include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/p2p/peerclient.h"
+#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/base/checks.h"
 
 namespace woogeen {
@@ -66,6 +68,12 @@ void PeerClient::OnDisconnected() {
   LOG(LS_INFO) << "Disconnected from signaling server.";
 }
 
+// Windows defines SendMessage as SendMessageA or SendMessageW. Undefine it
+// here and redefined it later.
+#if defined(UNICODE) && defined(WEBRTC_WIN) && defined(SendMessage)
+#undef SendMessage
+#endif
+
 void PeerClient::SendSignalingMessage(const std::string& message,
                                       const std::string& remote_id,
                                       std::function<void()> on_success,
@@ -73,6 +81,14 @@ void PeerClient::SendSignalingMessage(const std::string& message,
   signaling_channel_->SendMessage(message, remote_id, on_success,
                                   nullptr);  // TODO:fix on_failure.
 }
+
+#ifdef WEBRTC_WIN
+#ifdef UNICODE
+#define SendMessage SendMessageW
+#else
+#define SendMessage SendMessageA
+#endif
+#endif
 
 std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
     const std::string& target_id) {

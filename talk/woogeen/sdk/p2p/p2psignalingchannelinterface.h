@@ -8,7 +8,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "talk/woogeen/sdk/p2p/p2pexception.h"
+#include "p2pexception.h"
 
 namespace woogeen {
 class P2PSignalingChannelInterfaceObserver {
