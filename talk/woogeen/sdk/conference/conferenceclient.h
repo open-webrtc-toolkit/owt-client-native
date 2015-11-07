@@ -154,6 +154,8 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   void TriggerOnStreamRemoved(sio::message::ptr stream_info);
   conference::User ParseUser(sio::message::ptr user_info) const;
 
+  enum StreamType: int;
+
   ConferenceClientConfiguration configuration_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   // Key woogeen::Stream's ID, value is MediaStream's label
@@ -169,6 +171,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   // Key is woogeen::Stream's ID
   std::unordered_map<std::string, std::shared_ptr<woogeen::RemoteStream>>
       added_streams_;
+  std::unordered_map<std::string, StreamType> added_stream_type_;
   std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;
 };
 }

@@ -10,14 +10,10 @@
 #include <unordered_map>
 #include <chrono>
 #include <random>
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
-#include "webrtc/base/json.h"
-#include "webrtc/base/messagehandler.h"
 
 namespace woogeen {
 
@@ -149,10 +145,6 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   enum NegotiationState : int;
 
  private:
-  void SendSignalingMessage(
-      const Json::Value& data,
-      std::function<void()> success,
-      std::function<void(std::unique_ptr<ConferenceException>)> failure);
   // Publish and/or unpublish all streams in pending stream list.
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void ClosePeerConnection();  // Stop session and clean up.

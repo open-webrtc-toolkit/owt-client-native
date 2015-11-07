@@ -5,8 +5,16 @@
 #include <thread>
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/conferenceclient.h"
+#include "talk/woogeen/sdk/conference/conferenceexception.h"
+#include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 
 namespace woogeen {
+
+enum ConferenceClient::StreamType : int {
+  kStreamTypeCamera = 1,
+  kStreamTypeScreen,
+  kStreamTypeMix,
+};
 
 ConferenceClient::ConferenceClient(
     ConferenceClientConfiguration& configuration,
@@ -292,6 +300,10 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
   std::string remote_id = stream_info->get_map()["from"]->get_string();
   auto video = stream_info->get_map()["video"];
+  if(video->get_flag()!=sio::message::flag_object){
+    LOG(LS_ERROR) << "Video info for stream " << id << "is invalid, this stream will be ignored.";
+    return;
+  }
   std::string device = video->get_map()["device"]->get_string();
   if (device == "mcu") {
     auto remote_stream =
@@ -301,6 +313,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
+    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeMix));
   } else if (device == "screen") {
     auto remote_stream =
         std::make_shared<woogeen::RemoteScreenStream>(id, remote_id);
@@ -309,6 +322,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
+    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeScreen));
   } else {
     auto remote_stream =
         std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
@@ -317,6 +331,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
+    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeCamera));
   }
 }
 
@@ -408,35 +423,43 @@ void ConferenceClient::OnUserLeft(
 }
 
 void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
-  // TODO(jianjunz): Implement it with new argument type.
-  // std::string id;
-  // rtc::GetStringFromJsonObject(stream_info, "id", &id);
-  // Json::Value video = stream_info["video"];
-  // std::string device;
-  // std::string remote_id;
-  // rtc::GetStringFromJsonObject(stream_info, "from", &remote_id);
-  // auto stream_it = added_streams_.find(id);
-  // if (rtc::GetStringFromJsonObject(video, "device", &device) &&
-  //     device == "mcu") {
-  //   std::shared_ptr<RemoteMixedStream> stream =
-  //       std::static_pointer_cast<RemoteMixedStream>(stream_it->second);
-  //   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-  //     (*its)->OnStreamRemoved(stream);
-  //   }
-  // } else if (rtc::GetStringFromJsonObject(video, "device", &device) &&
-  //            device == "screen") {
-  //   std::shared_ptr<RemoteScreenStream> stream =
-  //       std::static_pointer_cast<RemoteScreenStream>(stream_it->second);
-  //   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-  //     (*its)->OnStreamRemoved(stream);
-  //   }
-  // } else {
-  //   std::shared_ptr<RemoteCameraStream> stream =
-  //       std::static_pointer_cast<RemoteCameraStream>(stream_it->second);
-  //   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-  //     (*its)->OnStreamRemoved(stream);
-  //   }
-  // }
-  // added_streams_.erase(stream_it);
+  std::string id=stream_info->get_map()["id"]->get_string();
+  auto stream_it = added_streams_.find(id);
+  auto stream_type = added_stream_type_.find(id);
+  if(stream_it==added_streams_.end()||stream_type==added_stream_type_.end()){
+    ASSERT(false);
+    LOG(LS_WARNING) << "Invalid stream or type.";
+    return;
+  }
+  auto stream = stream_it->second;
+  auto type=stream_type->second;
+  switch(type){
+    case kStreamTypeCamera:
+    {
+      std::shared_ptr<RemoteCameraStream> stream_ptr=std::static_pointer_cast<RemoteCameraStream>(stream);
+      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
+        (*observers_it)->OnStreamRemoved(stream_ptr);
+      }
+      break;
+    }
+    case kStreamTypeScreen:
+    {
+      std::shared_ptr<RemoteScreenStream> stream_ptr=std::static_pointer_cast<RemoteScreenStream>(stream);
+      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
+        (*observers_it)->OnStreamRemoved(stream_ptr);
+      }
+      break;
+    }
+    case kStreamTypeMix:
+    {
+      std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
+      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
+        (*observers_it)->OnStreamRemoved(stream_ptr);
+      }
+      break;
+    }
+  }
+  added_streams_.erase(stream_it);
+  added_stream_type_.erase(stream_type);
 }
 }

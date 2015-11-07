@@ -7,6 +7,7 @@
 #include <future>
 #include "webrtc/base/logging.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
+#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 
 namespace woogeen {
@@ -132,11 +133,6 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
   LOG(LS_INFO) << "Post create answer";
   pc_thread_->Post(this, kMessageTypeCreateAnswer, message_observer);
 }
-
-void ConferencePeerConnectionChannel::SendSignalingMessage(
-    const Json::Value& data,
-    std::function<void()> success,
-    std::function<void(std::unique_ptr<ConferenceException>)> failure) {}
 
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
