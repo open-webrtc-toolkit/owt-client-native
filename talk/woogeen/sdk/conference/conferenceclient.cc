@@ -57,7 +57,7 @@ void ConferenceClient::Join(
     } else {
       auto users = info->get_map()["users"]->get_vector();
       for (auto it = users.begin(); it != users.end(); ++it) {
-        auto user = std::make_shared<const conference::User>(ParseUser(*it));
+        auto user = std::make_shared<conference::User>(ParseUser(*it));
         for (auto its = observers_.begin(); its != observers_.end(); ++its) {
           (*its)->OnUserJoined(user);
         }

@@ -35,7 +35,7 @@ class User {
        std::string name,
        std::string role,
        Permission permissions)
-      : role_(role), id_(id), permissions_(permissions) {}
+      : role_(role), name_(name), id_(id), permissions_(permissions) {}
   std::string Role() const { return role_; };
   std::string Name() const { return name_; };
   std::string Id() const { return id_; };

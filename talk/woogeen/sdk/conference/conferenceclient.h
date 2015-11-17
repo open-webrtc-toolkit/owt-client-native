@@ -10,7 +10,7 @@
 #include <vector>
 #include "talk/woogeen/sdk/base/clientconfiguration.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
-#include "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
+#include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 
