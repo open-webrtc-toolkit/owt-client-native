@@ -10,10 +10,10 @@ namespace woogeen {
 
 PeerConnectionChannel::PeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration)
-    : peer_connection_(nullptr),
+    : pc_thread_(nullptr),
+      configuration_(configuration),
       factory_(nullptr),
-      pc_thread_(nullptr),
-      configuration_(configuration) {
+      peer_connection_(nullptr) {
   LOG(LS_INFO) << "PeerConnectionChannel video codec: "
                << configuration_.media_codec.video_codec;
 }

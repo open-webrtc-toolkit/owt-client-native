@@ -99,7 +99,7 @@ LocalCameraStream::LocalCameraStream(
   if (parameters->VideoEnabled()) {
     rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(
         cricket::DeviceManagerFactory::Create());
-    bool initialized = device_manager->Init();
+    device_manager->Init();
     cricket::Device device;
     if (!device_manager->GetVideoCaptureDevice(parameters->CameraId(),
                                                &device)) {
