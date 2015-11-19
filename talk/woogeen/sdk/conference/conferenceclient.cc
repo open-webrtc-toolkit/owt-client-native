@@ -19,7 +19,14 @@ enum ConferenceClient::StreamType : int {
 ConferenceClient::ConferenceClient(
     ConferenceClientConfiguration& configuration,
     std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel)
-    : configuration_(configuration), signaling_channel_(signaling_channel) {}
+    : configuration_(configuration), signaling_channel_(signaling_channel) {
+    //optionally enabling HW accleration
+#if defined(WEBRTC_WIN)
+    if (configuration.hardware_acceleration_ && (configuration.decoder_win_ != nullptr)){
+        PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.decoder_win_);
+    }
+#endif
+}
 
 void ConferenceClient::AddObserver(
     std::shared_ptr<ConferenceClientObserver> observer) {

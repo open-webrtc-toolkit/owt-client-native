@@ -1,0 +1,73 @@
+/*
+* libjingle
+* Copyright 2012 Google Inc.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+*  1. Redistributions of source code must retain the above copyright notice,
+*     this list of conditions and the following disclaimer.
+*  2. Redistributions in binary form must reproduce the above copyright notice,
+*     this list of conditions and the following disclaimer in the documentation
+*     and/or other materials provided with the distribution.
+*  3. The name of the author may not be used to endorse or promote products
+*     derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+* EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+* OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+* ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+//
+//MSDKVideoDecoderFactory implemenation
+//
+
+#include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
+MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
+  :decoder_window_(hWnd){
+    supported_codec_types_.clear();
+
+    //Check the esistence of MSDK VP8 and H264 decoder MFTs. This should be done by trying to load the VP8 and msmpeg2dec dll.
+    //For simplicity, we assume both of them are supported here.
+    bool is_vp8_hw_supported = true;
+    if (is_vp8_hw_supported) {
+        supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
+    }
+
+    bool is_h264_hw_supported = true;
+    if (is_h264_hw_supported) {
+        supported_codec_types_.push_back(webrtc::kVideoCodecH264);
+    }
+}
+
+
+MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {
+    MFShutdown();
+    ::CoUninitialize();
+}
+
+webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoCodecType type) {
+    if (supported_codec_types_.empty()) {
+        return NULL;
+    }
+    for (std::vector<webrtc::VideoCodecType>::const_iterator it =
+        supported_codec_types_.begin(); it != supported_codec_types_.end();
+        ++it) {
+        if (*it == type) {
+            return new MSDKVideoDecoder(type, decoder_window_);
+        }
+    }
+    return NULL;
+}
+
+void MSDKVideoDecoderFactory::DestroyVideoDecoder(
+    webrtc::VideoDecoder* decoder) {
+    delete decoder;
+}

@@ -6,12 +6,21 @@
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#if defined(WEBRTC_WIN)
+#include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
+#include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
+#endif
 
 namespace woogeen {
 void PeerConnectionThread::Run() {
   ProcessMessages(kForever);
   SetAllowBlockingCalls(true);
 }
+
+#if defined(WEBRTC_WIN)
+bool PeerConnectionDependencyFactory::hw_acceleration_ = false;
+HWND PeerConnectionDependencyFactory::decoder_win_ = false;
+#endif
 
 PeerConnectionThread::~PeerConnectionThread() {
   LOG(LS_INFO) << "Quit a PeerConnectionThread.";
@@ -23,7 +32,7 @@ scoped_refptr<PeerConnectionDependencyFactory>
 
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
-      callback_thread_(new PeerConnectionThread) {
+      callback_thread_(new PeerConnectionThread){
   pc_thread_->Start();
 }
 
@@ -36,6 +45,20 @@ PeerConnectionDependencyFactory::Create() {
 rtc::RefCountedObject<PeerConnectionDependencyFactory>();
   return pcdf;
 }*/
+
+#if defined(WEBRTC_WIN)
+//SetEnableHardwareAcceleration is supposed to be called the first peerconnection channel instance
+//in peerclient or conference client.
+void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window){
+    if (bEnabled && (decoder_window != nullptr)){
+        hw_acceleration_ = true;
+        decoder_win_ = decoder_window;
+    }else{
+        hw_acceleration_ = false;
+        decoder_win_ = nullptr;
+    }
+}
+#endif
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
@@ -71,7 +94,25 @@ void PeerConnectionDependencyFactory::
   if (!rtc::InitializeSSL()) {
     LOG(LS_ERROR) << "Failed to initialize SSL.";
   }
-  pc_factory_ = webrtc::CreatePeerConnectionFactory();
+  if (hw_acceleration_ && decoder_win_ != nullptr){
+      //We create peer connection factory with dedicated decoder factory.
+      rtc::Thread* worker_thread = new rtc::Thread();
+      worker_thread->SetName("worker_thread", NULL);
+      rtc::Thread* signaling_thread = new rtc::Thread();
+      signaling_thread->SetName("signaling_thread", NULL);
+      RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
+          << "Failed to start threads";
+      rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
+      rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+      decoder_factory.reset(new MSDKVideoDecoderFactory(decoder_win_));
+      encoder_factory.reset(new MSDKVideoEncoderFactory());
+      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
+          signaling_thread,
+          NULL, //Default ADM
+          encoder_factory.release(), //Encoder factory
+          decoder_factory.release());
+  }else
+    pc_factory_ = webrtc::CreatePeerConnectionFactory();
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>

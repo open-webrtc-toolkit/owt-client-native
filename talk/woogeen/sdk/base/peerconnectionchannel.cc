@@ -107,10 +107,18 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       }
       if (configuration_.media_codec.video_codec ==
           MediaCodec::VideoCodec::H264) {
-        std::size_t pos = sdp_string.find("100 107");
+        //For windows
+#if defined(WEBRTC_WIN)
+        std::size_t pos = sdp_string.find("100 116 117 120");
         if (pos != std::string::npos) {
-          sdp_string.replace(pos, 7, "107 100");
+          sdp_string.replace(pos, 15, "120 116 117 100");
         }
+#elif defined(WEBRTC_IOS)
+        std::size_t pos = sdp_string.find("100 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 7, "120 100");
+        }
+#endif
       }
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));

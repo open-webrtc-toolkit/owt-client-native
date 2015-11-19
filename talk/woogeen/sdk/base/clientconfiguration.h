@@ -15,6 +15,10 @@ namespace woogeen {
 struct ClientConfiguration {
   std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
   MediaCodec media_codec;
+#if defined(WEBRTC_WIN)
+  bool hardware_acceleration_;
+  HWND decoder_win_;
+#endif
 };
 }
 
