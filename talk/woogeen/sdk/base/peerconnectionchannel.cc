@@ -114,9 +114,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           sdp_string.replace(pos, 15, "120 116 117 100");
         }
 #elif defined(WEBRTC_IOS)
-        std::size_t pos = sdp_string.find("100 120");
+        std::size_t pos = sdp_string.find("100 107");
         if (pos != std::string::npos) {
-          sdp_string.replace(pos, 7, "120 100");
+          sdp_string.replace(pos, 7, "107 100");
         }
 #endif
       }
