@@ -94,6 +94,7 @@ void PeerConnectionDependencyFactory::
   if (!rtc::InitializeSSL()) {
     LOG(LS_ERROR) << "Failed to initialize SSL.";
   }
+#if defined(WEBRTC_WIN)
   if (hw_acceleration_ && decoder_win_ != nullptr){
       //We create peer connection factory with dedicated decoder factory.
       rtc::Thread* worker_thread = new rtc::Thread();
@@ -112,6 +113,7 @@ void PeerConnectionDependencyFactory::
           encoder_factory.release(), //Encoder factory
           decoder_factory.release());
   }else
+#endif
     pc_factory_ = webrtc::CreatePeerConnectionFactory();
 }
 
