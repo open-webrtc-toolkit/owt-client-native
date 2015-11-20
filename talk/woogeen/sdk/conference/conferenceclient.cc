@@ -307,7 +307,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
   std::string remote_id = stream_info->get_map()["from"]->get_string();
   auto video = stream_info->get_map()["video"];
-  if(video->get_flag()!=sio::message::flag_object){
+  if(video==nullptr||video->get_flag()!=sio::message::flag_object){
     LOG(LS_ERROR) << "Video info for stream " << id << "is invalid, this stream will be ignored.";
     return;
   }
