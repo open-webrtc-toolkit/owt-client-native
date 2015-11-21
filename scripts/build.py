@@ -44,7 +44,10 @@ def runhooks(arch, ssl_root):
   env.setdefault('GYP_GENERATOR_FLAGS', '')
   env['GYP_GENERATOR_FLAGS']+=("output_dir="+ARCH_PARAM_DICT.get(arch)[0])
   env.setdefault('GYP_GENERATORS', 'ninja')
-  subprocess.call(['gclient', 'runhooks'], cwd=HOME_PATH, env=env)
+  ret=subprocess.call(['gclient', 'runhooks'], cwd=HOME_PATH, env=env)
+  if ret == 0:
+    return True
+  return False
 
 def getoutputpath(arch, scheme):
   return '%s/%s-%s'%(ARCH_PARAM_DICT.get(arch)[0], SCHEME_DICT.get(scheme),
@@ -54,12 +57,14 @@ def ninjabuild(arch, scheme):
   out_path=getoutputpath(arch, scheme)
   for target_name in ['AppRTCDemo', 'woogeen_sdk_base', 'woogeen_sdk_p2p',
                       'woogeen_sdk_conf','woogeen_sdk_objc']:
-    subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)
-  # Combine all .a together by libtool.
-  if (os.path.exists(os.path.join(out_path, 'libwoogeen.a'))):
-    os.remove(os.path.join(out_path, 'libwoogeen.a'))
+    if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
+      return False
+  # Combine all.a together by libtool.
+  if (os.path.exists(os.path.join(HOME_PATH, out_path, 'libwoogeen.a'))):
+    os.remove(os.path.join(HOME_PATH, out_path, 'libwoogeen.a'))
   subprocess.call(['libtool -o %s/libwoogeen.a %s/*.a'%(out_path, out_path)],
       cwd=HOME_PATH, shell=True)
+  return True
 
 def copyheaders():
   if not os.path.exists(OUT_HEADER_PATH):
@@ -94,7 +99,9 @@ def dist(arch_list, scheme, ssl_root):
   if scheme == 'release':
     subprocess.call(['strip', '-S', '-x', '%s/out/libwoogeen.a'%HOME_PATH],
         cwd=HOME_PATH)
+  return True
 
+# Return 0 if build success
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--arch', default='arm64', dest='target_arch',
@@ -117,8 +124,10 @@ def main():
       return 1
     else:
       if not opts.skip_runhooks:
-        runhooks(arch_item, opts.ssl_root)
-      ninjabuild(arch_item, opts.scheme)
+        if not runhooks(arch_item, opts.ssl_root):
+          return 1
+      if not ninjabuild(arch_item, opts.scheme):
+        return 1
   dist(opts.arch, opts.scheme, opts.ssl_root)
   copyheaders()
   print 'Done.'
