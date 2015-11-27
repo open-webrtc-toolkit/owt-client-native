@@ -29,14 +29,17 @@
 
 #include <memory>
 #include <unordered_map>
+#include <iostream>
 #include "p2psignalingchannelinterface.h"
 #include "p2psignalingsenderinterface.h"
+#include "stream.h"
 
 namespace woogeen {
 
 class Stream;
 class RemoteStream;
 class LocalStream;
+class P2PPeerConnectionChannelObserverCppImpl;
 
 class P2PPeerConnectionChannel;
 
@@ -45,8 +48,7 @@ class PeerClientObserver {
  public:
   /**
    @brief This function will be invoked when client is disconnected from
-   signaling
-   server.
+   signaling server.
    */
   virtual void OnServerDisconnected(){};
   /**
@@ -261,6 +263,18 @@ class PeerClient : protected P2PSignalingSenderInterface,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
+  /*! Add an observer for peer client.
+    @param observer Add this object to observer list.
+                    Do not delete this object until it is removed from observer
+                    list.
+  */
+  void AddObserver(PeerClientObserver* observer);
+
+  /*! Remove an observer from peer client.
+    @param observer Remove this object from observer list.
+  */
+  void RemoveObserver(PeerClientObserver* observer);
+
  protected:
   // Implement
   virtual void SendSignalingMessage(const std::string& message,
@@ -271,14 +285,53 @@ class PeerClient : protected P2PSignalingSenderInterface,
   virtual void OnMessage(const std::string& message, const std::string& sender);
   virtual void OnDisconnected();
 
+  // Handle events from P2PPeerConnectionChannel
+  // Triggered when received an invitation.
+  virtual void OnInvited(const std::string& remote_id);
+  // Triggered when remote user accepted the invitation.
+  virtual void OnAccepted(const std::string& remote_id);
+  // Triggered when the WebRTC session is started.
+  virtual void OnStarted(const std::string& remote_id);
+  // Triggered when the WebRTC session is ended.
+  virtual void OnStopped(const std::string& remote_id);
+  // Triggered when remote user denied the invitation.
+  virtual void OnDenied(const std::string& remote_id);
+  // Triggered when remote user send data via data channel.
+  // Currently, data is string.
+  virtual void OnData(const std::string& remote_id,
+                      const std::string& message);
+  // Triggered when a new stream is added.
+  virtual void OnStreamAdded(
+      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+  virtual void OnStreamAdded(
+      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+  // Triggered when a remote stream is removed.
+  virtual void OnStreamRemoved(
+      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+  virtual void OnStreamRemoved(
+      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+
  private:
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
       const std::string& target_id);
+  // Trigger events.
+  template <typename T1, typename T2>
+  void OnEvent1(T1 func, T2 arg1);
+  template <typename T1, typename T2, typename T3>
+  void OnEvent2(T1 func, T2 arg1, T3 arg2);
 
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;
+  // P2PPeerConnectionChannelObserver adapter for each PeerConnectionChannel
+  std::unordered_map<std::string, P2PPeerConnectionChannelObserverCppImpl*>
+      pcc_observers_;
   std::string local_id_;
+  std::vector <PeerClientObserver*> observers_;
+  // It receives events from P2PPeerConnectionChannel and notify PeerClient.
+  P2PPeerConnectionChannelObserverCppImpl* pcc_observer_impl_;
+
+  friend class P2PPeerConnectionChannelObserverCppImpl;
 };
 }
 

@@ -2,9 +2,11 @@
  * Intel License
  */
 
+#include <future>
 #include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/p2p/peerclient.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 #include "webrtc/base/checks.h"
 
 namespace woogeen {
@@ -14,6 +16,23 @@ PeerClient::PeerClient(
     : signaling_channel_(signaling_channel) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(this);
+}
+
+
+template <typename T1, typename T2>
+void PeerClient::OnEvent1(T1 func, T2 arg1) {
+  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+    auto f = std::bind(func, *it, arg1);
+    std::async(std::launch::async, f);
+  }
+}
+
+template <typename T1, typename T2, typename T3>
+void PeerClient::OnEvent2(T1 func, T2 arg1, T3 arg2) {
+  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+    auto f = std::bind(func, *it, arg1, arg2);
+    std::async(std::launch::async, f);
+  }
 }
 
 void PeerClient::Connect(
@@ -82,6 +101,17 @@ void PeerClient::SendSignalingMessage(const std::string& message,
                                   nullptr);  // TODO:fix on_failure.
 }
 
+void PeerClient::AddObserver(PeerClientObserver* observer) {
+  RTC_CHECK(observer);
+  observers_.push_back(observer);
+}
+
+void PeerClient::RemoveObserver(PeerClientObserver* observer) {
+  RTC_CHECK(observer);
+  observers_.erase(std::remove(observers_.begin(), observers_.end(), observer),
+                  observers_.end());
+}
+
 #ifdef WEBRTC_WIN
 #ifdef UNICODE
 #define SendMessage SendMessageW
@@ -98,13 +128,75 @@ std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
     std::shared_ptr<P2PPeerConnectionChannel> pcc =
         std::shared_ptr<P2PPeerConnectionChannel>(
             new P2PPeerConnectionChannel(config, local_id_, target_id, this));
+    P2PPeerConnectionChannelObserverCppImpl *pcc_observer=new P2PPeerConnectionChannelObserverCppImpl(*this);
+    pcc->AddObserver(pcc_observer);
     auto pcc_pair =
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
             target_id, pcc);
     pc_channels_.insert(pcc_pair);
+    auto pcc_observer_pair=std::pair<std::string, P2PPeerConnectionChannelObserverCppImpl*>(target_id, pcc_observer);
+    pcc_observers_.insert(pcc_observer_pair);
     return pcc;
   } else {
     return pcc_it->second;
   }
+}
+
+void PeerClient::OnInvited(const std::string& remote_id) {
+  OnEvent1(&PeerClientObserver::OnInvited, remote_id);
+}
+
+void PeerClient::OnAccepted(const std::string& remote_id) {
+  OnEvent1(&PeerClientObserver::OnAccepted, remote_id);
+}
+
+void PeerClient::OnStarted(const std::string& remote_id) {
+  OnEvent1(&PeerClientObserver::OnChatStarted, remote_id);
+}
+
+void PeerClient::OnStopped(const std::string& remote_id) {
+  OnEvent1(&PeerClientObserver::OnChatStopped, remote_id);
+}
+
+void PeerClient::OnDenied(const std::string& remote_id) {
+  OnEvent1(&PeerClientObserver::OnDenied, remote_id);
+}
+
+void PeerClient::OnData(const std::string& remote_id,
+                        const std::string& message) {
+  OnEvent2(&PeerClientObserver::OnDataReceived, remote_id, message);
+}
+
+void PeerClient::OnStreamAdded(
+    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+  OnEvent1((void(PeerClientObserver::*)(
+               std::shared_ptr<woogeen::RemoteCameraStream>))(
+               &PeerClientObserver::OnStreamAdded),
+           stream);
+}
+void PeerClient::OnStreamAdded(
+    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+  OnEvent1((void(PeerClientObserver::*)(
+               std::shared_ptr<woogeen::RemoteScreenStream>))(
+               &PeerClientObserver::OnStreamAdded),
+           stream);
+}
+
+void PeerClient::OnStreamRemoved(
+    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+  OnEvent1(
+      (void (
+          PeerClientObserver::*)(std::shared_ptr<woogeen::RemoteCameraStream>))(
+          &PeerClientObserver::OnStreamRemoved),
+      stream);
+}
+
+void PeerClient::OnStreamRemoved(
+    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+  OnEvent1(
+      (void (
+          PeerClientObserver::*)(std::shared_ptr<woogeen::RemoteScreenStream>))(
+          &PeerClientObserver::OnStreamRemoved),
+      stream);
 }
 }
