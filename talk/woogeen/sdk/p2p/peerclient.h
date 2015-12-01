@@ -30,17 +30,14 @@
 #include <memory>
 #include <unordered_map>
 #include <iostream>
+#include <vector>
 #include "p2psignalingchannelinterface.h"
 #include "p2psignalingsenderinterface.h"
-#include "stream.h"
+#include "talk/woogeen/sdk/base/stream.h"
 
 namespace woogeen {
 
-class Stream;
-class RemoteStream;
-class LocalStream;
 class P2PPeerConnectionChannelObserverCppImpl;
-
 class P2PPeerConnectionChannel;
 
 /// Observer for PeerClient

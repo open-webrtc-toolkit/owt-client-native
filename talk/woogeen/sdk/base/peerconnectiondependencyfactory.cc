@@ -94,15 +94,15 @@ void PeerConnectionDependencyFactory::
   if (!rtc::InitializeSSL()) {
     LOG(LS_ERROR) << "Failed to initialize SSL.";
   }
+  rtc::Thread* worker_thread = new rtc::Thread();
+  worker_thread->SetName("worker_thread", NULL);
+  rtc::Thread* signaling_thread = new rtc::Thread();
+  signaling_thread->SetName("signaling_thread", NULL);
+  RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
+      << "Failed to start threads";
 #if defined(WEBRTC_WIN)
   if (hw_acceleration_ && decoder_win_ != nullptr){
       //We create peer connection factory with dedicated decoder factory.
-      rtc::Thread* worker_thread = new rtc::Thread();
-      worker_thread->SetName("worker_thread", NULL);
-      rtc::Thread* signaling_thread = new rtc::Thread();
-      signaling_thread->SetName("signaling_thread", NULL);
-      RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
-          << "Failed to start threads";
       rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
       rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
       decoder_factory.reset(new MSDKVideoDecoderFactory(decoder_win_));
@@ -114,7 +114,11 @@ void PeerConnectionDependencyFactory::
           decoder_factory.release());
   }else
 #endif
-    pc_factory_ = webrtc::CreatePeerConnectionFactory();
+      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
+          signaling_thread,
+          NULL, //Default ADM
+          NULL, //Encoder factory
+          NULL);
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>

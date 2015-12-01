@@ -34,6 +34,12 @@ namespace webrtc {
   class MediaStreamInterface;
 }
 
+namespace cricket {
+  class RawFramesCapturer;
+}
+
+class FrameGeneratorInterface;
+
 namespace woogeen {
 
 class MediaConstraintsImpl;
@@ -111,6 +117,16 @@ class LocalCameraStream : public LocalStream {
       std::shared_ptr<LocalCameraStreamParameters> parameters);
   ~LocalCameraStream();
 };
+
+class LocalRawStream : public LocalStream {
+  public:
+  explicit LocalRawStream(std::shared_ptr<LocalCameraStreamParameters> parameters, FrameGeneratorInterface* framer);
+  ~LocalRawStream();
+
+  private:
+   cricket::RawFramesCapturer* capturer_;
+};
+
 }
 
 #endif  // WOOGEEN_BASE_STREAM_H_

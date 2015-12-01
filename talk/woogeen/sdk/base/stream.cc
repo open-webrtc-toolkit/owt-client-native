@@ -10,6 +10,8 @@
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 
+#include "talk/media/devices/rawframescapturer.h"
+#include "talk/woogeen/sdk/base/framegeneratorinterface.h"
 
 namespace woogeen {
 
@@ -152,6 +154,57 @@ LocalCameraStream::LocalCameraStream(
   if (parameters->AudioEnabled()) {
     std::string audio_track_label =
         "AudioTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
+    scoped_refptr<AudioTrackInterface> audio_track =
+        factory->CreateLocalAudioTrack(audio_track_label);
+    stream->AddTrack(audio_track);
+  }
+  media_stream_ = stream;
+  media_stream_->AddRef();
+}
+
+LocalRawStream::~LocalRawStream() {
+  LOG(LS_INFO) << "Destory LocalCameraStream.";
+  if (media_stream_ != nullptr) {
+    // Remove all tracks before dispose stream.
+    auto audio_tracks = media_stream_->GetAudioTracks();
+    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
+      media_stream_->RemoveTrack(*it);
+    }
+    auto video_tracks = media_stream_->GetVideoTracks();
+    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it) {
+      media_stream_->RemoveTrack(*it);
+    }
+  }
+  delete capturer_;
+}
+
+LocalRawStream::LocalRawStream(std::shared_ptr<LocalCameraStreamParameters> parameters, FrameGeneratorInterface* framer) {
+  if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
+    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
+  }
+  scoped_refptr<PeerConnectionDependencyFactory> factory =
+      PeerConnectionDependencyFactory::Get();
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(1, 99999999);
+  std::string media_stream_label =
+      "MediaStream-" + std::to_string(dis(gen));
+  scoped_refptr<MediaStreamInterface> stream =
+      factory->CreateLocalMediaStream(media_stream_label);
+  if (parameters->VideoEnabled()) {
+    capturer_ = new cricket::RawFramesCapturer(framer);
+    capturer_->Init();
+    scoped_refptr<VideoSourceInterface> source =
+        factory->CreateVideoSource(capturer_, NULL);
+    std::string video_track_label =
+        "VideoTrack-" + std::to_string(dis(gen));
+    scoped_refptr<VideoTrackInterface> video_track =
+        factory->CreateLocalVideoTrack(video_track_label, source);
+    stream->AddTrack(video_track);
+  }
+  if (parameters->AudioEnabled()) {
+    std::string audio_track_label =
+        "AudioTrack-" + std::to_string(dis(gen));
     scoped_refptr<AudioTrackInterface> audio_track =
         factory->CreateLocalAudioTrack(audio_track_label);
     stream->AddTrack(audio_track);
