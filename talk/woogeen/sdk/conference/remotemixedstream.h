@@ -28,11 +28,20 @@
 #define WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
 
 #include "stream.h"
+#include "mediaformat.h"
 
 namespace woogeen {
 class RemoteMixedStream : public RemoteStream {
  public:
-  RemoteMixedStream(std::string& id, std::string& from);
+  RemoteMixedStream(std::string& id,
+                    std::string& from,
+                    const std::vector<VideoFormat> supported_video_formats);
+  // Get supported video formats.
+  // When subscribe this stream, user can specifiy one of these formats.
+  const std::vector<VideoFormat> SupportedVideoFormats();
+
+ private:
+  const std::vector<VideoFormat> supported_video_formats_;
 };
 }
 

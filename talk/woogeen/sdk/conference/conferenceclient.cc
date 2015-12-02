@@ -315,8 +315,19 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   }
   std::string device = video->get_map()["device"]->get_string();
   if (device == "mcu") {
-    auto remote_stream =
-        std::make_shared<woogeen::RemoteMixedStream>(id, remote_id);
+    std::vector<VideoFormat> video_formats;
+    // Only mixed streams has multiple resolutions
+    if (video->get_map()["resolutions"]) {
+      auto resolutions = video->get_map()["resolutions"]->get_vector();
+      for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
+        Resolution resolution((*it)->get_map()["width"]->get_int(),
+                              (*it)->get_map()["height"]->get_int());
+        const VideoFormat video_format(resolution);
+        video_formats.push_back(video_format);
+      }
+    }
+    auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(
+        id, remote_id, video_formats);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its)->OnStreamAdded(remote_stream);
     }

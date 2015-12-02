@@ -7,7 +7,7 @@
 
 #include "webrtc/base/messagehandler.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/mediacodec.h"
+#include "talk/woogeen/sdk/base/mediaformat.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 

@@ -24,8 +24,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_MEDIACODEC_H_
-#define WOOGEEN_BASE_MEDIACODEC_H_
+#ifndef WOOGEEN_BASE_MEDIAFORMAT_H_
+#define WOOGEEN_BASE_MEDIAFORMAT_H_
 
 #include <vector>
 
@@ -49,6 +49,22 @@ struct MediaCodec {
    * Preference for video codec. Default is H.264.
    */
   VideoCodec video_codec;
+};
+
+// This class represent a resolution value
+struct Resolution {
+  explicit Resolution(): width(0), height(0) {}
+  Resolution(int w, int h) : width(w), height(h) {}
+  int width;
+  int height;
+};
+
+/*
+ * An instance of this class represent a video format
+ */
+struct VideoFormat {
+  explicit VideoFormat(const Resolution& r): resolution(r){}
+  Resolution resolution;
 };
 }
 

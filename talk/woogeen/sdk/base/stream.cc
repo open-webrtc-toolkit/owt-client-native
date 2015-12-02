@@ -15,9 +15,9 @@
 
 namespace woogeen {
 
-Stream::Stream() : id_("") {}
+Stream::Stream() : id_(""), media_stream_(nullptr) {}
 
-Stream::Stream(std::string& id) : id_(id) {}
+Stream::Stream(std::string& id) : id_(id), media_stream_(nullptr) {}
 
 MediaStreamInterface* Stream::MediaStream() const {
   RTC_CHECK(media_stream_);
@@ -222,6 +222,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
 
 RemoteStream::RemoteStream(std::string& id, std::string& from)
     : Stream(id), remote_user_id_(from) {}
+
 std::string& RemoteStream::From() {
   return remote_user_id_;
 }

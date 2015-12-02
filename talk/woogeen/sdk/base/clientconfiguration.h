@@ -29,7 +29,7 @@
 
 #include <vector>
 #include <string>
-#include "mediacodec.h"
+#include "mediaformat.h"
 
 #if defined(WEBRTC_WIN)
 #include <windows.h>
