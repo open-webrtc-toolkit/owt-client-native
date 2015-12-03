@@ -326,6 +326,7 @@ void ConferencePeerConnectionChannel::Publish(
 
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
+    const SubscribeOptions& subscribe_options,
     std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream.";
@@ -336,11 +337,19 @@ void ConferencePeerConnectionChannel::Subscribe(
   }
   subscribe_success_callback_ = on_success;
   failure_callback_ = on_failure;
-
-  sio::message::ptr options = sio::object_message::create();
-  options->get_map()["streamId"] = sio::string_message::create(stream->Id());
+  sio::message::ptr sio_options = sio::object_message::create();
+  sio_options->get_map()["streamId"] =
+      sio::string_message::create(stream->Id());
+  sio::message::ptr video_options = sio::object_message::create();
+  sio::message::ptr resolution_options = sio::object_message::create();
+  resolution_options->get_map()["width"] =
+      sio::int_message::create(subscribe_options.resolution.width);
+  resolution_options->get_map()["height"] =
+      sio::int_message::create(subscribe_options.resolution.height);
+  video_options->get_map()["resolution"] = resolution_options;
+  sio_options->get_map()["video"] = video_options;
   signaling_channel_->SendInitializationMessage(
-      options, "", nullptr, on_failure);  // TODO: on_failure
+      sio_options, "", nullptr, on_failure);  // TODO: on_failure
   CreateOffer();
 }
 

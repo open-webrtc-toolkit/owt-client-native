@@ -33,6 +33,7 @@
 #include "clientconfiguration.h"
 #include "conferenceexception.h"
 #include "conferencesocketsignalingchannel.h"
+#include "subscribeoptions.h"
 #include "stream.h"
 
 namespace woogeen {
@@ -91,6 +92,11 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   // Subscribe a stream from the conference.
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
+      std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  void Subscribe(
+      std::shared_ptr<RemoteStream> stream,
+      const SubscribeOptions& options,
       std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   // Unpublish a stream to the conference.

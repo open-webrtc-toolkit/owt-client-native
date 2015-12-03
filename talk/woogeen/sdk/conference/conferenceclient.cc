@@ -100,7 +100,15 @@ void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  LOG(LS_INFO) << "Subscribe";
+  SubscribeOptions options;
+  Subscribe(stream, options, on_success, on_failure);
+}
+
+void ConferenceClient::Subscribe(
+    std::shared_ptr<RemoteStream> stream,
+    const SubscribeOptions& options,
+    std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
@@ -111,7 +119,7 @@ void ConferenceClient::Subscribe(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
   auto pc_pair = std::make_pair(stream->Id(), pcc);
   subscribe_pcs_.insert(pc_pair);
-  pcc->Subscribe(stream, on_success, on_failure);
+  pcc->Subscribe(stream, options, on_success, on_failure);
 }
 
 void ConferenceClient::Unpublish(

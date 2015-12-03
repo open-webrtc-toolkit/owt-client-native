@@ -14,6 +14,7 @@
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
+#include "talk/woogeen/sdk/conference/subscribeoptions.h"
 
 namespace woogeen {
 
@@ -64,6 +65,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   // Subscribe a stream from the conference.
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
+      const SubscribeOptions& options,
       std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   // Unsubscribe a remote stream from the conference.
