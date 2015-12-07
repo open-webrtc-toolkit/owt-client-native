@@ -16,11 +16,13 @@ int main(int argc, char** argv)
   using namespace woogeensample;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel(new P2PSocketSignalingChannel());
   std::shared_ptr<PeerClient> pc(new PeerClient(signaling_channel));
-  pc->Connect("", nullptr, nullptr);
+  cout << "Press Enter to connect peerserver." << std::endl;
+  cin.ignore();
+  std::string url = argv[1];
+  std::string to = argv[2];
+  pc->Connect(url, nullptr, nullptr);
   cout << "Press Enter to invite remote user." << std::endl;
   cin.ignore();
-  std::string message = "Hello World";
-  std::string to = "23";
   pc->Invite(to, nullptr, nullptr);
   cout << "Press Enter to publish local stream." << std::endl;
   cin.ignore();

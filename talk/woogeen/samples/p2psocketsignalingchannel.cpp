@@ -25,7 +25,8 @@ namespace woogeensample{
         };
       }
     }));
-    io_->connect("http://10.239.3.197:8095/", query);  // TODO: parse token to get host.
+    //io_->connect("http://10.239.3.197:8095/", query);  // TODO: parse token to get host.
+    io_->connect(token, query);  // TODO: parse token to get host.
   }
 
   void P2PSocketSignalingChannel::Disconnect(std::function<void()> on_success, std::function<void(std::unique_ptr<woogeen::P2PException>)> on_failure) {
