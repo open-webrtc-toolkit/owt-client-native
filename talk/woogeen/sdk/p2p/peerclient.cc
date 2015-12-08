@@ -76,6 +76,23 @@ void PeerClient::Publish(
   pcc->Publish(stream, on_success, on_failure);
 }
 
+void PeerClient::Unpublish(
+    const std::string& target_id,
+    std::shared_ptr<LocalStream> stream,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->Unpublish(stream, on_success, on_failure);
+}
+
+void PeerClient::Stop(
+    const std::string& target_id,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->Stop(on_success, on_failure);
+}
+
 void PeerClient::OnMessage(const std::string& message,
                            const std::string& sender) {
   auto pcc = GetPeerConnectionChannel(sender);
