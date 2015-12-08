@@ -24,16 +24,17 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
 
-#import "RTCRemoteStream.h"
+#import "Foundation/Foundation.h"
+#import "CoreGraphics/CoreGraphics.h"
 
-/// This class represent a mixed remote stream.
-@interface RTCRemoteMixedStream : RTCRemoteStream
+@interface RTCConferenceSubscribeOptions : NSObject
 
--(NSArray*)supportedVideoFormats;
+- (CGSize)resolution;
+- (void)setResolution:(CGSize)resolution;
 
 @end
 
-#endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_

@@ -6,10 +6,11 @@
 #include "talk/woogeen/sdk/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 
+#import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteScreenStream.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteCameraStream.h"
-#import "talk/woogeen/sdk/conference/objc/public/RTCRemoteMixedStream.h"
+#import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 
 namespace woogeen {
@@ -35,9 +36,18 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteMixedStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteMixedStream alloc] initWithNativeStream:stream];
-  [observer_ onStreamAdded:remote_stream];
+  RTCRemoteMixedStream* remote_stream =
+      [[RTCRemoteMixedStream alloc] initWithNativeStream:stream];
+  // Video formats
+  NSMutableArray* supportedVideoFormats = [[NSMutableArray alloc] init];
+  auto formats = stream->SupportedVideoFormats();
+  for (auto it = formats.begin(); it != formats.end(); ++it) {
+    RTCVideoFormat* format =
+        [[RTCVideoFormat alloc] initWithNativeVideoFormat:(*it)];
+    [supportedVideoFormats addObject:format];
+  }
+  [remote_stream setSupportedVideoFormats:supportedVideoFormats];
+  [observer_ onStreamAdded:(RTCRemoteStream*)remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(

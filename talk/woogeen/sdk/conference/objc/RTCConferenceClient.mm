@@ -15,6 +15,7 @@
 #import "talk/woogeen/sdk/conference/conferenceclient.h"
 #import "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
+#import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 
 @implementation RTCConferenceClient {
   std::unique_ptr<woogeen::ConferenceClient> _nativeConferenceClient;
@@ -119,11 +120,24 @@
 - (void)subscribe:(RTCRemoteStream*)stream
         onSuccess:(void (^)(RTCRemoteStream*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
+  [self subscribe:stream
+      withOptions:nil
+        onSuccess:onSuccess
+        onFailure:onFailure];
+}
+
+- (void)subscribe:(RTCRemoteStream*)stream
+      withOptions:(RTCConferenceSubscribeOptions*)options
+        onSuccess:(void (^)(RTCRemoteStream*))onSuccess
+        onFailure:(void (^)(NSError*))onFailure {
+  if (options == nil) {
+    options = [[RTCConferenceSubscribeOptions alloc] init];
+  }
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<woogeen::RemoteStream> nativeStream(
       std::static_pointer_cast<woogeen::RemoteStream>(nativeStreamRefPtr));
   _nativeConferenceClient->Subscribe(
-      nativeStream,
+      nativeStream, [options nativeSubscribeOptions],
       [=](std::shared_ptr<woogeen::RemoteStream> stream) {
         RTCRemoteStream* remote_stream =
             [[RTCRemoteStream alloc] initWithNativeStream:stream];

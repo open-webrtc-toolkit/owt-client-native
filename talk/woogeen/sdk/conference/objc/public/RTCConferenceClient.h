@@ -31,6 +31,7 @@
 #import "RTCRemoteStream.h"
 #import "RTCConferenceClientObserver.h"
 #import "RTCConferenceClientConfiguration.h"
+#import "RTCConferenceSubscribeOptions.h"
 
 /// An asynchronous class for app to communicate with a conference in MCU
 @interface RTCConferenceClient : NSObject
@@ -67,6 +68,11 @@
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(RTCRemoteStream*)stream
+        onSuccess:(void (^)(RTCRemoteStream*))onSuccess
+        onFailure:(void (^)(NSError*))onFailure;
+
+- (void)subscribe:(RTCRemoteStream*)stream
+        withOptions:(RTCConferenceSubscribeOptions*)options
         onSuccess:(void (^)(RTCRemoteStream*))onSuccess
         onFailure:(void (^)(NSError*))onFailure;
 /**
