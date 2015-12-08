@@ -321,7 +321,12 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     LOG(LS_ERROR) << "Video info for stream " << id << "is invalid, this stream will be ignored.";
     return;
   }
-  std::string device = video->get_map()["device"]->get_string();
+  std::string device;
+  if (video->get_map()["device"] != nullptr) {
+    device = video->get_map()["device"]->get_string();
+  } else {
+    device = "camera";
+  }
   if (device == "mcu") {
     std::vector<VideoFormat> video_formats;
     // Only mixed streams has multiple resolutions
