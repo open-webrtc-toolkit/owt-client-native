@@ -446,6 +446,7 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   }
   config.servers = ice_servers;
   config.media_codec = configuration_.media_codec;
+  config.encoded_video_frame_ = configuration_.encoded_video_frame_;
   return config;
 }
 

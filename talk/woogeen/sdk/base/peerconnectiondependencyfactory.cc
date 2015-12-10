@@ -6,6 +6,7 @@
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
@@ -21,6 +22,7 @@ void PeerConnectionThread::Run() {
 bool PeerConnectionDependencyFactory::hw_acceleration_ = false;
 HWND PeerConnectionDependencyFactory::decoder_win_ = false;
 #endif
+bool PeerConnectionDependencyFactory::encoded_frame_ = false;
 
 PeerConnectionThread::~PeerConnectionThread() {
   LOG(LS_INFO) << "Quit a PeerConnectionThread.";
@@ -49,7 +51,7 @@ rtc::RefCountedObject<PeerConnectionDependencyFactory>();
 #if defined(WEBRTC_WIN)
 //SetEnableHardwareAcceleration is supposed to be called the first peerconnection channel instance
 //in peerclient or conference client.
-void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window){
+void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window) {
     if (bEnabled && (decoder_window != nullptr)){
         hw_acceleration_ = true;
         decoder_win_ = decoder_window;
@@ -59,6 +61,10 @@ void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnable
     }
 }
 #endif
+
+void PeerConnectionDependencyFactory::SetEncodedVideoFrame(bool encoded_frame) {
+    encoded_frame_ = encoded_frame;
+}
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
@@ -100,6 +106,16 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
+  if (encoded_frame_) {
+     rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+     encoder_factory.reset(new EncodedVideoEncoderFactory());
+     pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
+          signaling_thread,
+          NULL, //Default ADM
+          encoder_factory.release(), //Encoder factory
+          NULL);
+     return;
+  }
 #if defined(WEBRTC_WIN)
   if (hw_acceleration_ && decoder_win_ != nullptr){
       //We create peer connection factory with dedicated decoder factory.

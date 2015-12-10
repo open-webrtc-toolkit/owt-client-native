@@ -12,8 +12,9 @@
 namespace woogeen {
 
 PeerClient::PeerClient(
+    PeerClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
-    : signaling_channel_(signaling_channel) {
+    : signaling_channel_(signaling_channel), configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(this);
 }
@@ -136,12 +137,12 @@ void PeerClient::RemoveObserver(PeerClientObserver* observer) {
 #define SendMessage SendMessageA
 #endif
 #endif
-
 std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   auto pcc_it = pc_channels_.find(target_id);
   if (pcc_it == pc_channels_.end()) {  // Create new channel if it doesn't exist
-    PeerConnectionChannelConfiguration config;
+    PeerConnectionChannelConfiguration config =
+      GetPeerConnectionChannelConfiguration();
     std::shared_ptr<P2PPeerConnectionChannel> pcc =
         std::shared_ptr<P2PPeerConnectionChannel>(
             new P2PPeerConnectionChannel(config, local_id_, target_id, this));
@@ -157,6 +158,22 @@ std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
   } else {
     return pcc_it->second;
   }
+}
+
+PeerConnectionChannelConfiguration PeerClient::GetPeerConnectionChannelConfiguration() {
+  PeerConnectionChannelConfiguration config;
+  std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
+  for(auto it = configuration_.ice_servers.begin(); it!=configuration_.ice_servers.end();++it){
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.urls=(*it).urls;
+    ice_server.username=(*it).username;
+    ice_server.password=(*it).password;
+    ice_servers.push_back(ice_server);
+  }
+  config.servers = ice_servers;
+  config.media_codec = configuration_.media_codec;
+  config.encoded_video_frame_ = configuration_.encoded_video_frame_;
+  return config;
 }
 
 void PeerClient::OnInvited(const std::string& remote_id) {

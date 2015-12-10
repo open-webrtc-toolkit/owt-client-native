@@ -3,16 +3,16 @@
  *
  *
  */
-#ifndef FILEFRAMEGENERATOR_H_
-#define FILEFRAMEGENERATOR_H_
+#ifndef ENCODEDFRAMGENERATOR_H_
+#define ENCODEDFRAMGENERATOR_H_
 
 #include <stdio.h>
 #include "talk/woogeen/sdk/base/framegeneratorinterface.h"
 
-class FileFrameGenerator: public FrameGeneratorInterface {
+class EncodedFrameGenerator: public FrameGeneratorInterface {
  public:
-  FileFrameGenerator(int width, int height, int fps);
-  ~FileFrameGenerator();
+  EncodedFrameGenerator(int width, int height, int fps);
+  ~EncodedFrameGenerator();
 
   int GetFrameSize();
 
@@ -32,4 +32,4 @@ class FileFrameGenerator: public FrameGeneratorInterface {
   FILE * fd;
 };
 
-#endif // FILEFRAMEGENERATOR_H_
+#endif // ENCODEDFRAMGENERATOR_H_

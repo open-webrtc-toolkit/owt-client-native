@@ -53,6 +53,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #if defined(WEBRTC_WIN)
   static void SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window);
 #endif
+  static void SetEncodedVideoFrame(bool encoded_frame);
 
  protected:
   explicit PeerConnectionDependencyFactory();
@@ -80,6 +81,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   static bool hw_acceleration_; //Enabling HW acceleration for VP8 & H264 enc/dec
   static HWND decoder_win_; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
 #endif
+  static bool encoded_frame_;
 };
 }  // namespace woogeen
 #endif  // WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_

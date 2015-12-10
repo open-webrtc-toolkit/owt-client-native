@@ -15,7 +15,10 @@ int main(int argc, char** argv)
   using namespace woogeen;
   using namespace woogeensample;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel(new P2PSocketSignalingChannel());
-  std::shared_ptr<PeerClient> pc(new PeerClient(signaling_channel));
+  PeerClientConfiguration configuration;
+  configuration.encoded_video_frame_ = true;
+  configuration.media_codec.video_codec = woogeen::MediaCodec::VideoCodec::H264;
+  std::shared_ptr<PeerClient> pc(new PeerClient(configuration, signaling_channel));
   cout << "Press Enter to connect peerserver." << std::endl;
   cin.ignore();
   std::string url = argv[1];

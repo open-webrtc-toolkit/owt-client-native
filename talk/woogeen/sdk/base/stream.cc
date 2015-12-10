@@ -15,9 +15,9 @@
 
 namespace woogeen {
 
-Stream::Stream() : id_(""), media_stream_(nullptr) {}
+Stream::Stream() : media_stream_(nullptr), id_("") {}
 
-Stream::Stream(std::string& id) : id_(id), media_stream_(nullptr) {}
+Stream::Stream(std::string& id) : media_stream_(nullptr), id_(id) {}
 
 MediaStreamInterface* Stream::MediaStream() const {
   RTC_CHECK(media_stream_);

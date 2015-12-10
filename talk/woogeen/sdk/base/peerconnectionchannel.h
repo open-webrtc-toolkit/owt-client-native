@@ -30,6 +30,7 @@ struct PeerConnectionChannelConfiguration
  public:
   explicit PeerConnectionChannelConfiguration() : RTCConfiguration() {}
   MediaCodec media_codec;
+  bool encoded_video_frame_;
 };
 
 class PeerConnectionChannel : public rtc::MessageHandler,

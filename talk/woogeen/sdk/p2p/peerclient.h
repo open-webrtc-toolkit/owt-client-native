@@ -31,14 +31,18 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
+#include "talk/woogeen/sdk/base/stream.h"
 #include "p2psignalingchannelinterface.h"
 #include "p2psignalingsenderinterface.h"
-#include "talk/woogeen/sdk/base/stream.h"
+#include "clientconfiguration.h"
 
 namespace woogeen {
 
+struct PeerClientConfiguration : ClientConfiguration {};
+
 class P2PPeerConnectionChannelObserverCppImpl;
 class P2PPeerConnectionChannel;
+struct PeerConnectionChannelConfiguration;
 
 /// Observer for PeerClient
 class PeerClientObserver {
@@ -116,7 +120,8 @@ class PeerClientObserver {
 class PeerClient : protected P2PSignalingSenderInterface,
                    protected P2PSignalingChannelInterfaceObserver {
  public:
-  PeerClient(std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
+  PeerClient(PeerClientConfiguration& configuration,
+             std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
   /**
   @brief Connect to the signaling server.
   @param token A token used for connection and authentication
@@ -311,6 +316,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
  private:
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
       const std::string& target_id);
+  PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
   // Trigger events.
   template <typename T1, typename T2>
   void OnEvent1(T1 func, T2 arg1);
@@ -327,6 +333,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
   std::vector <PeerClientObserver*> observers_;
   // It receives events from P2PPeerConnectionChannel and notify PeerClient.
   P2PPeerConnectionChannelObserverCppImpl* pcc_observer_impl_;
+  PeerClientConfiguration configuration_;
 
   friend class P2PPeerConnectionChannelObserverCppImpl;
 };

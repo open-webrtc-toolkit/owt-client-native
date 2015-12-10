@@ -57,6 +57,9 @@ struct ClientConfiguration {
   bool hardware_acceleration_;
   HWND decoder_win_;
 #endif
+  // Encoded video frame flag, default is false. If it is set to true,
+  // only encoded frame by customized input is accepted.
+  bool encoded_video_frame_ = false;
 };
 }
 
