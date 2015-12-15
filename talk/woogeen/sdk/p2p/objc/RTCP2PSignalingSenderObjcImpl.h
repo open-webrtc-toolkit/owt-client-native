@@ -6,7 +6,7 @@
 
 #include <string>
 #include <functional>
-#include "talk/woogeen/sdk/p2p/p2psignalingsenderinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2psignalingsenderinterface.h"
 
 namespace woogeen {
 

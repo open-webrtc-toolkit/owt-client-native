@@ -3,7 +3,7 @@
  */
 
 #include <memory>
-#include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/localcamerastreamparameters.h"
 
 #import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
 

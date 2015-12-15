@@ -5,7 +5,7 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 #define WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 
-#include "talk/woogeen/sdk/conference/conferenceclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceclient.h"
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClientObserver.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
 

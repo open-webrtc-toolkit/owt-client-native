@@ -7,8 +7,8 @@
 
 #include <functional>
 #include <memory>
-#include "talk/woogeen/sdk/conference/conferenceexception.h"
-#include "talk/woogeen/sdk/conference/conferenceuser.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceuser.h"
 #include "webrtc/base/json.h"
 
 namespace woogeen {

@@ -24,25 +24,39 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
-#define WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
 
-#include "stream.h"
-#include "mediaformat.h"
+#ifndef WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
+#define WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
+
+#include <functional>
+#include <memory>
+#include <string>
+#include "woogeen/p2pexception.h"
 
 namespace woogeen {
-class RemoteMixedStream : public RemoteStream {
+class P2PSignalingChannelInterfaceObserver {
  public:
-  RemoteMixedStream(std::string& id,
-                    std::string& from,
-                    const std::vector<VideoFormat> supported_video_formats);
-  // Get supported video formats.
-  // When subscribe this stream, user can specifiy one of these formats.
-  const std::vector<VideoFormat> SupportedVideoFormats();
+  virtual void OnMessage(const std::string& message,
+                         const std::string& sender) = 0;
+  virtual void OnDisconnected() = 0;
+};
 
- private:
-  const std::vector<VideoFormat> supported_video_formats_;
+class P2PSignalingChannelInterface {
+ public:
+  virtual void AddObserver(P2PSignalingChannelInterfaceObserver* observer) = 0;
+  virtual void Connect(
+      const std::string& token,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+  virtual void Disconnect(
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+  virtual void SendMessage(
+      const std::string& message,
+      const std::string& target_id,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
 };
 }
 
-#endif  // WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
+#endif  // WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_

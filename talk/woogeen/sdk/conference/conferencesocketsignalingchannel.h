@@ -9,25 +9,11 @@
 #include <unordered_map>
 #include "talk/woogeen/include/sio_client.h"
 #include "talk/woogeen/include/sio_message.h"
-#include "talk/woogeen/sdk/conference/conferenceuser.h"
-#include "talk/woogeen/sdk/conference/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceuser.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
 
 namespace woogeen {
-
-class ConferenceSocketSignalingChannelObserver {
- public:
-  virtual void OnStreamAdded(sio::message::ptr stream) = 0;
-  virtual void OnUserJoined(
-      std::shared_ptr<const woogeen::conference::User> user) = 0;
-  virtual void OnUserLeft(
-      std::shared_ptr<const woogeen::conference::User> user) = 0;
-  virtual void OnStreamRemoved(sio::message::ptr stream) = 0;
-  virtual void OnServerDisconnected() = 0;
-  virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
-  virtual void OnSignalingMessage(sio::message::ptr message) = 0;
-  // Notify the ID for a published stream.
-  virtual void OnStreamId(const std::string& id, const std::string& label) = 0;
-};
 
 class ConferenceSocketSignalingChannel {
  public:

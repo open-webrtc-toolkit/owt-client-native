@@ -3,11 +3,11 @@
  */
 
 #include <thread>
-#include "talk/woogeen/sdk/base/stream.h"
-#include "talk/woogeen/sdk/conference/remotemixedstream.h"
-#include "talk/woogeen/sdk/conference/conferenceclient.h"
-#include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/remotemixedstream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceclient.h"
 
 namespace woogeen {
 
@@ -17,10 +17,9 @@ enum ConferenceClient::StreamType : int {
   kStreamTypeMix,
 };
 
-ConferenceClient::ConferenceClient(
-    ConferenceClientConfiguration& configuration,
-    std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel)
-    : configuration_(configuration), signaling_channel_(signaling_channel) {
+ConferenceClient::ConferenceClient(ConferenceClientConfiguration& configuration)
+    : configuration_(configuration),
+      signaling_channel_(new woogeen::ConferenceSocketSignalingChannel()) {
   //optionally enabling HW accleration
 /*
 #if defined(WEBRTC_WIN)

@@ -3,10 +3,10 @@
  */
 
 #include <future>
-#include "talk/woogeen/sdk/base/stream.h"
-#include "talk/woogeen/sdk/p2p/peerclient.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/peerclient.h"
 #include "webrtc/base/checks.h"
 
 namespace woogeen {
@@ -105,12 +105,6 @@ void PeerClient::OnDisconnected() {
   LOG(LS_INFO) << "Disconnected from signaling server.";
 }
 
-// Windows defines SendMessage as SendMessageA or SendMessageW. Undefine it
-// here and redefined it later.
-#if defined(UNICODE) && defined(WEBRTC_WIN) && defined(SendMessage)
-#undef SendMessage
-#endif
-
 void PeerClient::SendSignalingMessage(const std::string& message,
                                       const std::string& remote_id,
                                       std::function<void()> on_success,
@@ -130,13 +124,6 @@ void PeerClient::RemoveObserver(PeerClientObserver* observer) {
                   observers_.end());
 }
 
-#ifdef WEBRTC_WIN
-#ifdef UNICODE
-#define SendMessage SendMessageW
-#else
-#define SendMessage SendMessageA
-#endif
-#endif
 std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   auto pcc_it = pc_channels_.find(target_id);

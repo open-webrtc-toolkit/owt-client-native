@@ -27,7 +27,7 @@
 #ifndef WOOGEEN_CONFERENCE_SUBSCRIBEOPTIONS_H_
 #define WOOGEEN_CONFERENCE_SUBSCRIBEOPTIONS_H_
 
-#include "mediaformat.h"
+#include "woogeen/mediaformat.h"
 
 namespace woogeen {
 

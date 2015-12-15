@@ -6,7 +6,7 @@
 
 #include "talk/media/base/videocapturer.h"
 #include "talk/media/devices/devicemanager.h"
-#include "talk/woogeen/sdk/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 

@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/base/localcamerastreamparameters.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/localcamerastreamparameters.h"
 
 #import "RTCLocalCameraStreamParameters.h"
 

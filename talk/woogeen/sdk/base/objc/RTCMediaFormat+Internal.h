@@ -4,7 +4,7 @@
 
 #import "talk/woogeen/sdk/base/objc/public/RTCMediaFormat.h"
 
-#include "talk/woogeen/sdk/base/mediaformat.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/mediaformat.h"
 
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_INTERNAL_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_INTERNAL_H_

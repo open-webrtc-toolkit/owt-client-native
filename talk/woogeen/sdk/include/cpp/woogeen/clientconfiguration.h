@@ -24,32 +24,43 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
-#define WOOGEEN_P2P_P2PEXCEPTION_H_
+#ifndef WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#define WOOGEEN_BASE_CLIENTCONFIGURATION_H_
 
-#include "exception.h"
+#include <vector>
+#include <string>
+#include "woogeen/mediaformat.h"
+
+#if defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
 
 namespace woogeen {
 
-class P2PException : public Exception {
- public:
-  enum Type : int {
-    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
-    kConnAuthFailed = 2121,
-    kMessageTargetUnreachable = 2201,
-    kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
-    kClientInvalidState = 2403,
-  };
+// Define ICE server
+struct IceServer {
+  // URLs for this group of ICE server
+  std::vector<std::string> urls;
+  // Username
+  std::string username;
+  // Password
+  std::string password;
+};
 
-  P2PException();
-  P2PException(Type type);
-  P2PException(Type type, const std::string& message);
-
-  enum Type Type();
-
- private:
-  enum Type type_;
+// Client configurations
+struct ClientConfiguration {
+  // List of ICE servers
+  std::vector<IceServer> ice_servers;
+  // Media codec preference
+  MediaCodec media_codec;
+#if defined(WEBRTC_WIN)
+  bool hardware_acceleration_;
+  HWND decoder_win_;
+#endif
+  // Encoded video frame flag, default is false. If it is set to true,
+  // only encoded frame by customized input is accepted.
+  bool encoded_video_frame_ = false;
 };
 }
 
-#endif  // WOOGEEN_P2P_P2PEXCEPTION_H_
+#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_

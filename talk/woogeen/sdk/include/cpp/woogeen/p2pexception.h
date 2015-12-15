@@ -24,22 +24,26 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
-#define WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
+#ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
+#define WOOGEEN_P2P_P2PEXCEPTION_H_
 
-#include "exception.h"
+#include "woogeen/exception.h"
 
 namespace woogeen {
 
-class ConferenceException : public Exception {
+class P2PException : public Exception {
  public:
   enum Type : int {
-    kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
+    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
+    kConnAuthFailed = 2121,
+    kMessageTargetUnreachable = 2201,
+    kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
+    kClientInvalidState = 2403,
   };
 
-  ConferenceException();
-  ConferenceException(Type type);
-  ConferenceException(Type type, const std::string& message);
+  P2PException();
+  P2PException(Type type);
+  P2PException(Type type, const std::string& message);
 
   enum Type Type();
 
@@ -48,4 +52,4 @@ class ConferenceException : public Exception {
 };
 }
 
-#endif  // WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
+#endif  // WOOGEEN_P2P_P2PEXCEPTION_H_

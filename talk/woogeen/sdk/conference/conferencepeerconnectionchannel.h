@@ -10,11 +10,11 @@
 #include <unordered_map>
 #include <chrono>
 #include <random>
-#include "talk/woogeen/sdk/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
-#include "talk/woogeen/sdk/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
-#include "talk/woogeen/sdk/conference/subscribeoptions.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/subscribeoptions.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
 
 namespace woogeen {
 

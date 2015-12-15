@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/base/exception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/exception.h"
 
 namespace woogeen {
 

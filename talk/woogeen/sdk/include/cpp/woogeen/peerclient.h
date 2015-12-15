@@ -31,10 +31,10 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
-#include "talk/woogeen/sdk/base/stream.h"
-#include "p2psignalingchannelinterface.h"
-#include "p2psignalingsenderinterface.h"
-#include "clientconfiguration.h"
+#include "woogeen/stream.h"
+#include "woogeen/p2psignalingchannelinterface.h"
+#include "woogeen/p2psignalingsenderinterface.h"
+#include "woogeen/clientconfiguration.h"
 
 namespace woogeen {
 

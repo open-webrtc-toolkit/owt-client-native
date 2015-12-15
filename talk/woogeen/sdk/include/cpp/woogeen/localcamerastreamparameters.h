@@ -24,43 +24,37 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_CLIENTCONFIGURATION_H_
-#define WOOGEEN_BASE_CLIENTCONFIGURATION_H_
 
-#include <vector>
+#ifndef WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
+#define WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
+
 #include <string>
-#include "mediaformat.h"
-
-#if defined(WEBRTC_WIN)
-#include <windows.h>
-#endif
 
 namespace woogeen {
+class LocalCameraStreamParameters final {
+ public:
+  LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
+  void CameraId(std::string& camera_id);
+  void StreamName(std::string& stream_name);
+  void Resolution(int width, int height);
+  void Fps(int fps);
+  std::string CameraId() { return camera_id_; }
+  std::string StreamName() { return stream_name_; }
+  int ResolutionWidth() { return resolution_width_; }
+  int ResolutionHeight() { return resolution_height_; }
+  int Fps() { return fps_; }
+  bool VideoEnabled() { return video_enabled_; }
+  bool AudioEnabled() { return audio_enabled_; }
 
-// Define ICE server
-struct IceServer {
-  // URLs for this group of ICE server
-  std::vector<std::string> urls;
-  // Username
-  std::string username;
-  // Password
-  std::string password;
-};
-
-// Client configurations
-struct ClientConfiguration {
-  // List of ICE servers
-  std::vector<IceServer> ice_servers;
-  // Media codec preference
-  MediaCodec media_codec;
-#if defined(WEBRTC_WIN)
-  bool hardware_acceleration_;
-  HWND decoder_win_;
-#endif
-  // Encoded video frame flag, default is false. If it is set to true,
-  // only encoded frame by customized input is accepted.
-  bool encoded_video_frame_ = false;
+ private:
+  std::string camera_id_;
+  std::string stream_name_;
+  int resolution_width_;
+  int resolution_height_;
+  int fps_;
+  bool video_enabled_;
+  bool audio_enabled_;
 };
 }
 
-#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#endif  // WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_

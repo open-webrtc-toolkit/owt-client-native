@@ -6,7 +6,7 @@
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "talk/woogeen/sdk/p2p/peerclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/peerclient.h"
 
 namespace woogeen {
 

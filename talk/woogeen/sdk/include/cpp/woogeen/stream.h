@@ -28,7 +28,7 @@
 #define WOOGEEN_BASE_STREAM_H_
 
 #include <memory>
-#include "localcamerastreamparameters.h"
+#include "woogeen/localcamerastreamparameters.h"
 
 namespace webrtc {
   class MediaStreamInterface;

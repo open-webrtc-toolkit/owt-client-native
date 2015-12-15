@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/p2p/p2pexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2pexception.h"
 
 namespace woogeen {
 

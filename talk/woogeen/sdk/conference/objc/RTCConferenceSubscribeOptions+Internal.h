@@ -3,7 +3,7 @@
 //
 
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceSubscribeOptions.h"
-#import "talk/woogeen/sdk/conference/subscribeoptions.h"
+#import "talk/woogeen/sdk/include/cpp/woogeen/subscribeoptions.h"
 
 @interface RTCConferenceSubscribeOptions (Internal)
 

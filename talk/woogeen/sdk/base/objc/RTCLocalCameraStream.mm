@@ -14,7 +14,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
 
-#include "talk/woogeen/sdk/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
 
 @implementation RTCLocalCameraStream
 
