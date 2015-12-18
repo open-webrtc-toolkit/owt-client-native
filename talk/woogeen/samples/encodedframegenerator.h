@@ -21,13 +21,13 @@ class EncodedFrameGenerator: public FrameGeneratorInterface {
   int GetHeight();
   int GetWidth();
   int GetFps();
-  VideoFrameType GetType();
+  VideoFrameCodec GetType();
 
  private:
   int width_;
   int height_;
   int fps_;
-  VideoFrameType type_;
+  VideoFrameCodec type_;
   int frame_data_size_;
   FILE * fd;
 };

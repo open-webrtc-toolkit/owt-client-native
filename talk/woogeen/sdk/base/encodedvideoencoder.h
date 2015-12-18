@@ -9,9 +9,6 @@
 #include <vector>
 #include "webrtc/video_encoder.h"
 
-// This is provides a H264 encoder implementation using the WMF
-
-
 class EncodedVideoEncoder : public webrtc::VideoEncoder {
 public:
     EncodedVideoEncoder(webrtc::VideoCodecType type);
@@ -32,14 +29,21 @@ public:
 
     int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
 
+    bool SupportsNativeHandle() const override;
+
     int Release() override;
 
 private:
+    // Search for H.264 start codes.
+    int32_t NextNaluPosition(uint8_t *buffer, size_t buffer_size);
 
     webrtc::EncodedImageCallback* callback_;
     int32_t bitrate_;  // Bitrate in bits per second.
     int32_t width_;
     int32_t height_;
-    webrtc::VideoCodecType codectype_;
+    //int count_;
+    webrtc::VideoCodecType codecType_;
+    uint16_t picture_id_;
+    //FILE * fd;
 };  // EncodedVideoEncoder
 #endif  // ENCODED_VIDEO_ENCODER_H_

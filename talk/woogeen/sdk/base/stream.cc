@@ -175,6 +175,7 @@ LocalRawStream::~LocalRawStream() {
       media_stream_->RemoveTrack(*it);
     }
   }
+  capturer_->Stop();
   delete capturer_;
 }
 

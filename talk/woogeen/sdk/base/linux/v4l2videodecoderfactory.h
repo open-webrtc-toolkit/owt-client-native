@@ -25,32 +25,22 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//
-//This native frame handle  struture contains neccessary information for render to display a native frame
-//
-#include <d3d9.h>
-#include <dxva2api.h>
-#include "webrtc/common_video/interface/video_frame_buffer.h"
+#include "talk/media/webrtc/webrtcvideodecoderfactory.h"
+#include "talk/woogeen/sdk/base/linux/v4l2videodecoder.h"
 #pragma once
-
-class NativeD3DSurfaceHandleImpl{
+// Declaration of V4l2 based decoder factory.
+class V4L2VideoDecoderFactory
+    : public cricket::WebRtcVideoDecoderFactory {
 public:
-    NativeD3DSurfaceHandleImpl();
-    void SetD3DSurfaceObject(IDirect3DDeviceManager9* dev_manager, IDirect3DSurface9* surface);
+    V4L2VideoDecoderFactory();
+    virtual ~V4L2VideoDecoderFactory();
 
-    IDirect3DSurface9* GetSurface(){ return surface_; };
-    IDirect3DDeviceManager9 * GetD3DManager(){ return dev_manager_; }
-private:
-    IDirect3DSurface9* surface_;
-    IDirect3DDeviceManager9* dev_manager_;
-};
+    // WebRtcVideoDecoderFactory implementation.
+    webrtc::VideoDecoder* CreateVideoDecoder(webrtc::VideoCodecType type)
+        override;
 
-class D3DNativeHandleBuffer : public webrtc::NativeHandleBuffer{
-public:
-    D3DNativeHandleBuffer(void* native_handle, int width, int height, int data_size);
-    //Surface release is done by the renderFrame call. so at present we don't provide dector for it.
+    void DestroyVideoDecoder(webrtc::VideoDecoder* decoder) override;
 
 private:
-    //NativeD3DSurfaceHandleImpl native_handle_;
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> NativeToI420Buffer();
+    std::vector<webrtc::VideoCodecType> supported_codec_types_;
 };

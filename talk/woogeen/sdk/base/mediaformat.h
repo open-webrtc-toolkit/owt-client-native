@@ -39,8 +39,8 @@ namespace woogeen {
 struct MediaCodec {
  public:
   enum VideoCodec : int {
-    H264 = 1,
-    VP8,
+    VP8 = 1,
+    H264,
   };
 
   explicit MediaCodec() : video_codec(H264) {}

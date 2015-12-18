@@ -2,6 +2,7 @@
  * Intel License
  */
 
+#include <iostream>
 #include "webrtc/base/thread.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
@@ -10,6 +11,8 @@
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
+#elif defined(WEBRTC_LINUX)
+#include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
 #endif
 
 namespace woogeen {
@@ -106,16 +109,24 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
+#if defined(WEBRTC_LINUX)
+  //TODO: change the logic if on windows platform we're going to support encoded
+  //frame as well
   if (encoded_frame_) {
      rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+     rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
      encoder_factory.reset(new EncodedVideoEncoderFactory());
+     decoder_factory.reset(new V4L2VideoDecoderFactory());
      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
           signaling_thread,
           NULL, //Default ADM
           encoder_factory.release(), //Encoder factory
-          NULL);
+          //NULL);
+          decoder_factory.release()); //Decoder factory
      return;
   }
+#endif
+
 #if defined(WEBRTC_WIN)
   if (hw_acceleration_ && decoder_win_ != nullptr){
       //We create peer connection factory with dedicated decoder factory.

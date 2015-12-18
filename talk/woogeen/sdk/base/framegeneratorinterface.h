@@ -8,7 +8,7 @@
 #define RAWFRAMEGENERATOR_H_
 
 typedef unsigned char uint8;
-enum VideoFrameType {
+enum VideoFrameCodec {
   I420,
   VP8,
   H264,
@@ -21,7 +21,7 @@ class FrameGeneratorInterface {
    virtual int GetHeight() = 0;
    virtual int GetWidth() = 0;
    virtual int GetFps() = 0;
-   virtual VideoFrameType GetType() = 0;
+   virtual VideoFrameCodec GetType() = 0;
    FrameGeneratorInterface() {};
  protected:
    ~FrameGeneratorInterface() {};

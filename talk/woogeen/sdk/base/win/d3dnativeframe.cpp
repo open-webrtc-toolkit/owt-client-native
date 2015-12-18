@@ -36,10 +36,12 @@ void NativeD3DSurfaceHandleImpl::SetD3DSurfaceObject(IDirect3DDeviceManager9* de
     surface_ = surface;
 }
 
-D3DNativeHandleBuffer::D3DNativeHandleBuffer(void* native_handle, int width, int height)
-    :webrtc::NativeHandleBuffer(native_handle_, width, height){}
+D3DNativeHandleBuffer::D3DNativeHandleBuffer(void* native_handle, int width, int height, int data_size)
+    :webrtc::NativeHandleBuffer(native_handle_, width, height, data_size){}
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> D3DNativeHandleBuffer::NativeToI420Buffer(){
     RTC_NOTREACHED();
     return nullptr;
 }
+
+

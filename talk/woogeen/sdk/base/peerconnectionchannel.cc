@@ -15,7 +15,7 @@ PeerConnectionChannel::PeerConnectionChannel(
       factory_(nullptr),
       peer_connection_(nullptr) {
   LOG(LS_INFO) << "PeerConnectionChannel video codec: "
-               << configuration_.media_codec.video_codec << " Encoded video frame is: " << configuration_.encoded_video_frame_ << std::endl;
+               << configuration_.media_codec.video_codec << " Encoded video frame is: " << configuration_.encoded_video_frame_;
   PeerConnectionDependencyFactory::SetEncodedVideoFrame(configuration_.encoded_video_frame_);
 }
 
@@ -106,9 +106,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         LOG(LS_ERROR) << "Error parsing local description.";
         ASSERT(false);
       }
-      if (configuration_.media_codec.video_codec ==
-          MediaCodec::VideoCodec::H264) {
-        //For windows
+      if (configuration_.media_codec.video_codec == MediaCodec::VideoCodec::H264) {
 #if defined(WEBRTC_WIN)
         std::size_t pos = sdp_string.find("100 116 117 120");
         if (pos != std::string::npos) {
@@ -119,20 +117,74 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         if (pos != std::string::npos) {
           sdp_string.replace(pos, 7, "107 100");
         }
+#elif defined(WEBRTC_LINUX)
+        std::size_t pos = sdp_string.find("100 116 117 121");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 15, "121 116 117 100");
+        }
+        pos = sdp_string.find("100 116 117 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 15, "120 116 117 100");
+        }
+
+        pos = sdp_string.find("100 116 117 96 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 18, "120 116 117 96 100");
+        }
+
+        pos = sdp_string.find("100 116 117 120 96");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 18, "120 100 116 117 96");
+        }
 #endif
       }
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-
       peer_connection_->SetLocalDescription(param->observer, new_desc);
+      //peer_connection_->SetLocalDescription(param->observer, param->description);
       delete param;
       break;
     }
     case kMessageTypeSetRemoteDescription: {
       SetSessionDescriptionMessage* param =
           static_cast<SetSessionDescriptionMessage*>(msg->pdata);
-      peer_connection_->SetRemoteDescription(param->observer,
-                                             param->description);
+      // Set codec preference.
+      webrtc::SessionDescriptionInterface* desc = param->description;
+      std::string sdp_string;
+      if (!desc->ToString(&sdp_string)) {
+        LOG(LS_ERROR) << "Error parsing local description.";
+        ASSERT(false);
+      }
+      if (configuration_.media_codec.video_codec == MediaCodec::VideoCodec::H264) {
+#if defined(WEBRTC_WIN)
+        std::size_t pos = sdp_string.find("100 116 117 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 15, "120 116 117 100");
+        }
+#elif defined(WEBRTC_IOS)
+        std::size_t pos = sdp_string.find("100 107");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 7, "107 100");
+        }
+#elif defined(WEBRTC_LINUX)
+        std::size_t pos = sdp_string.find("100 116 117 121");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 15, "121 116 117 100");
+        }
+        pos = sdp_string.find("100 116 117 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 15, "120 116 117 100");
+        }
+
+        pos = sdp_string.find("100 116 117 96 120");
+        if (pos != std::string::npos) {
+          sdp_string.replace(pos, 18, "120 116 117 96 100");
+        }
+#endif
+      }
+      webrtc::SessionDescriptionInterface* new_desc(
+          webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+      peer_connection_->SetRemoteDescription(param->observer, new_desc);
       delete param;
       break;
     }
