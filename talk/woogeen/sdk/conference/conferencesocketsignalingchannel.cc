@@ -11,15 +11,15 @@
 
 namespace woogeen {
 
-const std::string kEventNameCustomMessage = "customMessage";
+const std::string kEventNameCustomMessage = "custom_message";
 const std::string kEventNameSignalingMessage = "signaling_message";
 const std::string kEventNameOnSignalingMessage = "signaling_message_erizo";
-const std::string kEventNameOnCustomMessage = "onCustomMessage";
+const std::string kEventNameOnCustomMessage = "custom_message";
 const std::string kEventNameStreamControl = "control";
-const std::string kEventNameOnAddStream = "onAddStream";
-const std::string kEventNameOnRemoveStream = "onRemoveStream";
-const std::string kEventNameOnUserJoin = "onUserJoin";
-const std::string kEventNameOnUserLeave = "onUserLeave";
+const std::string kEventNameOnAddStream = "add_stream";
+const std::string kEventNameOnRemoveStream = "remove_stream";
+const std::string kEventNameOnUserJoin = "user_join";
+const std::string kEventNameOnUserLeave = "user_leave";
 
 ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
     : socket_client_(new sio::client()) {}
