@@ -2,10 +2,11 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/remotemixedstream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 
 namespace woogeen {
+namespace conference {
 
 RemoteMixedStream::RemoteMixedStream(
     std::string& id,
@@ -16,5 +17,6 @@ RemoteMixedStream::RemoteMixedStream(
 
 const std::vector<VideoFormat> RemoteMixedStream::SupportedVideoFormats() {
   return supported_video_formats_;
+}
 }
 };

@@ -9,6 +9,8 @@
 #include "webrtc/base/stringencode.h"
 
 namespace woogeen {
+namespace base {
+
 class MediaConstraintsImpl : public webrtc::MediaConstraintsInterface {
  public:
   MediaConstraintsImpl() {}
@@ -47,6 +49,7 @@ class MediaConstraintsImpl : public webrtc::MediaConstraintsInterface {
   Constraints mandatory_;
   Constraints optional_;
 };
+}
 }
 
 #endif  // WOOGEEN_BASE_MEDIACONSTRAINTSIMPL_H_

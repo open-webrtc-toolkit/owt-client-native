@@ -31,18 +31,22 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
-#include "woogeen/stream.h"
-#include "woogeen/p2psignalingchannelinterface.h"
-#include "woogeen/p2psignalingsenderinterface.h"
-#include "woogeen/clientconfiguration.h"
+#include "woogeen/base/stream.h"
+#include "woogeen/p2p/p2psignalingchannelinterface.h"
+#include "woogeen/p2p/p2psignalingsenderinterface.h"
+#include "woogeen/base/clientconfiguration.h"
 
 namespace woogeen {
+namespace base {
+  struct PeerConnectionChannelConfiguration;
+}
+
+namespace p2p{
 
 struct PeerClientConfiguration : ClientConfiguration {};
 
 class P2PPeerConnectionChannelObserverCppImpl;
 class P2PPeerConnectionChannel;
-struct PeerConnectionChannelConfiguration;
 
 /// Observer for PeerClient
 class PeerClientObserver {
@@ -95,25 +99,25 @@ class PeerClientObserver {
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream){};
+      std::shared_ptr<RemoteCameraStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is available.
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream){};
+      std::shared_ptr<RemoteScreenStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is removed.
    @param stream The remote stream removed.
    */
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream){};
+      std::shared_ptr<RemoteCameraStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is removed.
    @param stream The remote stream removed.
    */
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream){};
+      std::shared_ptr<RemoteScreenStream> stream){};
 };
 
 /// An async client for P2P WebRTC sessions
@@ -304,14 +308,14 @@ class PeerClient : protected P2PSignalingSenderInterface,
                       const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+      std::shared_ptr<RemoteCameraStream> stream);
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+      std::shared_ptr<RemoteScreenStream> stream);
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+      std::shared_ptr<RemoteCameraStream> stream);
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+      std::shared_ptr<RemoteScreenStream> stream);
 
  private:
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
@@ -337,6 +341,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
 
   friend class P2PPeerConnectionChannelObserverCppImpl;
 };
+}
 }
 
 #endif  // WOOGEEN_P2P_P2PPEERCLIENT_H_

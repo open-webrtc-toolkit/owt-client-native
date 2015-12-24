@@ -24,25 +24,30 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
-#define WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
+#ifndef WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
+#define WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
 
-#include "woogeen/stream.h"
-#include "woogeen/mediaformat.h"
+#include "woogeen/base/exception.h"
 
 namespace woogeen {
-class RemoteMixedStream : public RemoteStream {
+namespace conference {
+
+class ConferenceException : public woogeen::base::Exception {
  public:
-  RemoteMixedStream(std::string& id,
-                    std::string& from,
-                    const std::vector<VideoFormat> supported_video_formats);
-  // Get supported video formats.
-  // When subscribe this stream, user can specifiy one of these formats.
-  const std::vector<VideoFormat> SupportedVideoFormats();
+  enum Type : int {
+    kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
+  };
+
+  ConferenceException();
+  ConferenceException(Type type);
+  ConferenceException(Type type, const std::string& message);
+
+  enum Type Type();
 
  private:
-  const std::vector<VideoFormat> supported_video_formats_;
+  enum Type type_;
 };
 }
+}
 
-#endif  // WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
+#endif  // WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_

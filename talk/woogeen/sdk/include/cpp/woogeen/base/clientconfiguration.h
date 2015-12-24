@@ -24,25 +24,47 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_
-#define WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_
+#ifndef WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#define WOOGEEN_BASE_CLIENTCONFIGURATION_H_
 
+#include <vector>
 #include <string>
-#include <functional>
+#include "woogeen/base/mediaformat.h"
+
+#if defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
 
 namespace woogeen {
+namespace base{
 
-// Interface for signaling sender.
-// The sender may be a PeerClient/ConferenceClient instance which can send out
-// signaling messages created from peerconnection.
-class P2PSignalingSenderInterface {
- public:
-  // Send a signaling message.
-  virtual void SendSignalingMessage(const std::string& message,
-                                    const std::string& remote_id,
-                                    std::function<void()> success,
-                                    std::function<void(int)> failure) = 0;
+/**
+ * Define ICE server
+ */
+struct IceServer {
+  /// URLs for this group of ICE server
+  std::vector<std::string> urls;
+  /// Username
+  std::string username;
+  /// Password
+  std::string password;
+};
+
+// Client configurations
+struct ClientConfiguration {
+  // List of ICE servers
+  std::vector<IceServer> ice_servers;
+  // Media codec preference
+  MediaCodec media_codec;
+#if defined(WEBRTC_WIN)
+  bool hardware_acceleration_;
+  HWND decoder_win_;
+#endif
+  // Encoded video frame flag, default is false. If it is set to true,
+  // only encoded frame by customized input is accepted.
+  bool encoded_video_frame_ = false;
 };
 }
+}
 
-#endif  // WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_
+#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_

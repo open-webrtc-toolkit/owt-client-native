@@ -2,8 +2,8 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/remotemixedstream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
@@ -14,6 +14,7 @@
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 
 namespace woogeen {
+namespace conference {
 
 ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
     id<RTCConferenceClientObserver> observer) {
@@ -92,5 +93,6 @@ void ConferenceClientObserverObjcImpl::OnUserJoined(
 void ConferenceClientObserverObjcImpl::OnUserLeft(
     std::shared_ptr<const woogeen::conference::User> user) {
   [observer_ onUserLeft:[[RTCConferenceUser alloc] initWithNativeUser:user]];
+}
 }
 }

@@ -14,16 +14,16 @@
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 
 @implementation RTCLocalCameraStream
 
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters {
   self = [super init];
-  std::shared_ptr<woogeen::LocalCameraStreamParameters> local_parameters =
+  std::shared_ptr<woogeen::base::LocalCameraStreamParameters> local_parameters =
       [parameters nativeParameters];
-  std::shared_ptr<woogeen::LocalCameraStream> local_stream =
-      std::make_shared<woogeen::LocalCameraStream>(local_parameters);
+  std::shared_ptr<woogeen::base::LocalCameraStream> local_stream =
+      std::make_shared<woogeen::base::LocalCameraStream>(local_parameters);
   [super setNativeStream:local_stream];
   return self;
 }

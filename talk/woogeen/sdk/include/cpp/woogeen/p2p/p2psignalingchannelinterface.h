@@ -24,32 +24,41 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
-#define WOOGEEN_P2P_P2PEXCEPTION_H_
 
-#include "woogeen/exception.h"
+#ifndef WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
+#define WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
+
+#include <functional>
+#include <memory>
+#include <string>
+#include "woogeen/p2p/p2pexception.h"
 
 namespace woogeen {
-
-class P2PException : public Exception {
+namespace p2p {
+class P2PSignalingChannelInterfaceObserver {
  public:
-  enum Type : int {
-    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
-    kConnAuthFailed = 2121,
-    kMessageTargetUnreachable = 2201,
-    kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
-    kClientInvalidState = 2403,
-  };
+  virtual void OnMessage(const std::string& message,
+                         const std::string& sender) = 0;
+  virtual void OnDisconnected() = 0;
+};
 
-  P2PException();
-  P2PException(Type type);
-  P2PException(Type type, const std::string& message);
-
-  enum Type Type();
-
- private:
-  enum Type type_;
+class P2PSignalingChannelInterface {
+ public:
+  virtual void AddObserver(P2PSignalingChannelInterfaceObserver* observer) = 0;
+  virtual void Connect(
+      const std::string& token,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+  virtual void Disconnect(
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+  virtual void SendMessage(
+      const std::string& message,
+      const std::string& target_id,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
 };
 }
+}
 
-#endif  // WOOGEEN_P2P_P2PEXCEPTION_H_
+#endif  // WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_

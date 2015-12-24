@@ -30,24 +30,32 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include "woogeen/conferenceuser.h"
-#include "woogeen/clientconfiguration.h"
-#include "woogeen/conferenceexception.h"
-#include "woogeen/subscribeoptions.h"
-#include "woogeen/stream.h"
+#include "woogeen/base/clientconfiguration.h"
+#include "woogeen/base/stream.h"
+#include "woogeen/conference/user.h"
+#include "woogeen/conference/conferenceexception.h"
+#include "woogeen/conference/subscribeoptions.h"
 
 namespace sio{
   class message;
 }
 
 namespace woogeen {
+namespace base {
+  struct PeerConnectionChannelConfiguration;
+}
+}
+
+namespace woogeen {
+namespace conference {
+
+using namespace woogeen::base;
 
 struct ConferenceClientConfiguration : ClientConfiguration {};
 
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 class ConferenceSocketSignalingChannel;
-struct PeerConnectionChannelConfiguration;
 
 class ConferenceSocketSignalingChannelObserver {
  public:
@@ -68,18 +76,18 @@ class ConferenceClientObserver {
  public:
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream){};
+      std::shared_ptr<RemoteCameraStream> stream){};
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream){};
+      std::shared_ptr<RemoteScreenStream> stream){};
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteMixedStream> stream){};
+      std::shared_ptr<RemoteMixedStream> stream){};
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream){};
+      std::shared_ptr<RemoteCameraStream> stream){};
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream){};
+      std::shared_ptr<RemoteScreenStream> stream){};
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteMixedStream> stream){};
+      std::shared_ptr<RemoteMixedStream> stream){};
   // Triggered when received a message.
   virtual void OnMessageReceived(std::string& sender_id,
                                  std::string& message){};
@@ -218,11 +226,12 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       subscribe_pcs_;
   // Key is woogeen::Stream's ID
-  std::unordered_map<std::string, std::shared_ptr<woogeen::RemoteStream>>
+  std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
   std::unordered_map<std::string, StreamType> added_stream_type_;
   std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;
 };
+}
 }
 
 #endif  // WOOGEEN_CONFERENCE_CONFERENCECLIENT_H_

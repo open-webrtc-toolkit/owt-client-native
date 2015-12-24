@@ -4,7 +4,7 @@
 
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceUser.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceuser.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/user.h"
 
 /*
 // This class represent a user's permission

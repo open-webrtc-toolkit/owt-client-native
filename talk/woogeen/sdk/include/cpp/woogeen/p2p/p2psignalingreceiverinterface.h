@@ -24,28 +24,21 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
-#define WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
-
-#include "woogeen/exception.h"
+#ifndef WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_
+#define WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_
 
 namespace woogeen {
+namespace p2p {
 
-class ConferenceException : public Exception {
+// Interface for signaling receiver.
+// The receiver may be a peerconnection instance which can deal with the message
+// received.
+class P2PSignalingReceiverInterface {
  public:
-  enum Type : int {
-    kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
-  };
-
-  ConferenceException();
-  ConferenceException(Type type);
-  ConferenceException(Type type, const std::string& message);
-
-  enum Type Type();
-
- private:
-  enum Type type_;
+  // Received signaling message.
+  virtual void OnIncomingSignalingMessage(const std::string& message) = 0;
 };
 }
+}
 
-#endif  // WOOGEEN_CONFERENCE_CONFERENCEEXCEPTION_H_
+#endif  // WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_

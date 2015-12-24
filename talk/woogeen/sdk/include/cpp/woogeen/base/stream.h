@@ -28,7 +28,7 @@
 #define WOOGEEN_BASE_STREAM_H_
 
 #include <memory>
-#include "woogeen/localcamerastreamparameters.h"
+#include "woogeen/base/localcamerastreamparameters.h"
 
 namespace webrtc {
   class MediaStreamInterface;
@@ -42,12 +42,18 @@ class FrameGeneratorInterface;
 
 namespace woogeen {
 
+namespace conference{
+  class ConferencePeerConnectionChannel;
+}
+
+namespace base {
+
 class MediaConstraintsImpl;
 
 using webrtc::MediaStreamInterface;
 
 class Stream {
-  friend class ConferencePeerConnectionChannel;
+  friend class woogeen::conference::ConferencePeerConnectionChannel;
 
  public:
   MediaStreamInterface* MediaStream() const;
@@ -76,11 +82,11 @@ class LocalStream : public Stream {
   LocalStream();
   virtual ~LocalStream();
  protected:
-  woogeen::MediaConstraintsImpl* media_constraints_;
+  MediaConstraintsImpl* media_constraints_;
 };
 
 class RemoteStream : public Stream {
-  friend class ConferencePeerConnectionChannel;
+  friend class woogeen::conference::ConferencePeerConnectionChannel;
 
  public:
   // Return the remote user ID, indicates who published this stream.
@@ -126,7 +132,7 @@ class LocalRawStream : public LocalStream {
   private:
    cricket::RawFramesCapturer* capturer_;
 };
-
+}
 }
 
 #endif  // WOOGEEN_BASE_STREAM_H_

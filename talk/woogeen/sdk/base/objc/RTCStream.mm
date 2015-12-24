@@ -9,7 +9,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
 @implementation RTCStream {
-  std::shared_ptr<woogeen::Stream> _nativeStream;
+  std::shared_ptr<woogeen::base::Stream> _nativeStream;
   RTCMediaStream* _mediaStream;
 }
 
@@ -59,17 +59,17 @@
 
 @implementation RTCStream (Internal)
 
-- (instancetype)initWithNativeStream:(std::shared_ptr<woogeen::Stream>)stream {
+- (instancetype)initWithNativeStream:(std::shared_ptr<woogeen::base::Stream>)stream {
   self = [super init];
   [self setNativeStream:stream];
   return self;
 }
 
-- (void)setNativeStream:(std::shared_ptr<woogeen::Stream>)stream {
+- (void)setNativeStream:(std::shared_ptr<woogeen::base::Stream>)stream {
   _nativeStream = stream;
 }
 
-- (std::shared_ptr<woogeen::Stream>)nativeStream {
+- (std::shared_ptr<woogeen::base::Stream>)nativeStream {
   return _nativeStream;
 }
 

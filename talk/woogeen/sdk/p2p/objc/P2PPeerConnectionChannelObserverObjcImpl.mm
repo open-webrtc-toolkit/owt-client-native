@@ -10,6 +10,7 @@
 #include "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 
 namespace woogeen {
+namespace p2p {
 P2PPeerConnectionChannelObserverObjcImpl::
     P2PPeerConnectionChannelObserverObjcImpl(
         id<RTCP2PPeerConnectionChannelObserver> observer) {
@@ -50,7 +51,7 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+    std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
   [_observer onStreamAdded:remote_stream];
@@ -58,12 +59,12 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+    std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
   // TODO: handle screen stream.
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+    std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
   [_observer onStreamRemoved:remote_stream];
@@ -71,7 +72,8 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+    std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
   // TODO: handle screen stream.
+}
 }
 }

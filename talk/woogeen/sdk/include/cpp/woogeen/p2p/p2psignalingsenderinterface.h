@@ -24,24 +24,27 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_EXCEPTION_H_
-#define WOOGEEN_BASE_EXCEPTION_H_
+#ifndef WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_
+#define WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_
 
 #include <string>
+#include <functional>
 
 namespace woogeen {
+namespace p2p {
 
-// Exception for base SDK
-class Exception {
+// Interface for signaling sender.
+// The sender may be a PeerClient/ConferenceClient instance which can send out
+// signaling messages created from peerconnection.
+class P2PSignalingSenderInterface {
  public:
-  Exception();
-  Exception(const std::string& message);
-
-  std::string Message();
-
- private:
-  const std::string& message_;
+  // Send a signaling message.
+  virtual void SendSignalingMessage(const std::string& message,
+                                    const std::string& remote_id,
+                                    std::function<void()> success,
+                                    std::function<void(int)> failure) = 0;
 };
 }
+}
 
-#endif  // WOOGEEN_BASE_EXCEPTION_H_
+#endif  // WOOGEEN_BASE_SIGNALINGSENDERINTERFACE_H_

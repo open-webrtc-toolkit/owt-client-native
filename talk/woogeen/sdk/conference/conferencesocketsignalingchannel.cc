@@ -10,6 +10,7 @@
 #include "webrtc/base/json.h"
 
 namespace woogeen {
+namespace conference {
 
 const std::string kEventNameCustomMessage = "custom_message";
 const std::string kEventNameSignalingMessage = "signaling_message";
@@ -338,5 +339,6 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
       on_failure(std::move(e));
     }
   }
+}
 }
 }

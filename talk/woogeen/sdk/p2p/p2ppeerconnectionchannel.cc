@@ -9,6 +9,7 @@
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 
 namespace woogeen {
+namespace p2p {
 
 using std::string;
 
@@ -403,8 +404,8 @@ void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
   if (remote_stream_type_.find(stream->label()) ==
       remote_stream_type_.end())  // This stream is invalid.
     return;
-  std::shared_ptr<woogeen::RemoteCameraStream> remote_stream(
-      new woogeen::RemoteCameraStream(stream, remote_id_));
+  std::shared_ptr<RemoteCameraStream> remote_stream(
+      new RemoteCameraStream(stream, remote_id_));
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -416,8 +417,8 @@ void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
   if (remote_stream_type_.find(stream->label()) ==
       remote_stream_type_.end())  // This stream is invalid.
     return;
-  std::shared_ptr<woogeen::RemoteCameraStream> remote_stream(
-      new woogeen::RemoteCameraStream(stream, remote_id_));
+  std::shared_ptr<RemoteCameraStream> remote_stream(
+      new RemoteCameraStream(stream, remote_id_));
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -829,5 +830,6 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
     }
     pending_messages_.clear();
   }
+}
 }
 }

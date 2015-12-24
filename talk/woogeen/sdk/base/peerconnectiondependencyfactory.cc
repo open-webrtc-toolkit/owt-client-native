@@ -16,6 +16,8 @@
 #endif
 
 namespace woogeen {
+namespace base {
+
 void PeerConnectionThread::Run() {
   ProcessMessages(kForever);
   SetAllowBlockingCalls(true);
@@ -204,5 +206,6 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
                        Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
                             pc_factory_.get(), id, nullptr))
       .get();
+}
 }
 }

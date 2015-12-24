@@ -6,9 +6,10 @@
 
 #include <string>
 #include <functional>
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2psignalingsenderinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
 
 namespace woogeen {
+namespace p2p {
 
 // It wraps an id<RTCSignalingSenderInterface> and call methods on that
 // interface.
@@ -23,4 +24,5 @@ class RTCP2PSignalingSenderObjcImpl : public P2PSignalingSenderInterface {
  private:
   id<RTCP2PSignalingSenderProtocol> _sender;
 };
+}
 }

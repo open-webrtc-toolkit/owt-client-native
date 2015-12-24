@@ -4,12 +4,13 @@
 
 #include <thread>
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/remotemixedstream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 
 namespace woogeen {
+namespace conference {
 
 enum ConferenceClient::StreamType : int {
   kStreamTypeCamera = 1,
@@ -19,7 +20,7 @@ enum ConferenceClient::StreamType : int {
 
 ConferenceClient::ConferenceClient(ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
-      signaling_channel_(new woogeen::ConferenceSocketSignalingChannel()) {
+      signaling_channel_(new ConferenceSocketSignalingChannel()) {
   //optionally enabling HW accleration
 /*
 #if defined(WEBRTC_WIN)
@@ -338,7 +339,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
         video_formats.push_back(video_format);
       }
     }
-    auto remote_stream = std::make_shared<woogeen::RemoteMixedStream>(
+    auto remote_stream = std::make_shared<RemoteMixedStream>(
         id, remote_id, video_formats);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its)->OnStreamAdded(remote_stream);
@@ -348,7 +349,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeMix));
   } else if (device == "screen") {
     auto remote_stream =
-        std::make_shared<woogeen::RemoteScreenStream>(id, remote_id);
+        std::make_shared<RemoteScreenStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its)->OnStreamAdded(remote_stream);
     }
@@ -357,7 +358,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeScreen));
   } else {
     auto remote_stream =
-        std::make_shared<woogeen::RemoteCameraStream>(id, remote_id);
+        std::make_shared<RemoteCameraStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its)->OnStreamAdded(remote_stream);
     }
@@ -502,5 +503,6 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   }
   added_streams_.erase(stream_it);
   added_stream_type_.erase(stream_type);
+}
 }
 }

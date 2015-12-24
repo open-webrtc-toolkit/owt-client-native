@@ -8,7 +8,7 @@
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 
 namespace woogeen {
-
+namespace p2p {
 // It wraps an id<RTCP2PPeerConnectionChannelObserver> and call methods on that
 // interface.
 class P2PPeerConnectionChannelObserverObjcImpl
@@ -26,15 +26,16 @@ class P2PPeerConnectionChannelObserverObjcImpl
   void OnData(const std::string& remote_id,
               const std::string& message) override;
   void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream) override;
   void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream) override;
   void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream) override;
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream) override;
   void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream) override;
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream) override;
 
  private:
   id<RTCP2PPeerConnectionChannelObserver> _observer;
 };
+}
 }

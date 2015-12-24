@@ -7,11 +7,12 @@
 
 #include <functional>
 #include <memory>
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceuser.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceuser.h"
 #include "webrtc/base/json.h"
 
 namespace woogeen {
+namespace conference {
 
 class ConferenceSocketSignalingChannel {
  public:
@@ -48,6 +49,7 @@ class ConferenceSocketSignalingChannel {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure) = 0;
 };
+}
 }
 
 #endif  // WOOGEEN_CONFERENCE_SIGNALINGCHANNELINTERFACE_H_

@@ -30,6 +30,7 @@
 #include <vector>
 
 namespace woogeen {
+namespace base {
 
 /*
  * @brief An instance of this class indicates preference for codecs.
@@ -66,6 +67,7 @@ struct VideoFormat {
   explicit VideoFormat(const Resolution& r): resolution(r){}
   Resolution resolution;
 };
+}
 }
 
 #endif  // WOOGEEN_BASE_MEDIACODEC_H_

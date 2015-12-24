@@ -10,6 +10,7 @@
 #include "webrtc/base/scoped_ref_ptr.h"
 
 namespace woogeen {
+namespace base {
 // A webrtc::CreateSessionDescriptionObserver implementation used to invoke user
 // defined function when creating description complete.
 class FunctionalCreateSessionDescriptionObserver
@@ -51,6 +52,7 @@ class FunctionalSetSessionDescriptionObserver
   std::function<void()> on_success_;
   std::function<void(const std::string& error)> on_failure_;
 };
+}
 }
 
 #endif  // WOOGEEN_BASE_FUNCTIONALOBSERVER_H_

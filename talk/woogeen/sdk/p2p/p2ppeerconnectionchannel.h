@@ -14,14 +14,17 @@
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2pexception.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2psignalingsenderinterface.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2psignalingreceiverinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2pexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/messagehandler.h"
 
 namespace woogeen {
+namespace p2p {
+
+using namespace woogeen::base;
 
 // P2PPeerConnectionChannel callback interface.
 // Usually, PeerClient should implement these methods and notify application.
@@ -43,14 +46,14 @@ class P2PPeerConnectionChannelObserver {
                       const std::string& message) = 0;
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream) = 0;
+      std::shared_ptr<RemoteCameraStream> stream) = 0;
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream) = 0;
+      std::shared_ptr<RemoteScreenStream> stream) = 0;
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream) = 0;
+      std::shared_ptr<RemoteCameraStream> stream) = 0;
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream) = 0;
+      std::shared_ptr<RemoteScreenStream> stream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified
@@ -208,6 +211,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::mutex pending_messages_mutex_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
+}
 }
 
 #endif  // WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_

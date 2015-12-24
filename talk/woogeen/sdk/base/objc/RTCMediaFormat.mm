@@ -5,13 +5,13 @@
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 
 @implementation RTCVideoFormat {
-  woogeen::VideoFormat* _videoFormat;
+  woogeen::base::VideoFormat* _videoFormat;
 }
 
 - (instancetype)init {
   self = [super init];
-  woogeen::Resolution resolution(0, 0);
-  _videoFormat = new woogeen::VideoFormat(resolution);
+  woogeen::base::Resolution resolution(0, 0);
+  _videoFormat = new woogeen::base::VideoFormat(resolution);
   return self;
 }
 
@@ -29,11 +29,11 @@
 @implementation RTCVideoFormat (Internal)
 
 - (instancetype)initWithNativeVideoFormat:
-    (const woogeen::VideoFormat&)videoFormat {
+    (const woogeen::base::VideoFormat&)videoFormat {
   self = [super init];
-  woogeen::Resolution resolution(videoFormat.resolution.width,
+  woogeen::base::Resolution resolution(videoFormat.resolution.width,
                                  videoFormat.resolution.height);
-  _videoFormat = new woogeen::VideoFormat(resolution);
+  _videoFormat = new woogeen::base::VideoFormat(resolution);
   return self;
 }
 

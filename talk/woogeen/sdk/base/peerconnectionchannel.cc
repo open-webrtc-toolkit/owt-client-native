@@ -7,6 +7,7 @@
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 
 namespace woogeen {
+namespace base {
 
 PeerConnectionChannel::PeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration)
@@ -269,4 +270,5 @@ void PeerConnectionChannel::OnIceConnectionChange(
 
 void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
+}
 }

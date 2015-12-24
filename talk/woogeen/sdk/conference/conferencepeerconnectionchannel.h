@@ -12,11 +12,14 @@
 #include <random>
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/subscribeoptions.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/subscribeoptions.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
 
 namespace woogeen {
+namespace conference {
+
+using namespace woogeen::base;
 
 // ConferencePeerConnectionChannel callback interface.
 // Usually, ConferenceClient should implement these methods and notify
@@ -33,9 +36,9 @@ class ConferencePeerConnectionChannelObserver {
   // Triggered when remote user denied the invitation.
   virtual void OnDenied(const std::string& remote_id) = 0;
   // Triggered when a new stream is added.
-  virtual void OnStreamAdded(woogeen::RemoteStream* stream) = 0;
+  virtual void OnStreamAdded(RemoteStream* stream) = 0;
   // Triggered when a remote stream is removed.
-  virtual void OnStreamRemoved(woogeen::RemoteStream* stream) = 0;
+  virtual void OnStreamRemoved(RemoteStream* stream) = 0;
 };
 
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with
@@ -196,6 +199,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::vector<ConferencePeerConnectionChannelObserver*> observers_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
-};
+}
+}
 
 #endif  // WOOGEEN_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_

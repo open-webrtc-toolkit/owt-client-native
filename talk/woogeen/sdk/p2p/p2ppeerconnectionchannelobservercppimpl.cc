@@ -5,6 +5,7 @@
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 
 namespace woogeen {
+namespace p2p {
 
 void P2PPeerConnectionChannelObserverCppImpl::OnInvited(
     const std::string& remote_id) {
@@ -38,20 +39,21 @@ void P2PPeerConnectionChannelObserverCppImpl::OnData(
 }
 
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+    std::shared_ptr<RemoteCameraStream> stream) {
   peer_client_.OnStreamAdded(stream);
 }
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+    std::shared_ptr<RemoteScreenStream> stream) {
   peer_client_.OnStreamAdded(stream);
 }
 
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::RemoteCameraStream> stream) {
+    std::shared_ptr<RemoteCameraStream> stream) {
   peer_client_.OnStreamRemoved(stream);
 }
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::RemoteScreenStream> stream) {
+    std::shared_ptr<RemoteScreenStream> stream) {
   peer_client_.OnStreamRemoved(stream);
 }
-};
+}
+}

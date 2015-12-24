@@ -9,11 +9,12 @@
 #include <unordered_map>
 #include "talk/woogeen/include/sio_client.h"
 #include "talk/woogeen/include/sio_message.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceclient.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceuser.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/user.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
 
 namespace woogeen {
+namespace conference {
 
 class ConferenceSocketSignalingChannel {
  public:
@@ -68,6 +69,7 @@ class ConferenceSocketSignalingChannel {
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
 };
+}
 }
 
 #endif

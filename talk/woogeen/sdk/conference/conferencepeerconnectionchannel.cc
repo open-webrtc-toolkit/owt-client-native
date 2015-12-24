@@ -11,6 +11,7 @@
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 
 namespace woogeen {
+namespace conference {
 
 using std::string;
 
@@ -498,5 +499,6 @@ int ConferencePeerConnectionChannel::RandomInt(int lower_bound,
   std::mt19937 mt(rd());
   std::uniform_int_distribution<int> dist(1, kTiebreakerUpperBound);
   return dist(mt);
+}
 }
 }

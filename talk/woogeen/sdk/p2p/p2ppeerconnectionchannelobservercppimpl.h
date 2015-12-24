@@ -6,9 +6,12 @@
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/peerclient.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/peerclient.h"
 
 namespace woogeen {
+namespace p2p {
+
+using namespace woogeen::base;
 
 // This class connect a PeerClient and a P2PPeerConnectionChannel, so the
 // P2PPeerConnectionChannel can notify PeerClient when event raises.
@@ -36,18 +39,19 @@ class P2PPeerConnectionChannelObserverCppImpl
   virtual void OnData(const std::string& remote_id, const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+      std::shared_ptr<RemoteCameraStream> stream);
   virtual void OnStreamAdded(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+      std::shared_ptr<RemoteScreenStream> stream);
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteCameraStream> stream);
+      std::shared_ptr<RemoteCameraStream> stream);
   virtual void OnStreamRemoved(
-      std::shared_ptr<woogeen::RemoteScreenStream> stream);
+      std::shared_ptr<RemoteScreenStream> stream);
 
  private:
   PeerClient& peer_client_;
 };
+}
 }
 
 #endif  // WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_

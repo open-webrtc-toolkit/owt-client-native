@@ -3,9 +3,10 @@
  */
 
 #include <random>
-#include "talk/woogeen/sdk/include/cpp/woogeen/localcamerastreamparameters.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/localcamerastreamparameters.h"
 
 namespace woogeen {
+namespace base {
 
 LocalCameraStreamParameters::LocalCameraStreamParameters(bool video_enabled,
                                                          bool audio_enabled)
@@ -30,5 +31,6 @@ void LocalCameraStreamParameters::CameraId(std::string& camera_id) {
 void LocalCameraStreamParameters::Resolution(int width, int height) {
   resolution_width_ = width;
   resolution_height_ = height;
+}
 }
 }

@@ -20,8 +20,8 @@
 
 @implementation RTCConferenceSubscribeOptions (Internal)
 
-- (woogeen::SubscribeOptions)nativeSubscribeOptions {
-  woogeen::SubscribeOptions options;
+- (woogeen::conference::SubscribeOptions)nativeSubscribeOptions {
+  woogeen::conference::SubscribeOptions options;
   options.resolution.width = _resolution.width;
   options.resolution.height = _resolution.height;
   return options;

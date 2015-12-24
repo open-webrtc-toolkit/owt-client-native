@@ -24,39 +24,26 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef WOOGEEN_BASE_EXCEPTION_H_
+#define WOOGEEN_BASE_EXCEPTION_H_
 
-#ifndef WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
-#define WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
-
-#include <functional>
-#include <memory>
 #include <string>
-#include "woogeen/p2pexception.h"
 
 namespace woogeen {
-class P2PSignalingChannelInterfaceObserver {
- public:
-  virtual void OnMessage(const std::string& message,
-                         const std::string& sender) = 0;
-  virtual void OnDisconnected() = 0;
-};
+namespace base{
 
-class P2PSignalingChannelInterface {
+// Exception for base SDK
+class Exception {
  public:
-  virtual void AddObserver(P2PSignalingChannelInterfaceObserver* observer) = 0;
-  virtual void Connect(
-      const std::string& token,
-      std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
-  virtual void Disconnect(
-      std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
-  virtual void SendMessage(
-      const std::string& message,
-      const std::string& target_id,
-      std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+  Exception();
+  Exception(const std::string& message);
+
+  std::string Message();
+
+ private:
+  const std::string& message_;
 };
 }
+}
 
-#endif  // WOOGEEN_P2P_P2PSIGNALINGCHANNELINTERFACE_H_
+#endif  // WOOGEEN_BASE_EXCEPTION_H_

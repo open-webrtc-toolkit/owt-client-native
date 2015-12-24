@@ -7,7 +7,7 @@
 @interface RTCPeerConnectionDependencyFactory ()
 
 @property(nonatomic, assign)
-    rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory>
+    rtc::scoped_refptr<woogeen::base::PeerConnectionDependencyFactory>
         nativePeerConnectionDependencyFactory;
 
 @end
@@ -21,7 +21,7 @@ static RTCPeerConnectionDependencyFactory* sharedFactory;
 
 - (id)init {
   _nativePeerConnectionDependencyFactory =
-      woogeen::PeerConnectionDependencyFactory::Get();
+      woogeen::base::PeerConnectionDependencyFactory::Get();
   NSLog(@"Init RTCPCDependencyFactory");
   return self;
 }

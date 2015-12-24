@@ -2,9 +2,10 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2pexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2pexception.h"
 
 namespace woogeen {
+namespace p2p {
 
 P2PException::P2PException() : P2PException(kUnkown) {}
 
@@ -13,4 +14,5 @@ P2PException::P2PException(enum Type type)
 
 P2PException::P2PException(enum Type type, const std::string& message)
     : Exception(message), type_(type) {}
+}
 }

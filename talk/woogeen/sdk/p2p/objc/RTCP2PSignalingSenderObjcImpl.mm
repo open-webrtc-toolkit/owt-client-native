@@ -7,6 +7,8 @@
 #include "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
 
 namespace woogeen {
+namespace p2p {
+
 RTCP2PSignalingSenderObjcImpl::RTCP2PSignalingSenderObjcImpl(
     id<RTCP2PSignalingSenderProtocol> sender) {
   _sender = sender;
@@ -31,5 +33,6 @@ void RTCP2PSignalingSenderObjcImpl::SendSignalingMessage(
         NSLog(@"Send signaling message failed.");
         failure(0);
       }];
+}
 }
 }

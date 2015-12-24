@@ -6,7 +6,7 @@
 
 #include "talk/media/base/videocapturer.h"
 #include "talk/media/devices/devicemanager.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 
@@ -14,6 +14,7 @@
 #include "talk/woogeen/sdk/base/framegeneratorinterface.h"
 
 namespace woogeen {
+namespace base {
 
 Stream::Stream() : media_stream_(nullptr), id_("") {}
 
@@ -250,4 +251,5 @@ RemoteScreenStream::RemoteScreenStream(std::string& id, std::string& from)
 RemoteScreenStream::RemoteScreenStream(MediaStreamInterface* media_stream,
                                        std::string& from)
     : RemoteStream(media_stream, from) {}
+}
 }

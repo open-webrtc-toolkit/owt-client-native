@@ -9,9 +9,10 @@
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/mediaformat.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
 
 namespace woogeen {
+namespace base {
 
 using webrtc::PeerConnectionInterface;
 
@@ -111,10 +112,11 @@ class PeerConnectionChannel : public rtc::MessageHandler,
 
   // |factory_| is got from PeerConnectionDependencyFactory::Get() which is
   // shared among all PeerConnectionChannels.
-  rtc::scoped_refptr<woogeen::PeerConnectionDependencyFactory> factory_;
+  rtc::scoped_refptr<PeerConnectionDependencyFactory> factory_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
-  woogeen::MediaConstraintsImpl media_constraints_;
+  MediaConstraintsImpl media_constraints_;
 };
+}
 }
 
 #endif  // WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_

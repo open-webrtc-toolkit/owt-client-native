@@ -24,37 +24,30 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
+#define WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_
 
-#ifndef WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
-#define WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
-
-#include <string>
+#include "woogeen/base/stream.h"
+#include "woogeen/base/mediaformat.h"
 
 namespace woogeen {
-class LocalCameraStreamParameters final {
+namespace conference {
+
+using woogeen::base::VideoFormat;
+
+class RemoteMixedStream : public woogeen::base::RemoteStream {
  public:
-  LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
-  void CameraId(std::string& camera_id);
-  void StreamName(std::string& stream_name);
-  void Resolution(int width, int height);
-  void Fps(int fps);
-  std::string CameraId() { return camera_id_; }
-  std::string StreamName() { return stream_name_; }
-  int ResolutionWidth() { return resolution_width_; }
-  int ResolutionHeight() { return resolution_height_; }
-  int Fps() { return fps_; }
-  bool VideoEnabled() { return video_enabled_; }
-  bool AudioEnabled() { return audio_enabled_; }
+  RemoteMixedStream(std::string& id,
+                    std::string& from,
+                    const std::vector<VideoFormat> supported_video_formats);
+  // Get supported video formats.
+  // When subscribe this stream, user can specifiy one of these formats.
+  const std::vector<VideoFormat> SupportedVideoFormats();
 
  private:
-  std::string camera_id_;
-  std::string stream_name_;
-  int resolution_width_;
-  int resolution_height_;
-  int fps_;
-  bool video_enabled_;
-  bool audio_enabled_;
+  const std::vector<VideoFormat> supported_video_formats_;
 };
 }
+}
 
-#endif  // WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
+#endif  // WOOGEEN_CONFERENCE_REMOTEMIXEDSTREAM_H_

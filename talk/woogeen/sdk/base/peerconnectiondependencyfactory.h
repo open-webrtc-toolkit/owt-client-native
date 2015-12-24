@@ -10,6 +10,7 @@
 #include "webrtc/base/bind.h"
 
 namespace woogeen {
+namespace base {
 using webrtc::MediaStreamInterface;
 using webrtc::AudioTrackInterface;
 using webrtc::VideoTrackInterface;
@@ -83,5 +84,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #endif
   static bool encoded_frame_;
 };
+}
 }  // namespace woogeen
 #endif  // WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_

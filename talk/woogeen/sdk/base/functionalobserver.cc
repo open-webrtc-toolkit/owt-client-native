@@ -5,6 +5,7 @@
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 
 namespace woogeen {
+namespace base {
 
 FunctionalCreateSessionDescriptionObserver::
     FunctionalCreateSessionDescriptionObserver(
@@ -59,5 +60,6 @@ void FunctionalSetSessionDescriptionObserver::OnFailure(
   if (on_failure_ != nullptr) {
     on_failure_(error);
   }
+}
 }
 }
