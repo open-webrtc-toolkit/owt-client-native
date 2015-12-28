@@ -38,9 +38,7 @@
 namespace woogeen {
 namespace base{
 
-/**
- * Define ICE server
- */
+/// Define ICE server
 struct IceServer {
   /// URLs for this group of ICE server
   std::vector<std::string> urls;
@@ -50,18 +48,21 @@ struct IceServer {
   std::string password;
 };
 
-// Client configurations
+/// Client configurations
 struct ClientConfiguration {
-  // List of ICE servers
+  /// List of ICE servers
   std::vector<IceServer> ice_servers;
-  // Media codec preference
+  /// Media codec preference
   MediaCodec media_codec;
 #if defined(WEBRTC_WIN)
   bool hardware_acceleration_;
   HWND decoder_win_;
 #endif
-  // Encoded video frame flag, default is false. If it is set to true,
-  // only encoded frame by customized input is accepted.
+  /// Encoded video frame flag.
+  /**
+   * Default is false. If it is set to true, only streams with encoded frame can
+   * be published.
+   */
   bool encoded_video_frame_ = false;
 };
 }

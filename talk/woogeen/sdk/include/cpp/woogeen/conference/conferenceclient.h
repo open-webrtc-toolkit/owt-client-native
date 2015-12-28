@@ -51,12 +51,19 @@ namespace conference {
 
 using namespace woogeen::base;
 
+/**
+  @brief Configuration for creating a RTCConferenceClient
+  @detail This configuration is used while creating RTCConferenceClient.
+  Changing this configuration does NOT impact RTCConferenceClient already
+  created.
+*/
 struct ConferenceClientConfiguration : ClientConfiguration {};
 
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 class ConferenceSocketSignalingChannel;
 
+/** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) = 0;
@@ -71,66 +78,124 @@ class ConferenceSocketSignalingChannelObserver {
   // Notify the ID for a published stream.
   virtual void OnStreamId(const std::string& id, const std::string& label) = 0;
 };
+/** @endcond */
 
+/// Observer for RTCConferenceClient.
 class ConferenceClientObserver {
  public:
-  // Triggered when a new stream is added.
+  /**
+    @brief Triggers when a stream is added.
+    @param stream The stream which is added.
+  */
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteCameraStream> stream){};
+  /**
+    @brief Triggers when a stream is added.
+    @param stream The stream which is added.
+  */
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteScreenStream> stream){};
+  /**
+    @brief Triggers when a stream is added.
+    @param stream The stream which is added.
+  */
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteMixedStream> stream){};
-  // Triggered when a remote stream is removed.
+  /**
+    @brief Triggers when a stream is removed.
+    @param stream The stream which is removed.
+  */
   virtual void OnStreamRemoved(
       std::shared_ptr<RemoteCameraStream> stream){};
+  /**
+    @brief Triggers when a stream is removed.
+    @param stream The stream which is removed.
+  */
   virtual void OnStreamRemoved(
       std::shared_ptr<RemoteScreenStream> stream){};
+  /**
+    @brief Triggers when a stream is removed.
+    @param stream The stream which is removed.
+  */
   virtual void OnStreamRemoved(
       std::shared_ptr<RemoteMixedStream> stream){};
-  // Triggered when received a message.
+  /**
+    @brief Triggers when a message is received.
+    @param sender_id Sender's ID.
+    @param message Message received.
+  */
   virtual void OnMessageReceived(std::string& sender_id,
                                  std::string& message){};
+  /**
+    @brief Triggers when a user joined conference.
+    @param user The user joined.
+  */
   virtual void OnUserJoined(std::shared_ptr<const conference::User>){};
+  /**
+    @brief Triggers when a user left conference.
+    @param user The user left.
+  */
   virtual void OnUserLeft(std::shared_ptr<const conference::User>){};
-  // Triggered when server is disconnected.
+  /// Triggered when server is disconnected.
   virtual void OnServerDisconnected(){};
-  // TODO(jianjun): add other events.
 };
 
+/// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
  public:
   ConferenceClient(ConferenceClientConfiguration& configuration);
-  // Add an observer for conferenc client.
+  /// Add an observer for conferenc client.
   void AddObserver(std::shared_ptr<ConferenceClientObserver> observer);
-  // Remove an object from conference client.
+  /// Remove an object from conference client.
   void RemoveObserver(std::shared_ptr<ConferenceClientObserver> observer);
-  // Join a conference.
+  /**
+    @brief Connect to the specified room to join a conference.
+    @param token Includes the room info which is encrypted.
+  */
   void Join(
       const std::string& token,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Publish a stream to the conference.
+  /**
+    @brief Publish the stream to the current room.
+    @param stream The stream to be published.
+  */
   void Publish(
       std::shared_ptr<LocalStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Subscribe a stream from the conference.
+  /**
+    @brief Subscribe a stream from the current room.
+    @param stream The remote stream to be subscribed.
+    @param onSuccess Success callback with a stream that contains media stream.
+  */
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Subscribe a stream from the current room.
+    @param stream The remote stream to be subscribed.
+    @param options Options for subscribing the stream.
+    @param onSuccess Success callback with a stream that contains media stream.
+  */
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       const SubscribeOptions& options,
       std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Unpublish a stream to the conference.
+  /**
+    @brief Un-publish the stream from the current room.
+    @param stream The stream to be unpublished.
+  */
   void Unpublish(
       std::shared_ptr<LocalStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Unsubscribe a stream from the conference.
+  /**
+    @brief Un-subscribe the stream from the current room.
+    @param stream The stream to be unsubscribed.
+  */
   void Unsubscribe(
       std::shared_ptr<RemoteStream> stream,
       std::function<void()> on_success,
@@ -140,43 +205,58 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
       const std::string& message,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Send a message to a specified participant.
+  /**
+    @brief Send messsage to all participants in the conference.
+    @param message The message to be sent.
+  */
   void Send(
       const std::string& message,
       const std::string& receiver,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Continue to transmit specified stream's audio data.
-  // If |stream| is a remote stream, MCU will continue to send audio data to
-  // client. If |stream| is a local stream, client will continue to send audio
-  // data to MCU. This method is expected to be called after |DisableAudio|.
+  /**
+    @brief Continue to transmit specified stream's audio data.
+    @detail If |stream| is a remote stream, MCU will continue to send audio data
+    to client. If |stream| is a local stream, client will continue to send audio
+    data to MCU. This method is expected to be called after |DisableAudio|.
+  */
   void PlayAudio(
       std::shared_ptr<Stream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Stop transmitting specified stream's audio data.
-  // If |stream| is a remote stream, MCU will stop sending audio data to client.
-  // If |stream| is a local stream, client will stop sending audio data to MCU.
+  /**
+    @brief Stop transmitting specified stream's audio data.
+    @detail If |stream| is a remote stream, MCU will stop sending audio data to
+    client. If |stream| is a local stream, client will stop sending audio data
+    to MCU.
+  */
   void PauseAudio(
       std::shared_ptr<Stream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Continue to transmit specified stream's video data.
-  // If |stream| is a remote stream, MCU will continue to send video data to
-  // client. If |stream| is a local stream, client will continue to send video
-  // data to MCU. This method is expected to be called after |DisableVideo|.
+  /**
+    @brief Continue to transmit specified stream's video data.
+    @detail If |stream| is a remote stream, MCU will continue to send video data
+    to client. If |stream| is a local stream, client will continue to send video
+    data to MCU. This method is expected to be called after |DisableVideo|.
+  */
   void PlayVideo(
       std::shared_ptr<Stream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Stop transmitting specified stream's video data.
-  // If |stream| is a remote stream, MCU will stop sending video data to client.
-  // If |stream| is a local stream, client will stop sending video data to MCU.
+  /**
+    @brief Stop transmitting specified stream's video data.
+    @detail If |stream| is a remote stream, MCU will stop sending video data to
+    client. If |stream| is a local stream, client will stop sending video data
+    to MCU.
+  */
   void PauseVideo(
       std::shared_ptr<Stream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Leave this conference.
+  /**
+    @brief Leave current conference.
+  */
   void Leave(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);

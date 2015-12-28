@@ -43,6 +43,12 @@ namespace base {
 
 namespace p2p{
 
+/**
+ @brief Configuration for PeerClient
+
+ This configuration is used while creating PeerClient. Changing this
+ configuration does NOT impact PeerClient already created.
+*/
 struct PeerClientConfiguration : ClientConfiguration {};
 
 class P2PPeerConnectionChannelObserverCppImpl;

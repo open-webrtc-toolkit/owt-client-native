@@ -35,13 +35,16 @@ namespace conference {
 
 using woogeen::base::VideoFormat;
 
+/// This class represent a mixed remote stream.
 class RemoteMixedStream : public woogeen::base::RemoteStream {
  public:
   RemoteMixedStream(std::string& id,
                     std::string& from,
                     const std::vector<VideoFormat> supported_video_formats);
-  // Get supported video formats.
-  // When subscribe this stream, user can specifiy one of these formats.
+  /**
+    @brief Get supported video formats.
+    @detail When subscribe this stream, user can specifiy one of these formats.
+  */
   const std::vector<VideoFormat> SupportedVideoFormats();
 
  private:

@@ -52,15 +52,26 @@ class MediaConstraintsImpl;
 
 using webrtc::MediaStreamInterface;
 
+/// Base class of all streams with media stream
 class Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;
 
  public:
+  /** @cond */
   MediaStreamInterface* MediaStream() const;
+  /** @endcond */
+  /**
+    @brief Get the ID of the stream
+    @return Stream's ID
+  */
   const std::string& Id() const;
+  /// Disable all audio tracks of the stream.
   virtual void DisableAudio();
+  /// Disable all video tracks of the stream.
   virtual void DisableVideo();
+  /// Enable all audio tracks of the stream.
   virtual void EnableAudio();
+  /// Enable all video tracks of the stream.
   virtual void EnableVideo();
 
  protected:
@@ -77,6 +88,10 @@ class Stream {
   std::string id_;
 };
 
+/**
+  @brief This class represent a local stream.
+  @detail A local stream can be published to remote side.
+*/
 class LocalStream : public Stream {
  public:
   LocalStream();
@@ -85,11 +100,16 @@ class LocalStream : public Stream {
   MediaConstraintsImpl* media_constraints_;
 };
 
+/**
+  @brief This class represents a remote stream.
+  @detail A remote is published from a remote client or MCU. Do not construct
+  remote stream outside SDK.
+*/
 class RemoteStream : public Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;
 
  public:
-  // Return the remote user ID, indicates who published this stream.
+  /// Return the remote user ID, indicates who published this stream.
   std::string& From();
 
  protected:
@@ -103,31 +123,52 @@ class RemoteStream : public Stream {
   std::string& remote_user_id_;
 };
 
+/// This class represent a remote stream captured from a camera and/or mic.
 class RemoteCameraStream : public RemoteStream {
  public:
+  /** @cond */
   explicit RemoteCameraStream(std::string& id, std::string& from);
   explicit RemoteCameraStream(MediaStreamInterface* media_stream,
                               std::string& from);
+  /** @endcond */
 };
 
+/// This class represent a remote stream captured from screen sharing.
 class RemoteScreenStream : public RemoteStream {
  public:
+  /** @cond */
   explicit RemoteScreenStream(std::string& id, std::string& from);
   explicit RemoteScreenStream(MediaStreamInterface* media_stream,
                               std::string& from);
+  /** @endcond */
 };
 
+/// This class represent a local stream captured from camera, mic.
 class LocalCameraStream : public LocalStream {
  public:
+  /**
+    Initialize a LocalCameraStream with parameters.
+    @param parameters Parameters for creating the stream. The stream will not be
+    impacted if chaning parameters after it is created.
+  */
   explicit LocalCameraStream(
       std::shared_ptr<LocalCameraStreamParameters> parameters);
   ~LocalCameraStream();
 };
 
+/// This class represent a local stream which use frame generator to generate frames.
 class LocalRawStream : public LocalStream {
   public:
-  explicit LocalRawStream(std::shared_ptr<LocalCameraStreamParameters> parameters, FrameGeneratorInterface* framer);
-  ~LocalRawStream();
+  /**
+    Initialize a LocalRawStream with parameters.
+    @param parameters Parameters for creating the stream. The stream will not be
+    impacted if chaning parameters after it is created.
+    @param framer An instance implemented FrameGeneratorInterface.
+  */
+   explicit LocalRawStream(
+       std::shared_ptr<LocalCameraStreamParameters> parameters,
+       FrameGeneratorInterface* framer);
+   ~LocalRawStream();
 
   private:
    cricket::RawFramesCapturer* capturer_;

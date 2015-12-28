@@ -31,17 +31,17 @@
 
 namespace woogeen {
 namespace conference {
-// This class represent a user's permission.
+/// This class represent a user's permission.
 class Permission {
  public:
   Permission(bool publish, bool subscribe, bool record)
       : publish_(publish), record_(record), subscribe_(subscribe) {}
 
-  // Indicates whether publish is allowed.
+  /// Indicates whether publish is allowed.
   bool CanPublish() const { return publish_; };
-  // Indicates whether record is allowed.
+  /// Indicates whether record is allowed.
   bool CanRecord() const { return record_; };
-  // Indicates whether subscribe is allowed.
+  /// Indicates whether subscribe is allowed.
   bool CanSubscribe() const { return subscribe_; };
 
  private:
@@ -50,7 +50,7 @@ class Permission {
   bool subscribe_;
 };
 
-// This class represent an attendee of a conference
+/// This class represent an attendee of a conference
 class User {
  public:
   User(std::string id,
@@ -58,10 +58,15 @@ class User {
        std::string role,
        Permission permissions)
       : role_(role), name_(name), id_(id), permissions_(permissions) {}
+  /// Get user's role.
   std::string Role() const { return role_; };
+  /// Get user's name.
   std::string Name() const { return name_; };
+  /// Get user's ID.
   std::string Id() const { return id_; };
+  /** @cond */
   Permission Permissions() const { return permissions_; };
+  /** @endcond */
 
  private:
   std::string role_;

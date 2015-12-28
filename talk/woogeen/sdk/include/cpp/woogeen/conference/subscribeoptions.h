@@ -32,6 +32,7 @@
 namespace woogeen {
 namespace conference {
 
+/// Options for subscribing a remote stream.
 struct SubscribeOptions {
   woogeen::base::Resolution resolution;
 };

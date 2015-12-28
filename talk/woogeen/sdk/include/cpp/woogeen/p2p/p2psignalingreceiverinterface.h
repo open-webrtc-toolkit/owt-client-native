@@ -30,15 +30,20 @@
 namespace woogeen {
 namespace p2p {
 
-// Interface for signaling receiver.
-// The receiver may be a peerconnection instance which can deal with the message
-// received.
+/** @cond */
+/**
+  @brief Interface for signaling receiver.
+  @detail The receiver may be a peerconnection instance which can deal with the
+  message received.
+*/
 class P2PSignalingReceiverInterface {
  public:
-  // Received signaling message.
+  /// Received signaling message.
   virtual void OnIncomingSignalingMessage(const std::string& message) = 0;
 };
 }
 }
+
+/** @endcond */
 
 #endif  // WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_

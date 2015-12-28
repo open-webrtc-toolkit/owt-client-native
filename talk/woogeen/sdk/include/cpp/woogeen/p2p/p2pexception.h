@@ -32,6 +32,7 @@
 namespace woogeen {
 namespace p2p {
 
+/// This class reprensents a P2P exception.
 class P2PException : public woogeen::base::Exception {
  public:
   enum Type : int {

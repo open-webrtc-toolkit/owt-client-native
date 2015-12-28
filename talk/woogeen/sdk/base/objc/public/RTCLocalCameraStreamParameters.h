@@ -46,8 +46,8 @@
 /**
   @brief Set the video resolution.
 
-  If the resolution specified is not supported on current device, it will choose
-  a optimized solution.
+  If the resolution specified is not supported on current device, creation will
+  failed.
   @param width The width of the video.
   @param height The height of the video.
 */

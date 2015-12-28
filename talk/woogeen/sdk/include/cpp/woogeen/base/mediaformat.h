@@ -32,7 +32,7 @@
 namespace woogeen {
 namespace base {
 
-/*
+/**
  * @brief An instance of this class indicates preference for codecs.
  * @detail It is not guaranteed to use preferred codec, if remote side doesn't
  * support preferred codec, it will use other codec.
@@ -46,25 +46,29 @@ struct MediaCodec {
 
   explicit MediaCodec() : video_codec(H264) {}
 
-  /*
-   * Preference for video codec. Default is H.264.
+  /**
+   * @brief Preference for video codec. Default is H.264.
    */
   VideoCodec video_codec;
 };
 
-// This class represent a resolution value
+/// This class represent a resolution value
 struct Resolution {
+  /// Construct an instance with width and height equal to 0.
   explicit Resolution(): width(0), height(0) {}
+  /// Construct an instance with specify width and height.
   Resolution(int w, int h) : width(w), height(h) {}
   int width;
   int height;
 };
 
-/*
- * An instance of this class represent a video format
+/**
+ * @brief An instance of this class represent a video format
  */
 struct VideoFormat {
+  /** @cond */
   explicit VideoFormat(const Resolution& r): resolution(r){}
+  /** @endcond */
   Resolution resolution;
 };
 }

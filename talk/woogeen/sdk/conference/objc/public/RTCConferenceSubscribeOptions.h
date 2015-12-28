@@ -30,6 +30,7 @@
 #import "Foundation/Foundation.h"
 #import "CoreGraphics/CoreGraphics.h"
 
+/// Options for subscribing a remote stream.
 @interface RTCConferenceSubscribeOptions : NSObject
 
 - (CGSize)resolution;

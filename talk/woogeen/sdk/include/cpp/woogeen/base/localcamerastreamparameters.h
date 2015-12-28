@@ -33,13 +33,49 @@
 namespace woogeen {
 namespace base{
 
+/**
+  @brief This class contains parameters and methods that needed for creating a
+  local camera stream.
+
+  When a stream is created, it will not be impacted if these parameters are
+  changed.
+*/
 class LocalCameraStreamParameters final {
  public:
+  /**
+    @brief Initialize a LocalCameraStreamParameters.
+    @param video_enabled Indicates if video is enabled for this stream.
+    @param audio_anabled Indicates if audio is enabled for this stream.
+  */
   LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
+  /**
+    @brief Set the ID of the camera to be used.
+    @param camera_id Camera ID.
+  */
   void CameraId(std::string& camera_id);
+  /**
+    @brief Set the ID of media stream.
+    @param stream_name The ID of media stream created.
+  */
   void StreamName(std::string& stream_name);
+  /**
+    @brief Set the video resolution.
+
+    If the resolution specified is not supported on current device, creation
+    will failed.
+    @param width The width of the video.
+    @param height The height of the video.
+  */
   void Resolution(int width, int height);
+  /**
+    @brief Set the frame rate.
+
+    If the frame rate specified is not supported on current device, creation
+    will failed.
+    @param fps The frame rate of the video.
+  */
   void Fps(int fps);
+  /** @cond */
   std::string CameraId() { return camera_id_; }
   std::string StreamName() { return stream_name_; }
   int ResolutionWidth() { return resolution_width_; }
@@ -47,6 +83,7 @@ class LocalCameraStreamParameters final {
   int Fps() { return fps_; }
   bool VideoEnabled() { return video_enabled_; }
   bool AudioEnabled() { return audio_enabled_; }
+  /** @endcond */
 
  private:
   std::string camera_id_;

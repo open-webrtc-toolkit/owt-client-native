@@ -32,6 +32,7 @@
 namespace woogeen {
 namespace conference {
 
+/// This class reprensents a conference exception.
 class ConferenceException : public woogeen::base::Exception {
  public:
   enum Type : int {

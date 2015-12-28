@@ -70,7 +70,12 @@
 - (void)subscribe:(RTCRemoteStream*)stream
         onSuccess:(void (^)(RTCRemoteStream*))onSuccess
         onFailure:(void (^)(NSError*))onFailure;
-
+/**
+  @brief Subscribe a stream from the current room.
+  @param stream The remote stream to be subscribed.
+  @param options Options for subscribing the stream.
+  @param onSuccess Success callback with a stream that contains media stream.
+*/
 - (void)subscribe:(RTCRemoteStream*)stream
         withOptions:(RTCConferenceSubscribeOptions*)options
         onSuccess:(void (^)(RTCRemoteStream*))onSuccess

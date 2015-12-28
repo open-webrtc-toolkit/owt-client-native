@@ -32,12 +32,21 @@
 namespace woogeen {
 namespace base{
 
-// Exception for base SDK
+/// Base class for exceptions
 class Exception {
  public:
+  /// Default constructor for exceptions.
   Exception();
+  /**
+    @brief Constructor with message.
+    @param message Exception message.
+  */
   Exception(const std::string& message);
 
+  /**
+    @brief Get exception message.
+    @return Exception message.
+  */
   std::string Message();
 
  private:
