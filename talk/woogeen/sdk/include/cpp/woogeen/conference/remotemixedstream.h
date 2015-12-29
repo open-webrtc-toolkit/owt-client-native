@@ -45,7 +45,7 @@ class RemoteMixedStream : public woogeen::base::RemoteStream {
     @brief Get supported video formats.
     @detail When subscribe this stream, user can specifiy one of these formats.
   */
-  const std::vector<VideoFormat> SupportedVideoFormats();
+  std::vector<VideoFormat> SupportedVideoFormats();
 
  private:
   const std::vector<VideoFormat> supported_video_formats_;

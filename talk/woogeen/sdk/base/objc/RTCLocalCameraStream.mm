@@ -20,8 +20,8 @@
 
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters {
   self = [super init];
-  std::shared_ptr<woogeen::base::LocalCameraStreamParameters> local_parameters =
-      [parameters nativeParameters];
+  woogeen::base::LocalCameraStreamParameters local_parameters =
+      *[parameters nativeParameters].get();
   std::shared_ptr<woogeen::base::LocalCameraStream> local_stream =
       std::make_shared<woogeen::base::LocalCameraStream>(local_parameters);
   [super setNativeStream:local_stream];

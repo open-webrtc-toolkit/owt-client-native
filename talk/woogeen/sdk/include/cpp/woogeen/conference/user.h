@@ -34,6 +34,7 @@ namespace conference {
 /// This class represent a user's permission.
 class Permission {
  public:
+  /** @cond */
   Permission(bool publish, bool subscribe, bool record)
       : publish_(publish), record_(record), subscribe_(subscribe) {}
 
@@ -43,6 +44,7 @@ class Permission {
   bool CanRecord() const { return record_; };
   /// Indicates whether subscribe is allowed.
   bool CanSubscribe() const { return subscribe_; };
+  /** @endcond */
 
  private:
   bool publish_;

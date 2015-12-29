@@ -24,13 +24,17 @@ void LocalCameraStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
 
-void LocalCameraStreamParameters::CameraId(std::string& camera_id) {
+void LocalCameraStreamParameters::CameraId(const std::string& camera_id) {
   camera_id_ = camera_id;
 }
 
 void LocalCameraStreamParameters::Resolution(int width, int height) {
   resolution_width_ = width;
   resolution_height_ = height;
+}
+
+void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
+  stream_name_ = stream_name;
 }
 }
 }

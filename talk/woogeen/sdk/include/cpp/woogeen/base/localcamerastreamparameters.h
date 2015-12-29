@@ -52,12 +52,12 @@ class LocalCameraStreamParameters final {
     @brief Set the ID of the camera to be used.
     @param camera_id Camera ID.
   */
-  void CameraId(std::string& camera_id);
+  void CameraId(const std::string& camera_id);
   /**
     @brief Set the ID of media stream.
     @param stream_name The ID of media stream created.
   */
-  void StreamName(std::string& stream_name);
+  void StreamName(const std::string& stream_name);
   /**
     @brief Set the video resolution.
 
@@ -76,13 +76,13 @@ class LocalCameraStreamParameters final {
   */
   void Fps(int fps);
   /** @cond */
-  std::string CameraId() { return camera_id_; }
-  std::string StreamName() { return stream_name_; }
-  int ResolutionWidth() { return resolution_width_; }
-  int ResolutionHeight() { return resolution_height_; }
-  int Fps() { return fps_; }
-  bool VideoEnabled() { return video_enabled_; }
-  bool AudioEnabled() { return audio_enabled_; }
+  std::string CameraId() const { return camera_id_; }
+  std::string StreamName() const { return stream_name_; }
+  int ResolutionWidth() const { return resolution_width_; }
+  int ResolutionHeight() const { return resolution_height_; }
+  int Fps() const { return fps_; }
+  bool VideoEnabled() const { return video_enabled_; }
+  bool AudioEnabled() const { return audio_enabled_; }
   /** @endcond */
 
  private:

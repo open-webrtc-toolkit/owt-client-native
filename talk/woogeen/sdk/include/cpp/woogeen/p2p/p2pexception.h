@@ -44,8 +44,8 @@ class P2PException : public woogeen::base::Exception {
   };
 
   P2PException();
-  P2PException(Type type);
-  P2PException(Type type, const std::string& message);
+  P2PException(const Type& type);
+  P2PException(const Type& type, const std::string& message);
 
   enum Type Type();
 

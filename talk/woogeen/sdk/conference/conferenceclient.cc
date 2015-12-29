@@ -18,7 +18,7 @@ enum ConferenceClient::StreamType : int {
   kStreamTypeMix,
 };
 
-ConferenceClient::ConferenceClient(ConferenceClientConfiguration& configuration)
+ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()) {
   //optionally enabling HW accleration
@@ -30,15 +30,16 @@ ConferenceClient::ConferenceClient(ConferenceClientConfiguration& configuration)
 #endif*/
 }
 
-void ConferenceClient::AddObserver(
-    std::shared_ptr<ConferenceClientObserver> observer) {
+void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
   observers_.push_back(observer);
 }
 
-void ConferenceClient::RemoveObserver(
-    std::shared_ptr<ConferenceClientObserver> observer) {
-  observers_.erase(std::remove(observers_.begin(), observers_.end(), observer),
-                   observers_.end());
+void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
+  observers_.erase(std::find_if(
+      observers_.begin(), observers_.end(),
+      [&](std::reference_wrapper<ConferenceClientObserver> o) -> bool {
+        return &observer == &(o.get());
+      }));
 }
 
 void ConferenceClient::Join(
@@ -68,7 +69,7 @@ void ConferenceClient::Join(
       for (auto it = users.begin(); it != users.end(); ++it) {
         auto user = std::make_shared<conference::User>(ParseUser(*it));
         for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-          (*its)->OnUserJoined(user);
+          (*its).get().OnUserJoined(user);
         }
       }
     }
@@ -264,7 +265,7 @@ void ConferenceClient::OnCustomMessage(std::string& from,
                                        std::string& message) {
   LOG(LS_INFO) << "ConferenceClient OnCustomMessage";
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its)->OnMessageReceived(from, message);
+    (*its).get().OnMessageReceived(from, message);
   }
 }
 
@@ -287,7 +288,7 @@ void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
 
 void ConferenceClient::OnServerDisconnected() {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its)->OnServerDisconnected();
+    (*its).get().OnServerDisconnected();
   }
 }
 
@@ -342,7 +343,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     auto remote_stream = std::make_shared<RemoteMixedStream>(
         id, remote_id, video_formats);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its)->OnStreamAdded(remote_stream);
+      (*its).get().OnStreamAdded(remote_stream);
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
@@ -351,7 +352,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     auto remote_stream =
         std::make_shared<RemoteScreenStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its)->OnStreamAdded(remote_stream);
+      (*its).get().OnStreamAdded(remote_stream);
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
@@ -360,7 +361,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     auto remote_stream =
         std::make_shared<RemoteCameraStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its)->OnStreamAdded(remote_stream);
+      (*its).get().OnStreamAdded(remote_stream);
     }
     auto stream_pair = std::make_pair(id, remote_stream);
     added_streams_.insert(stream_pair);
@@ -453,14 +454,14 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
 void ConferenceClient::OnUserJoined(
     std::shared_ptr<const conference::User> user) {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its)->OnUserJoined(user);
+    (*its).get().OnUserJoined(user);
   }
 }
 
 void ConferenceClient::OnUserLeft(
     std::shared_ptr<const conference::User> user) {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its)->OnUserLeft(user);
+    (*its).get().OnUserLeft(user);
   }
 }
 
@@ -480,7 +481,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
     {
       std::shared_ptr<RemoteCameraStream> stream_ptr=std::static_pointer_cast<RemoteCameraStream>(stream);
       for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it)->OnStreamRemoved(stream_ptr);
+        (*observers_it).get().OnStreamRemoved(stream_ptr);
       }
       break;
     }
@@ -488,7 +489,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
     {
       std::shared_ptr<RemoteScreenStream> stream_ptr=std::static_pointer_cast<RemoteScreenStream>(stream);
       for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it)->OnStreamRemoved(stream_ptr);
+        (*observers_it).get().OnStreamRemoved(stream_ptr);
       }
       break;
     }
@@ -496,7 +497,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
     {
       std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
       for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it)->OnStreamRemoved(stream_ptr);
+        (*observers_it).get().OnStreamRemoved(stream_ptr);
       }
       break;
     }

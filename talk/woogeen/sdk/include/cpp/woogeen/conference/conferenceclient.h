@@ -52,9 +52,9 @@ namespace conference {
 using namespace woogeen::base;
 
 /**
-  @brief Configuration for creating a RTCConferenceClient
-  @detail This configuration is used while creating RTCConferenceClient.
-  Changing this configuration does NOT impact RTCConferenceClient already
+  @brief Configuration for creating a ConferenceClient
+  @detail This configuration is used while creating ConferenceClient.
+  Changing this configuration does NOT impact ConferenceClient already
   created.
 */
 struct ConferenceClientConfiguration : ClientConfiguration {};
@@ -143,11 +143,15 @@ class ConferenceClientObserver {
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
  public:
-  ConferenceClient(ConferenceClientConfiguration& configuration);
+  /**
+    @brief Initialize a ConferenceClient instance with specific configuration
+    @param config Configuration for creating the ConferenceClient.
+  */
+  ConferenceClient(const ConferenceClientConfiguration& configuration);
   /// Add an observer for conferenc client.
-  void AddObserver(std::shared_ptr<ConferenceClientObserver> observer);
+  void AddObserver(ConferenceClientObserver& observer);
   /// Remove an object from conference client.
-  void RemoveObserver(std::shared_ptr<ConferenceClientObserver> observer);
+  void RemoveObserver(ConferenceClientObserver& observer);
   /**
     @brief Connect to the specified room to join a conference.
     @param token Includes the room info which is encrypted.
@@ -200,7 +204,10 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
       std::shared_ptr<RemoteStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  // Send a message to all participants in the conference.
+  /**
+    @brief Send messsage to all participants in the conference.
+    @param message The message to be sent.
+  */
   void Send(
       const std::string& message,
       std::function<void()> on_success,
@@ -208,6 +215,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   /**
     @brief Send messsage to all participants in the conference.
     @param message The message to be sent.
+    @param receiver Receiver's user ID.
   */
   void Send(
       const std::string& message,
@@ -309,7 +317,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
   std::unordered_map<std::string, StreamType> added_stream_type_;
-  std::vector<std::shared_ptr<ConferenceClientObserver>> observers_;
+  std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
 };
 }
 }

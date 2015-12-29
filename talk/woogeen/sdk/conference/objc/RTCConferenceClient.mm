@@ -18,6 +18,7 @@
 
 @implementation RTCConferenceClient {
   std::unique_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;
+  std::vector<woogeen::conference::ConferenceClientObserverObjcImpl*> _observers;
 }
 
 - (instancetype)initWithConfiguration:
@@ -46,9 +47,9 @@
 }
 
 - (void)addObserver:(id<RTCConferenceClientObserver>)observer {
-  std::shared_ptr<woogeen::conference::ConferenceClientObserver> nativeObserver(
-      new woogeen::conference::ConferenceClientObserverObjcImpl(observer));
-  _nativeConferenceClient->AddObserver(nativeObserver);
+  auto ob = new woogeen::conference::ConferenceClientObserverObjcImpl(observer);
+  _observers.push_back(ob);
+  _nativeConferenceClient->AddObserver(*ob);
 }
 
 - (void)removeObserver:(id<RTCConferenceClientObserver>)observer {
@@ -397,6 +398,11 @@
                               NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
+}
+
+- (void)dealloc {
+  while(!_observers.empty())
+    delete _observers.back(), _observers.pop_back();
 }
 
 @end

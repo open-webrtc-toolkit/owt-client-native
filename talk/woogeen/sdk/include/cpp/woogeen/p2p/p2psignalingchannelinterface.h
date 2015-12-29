@@ -61,10 +61,16 @@ class P2PSignalingChannelInterfaceObserver {
 class P2PSignalingChannelInterface {
  public:
   /**
-   @brief Add an observer for RTCP2PSignalingChannel
+   @brief Add an observer for P2PSignalingChannel
    @param observer An observer instance.
    */
-  virtual void AddObserver(P2PSignalingChannelInterfaceObserver* observer) = 0;
+  virtual void AddObserver(P2PSignalingChannelInterfaceObserver& observer) = 0;
+  /**
+   @brief Remove an observer for P2PSignalingChannel
+   @param observer An observer instance.
+   */
+  virtual void RemoveObserver(
+      P2PSignalingChannelInterfaceObserver& observer) = 0;
   /**
    @brief Connect to the signaling server
    @param token A token used for connecting signaling server

@@ -64,7 +64,7 @@ class Stream {
     @brief Get the ID of the stream
     @return Stream's ID
   */
-  const std::string& Id() const;
+  virtual std::string Id() const;
   /// Disable all audio tracks of the stream.
   virtual void DisableAudio();
   /// Disable all video tracks of the stream.
@@ -75,7 +75,7 @@ class Stream {
   virtual void EnableVideo();
 
  protected:
-  Stream(std::string& id);
+  Stream(const std::string& id);
   Stream();
   virtual ~Stream();
   void Id(const std::string& id);
@@ -110,7 +110,7 @@ class RemoteStream : public Stream {
 
  public:
   /// Return the remote user ID, indicates who published this stream.
-  std::string& From();
+  std::string From();
 
  protected:
   explicit RemoteStream(std::string& id, std::string& from);
@@ -151,8 +151,7 @@ class LocalCameraStream : public LocalStream {
     @param parameters Parameters for creating the stream. The stream will not be
     impacted if chaning parameters after it is created.
   */
-  explicit LocalCameraStream(
-      std::shared_ptr<LocalCameraStreamParameters> parameters);
+  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters);
   ~LocalCameraStream();
 };
 

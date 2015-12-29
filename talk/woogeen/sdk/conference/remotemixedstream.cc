@@ -15,7 +15,7 @@ RemoteMixedStream::RemoteMixedStream(
     : RemoteStream(id, from),
       supported_video_formats_(supported_video_formats) {}
 
-const std::vector<VideoFormat> RemoteMixedStream::SupportedVideoFormats() {
+std::vector<VideoFormat> RemoteMixedStream::SupportedVideoFormats() {
   return supported_video_formats_;
 }
 }

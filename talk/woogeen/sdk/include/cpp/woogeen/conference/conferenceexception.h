@@ -40,8 +40,8 @@ class ConferenceException : public woogeen::base::Exception {
   };
 
   ConferenceException();
-  ConferenceException(Type type);
-  ConferenceException(Type type, const std::string& message);
+  ConferenceException(const Type& type);
+  ConferenceException(const Type& type, const std::string& message);
 
   enum Type Type();
 

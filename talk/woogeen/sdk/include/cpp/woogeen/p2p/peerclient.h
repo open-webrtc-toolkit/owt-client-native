@@ -129,7 +129,13 @@ class PeerClientObserver {
 /// An async client for P2P WebRTC sessions
 class PeerClient : protected P2PSignalingSenderInterface,
                    protected P2PSignalingChannelInterfaceObserver {
+
  public:
+  /**
+   @brief Init an PeerClient instance with speficied signaling channel.
+   @param configuration Configuration for creating the PTCPeerClient.
+   @param signalingChannel Signaling channel used for exchange signaling messages.
+   */
   PeerClient(PeerClientConfiguration& configuration,
              std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
   /**
@@ -280,12 +286,12 @@ class PeerClient : protected P2PSignalingSenderInterface,
                     Do not delete this object until it is removed from observer
                     list.
   */
-  void AddObserver(PeerClientObserver* observer);
+  void AddObserver(PeerClientObserver& observer);
 
   /*! Remove an observer from peer client.
     @param observer Remove this object from observer list.
   */
-  void RemoveObserver(PeerClientObserver* observer);
+  void RemoveObserver(PeerClientObserver& observer);
 
  protected:
   // Implement
@@ -340,7 +346,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
   std::unordered_map<std::string, P2PPeerConnectionChannelObserverCppImpl*>
       pcc_observers_;
   std::string local_id_;
-  std::vector <PeerClientObserver*> observers_;
+  std::vector<std::reference_wrapper<PeerClientObserver>> observers_;
   // It receives events from P2PPeerConnectionChannel and notify PeerClient.
   P2PPeerConnectionChannelObserverCppImpl* pcc_observer_impl_;
   PeerClientConfiguration configuration_;

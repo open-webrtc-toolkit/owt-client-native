@@ -17,10 +17,10 @@ PeerClient::PeerClient(
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
     : signaling_channel_(signaling_channel), configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
-  signaling_channel_->AddObserver(this);
+  signaling_channel_->AddObserver(*this);
 }
 
-
+// TODO(jianjunz): Remove them to utility class
 template <typename T1, typename T2>
 void PeerClient::OnEvent1(T1 func, T2 arg1) {
   for (auto it = observers_.begin(); it != observers_.end(); ++it) {
@@ -114,15 +114,16 @@ void PeerClient::SendSignalingMessage(const std::string& message,
                                   nullptr);  // TODO:fix on_failure.
 }
 
-void PeerClient::AddObserver(PeerClientObserver* observer) {
-  RTC_CHECK(observer);
+void PeerClient::AddObserver(PeerClientObserver& observer) {
   observers_.push_back(observer);
 }
 
-void PeerClient::RemoveObserver(PeerClientObserver* observer) {
-  RTC_CHECK(observer);
-  observers_.erase(std::remove(observers_.begin(), observers_.end(), observer),
-                  observers_.end());
+void PeerClient::RemoveObserver(PeerClientObserver& observer) {
+  observers_.erase(std::find_if(
+      observers_.begin(), observers_.end(),
+      [&](std::reference_wrapper<PeerClientObserver> o) -> bool {
+        return &observer == &(o.get());
+      }));
 }
 
 std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
