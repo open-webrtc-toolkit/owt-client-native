@@ -24,8 +24,8 @@ void PeerConnectionThread::Run() {
 }
 
 #if defined(WEBRTC_WIN)
-bool PeerConnectionDependencyFactory::hw_acceleration_ = false;
-HWND PeerConnectionDependencyFactory::decoder_win_ = false;
+bool PeerConnectionDependencyFactory::render_hardware_acceleration_enabled_ = false;
+HWND PeerConnectionDependencyFactory::render_window_ = false;
 #endif
 bool PeerConnectionDependencyFactory::encoded_frame_ = false;
 
@@ -58,11 +58,11 @@ rtc::RefCountedObject<PeerConnectionDependencyFactory>();
 //in peerclient or conference client.
 void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window) {
     if (bEnabled && (decoder_window != nullptr)){
-        hw_acceleration_ = true;
-        decoder_win_ = decoder_window;
+        render_hardware_acceleration_enabled_ = true;
+        render_window_ = decoder_window;
     }else{
-        hw_acceleration_ = false;
-        decoder_win_ = nullptr;
+        render_hardware_acceleration_enabled_ = false;
+        render_window_ = nullptr;
     }
 }
 #endif
@@ -130,11 +130,11 @@ void PeerConnectionDependencyFactory::
 #endif
 
 #if defined(WEBRTC_WIN)
-  if (hw_acceleration_ && decoder_win_ != nullptr){
+  if (render_hardware_acceleration_enabled_ && render_window_ != nullptr){
       //We create peer connection factory with dedicated decoder factory.
       rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
       rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-      decoder_factory.reset(new MSDKVideoDecoderFactory(decoder_win_));
+      decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
       encoder_factory.reset(new MSDKVideoEncoderFactory());
       pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
           signaling_thread,

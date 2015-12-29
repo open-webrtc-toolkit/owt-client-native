@@ -55,8 +55,10 @@ struct ClientConfiguration {
   /// Media codec preference
   MediaCodec media_codec;
 #if defined(WEBRTC_WIN)
-  bool hardware_acceleration_;
-  HWND decoder_win_;
+  /// Indicates whether hardware acceleration for render is enabled.
+  bool render_hardware_acceleration_enabled_;
+  /// The handle for HW video decoding to texture
+  HWND render_window_;
 #endif
   /// Encoded video frame flag.
   /**

@@ -24,8 +24,8 @@ ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configur
   //optionally enabling HW accleration
 /*
 #if defined(WEBRTC_WIN)
-  if (configuration.hardware_acceleration_ && (configuration.decoder_win_ != nullptr)){
-      PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.decoder_win_);
+  if (configuration.hardware_acceleration_ && (configuration.render_window_ != nullptr)){
+      PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.render_window_);
   }
 #endif*/
 }
