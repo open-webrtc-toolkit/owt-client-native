@@ -9,9 +9,9 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-
 #include "talk/media/devices/rawframescapturer.h"
 #include "talk/woogeen/sdk/base/framegeneratorinterface.h"
+#include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 
 namespace woogeen {
 namespace base {
@@ -79,6 +79,20 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
     (*it)->set_enabled(enabled);
   }
+}
+
+void Stream::Attach(VideoRendererRGBInterface& renderer){
+  auto video_tracks=media_stream_->GetVideoTracks();
+  if(video_tracks.size()==0){
+    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  }else if (video_tracks.size()>1){
+    LOG(LS_WARNING) << "There are more than one video tracks, the first one will be attachecd to renderer.";
+  }
+  // TODO: delete it when detach or stream is disposed.
+  WebrtcVideoRendererRGBImpl* renderer_impl = new WebrtcVideoRendererRGBImpl(renderer);
+  video_tracks[0]->AddRenderer(renderer_impl);
+  LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
 LocalStream::LocalStream():media_constraints_(new MediaConstraintsImpl){

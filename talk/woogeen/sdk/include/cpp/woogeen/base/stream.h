@@ -29,6 +29,7 @@
 
 #include <memory>
 #include "woogeen/base/localcamerastreamparameters.h"
+#include "woogeen/base/videorendererinterface.h"
 
 namespace webrtc {
   class MediaStreamInterface;
@@ -73,6 +74,8 @@ class Stream {
   virtual void EnableAudio();
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
+  /// Attach the stream to a renderer, so it can be displayed.
+  virtual void Attach(VideoRendererRGBInterface& renderer);
 
  protected:
   Stream(const std::string& id);
