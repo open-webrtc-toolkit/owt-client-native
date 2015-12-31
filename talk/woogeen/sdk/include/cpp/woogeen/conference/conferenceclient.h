@@ -27,6 +27,7 @@
 #ifndef WOOGEEN_CONFERENCE_CONFERENCECLIENT_H_
 #define WOOGEEN_CONFERENCE_CONFERENCECLIENT_H_
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>

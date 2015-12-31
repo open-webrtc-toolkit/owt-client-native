@@ -3,6 +3,8 @@
  */
 
 #include <thread>
+#include <future>
+#include "webrtc/base/base64.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
@@ -39,8 +41,25 @@ void ConferenceClient::Join(
     const std::string& token,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  std::string token_decoded("");
+  if (!rtc::Base64::IsBase64Encoded(token)) {
+    LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
+                       "please pass it without modification.";
+    token_decoded = token;
+  } else {
+    if (!rtc::Base64::Decode(token, rtc::Base64::DO_STRICT, &token_decoded,
+                             nullptr)) {
+      if (on_failure) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Invalid token."));
+        // TODO: Use async instead.
+        on_failure(std::move(e));
+      }
+      return;
+    }
+  }
   signaling_channel_->AddObserver(*this);
-  signaling_channel_->Connect(token, [=](sio::message::ptr info) {
+  signaling_channel_->Connect(token_decoded, [=](sio::message::ptr info) {
     if (on_success) {
       on_success();
     }
