@@ -43,6 +43,7 @@ namespace base {
 
 namespace p2p{
 
+using namespace base;
 /**
  @brief Configuration for PeerClient
 
