@@ -14,6 +14,7 @@
 #import "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
+#import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 
 @implementation RTCConferenceClient {
@@ -56,14 +57,14 @@
 }
 
 - (void)joinWithOnSuccess:(NSString*)token
-                onSuccess:(void (^)())onSuccess
+                onSuccess:(void (^)(RTCConferenceUser*))onSuccess
                 onFailure:(void (^)(NSError*))onFailure {
   const std::string nativeToken = [token UTF8String];
   _nativeConferenceClient->Join(
       nativeToken,
-      [=]() {
+      [=](std::shared_ptr<woogeen::conference::User> user) {
         if (onSuccess != nil)
-          onSuccess();
+          onSuccess([[RTCConferenceUser alloc]initWithNativeUser: user]);
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
         if (onFailure == nil)

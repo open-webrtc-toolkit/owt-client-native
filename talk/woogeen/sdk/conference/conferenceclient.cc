@@ -39,7 +39,7 @@ void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
 
 void ConferenceClient::Join(
     const std::string& token,
-    std::function<void()> on_success,
+    std::function<void(std::shared_ptr<User>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   std::string token_decoded("");
   if (!rtc::Base64::IsBase64Encoded(token)) {
@@ -60,8 +60,55 @@ void ConferenceClient::Join(
   }
   signaling_channel_->AddObserver(*this);
   signaling_channel_->Connect(token_decoded, [=](sio::message::ptr info) {
-    if (on_success) {
-      on_success();
+    // Get current user's ID.
+    std::string user_id;
+    if(info->get_map()["clientId"]->get_flag() != sio::message::flag_string) {
+      LOG(LS_ERROR) << "Room info doesn't contain client ID.";
+      if(on_failure){
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Received unkown message from MCU."));
+        // TODO: Use async instead.
+        on_failure(std::move(e));
+      }
+      return;
+    } else {
+      user_id = info->get_map()["clientId"]->get_string();
+    }
+    // Trigger OnUserJoin for existed users.
+    if (info->get_map()["users"]->get_flag() != sio::message::flag_array) {
+      LOG(LS_WARNING) << "Room info doesn't contain valid users.";
+    } else {
+      auto users = info->get_map()["users"]->get_vector();
+      // Get current user's ID and trigger |on_success|. Make sure |on_success|
+      // is triggered before any other events because OnUserJoined and
+      // OnStreamAdded should be triggered after join a conference.
+      if (on_success) {
+        auto user_it=users.begin();
+        for (auto user_it = users.begin(); user_it != users.end(); user_it++) {
+          if ((*user_it)->get_map()["id"]->get_string() == user_id) {
+            std::shared_ptr<User> user=std::make_shared<User>(ParseUser(*user_it));
+            // TODO: use async instead.
+            on_success(std::move(user));
+            break;
+          }
+        }
+        if (user_it == users.end()) {
+          LOG(LS_ERROR) << "Cannot find current user's info in user list.";
+          if (on_failure) {
+            std::unique_ptr<ConferenceException> e(
+                new ConferenceException(ConferenceException::kUnkown,
+                                        "Received unkown message from MCU."));
+            // TODO: Use async instead.
+            on_failure(std::move(e));
+          }
+        }
+      }
+      for (auto it = users.begin(); it != users.end(); ++it) {
+        auto user = std::make_shared<conference::User>(ParseUser(*it));
+        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+          (*its).get().OnUserJoined(user);
+        }
+      }
     }
     // Trigger OnStreamAdded for existed remote streams.
     if (info->get_map()["streams"]->get_flag() != sio::message::flag_array) {
@@ -71,18 +118,6 @@ void ConferenceClient::Join(
       for (auto it = streams.begin(); it != streams.end(); ++it) {
         LOG(LS_INFO) << "Find streams in the conference.";
         TriggerOnStreamAdded(*it);
-      }
-    }
-    // Trigger OnUserJoin for existed users.
-    if (info->get_map()["users"]->get_flag() != sio::message::flag_array) {
-      LOG(LS_WARNING) << "Room info doesn't contain valid users.";
-    } else {
-      auto users = info->get_map()["users"]->get_vector();
-      for (auto it = users.begin(); it != users.end(); ++it) {
-        auto user = std::make_shared<conference::User>(ParseUser(*it));
-        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-          (*its).get().OnUserJoined(user);
-        }
       }
     }
   }, on_failure);

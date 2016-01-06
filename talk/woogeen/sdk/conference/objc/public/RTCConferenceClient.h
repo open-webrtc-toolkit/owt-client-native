@@ -32,6 +32,7 @@
 #import "RTCConferenceClientObserver.h"
 #import "RTCConferenceClientConfiguration.h"
 #import "RTCConferenceSubscribeOptions.h"
+#import "RTCConferenceUser.h"
 
 /// An asynchronous class for app to communicate with a conference in MCU
 @interface RTCConferenceClient : NSObject
@@ -46,7 +47,7 @@
   @param token Includes the room info which is encrypted.
 */
 - (void)joinWithOnSuccess:(NSString*)token
-                onSuccess:(void (^)())onSuccess
+                onSuccess:(void (^)(RTCConferenceUser*))onSuccess
                 onFailure:(void (^)(NSError*))onFailure;
 /**
   @brief Publish the stream to the current room.

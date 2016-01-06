@@ -157,10 +157,12 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   /**
     @brief Connect to the specified room to join a conference.
     @param token Includes the room info which is encrypted.
+    @param on_success Join conference success, on_sucess will be executed with
+    current user's information.
   */
   void Join(
       const std::string& token,
-      std::function<void()> on_success,
+      std::function<void(std::shared_ptr<User>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Publish the stream to the current room.
