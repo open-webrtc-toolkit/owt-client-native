@@ -16,8 +16,8 @@ int main(int argc, char** argv)
   using namespace woogeen::base;
   using namespace woogeen::p2p;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel(new P2PSocketSignalingChannel());
+  GlobalConfiguration::SetEncodedVideoFrameEnabled(true);
   PeerClientConfiguration configuration;
-  configuration.encoded_video_frame_ = true;
   configuration.media_codec.video_codec = MediaCodec::VideoCodec::VP8;
   //configuration.media_codec.video_codec = MediaCodec::VideoCodec::H264;
   std::shared_ptr<PeerClient> pc(new PeerClient(configuration, signaling_channel));
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
   LocalCameraStreamParameters lcsp(LocalCameraStreamParameters(true, false));
   //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
-  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 30);
+  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
   //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
   LocalRawStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp), framer);

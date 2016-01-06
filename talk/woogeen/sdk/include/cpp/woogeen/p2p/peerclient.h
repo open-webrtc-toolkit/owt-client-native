@@ -35,6 +35,7 @@
 #include "woogeen/p2p/p2psignalingchannelinterface.h"
 #include "woogeen/p2p/p2psignalingsenderinterface.h"
 #include "woogeen/base/clientconfiguration.h"
+#include "woogeen/base/globalconfiguration.h"
 
 namespace woogeen {
 namespace base {

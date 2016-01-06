@@ -15,9 +15,9 @@ EncodedFrameGenerator::EncodedFrameGenerator(int width, int height, int fps) {
   type_ = VideoFrameCodec::VP8;
   fd = fopen("./source.vp8", "rb");
   if(!fd) {
-    std::cout << "failed to open the source.h264." << std::endl;
+    std::cout << "failed to open the source.vp8." << std::endl;
   } else {
-    std::cout << "sucessfully open the source.h264." << std::endl;
+    std::cout << "sucessfully open the source.vp8." << std::endl;
   }
 }
 

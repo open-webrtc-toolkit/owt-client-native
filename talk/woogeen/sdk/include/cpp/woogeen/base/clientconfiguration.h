@@ -31,10 +31,6 @@
 #include <string>
 #include "woogeen/base/mediaformat.h"
 
-#if defined(WEBRTC_WIN)
-#include <windows.h>
-#endif
-
 namespace woogeen {
 namespace base{
 
@@ -54,18 +50,6 @@ struct ClientConfiguration {
   std::vector<IceServer> ice_servers;
   /// Media codec preference
   MediaCodec media_codec;
-#if defined(WEBRTC_WIN)
-  /// Indicates whether hardware acceleration for render is enabled.
-  bool render_hardware_acceleration_enabled_;
-  /// The handle for HW video decoding to texture
-  HWND render_window_;
-#endif
-  /// Encoded video frame flag.
-  /**
-   * Default is false. If it is set to true, only streams with encoded frame can
-   * be published.
-   */
-  bool encoded_video_frame_ = false;
 };
 }
 }

@@ -11,9 +11,10 @@
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
-#elif defined(WEBRTC_LINUX)
-#include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
 #endif
+#include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
+#include "woogeen/base/clientconfiguration.h"
+#include "woogeen/base/globalconfiguration.h"
 
 namespace woogeen {
 namespace base {
@@ -23,23 +24,27 @@ void PeerConnectionThread::Run() {
   SetAllowBlockingCalls(true);
 }
 
-#if defined(WEBRTC_WIN)
-bool PeerConnectionDependencyFactory::render_hardware_acceleration_enabled_ = false;
-HWND PeerConnectionDependencyFactory::render_window_ = false;
-#endif
-bool PeerConnectionDependencyFactory::encoded_frame_ = false;
-
 PeerConnectionThread::~PeerConnectionThread() {
   LOG(LS_INFO) << "Quit a PeerConnectionThread.";
   Stop();
 }
 
-scoped_refptr<PeerConnectionDependencyFactory>
+rtc::scoped_refptr<PeerConnectionDependencyFactory>
     PeerConnectionDependencyFactory::dependency_factory_;
 
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
       callback_thread_(new PeerConnectionThread){
+#if defined(WEBRTC_WIN)
+  if (GlobalConfiguration::GetCodecHardwareAccelerationEnabled() && (GlobalConfiguration::GetRenderWindow() != nullptr)){
+        render_hardware_acceleration_enabled_ = true;
+        render_window_ = GlobalConfiguration::GetRenderWindow();
+    }else{
+        render_hardware_acceleration_enabled_ = false;
+        render_window_ = nullptr;
+  }
+#endif
+  encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
   pc_thread_->Start();
 }
 
@@ -52,24 +57,6 @@ PeerConnectionDependencyFactory::Create() {
 rtc::RefCountedObject<PeerConnectionDependencyFactory>();
   return pcdf;
 }*/
-
-#if defined(WEBRTC_WIN)
-//SetEnableHardwareAcceleration is supposed to be called the first peerconnection channel instance
-//in peerclient or conference client.
-void PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(bool bEnabled, HWND decoder_window) {
-    if (bEnabled && (decoder_window != nullptr)){
-        render_hardware_acceleration_enabled_ = true;
-        render_window_ = decoder_window;
-    }else{
-        render_hardware_acceleration_enabled_ = false;
-        render_window_ = nullptr;
-    }
-}
-#endif
-
-void PeerConnectionDependencyFactory::SetEncodedVideoFrame(bool encoded_frame) {
-    encoded_frame_ = encoded_frame;
-}
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
@@ -111,7 +98,6 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
-#if defined(WEBRTC_LINUX)
   //TODO: change the logic if on windows platform we're going to support encoded
   //frame as well
   if (encoded_frame_) {
@@ -123,11 +109,10 @@ void PeerConnectionDependencyFactory::
           signaling_thread,
           NULL, //Default ADM
           encoder_factory.release(), //Encoder factory
-          //NULL);
-          decoder_factory.release()); //Decoder factory
+          NULL);
+          //decoder_factory.release()); //Decoder factory
      return;
   }
-#endif
 
 #if defined(WEBRTC_WIN)
   if (render_hardware_acceleration_enabled_ && render_window_ != nullptr){

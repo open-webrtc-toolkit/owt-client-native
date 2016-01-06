@@ -21,13 +21,6 @@ enum ConferenceClient::StreamType : int {
 ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()) {
-  //optionally enabling HW accleration
-/*
-#if defined(WEBRTC_WIN)
-  if (configuration.hardware_acceleration_ && (configuration.render_window_ != nullptr)){
-      PeerConnectionDependencyFactory::SetEnableHardwareAcceleration(true, configuration_.render_window_);
-  }
-#endif*/
 }
 
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
@@ -447,7 +440,6 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   }
   config.servers = ice_servers;
   config.media_codec = configuration_.media_codec;
-  config.encoded_video_frame_ = configuration_.encoded_video_frame_;
   return config;
 }
 

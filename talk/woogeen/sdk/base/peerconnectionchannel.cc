@@ -16,8 +16,7 @@ PeerConnectionChannel::PeerConnectionChannel(
       factory_(nullptr),
       peer_connection_(nullptr) {
   LOG(LS_INFO) << "PeerConnectionChannel video codec: "
-               << configuration_.media_codec.video_codec << " Encoded video frame is: " << configuration_.encoded_video_frame_;
-  PeerConnectionDependencyFactory::SetEncodedVideoFrame(configuration_.encoded_video_frame_);
+               << configuration_.media_codec.video_codec;
 }
 
 PeerConnectionChannel::~PeerConnectionChannel() {
