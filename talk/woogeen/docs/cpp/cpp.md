@@ -16,8 +16,6 @@ Getting Started
 ---------------
 The release package includes two sample applications to get you started quickly with the SDK. The following three static libraries are provided in the SDK along with their respective headers:
 
-TODO: Confirm it before release
-
 - woogeen.lib - this library includes all the WebRTC features.
 - sioclient.lib - this library includes Socket.IO C++ client without TLS features.
 - sioclient_tls.lib - this library includes the Socket.IO C++ client with TLS features.
@@ -45,10 +43,13 @@ Here is a list of known issues:
 - Get connection stats is not supported.
 - Bitrate control is not supported. It may costs up to 2Mbps per connection.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
+- woogeen.lib is compiled on 32 bit platform.
 
 Video Codecs
 ------------
-Both VP8 and H.264 are supported.
+For encoder, only VP8 is supported. So if you want to publish stream to remote side or conference, please choose VP8.
+
+For decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both VP8 and H.264 are supported, but it will fallback to VP8 software decoder if GPU not supports VP8 hardware decoder. Broadwell® and Skylake® supports VP8 hardware decoder.
 
 Publish Streams with Encoded Frames
 ------------
