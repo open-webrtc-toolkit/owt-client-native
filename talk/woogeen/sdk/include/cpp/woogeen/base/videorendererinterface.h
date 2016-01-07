@@ -52,5 +52,4 @@ class VideoRendererRGBInterface {
 }
 }
 
-
 #endif // WOOGEEN_BASE_VIDEORENDERERINTERFACE_H_
