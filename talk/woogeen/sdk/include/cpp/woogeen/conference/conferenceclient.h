@@ -31,6 +31,7 @@
 #include <unordered_map>
 #include <vector>
 #include "woogeen/base/clientconfiguration.h"
+#include "woogeen/base/globalconfiguration.h"
 #include "woogeen/base/stream.h"
 #include "woogeen/conference/user.h"
 #include "woogeen/conference/conferenceexception.h"

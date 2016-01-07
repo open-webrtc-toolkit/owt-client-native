@@ -12,7 +12,9 @@
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
 #endif
+#if defined(WEBRTC_LINUX)
 #include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
+#endif
 #include "woogeen/base/clientconfiguration.h"
 #include "woogeen/base/globalconfiguration.h"
 
@@ -98,19 +100,27 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
-  //TODO: change the logic if on windows platform we're going to support encoded
-  //frame as well
   if (encoded_frame_) {
      rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-     rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
      encoder_factory.reset(new EncodedVideoEncoderFactory());
+#if defined(WEBRTC_WIN)
+     rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
+     decoder_factory.reset(new MSDKVideoDecoderFactory(nullptr));
+#elif defined(WEBRTC_LINUX)
+     rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
      decoder_factory.reset(new V4L2VideoDecoderFactory());
+#endif
      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
           signaling_thread,
           NULL, //Default ADM
           encoder_factory.release(), //Encoder factory
-          NULL);
-          //decoder_factory.release()); //Decoder factory
+  //TODO: If iOS to support encoded frame, needs to
+  //implement decoder_factory for iOS.
+#if defined(WEBRTC_IOS)
+          NULL); //Decoder factory
+#else
+          decoder_factory.release()); //Decoder factory
+#endif
      return;
   }
 
