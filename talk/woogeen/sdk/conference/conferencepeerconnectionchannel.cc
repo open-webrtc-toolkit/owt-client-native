@@ -165,10 +165,12 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
       new_state == PeerConnectionInterface::kIceConnectionCompleted) {
     if (publish_success_callback_) {
-      std::async(publish_success_callback_);
+      std::thread t(publish_success_callback_);
+      t.detach();
       publish_success_callback_ = nullptr;
     } else if (subscribe_success_callback_) {
-      std::async(subscribe_success_callback_, subscribed_stream_);
+      std::thread t(subscribe_success_callback_,subscribed_stream_);
+      t.detach();
       subscribe_success_callback_ = nullptr;
     }
   }
