@@ -9,7 +9,7 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-#include "talk/media/devices/rawframescapturer.h"
+#include "talk/media/devices/customizedframescapturer.h"
 #include "talk/woogeen/sdk/base/framegeneratorinterface.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 
@@ -177,7 +177,7 @@ LocalCameraStream::LocalCameraStream(
   media_stream_->AddRef();
 }
 
-LocalRawStream::~LocalRawStream() {
+LocalCustomizedStream::~LocalCustomizedStream() {
   LOG(LS_INFO) << "Destory LocalCameraStream.";
   if (media_stream_ != nullptr) {
     // Remove all tracks before dispose stream.
@@ -194,7 +194,7 @@ LocalRawStream::~LocalRawStream() {
   delete capturer_;
 }
 
-LocalRawStream::LocalRawStream(std::shared_ptr<LocalCameraStreamParameters> parameters, FrameGeneratorInterface* framer) {
+LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStreamParameters> parameters, FrameGeneratorInterface* framer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
@@ -208,7 +208,7 @@ LocalRawStream::LocalRawStream(std::shared_ptr<LocalCameraStreamParameters> para
   scoped_refptr<MediaStreamInterface> stream =
       factory->CreateLocalMediaStream(media_stream_label);
   if (parameters->VideoEnabled()) {
-    capturer_ = new cricket::RawFramesCapturer(framer);
+    capturer_ = new cricket::CustomizedFramesCapturer(framer);
     capturer_->Init();
     scoped_refptr<VideoSourceInterface> source =
         factory->CreateVideoSource(capturer_, NULL);

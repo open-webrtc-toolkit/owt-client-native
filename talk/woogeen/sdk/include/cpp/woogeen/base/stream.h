@@ -36,7 +36,7 @@ namespace webrtc {
 }
 
 namespace cricket {
-  class RawFramesCapturer;
+  class CustomizedFramesCapturer;
 }
 
 class FrameGeneratorInterface;
@@ -159,21 +159,21 @@ class LocalCameraStream : public LocalStream {
 };
 
 /// This class represent a local stream which use frame generator to generate frames.
-class LocalRawStream : public LocalStream {
+class LocalCustomizedStream : public LocalStream {
   public:
   /**
-    Initialize a LocalRawStream with parameters.
+    Initialize a LocalCustomizedStream with parameters.
     @param parameters Parameters for creating the stream. The stream will not be
     impacted if chaning parameters after it is created.
     @param framer An instance implemented FrameGeneratorInterface.
   */
-   explicit LocalRawStream(
-       std::shared_ptr<LocalCameraStreamParameters> parameters,
+   explicit LocalCustomizedStream(
+       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
        FrameGeneratorInterface* framer);
-   ~LocalRawStream();
+   ~LocalCustomizedStream();
 
   private:
-   cricket::RawFramesCapturer* capturer_;
+   cricket::CustomizedFramesCapturer* capturer_;
 };
 }
 }

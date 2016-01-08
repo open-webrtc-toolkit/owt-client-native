@@ -94,6 +94,41 @@ class LocalCameraStreamParameters final {
   bool video_enabled_;
   bool audio_enabled_;
 };
+
+/**
+  @brief This class contains parameters and methods that needed for creating a
+  local customized stream.
+
+  When a stream is created, it will not be impacted if these parameters are
+  changed.
+*/
+class LocalCustomizedStreamParameters final {
+ public:
+  /**
+    @brief Initialize a LocalCustomizedStreamParameters.
+    @param video_enabled Indicates if video is enabled for this stream.
+    @param audio_anabled Indicates if audio is enabled for this stream.
+  */
+  LocalCustomizedStreamParameters(bool video_enabled, bool audio_enabled) {
+     video_enabled_ = video_enabled;
+     audio_enabled_ = audio_enabled;
+  }
+  ~LocalCustomizedStreamParameters() {}
+  /**
+    @brief Get video is enabled or not for this stream.
+    @return true or false.
+  */
+  bool VideoEnabled() const { return video_enabled_; }
+  /**
+    @brief Get audio is enabled or not for this stream.
+    @return true or false.
+  */
+  bool AudioEnabled() const { return audio_enabled_; }
+
+ private:
+  bool video_enabled_;
+  bool audio_enabled_;
+};
 }
 }
 

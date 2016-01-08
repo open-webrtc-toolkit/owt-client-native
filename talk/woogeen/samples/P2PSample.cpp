@@ -38,13 +38,13 @@ int main(int argc, char** argv)
   LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));*/
 
-  LocalCameraStreamParameters lcsp(LocalCameraStreamParameters(true, false));
+  LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, false));
   //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
   EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
   //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
-  LocalRawStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp), framer);
-  std::shared_ptr<LocalRawStream> shared_stream(std::make_shared<LocalRawStream>(stream));
+  LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);
+  std::shared_ptr<LocalCustomizedStream> shared_stream(std::make_shared<LocalCustomizedStream>(stream));
 
   pc->Publish(to, shared_stream, nullptr, nullptr);
   cout << "Press Enter to exit." << std::endl;
