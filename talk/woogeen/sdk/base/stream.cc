@@ -139,32 +139,32 @@ LocalCameraStream::LocalCameraStream(
     if (!device_manager->GetVideoCaptureDevice(parameters.CameraId(),
                                                &device)) {
       LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
-      return;
+    } else {
+      rtc::scoped_ptr<cricket::VideoCapturer> capturer(
+          device_manager->CreateVideoCapturer(device));
+      ASSERT(capturer);
+      cricket::VideoCapturer* capturer_ptr = capturer.release();
+      ASSERT(capturer_ptr);
+      media_constraints_->SetMandatory(
+          webrtc::MediaConstraintsInterface::kMaxWidth,
+          std::to_string(parameters.ResolutionWidth()));
+      media_constraints_->SetMandatory(
+          webrtc::MediaConstraintsInterface::kMaxHeight,
+          std::to_string(parameters.ResolutionHeight()));
+      media_constraints_->SetMandatory(
+          webrtc::MediaConstraintsInterface::kMinWidth,
+          std::to_string(parameters.ResolutionWidth()));
+      media_constraints_->SetMandatory(
+          webrtc::MediaConstraintsInterface::kMinHeight,
+          std::to_string(parameters.ResolutionHeight()));
+      scoped_refptr<VideoSourceInterface> source =
+          factory->CreateVideoSource(capturer_ptr, media_constraints_);
+      std::string video_track_label =
+          "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
+      scoped_refptr<VideoTrackInterface> video_track =
+          factory->CreateLocalVideoTrack(video_track_label, source);
+      stream->AddTrack(video_track);
     }
-    rtc::scoped_ptr<cricket::VideoCapturer> capturer(
-        device_manager->CreateVideoCapturer(device));
-    ASSERT(capturer);
-    cricket::VideoCapturer* capturer_ptr = capturer.release();
-    ASSERT(capturer_ptr);
-    media_constraints_->SetMandatory(
-        webrtc::MediaConstraintsInterface::kMaxWidth,
-        std::to_string(parameters.ResolutionWidth()));
-    media_constraints_->SetMandatory(
-        webrtc::MediaConstraintsInterface::kMaxHeight,
-        std::to_string(parameters.ResolutionHeight()));
-    media_constraints_->SetMandatory(
-        webrtc::MediaConstraintsInterface::kMinWidth,
-        std::to_string(parameters.ResolutionWidth()));
-    media_constraints_->SetMandatory(
-        webrtc::MediaConstraintsInterface::kMinHeight,
-        std::to_string(parameters.ResolutionHeight()));
-    scoped_refptr<VideoSourceInterface> source =
-        factory->CreateVideoSource(capturer_ptr, media_constraints_);
-    std::string video_track_label =
-        "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
-    scoped_refptr<VideoTrackInterface> video_track =
-        factory->CreateLocalVideoTrack(video_track_label, source);
-    stream->AddTrack(video_track);
   }
   if (parameters.AudioEnabled()) {
     std::string audio_track_label =
