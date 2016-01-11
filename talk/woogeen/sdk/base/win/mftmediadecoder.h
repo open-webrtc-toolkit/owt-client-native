@@ -117,6 +117,7 @@ public:
     // rtc::MessageHandler implementation.
     void OnMessage(rtc::Message* msg) override;
 
+    static bool isVP8HWAccelerationSupported();
 private:
     //Utility methods to decide which MSDK dlls to be loaded.
     Version GetOSVersion();

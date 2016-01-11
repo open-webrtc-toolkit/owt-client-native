@@ -53,6 +53,46 @@ const CLSID MEDIASUBTYPE_VP80 = {
     { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 }
 };
 
+bool MSDKVideoDecoder::isVP8HWAccelerationSupported(){
+    HRESULT hr;
+    CComPtr<IMFTransform> vp8_dec;
+    hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(hr)){
+        return false;
+    }
+    hr = MFStartup(MF_VERSION, MFSTARTUP_FULL);
+    if (FAILED(hr)){
+        return false;
+    }
+    hr = ::CoCreateInstance(
+        CLSID_WebmMfVp8Dec,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_IMFTransform,
+        (void**)&vp8_dec
+        );
+    if (FAILED(hr)){
+        MFShutdown();
+        ::CoUninitialize();
+        return false;
+    }
+    CComPtr<IMFMediaType> in_type;
+    hr = vp8_dec->GetInputAvailableType(0, 0, &in_type);
+    if (FAILED(hr)){
+        MFShutdown();
+        ::CoUninitialize();
+        return false;
+    }
+    hr = vp8_dec->SetInputType(0, in_type, 0);
+    if (FAILED(hr)){
+        MFShutdown();
+        ::CoUninitialize();
+        return false;
+    }
+    MFShutdown();
+    CoUninitialize();
+    return true;
+}
 
 static IMFSample* CreateEmptySampleWithBuffer(int buffer_size){
     IMFSample* sample;
@@ -185,13 +225,28 @@ int32_t MSDKVideoDecoder::Reset(){
 int32_t MSDKVideoDecoder::Release(){
     pending_input_buffer.clear();
     pending_output_samples_.clear();
-    decoder_->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+    if (decoder_!=nullptr)
+      decoder_->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
     pending_output_samples_.clear();
-    d3d9_->Release();
-    device_->Release();
-    dev_manager_->Release();
-    decoder_->Release();
-    decoder_thread_->Stop();
+    if (d3d9_ != nullptr){
+        d3d9_->Release();
+        d3d9_ = nullptr;
+    }
+    if (device_ != nullptr){
+        device_->Release();
+        device_ = nullptr;
+    }
+    if (dev_manager_ != nullptr){
+        dev_manager_->Release();
+        dev_manager_ = nullptr;
+    }
+    if (decoder_ != nullptr){
+        decoder_->Release();
+        decoder_ = nullptr;
+    }
+    if (decoder_thread_.get() != nullptr){
+        decoder_thread_->Stop();
+    }
     state_ = kStopped;
     MFShutdown();
     return WEBRTC_VIDEO_CODEC_OK;
@@ -209,6 +264,10 @@ MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type, HWND decoder_win
     decoder_thread_(new rtc::Thread()){
     decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
     RTC_CHECK(decoder_thread_->Start()) << "Failed to start MSDK video decoder thread";
+    d3d9_ = nullptr;
+    device_ = nullptr;
+    dev_manager_ = nullptr;
+    decoder_ = nullptr;
 }
 
 MSDKVideoDecoder::~MSDKVideoDecoder(){

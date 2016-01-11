@@ -34,10 +34,9 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
   :decoder_window_(hWnd){
     supported_codec_types_.clear();
 
-    //Check the esistence of MSDK VP8 and H264 decoder MFTs. This should be done by trying to load the VP8 and msmpeg2dec dll.
-    //For simplicity, we assume both of them are supported here.
-    bool is_vp8_hw_supported = true;
-    if (is_vp8_hw_supported) {
+    //Only BDW and SKL and above supports VP8 HW decoding. So we need to check if we're able to set input type on the
+    //decoder mft. This is the simpliest method to check VP8 capability on IA.
+    if (MSDKVideoDecoder::isVP8HWAccelerationSupported()) {
         supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
     }
 
