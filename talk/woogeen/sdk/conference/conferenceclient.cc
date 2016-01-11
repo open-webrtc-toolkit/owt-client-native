@@ -139,8 +139,7 @@ void ConferenceClient::Publish(
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
-  auto pc_pair = std::make_pair(stream->MediaStream()->label(), pcc);
-  publish_pcs_.insert(pc_pair);
+  publish_pcs_[stream->MediaStream()->label()] = pcc;
   pcc->Publish(stream, on_success, on_failure);
 }
 
@@ -165,8 +164,7 @@ void ConferenceClient::Subscribe(
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
-  auto pc_pair = std::make_pair(stream->Id(), pcc);
-  subscribe_pcs_.insert(pc_pair);
+  subscribe_pcs_[stream->Id()] = pcc;
   pcc->Subscribe(stream, options, on_success, on_failure);
 }
 
@@ -341,8 +339,7 @@ void ConferenceClient::OnServerDisconnected() {
 
 void ConferenceClient::OnStreamId(const std::string& id,
                                   const std::string& publish_stream_label) {
-  auto id_label = std::make_pair(id, publish_stream_label);
-  publish_id_label_map_.insert(id_label);
+  publish_id_label_map_[id] = publish_stream_label;
   auto pcc = GetConferencePeerConnectionChannel(id);
   RTC_CHECK(pcc != nullptr);
   pcc->SetStreamId(id);
@@ -392,27 +389,24 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnStreamAdded(remote_stream);
     }
-    auto stream_pair = std::make_pair(id, remote_stream);
-    added_streams_.insert(stream_pair);
-    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeMix));
+    added_streams_[id] = remote_stream;
+    added_stream_type_[id] = StreamType::kStreamTypeMix;
   } else if (device == "screen") {
     auto remote_stream =
         std::make_shared<RemoteScreenStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnStreamAdded(remote_stream);
     }
-    auto stream_pair = std::make_pair(id, remote_stream);
-    added_streams_.insert(stream_pair);
-    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeScreen));
+    added_streams_[id] = remote_stream;
+    added_stream_type_[id] = StreamType::kStreamTypeScreen;
   } else {
     auto remote_stream =
         std::make_shared<RemoteCameraStream>(id, remote_id);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnStreamAdded(remote_stream);
     }
-    auto stream_pair = std::make_pair(id, remote_stream);
-    added_streams_.insert(stream_pair);
-    added_stream_type_.insert(std::make_pair(id, StreamType::kStreamTypeCamera));
+    added_streams_[id] = remote_stream;
+    added_stream_type_[id] = StreamType::kStreamTypeCamera;
   }
 }
 
