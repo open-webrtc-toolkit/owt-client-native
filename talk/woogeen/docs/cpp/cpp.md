@@ -23,7 +23,7 @@ three static libraries are provided in the SDK along with their respective heade
 # Socket.IO {#section4}
 Socket.IO cpp client is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp).
 
-The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure 
+The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
 connections, link your application with sioclient_tls.lib; otherwise, link it with sioclient.lib.
 
 The sioclient_tls.lib included in release package has been enhanced so it will verify server's certificate. If the
@@ -53,16 +53,18 @@ For encoder, only VP8 is supported. So if you want to publish stream to remote s
 
 For decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both
 VP8 and H.264 are supported, but it will fallback to VP8 software decoder if GPU not supports VP8 hardware decoder.
-Broadwell® and Skylake® supports VP8 hardware decoder.
+Broadwell<sup>®</sup> and Skylake<sup>®</sup> supports VP8 hardware decoder.
 
 # Publish Streams with Customized Frames {#section8}
 Customized frames can be i420 frame from yuv file, encoded frame from IP Camera or H264/VP8 files(There is a
-GlobalConfiguration API to enble encoded frame setting and no raw frame is allowed for this setting). If it is the encoded
+{@link woogeen.base.GlobalConfiguration GlobalConfiguration} API to enble encoded frame setting and no raw frame is allowed for this setting). If it is the encoded
 frame, the encoding pipeline will be bypassed and sent to remote side directly. The encoded frame provider should generate
 key frame in proper interval to avoid key frame dropped in network, which causes remote side frame decoding error and
-picture quality recovery in long time. The encoded frame provider needs to implement its own frame generator extends from
-FrameGeneratorInterface, which generates customized frames as our sample code and feeds the frame generator to
-LocalCustomizedStream for stream publishing.
+picture quality recovery in long time.
+
+The encoded frame provider needs to implement its own frame generator extends from
+{@link FrameGeneratorInterface FrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
+{@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 
 # Intel CS for WebRTC Websites {#section9}
 [Home page](http://webrtc.intel.com)
