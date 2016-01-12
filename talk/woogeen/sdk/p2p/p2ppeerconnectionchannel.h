@@ -203,6 +203,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect"
+  int reconnect_timeout_;  // Unit: second
   std::vector<std::shared_ptr<std::string>> pending_messages_;  // Messages need
                                                                 // to be sent
                                                                 // once data

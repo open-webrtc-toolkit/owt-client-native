@@ -78,6 +78,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       negotiation_needed_(false),
       last_disconnect_(
           std::chrono::time_point<std::chrono::system_clock>::max()),
+      reconnect_timeout_(10),
       callback_thread_(new PeerConnectionThread) {
   callback_thread_->Start();
   RTC_CHECK(signaling_sender_);
@@ -469,7 +470,17 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionDisconnected:
       last_disconnect_ = std::chrono::system_clock::now();
-      // TODO(jianjun): Check state after a few seconds.
+      // Check state after a period of time.
+      std::thread([this]() {
+        std::this_thread::sleep_for(std::chrono::seconds(reconnect_timeout_));
+        if (std::chrono::system_clock::now() - last_disconnect_ >=
+            std::chrono::seconds(reconnect_timeout_)) {
+          LOG(LS_INFO) << "Detect reconnection failed, stop this session.";
+          Stop(nullptr, nullptr);
+        } else {
+          LOG(LS_INFO) << "Detect reconnection succeed.";
+        }
+      }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
       for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
