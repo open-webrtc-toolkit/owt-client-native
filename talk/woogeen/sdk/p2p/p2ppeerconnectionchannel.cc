@@ -230,6 +230,7 @@ void P2PPeerConnectionChannel::SendNegotiationAccepted() {
   json[kMessageTypeKey] = kChatNegotiationAccepted;
   SendSignalingMessage(json, nullptr, nullptr);
   ChangeNegotiationState(kNegotiationStateAccepted);
+  negotiation_needed_ = false;
 }
 
 void P2PPeerConnectionChannel::SendSignalingMessage(
@@ -315,11 +316,11 @@ void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
   LOG(LS_INFO)
       << "Received negotiation needed event, current negotiation state:"
       << negotiation_state_;
+  negotiation_needed_ = true;
   if (negotiation_state_ == kNegotiationStateNone ||
       (negotiation_state_ == kNegotiationStateSent &&
        local_id_.compare(remote_id_) < 0)) {
     ChangeNegotiationState(kNegotiationStateAccepted);
-    negotiation_needed_ = true;
     SendNegotiationAccepted();
   }
 }
