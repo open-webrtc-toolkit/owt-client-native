@@ -190,8 +190,7 @@ LocalCustomizedStream::~LocalCustomizedStream() {
       media_stream_->RemoveTrack(*it);
     }
   }
-  capturer_->Stop();
-  delete capturer_;
+  capturer_ = nullptr;
 }
 
 LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStreamParameters> parameters, FrameGeneratorInterface* framer) {
