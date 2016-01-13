@@ -33,21 +33,21 @@
 namespace woogeen {
 namespace base {
 
-/// RGB buffer and its information
-struct RGBBuffer {
-  /// RGB buffer
+/// ARGB buffer and its information
+struct ARGBBuffer {
+  /// ARGB buffer
   uint8_t* buffer;
-  /// Resolution for the RGB buffer
+  /// Resolution for the ARGB buffer
   Resolution resolution;
 
-  ~RGBBuffer() { delete buffer; }
+  ~ARGBBuffer() { delete buffer; }
 };
 
 /// Interface for rendering VideoFrames from a VideoTrack
-class VideoRendererRGBInterface {
+class VideoRendererARGBInterface {
  public:
-  virtual void RenderFrame(std::unique_ptr<RGBBuffer> buffer) = 0;
-  virtual ~VideoRendererRGBInterface() {}
+  virtual void RenderFrame(std::unique_ptr<ARGBBuffer> buffer) = 0;
+  virtual ~VideoRendererARGBInterface() {}
 };
 }
 }

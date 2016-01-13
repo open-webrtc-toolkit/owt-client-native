@@ -7,7 +7,7 @@
 
 namespace woogeen {
 namespace base {
-void WebrtcVideoRendererRGBImpl::RenderFrame(
+void WebrtcVideoRendererARGBImpl::RenderFrame(
     const cricket::VideoFrame* video_frame) {
   const cricket::VideoFrame* frame = video_frame->GetCopyWithRotationApplied();
   Resolution resolution(static_cast<int>(frame->GetWidth()),
@@ -16,8 +16,8 @@ void WebrtcVideoRendererRGBImpl::RenderFrame(
   frame->ConvertToRgbBuffer(cricket::FOURCC_ARGB, buffer,
                             resolution.width * resolution.height * 4,
                             resolution.width * 4);
-  std::unique_ptr<RGBBuffer> rgb_buffer(new RGBBuffer{buffer, resolution});
-  renderer_.RenderFrame(std::move(rgb_buffer));
+  std::unique_ptr<ARGBBuffer> argb_buffer(new ARGBBuffer{buffer, resolution});
+  renderer_.RenderFrame(std::move(argb_buffer));
 }
 }
 }

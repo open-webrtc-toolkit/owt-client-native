@@ -73,7 +73,7 @@ class Stream {
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
   /// Attach the stream to a renderer, so it can be displayed.
-  virtual void Attach(VideoRendererRGBInterface& renderer);
+  virtual void Attach(VideoRendererARGBInterface& renderer);
 
  protected:
   Stream(const std::string& id);

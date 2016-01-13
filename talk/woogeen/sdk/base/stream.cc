@@ -81,7 +81,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   }
 }
 
-void Stream::Attach(VideoRendererRGBInterface& renderer){
+void Stream::Attach(VideoRendererARGBInterface& renderer){
   auto video_tracks=media_stream_->GetVideoTracks();
   if(video_tracks.size()==0){
     LOG(LS_ERROR) << "Attach failed because of no video tracks.";
@@ -90,7 +90,7 @@ void Stream::Attach(VideoRendererRGBInterface& renderer){
     LOG(LS_WARNING) << "There are more than one video tracks, the first one will be attachecd to renderer.";
   }
   // TODO: delete it when detach or stream is disposed.
-  WebrtcVideoRendererRGBImpl* renderer_impl = new WebrtcVideoRendererRGBImpl(renderer);
+  WebrtcVideoRendererARGBImpl* renderer_impl = new WebrtcVideoRendererARGBImpl(renderer);
   video_tracks[0]->AddRenderer(renderer_impl);
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
