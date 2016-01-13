@@ -3,13 +3,12 @@
  *
  *
  */
-#ifndef ENCODEDFRAMGENERATOR_H_
-#define ENCODEDFRAMGENERATOR_H_
+#ifndef ENCODED_FRAMGE_NERATOR_H_
+#define ENCODED_FRAMGE_NERATOR_H_
 
 #include <stdio.h>
-#include "talk/woogeen/sdk/base/framegeneratorinterface.h"
-
-class EncodedFrameGenerator: public FrameGeneratorInterface {
+#include "woogeen/base/framegeneratorinterface.h"
+class EncodedFrameGenerator: public woogeen::base::FrameGeneratorInterface {
  public:
   EncodedFrameGenerator(int width, int height, int fps);
   ~EncodedFrameGenerator();
@@ -21,15 +20,15 @@ class EncodedFrameGenerator: public FrameGeneratorInterface {
   int GetHeight();
   int GetWidth();
   int GetFps();
-  VideoFrameCodec GetType();
+  woogeen::base::FrameGeneratorInterface::VideoFrameCodec GetType();
 
  private:
   int width_;
   int height_;
   int fps_;
-  VideoFrameCodec type_;
+  woogeen::base::FrameGeneratorInterface::VideoFrameCodec type_;
   int frame_data_size_;
   FILE * fd;
 };
 
-#endif // ENCODEDFRAMGENERATOR_H_
+#endif // ENCODED_FRAMGE_NERATOR_H_

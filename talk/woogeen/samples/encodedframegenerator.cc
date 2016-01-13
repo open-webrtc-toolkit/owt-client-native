@@ -10,9 +10,9 @@ EncodedFrameGenerator::EncodedFrameGenerator(int width, int height, int fps) {
   width_ = width;
   height_ = height;
   fps_ = fps;
-  /*type_ = VideoFrameCodec::H264;
+  /*type_ = woogeen::base::VideoFrameCodec::H264;
   fd = fopen("./source.h264", "rb");*/
-  type_ = VideoFrameCodec::VP8;
+  type_ = woogeen::base::FrameGeneratorInterface::VideoFrameCodec::VP8;
   fd = fopen("./source.vp8", "rb");
   if(!fd) {
     std::cout << "failed to open the source.vp8." << std::endl;
@@ -30,7 +30,7 @@ int EncodedFrameGenerator::GetFrameSize() { return frame_data_size_; }
 int EncodedFrameGenerator::GetHeight() { return height_; }
 int EncodedFrameGenerator::GetWidth() { return width_; }
 int EncodedFrameGenerator::GetFps() { return fps_; }
-VideoFrameCodec EncodedFrameGenerator::GetType() { return type_; }
+woogeen::base::FrameGeneratorInterface::VideoFrameCodec EncodedFrameGenerator::GetType() { return type_; }
 
 void EncodedFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
   if(fread(&frame_data_size_, 1, sizeof(int), fd) != sizeof(int)) {

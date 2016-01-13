@@ -6,12 +6,12 @@
 
 #include "talk/media/base/videocapturer.h"
 #include "talk/media/devices/devicemanager.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-#include "talk/media/devices/customizedframescapturer.h"
-#include "talk/woogeen/sdk/base/framegeneratorinterface.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
+#include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#include "woogeen/base/framegeneratorinterface.h"
+#include "woogeen/base/stream.h"
 
 namespace woogeen {
 namespace base {
@@ -207,7 +207,7 @@ LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStre
   scoped_refptr<MediaStreamInterface> stream =
       factory->CreateLocalMediaStream(media_stream_label);
   if (parameters->VideoEnabled()) {
-    capturer_ = new cricket::CustomizedFramesCapturer(framer);
+    capturer_ = new CustomizedFramesCapturer(framer);
     capturer_->Init();
     scoped_refptr<VideoSourceInterface> source =
         factory->CreateVideoSource(capturer_, NULL);

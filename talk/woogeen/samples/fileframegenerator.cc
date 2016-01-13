@@ -9,7 +9,7 @@
 FileFrameGenerator::FileFrameGenerator(int width, int height, int fps) {
   width_ = width;
   height_ = height;
-  type_ = VideoFrameCodec::I420;
+  type_ = woogeen::base::FrameGeneratorInterface::VideoFrameCodec::I420;
   fps_ = fps;
   int size = width_ * height_;
   int qsize = size / 4;
@@ -32,7 +32,7 @@ int FileFrameGenerator::GetHeight() { return height_; }
 int FileFrameGenerator::GetWidth() { return width_; }
 int FileFrameGenerator::GetFps() { return fps_; }
 
-VideoFrameCodec FileFrameGenerator::GetType() { return type_; }
+woogeen::base::FrameGeneratorInterface::VideoFrameCodec FileFrameGenerator::GetType() { return type_; }
 
 void FileFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
   uint8* buffer = new uint8[frame_data_size_];

@@ -63,7 +63,7 @@ key frame in proper interval to avoid key frame dropped in network, which causes
 picture quality recovery in long time.
 
 The encoded frame provider needs to implement its own frame generator extends from
-{@link FrameGeneratorInterface FrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
+{@link woogeen.base.FrameGeneratorInterface FrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 
 # Intel CS for WebRTC Websites {#section9}

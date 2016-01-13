@@ -35,12 +35,6 @@ namespace webrtc {
   class MediaStreamInterface;
 }
 
-namespace cricket {
-  class CustomizedFramesCapturer;
-}
-
-class FrameGeneratorInterface;
-
 namespace woogeen {
 
 namespace conference{
@@ -50,6 +44,10 @@ namespace conference{
 namespace base {
 
 class MediaConstraintsImpl;
+
+class CustomizedFramesCapturer;
+
+class FrameGeneratorInterface;
 
 using webrtc::MediaStreamInterface;
 
@@ -173,7 +171,7 @@ class LocalCustomizedStream : public LocalStream {
    ~LocalCustomizedStream();
 
   private:
-   cricket::CustomizedFramesCapturer* capturer_;
+   CustomizedFramesCapturer* capturer_;
 };
 }
 }
