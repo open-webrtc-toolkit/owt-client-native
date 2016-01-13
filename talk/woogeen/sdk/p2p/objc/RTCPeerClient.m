@@ -229,6 +229,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 
 - (void)onDeniedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received Denied.");
+  [_peerConnectionChannels removeObjectForKey: remoteUserId];
   for (id observer in _observers) {
     [observer onDenied:remoteUserId];
   }
@@ -250,6 +251,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 
 - (void)onStoppedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received chat stopped.");
+  [_peerConnectionChannels removeObjectForKey: remoteUserId];
   for (id observer in _observers) {
     [observer onChatStopped:remoteUserId];
   }

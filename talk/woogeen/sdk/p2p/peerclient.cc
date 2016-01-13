@@ -179,11 +179,12 @@ void PeerClient::OnStarted(const std::string& remote_id) {
 }
 
 void PeerClient::OnStopped(const std::string& remote_id) {
-  OnEvent1(&PeerClientObserver::OnChatStopped, remote_id);
   pc_channels_.erase(remote_id);
+  OnEvent1(&PeerClientObserver::OnChatStopped, remote_id);
 }
 
 void PeerClient::OnDenied(const std::string& remote_id) {
+  pc_channels_.erase(remote_id);
   OnEvent1(&PeerClientObserver::OnDenied, remote_id);
 }
 

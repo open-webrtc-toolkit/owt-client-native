@@ -488,7 +488,6 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
            it != observers_.end(); it++) {
         (*it)->OnStopped(remote_id_);
       }
-      Stop(nullptr, nullptr);
       break;
     default:
       break;
