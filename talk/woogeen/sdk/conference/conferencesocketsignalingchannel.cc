@@ -12,7 +12,7 @@
 namespace woogeen {
 namespace conference {
 
-const std::string kEventNameCustomMessage = "custom_message";
+const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessage = "signaling_message";
 const std::string kEventNameOnSignalingMessage = "signaling_message_erizo";
 const std::string kEventNameOnCustomMessage = "custom_message";
