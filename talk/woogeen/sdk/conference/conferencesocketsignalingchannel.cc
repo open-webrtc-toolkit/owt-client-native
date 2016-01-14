@@ -6,6 +6,7 @@
 #include <thread>
 #include <algorithm>
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
+#include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/json.h"
 
@@ -222,16 +223,27 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
           return;
         }
         if (message->get_string() == "initializing") {
-          std::string stream_id = "";
-          if (msg.size() > 1) {
-            stream_id = msg.at(1)->get_string();
+          if (msg.size() == 1) {  // Subscribe
+            on_success();
+            return;
           }
+          if (msg.at(1)->get_flag() != sio::message::flag_string) {
+            ASSERT(false);
+            return;
+          }
+          std::string stream_id = msg.at(1)->get_string();
           for (auto it = observers_.begin(); it != observers_.end(); ++it) {
             (*it)->OnStreamId(stream_id, publish_stream_label);
           }
-          if (on_success)
-            on_success();
+          on_success();
           return;
+        } else if (message->get_string() == "error" && msg.at(1) != nullptr &&
+                   msg.at(1)->get_flag() == sio::message::flag_string) {
+          if (on_failure) {
+            std::unique_ptr<ConferenceException> e(new ConferenceException(
+                ConferenceException::kUnkown, msg.at(1)->get_string()));
+            on_failure(std::move(e));
+          }
         } else {
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(new ConferenceException(

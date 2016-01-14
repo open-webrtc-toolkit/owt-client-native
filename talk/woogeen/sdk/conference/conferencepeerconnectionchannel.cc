@@ -351,9 +351,9 @@ void ConferencePeerConnectionChannel::Subscribe(
       sio::int_message::create(subscribe_options.resolution.height);
   video_options->get_map()["resolution"] = resolution_options;
   sio_options->get_map()["video"] = video_options;
-  signaling_channel_->SendInitializationMessage(
-      sio_options, "", nullptr, on_failure);  // TODO: on_failure
-  CreateOffer();
+  signaling_channel_->SendInitializationMessage(sio_options, "", [this]() {
+    CreateOffer();
+  }, on_failure);  // TODO: on_failure
 }
 
 void ConferencePeerConnectionChannel::Unpublish(
@@ -457,6 +457,10 @@ void ConferencePeerConnectionChannel::Stop(
 
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
+  if (message == nullptr || message->get_flag() != sio::message::flag_object) {
+    LOG(LS_ERROR) << "Received unknown message from MCU.";
+    return;
+  }
   const std::string type = message->get_map()["type"]->get_string();
   LOG(LS_INFO) << "On signaling message: " << type;
   if (type == "answer") {
