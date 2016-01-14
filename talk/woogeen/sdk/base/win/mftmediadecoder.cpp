@@ -244,9 +244,7 @@ int32_t MSDKVideoDecoder::Release(){
         decoder_->Release();
         decoder_ = nullptr;
     }
-    if (decoder_thread_.get() != nullptr){
-        decoder_thread_->Stop();
-    }
+
     state_ = kStopped;
     MFShutdown();
     return WEBRTC_VIDEO_CODEC_OK;
@@ -273,6 +271,9 @@ MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type, HWND decoder_win
 MSDKVideoDecoder::~MSDKVideoDecoder(){
     ntp_time_ms_.clear();
     timestamps_.clear();
+    if (decoder_thread_.get() != nullptr){
+      decoder_thread_->Stop();
+    }
 }
 
 Version MSDKVideoDecoder::GetOSVersion() {
