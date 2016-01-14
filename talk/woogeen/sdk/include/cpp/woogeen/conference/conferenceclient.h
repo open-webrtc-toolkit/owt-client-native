@@ -288,8 +288,14 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
                           const std::string& publish_stream_label) override;
 
  private:
+  /// Return true if |pointer| is not a null pointer, else return false and
+  /// trigger |on_failure|
   bool CheckNullPointer(
       uintptr_t pointer,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /// Return true if signaling channel is connected, else return false and
+  /// trigger |on_failure|
+  bool CheckSignalingChannelOnline(
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);
   PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration()
@@ -307,6 +313,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
 
   ConferenceClientConfiguration configuration_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
+  bool signaling_channel_connected_;
   // Key woogeen::Stream's ID, value is MediaStream's label
   std::unordered_map<std::string, std::string> publish_id_label_map_;
   // Key is woogeen::Stream's ID.

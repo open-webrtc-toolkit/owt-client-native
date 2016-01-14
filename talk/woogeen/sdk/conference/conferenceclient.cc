@@ -22,7 +22,8 @@ enum ConferenceClient::StreamType : int {
 
 ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
-      signaling_channel_(new ConferenceSocketSignalingChannel()) {
+      signaling_channel_(new ConferenceSocketSignalingChannel()),
+      signaling_channel_connected_(false) {
 }
 
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
@@ -60,6 +61,7 @@ void ConferenceClient::Join(
   }
   signaling_channel_->AddObserver(*this);
   signaling_channel_->Connect(token_decoded, [=](sio::message::ptr info) {
+    signaling_channel_connected_ = true;
     // Get current user's ID.
     std::string user_id;
     if(info->get_map()["clientId"]->get_flag() != sio::message::flag_string) {
@@ -135,6 +137,9 @@ void ConferenceClient::Publish(
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
@@ -160,6 +165,9 @@ void ConferenceClient::Subscribe(
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
@@ -178,6 +186,9 @@ void ConferenceClient::Unpublish(
   }
   if (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure)) {
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
   auto pcc_it = publish_pcs_.find(stream->MediaStream()->label());
@@ -205,6 +216,9 @@ void ConferenceClient::Unsubscribe(
     LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   LOG(LS_INFO) << "About to unsubscribe stream " << stream->Id();
   auto pcc_it = subscribe_pcs_.find(stream->Id());
   if (pcc_it == subscribe_pcs_.end()) {
@@ -227,6 +241,9 @@ void ConferenceClient::Send(
     const std::string& message,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   std::string receiver("");
   Send(message, receiver, on_success, on_failure);
 }
@@ -236,6 +253,9 @@ void ConferenceClient::Send(
     const std::string& receiver,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   if (message == "") {
     LOG(LS_WARNING) << "Cannot send empty message.";
     if (on_failure != nullptr) {
@@ -253,6 +273,9 @@ void ConferenceClient::PlayAudio(
     std::shared_ptr<Stream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   auto pc = GetConferencePeerConnectionChannel(stream);
   if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
     return;
@@ -268,6 +291,9 @@ void ConferenceClient::PauseAudio(
   if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   pc->PauseAudio(stream, on_success, on_failure);
 }
 
@@ -277,6 +303,9 @@ void ConferenceClient::PlayVideo(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   auto pc = GetConferencePeerConnectionChannel(stream);
   if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
   pc->PlayVideo(stream, on_success, on_failure);
@@ -290,12 +319,18 @@ void ConferenceClient::PauseVideo(
   if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   pc->PauseVideo(stream, on_success, on_failure);
 }
 
 void ConferenceClient::Leave(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
   publish_id_label_map_.clear();
   publish_pcs_.clear();
   subscribe_pcs_.clear();
@@ -332,6 +367,7 @@ void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
 }
 
 void ConferenceClient::OnServerDisconnected() {
+  signaling_channel_connected_ = false;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnServerDisconnected();
   }
@@ -357,6 +393,19 @@ bool ConferenceClient::CheckNullPointer(
   }
   return false;
 }
+
+bool ConferenceClient::CheckSignalingChannelOnline(
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  if(signaling_channel_connected_)
+    return true;
+ if (on_failure != nullptr) {
+    std::unique_ptr<ConferenceException> e(new ConferenceException(
+        ConferenceException::kUnkown, "Conference server is not connected."));
+    on_failure(std::move(e));
+  }
+  return false; 
+}
+
 
 void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
