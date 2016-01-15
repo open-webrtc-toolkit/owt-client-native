@@ -32,12 +32,15 @@ The libsioclient_tls.a included in release package has been enhanced so it will 
 # Background Modes {#section5}
 Socket connections are disconnected when the device is locked. If your app must remain connected with server, "VoIP" needs to be added to your app's background modes. For detailed information about background execution, please refer to the [iOS developer library](https://developer.apple.com/library/ios/documentation/iPhone/Conceptual/iPhoneOSProgrammingGuide/BackgroundExecution/BackgroundExecution.html).
 
-# Customize Signaling Channel {#section6}
+# NAT and Firewall Traversal {#section6}
+Intel CS for WebRTC Client SDK for iOS fully supports NAT and firewall traversal with STUN / TURN / ICE. The rfc5766-turn-server version 3.2.3.6 from https://code.google.com/p/rfc5766-turn-server/ has been verified.
+
+# Customize Signaling Channel {#section7}
 Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel for P2P sessions can be customized by implementing `RTCP2PSignalingChannelProtocol`. We provides a default `SocketSignalingChannel` in sample which works with PeerServer in the release package.
 
 `PeerClient` implements `RTCP2PSignalingChannelObserver` and will be registered into `RTCP2PSignalingChannelProtocol`'s implementation, so you can invoke its methods to notify `PeerClient` during your signaling channel implementation when a new message is coming or connection is lost.
 
-# Known Issues {#section7}
+# Known Issues {#section8}
 Here is a list of known issues:
 
 - Conference recording is not supported.
@@ -47,10 +50,10 @@ Here is a list of known issues:
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - Bitcode is not supported. Please disable bitcode when building apps.
 
-# Video Codecs {#section8}
+# Video Codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is only supported in iOS 8 or later.
 
-# Intel CS for WebRTC Websites {#section9}
+# Intel CS for WebRTC Websites {#section10}
 [Home page](http://webrtc.intel.com)
 
 [Forum](https://software.intel.com/en-us/forums/intel-collaboration-suite-for-webrtc)

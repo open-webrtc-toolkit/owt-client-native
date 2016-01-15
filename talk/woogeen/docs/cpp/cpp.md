@@ -29,7 +29,10 @@ connections, link your application with sioclient_tls.lib; otherwise, link it wi
 The sioclient_tls.lib included in release package has been enhanced so it will verify server's certificate. If the
 server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (v1.6.1) by yourself.
 
-# Customize Signaling Channel {#section5}
+# NAT and Firewall Traversal {#section5}
+Intel CS for WebRTC Client SDK for C++ fully supports NAT and firewall traversal with STUN / TURN / ICE. The rfc5766-turn-server version 3.2.3.6 from https://code.google.com/p/rfc5766-turn-server/ has been verified.
+
+# Customize Signaling Channel {#section6}
 Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel
 for P2P sessions can be customized by implementing `P2PSignalingChannelInterface`. We provides a default
 `P2PSocketSignalingChannel` in sample which works with PeerServer in the release package.
@@ -38,7 +41,7 @@ for P2P sessions can be customized by implementing `P2PSignalingChannelInterface
 can invoke its methods to notify `PeerClient` during your customized signaling channel implementation when a new
 message is coming or connection is lost.
 
-# Known Issues {#section6}
+# Known Issues {#section7}
 Here is a list of known issues:
 
 - Conference recording is not supported.
@@ -49,7 +52,7 @@ Here is a list of known issues:
 - woogeen.lib is compiled on 32 bit platform.
 - publishing local H264 stream is not supported.
 
-# Video Codecs {#section7}
+# Video Codecs {#section8}
 For encoder, only VP8 is supported. So if you want to publish stream to remote side or conference, please choose VP8.
 
 For decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both
@@ -58,7 +61,7 @@ Broadwell<sup>®</sup> and Skylake<sup>®</sup> supports VP8 hardware decoder.
 
 To turn on hardware acceleration for decoding of VP8/H264, make sure you enable it in {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API, providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
-# Publish Streams with Customized Frames {#section8}
+# Publish Streams with Customized Frames {#section9}
 Customized frames can be i420 frame from yuv file, encoded frame from IP Camera or H264/VP8 files(There is a
 {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API to enble encoded frame setting and no raw frame is allowed for this setting). If it is the encoded
 frame, the encoding pipeline will be bypassed and sent to remote side directly. The encoded frame provider should generate
@@ -69,7 +72,7 @@ The encoded frame provider needs to implement its own frame generator extends fr
 {@link woogeen.base.FrameGeneratorInterface FrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 
-# Intel CS for WebRTC Websites {#section9}
+# Intel CS for WebRTC Websites {#section10}
 [Home page](http://webrtc.intel.com)
 
 [Forum](https://software.intel.com/en-us/forums/intel-collaboration-suite-for-webrtc)
