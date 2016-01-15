@@ -102,6 +102,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // Use a map if we need more than one data channels for a PeerConnection in
   // the future.
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  MediaConstraintsImpl media_constraints_;
 
  private:
   // DataChannelObserver
@@ -114,7 +115,6 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // shared among all PeerConnectionChannels.
   rtc::scoped_refptr<PeerConnectionDependencyFactory> factory_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
-  MediaConstraintsImpl media_constraints_;
 };
 }
 }

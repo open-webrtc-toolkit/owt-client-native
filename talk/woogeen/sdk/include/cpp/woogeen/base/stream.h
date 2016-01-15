@@ -39,6 +39,7 @@ namespace woogeen {
 
 namespace conference{
   class ConferencePeerConnectionChannel;
+  class ConferenceClient;
 }
 
 namespace base {
@@ -108,6 +109,7 @@ class LocalStream : public Stream {
 */
 class RemoteStream : public Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;
+  friend class woogeen::conference::ConferenceClient;
 
  public:
   /// Return the remote user ID, indicates who published this stream.
@@ -122,6 +124,10 @@ class RemoteStream : public Stream {
 
  private:
   std::string& remote_user_id_;
+  // Indicates whether this stream can be subscribed with audio or video.
+  // It does NOT mean the media stream has audio/video tracks.
+  bool has_audio_ = true;
+  bool has_video_ = true;
 };
 
 /// This class represent a remote stream captured from a camera and/or mic.

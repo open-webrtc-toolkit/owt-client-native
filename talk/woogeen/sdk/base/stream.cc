@@ -82,6 +82,11 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
 }
 
 void Stream::Attach(VideoRendererARGBInterface& renderer){
+  if (media_stream_ == nullptr) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Cannot attach an audio only stream to an renderer.";
+    return;
+  }
   auto video_tracks=media_stream_->GetVideoTracks();
   if(video_tracks.size()==0){
     LOG(LS_ERROR) << "Attach failed because of no video tracks.";

@@ -343,14 +343,27 @@ void ConferencePeerConnectionChannel::Subscribe(
   sio::message::ptr sio_options = sio::object_message::create();
   sio_options->get_map()["streamId"] =
       sio::string_message::create(stream->Id());
-  sio::message::ptr video_options = sio::object_message::create();
-  sio::message::ptr resolution_options = sio::object_message::create();
-  resolution_options->get_map()["width"] =
-      sio::int_message::create(subscribe_options.resolution.width);
-  resolution_options->get_map()["height"] =
-      sio::int_message::create(subscribe_options.resolution.height);
-  video_options->get_map()["resolution"] = resolution_options;
-  sio_options->get_map()["video"] = video_options;
+  if (stream->has_video_) {
+    sio::message::ptr video_options = sio::object_message::create();
+    sio::message::ptr resolution_options = sio::object_message::create();
+    resolution_options->get_map()["width"] =
+        sio::int_message::create(subscribe_options.resolution.width);
+    resolution_options->get_map()["height"] =
+        sio::int_message::create(subscribe_options.resolution.height);
+    video_options->get_map()["resolution"] = resolution_options;
+    sio_options->get_map()["video"] = video_options;
+  } else {
+    LOG(LS_INFO) << "Subscribe an audio only stream.";
+    sio_options->get_map()["video"] = sio::bool_message::create(false);
+  }
+  sio_options->get_map()["audio"] =
+      sio::bool_message::create(stream->has_audio_);
+  media_constraints_.SetMandatory(
+      webrtc::MediaConstraintsInterface::kOfferToReceiveAudio,
+      stream->has_audio_);
+  media_constraints_.SetMandatory(
+      webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
+      stream->has_video_);
   signaling_channel_->SendInitializationMessage(sio_options, "", [this]() {
     CreateOffer();
   }, on_failure);  // TODO: on_failure

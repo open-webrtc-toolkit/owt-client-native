@@ -419,47 +419,67 @@ bool ConferenceClient::CheckSignalingChannelOnline(
 void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
   std::string remote_id = stream_info->get_map()["from"]->get_string();
-  auto video = stream_info->get_map()["video"];
-  if(video==nullptr||video->get_flag()!=sio::message::flag_object){
-    LOG(LS_ERROR) << "Video info for stream " << id << "is invalid, this stream will be ignored.";
+  auto audio = stream_info->get_map()["audio"];
+  if (audio == nullptr || audio->get_flag() != sio::message::flag_boolean) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Audio info for stream " << id
+                  << "is invalid, this stream will be ignored.";
     return;
   }
-  std::string device;
-  if (video->get_map()["device"] != nullptr) {
-    device = video->get_map()["device"]->get_string();
-  } else {
-    device = "camera";
+  bool has_audio = audio->get_bool();
+  auto video = stream_info->get_map()["video"];
+  if (video == nullptr || (video->get_flag() != sio::message::flag_object &&
+                           video->get_flag() != sio::message::flag_boolean)) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Video info for stream " << id
+                  << "is invalid, this stream will be ignored.";
+    return;
   }
-  if (device == "mcu") {
-    std::vector<VideoFormat> video_formats;
-    // Only mixed streams has multiple resolutions
-    if (video->get_map()["resolutions"]) {
-      auto resolutions = video->get_map()["resolutions"]->get_vector();
-      for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
-        Resolution resolution((*it)->get_map()["width"]->get_int(),
-                              (*it)->get_map()["height"]->get_int());
-        const VideoFormat video_format(resolution);
-        video_formats.push_back(video_format);
+  if (video->get_flag() == sio::message::flag_object &&
+      video->get_map()["device"]->get_string() != "camera") {
+    std::string device(video->get_map()["device"]->get_string());
+    if (device == "mcu") {
+      std::vector<VideoFormat> video_formats;
+      // Only mixed streams has multiple resolutions
+      if (video->get_map()["resolutions"]) {
+        auto resolutions = video->get_map()["resolutions"]->get_vector();
+        for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
+          Resolution resolution((*it)->get_map()["width"]->get_int(),
+                                (*it)->get_map()["height"]->get_int());
+          const VideoFormat video_format(resolution);
+          video_formats.push_back(video_format);
+        }
       }
+      auto remote_stream =
+          std::make_shared<RemoteMixedStream>(id, remote_id, video_formats);
+      LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
+      remote_stream->has_audio_ = has_audio;
+      remote_stream->has_video_ = true;
+      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+        (*its).get().OnStreamAdded(remote_stream);
+      }
+      added_streams_[id] = remote_stream;
+      added_stream_type_[id] = StreamType::kStreamTypeMix;
+    } else if (device == "screen") {
+      auto remote_stream = std::make_shared<RemoteScreenStream>(id, remote_id);
+      LOG(LS_INFO) << "OnStreamAdded: screen stream.";
+      remote_stream->has_audio_ = has_audio;
+      remote_stream->has_video_ = true;
+      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+        (*its).get().OnStreamAdded(remote_stream);
+      }
+      added_streams_[id] = remote_stream;
+      added_stream_type_[id] = StreamType::kStreamTypeScreen;
     }
-    auto remote_stream = std::make_shared<RemoteMixedStream>(
-        id, remote_id, video_formats);
-    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its).get().OnStreamAdded(remote_stream);
-    }
-    added_streams_[id] = remote_stream;
-    added_stream_type_[id] = StreamType::kStreamTypeMix;
-  } else if (device == "screen") {
-    auto remote_stream =
-        std::make_shared<RemoteScreenStream>(id, remote_id);
-    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its).get().OnStreamAdded(remote_stream);
-    }
-    added_streams_[id] = remote_stream;
-    added_stream_type_[id] = StreamType::kStreamTypeScreen;
   } else {
-    auto remote_stream =
-        std::make_shared<RemoteCameraStream>(id, remote_id);
+    bool has_video(true);
+    if (video->get_flag() == sio::message::flag_boolean && !video->get_bool()) {
+      has_video = false;
+    }
+    auto remote_stream = std::make_shared<RemoteCameraStream>(id, remote_id);
+    LOG(LS_INFO) << "OnStreamAdded: camera stream.";
+    remote_stream->has_audio_ = has_audio;
+    remote_stream->has_video_ = has_video;
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnStreamAdded(remote_stream);
     }
