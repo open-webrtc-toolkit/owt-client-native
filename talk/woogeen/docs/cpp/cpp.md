@@ -47,6 +47,7 @@ Here is a list of known issues:
 - Bitrate control is not supported. It may costs up to 2Mbps per connection.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - woogeen.lib is compiled on 32 bit platform.
+- publishing local H264 stream is not supported.
 
 # Video Codecs {#section7}
 For encoder, only VP8 is supported. So if you want to publish stream to remote side or conference, please choose VP8.
@@ -55,12 +56,14 @@ For decoder, if hardware acceleration is not enabled, only VP8 is supported. If 
 VP8 and H.264 are supported, but it will fallback to VP8 software decoder if GPU not supports VP8 hardware decoder.
 Broadwell<sup>®</sup> and Skylake<sup>®</sup> supports VP8 hardware decoder.
 
+To turn on hardware acceleration for decoding of VP8/H264, make sure you enable it in {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API, providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
+
 # Publish Streams with Customized Frames {#section8}
 Customized frames can be i420 frame from yuv file, encoded frame from IP Camera or H264/VP8 files(There is a
 {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API to enble encoded frame setting and no raw frame is allowed for this setting). If it is the encoded
 frame, the encoding pipeline will be bypassed and sent to remote side directly. The encoded frame provider should generate
 key frame in proper interval to avoid key frame dropped in network, which causes remote side frame decoding error and
-picture quality recovery in long time.
+picture quality recovery in long time. Also note if H264 is selected, codec hardware acceleration must be enabled in order to subscribe remote streams.
 
 The encoded frame provider needs to implement its own frame generator extends from
 {@link woogeen.base.FrameGeneratorInterface FrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
