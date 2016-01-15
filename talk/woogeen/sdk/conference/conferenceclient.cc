@@ -42,6 +42,15 @@ void ConferenceClient::Join(
     const std::string& token,
     std::function<void(std::shared_ptr<User>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (signaling_channel_connected_){
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(
+          new ConferenceException(ConferenceException::kUnkown,
+                                  "Already connected to conference server."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   std::string token_decoded("");
   if (!rtc::Base64::IsBase64Encoded(token)) {
     LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
@@ -396,14 +405,14 @@ bool ConferenceClient::CheckNullPointer(
 
 bool ConferenceClient::CheckSignalingChannelOnline(
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
-  if(signaling_channel_connected_)
+  if (signaling_channel_connected_)
     return true;
- if (on_failure != nullptr) {
+  if (on_failure != nullptr) {
     std::unique_ptr<ConferenceException> e(new ConferenceException(
         ConferenceException::kUnkown, "Conference server is not connected."));
     on_failure(std::move(e));
   }
-  return false; 
+  return false;
 }
 
 
