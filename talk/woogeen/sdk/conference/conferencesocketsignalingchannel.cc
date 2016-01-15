@@ -64,6 +64,16 @@ void ConferenceSocketSignalingChannel::Connect(
   rtc::GetStringFromJsonObject(jsonToken, "tokenId", &token_id);
   rtc::GetStringFromJsonObject(jsonToken, "signature", &signature);
   socket_client_->socket();
+  socket_client_->set_socket_close_listener([this](std::string const& nsp) {
+    LOG(LS_INFO) << "Socket.IO disconnected.";
+    if (disconnect_complete_) {
+      disconnect_complete_();
+    }
+    disconnect_complete_ = nullptr;
+    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+      (*it)->OnServerDisconnected();
+    }
+  });
   socket_client_->set_open_listener([=](void) {
     sio::message::ptr token_message = sio::object_message::create();
     token_message->get_map()["host"] = sio::string_message::create(host);
@@ -180,12 +190,16 @@ void ConferenceSocketSignalingChannel::Connect(
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  socket_client_->close();
-  std::thread t(on_success);  // TODO: Check if socket client is connected.
-  t.detach();
-  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-    (*it)->OnServerDisconnected();
+  if (!socket_client_->opened()) {
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Socket.IO is not connected."));
+      on_failure(std::move(e));
+    }
+    return;
   }
+  disconnect_complete_=on_success;
+  socket_client_->close();
 }
 
 void ConferenceSocketSignalingChannel::SendInitializationMessage(

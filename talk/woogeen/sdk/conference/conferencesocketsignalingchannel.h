@@ -68,6 +68,7 @@ class ConferenceSocketSignalingChannel {
  private:
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
+  std::function<void()> disconnect_complete_;
 };
 }
 }
