@@ -100,58 +100,25 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
-  if (encoded_frame_) {
-     rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-     encoder_factory.reset(new EncodedVideoEncoderFactory());
-     if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
+  rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+  rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
 #if defined(WEBRTC_WIN)
-       rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
-       decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
-#elif defined(WEBRTC_LINUX)
-       rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
-       decoder_factory.reset(new V4L2VideoDecoderFactory());
-#endif
-       pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
-         signaling_thread,
-         NULL, //Default ADM
-         encoder_factory.release(), //Encoder factory
-         //TODO: If iOS to support encoded frame, needs to
-         //implement decoder_factory for iOS.
-#if defined(WEBRTC_IOS)
-         NULL); //Decoder factory
-#else
-         decoder_factory.release()); //Decoder factory
-#endif
-     }
-     else {
-       pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
-         signaling_thread,
-         NULL, //Default ADM
-         encoder_factory.release(),
-         NULL);
-     }
-     return;
+  if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
+    encoder_factory.reset(new MSDKVideoEncoderFactory());
+    decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
   }
-
-#if defined(WEBRTC_WIN)
-  if (render_hardware_acceleration_enabled_ && render_window_ != nullptr){
-      //We create peer connection factory with dedicated decoder factory.
-      rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
-      rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-      decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
-      encoder_factory.reset(new MSDKVideoEncoderFactory());
-      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
-          signaling_thread,
-          NULL, //Default ADM
-          encoder_factory.release(), //Encoder factory
-          decoder_factory.release());
-  }else
+#elif defined(WEBRTC_LINUX)
+  decoder_factory.reset(new V4L2VideoDecoderFactory());
 #endif
-      pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
-          signaling_thread,
-          NULL, //Default ADM
-          NULL, //Encoder factory
-          NULL);
+  if (encoded_frame_)
+  {
+    encoder_factory.reset(new EncodedVideoEncoderFactory());
+  }
+  pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
+    signaling_thread,
+    NULL, //Default ADM
+    encoder_factory.release(), //Encoder factory
+    decoder_factory.release()); //Decoder factory
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>
