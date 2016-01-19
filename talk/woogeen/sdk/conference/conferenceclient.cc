@@ -166,6 +166,7 @@ void ConferenceClient::Subscribe(
     std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   SubscribeOptions options;
+  options.resolution = Resolution(640, 480);
   Subscribe(stream, options, on_success, on_failure);
 }
 
