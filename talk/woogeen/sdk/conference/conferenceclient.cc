@@ -26,6 +26,10 @@ ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configur
       signaling_channel_connected_(false) {
 }
 
+ConferenceClient::~ConferenceClient() {
+  signaling_channel_->RemoveObserver(*this);
+}
+
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
   observers_.push_back(observer);
 }

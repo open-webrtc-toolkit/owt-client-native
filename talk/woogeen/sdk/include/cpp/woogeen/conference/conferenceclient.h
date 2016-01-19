@@ -150,6 +150,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
     @param config Configuration for creating the ConferenceClient.
   */
   ConferenceClient(const ConferenceClientConfiguration& configuration);
+  ~ConferenceClient();
   /// Add an observer for conferenc client.
   void AddObserver(ConferenceClientObserver& observer);
   /// Remove an object from conference client.
