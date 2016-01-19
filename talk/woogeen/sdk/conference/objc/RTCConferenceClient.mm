@@ -56,9 +56,9 @@
 - (void)removeObserver:(id<RTCConferenceClientObserver>)observer {
 }
 
-- (void)joinWithOnSuccess:(NSString*)token
-                onSuccess:(void (^)(RTCConferenceUser*))onSuccess
-                onFailure:(void (^)(NSError*))onFailure {
+- (void)joinWithToken:(NSString*)token
+            onSuccess:(void (^)(RTCConferenceUser*))onSuccess
+            onFailure:(void (^)(NSError*))onFailure {
   const std::string nativeToken = [token UTF8String];
   _nativeConferenceClient->Join(
       nativeToken,

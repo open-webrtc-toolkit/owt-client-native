@@ -46,9 +46,9 @@
   @brief Connect to the specified room to join a conference.
   @param token Includes the room info which is encrypted.
 */
-- (void)joinWithOnSuccess:(NSString*)token
-                onSuccess:(void (^)(RTCConferenceUser*))onSuccess
-                onFailure:(void (^)(NSError*))onFailure;
+- (void)joinWithToken:(NSString*)token
+            onSuccess:(void (^)(RTCConferenceUser*))onSuccess
+            onFailure:(void (^)(NSError*))onFailure;
 /**
   @brief Publish the stream to the current room.
   @param stream The stream to be published.
