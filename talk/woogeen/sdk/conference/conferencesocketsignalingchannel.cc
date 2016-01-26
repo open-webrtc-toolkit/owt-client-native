@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/base/common.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/json.h"
 
@@ -18,6 +19,8 @@ const std::string kEventNameSignalingMessage = "signaling_message";
 const std::string kEventNameOnSignalingMessage = "signaling_message_erizo";
 const std::string kEventNameOnCustomMessage = "custom_message";
 const std::string kEventNameStreamControl = "control";
+const std::string kEventNameGetRegion = "getRegion";
+const std::string kEventNameSetRegion = "setRegion";
 const std::string kEventNameOnAddStream = "add_stream";
 const std::string kEventNameOnRemoveStream = "remove_stream";
 const std::string kEventNameOnUserJoin = "user_join";
@@ -324,6 +327,42 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
   send_message->get_map()["type"] = sio::string_message::create("control");
   send_message->get_map()["payload"] = payload;
   socket_client_->socket()->emit(kEventNameCustomMessage, send_message,
+                                 [=](sio::message::list const& msg) {
+                                   OnEmitAck(msg, on_success, on_failure);
+                                 });
+}
+
+void ConferenceSocketSignalingChannel::GetRegion(
+      const std::string& stream_id,
+      std::function<void(std::string)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  socket_client_->socket()->emit(
+      kEventNameGetRegion, send_message, [=](sio::message::list const& msg) {
+        OnEmitAck(msg, [on_success, msg] {
+          if (on_success == nullptr)
+            return;
+          sio::message::ptr region_ptr = msg.at(1);
+          RTC_CHECK(region_ptr->get_flag() == sio::message::flag_object);
+          RTC_CHECK(region_ptr->get_map()["region"] &&
+                    region_ptr->get_map()["region"]->get_flag() ==
+                        sio::message::flag_string);
+          std::string region_id = region_ptr->get_map()["region"]->get_string();
+          on_success(region_id);
+        }, on_failure);
+      });
+}
+
+void ConferenceSocketSignalingChannel::SetRegion(
+      const std::string& stream_id,
+      const std::string& region_id,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["region"] = sio::string_message::create(region_id);
+  socket_client_->socket()->emit(kEventNameSetRegion, send_message,
                                  [=](sio::message::list const& msg) {
                                    OnEmitAck(msg, on_success, on_failure);
                                  });

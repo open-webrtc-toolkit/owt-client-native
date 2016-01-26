@@ -350,6 +350,33 @@ void ConferenceClient::Leave(
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 
+void ConferenceClient::GetRegion(
+      std::shared_ptr<RemoteStream> stream,
+      std::function<void(std::string)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)){
+    return;
+  }
+  signaling_channel_->GetRegion(stream->Id(), on_success, on_failure);
+}
+
+void ConferenceClient::SetRegion(
+    std::shared_ptr<RemoteStream> stream,
+    const std::string& region_id,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  signaling_channel_->SetRegion(stream->Id(), region_id, on_success, on_failure);
+}
+
 void ConferenceClient::OnStreamAdded(sio::message::ptr stream) {
   TriggerOnStreamAdded(stream);
 }

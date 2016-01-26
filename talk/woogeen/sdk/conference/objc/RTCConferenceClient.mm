@@ -53,6 +53,24 @@
   _nativeConferenceClient->AddObserver(*ob);
 }
 
+- (void)triggerOnFailure:(void (^)(NSError*))onFailure
+           withException:
+               (std::unique_ptr<woogeen::conference::ConferenceException>)e {
+  if (onFailure == nil)
+    return;
+  NSError* err = [[NSError alloc]
+      initWithDomain:RTCErrorDomain
+                code:WoogeenConferenceErrorUnknown
+            userInfo:[[NSDictionary alloc]
+                         initWithObjectsAndKeys:
+                             [NSString
+                                 stringWithCString:e->Message().c_str()
+                                          encoding:[NSString
+                                                       defaultCStringEncoding]],
+                             NSLocalizedDescriptionKey, nil]];
+  onFailure(err);
+}
+
 - (void)removeObserver:(id<RTCConferenceClientObserver>)observer {
 }
 
@@ -67,21 +85,7 @@
           onSuccess([[RTCConferenceUser alloc]initWithNativeUser: user]);
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -98,21 +102,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -143,21 +133,7 @@
         onSuccess(remote_stream);
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -174,21 +150,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -205,21 +167,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -233,21 +181,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -264,21 +198,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -295,21 +215,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -326,21 +232,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -357,21 +249,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 
@@ -383,21 +261,47 @@
           onSuccess();
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenConferenceErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)getRegion:(RTCRemoteStream*)stream
+        onSuccess:(void (^)(NSString*))onSuccess
+        onFailure:(void (^)(NSError*))onFailure {
+  auto nativeStreamRefPtr = [stream nativeStream];
+  std::shared_ptr<woogeen::base::RemoteStream> nativeStream(
+      std::static_pointer_cast<woogeen::base::RemoteStream>(
+          nativeStreamRefPtr));
+  _nativeConferenceClient->GetRegion(
+      nativeStream,
+      [=](std::string region_id) {
+        if (onSuccess) {
+          onSuccess([NSString stringWithUTF8String:region_id.c_str()]);
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)setRegion:(RTCRemoteStream*)stream
+         regionId:(NSString*)regionId
+        onSuccess:(void (^)())onSuccess
+        onFailure:(void (^)(NSError*))onFailure{
+  auto nativeStreamRefPtr = [stream nativeStream];
+  std::shared_ptr<woogeen::base::RemoteStream> nativeStream(
+      std::static_pointer_cast<woogeen::base::RemoteStream>(
+          nativeStreamRefPtr));
+  auto nativeRegionid = [regionId UTF8String];
+  _nativeConferenceClient->SetRegion(
+      nativeStream, nativeRegionid,
+      [=]() {
+        if (onSuccess) {
+          onSuccess();
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 

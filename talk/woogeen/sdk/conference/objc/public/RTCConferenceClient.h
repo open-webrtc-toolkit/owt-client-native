@@ -136,6 +136,20 @@
          onSuccess:(void (^)())onSuccess
          onFailure:(void (^)(NSError*))onFailure;
 /**
+  @brief Get a remote stream's region
+*/
+- (void)getRegion:(RTCRemoteStream*)stream
+        onSuccess:(void (^)(NSString*))onSuccess
+        onFailure:(void (^)(NSError*))onFailure;
+
+/**
+  @brief Set a remote stream's region
+*/
+- (void)setRegion:(RTCRemoteStream*)stream
+         regionId:(NSString*)regionId
+        onSuccess:(void (^)())onSuccess
+        onFailure:(void (^)(NSError*))onFailure;
+/**
   @brief Leave current conference.
 */
 - (void)leaveWithOnSuccess:(void (^)())onSuccess

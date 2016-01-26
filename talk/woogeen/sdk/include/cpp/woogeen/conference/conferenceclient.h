@@ -274,6 +274,23 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
+  /**
+    @brief Get a remote stream's region
+  */
+  void GetRegion(
+      std::shared_ptr<RemoteStream> stream,
+      std::function<void(std::string)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Set a remote stream's region
+  */
+  void SetRegion(
+      std::shared_ptr<RemoteStream> stream,
+      const std::string& region_id,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
  protected:
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,
