@@ -74,6 +74,7 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnUserLeft(
       std::shared_ptr<const woogeen::conference::User> user) = 0;
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) = 0;
+  virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) = 0;
   virtual void OnServerDisconnected() = 0;
   virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
   virtual void OnSignalingMessage(std::shared_ptr<sio::message> message) = 0;
@@ -301,6 +302,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   virtual void OnUserLeft(
       std::shared_ptr<const conference::User> user) override;
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) override;
+  virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) override;
   virtual void OnServerDisconnected() override;
   virtual void OnStreamId(const std::string& id,
                           const std::string& publish_stream_label) override;
@@ -325,6 +327,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(const std::string& stream_id) const;
   void TriggerOnStreamRemoved(std::shared_ptr<sio::message> stream_info);
+  void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
   conference::User ParseUser(std::shared_ptr<sio::message> user_info) const;
 
   enum StreamType: int;

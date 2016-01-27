@@ -35,20 +35,37 @@ namespace conference {
 
 using woogeen::base::VideoFormat;
 
+class RemoteMixedStreamObserver : public woogeen::base::StreamObserver {
+ public:
+  virtual void OnVideoLayoutChanged(){};
+};
+
 /// This class represent a mixed remote stream.
 class RemoteMixedStream : public woogeen::base::RemoteStream {
  public:
   RemoteMixedStream(std::string& id,
                     std::string& from,
                     const std::vector<VideoFormat> supported_video_formats);
+
+  /// Add an observer for conferenc client.
+  void AddObserver(RemoteMixedStreamObserver& observer);
+  /// Remove an object from conference client.
+  void RemoveObserver(RemoteMixedStreamObserver& observer);
+
   /**
     @brief Get supported video formats.
     @detail When subscribe this stream, user can specifiy one of these formats.
   */
   std::vector<VideoFormat> SupportedVideoFormats();
 
+ protected:
+  virtual void OnVideoLayoutChanged();
+
  private:
   const std::vector<VideoFormat> supported_video_formats_;
+  std::vector<std::reference_wrapper<RemoteMixedStreamObserver>> observers_;
+
+  friend class woogeen::conference::ConferenceClient;
 };
 }
 }

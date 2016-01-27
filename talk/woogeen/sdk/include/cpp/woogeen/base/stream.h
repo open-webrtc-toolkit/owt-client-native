@@ -52,6 +52,11 @@ class FrameGeneratorInterface;
 
 using webrtc::MediaStreamInterface;
 
+/// Observer for Stream
+class StreamObserver {
+
+};
+
 /// Base class of all streams with media stream
 class Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;

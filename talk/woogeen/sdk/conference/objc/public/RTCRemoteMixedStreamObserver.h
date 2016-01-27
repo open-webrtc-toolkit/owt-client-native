@@ -24,21 +24,19 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
 
-#import "RTCRemoteStream.h"
-#import "RTCRemoteMixedStreamObserver.h"
+#import <Foundation/Foundation.h>
 
-/// This class represent a mixed remote stream.
-@interface RTCRemoteMixedStream : RTCRemoteStream
+/// Observer for RTCRemoteMixedStream.
+@protocol RTCRemoteMixedStreamObserver<NSObject>
 
--(NSArray*)supportedVideoFormats;
 /**
-  @brief Add an observer for RTCRemoteMixedStream.
+  @brief Triggers when video layout is changed.
 */
-- (void)addObserver:(id<RTCRemoteMixedStreamObserver>)observer;
+- (void)onVideoLayoutChanged;
 
 @end
 
-#endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_

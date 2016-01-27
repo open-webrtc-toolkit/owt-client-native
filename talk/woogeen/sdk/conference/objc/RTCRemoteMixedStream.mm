@@ -5,9 +5,11 @@
 #import <Foundation/Foundation.h>
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
+#import "talk/woogeen/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
 
 @implementation RTCRemoteMixedStream {
   NSArray* _supportedVideoFormats;
+  std::vector<woogeen::conference::RemoteMixedStreamObserverObjcImpl*> _observers;
 }
 
 - (NSArray*)supportedVideoFormats {
@@ -15,6 +17,15 @@
     _supportedVideoFormats = [[NSArray alloc] init];
   }
   return _supportedVideoFormats;
+}
+
+- (void)addObserver:(id<RTCRemoteMixedStreamObserver>)observer {
+  auto ob =
+      new woogeen::conference::RemoteMixedStreamObserverObjcImpl(observer);
+  _observers.push_back(ob);
+  std::shared_ptr<woogeen::conference::RemoteMixedStream> stream_ptr =
+      std::static_pointer_cast<woogeen::conference::RemoteMixedStream>([self nativeStream]);
+  stream_ptr->AddObserver(*ob);
 }
 
 @end

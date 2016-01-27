@@ -23,6 +23,7 @@ const std::string kEventNameGetRegion = "getRegion";
 const std::string kEventNameSetRegion = "setRegion";
 const std::string kEventNameOnAddStream = "add_stream";
 const std::string kEventNameOnRemoveStream = "remove_stream";
+const std::string kEventNameOnUpdateStream = "update_stream";
 const std::string kEventNameOnUserJoin = "user_join";
 const std::string kEventNameOnUserLeave = "user_leave";
 
@@ -175,6 +176,16 @@ void ConferenceSocketSignalingChannel::Connect(
             std::cout << "Received on remove stream." << std::endl;
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnStreamRemoved(data);
+            }
+          }));
+  socket_client_->socket()->on(
+      kEventNameOnUpdateStream,
+      sio::socket::event_listener_aux(
+          [&](std::string const& name, sio::message::ptr const& data,
+              bool is_ack, sio::message::list& ack_resp) {
+            std::cout << "Received on update stream." << std::endl;
+            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+              (*it)->OnStreamUpdated(data);
             }
           }));
   socket_client_->socket()->on(

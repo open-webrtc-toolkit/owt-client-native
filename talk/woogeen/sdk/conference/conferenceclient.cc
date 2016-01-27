@@ -406,6 +406,10 @@ void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
   TriggerOnStreamRemoved(stream);
 }
 
+void ConferenceClient::OnStreamUpdated(sio::message::ptr stream) {
+  TriggerOnStreamUpdated(stream);
+}
+
 void ConferenceClient::OnServerDisconnected() {
   signaling_channel_connected_ = false;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
@@ -653,6 +657,36 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   }
   added_streams_.erase(stream_it);
   added_stream_type_.erase(stream_type);
+}
+
+void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
+  if (!(stream_info && stream_info->get_flag() == sio::message::flag_object &&
+        stream_info->get_map()["id"] && stream_info->get_map()["event"] &&
+        stream_info->get_map()["id"]->get_flag() == sio::message::flag_string &&
+        stream_info->get_map()["event"]->get_flag() ==
+            sio::message::flag_string)) {
+    RTC_DCHECK(false);
+    return;
+  }
+  std::string id = stream_info->get_map()["id"]->get_string();
+  std::string event = stream_info->get_map()["event"]->get_string();
+  auto stream_it = added_streams_.find(id);
+  auto stream_type = added_stream_type_.find(id);
+  if (stream_it == added_streams_.end() ||
+      stream_type == added_stream_type_.end()) {
+    RTC_DCHECK(false);
+    LOG(LS_WARNING) << "Invalid stream or type.";
+    return;
+  }
+  auto stream = stream_it->second;
+  auto type = stream_type->second;
+  if (type != kStreamTypeMix || event != "VideoLayoutChanged") {
+    // TODO(jianjunz): Remove it when this event is supported on other streams.
+    LOG(LS_WARNING) << "Stream updated event only supported on mixed stream.";
+    return;
+  }
+  std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
+  stream_ptr->OnVideoLayoutChanged();
 }
 }
 }
