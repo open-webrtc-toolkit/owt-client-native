@@ -144,30 +144,36 @@ void ConferenceSocketSignalingChannel::Connect(
           }));
   socket_client_->socket()->on(
       kEventNameOnUserJoin,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received user join message." << std::endl;
-            // auto user = std::make_shared<const conference::User>(
-            //     ParseUser(data->get_map()["user"]));
-            // for (auto it = observers_.begin(); it != observers_.end(); ++it)
-            // {
-            //   (*it)->OnUserJoined(user);
-            // }
-          }));
+      sio::socket::event_listener_aux([&](
+          std::string const& name, sio::message::ptr const& data, bool is_ack,
+          sio::message::list& ack_resp) {
+        std::cout << "Received user join message." << std::endl;
+        if (data == nullptr || data->get_flag() != sio::message::flag_object ||
+            data->get_map()["user"] == nullptr ||
+            data->get_map()["user"]->get_flag() != sio::message::flag_object) {
+          RTC_DCHECK(false);
+          return;
+        }
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnUserJoined(data->get_map()["user"]);
+        }
+      }));
   socket_client_->socket()->on(
       kEventNameOnUserLeave,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received user leave message." << std::endl;
-            // auto user = std::make_shared<const conference::User>(
-            //     ParseUser(data->get_map()["user"]));
-            // for (auto it = observers_.begin(); it != observers_.end(); ++it)
-            // {
-            //   (*it)->OnUserLeft(user);
-            // }
-          }));
+      sio::socket::event_listener_aux([&](
+          std::string const& name, sio::message::ptr const& data, bool is_ack,
+          sio::message::list& ack_resp) {
+        std::cout << "Received user leave message." << std::endl;
+        if (data == nullptr || data->get_flag() != sio::message::flag_object ||
+            data->get_map()["user"] == nullptr ||
+            data->get_map()["user"]->get_flag() != sio::message::flag_object) {
+          RTC_DCHECK(false);
+          return;
+        }
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnUserLeft(data->get_map()["user"]);
+        }
+      }));
   socket_client_->socket()->on(
       kEventNameOnRemoveStream,
       sio::socket::event_listener_aux(

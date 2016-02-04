@@ -101,9 +101,18 @@ void ConferenceClient::Join(
         auto user_it=users.begin();
         for (auto user_it = users.begin(); user_it != users.end(); user_it++) {
           if ((*user_it)->get_map()["id"]->get_string() == user_id) {
-            std::shared_ptr<User> user=std::make_shared<User>(ParseUser(*user_it));
-            // TODO: use async instead.
-            on_success(std::move(user));
+            User* user_raw;
+            if (ParseUser(*user_it, &user_raw)) {
+              std::shared_ptr<User> user(user_raw);
+              // TODO: use async instead.
+              on_success(user);
+            } else if (on_failure) {
+              std::unique_ptr<ConferenceException> e(new ConferenceException(
+                  ConferenceException::kUnkown,
+                  "Failed to parse current user's info"));
+              // TODO: Use async instead.
+              on_failure(std::move(e));
+            }
             break;
           }
         }
@@ -112,17 +121,14 @@ void ConferenceClient::Join(
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(
                 new ConferenceException(ConferenceException::kUnkown,
-                                        "Received unkown message from MCU."));
+                                        "Received unknown message from MCU."));
             // TODO: Use async instead.
             on_failure(std::move(e));
           }
         }
       }
       for (auto it = users.begin(); it != users.end(); ++it) {
-        auto user = std::make_shared<conference::User>(ParseUser(*it));
-        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-          (*its).get().OnUserJoined(user);
-        }
+        TriggerOnUserJoined(*it);
       }
     }
     // Trigger OnStreamAdded for existed remote streams.
@@ -523,8 +529,53 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   }
 }
 
-conference::User ConferenceClient::ParseUser(
-    sio::message::ptr user_message) const {
+void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
+  User* user_raw;
+  if(ParseUser(user_info, &user_raw)){
+    std::shared_ptr<User> user(user_raw);
+    participants[user->Id()] = user;
+    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+      (*its).get().OnUserJoined(user);
+    }
+  }
+}
+
+void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
+  if (user_info == nullptr ||
+      user_info->get_flag() != sio::message::flag_object ||
+      user_info->get_map()["id"] == nullptr ||
+      user_info->get_map()["id"]->get_flag() != sio::message::flag_string) {
+    RTC_DCHECK(false);
+    return;
+  }
+  auto user_id = user_info->get_map()["id"]->get_string();
+  auto user_it = participants.find(user_id);
+  if (user_it == participants.end()) {
+    RTC_DCHECK(false);
+    return;
+  }
+  auto user = user_it->second;
+  participants.erase(user_it);
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnUserLeft(user);
+  }
+}
+
+bool ConferenceClient::ParseUser(sio::message::ptr user_message,
+                                 User** user) const {
+  if (user_message == nullptr ||
+      user_message->get_flag() != sio::message::flag_object ||
+      user_message->get_map()["id"] == nullptr ||
+      user_message->get_map()["id"]->get_flag() != sio::message::flag_string ||
+      user_message->get_map()["name"] == nullptr ||
+      user_message->get_map()["name"]->get_flag() !=
+          sio::message::flag_string ||
+      user_message->get_map()["role"] == nullptr ||
+      user_message->get_map()["role"]->get_flag() !=
+          sio::message::flag_string) {
+    RTC_DCHECK(false);
+    return false;
+  }
   std::string id = user_message->get_map()["id"]->get_string();
   std::string user_name = user_message->get_map()["name"]->get_string();
   std::string role = user_message->get_map()["role"]->get_string();
@@ -535,8 +586,8 @@ conference::User ConferenceClient::ParseUser(
   bool record = true;
   conference::Permission permission(publish, subscribe, record);
 
-  conference::User user(id, user_name, role, permission);
-  return user;
+  *user = new User(id, user_name, role, permission);
+  return true;
 }
 
 std::shared_ptr<ConferencePeerConnectionChannel>
@@ -604,18 +655,12 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   return config;
 }
 
-void ConferenceClient::OnUserJoined(
-    std::shared_ptr<const conference::User> user) {
-  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnUserJoined(user);
-  }
+void ConferenceClient::OnUserJoined(std::shared_ptr<sio::message> user) {
+  TriggerOnUserJoined(user);
 }
 
-void ConferenceClient::OnUserLeft(
-    std::shared_ptr<const conference::User> user) {
-  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnUserLeft(user);
-  }
+void ConferenceClient::OnUserLeft(std::shared_ptr<sio::message> user) {
+  TriggerOnUserLeft(user);
 }
 
 void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {

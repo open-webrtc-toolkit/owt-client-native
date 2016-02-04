@@ -68,11 +68,9 @@ class ConferenceSocketSignalingChannel;
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
+  virtual void OnUserJoined(std::shared_ptr<sio::message> user) = 0;
+  virtual void OnUserLeft(std::shared_ptr<sio::message> user) = 0;
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) = 0;
-  virtual void OnUserJoined(
-      std::shared_ptr<const woogeen::conference::User> user) = 0;
-  virtual void OnUserLeft(
-      std::shared_ptr<const woogeen::conference::User> user) = 0;
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) = 0;
   virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) = 0;
   virtual void OnServerDisconnected() = 0;
@@ -296,11 +294,10 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,
                                std::string& message) override;
-  virtual void OnSignalingMessage(std::shared_ptr<sio::message> stream) override;
-  virtual void OnUserJoined(
-      std::shared_ptr<const conference::User> user) override;
-  virtual void OnUserLeft(
-      std::shared_ptr<const conference::User> user) override;
+  virtual void OnSignalingMessage(
+      std::shared_ptr<sio::message> stream) override;
+  virtual void OnUserJoined(std::shared_ptr<sio::message> user) override;
+  virtual void OnUserLeft(std::shared_ptr<sio::message> user) override;
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) override;
   virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) override;
   virtual void OnServerDisconnected() override;
@@ -317,7 +314,6 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   /// trigger |on_failure|
   bool CheckSignalingChannelOnline(
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);
   PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration()
       const;
   // Get the |ConferencePeerConnectionChannel| instance associated with specific
@@ -326,9 +322,13 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(const std::string& stream_id) const;
+  void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info);
+  void TriggerOnUserLeft(std::shared_ptr<sio::message> user_info);
+  void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamRemoved(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
-  conference::User ParseUser(std::shared_ptr<sio::message> user_info) const;
+  // Return true if |user_info| is correct, and |*user| points to the user object
+  bool ParseUser(std::shared_ptr<sio::message> user_info, User** user) const;
 
   enum StreamType: int;
 
@@ -349,6 +349,8 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
   std::unordered_map<std::string, StreamType> added_stream_type_;
+  // Key is user's ID
+  std::unordered_map<std::string, std::shared_ptr<User>> participants;
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
 };
 }
