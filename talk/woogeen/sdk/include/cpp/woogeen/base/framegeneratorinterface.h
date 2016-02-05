@@ -1,15 +1,33 @@
 /*
- *
- *
- *
+ * Intel License
  */
-#ifndef FRAME_GENERATOR_INTERFACE_H_
-#define FRAME_GENERATOR_INTERFACE_H_
+#ifndef WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
+#define WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
+
+#include "stdint.h"
 
 typedef unsigned char uint8;
 
 namespace woogeen {
 namespace base {
+/**
+ @brief frame generator interface for audio
+ @detail Sample rate and channel numbers cannot be changed once the generator is
+ created. Currently, only 16 bit little-endian PCM is supported.
+*/
+class AudioFrameGeneratorInterface {
+ public:
+  /**
+   @brief Generate frames for next 10ms and |frame_buffer| point to the buffer.
+   @return Return true if generate successfully, false if failed.
+   */
+  virtual bool GenerateFramesForNext10Ms(int8_t** frame_buffer) = 0;
+  /// Get sample rate for frames generated.
+  virtual int GetSampleRate() = 0;
+  /// Get numbers of channel for frames generated.
+  virtual int GetChannelNumber() = 0;
+};
+
 /**
  @brief frame generator interface for users to generates frame.
 
@@ -54,4 +72,4 @@ class FrameGeneratorInterface {
 
 } // namespace base
 } // namespace woogeen
-#endif  // FRAME_GENERATOR_INTERFACE_H_
+#endif  // WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_

@@ -7,7 +7,7 @@ namespace base{
    HWND GlobalConfiguration::render_window_ = nullptr; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
 #endif
    bool GlobalConfiguration::encoded_frame_ = false;
-
+   std::unique_ptr<AudioFrameGeneratorInterface> GlobalConfiguration::audio_frame_generator_ = nullptr;
 }
 }
 

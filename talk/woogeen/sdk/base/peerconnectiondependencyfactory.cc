@@ -8,6 +8,7 @@
 #include "webrtc/base/ssladapter.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
+#include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/media/webrtc/webrtcvideodecoderfactory.h"
 #include "talk/media/webrtc/webrtcvideoencoderfactory.h"
 #if defined(WEBRTC_WIN)
@@ -112,15 +113,23 @@ void PeerConnectionDependencyFactory::
 #elif defined(WEBRTC_LINUX)
   decoder_factory.reset(new V4L2VideoDecoderFactory());
 #endif
+  // Encoded video frame
   if (encoded_frame_)
   {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   }
-  pc_factory_ = webrtc::CreatePeerConnectionFactory(worker_thread,
-    signaling_thread,
-    NULL, //Default ADM
-    encoder_factory.release(), //Encoder factory
-    decoder_factory.release()); //Decoder factory
+  // Raw audio frame
+  // if adm is nullptr, voe_base will initilize it with the default internal
+  // adm.
+  rtc::scoped_refptr<AudioDeviceModule> adm;
+  if (GlobalConfiguration::GetEncodedAudioFrameEnabled()) {
+    adm = CustomizedAudioDeviceModule::Create(
+        std::move(GlobalConfiguration::GetAudioFrameGenerator()));
+  }
+  pc_factory_ = webrtc::CreatePeerConnectionFactory(
+      worker_thread, signaling_thread, adm,
+      encoder_factory.release(),   // Encoder factory
+      decoder_factory.release());  // Decoder factory
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>

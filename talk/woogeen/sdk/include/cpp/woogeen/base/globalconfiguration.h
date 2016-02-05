@@ -27,12 +27,15 @@
 #ifndef WOOGEEN_BASE_GLOBALCONFIGURATION_H_
 #define WOOGEEN_BASE_GLOBALCONFIGURATION_H_
 
+#include <memory>
+#include "woogeen/base/framegeneratorinterface.h"
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
 
 namespace woogeen {
 namespace base{
+
 /**
  @brief configuration of global using.
 
@@ -41,8 +44,6 @@ namespace base{
 class GlobalConfiguration {
   friend class PeerConnectionDependencyFactory;
  public:
-  GlobalConfiguration() {}
-  ~GlobalConfiguration() {}
 #if defined(WEBRTC_WIN)
    /**
    @brief This function sets hardware acceleration is enabled for video decoding and rendering.
@@ -61,7 +62,23 @@ class GlobalConfiguration {
   static void SetEncodedVideoFrameEnabled(bool enabled) {
      encoded_frame_ = enabled;
   }
-  private:
+  /**
+   @brief This function sets the capturing frame type to be encoded audio frame.
+   @detail When it is enabled, SDK will not capture audio from mic. This means
+   you cannot create LocalStream other than LocalCustomizedStream.
+   @param enabled set capturing frame is encoded or not.
+   @param audio_frame_generator An implementation which feeds audio frames to SDK.
+   */
+  static void SetEncodedAudioFrameEnabled(
+      bool enabled,
+      std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator) {
+    if (enabled)
+      audio_frame_generator_ = std::move(audio_frame_generator);
+  }
+
+private:
+  GlobalConfiguration() {}
+  virtual ~GlobalConfiguration() {}
 #if defined(WEBRTC_WIN)
   /**
    @brief This function gets hardware acceleration is enabled or not.
@@ -87,12 +104,26 @@ class GlobalConfiguration {
   static bool GetEncodedVideoFrameEnabled() {
      return encoded_frame_;
   }
+  /**
+   @brief This function gets the capturing frame type.
+   @return true or false.
+   */
+  static bool GetEncodedAudioFrameEnabled() {
+    return audio_frame_generator_ ? true : false;
+  }
+  /**
+   @brief This function returns audio frame generator.
+   */
+  static std::unique_ptr<AudioFrameGeneratorInterface> GetAudioFrameGenerator(){
+    return std::move(audio_frame_generator_);
+  }
   // Encoded video frame flag.
    /**
    * Default is false. If it is set to true, only streams with encoded frame can
    * be published.
    */
   static bool encoded_frame_;
+  static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
 };
 
 }
