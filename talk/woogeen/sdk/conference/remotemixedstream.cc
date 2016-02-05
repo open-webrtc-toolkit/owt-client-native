@@ -2,6 +2,7 @@
  * Intel License
  */
 
+#include <algorithm>
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "webrtc/base/logging.h"
