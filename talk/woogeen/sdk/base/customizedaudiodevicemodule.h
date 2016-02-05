@@ -11,6 +11,7 @@
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 
 namespace woogeen {
@@ -197,6 +198,9 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int64_t _lastProcessTime;
   bool _initialized;
   mutable ErrorCode _lastError;
+
+  // Default internal adm for playout.
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> _outputAdm;
 };
 }
 }

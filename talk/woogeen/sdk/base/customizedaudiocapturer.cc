@@ -4,6 +4,7 @@
 
 #include "talk/woogeen/sdk/base/CustomizedAudioCapturer.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/base/logging.h"
 
 namespace woogeen {
 namespace base {
@@ -421,7 +422,13 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   }
 
   crit_sect_.Leave();
-  SleepMs(10 - (clock_->CurrentNtpInMilliseconds() - current_time));
+  uint64_t sleep_ms = clock_->CurrentNtpInMilliseconds() - current_time;
+  if (sleep_ms < 10) {
+    SleepMs(10 - sleep_ms);
+  } else {
+    LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
+                       "leads to large latency";
+  }
   return true;
 };
 }
