@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/base/CustomizedAudioCapturer.h"
+#include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/base/logging.h"
 
