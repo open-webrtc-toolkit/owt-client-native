@@ -10,6 +10,7 @@
 #include "encodedframegenerator.h"
 #include "fileaudioframegenerator.h"
 #include "talk/woogeen/include/asio_token.h"
+#include <unistd.h>
 
 using namespace std;
 
@@ -24,6 +25,7 @@ std::function<void(std::unique_ptr<ConferenceException>)>join_room_failure {
 
 int main(int argc, char** argv)
 {
+  daemon(1,1);
   using namespace woogeen::base;
   using namespace woogeen::conference;
   const std::string path = "./audio_long16.pcm";
@@ -55,18 +57,34 @@ int main(int argc, char** argv)
   scheme.append(suffix);
   std::shared_ptr<ConferenceClient> room(new ConferenceClient(configuration));
 
-  cout << "Press Enter to connect room." << std::endl;
-  cin.ignore();
+//  cout << "Press Enter to connect room." << std::endl;
+ // cin.ignore();
   std::string roomId("");
   if(argc == 3){
     std::string roomStr(argv[2]);
     roomId.append(roomStr);
   }
   string token = getToken(scheme, roomId);
+  LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, true));
+  //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
+  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
+  //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
+  //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
+  LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);
+  std::shared_ptr<LocalCustomizedStream> shared_stream(std::make_shared<LocalCustomizedStream>(stream));
+
   if (token != "") {
       room->Join(token,
-                    [=](std::shared_ptr<User> user) {
-                      cout << "Join succeeded!" << endl;
+          [=](std::shared_ptr<User> user) {
+              room->Publish(shared_stream,
+              [=] {
+                      cout <<" ============Publish succeed==========";
+                  },
+              [=](std::unique_ptr<ConferenceException> err) {
+                  cout <<" ============Publish failed===========";
+              });
+
+              cout << "Join succeeded!" << endl;
                     },
                     [=](std::unique_ptr<ConferenceException> err) {
                       cout << "Join failed!" << endl;
@@ -75,8 +93,11 @@ int main(int argc, char** argv)
      cout << "create token error!" << endl;
   }
 
-  cout << "Press Enter to publish local stream." << std::endl;
-  cin.ignore();
+  while(1){
+    sleep(1);
+  }
+//  cout << "Press Enter to publish local stream." << std::endl;
+//  cin.ignore();
 /*
   std::shared_ptr<woogeen::base::LocalCameraStreamParameters> lcsp;
   lcsp.reset(new LocalCameraStreamParameters(true, true));
@@ -89,23 +110,8 @@ int main(int argc, char** argv)
   //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
 */
 
-  LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, true));
-  //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
-  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
-  //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
-  //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
-  LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);
-  std::shared_ptr<LocalCustomizedStream> shared_stream(std::make_shared<LocalCustomizedStream>(stream));
-
-  room->Publish(shared_stream,
-                [=] {
-                      cout <<" ============Publish succeed==========";
-                    },
-                [=](std::unique_ptr<ConferenceException> err) {
-                      cout <<" ============Publish failed===========";
-                });
-  cout << "Press Enter to exit." << std::endl;
-  cin.ignore();
+ // cout << "Press Enter to exit." << std::endl;
+  //cin.ignore();
   return 0;
 }
 

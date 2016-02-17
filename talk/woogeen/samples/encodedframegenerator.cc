@@ -43,7 +43,7 @@ void EncodedFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
   fread(&iskeyframe, 1, sizeof(int), fd);
   fread(&frameid, 1, sizeof(int), fd);
   std::cout << "wenjie 1111--------------frame size: " << frame_data_size_ << " keyframe : " << iskeyframe << std::endl;*/
-  std::cout << "Encoded frame size is: " << frame_data_size_ << std::endl;
+  //std::cout << "Encoded frame size is: " << frame_data_size_ << std::endl;
   fread(buffer, 1, frame_data_size_, fd);
   *frame_buffer = buffer;
 }
