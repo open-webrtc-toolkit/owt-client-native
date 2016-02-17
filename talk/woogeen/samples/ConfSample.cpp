@@ -8,6 +8,7 @@
 #include "p2psocketsignalingchannel.h"
 #include "fileframegenerator.h"
 #include "encodedframegenerator.h"
+#include "fileaudioframegenerator.h"
 #include "talk/woogeen/include/asio_token.h"
 
 using namespace std;
@@ -25,7 +26,13 @@ int main(int argc, char** argv)
 {
   using namespace woogeen::base;
   using namespace woogeen::conference;
+  const std::string path = "./audio_long16.pcm";
+  std::unique_ptr<woogeen::base::AudioFrameGeneratorInterface> audio_generator(FileAudioFrameGenerator::Create(path));
+  if (audio_generator == nullptr){
+    return -1;
+  }
   GlobalConfiguration::SetEncodedVideoFrameEnabled(true);
+  GlobalConfiguration::SetEncodedAudioFrameEnabled(true, std::move(audio_generator));
   ConferenceClientConfiguration configuration;
   IceServer ice;
   ice.urls.push_back("stun:61.152.239.56");
