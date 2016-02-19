@@ -38,21 +38,19 @@ namespace woogeen {
 namespace base {
 
 ///////////////////////////////////////////////////////////////////////
-// Definition of private class CustomizedFramesThread that periodically generates
-// frames.
+// Definition of private class CustomizedFramesThread that periodically
+// generates frames.
 ///////////////////////////////////////////////////////////////////////
 class CustomizedFramesCapturer::CustomizedFramesThread
-    : public rtc::Thread, public rtc::MessageHandler {
+    : public rtc::Thread,
+      public rtc::MessageHandler {
  public:
   explicit CustomizedFramesThread(CustomizedFramesCapturer* capturer, int fps)
-      : capturer_(capturer),
-        finished_(false) {
-    waiting_time_ms = 1000/fps;
+      : capturer_(capturer), finished_(false) {
+    waiting_time_ms = 1000 / fps;
   }
 
-  virtual ~CustomizedFramesThread() {
-    Stop();
-  }
+  virtual ~CustomizedFramesThread() { Stop(); }
 
   // Override virtual method of parent Thread. Context: Worker Thread.
   virtual void Run() {
@@ -97,9 +95,11 @@ class CustomizedFramesCapturer::CustomizedFramesThread
 // Implementation of class CustomizedFramesCapturer.
 /////////////////////////////////////////////////////////////////////
 
-const char* CustomizedFramesCapturer::kRawFrameDeviceName = "CustomizedFramesGenerator";
+const char* CustomizedFramesCapturer::kRawFrameDeviceName =
+    "CustomizedFramesGenerator";
 
-CustomizedFramesCapturer::CustomizedFramesCapturer(FrameGeneratorInterface* rawFrameGenerator) {
+CustomizedFramesCapturer::CustomizedFramesCapturer(
+    FrameGeneratorInterface* rawFrameGenerator) {
   frame_generator_ = rawFrameGenerator;
   width_ = frame_generator_->GetWidth();
   height_ = frame_generator_->GetHeight();
@@ -118,11 +118,11 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
 void CustomizedFramesCapturer::Init() {
   // Enumerate the supported formats. We have only one supported format.
   if (frame_type_ == FrameGeneratorInterface::I420) {
-     captured_frame_.fourcc = FOURCC_I420;
+    captured_frame_.fourcc = FOURCC_I420;
   } else if (frame_type_ == FrameGeneratorInterface::VP8) {
-     captured_frame_.fourcc = FOURCC_VP80;
+    captured_frame_.fourcc = FOURCC_VP80;
   } else if (frame_type_ == FrameGeneratorInterface::H264) {
-     captured_frame_.fourcc = FOURCC_H264;
+    captured_frame_.fourcc = FOURCC_H264;
   }
   captured_frame_.pixel_height = 1;
   captured_frame_.pixel_width = 1;
@@ -136,7 +136,8 @@ void CustomizedFramesCapturer::Init() {
   SetSupportedFormats(supported);
 }
 
-CaptureState CustomizedFramesCapturer::Start(const VideoFormat& capture_format) {
+CaptureState CustomizedFramesCapturer::Start(
+    const VideoFormat& capture_format) {
   if (IsRunning()) {
     LOG(LS_ERROR) << "Yuv Frame Generator is already running";
     return CS_FAILED;
@@ -175,7 +176,8 @@ void CustomizedFramesCapturer::Stop() {
   async_invoker_.reset();
 }
 
-bool CustomizedFramesCapturer::GetPreferredFourccs(std::vector<uint32>* fourccs) {
+bool CustomizedFramesCapturer::GetPreferredFourccs(
+    std::vector<uint32>* fourccs) {
   if (!fourccs) {
     return false;
   }
@@ -191,16 +193,19 @@ void CustomizedFramesCapturer::sendCapturedFrame() {
 void CustomizedFramesCapturer::ReadFrame() {
   // 1. Signal the previously read frame to downstream in worker_thread.
   rtc::CritScope lock(&lock_);
-  uint8 *buffer;
+  uint8* buffer;
   frame_generator_->GenerateNextFrame(&buffer);
-  captured_frame_.time_stamp = webrtc::TickTime::MillisecondTimestamp() * rtc::kNumNanosecsPerMillisec;
+  captured_frame_.time_stamp =
+      webrtc::TickTime::MillisecondTimestamp() * rtc::kNumNanosecsPerMillisec;
   frame_data_size_ = frame_generator_->GetFrameSize();
   captured_frame_.data_size = frame_data_size_;
   captured_frame_.data = new char[frame_data_size_];
   memmove(captured_frame_.data, buffer, frame_data_size_);
   delete buffer;
-  async_invoker_->AsyncInvoke<void>(worker_thread_, rtc::Bind(&CustomizedFramesCapturer::sendCapturedFrame , this));
+  async_invoker_->AsyncInvoke<void>(
+      worker_thread_,
+      rtc::Bind(&CustomizedFramesCapturer::sendCapturedFrame, this));
 }
 
-} // namespace base
-} // namespace woogeen
+}  // namespace base
+}  // namespace woogeen

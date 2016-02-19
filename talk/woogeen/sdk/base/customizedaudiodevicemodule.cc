@@ -255,7 +255,7 @@ int32_t CustomizedAudioDeviceModule::Init() {
     return -1;
   }
 
-  if(!_outputAdm || _outputAdm->Init() == -1)
+  if (!_outputAdm || _outputAdm->Init() == -1)
     return -1;
 
   _initialized = true;
@@ -274,7 +274,7 @@ int32_t CustomizedAudioDeviceModule::Terminate() {
     return -1;
   }
 
-  if(!_outputAdm || _outputAdm->Terminate() == -1)
+  if (!_outputAdm || _outputAdm->Terminate() == -1)
     return -1;
 
   _initialized = false;

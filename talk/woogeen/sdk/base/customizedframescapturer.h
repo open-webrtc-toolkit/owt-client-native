@@ -25,8 +25,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TALK_MEDIA_DEVICES_CUSTOMIZEDFRAMESCAPTURER_H_
-#define TALK_MEDIA_DEVICES_CUSTOMIZEDFRAMESCAPTURER_H_
+#ifndef WOOGEEN_BASE_CUSTOMIZEDFRAMESCAPTURER_H_
+#define WOOGEEN_BASE_CUSTOMIZEDFRAMESCAPTURER_H_
 
 #include <string>
 #include <vector>
@@ -52,7 +52,8 @@ class CustomizedFramesCapturer : public VideoCapturer {
   void Init();
   void sendCapturedFrame();
   // Override virtual methods of parent class VideoCapturer.
-  virtual CaptureState Start(const cricket::VideoFormat& capture_format) override;
+  virtual CaptureState Start(
+      const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;
   virtual bool IsRunning() override;
   virtual bool IsScreencast() const { return false; }
@@ -82,7 +83,7 @@ class CustomizedFramesCapturer : public VideoCapturer {
   RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesCapturer);
 };
 
-} // namespace base
-} // namespace woogeen
+}  // namespace base
+}  // namespace woogeen
 
-#endif  // TALK_MEDIA_DEVICES_CUSTOMIZEDFRAMESCAPTURER_H_
+#endif  // WOOGEEN_BASE_CUSTOMIZEDFRAMESCAPTURER_H_

@@ -192,12 +192,12 @@ bool CustomizedAudioCapturer::AGC() const {
 }
 
 int32_t CustomizedAudioCapturer::SetWaveOutVolume(uint16_t volumeLeft,
-                                                uint16_t volumeRight) {
+                                                  uint16_t volumeRight) {
   return -1;
 }
 
 int32_t CustomizedAudioCapturer::WaveOutVolume(uint16_t& volumeLeft,
-                                             uint16_t& volumeRight) const {
+                                               uint16_t& volumeRight) const {
   return -1;
 }
 
@@ -237,7 +237,8 @@ int32_t CustomizedAudioCapturer::MinSpeakerVolume(uint32_t& minVolume) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::SpeakerVolumeStepSize(uint16_t& stepSize) const {
+int32_t CustomizedAudioCapturer::SpeakerVolumeStepSize(
+    uint16_t& stepSize) const {
   return -1;
 }
 
@@ -253,11 +254,13 @@ int32_t CustomizedAudioCapturer::MicrophoneVolume(uint32_t& volume) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::MaxMicrophoneVolume(uint32_t& maxVolume) const {
+int32_t CustomizedAudioCapturer::MaxMicrophoneVolume(
+    uint32_t& maxVolume) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::MinMicrophoneVolume(uint32_t& minVolume) const {
+int32_t CustomizedAudioCapturer::MinMicrophoneVolume(
+    uint32_t& minVolume) const {
   return -1;
 }
 
@@ -375,7 +378,8 @@ void CustomizedAudioCapturer::ClearRecordingError() {}
 
 void CustomizedAudioCapturer::VolumeOverloud(int16_t level) {}
 
-void CustomizedAudioCapturer::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
+void CustomizedAudioCapturer::AttachAudioBuffer(
+    AudioDeviceBuffer* audioBuffer) {
   CriticalSectionScoped lock(&crit_sect_);
 
   audio_buffer_ = audioBuffer;

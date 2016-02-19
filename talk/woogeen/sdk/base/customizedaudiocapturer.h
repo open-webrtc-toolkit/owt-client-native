@@ -149,6 +149,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
 
   void VolumeOverloud(int16_t level) override;
+
  private:
   static bool RecThreadFunc(void*);
   static bool PlayThreadFunc(void*);
@@ -172,7 +173,6 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   uint64_t last_call_record_millis_;
 
   Clock* clock_;
-
 };
 }
 }
