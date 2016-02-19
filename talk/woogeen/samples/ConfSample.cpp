@@ -1,6 +1,8 @@
+//
+//Intel License
+//
 // P2PSample.cpp : Defines the entry point for the console application.
 //
-
 #include <iostream>
 #include "woogeen/conference/conferenceclient.h"
 #include "woogeen/base/localcamerastreamparameters.h"
@@ -10,6 +12,7 @@
 #include "encodedframegenerator.h"
 #include "fileaudioframegenerator.h"
 #include "talk/woogeen/include/asio_token.h"
+#include "conferenceobserver.h"
 #include <unistd.h>
 
 using namespace std;
@@ -21,7 +24,6 @@ using namespace std;
 std::function<void(std::unique_ptr<ConferenceException>)>join_room_failure {
 
 }*/
-
 
 int main(int argc, char** argv)
 {
@@ -57,6 +59,8 @@ int main(int argc, char** argv)
   scheme.append(suffix);
   std::shared_ptr<ConferenceClient> room(new ConferenceClient(configuration));
 
+  ConferenceSampleObserver *observer = new ConferenceSampleObserver(room);
+  room->AddObserver(*observer);
 //  cout << "Press Enter to connect room." << std::endl;
  // cin.ignore();
   std::string roomId("");
@@ -112,6 +116,10 @@ int main(int argc, char** argv)
 
  // cout << "Press Enter to exit." << std::endl;
   //cin.ignore();
+  if(observer) {
+    delete observer;
+    observer = nullptr;
+  }
   return 0;
 }
 
