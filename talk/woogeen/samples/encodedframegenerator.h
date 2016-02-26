@@ -8,9 +8,16 @@
 
 #include <stdio.h>
 #include "woogeen/base/framegeneratorinterface.h"
+
+enum EncodedMimeType {
+  ENCODED_VP8,
+  ENCODED_H264,
+  ENCODED_UNKNOWN = 99
+};
+
 class EncodedFrameGenerator: public woogeen::base::FrameGeneratorInterface {
  public:
-  EncodedFrameGenerator(int width, int height, int fps);
+  EncodedFrameGenerator(int width, int height, int fps, EncodedMimeType codecType);
   ~EncodedFrameGenerator();
 
   int GetFrameSize();

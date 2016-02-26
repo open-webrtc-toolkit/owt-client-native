@@ -8,6 +8,8 @@
 #include "p2psocketsignalingchannel.h"
 #include "fileframegenerator.h"
 #include "encodedframegenerator.h"
+#include "directframegenerator.h"
+
 
 using namespace std;
 
@@ -25,8 +27,7 @@ int main(int argc, char** argv)
   cin.ignore();
   /*std::string url = argv[1];
   std::string to = argv[2];*/
-  std::string url = "http://10.239.3.197:8095";
-  //std::string url = "http://192.168.23.227:8095";
+  std::string url = "http://10.239.196.77:8095";
   std::string to = "12";
   pc->Connect(url, nullptr, nullptr);
   cout << "Press Enter to invite remote user." << std::endl;
@@ -37,15 +38,29 @@ int main(int argc, char** argv)
   /*LocalCameraStreamParameters lcsp(LocalCameraStreamParameters(true, false));
   LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));*/
-
-  LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, false));
-  //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
-  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
-  //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
-  //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
-  LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);
-  std::shared_ptr<LocalCustomizedStream> shared_stream(std::make_shared<LocalCustomizedStream>(stream));
-
+#if 1  //Turn this on if you're streaming IP camera
+  DirectFrameGenerator::Options options;
+  options.width = 1280;
+  options.height = 720;
+  options.fps = 20;
+  options.useLocal = false;
+  options.type = FrameGeneratorInterface::VideoFrameCodec::H264;
+  options.url = "rtsp://admin:admin@10.239.10.113:554/cam/realmonitor?channel=1&subtype=0";
+  //options.url = "rtsp://10.239.10.23/rtsp_tunnel?h26x=4&line=1&inst=1";
+  std::shared_ptr<DirectFrameGenerator> generator;
+  generator.reset(new DirectFrameGenerator(options));
+  std::shared_ptr<LocalCustomizedStreamParameters> lcsp;
+  lcsp.reset(new LocalCustomizedStreamParameters(true, true));
+  std::shared_ptr<LocalStream> shared_stream;
+  shared_stream.reset(new LocalCustomizedStream(lcsp, generator.get()));
+#else  //Turn this on if you're streaming yuv/encoded-vp8/encoded-h264
+  FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
+  //EncodedFrameGenerator* framer = new EncodedFrameGenerator(1920, 1080, 20, ENCODED_H264);
+  std::shared_ptr<LocalCustomizedStreamParameters> lcsp;
+  lcsp.reset(new LocalCustomizedStreamParameters(true, true));
+  std::shared_ptr<LocalStream> shared_stream;
+  shared_stream.reset(new LocalCustomizedStream(lcsp, framer));
+#endif
   pc->Publish(to, shared_stream, nullptr, nullptr);
   cout << "Press Enter to exit." << std::endl;
   cin.ignore();

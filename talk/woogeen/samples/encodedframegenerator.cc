@@ -6,14 +6,19 @@
 #include <iostream>
 #include "encodedframegenerator.h"
 
-EncodedFrameGenerator::EncodedFrameGenerator(int width, int height, int fps) {
+EncodedFrameGenerator::EncodedFrameGenerator(int width, int height, int fps, EncodedMimeType codecType) {
   width_ = width;
   height_ = height;
   fps_ = fps;
   /*type_ = woogeen::base::VideoFrameCodec::H264;
   fd = fopen("./source.h264", "rb");*/
-  type_ = woogeen::base::FrameGeneratorInterface::VideoFrameCodec::VP8;
-  fd = fopen("./source.vp8", "rb");
+  if(codecType == ENCODED_VP8){
+    type_ = woogeen::base::FrameGeneratorInterface::VideoFrameCodec::VP8;
+    fd = fopen("./source.vp8", "rb");
+  }else if(codecType == ENCODED_H264){
+    type_ = woogeen::base::FrameGeneratorInterface::VideoFrameCodec::H264;
+    fd = fopen("./source.h264", "rb");
+  }
   if(!fd) {
     std::cout << "failed to open the source.vp8." << std::endl;
   } else {
