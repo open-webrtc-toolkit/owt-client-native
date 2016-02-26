@@ -183,6 +183,7 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int32_t CreateCustomizedAudioDevice(
       std::unique_ptr<AudioFrameGeneratorInterface> frame_generator);
   int32_t AttachAudioBuffer();
+  void CreateOutputAdm();
 
   CriticalSectionWrapper& _critSect;
   CriticalSectionWrapper& _critSectEventCb;

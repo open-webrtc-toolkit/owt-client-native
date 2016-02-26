@@ -80,7 +80,7 @@ CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
       _lastProcessTime(TickTime::MillisecondTimestamp()),
       _initialized(false),
       _lastError(kAdmErrNone),
-      _outputAdm(webrtc::AudioDeviceModuleImpl::Create(0)) {
+      _outputAdm(nullptr) {
   WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s created",
                __FUNCTION__);
 }
@@ -253,6 +253,10 @@ int32_t CustomizedAudioDeviceModule::Init() {
 
   if (_ptrAudioDevice->Init() == -1) {
     return -1;
+  }
+
+  if (!_outputAdm) {
+    CreateOutputAdm();
   }
 
   if (!_outputAdm || _outputAdm->Init() == -1)
@@ -1021,6 +1025,9 @@ bool CustomizedAudioDeviceModule::Recording() const {
 
 int32_t CustomizedAudioDeviceModule::RegisterEventObserver(
     AudioDeviceObserver* eventCallback) {
+  if (_outputAdm == nullptr) {
+    CreateOutputAdm();
+  }
   return _outputAdm->RegisterEventObserver(eventCallback);
 }
 
@@ -1290,6 +1297,12 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
 
 void CustomizedAudioDeviceModule::VolumeOverloud(int16_t level) {
   _outputAdm->VolumeOverloud(level);
+}
+
+void CustomizedAudioDeviceModule::CreateOutputAdm(){
+  if(_outputAdm==nullptr){
+    _outputAdm=webrtc::AudioDeviceModuleImpl::Create(0);
+  }
 }
 }
 
