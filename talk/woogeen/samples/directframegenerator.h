@@ -98,8 +98,9 @@ private:
   FILE *output;
 #endif
   //AVCodec
-  //AVCodec* m_decoder;
-  //AVCodecContext *m_decoderContext;
+  AVCodec* m_decoder;
+  AVCodecContext* m_decoderContext;
+  AVFrame* m_frame;
 };
 
 #endif // DIRECTFRAMGENERATOR_H_

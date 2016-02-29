@@ -18,7 +18,8 @@ int main(int argc, char** argv)
   using namespace woogeen::base;
   using namespace woogeen::p2p;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel(new P2PSocketSignalingChannel());
-  GlobalConfiguration::SetEncodedVideoFrameEnabled(true);
+  //GlobalConfiguration::SetEncodedVideoFrameEnabled(true);
+  GlobalConfiguration::SetEncodedVideoFrameEnabled(false);
   PeerClientConfiguration configuration;
   configuration.media_codec.video_codec = MediaCodec::VideoCodec::VP8;
   //configuration.media_codec.video_codec = MediaCodec::VideoCodec::H264;
@@ -27,7 +28,7 @@ int main(int argc, char** argv)
   cin.ignore();
   /*std::string url = argv[1];
   std::string to = argv[2];*/
-  std::string url = "http://10.239.196.77:8095";
+  std::string url = "http://10.239.196.5:8095";
   std::string to = "12";
   pc->Connect(url, nullptr, nullptr);
   cout << "Press Enter to invite remote user." << std::endl;
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
   /*LocalCameraStreamParameters lcsp(LocalCameraStreamParameters(true, false));
   LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));*/
-#if 1  //Turn this on if you're streaming IP camera
+#if 1
   DirectFrameGenerator::Options options;
   options.width = 1280;
   options.height = 720;
@@ -53,7 +54,7 @@ int main(int argc, char** argv)
   lcsp.reset(new LocalCustomizedStreamParameters(true, true));
   std::shared_ptr<LocalStream> shared_stream;
   shared_stream.reset(new LocalCustomizedStream(lcsp, generator.get()));
-#else  //Turn this on if you're streaming yuv/encoded-vp8/encoded-h264
+#else
   FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
   //EncodedFrameGenerator* framer = new EncodedFrameGenerator(1920, 1080, 20, ENCODED_H264);
   std::shared_ptr<LocalCustomizedStreamParameters> lcsp;

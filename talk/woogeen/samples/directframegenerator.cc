@@ -4,6 +4,10 @@
 #include <fstream>
 #include "directframegenerator.h"
 
+enum PixelFormat rtsp_get_format(AVCodecContext* ctx, const enum PixelFormat* fmt){
+  return AV_PIX_FMT_YUV420P;
+}
+
 DirectFrameGenerator::DirectFrameGenerator(const Options& options)
     : m_width(options.width),
       m_height(options.height),
@@ -16,7 +20,10 @@ DirectFrameGenerator::DirectFrameGenerator(const Options& options)
       m_inputFormat(nullptr),
       m_timeoutHandler(nullptr),
       m_videoStreamIndex(-1),
-      m_audioStreamIndex(-1) {
+      m_audioStreamIndex(-1),
+      m_decoder(nullptr),
+      m_decoderContext(nullptr),
+      m_frame(nullptr) {
   if (options.useLocal) {
     fprintf(stdout, "local url: %s, use local camera\n", m_url.c_str());
   } else if (options.transport.compare("tcp") == 0) {
@@ -46,6 +53,12 @@ DirectFrameGenerator::~DirectFrameGenerator() {
   }
   if (m_transportOpts) {
     av_dict_free(&m_transportOpts);
+  }
+  if (m_decoderContext) {
+    avcodec_close(m_decoderContext);
+    av_free(m_decoderContext);
+    if(m_frame)
+      av_frame_free(&m_frame);
   }
 #ifdef CAPTURE_FROM_IPCAM
   if(output != nullptr){
@@ -127,6 +140,27 @@ void DirectFrameGenerator::Init() {
     fprintf(stderr, "No Video stream found\n");
     return;
   }
+  //Initialize decoder
+  m_decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+  if(!m_decoder){
+    fprintf(stderr, "Failed to find h264 decoder.\n");
+    return;
+  }
+  m_decoderContext = avcodec_alloc_context3(m_decoder);
+  if(!m_decoderContext){
+    fprintf(stderr, "Failed to alloc decoder context.\n");
+    return;
+  }
+  m_decoderContext->get_format = rtsp_get_format;
+  if(avcodec_open2(m_decoderContext, m_decoder, NULL)<0){
+    fprintf(stderr, "Failed to open deocder.\n");
+    return;
+  }
+  m_frame = av_frame_alloc();
+  if(!m_frame){
+    fprintf(stderr, "Failed to alloc frame.\n");
+    return;
+  }
 }
 
 int DirectFrameGenerator::GetFrameSize() {
@@ -143,12 +177,12 @@ int DirectFrameGenerator::GetFps() {
 }
 
 woogeen::base::FrameGeneratorInterface::VideoFrameCodec DirectFrameGenerator::GetType() {
-  return m_type;
+  //return m_type;
+  return woogeen::base::FrameGeneratorInterface::VideoFrameCodec::I420;
 }
 
 void DirectFrameGenerator::ReadFrame() {
   av_read_play(m_context);
-
   m_timeoutHandler->reset(1000);
   if (av_read_frame(m_context, &m_avPacket) < 0) {
     {
@@ -191,7 +225,7 @@ void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
     }
     fprintf(stdout, "Receive video frame packet with size %d \n",
             m_avPacket.size);
-    m_frame_data_size = m_avPacket.size;
+//    m_frame_data_size = m_avPacket.size;
 #ifdef CAPTURE_FROM_IPCAM
     count++;
     if (output != nullptr && count < 300){
@@ -203,10 +237,41 @@ void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
       output == nullptr;
     }
 #endif
+
+#if 1
+    int len, got_frame;
+    len = avcodec_decode_video2(m_decoderContext, m_frame, &got_frame, &m_avPacket);
+    if(len<0){
+      av_free_packet(&m_avPacket);
+      av_init_packet(&m_avPacket);
+      GenerateNextFrame(frame_buffer);
+    }
+    if(got_frame){
+      int width = m_frame->width;
+      int height = m_frame->height;
+      int msize = width*height;
+      int qsize = width*height/4;
+      int frame_size = msize + 2*qsize;
+      m_frame_data_size = frame_size;
+      *frame_buffer = new uint8[frame_size];
+      memcpy(*frame_buffer, m_frame->data[0], msize);
+      memcpy(*frame_buffer+msize, m_frame->data[1], qsize);
+      memcpy(*frame_buffer+msize+qsize, m_frame->data[2], qsize);
+      av_free_packet(&m_avPacket);
+      av_init_packet(&m_avPacket);
+    }else{
+      av_free_packet(&m_avPacket);
+      av_init_packet(&m_avPacket);
+      GenerateNextFrame(frame_buffer);
+    }
+#endif
+    //Copy the resulting frame data to frame buffer.
+#if 0
     *frame_buffer = new uint8[m_frame_data_size];  // important: buffer will be
                                                    // deleted by raw frame
                                                    // capturer
     memmove(*frame_buffer, m_avPacket.data, m_frame_data_size);
+#endif
   } else {
     av_free_packet(&m_avPacket);
     av_init_packet(&m_avPacket);
