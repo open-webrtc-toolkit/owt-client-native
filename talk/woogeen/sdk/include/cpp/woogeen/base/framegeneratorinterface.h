@@ -4,9 +4,7 @@
 #ifndef WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
 #define WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
 
-#include "stdint.h"
-
-typedef unsigned char uint8;
+#include <vector>
 
 namespace woogeen {
 namespace base {
@@ -18,10 +16,10 @@ namespace base {
 class AudioFrameGeneratorInterface {
  public:
   /**
-   @brief Generate frames for next 10ms and |frame_buffer| point to the buffer.
-   @return Return true if generate successfully, false if failed.
+   @brief Generate frames for next 10ms.
+   @return Frames for next 10ms.
    */
-  virtual bool GenerateFramesForNext10Ms(int8_t** frame_buffer) = 0;
+  virtual std::vector<uint8_t> GenerateFramesForNext10Ms() = 0;
   /// Get sample rate for frames generated.
   virtual int GetSampleRate() = 0;
   /// Get numbers of channel for frames generated.
@@ -33,7 +31,7 @@ class AudioFrameGeneratorInterface {
 
  FrameGeneratorInterface is the virtual class to implement its own frame generator.
 */
-class FrameGeneratorInterface {
+class VideoFrameGeneratorInterface {
  public:
   enum VideoFrameCodec {
     I420,
@@ -41,14 +39,10 @@ class FrameGeneratorInterface {
     H264,
   };
   /**
-   @brief This function gets the size of video frame.
-   */
-   virtual int GetFrameSize() = 0;
-  /**
    @brief This function generates one frame data.
    @param frame_buffer to store frame data.
    */
-   virtual void GenerateNextFrame(uint8** frame_buffer) = 0;
+   virtual std::vector<uint8_t> GenerateNextFrame() = 0;
   /**
    @brief This function gets the height of video frame.
    */
@@ -65,9 +59,9 @@ class FrameGeneratorInterface {
    @brief This function gets the video frame type of video frame generator.
    */
    virtual VideoFrameCodec GetType() = 0;
-   FrameGeneratorInterface() {};
+   VideoFrameGeneratorInterface() {};
  protected:
-   ~FrameGeneratorInterface() {};
+   ~VideoFrameGeneratorInterface() {};
 };
 
 } // namespace base

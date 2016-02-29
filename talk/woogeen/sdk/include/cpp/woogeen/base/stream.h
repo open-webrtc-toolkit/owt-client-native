@@ -48,7 +48,7 @@ class MediaConstraintsImpl;
 
 class CustomizedFramesCapturer;
 
-class FrameGeneratorInterface;
+class VideoFrameGeneratorInterface;
 
 using webrtc::MediaStreamInterface;
 
@@ -174,11 +174,11 @@ class LocalCustomizedStream : public LocalStream {
     Initialize a LocalCustomizedStream with parameters.
     @param parameters Parameters for creating the stream. The stream will not be
     impacted if chaning parameters after it is created.
-    @param framer An instance implemented FrameGeneratorInterface.
+    @param framer An instance implemented VideoFrameGeneratorInterface.
   */
    explicit LocalCustomizedStream(
        std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-       FrameGeneratorInterface* framer);
+       VideoFrameGeneratorInterface* framer);
    ~LocalCustomizedStream();
 
   private:

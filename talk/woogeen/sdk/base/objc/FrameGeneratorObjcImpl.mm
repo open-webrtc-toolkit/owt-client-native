@@ -2,7 +2,8 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
-#include "talk/woogeen/sdk/base/objc/FrameGeneratorObjcImpl.h"
+#import <vector>
+#import "talk/woogeen/sdk/base/objc/FrameGeneratorObjcImpl.h"
 
 namespace woogeen {
 namespace base {
@@ -15,12 +16,13 @@ int AudioFrameGeneratorObjcImpl::GetChannelNumber() {
   return (int)[objc_generator_ channelNumber];
 }
 
-bool AudioFrameGeneratorObjcImpl::GenerateFramesForNext10Ms(
-    int8_t** frame_buffer) {
-  int8_t* buffer;
-  buffer = (int8_t*)[[objc_generator_ framesForNext10Ms] bytes];
-  *frame_buffer = buffer;
-  return true;
+std::vector<uint8_t> AudioFrameGeneratorObjcImpl::GenerateFramesForNext10Ms() {
+  if (buffer_size_for_10ms_ == 0) {
+    buffer_size_for_10ms_ = (GetSampleRate() / 100) * GetChannelNumber() * 2;
+  }
+  uint8_t* buffer_ptr = (uint8_t*)[[objc_generator_ framesForNext10Ms] bytes];
+  std::vector<uint8_t> buffer(buffer_ptr, buffer_ptr + buffer_size_for_10ms_);
+  return buffer;
 }
 
 int VideoFrameGeneratorObjcImpl::GetHeight() {
@@ -35,22 +37,20 @@ int VideoFrameGeneratorObjcImpl::GetFps() {
   return (int)[objc_generator_ frameRate];
 }
 
-FrameGeneratorInterface::VideoFrameCodec
+VideoFrameGeneratorInterface::VideoFrameCodec
 VideoFrameGeneratorObjcImpl::GetType() {
-  return woogeen::base::FrameGeneratorInterface::VideoFrameCodec::I420;
+  return woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec::I420;
 }
 
-int VideoFrameGeneratorObjcImpl::GetFrameSize() {
-  int size = GetWidth() * GetHeight();
-  int qsize = size / 4;
-  return (size + 2 * qsize);
-}
-
-void VideoFrameGeneratorObjcImpl::GenerateNextFrame(uint8** frame_buffer) {
-  uint8* buffer;
-  NSData* data = [objc_generator_ nextFrame];
-  buffer = (uint8*)[data bytes];
-  *frame_buffer = buffer;
+std::vector<uint8_t> VideoFrameGeneratorObjcImpl::GenerateNextFrame() {
+  if (buffer_size_for_a_frame_ == 0) {
+    int size = GetWidth() * GetHeight();
+    int qsize = size / 4;
+    buffer_size_for_a_frame_ = size + 2 * qsize;
+  }
+  uint8_t* buffer_ptr = (uint8_t*)[[objc_generator_ nextFrame] bytes];
+  std::vector<uint8_t> buffer(buffer_ptr, buffer_ptr + buffer_size_for_a_frame_);
+  return buffer;
 }
 }
 }

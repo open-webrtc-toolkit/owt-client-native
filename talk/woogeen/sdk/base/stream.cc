@@ -198,7 +198,7 @@ LocalCustomizedStream::~LocalCustomizedStream() {
   capturer_ = nullptr;
 }
 
-LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStreamParameters> parameters, FrameGeneratorInterface* framer) {
+LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStreamParameters> parameters, VideoFrameGeneratorInterface* framer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }

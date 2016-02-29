@@ -99,7 +99,7 @@ const char* CustomizedFramesCapturer::kRawFrameDeviceName =
     "CustomizedFramesGenerator";
 
 CustomizedFramesCapturer::CustomizedFramesCapturer(
-    FrameGeneratorInterface* rawFrameGenerator) {
+    VideoFrameGeneratorInterface* rawFrameGenerator) {
   frame_generator_ = rawFrameGenerator;
   width_ = frame_generator_->GetWidth();
   height_ = frame_generator_->GetHeight();
@@ -117,11 +117,11 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
 
 void CustomizedFramesCapturer::Init() {
   // Enumerate the supported formats. We have only one supported format.
-  if (frame_type_ == FrameGeneratorInterface::I420) {
+  if (frame_type_ == VideoFrameGeneratorInterface::I420) {
     captured_frame_.fourcc = FOURCC_I420;
-  } else if (frame_type_ == FrameGeneratorInterface::VP8) {
+  } else if (frame_type_ == VideoFrameGeneratorInterface::VP8) {
     captured_frame_.fourcc = FOURCC_VP80;
-  } else if (frame_type_ == FrameGeneratorInterface::H264) {
+  } else if (frame_type_ == VideoFrameGeneratorInterface::H264) {
     captured_frame_.fourcc = FOURCC_H264;
   }
   captured_frame_.pixel_height = 1;
@@ -193,18 +193,17 @@ void CustomizedFramesCapturer::sendCapturedFrame() {
 void CustomizedFramesCapturer::ReadFrame() {
   // 1. Signal the previously read frame to downstream in worker_thread.
   rtc::CritScope lock(&lock_);
-  uint8* buffer;
-  frame_generator_->GenerateNextFrame(&buffer);
+  auto buffer = frame_generator_->GenerateNextFrame();
   captured_frame_.time_stamp =
       webrtc::TickTime::MillisecondTimestamp() * rtc::kNumNanosecsPerMillisec;
-  frame_data_size_ = frame_generator_->GetFrameSize();
+  frame_data_size_ = buffer.size();
   captured_frame_.data_size = frame_data_size_;
-  captured_frame_.data = new char[frame_data_size_];
-  memmove(captured_frame_.data, buffer, frame_data_size_);
-  delete buffer;
-  async_invoker_->AsyncInvoke<void>(
-      worker_thread_,
+  captured_frame_.data = new int8_t[frame_data_size_];
+  std::copy(buffer.begin(), buffer.end(), (int8_t*)captured_frame_.data);
+  worker_thread_->Invoke<void>(
       rtc::Bind(&CustomizedFramesCapturer::sendCapturedFrame, this));
+  delete[](int8_t*)captured_frame_.data;
+  captured_frame_.data = nullptr;
 }
 
 }  // namespace base

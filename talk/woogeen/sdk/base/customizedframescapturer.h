@@ -45,7 +45,7 @@ using namespace cricket;
 // Simulated video capturer that periodically reads frames from a file.
 class CustomizedFramesCapturer : public VideoCapturer {
  public:
-  CustomizedFramesCapturer(FrameGeneratorInterface* rawFrameGenerator);
+  CustomizedFramesCapturer(VideoFrameGeneratorInterface* rawFrameGenerator);
   virtual ~CustomizedFramesCapturer();
   static const char* kRawFrameDeviceName;
 
@@ -68,13 +68,13 @@ class CustomizedFramesCapturer : public VideoCapturer {
  private:
   class CustomizedFramesThread;  // Forward declaration, defined in .cc.
 
-  FrameGeneratorInterface* frame_generator_;
+  VideoFrameGeneratorInterface* frame_generator_;
   CapturedFrame captured_frame_;
   CustomizedFramesThread* frames_generator_thread;
   int width_;
   int height_;
   int fps_;
-  FrameGeneratorInterface::VideoFrameCodec frame_type_;
+  VideoFrameGeneratorInterface::VideoFrameCodec frame_type_;
   uint32 frame_data_size_;
   rtc::Thread* worker_thread_;  // Set in Start(), unset in Stop();
   rtc::scoped_ptr<rtc::AsyncInvoker> async_invoker_;

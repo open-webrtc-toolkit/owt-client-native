@@ -14,25 +14,26 @@ class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
  public:
   explicit AudioFrameGeneratorObjcImpl(
       id<RTCAudioFrameGeneratorProtocol> generator)
-      : objc_generator_(generator) {}
+      : objc_generator_(generator), buffer_size_for_10ms_(0) {
+      }
 
-  bool GenerateFramesForNext10Ms(int8_t** frame_buffer);
+  virtual std::vector<uint8_t> GenerateFramesForNext10Ms();
   virtual int GetSampleRate();
   virtual int GetChannelNumber();
 
  private:
   id<RTCAudioFrameGeneratorProtocol> objc_generator_;
+  int buffer_size_for_10ms_;
 };
 
 /// This class cast objc video frame generator to C++ one. Only I420 raw frame
 /// is supported.
-class VideoFrameGeneratorObjcImpl : public FrameGeneratorInterface {
+class VideoFrameGeneratorObjcImpl : public VideoFrameGeneratorInterface {
  public:
   explicit VideoFrameGeneratorObjcImpl(
       id<RTCVideoFrameGeneratorProtocol> generator)
-      : objc_generator_(generator), previous_(nullptr) {}
-  virtual int GetFrameSize();
-  virtual void GenerateNextFrame(uint8** frame_buffer);
+      : objc_generator_(generator) {}
+  virtual std::vector<uint8_t> GenerateNextFrame();
   virtual int GetHeight();
   virtual int GetWidth();
   virtual int GetFps();
@@ -40,7 +41,7 @@ class VideoFrameGeneratorObjcImpl : public FrameGeneratorInterface {
 
  private:
   id<RTCVideoFrameGeneratorProtocol> objc_generator_;
-  uint8* previous_;
+  int buffer_size_for_a_frame_;
 };
 }
 }

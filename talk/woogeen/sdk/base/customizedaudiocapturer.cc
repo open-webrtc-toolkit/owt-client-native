@@ -411,10 +411,9 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
 
   if (last_call_record_millis_ == 0 ||
       current_time - last_call_record_millis_ >= 10) {
-    if (!frame_generator_->GenerateFramesForNext10Ms(&recording_buffer_)) {
-      crit_sect_.Leave();
-      return false;
-    }
+    auto buffer = frame_generator_->GenerateFramesForNext10Ms();
+    recording_buffer_ = new int8_t[buffer.size()];
+    std::copy(buffer.begin(), buffer.end(), recording_buffer_);
 
     // Sample rate and channel number cannot be changed on the fly.
     audio_buffer_->SetRecordedBuffer(recording_buffer_,
@@ -422,6 +421,8 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
     last_call_record_millis_ = current_time;
     crit_sect_.Leave();
     audio_buffer_->DeliverRecordedData();
+    delete[] recording_buffer_;
+    recording_buffer_ = nullptr;
     crit_sect_.Enter();
   }
 
