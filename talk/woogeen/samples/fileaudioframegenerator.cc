@@ -33,7 +33,7 @@ bool FileAudioFrameGenerator::Init() {
   recording_buffer_size_in_10ms_ =
       recording_frames_in_10_ms_ * channel_number_ * sample_size_ / 8;
   if (!recording_buffer_) {
-    recording_buffer_ = new int8_t[recording_buffer_size_in_10ms_];
+    recording_buffer_ = new uint8_t[recording_buffer_size_in_10ms_];
   }
   fd = fopen(input_filename_.c_str(), "rb");
   if (!fd) {
@@ -49,7 +49,7 @@ bool FileAudioFrameGenerator::Init() {
   return true;
 }
 
-bool FileAudioFrameGenerator::GenerateFramesForNext10Ms(int8_t** frame_buffer) {
+std::vector<uint8_t> FileAudioFrameGenerator::GenerateFramesForNext10Ms() {
   if (fread(recording_buffer_, 1, recording_buffer_size_in_10ms_, fd) !=
       recording_buffer_size_in_10ms_) {
     if (feof(fd)) {
@@ -57,16 +57,19 @@ bool FileAudioFrameGenerator::GenerateFramesForNext10Ms(int8_t** frame_buffer) {
       fseek(fd, 0, SEEK_SET);
       if (fread(recording_buffer_, 1, recording_buffer_size_in_10ms_, fd) !=
           recording_buffer_size_in_10ms_) {
-        return false;
+        return std::vector<uint8_t>();;
       }
     } else if (ferror(fd)) {
       std::cout << "Error while reading file" << std::endl;
+      return std::vector<uint8_t>();;
     } else {
       std::cout << "Unknown error while reading file" << std::endl;
+      return std::vector<uint8_t>();;
     }
   }
-  *frame_buffer = recording_buffer_;
-  return true;
+  std::vector<uint8_t> buffer(
+      recording_buffer_, recording_buffer_ + recording_buffer_size_in_10ms_);
+  return buffer;
 }
 
 int FileAudioFrameGenerator::GetSampleRate() { return sample_rate_; }

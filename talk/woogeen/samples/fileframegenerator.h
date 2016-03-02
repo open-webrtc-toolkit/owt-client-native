@@ -9,25 +9,23 @@
 #include <stdio.h>
 #include "woogeen/base/framegeneratorinterface.h"
 
-class FileFrameGenerator: public woogeen::base::FrameGeneratorInterface {
+class FileFrameGenerator: public woogeen::base::VideoFrameGeneratorInterface {
  public:
   FileFrameGenerator(int width, int height, int fps);
   ~FileFrameGenerator();
 
-  int GetFrameSize();
+  std::vector<uint8_t> GenerateNextFrame() override;
 
-  void GenerateNextFrame(uint8** frame_buffer);
-
-  int GetHeight();
-  int GetWidth();
-  int GetFps();
-  woogeen::base::FrameGeneratorInterface::VideoFrameCodec GetType();
+  int GetHeight() override;
+  int GetWidth() override;
+  int GetFps() override;
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType() override;
 
  private:
   int width_;
   int height_;
   int fps_;
-  woogeen::base::FrameGeneratorInterface::VideoFrameCodec type_;
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec type_;
   int frame_data_size_;
   FILE * fd;
 };

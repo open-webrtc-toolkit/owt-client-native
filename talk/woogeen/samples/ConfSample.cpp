@@ -71,7 +71,8 @@ int main(int argc, char** argv)
   string token = getToken(scheme, roomId);
   LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, true));
   //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
-  EncodedFrameGenerator* framer = new EncodedFrameGenerator(640, 480, 20);
+  EncodedFrameGenerator* framer =
+      new EncodedFrameGenerator(640, 480, 20, EncodedMimeType::ENCODED_VP8);
   //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
   LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);

@@ -15,25 +15,23 @@ enum EncodedMimeType {
   ENCODED_UNKNOWN = 99
 };
 
-class EncodedFrameGenerator: public woogeen::base::FrameGeneratorInterface {
+class EncodedFrameGenerator: public woogeen::base::VideoFrameGeneratorInterface {
  public:
   EncodedFrameGenerator(int width, int height, int fps, EncodedMimeType codecType);
   ~EncodedFrameGenerator();
 
-  int GetFrameSize();
+  std::vector<uint8_t> GenerateNextFrame() override;
 
-  void GenerateNextFrame(uint8** frame_buffer);
-
-  int GetHeight();
-  int GetWidth();
-  int GetFps();
-  woogeen::base::FrameGeneratorInterface::VideoFrameCodec GetType();
+  int GetHeight() override;
+  int GetWidth() override;
+  int GetFps() override;
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType() override;
 
  private:
   int width_;
   int height_;
   int fps_;
-  woogeen::base::FrameGeneratorInterface::VideoFrameCodec type_;
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec type_;
   int frame_data_size_;
   FILE * fd;
 };
