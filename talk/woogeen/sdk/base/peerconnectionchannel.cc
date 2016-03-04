@@ -5,6 +5,7 @@
 #include <vector>
 #include "webrtc/base/logging.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
+#include "talk/woogeen/sdk/base/sdputils.h"
 
 namespace woogeen {
 namespace base {
@@ -141,7 +142,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);
-      //peer_connection_->SetLocalDescription(param->observer, param->description);
       delete param;
       break;
     }
@@ -181,6 +181,14 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           sdp_string.replace(pos, 18, "120 116 117 96 100");
         }
 #endif
+      }
+      if (configuration_.max_audio_bandwidth != 0) {
+        sdp_string = SdpUtils::SetMaximumAudioBandwidth(
+            sdp_string, configuration_.max_audio_bandwidth);
+      }
+      if (configuration_.max_video_bandwidth != 0) {
+        sdp_string = SdpUtils::SetMaximumVideoBandwidth(
+            sdp_string, configuration_.max_video_bandwidth);
       }
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));

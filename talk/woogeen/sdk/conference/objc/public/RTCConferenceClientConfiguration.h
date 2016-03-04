@@ -39,6 +39,10 @@
 
 @property(nonatomic, strong, readwrite) NSArray* ICEServers;
 @property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
+/// Max outgoing audio bandwidth, unit: kbps.
+@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
+/// Max outgoing video bandwidth, unit: kbps.
+@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
 
 @end
 

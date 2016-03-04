@@ -37,6 +37,8 @@
   }
   woogeen::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;
+  nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
+  nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
   LOG(LS_INFO) << "Video codec preference: " << config.mediaCodec.videoCodec;
   if (config.mediaCodec.videoCodec == VideoCodecVP8) {
     nativeConfig.media_codec.video_codec = woogeen::base::MediaCodec::VideoCodec::VP8;

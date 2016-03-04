@@ -31,6 +31,10 @@ struct PeerConnectionChannelConfiguration
  public:
   explicit PeerConnectionChannelConfiguration() : RTCConfiguration() {}
   MediaCodec media_codec;
+  /// Max outgoing video bandwidth, unit: kbps.
+  int max_video_bandwidth;
+  /// Max outgoing audio bandwidth, unit: kbps.
+  int max_audio_bandwidth;
   bool encoded_video_frame_;
 };
 

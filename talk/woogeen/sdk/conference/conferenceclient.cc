@@ -652,6 +652,8 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   }
   config.servers = ice_servers;
   config.media_codec = configuration_.media_codec;
+  config.max_audio_bandwidth = configuration_.max_audio_bandwidth;
+  config.max_video_bandwidth = configuration_.max_video_bandwidth;
   return config;
 }
 
