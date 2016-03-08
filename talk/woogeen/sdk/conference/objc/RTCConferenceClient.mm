@@ -39,9 +39,43 @@
   nativeConfig->max_audio_bandwidth = [config maxAudioBandwidth];
   nativeConfig->max_video_bandwidth = [config maxVideoBandwidth];
   LOG(LS_INFO) << "Video codec preference: " << config.mediaCodec.videoCodec;
-  if (config.mediaCodec.videoCodec == VideoCodecVP8) {
-    nativeConfig->media_codec.video_codec =
-        woogeen::base::MediaCodec::VideoCodec::VP8;
+  switch (config.mediaCodec.audioCodec) {
+    case AudioCodecOpus:
+      nativeConfig->media_codec.audio_codec =
+          woogeen::base::MediaCodec::AudioCodec::OPUS;
+      break;
+    case AudioCodecIsac:
+      nativeConfig->media_codec.audio_codec =
+          woogeen::base::MediaCodec::AudioCodec::ISAC;
+      break;
+    case AudioCodecG722:
+      nativeConfig->media_codec.audio_codec =
+          woogeen::base::MediaCodec::AudioCodec::G722;
+      break;
+    case AudioCodecPcmu:
+      nativeConfig->media_codec.audio_codec =
+          woogeen::base::MediaCodec::AudioCodec::PCMU;
+      break;
+    case AudioCodecPcma:
+      nativeConfig->media_codec.audio_codec =
+          woogeen::base::MediaCodec::AudioCodec::PCMA;
+      break;
+    default:
+      LOG(LS_WARNING)
+          << "Invalid audio codec preference, will use default value instead.";
+  }
+  switch (config.mediaCodec.videoCodec) {
+    case VideoCodecVP8:
+      nativeConfig->media_codec.video_codec =
+          woogeen::base::MediaCodec::VideoCodec::VP8;
+      break;
+    case VideoCodecH264:
+      nativeConfig->media_codec.video_codec =
+          woogeen::base::MediaCodec::VideoCodec::H264;
+      break;
+    default:
+      LOG(LS_WARNING)
+          << "Invalid video codec preference, will use default value instead.";
   }
   std::unique_ptr<woogeen::conference::ConferenceClient> nativeConferenceClient(
       new woogeen::conference::ConferenceClient(*nativeConfig));

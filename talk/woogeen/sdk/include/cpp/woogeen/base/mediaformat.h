@@ -39,17 +39,28 @@ namespace base {
  */
 struct MediaCodec {
  public:
+  enum AudioCodec : int {
+    OPUS = 1,
+    ISAC,
+    G722,
+    PCMU,
+    PCMA,
+  };
   enum VideoCodec : int {
     VP8 = 1,
     H264,
   };
 
-  explicit MediaCodec() : video_codec(H264) {}
+  explicit MediaCodec() : video_codec(H264), audio_codec(OPUS) {}
 
   /**
    * @brief Preference for video codec. Default is H.264.
    */
   VideoCodec video_codec;
+  /**
+   * @brief Preference for audio codec. Default is Opus.
+   */
+  AudioCodec audio_codec;
 };
 
 /// This class represent a resolution value

@@ -27,7 +27,18 @@
 #ifndef WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
 #define WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
 
-#import "RTCVideoCodecs.h"
+typedef NS_ENUM(NSInteger, VideoCodec) {
+  VideoCodecH264 = 1,
+  VideoCodecVP8 = 2,
+};
+
+typedef NS_ENUM(NSInteger, AudioCodec) {
+  AudioCodecOpus = 1,
+  AudioCodecIsac = 2,
+  AudioCodecG722 = 3,
+  AudioCodecPcmu = 4,
+  AudioCodecPcma = 5,
+};
 
 /*
   @brief An instance of this class indicates preference for codecs.
@@ -36,6 +47,8 @@
 */
 @interface RTCMediaCodec : NSObject
 
+/// Preference for audio codec. Default is Opus.
+@property(nonatomic, readwrite) NSInteger audioCodec;
 /// Preference for video codec. Default is H.264.
 @property(nonatomic, readwrite) NSInteger videoCodec;
 

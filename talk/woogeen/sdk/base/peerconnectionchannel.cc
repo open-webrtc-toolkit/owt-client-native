@@ -107,38 +107,10 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         LOG(LS_ERROR) << "Error parsing local description.";
         ASSERT(false);
       }
-      if (configuration_.media_codec.video_codec == MediaCodec::VideoCodec::H264) {
-#if defined(WEBRTC_WIN)
-        std::size_t pos = sdp_string.find("100 116 117 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "120 116 117 100");
-        }
-#elif defined(WEBRTC_IOS)
-        std::size_t pos = sdp_string.find("100 107");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 7, "107 100");
-        }
-#elif defined(WEBRTC_LINUX)
-        std::size_t pos = sdp_string.find("100 116 117 121");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "121 116 117 100");
-        }
-        pos = sdp_string.find("100 116 117 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "120 116 117 100");
-        }
-
-        pos = sdp_string.find("100 116 117 96 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 18, "120 116 117 96 100");
-        }
-
-        pos = sdp_string.find("100 116 117 120 96");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 18, "120 100 116 117 96");
-        }
-#endif
-      }
+      sdp_string = SdpUtils::SetPreferAudioCodec(
+          sdp_string, configuration_.media_codec.audio_codec);
+      sdp_string = SdpUtils::SetPreferVideoCodec(
+          sdp_string, configuration_.media_codec.video_codec);
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);
@@ -154,33 +126,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       if (!desc->ToString(&sdp_string)) {
         LOG(LS_ERROR) << "Error parsing local description.";
         ASSERT(false);
-      }
-      if (configuration_.media_codec.video_codec == MediaCodec::VideoCodec::H264) {
-#if defined(WEBRTC_WIN)
-        std::size_t pos = sdp_string.find("100 116 117 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "120 116 117 100");
-        }
-#elif defined(WEBRTC_IOS)
-        std::size_t pos = sdp_string.find("100 107");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 7, "107 100");
-        }
-#elif defined(WEBRTC_LINUX)
-        std::size_t pos = sdp_string.find("100 116 117 121");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "121 116 117 100");
-        }
-        pos = sdp_string.find("100 116 117 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 15, "120 116 117 100");
-        }
-
-        pos = sdp_string.find("100 116 117 96 120");
-        if (pos != std::string::npos) {
-          sdp_string.replace(pos, 18, "120 116 117 96 100");
-        }
-#endif
       }
       if (configuration_.max_audio_bandwidth != 0) {
         sdp_string = SdpUtils::SetMaximumAudioBandwidth(
