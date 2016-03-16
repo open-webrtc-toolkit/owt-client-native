@@ -122,7 +122,7 @@ void PeerConnectionDependencyFactory::
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
   rtc::scoped_refptr<AudioDeviceModule> adm;
-  if (GlobalConfiguration::GetEncodedAudioFrameEnabled()) {
+  if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     adm = CustomizedAudioDeviceModule::Create(
         std::move(GlobalConfiguration::GetAudioFrameGenerator()));
   }

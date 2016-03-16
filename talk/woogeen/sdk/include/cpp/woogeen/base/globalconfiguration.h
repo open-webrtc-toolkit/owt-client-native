@@ -57,19 +57,21 @@ class GlobalConfiguration {
 #endif
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
-   @param enabled set capturing frame is encoded or not.
+   @param enabled Capturing frame is encoded or not.
    */
   static void SetEncodedVideoFrameEnabled(bool enabled) {
      encoded_frame_ = enabled;
   }
   /**
-   @brief This function sets the capturing frame type to be encoded audio frame.
+   @brief This function sets the audio input to be an instance of
+   AudioFrameGeneratorInterface.
    @detail When it is enabled, SDK will not capture audio from mic. This means
    you cannot create LocalStream other than LocalCustomizedStream.
-   @param enabled set capturing frame is encoded or not.
-   @param audio_frame_generator An implementation which feeds audio frames to SDK.
+   @param enabled Customized audio input is enabled or not.
+   @param audio_frame_generator An implementation which feeds audio frames to
+   SDK.
    */
-  static void SetEncodedAudioFrameEnabled(
+  static void SetCustomizedAudioInputEnabled(
       bool enabled,
       std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator) {
     if (enabled)
@@ -108,7 +110,7 @@ private:
    @brief This function gets the capturing frame type.
    @return true or false.
    */
-  static bool GetEncodedAudioFrameEnabled() {
+  static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
   /**
