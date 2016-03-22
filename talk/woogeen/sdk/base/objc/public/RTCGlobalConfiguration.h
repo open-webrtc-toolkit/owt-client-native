@@ -37,7 +37,7 @@
  @param audioFrameGenerator An implementation which feeds audio frames to SDK.
  If |enabled| is NO, generator will be ignored.
  */
-+ (void)setCustomizedAudioInputEnabled:(bool)enabled
++ (void)setCustomizedAudioInputEnabled:(BOOL)enabled
                    audioFrameGenerator:
                        (id<RTCAudioFrameGeneratorProtocol>)audioFrameGenerator;
 
