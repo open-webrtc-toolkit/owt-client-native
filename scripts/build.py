@@ -42,7 +42,7 @@ def runhooks(arch, ssl_root):
   if(ssl_root):
     env['GYP_DEFINES']+=(' ssl_root='+ssl_root)
   env.setdefault('GYP_GENERATOR_FLAGS', '')
-  env['GYP_GENERATOR_FLAGS']+=("output_dir="+ARCH_PARAM_DICT.get(arch)[0])
+  env['GYP_GENERATOR_FLAGS']+=(" output_dir="+ARCH_PARAM_DICT.get(arch)[0])
   env.setdefault('GYP_GENERATORS', 'ninja')
   ret=subprocess.call(['gclient', 'runhooks'], cwd=HOME_PATH, env=env)
   if ret == 0:
