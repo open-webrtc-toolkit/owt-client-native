@@ -332,7 +332,8 @@ void ConferencePeerConnectionChannel::Subscribe(
     const SubscribeOptions& subscribe_options,
     std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  LOG(LS_INFO) << "Subscribe a remote stream.";
+  LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
+               << stream->has_audio_ << ", has video? " << stream->has_video_;
   subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
@@ -344,14 +345,19 @@ void ConferencePeerConnectionChannel::Subscribe(
   sio_options->get_map()["streamId"] =
       sio::string_message::create(stream->Id());
   if (stream->has_video_) {
-    sio::message::ptr video_options = sio::object_message::create();
-    sio::message::ptr resolution_options = sio::object_message::create();
-    resolution_options->get_map()["width"] =
-        sio::int_message::create(subscribe_options.resolution.width);
-    resolution_options->get_map()["height"] =
-        sio::int_message::create(subscribe_options.resolution.height);
-    video_options->get_map()["resolution"] = resolution_options;
-    sio_options->get_map()["video"] = video_options;
+    if (subscribe_options.resolution.width != 0 &&
+        subscribe_options.resolution.height != 0) {
+      sio::message::ptr video_options = sio::object_message::create();
+      sio::message::ptr resolution_options = sio::object_message::create();
+      resolution_options->get_map()["width"] =
+          sio::int_message::create(subscribe_options.resolution.width);
+      resolution_options->get_map()["height"] =
+          sio::int_message::create(subscribe_options.resolution.height);
+      video_options->get_map()["resolution"] = resolution_options;
+      sio_options->get_map()["video"] = video_options;
+    } else {
+      sio_options->get_map()["video"] = sio::bool_message::create(true);
+    }
   } else {
     LOG(LS_INFO) << "Subscribe an audio only stream.";
     sio_options->get_map()["video"] = sio::bool_message::create(false);
