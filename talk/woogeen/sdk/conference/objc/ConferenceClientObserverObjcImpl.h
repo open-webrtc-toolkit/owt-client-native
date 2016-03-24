@@ -5,7 +5,10 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 #define WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 
+#include <unordered_map>
+#include <mutex>
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
+
 #import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClientObserver.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
 
@@ -37,7 +40,13 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<const woogeen::conference::User> user) override;
 
  private:
+  void AddRemoteStreamToMap(const std::string& id, RTCRemoteStream* stream);
+  void TriggerOnStreamRemoved(
+      std::shared_ptr<woogeen::base::RemoteStream> stream);
+
   id<RTCConferenceClientObserver> observer_;
+  std::unordered_map<std::string, RTCRemoteStream*> remote_streams_;
+  std::mutex remote_streams_mutex_;
 };
 }
 }

@@ -5,6 +5,8 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
@@ -21,10 +23,18 @@ ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
   observer_ = observer;
 }
 
+void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
+    const std::string& id,
+    RTCRemoteStream* stream) {
+  std::lock_guard<std::mutex> lock(remote_streams_mutex_);
+  remote_streams_[id] = stream;
+}
+
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
+  AddRemoteStreamToMap(stream->Id(), remote_stream);
   [observer_ onStreamAdded:remote_stream];
 }
 
@@ -32,6 +42,7 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteScreenStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteScreenStream alloc] initWithNativeStream:stream];
+  AddRemoteStreamToMap(stream->Id(), remote_stream);
   [observer_ onStreamAdded:remote_stream];
 }
 
@@ -48,27 +59,38 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
     [supportedVideoFormats addObject:format];
   }
   [remote_stream setSupportedVideoFormats:supportedVideoFormats];
+  AddRemoteStreamToMap(stream->Id(), remote_stream);
   [observer_ onStreamAdded:(RTCRemoteStream*)remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<RemoteCameraStream> stream) {
-  RTCRemoteStream* remote_stream =
-      [[RTCRemoteStream alloc] initWithNativeStream:stream];
-  [observer_ onStreamRemoved:remote_stream];
+  TriggerOnStreamRemoved(stream);
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<RemoteScreenStream> stream) {
-  RTCRemoteStream* remote_stream =
-      [[RTCRemoteStream alloc] initWithNativeStream:stream];
-  [observer_ onStreamRemoved:remote_stream];
+  TriggerOnStreamRemoved(stream);
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<RemoteMixedStream> stream) {
-  RTCRemoteStream* remote_stream =
-      [[RTCRemoteStream alloc] initWithNativeStream:stream];
+  TriggerOnStreamRemoved(stream);
+}
+
+void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
+    std::shared_ptr<woogeen::base::RemoteStream> stream) {
+  RTCRemoteStream* remote_stream(nullptr);
+  {
+    std::lock_guard<std::mutex> lock(remote_streams_mutex_);
+    auto remote_stream_it = remote_streams_.find(stream->Id());
+    if (remote_stream_it == remote_streams_.end()) {
+      RTC_DCHECK(false);
+      return;
+    }
+    remote_stream = remote_stream_it->second;
+    remote_streams_.erase(remote_stream_it);
+  }
   [observer_ onStreamRemoved:remote_stream];
 }
 
