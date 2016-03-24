@@ -46,19 +46,15 @@ Here is a list of known issues:
 - Conference recording is not supported.
 - Subscribe streams with audio/video only option is not supported.
 - Get connection stats is not supported.
-- Bitrate control is not supported. It may costs up to 2Mbps per connection.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - woogeen.lib is compiled as 32 bit library.
-- Publishing local H264 stream is not supported.
 
 # Video codecs {#section8}
-Only VP8 is supported for encoding. Therefore, when publishing the stream to the remote side or conference, select VP8.
-
 For the decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both
 VP8 and H.264 are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
-Most of the Intel<sup>®</sup> 5th and 6th Generation Core(TM) Platforms support VP8 hardware decodeing
+Most of the Intel<sup>®</sup> 5th and 6th Generation Core(TM) Platforms support VP8 hardware decodeing.
 
-Hardware acceleration for decoding of VP8/H264 is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API, 
+Hardware acceleration for decoding of VP8/H264, and encoding of H264, is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API, 
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # Publish streams with customized frames {#section9}
