@@ -50,7 +50,7 @@ class CustomizedFramesCapturer : public VideoCapturer {
   static const char* kRawFrameDeviceName;
 
   void Init();
-  void sendCapturedFrame();
+  void SendCapturedFrame();
   // Override virtual methods of parent class VideoCapturer.
   virtual CaptureState Start(
       const cricket::VideoFormat& capture_format) override;
@@ -63,7 +63,10 @@ class CustomizedFramesCapturer : public VideoCapturer {
   virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs);
 
   // Read a frame and determine how long to wait for the next frame.
-  void ReadFrame();
+  virtual void ReadFrame();
+  // Adjust |frame_buffer_|'s capacity to store frame data. |frame_buffer_|'s
+  // capacity should be greater or equal to |size|.
+  virtual void AdjustFrameBuffer(uint32_t size);
 
  private:
   class CustomizedFramesThread;  // Forward declaration, defined in .cc.
@@ -75,7 +78,9 @@ class CustomizedFramesCapturer : public VideoCapturer {
   int height_;
   int fps_;
   VideoFrameGeneratorInterface::VideoFrameCodec frame_type_;
-  uint32 frame_data_size_;
+  uint32_t frame_buffer_capacity_;
+  std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
+      frame_buffer_;  // Pointer to a reuseable memory for video frames.
   rtc::Thread* worker_thread_;  // Set in Start(), unset in Stop();
   rtc::scoped_ptr<rtc::AsyncInvoker> async_invoker_;
   rtc::CriticalSection lock_;

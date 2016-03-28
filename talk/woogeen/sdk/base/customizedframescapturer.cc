@@ -30,6 +30,7 @@
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/thread.h"
+#include "webrtc/system_wrappers/interface/aligned_malloc.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
@@ -99,20 +100,20 @@ const char* CustomizedFramesCapturer::kRawFrameDeviceName =
     "CustomizedFramesGenerator";
 
 CustomizedFramesCapturer::CustomizedFramesCapturer(
-    VideoFrameGeneratorInterface* rawFrameGenerator) {
-  frame_generator_ = rawFrameGenerator;
-  width_ = frame_generator_->GetWidth();
-  height_ = frame_generator_->GetHeight();
-  fps_ = frame_generator_->GetFps();
-  frame_type_ = frame_generator_->GetType();
-  frames_generator_thread = NULL;
-  async_invoker_ = nullptr;
-}
+    VideoFrameGeneratorInterface* raw_frameGenerator)
+    : frame_generator_(raw_frameGenerator),
+      width_(frame_generator_->GetWidth()),
+      height_(frame_generator_->GetHeight()),
+      fps_(frame_generator_->GetFps()),
+      frame_type_(frame_generator_->GetType()),
+      frame_buffer_capacity_(0),
+      frame_buffer_(nullptr),
+      frames_generator_thread(nullptr),
+      async_invoker_(nullptr) {}
 
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   Stop();
   frame_generator_ = NULL;
-  delete[] static_cast<char*>(captured_frame_.data);
 }
 
 void CustomizedFramesCapturer::Init() {
@@ -185,25 +186,38 @@ bool CustomizedFramesCapturer::GetPreferredFourccs(
   return true;
 }
 
-void CustomizedFramesCapturer::sendCapturedFrame() {
+void CustomizedFramesCapturer::SendCapturedFrame() {
   SignalFrameCaptured(this, &captured_frame_);
+}
+
+void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
+  if (size > frame_buffer_capacity_ || !frame_buffer_) {
+    LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
+    auto new_size = size * 2;
+    frame_buffer_.reset(static_cast<uint8_t*>(
+        webrtc::AlignedMalloc(new_size * sizeof(uint8_t), 16)));
+    frame_buffer_capacity_ = new_size;
+  }
 }
 
 // Executed in the context of CustomizedFramesThread.
 void CustomizedFramesCapturer::ReadFrame() {
   // 1. Signal the previously read frame to downstream in worker_thread.
   rtc::CritScope lock(&lock_);
-  auto buffer = frame_generator_->GenerateNextFrame();
+  auto frame_size = frame_generator_->GetNextFrameSize();
+  AdjustFrameBuffer(frame_size);
+  if (frame_generator_->GenerateNextFrame(
+          frame_buffer_.get(), frame_buffer_capacity_) != frame_size) {
+    RTC_DCHECK(false);
+    LOG(LS_ERROR) << "Failed to get video frame.";
+    return;
+  }
   captured_frame_.time_stamp =
       webrtc::TickTime::MillisecondTimestamp() * rtc::kNumNanosecsPerMillisec;
-  frame_data_size_ = buffer.size();
-  captured_frame_.data_size = frame_data_size_;
-  captured_frame_.data = new int8_t[frame_data_size_];
-  std::copy(buffer.begin(), buffer.end(), (int8_t*)captured_frame_.data);
+  captured_frame_.data_size = frame_size;
+  captured_frame_.data = frame_buffer_.get();
   worker_thread_->Invoke<void>(
-      rtc::Bind(&CustomizedFramesCapturer::sendCapturedFrame, this));
-  delete[](int8_t*)captured_frame_.data;
-  captured_frame_.data = nullptr;
+      rtc::Bind(&CustomizedFramesCapturer::SendCapturedFrame, this));
 }
 
 }  // namespace base

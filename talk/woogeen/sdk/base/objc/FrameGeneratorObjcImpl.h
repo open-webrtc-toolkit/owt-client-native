@@ -17,9 +17,10 @@ class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
       : objc_generator_(generator), buffer_size_for_10ms_(0) {
       }
 
-  virtual std::vector<uint8_t> GenerateFramesForNext10Ms();
-  virtual int GetSampleRate();
-  virtual int GetChannelNumber();
+  virtual uint32_t GenerateFramesForNext10Ms(const uint8_t* buffer,
+                                             const uint32_t capacity) override;
+  virtual int GetSampleRate() override;
+  virtual int GetChannelNumber() override;
 
  private:
   id<RTCAudioFrameGeneratorProtocol> objc_generator_;
@@ -32,12 +33,14 @@ class VideoFrameGeneratorObjcImpl : public VideoFrameGeneratorInterface {
  public:
   explicit VideoFrameGeneratorObjcImpl(
       id<RTCVideoFrameGeneratorProtocol> generator)
-      : objc_generator_(generator) {}
-  virtual std::vector<uint8_t> GenerateNextFrame();
-  virtual int GetHeight();
-  virtual int GetWidth();
-  virtual int GetFps();
-  virtual VideoFrameCodec GetType();
+      : objc_generator_(generator), buffer_size_for_a_frame_(0) {}
+  virtual uint32_t GenerateNextFrame(const uint8_t* buffer,
+                                     const uint32_t capacity) override;
+  virtual uint32_t GetNextFrameSize() override;
+  virtual int GetHeight() override;
+  virtual int GetWidth() override;
+  virtual int GetFps() override;
+  virtual VideoFrameCodec GetType() override;
 
  private:
   id<RTCVideoFrameGeneratorProtocol> objc_generator_;

@@ -35,13 +35,18 @@
 @protocol RTCAudioFrameGeneratorProtocol<NSObject>
 /**
  @brief Generate frames for next 10ms.
- @return Frames for next 10ms.
+ @param buffer Points to the start address for frame data. The memory is
+ allocated and owned by SDK. Implementations should fill frame data to the
+ memory starts from |buffer|.
+ @param capacity Buffer's capacity. It will be equal or greater to expected
+ frame buffer size.
+ @return The size of actually frame buffer size.
  */
-- (NSData*)framesForNext10Ms;
+- (NSUInteger)framesForNext10Ms:(const uint8_t*)buffer capacity:(const NSUInteger)capacity;
 /// Get sample rate for frames generated.
-- (NSInteger)sampleRate;
+- (NSUInteger)sampleRate;
 /// Get numbers of channel for frames generated.
-- (NSInteger)channelNumber;
+- (NSUInteger)channelNumber;
 @end
 
 /**
@@ -54,9 +59,14 @@
 @protocol RTCVideoFrameGeneratorProtocol<NSObject>
 /**
  @brief Generate next video frame
- @return Next frame data.
+ @param buffer Points to the start address for frame data. The memory is
+ allocated and owned by SDK. Implementations should fill frame data to the
+ memory starts from |buffer|.
+ @param capacity Buffer's capacity. It will be equal or greater to expected
+ frame buffer size.
+ @return The size of actually frame buffer size.
 */
-- (NSData*)nextFrame;
+- (NSUInteger)nextFrame:(const uint8_t*)buffer capacity:(const NSUInteger)capacity;
 /**
  @brief frame resolution
 */
@@ -64,5 +74,5 @@
 /**
  @brief frame rate, unit: fps
 */
-- (NSInteger)frameRate;
+- (NSUInteger)frameRate;
 @end

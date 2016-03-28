@@ -3,8 +3,9 @@
  */
 
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
 
 namespace woogeen {
 namespace base {
@@ -120,8 +121,12 @@ int32_t CustomizedAudioCapturer::InitRecording() {
   }
 
   recording_sample_rate_ = frame_generator_->GetSampleRate();
-
+  recording_channel_number_ = frame_generator_->GetChannelNumber();
   recording_frames_in_10ms_ = static_cast<size_t>(recording_sample_rate_ / 100);
+  recording_buffer_size_ =
+      recording_frames_in_10ms_ * recording_channel_number_ * 2;
+  recording_buffer_.reset(static_cast<uint8_t*>(webrtc::AlignedMalloc<uint8_t>(
+      recording_buffer_size_ * sizeof(uint8_t), 16)));
   if (audio_buffer_) {
     audio_buffer_->SetRecordingChannels(frame_generator_->GetChannelNumber());
     audio_buffer_->SetRecordingSampleRate(frame_generator_->GetSampleRate());
@@ -411,18 +416,21 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
 
   if (last_call_record_millis_ == 0 ||
       current_time - last_call_record_millis_ >= 10) {
-    auto buffer = frame_generator_->GenerateFramesForNext10Ms();
-    recording_buffer_ = new int8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), recording_buffer_);
+    if (frame_generator_->GenerateFramesForNext10Ms(recording_buffer_.get(),
+                                                    recording_buffer_size_) !=
+        recording_buffer_size_) {
+      crit_sect_.Leave();
+      RTC_DCHECK(false);
+      LOG(LS_ERROR) << "Get audio frames failed.";
+      return false;
+    }
 
     // Sample rate and channel number cannot be changed on the fly.
-    audio_buffer_->SetRecordedBuffer(recording_buffer_,
-                                     recording_frames_in_10ms_);
+    audio_buffer_->SetRecordedBuffer(
+        recording_buffer_.get(), recording_frames_in_10ms_);  // Buffer copied here
     last_call_record_millis_ = current_time;
     crit_sect_.Leave();
     audio_buffer_->DeliverRecordedData();
-    delete[] recording_buffer_;
-    recording_buffer_ = nullptr;
     crit_sect_.Enter();
   }
 

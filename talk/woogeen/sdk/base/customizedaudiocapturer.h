@@ -8,6 +8,7 @@
 #include <memory>
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/system_wrappers/interface/aligned_malloc.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
@@ -159,13 +160,14 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   std::unique_ptr<AudioFrameGeneratorInterface> frame_generator_;
 
   AudioDeviceBuffer* audio_buffer_;
-  int8_t* recording_buffer_;  // In bytes.
+  std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
+      recording_buffer_;  // Pointer to a useable memory for audio frames.
   CriticalSectionWrapper& crit_sect_;
 
   size_t recording_frames_in_10ms_;
   int recording_sample_rate_;
   int recording_channel_number_;
-  int recording_buffer_sze_;
+  int recording_buffer_size_;
 
   rtc::scoped_ptr<ThreadWrapper> thread_rec_;
 
