@@ -12,12 +12,12 @@
                    audioFrameGenerator:
                        (id<RTCAudioFrameGeneratorProtocol>)audioFrameGenerator {
   if (!enabled || audioFrameGenerator == nil) {
-    woogeen::base::GlobalConfiguration::SetEncodedAudioFrameEnabled(false,
-                                                                    nullptr);
+    woogeen::base::GlobalConfiguration::SetCustomizedAudioInputEnabled(false,
+                                                                       nullptr);
   }
   std::unique_ptr<woogeen::base::AudioFrameGeneratorInterface> generator(
       new woogeen::base::AudioFrameGeneratorObjcImpl(audioFrameGenerator));
-  woogeen::base::GlobalConfiguration::SetEncodedAudioFrameEnabled(
+  woogeen::base::GlobalConfiguration::SetCustomizedAudioInputEnabled(
       true, std::move(generator));
 }
 
