@@ -668,6 +668,7 @@ void P2PPeerConnectionChannel::Stop(
     case kSessionStateConnected:
       pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
+    case kSessionStateOffered:
       SendStop(nullptr, nullptr);
       ChangeSessionState(kSessionStateReady);
       break;
