@@ -23,7 +23,7 @@ static const std::unordered_map<MediaCodec::AudioCodec,
 static const std::unordered_map<MediaCodec::VideoCodec,
                                 const std::string,
                                 std::hash<int>> video_codec_names = {
-    {MediaCodec::VideoCodec::VP8, "Vp8"},
+    {MediaCodec::VideoCodec::VP8, "VP8"},
     {MediaCodec::VideoCodec::H264, "H264"}};
 
 std::string SdpUtils::SetMaximumVideoBandwidth(const std::string& sdp,

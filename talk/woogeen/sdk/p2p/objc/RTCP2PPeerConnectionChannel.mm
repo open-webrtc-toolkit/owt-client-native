@@ -11,6 +11,7 @@
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
+#import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
@@ -39,16 +40,10 @@
   nativeConfig.servers = nativeIceServers;
   nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
   nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
-  LOG(LS_INFO) << "Video codec preference: " << config.mediaCodec.videoCodec;
-  if (config.mediaCodec.videoCodec == VideoCodecVP8) {
-    nativeConfig.media_codec.video_codec = woogeen::base::MediaCodec::VideoCodec::VP8;
-  } else if (config.mediaCodec.videoCodec == VideoCodecH264) {
-    nativeConfig.media_codec.video_codec =
-        woogeen::base::MediaCodec::VideoCodec::H264;
-  } else {
-    LOG(LS_ERROR) << "Weird video codec preference.";
-    ASSERT(false);
-  }
+  nativeConfig.media_codec.audio_codec =
+      [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];
+  nativeConfig.media_codec.video_codec =
+      [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];
   _nativeChannel = new woogeen::p2p::P2PPeerConnectionChannel(
       nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;

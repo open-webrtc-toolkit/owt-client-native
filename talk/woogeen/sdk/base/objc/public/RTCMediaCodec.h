@@ -28,8 +28,8 @@
 #define WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
 
 typedef NS_ENUM(NSInteger, VideoCodec) {
-  VideoCodecH264 = 1,
-  VideoCodecVP8 = 2,
+  VideoCodecVP8 = 1,
+  VideoCodecH264 = 2,
 };
 
 typedef NS_ENUM(NSInteger, AudioCodec) {
