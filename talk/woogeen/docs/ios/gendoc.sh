@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#TODO: COPY HEADER
-
+#COPY HEADER
+python copyheader.py
 #GENERATE
 rm -rf html
 doxygen doxygen_ios.conf
