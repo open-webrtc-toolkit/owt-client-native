@@ -285,6 +285,7 @@ void P2PPeerConnectionChannel::OnMessageAcceptance() {
     (*it)->OnAccepted(remote_id_);
   }
   InitializePeerConnection();
+  ChangeSessionState(kSessionStateConnecting);
   CreateOffer();
 }
 
@@ -336,6 +337,9 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   string desc;
   rtc::GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
   if (type == "offer" || type == "answer") {
+    if (type == "offer" && session_state_ == kSessionStateMatched) {
+      ChangeSessionState(kSessionStateConnecting);
+    }
     string sdp;
     if (!rtc::GetStringFromJsonObject(message, kSessionDescriptionSdpKey,
                                       &sdp)) {
