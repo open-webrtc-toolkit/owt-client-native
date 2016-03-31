@@ -459,7 +459,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
   switch (new_state) {
     case webrtc::PeerConnectionInterface::kIceConnectionConnected:
     case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
-      if (session_state_ == kSessionStateMatched) {
+      if (session_state_ == kSessionStateConnecting) {
         for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
                  observers_.begin();
              it != observers_.end(); it++) {
