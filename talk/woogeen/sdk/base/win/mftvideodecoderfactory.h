@@ -26,7 +26,6 @@
 */
 
 #include "talk/media/webrtc/webrtcvideodecoderfactory.h"
-#include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
 #pragma once
 // Declaration of MSDK based decoder factory.
 class MSDKVideoDecoderFactory

@@ -30,6 +30,8 @@
 //
 
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
+#include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
+#include "talk/woogeen/sdk/base/win/h264_msdk_decoder.h"
 MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
   :decoder_window_(hWnd){
     supported_codec_types_.clear();
@@ -59,8 +61,11 @@ webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoC
     for (std::vector<webrtc::VideoCodecType>::const_iterator it =
         supported_codec_types_.begin(); it != supported_codec_types_.end();
         ++it) {
-        if (*it == type) {
+        if (*it == type && type == webrtc::kVideoCodecVP8) {
             return new MSDKVideoDecoder(type, decoder_window_);
+        }
+        else if (*it == type && type == webrtc::kVideoCodecH264) {
+            return new H264MSDKVideoDecoder(type, decoder_window_);
         }
     }
     return NULL;
