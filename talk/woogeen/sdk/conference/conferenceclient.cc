@@ -20,6 +20,9 @@ enum ConferenceClient::StreamType : int {
   kStreamTypeMix,
 };
 
+const std::string play_pause_failure_message =
+    "Cannot play/pause a stream that have not been published or subscribed.";
+
 ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
@@ -296,7 +299,8 @@ void ConferenceClient::PlayAudio(
     return;
   }
   auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
+                        on_failure)) {
     return;
   }
   pc->PlayAudio(stream, on_success, on_failure);
@@ -307,7 +311,8 @@ void ConferenceClient::PauseAudio(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
+                        on_failure)) {
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
@@ -321,7 +326,8 @@ void ConferenceClient::PlayVideo(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
+                        on_failure)) {
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
@@ -335,7 +341,8 @@ void ConferenceClient::PauseVideo(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
+                        on_failure)) {
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
@@ -434,11 +441,19 @@ void ConferenceClient::OnStreamId(const std::string& id,
 bool ConferenceClient::CheckNullPointer(
     uintptr_t pointer,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  std::string failure_message="Null pointer is not allowed.";
+  return CheckNullPointer(pointer, failure_message, on_failure);
+}
+
+bool ConferenceClient::CheckNullPointer(
+    uintptr_t pointer,
+    const std::string& failure_message,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (pointer)
     return true;
   if (on_failure != nullptr) {
     std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnkown, "Nullptr is not allowed."));
+        ConferenceException::kUnkown, failure_message));
     on_failure(std::move(e));
   }
   return false;

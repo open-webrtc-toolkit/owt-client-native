@@ -306,9 +306,13 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
 
  private:
   /// Return true if |pointer| is not a null pointer, else return false and
-  /// trigger |on_failure|
+  /// trigger |on_failure| with |failure_message|.
   bool CheckNullPointer(
       uintptr_t pointer,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  bool CheckNullPointer(
+      uintptr_t pointer,
+      const std::string& failure_message,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /// Return true if signaling channel is connected, else return false and
   /// trigger |on_failure|

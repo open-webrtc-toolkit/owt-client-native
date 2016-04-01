@@ -21,7 +21,6 @@ Stream::Stream() : media_stream_(nullptr), id_("") {}
 Stream::Stream(const std::string& id) : media_stream_(nullptr), id_(id) {}
 
 MediaStreamInterface* Stream::MediaStream() const {
-  RTC_CHECK(media_stream_);
   return media_stream_;
 }
 
