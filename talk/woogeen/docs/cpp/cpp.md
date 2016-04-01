@@ -20,6 +20,10 @@ three static libraries are provided in the SDK along with their respective heade
 - sioclient.lib - this library includes Socket.IO C++ client without TLS features.
 - sioclient_tls.lib - this library includes the Socket.IO C++ client with TLS features.
 
+woogeen.lib references libraries in Windows SDK for DXVA support. Your application must statically link
+mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib and dxva2.lib to build. Depending on your signaling
+channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
+
 # Socket.IO {#section4}
 Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp).
 
