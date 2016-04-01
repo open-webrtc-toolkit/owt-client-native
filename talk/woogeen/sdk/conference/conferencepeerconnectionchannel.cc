@@ -319,8 +319,8 @@ void ConferencePeerConnectionChannel::Publish(
   options->get_map()["video"] = video_options;
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->label(), [stream, this]() {
-        rtc::TypedMessageData<MediaStreamInterface*>* param =
-            new rtc::TypedMessageData<MediaStreamInterface*>(
+        rtc::ScopedRefMessageData<MediaStreamInterface>* param =
+            new rtc::ScopedRefMessageData<MediaStreamInterface>(
                 stream->MediaStream());
         pc_thread_->Post(this, kMessageTypeAddStream, param);
         CreateOffer();

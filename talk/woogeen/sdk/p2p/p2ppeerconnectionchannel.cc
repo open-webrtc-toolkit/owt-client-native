@@ -333,6 +333,14 @@ void P2PPeerConnectionChannel::OnMessageNegotiationAcceptance() {
 }
 
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
+  if (session_state_ == kSessionStateReady ||
+      session_state_ == kSessionStateOffered ||
+      session_state_ == kSessionStatePending) {
+    LOG(LS_WARNING)
+        << "Received signaling message in invalid state. Current state: "
+        << session_state_;
+    return;
+  }
   string type;
   string desc;
   rtc::GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
@@ -707,8 +715,8 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       stream_info[kStreamTypeKey] = "video";
       json[kMessageDataKey] = stream_info;
       SendSignalingMessage(json, nullptr, nullptr);
-      rtc::TypedMessageData<MediaStreamInterface*>* param =
-          new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
+      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
+          new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       LOG(LS_INFO) << "Post add stream";
       pc_thread_->Post(this, kMessageTypeAddStream, param);
     }
@@ -723,8 +731,8 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       std::shared_ptr<LocalStream> stream = *it;
       scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();
-      rtc::TypedMessageData<MediaStreamInterface*>* param =
-          new rtc::TypedMessageData<MediaStreamInterface*>(media_stream);
+      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
+          new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       LOG(LS_INFO) << "Post remove stream";
       pc_thread_->Post(this, kMessageTypeRemoveStream, param);
     }
