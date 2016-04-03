@@ -392,6 +392,15 @@ void ConferencePeerConnectionChannel::Unpublish(
     }
     return;
   }
+  if (publish_success_callback_ != nullptr) {  // Publishing
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown,
+          "Cannot unpublish a stream during publishing."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   signaling_channel_->SendStreamEvent("unpublish", stream->Id(), on_success,
                                       on_failure);
 }
@@ -410,6 +419,15 @@ void ConferencePeerConnectionChannel::Unsubscribe(
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
           ConferenceException::kUnkown, "Invalid stream to be unsubscribed."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  if (subscribe_success_callback_ != nullptr) {  // Subscribing
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown,
+          "Cannot unsubscribe a stream during subscribing."));
       on_failure(std::move(e));
     }
     return;
