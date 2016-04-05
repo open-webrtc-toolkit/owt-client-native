@@ -67,6 +67,7 @@ class LocalCameraStreamParameters final {
     @param height The height of the video.
   */
   void Resolution(int width, int height);
+  /** @cond */
   /**
     @brief Set the frame rate.
 
@@ -75,7 +76,6 @@ class LocalCameraStreamParameters final {
     @param fps The frame rate of the video.
   */
   void Fps(int fps);
-  /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
   int ResolutionWidth() const { return resolution_width_; }
