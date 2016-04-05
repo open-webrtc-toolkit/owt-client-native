@@ -69,6 +69,11 @@ struct Resolution {
   explicit Resolution(): width(0), height(0) {}
   /// Construct an instance with specify width and height.
   Resolution(int w, int h) : width(w), height(h) {}
+
+  bool operator==(const Resolution& rhs) const {
+    return this->width == rhs.width && this->height == rhs.height;
+  }
+
   int width;
   int height;
 };

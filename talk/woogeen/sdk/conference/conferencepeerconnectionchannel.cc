@@ -6,7 +6,10 @@
 #include <thread>
 #include <future>
 #include "webrtc/base/logging.h"
+#include "talk/media/base/videocommon.h"
+#include "talk/media/base/videocapturer.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
+#include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 
@@ -302,7 +305,8 @@ void ConferencePeerConnectionChannel::Publish(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
   published_stream_ = stream;
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+  if ((!CheckNullPointer((uintptr_t)stream.get(), on_failure)) ||
+      (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
@@ -311,12 +315,30 @@ void ConferencePeerConnectionChannel::Publish(
 
   sio::message::ptr options = sio::object_message::create();
   options->get_map()["state"] = sio::string_message::create("erizo");
-  options->get_map()["audio"] = sio::bool_message::create(
-      true);  // TODO: detects if it's really has audio
-  sio::message::ptr video_options = sio::object_message::create();
-  video_options->get_map()["device"] = sio::string_message::create(
-      "camera");  // TODO: currently only camera streams.
-  options->get_map()["video"] = video_options;
+  if (stream->MediaStream()->GetAudioTracks().size() == 0) {
+    options->get_map()["audio"] = sio::bool_message::create(false);
+  } else {
+    options->get_map()["audio"] = sio::bool_message::create(true);
+  }
+  if (stream->MediaStream()->GetVideoTracks().size() == 0) {
+    options->get_map()["video"] = sio::bool_message::create(false);
+  } else {
+    sio::message::ptr video_options = sio::object_message::create();
+    video_options->get_map()["device"] = sio::string_message::create(
+        "camera");  // Currently only camera streams.
+    // Resolution
+    auto video_track_source =
+        stream->MediaStream()->GetVideoTracks()[0]->GetSource();
+    cricket::VideoCapturer* captuere = video_track_source->GetVideoCapturer();
+    // |video_format| is expected format, actually format may be different from
+    // it. It depends on capturer module.
+    auto video_format = captuere->GetCaptureFormat();
+    auto resolution_string = MediaUtils::GetResolutionName(
+        Resolution(video_format->width, video_format->height));
+    video_options->get_map()["resolution"] =
+        sio::string_message::create(resolution_string);
+    options->get_map()["video"] = video_options;
+  }
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->label(), [stream, this]() {
         rtc::ScopedRefMessageData<MediaStreamInterface>* param =
