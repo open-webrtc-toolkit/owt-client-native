@@ -30,7 +30,9 @@
 
 #include <string>
 #include <vector>
-
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+#include <memory>
+#endif
 #include "talk/media/base/videocapturer.h"
 #include "webrtc/base/stream.h"
 #include "webrtc/base/stringutils.h"

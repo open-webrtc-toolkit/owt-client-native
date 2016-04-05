@@ -52,6 +52,7 @@ Here is a list of known issues:
 - Get connection stats is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - woogeen.lib is compiled as 32 bit library.
+- Bandwidth setting for publishing H264 stream does not take effect.
 
 # Video codecs {#section8}
 For the decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both
