@@ -17,7 +17,7 @@ int AudioFrameGeneratorObjcImpl::GetChannelNumber() {
 }
 
 uint32_t AudioFrameGeneratorObjcImpl::GenerateFramesForNext10Ms(
-    const uint8_t* buffer,
+    uint8_t* buffer,
     const uint32_t capacity) {
   return [objc_generator_ framesForNext10Ms:buffer capacity:capacity];
 }
@@ -49,7 +49,7 @@ uint32_t VideoFrameGeneratorObjcImpl::GetNextFrameSize(){
 }
 
 uint32_t VideoFrameGeneratorObjcImpl::GenerateNextFrame(
-    const uint8_t* buffer,
+    uint8_t* buffer,
     const uint32_t capacity) {
   return [objc_generator_ nextFrame:buffer capacity:capacity];
 }

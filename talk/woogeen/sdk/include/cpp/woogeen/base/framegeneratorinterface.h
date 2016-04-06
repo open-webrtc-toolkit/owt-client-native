@@ -22,7 +22,7 @@ class AudioFrameGeneratorInterface {
    frame buffer size.
    @return The size of actually frame buffer size.
    */
-  virtual uint32_t GenerateFramesForNext10Ms(const uint8_t* buffer,
+  virtual uint32_t GenerateFramesForNext10Ms(uint8_t* buffer,
                                              const uint32_t capacity) = 0;
   /// Get sample rate for frames generated.
   virtual int GetSampleRate() = 0;
@@ -52,7 +52,7 @@ class VideoFrameGeneratorInterface {
    frame buffer size.
    @return The size of actually frame buffer size.
    */
-  virtual uint32_t GenerateNextFrame(const uint8_t* buffer,
+  virtual uint32_t GenerateNextFrame(uint8_t* buffer,
                                      const uint32_t capacity) = 0;
   /**
    @brief This function gets the size of next video frame.

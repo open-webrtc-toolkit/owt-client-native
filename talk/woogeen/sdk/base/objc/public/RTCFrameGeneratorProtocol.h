@@ -42,7 +42,7 @@
  frame buffer size.
  @return The size of actually frame buffer size.
  */
-- (NSUInteger)framesForNext10Ms:(const uint8_t*)buffer capacity:(const NSUInteger)capacity;
+- (NSUInteger)framesForNext10Ms:(uint8_t*)buffer capacity:(const NSUInteger)capacity;
 /// Get sample rate for frames generated.
 - (NSUInteger)sampleRate;
 /// Get numbers of channel for frames generated.
@@ -66,7 +66,7 @@
  frame buffer size.
  @return The size of actually frame buffer size.
 */
-- (NSUInteger)nextFrame:(const uint8_t*)buffer capacity:(const NSUInteger)capacity;
+- (NSUInteger)nextFrame:(uint8_t*)buffer capacity:(const NSUInteger)capacity;
 /**
  @brief frame resolution
 */
