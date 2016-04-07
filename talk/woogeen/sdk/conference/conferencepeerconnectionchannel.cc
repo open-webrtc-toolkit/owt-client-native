@@ -304,11 +304,19 @@ void ConferencePeerConnectionChannel::Publish(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
+  RTC_DCHECK(!subscribe_success_callback_);
   published_stream_ = stream;
   if ((!CheckNullPointer((uintptr_t)stream.get(), on_failure)) ||
       (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
+  }
+  if (publish_success_callback_) {
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Publishing this stream."));
+      on_failure(std::move(e));
+    }
   }
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
@@ -356,10 +364,18 @@ void ConferencePeerConnectionChannel::Subscribe(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                << stream->has_audio_ << ", has video? " << stream->has_video_;
+  RTC_DCHECK(!publish_success_callback_);
   subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
+  }
+  if (subscribe_success_callback_) {
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Subscribing this stream."));
+      on_failure(std::move(e));
+    }
   }
   subscribe_success_callback_ = on_success;
   failure_callback_ = on_failure;
