@@ -173,6 +173,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CreateDataChannel(const std::string& label);
   // Send all messages in pending message list.
   void DrainPendingMessages();
+  void TriggerOnStopped();
 
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;

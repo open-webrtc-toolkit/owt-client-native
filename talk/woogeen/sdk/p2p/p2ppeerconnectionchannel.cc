@@ -294,8 +294,15 @@ void P2PPeerConnectionChannel::OnMessageStop() {
     case kSessionStateConnecting:
     case kSessionStateConnected:
       pc_thread_->Send(this, kMessageTypeClosePeerConnection, nullptr);
+      ChangeSessionState(kSessionStateReady);
+      break;
+    case kSessionStatePending:
     case kSessionStateMatched:
       ChangeSessionState(kSessionStateReady);
+      // Maybe we can add another event like "cancel" for such kind scenario.
+      // For now, we trigger OnStop to indicate the invitation has been
+      // canceled, and session is stopped.
+      TriggerOnStopped();
       break;
     default:
       LOG(LS_WARNING)
@@ -495,11 +502,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-      for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-               observers_.begin();
-           it != observers_.end(); it++) {
-        (*it)->OnStopped(remote_id_);
-      }
+      TriggerOnStopped();
       break;
     default:
       break;
@@ -596,6 +599,14 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
   return false;
 }
 
+void P2PPeerConnectionChannel::TriggerOnStopped() {
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
+           observers_.begin();
+       it != observers_.end(); it++) {
+    (*it)->OnStopped(remote_id_);
+  }
+}
+
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
@@ -680,9 +691,13 @@ void P2PPeerConnectionChannel::Stop(
     case kSessionStateConnected:
       pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
     case kSessionStateMatched:
+      SendStop(nullptr, nullptr);
+      ChangeSessionState(kSessionStateReady);
+      break;
     case kSessionStateOffered:
       SendStop(nullptr, nullptr);
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     default:
       if (on_failure != nullptr) {
