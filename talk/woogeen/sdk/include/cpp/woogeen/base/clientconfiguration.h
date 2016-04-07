@@ -50,7 +50,10 @@ struct ClientConfiguration {
   std::vector<IceServer> ice_servers;
   /// Media codec preference
   MediaCodec media_codec;
-  /// Max outgoing audio bandwidth, unit: kbps.
+  /**
+   @brief Max outgoing audio bandwidth, unit: kbps.
+   @detail Please be noticed different codecs may support different bitrate ranges.
+   */
   int max_audio_bandwidth;
   /// Max outgoing video bandwidth, unit: kbps.
   int max_video_bandwidth;

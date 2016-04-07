@@ -38,8 +38,12 @@
 @interface RTCConferenceClientConfiguration : NSObject
 
 @property(nonatomic, strong, readwrite) NSArray* ICEServers;
+/// Media codec preference
 @property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
-/// Max outgoing audio bandwidth, unit: kbps.
+/**
+ @brief Max outgoing audio bandwidth, unit: kbps.
+ @detail Please be noticed different codecs may support different bitrate ranges.
+ */
 @property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
 /// Max outgoing video bandwidth, unit: kbps.
 @property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
