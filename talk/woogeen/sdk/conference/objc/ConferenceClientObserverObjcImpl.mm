@@ -116,5 +116,9 @@ void ConferenceClientObserverObjcImpl::OnUserLeft(
     std::shared_ptr<const woogeen::conference::User> user) {
   [observer_ onUserLeft:[[RTCConferenceUser alloc] initWithNativeUser:user]];
 }
+
+void ConferenceClientObserverObjcImpl::OnServerDisconnected(){
+  [observer_ onServerDisconnected];
+}
 }
 }

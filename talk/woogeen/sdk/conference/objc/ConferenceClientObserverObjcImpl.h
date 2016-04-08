@@ -38,6 +38,7 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<const woogeen::conference::User> user) override;
   virtual void OnUserLeft(
       std::shared_ptr<const woogeen::conference::User> user) override;
+  virtual void OnServerDisconnected() override;
 
  private:
   void AddRemoteStreamToMap(const std::string& id, RTCRemoteStream* stream);
