@@ -46,6 +46,7 @@ struct IceServer {
 
 /// Client configurations
 struct ClientConfiguration {
+  ClientConfiguration() : max_audio_bandwidth(0), max_video_bandwidth(0){};
   /// List of ICE servers
   std::vector<IceServer> ice_servers;
   /// Media codec preference
