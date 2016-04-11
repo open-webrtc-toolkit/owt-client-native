@@ -49,27 +49,27 @@ bool FileAudioFrameGenerator::Init() {
   return true;
 }
 
-std::vector<uint8_t> FileAudioFrameGenerator::GenerateFramesForNext10Ms() {
-  if (fread(recording_buffer_, 1, recording_buffer_size_in_10ms_, fd) !=
+uint32_t FileAudioFrameGenerator::GenerateFramesForNext10Ms(uint8_t* frame_buffer, const uint32_t capacity) {
+  if ( capacity < recording_buffer_size_in_10ms_) {
+     std::cout << "The capacity is too small" << std::endl;
+     return 0;
+  }
+  if (fread(frame_buffer, 1, recording_buffer_size_in_10ms_, fd) !=
       recording_buffer_size_in_10ms_) {
     if (feof(fd)) {
       std::cout << "Reach the end of input file." << std::endl;
       fseek(fd, 0, SEEK_SET);
-      if (fread(recording_buffer_, 1, recording_buffer_size_in_10ms_, fd) !=
-          recording_buffer_size_in_10ms_) {
-        return std::vector<uint8_t>();;
-      }
+      return fread(frame_buffer, 1, recording_buffer_size_in_10ms_, fd);
     } else if (ferror(fd)) {
       std::cout << "Error while reading file" << std::endl;
-      return std::vector<uint8_t>();;
+      return 0;
     } else {
       std::cout << "Unknown error while reading file" << std::endl;
-      return std::vector<uint8_t>();;
+      return 0;
     }
+  } else {
+    return recording_buffer_size_in_10ms_;
   }
-  std::vector<uint8_t> buffer(
-      recording_buffer_, recording_buffer_ + recording_buffer_size_in_10ms_);
-  return buffer;
 }
 
 int FileAudioFrameGenerator::GetSampleRate() { return sample_rate_; }

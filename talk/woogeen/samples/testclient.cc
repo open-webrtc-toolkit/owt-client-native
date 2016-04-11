@@ -1,7 +1,7 @@
 //
 //Intel License
 //
-// P2PSample.cpp : Defines the entry point for the console application.
+// testclient.cc : Defines the entry point for the console application.
 //
 #include <iostream>
 #include "woogeen/conference/conferenceclient.h"
@@ -30,8 +30,80 @@ int main(int argc, char** argv)
   daemon(1,1);
   using namespace woogeen::base;
   using namespace woogeen::conference;
-  const std::string audiopath = "./audio_long16.pcm";
-  const std::string videopath = "./source.video";
+  std::string audiopath("");
+  std::string videopath("");
+  std::string roomId("");
+  std::string scheme("http://");
+  std::string suffix("/createToken");
+  ConferenceClientConfiguration configuration;
+  EncodedMimeType type;
+  int width;
+  int height;
+  int fps;
+
+  if(argc >= 2){
+    std::string hosturl(argv[1]);
+    scheme.append(hosturl);
+  }else{
+    std::string fixed("10.239.44.59:3001");
+    scheme.append(fixed);
+  }
+
+  if(argc >= 3){
+    std::string roomStr(argv[2]);
+    roomId.append(roomStr);
+  }
+
+  if(argc >= 4){
+    std::string codec(argv[3]);
+    if (codec.find("h264") != std::string::npos) {
+      configuration.media_codec.video_codec = MediaCodec::VideoCodec::H264;
+      type = EncodedMimeType::ENCODED_H264;
+    }else{
+      configuration.media_codec.video_codec = MediaCodec::VideoCodec::VP8;
+      type = EncodedMimeType::ENCODED_VP8;
+    }
+  }else{
+    configuration.media_codec.video_codec = MediaCodec::VideoCodec::VP8;
+    type = EncodedMimeType::ENCODED_VP8;
+  }
+
+  if(argc >= 5){
+    std::string res(argv[4]);
+    if (res.find("1080") != std::string::npos) {
+      width = 1920;
+      height = 1080;
+    }else if (res.find("720") != std::string::npos){
+      width = 1280;
+      height = 720;
+    }else if (res.find("vga") != std::string::npos){
+      width = 640;
+      height = 480;
+    }else{
+      width = 320;
+      height = 240;
+    }
+  }else{
+    width = 640;
+    height = 480;
+  }
+
+   if(argc >= 6){
+    fps = atoi(argv[5]);
+  }else{
+    fps = 20;
+  }
+
+  if(argc >= 7){
+    std::string path(argv[6]);
+    audiopath.append(path);
+    audiopath.append("/audio_long16.pcm");
+    videopath.append(path);
+    videopath.append("/source.video");
+  }else{
+    audiopath.append("./audio_long16.pcm");
+    videopath.append("./source.video");
+  }
 
   std::unique_ptr<woogeen::base::AudioFrameGeneratorInterface> audio_generator(FileAudioFrameGenerator::Create(audiopath));
   if (audio_generator == nullptr){
@@ -40,7 +112,6 @@ int main(int argc, char** argv)
   GlobalConfiguration::SetEncodedVideoFrameEnabled(true);
   GlobalConfiguration::SetCustomizedAudioInputEnabled(true, std::move(audio_generator));
 
-  ConferenceClientConfiguration configuration;
   IceServer ice;
   ice.urls.push_back("stun:61.152.239.56");
   ice.username = "";
@@ -48,18 +119,7 @@ int main(int argc, char** argv)
   vector<IceServer> ice_servers;
   ice_servers.push_back(ice);
   configuration.ice_servers = ice_servers;
-  configuration.media_codec.video_codec = MediaCodec::VideoCodec::VP8;
-  //configuration.media_codec.audio_codec = MediaCodec::AudioCodec::ISAC;
-  //configuration.media_codec.video_codec = MediaCodec::VideoCodec::H264;
-  std::string scheme("http://");
-  std::string suffix("/createToken");
-  if(argc >= 2){
-    std::string hosturl(argv[1]);
-    scheme.append(hosturl);
-  }else{
-    std::string fixed("10.239.44.59:3001");
-    scheme.append(fixed);
-  }
+
   scheme.append(suffix);
   std::shared_ptr<ConferenceClient> room(new ConferenceClient(configuration));
 
@@ -67,16 +127,11 @@ int main(int argc, char** argv)
   room->AddObserver(*observer);
 //  cout << "Press Enter to connect room." << std::endl;
  // cin.ignore();
-  std::string roomId("");
-  if(argc == 3){
-    std::string roomStr(argv[2]);
-    roomId.append(roomStr);
-  }
+
   string token = getToken(scheme, roomId);
   LocalCustomizedStreamParameters lcsp(LocalCustomizedStreamParameters(true, true));
   //FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
-  EncodedFrameGenerator* framer =
-      new EncodedFrameGenerator(videopath, 640, 480, 20, EncodedMimeType::ENCODED_VP8);
+  EncodedFrameGenerator* framer = new EncodedFrameGenerator(videopath, width, height, fps, type);
   //LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
   //std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));
   LocalCustomizedStream stream(std::make_shared<LocalCustomizedStreamParameters>(lcsp), framer);

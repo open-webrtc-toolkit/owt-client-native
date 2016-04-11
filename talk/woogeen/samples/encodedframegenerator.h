@@ -17,17 +17,20 @@ enum EncodedMimeType {
 
 class EncodedFrameGenerator: public woogeen::base::VideoFrameGeneratorInterface {
  public:
-  EncodedFrameGenerator(int width, int height, int fps, EncodedMimeType codecType);
+  EncodedFrameGenerator(const std::string& input_filename, int width, int height, int fps, EncodedMimeType codecType);
   ~EncodedFrameGenerator();
 
-  std::vector<uint8_t> GenerateNextFrame() override;
+  uint32_t GetNextFrameSize();
 
-  int GetHeight() override;
-  int GetWidth() override;
-  int GetFps() override;
-  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType() override;
+  uint32_t GenerateNextFrame(uint8_t* frame_buffer, const uint32_t capacity);
+
+  int GetHeight();
+  int GetWidth();
+  int GetFps();
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType();
 
  private:
+  const std::string& input_filename_;
   int width_;
   int height_;
   int fps_;

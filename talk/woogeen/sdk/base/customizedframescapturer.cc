@@ -102,13 +102,13 @@ const char* CustomizedFramesCapturer::kRawFrameDeviceName =
 CustomizedFramesCapturer::CustomizedFramesCapturer(
     VideoFrameGeneratorInterface* raw_frameGenerator)
     : frame_generator_(raw_frameGenerator),
+      frames_generator_thread(nullptr),
       width_(frame_generator_->GetWidth()),
       height_(frame_generator_->GetHeight()),
       fps_(frame_generator_->GetFps()),
       frame_type_(frame_generator_->GetType()),
       frame_buffer_capacity_(0),
       frame_buffer_(nullptr),
-      frames_generator_thread(nullptr),
       async_invoker_(nullptr) {}
 
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {

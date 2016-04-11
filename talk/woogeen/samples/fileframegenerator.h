@@ -14,19 +14,19 @@ class FileFrameGenerator: public woogeen::base::VideoFrameGeneratorInterface {
   FileFrameGenerator(int width, int height, int fps);
   ~FileFrameGenerator();
 
-  std::vector<uint8_t> GenerateNextFrame() override;
-
-  int GetHeight() override;
-  int GetWidth() override;
-  int GetFps() override;
-  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType() override;
+  uint32_t GetNextFrameSize();
+  uint32_t GenerateNextFrame(uint8_t* frame_buffer, const uint32_t capacity);
+  int GetHeight();
+  int GetWidth();
+  int GetFps();
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType();
 
  private:
   int width_;
   int height_;
   int fps_;
+  uint32_t frame_data_size_;
   woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec type_;
-  int frame_data_size_;
   FILE * fd;
 };
 
