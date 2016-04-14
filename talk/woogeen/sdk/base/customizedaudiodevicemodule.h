@@ -9,7 +9,7 @@
 
 #include <memory>
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
@@ -29,10 +29,10 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   CustomizedAudioDeviceModule();
   virtual ~CustomizedAudioDeviceModule();
   int64_t TimeUntilNextProcess() override;
-  int32_t Process() override;
+  void Process() override;
 
   // Factory methods (resource allocation/deallocation)
-  static AudioDeviceModule* Create(
+  static rtc::scoped_refptr<AudioDeviceModule> Create(
       std::unique_ptr<AudioFrameGeneratorInterface> frame_generator);
 
   // Retrieve the currently utilized audio layer
@@ -183,6 +183,7 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int32_t CreateCustomizedAudioDevice(
       std::unique_ptr<AudioFrameGeneratorInterface> frame_generator);
   int32_t AttachAudioBuffer();
+
   void CreateOutputAdm();
 
   CriticalSectionWrapper& _critSect;

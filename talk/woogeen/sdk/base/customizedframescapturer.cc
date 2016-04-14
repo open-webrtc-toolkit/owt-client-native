@@ -30,9 +30,9 @@
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/thread.h"
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
 
 namespace woogeen {
@@ -178,7 +178,7 @@ void CustomizedFramesCapturer::Stop() {
 }
 
 bool CustomizedFramesCapturer::GetPreferredFourccs(
-    std::vector<uint32>* fourccs) {
+    std::vector<uint32_t>* fourccs) {
   if (!fourccs) {
     return false;
   }

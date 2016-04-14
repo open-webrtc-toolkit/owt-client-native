@@ -5,8 +5,8 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #define WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/app/webrtc/videosourceinterface.h"
+#include "webrtc/api/peerconnectioninterface.h"
+#include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/base/bind.h"
 
 namespace woogeen {
@@ -14,7 +14,7 @@ namespace base {
 using webrtc::MediaStreamInterface;
 using webrtc::AudioTrackInterface;
 using webrtc::VideoTrackInterface;
-using webrtc::VideoSourceInterface;
+using webrtc::VideoTrackSourceInterface;
 using webrtc::PeerConnectionFactoryInterface;
 using webrtc::MediaConstraintsInterface;
 using rtc::scoped_refptr;
@@ -45,8 +45,8 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const std::string& id);
   rtc::scoped_refptr<VideoTrackInterface> CreateLocalVideoTrack(
       const std::string& id,
-      webrtc::VideoSourceInterface* video_source);
-  rtc::scoped_refptr<VideoSourceInterface> CreateVideoSource(
+      webrtc::VideoTrackSourceInterface* video_source);
+  rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       cricket::VideoCapturer* capturer,
       const MediaConstraintsInterface* constraints);
 

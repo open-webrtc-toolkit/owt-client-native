@@ -20,7 +20,7 @@ class EncodedVideoEncoder : public webrtc::VideoEncoder {
 
   int Encode(const webrtc::VideoFrame& input_image,
              const webrtc::CodecSpecificInfo* codec_specific_info,
-             const std::vector<webrtc::VideoFrameType>* frame_types) override;
+             const std::vector<webrtc::FrameType>* frame_types) override;
 
   int RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* callback) override;

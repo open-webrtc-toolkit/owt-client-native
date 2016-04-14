@@ -2,14 +2,14 @@
  * Intel License
  */
 
-#include "talk/media/base/videocommon.h"
+#include "webrtc/media/base/videocommon.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 
 namespace woogeen {
 namespace base {
-void WebrtcVideoRendererARGBImpl::RenderFrame(
-    const cricket::VideoFrame* video_frame) {
-  const cricket::VideoFrame* frame = video_frame->GetCopyWithRotationApplied();
+void WebrtcVideoRendererARGBImpl::OnFrame(
+    const cricket::VideoFrame& video_frame) {
+  const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
   Resolution resolution(static_cast<int>(frame->GetWidth()),
                         static_cast<int>(frame->GetHeight()));
   uint8_t* buffer = new uint8_t[resolution.width * resolution.height * 4];

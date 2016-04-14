@@ -4,15 +4,15 @@
 
 #include <string>
 #include <vector>
+#include "talk/woogeen/sdk/base/encodedvideoencoder.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/buffer.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_error_codes.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "talk/woogeen/sdk/base/encodedvideoencoder.h"
-#include "talk/media/base/videoframe.h"
+#include "webrtc/modules/video_coding/include/video_error_codes.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/media/base/videoframe.h"
 
 // H.264 start code length.
 #define H264_SC_LENGTH 4
@@ -43,7 +43,7 @@ int EncodedVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
 int EncodedVideoEncoder::Encode(
     const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
-    const std::vector<webrtc::VideoFrameType>* frame_types) {
+    const std::vector<webrtc::FrameType>* frame_types) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> video_frame_buffer(
       input_image.video_frame_buffer());
   if (video_frame_buffer == nullptr) {

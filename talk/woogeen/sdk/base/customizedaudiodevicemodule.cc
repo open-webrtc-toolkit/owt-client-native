@@ -4,10 +4,10 @@
 
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/base/refcount.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
@@ -37,24 +37,22 @@ namespace base {
 //  CustomizedAudioDeviceModule::Create()
 // ----------------------------------------------------------------------------
 
-AudioDeviceModule* CustomizedAudioDeviceModule::Create(
+rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
     std::unique_ptr<AudioFrameGeneratorInterface> frame_generator) {
   // Create the generic ref counted implementation.
-  RefCountImpl<CustomizedAudioDeviceModule>* audioDevice =
-      new RefCountImpl<CustomizedAudioDeviceModule>();
+  rtc::scoped_refptr<CustomizedAudioDeviceModule> audioDevice(
+      new rtc::RefCountedObject<CustomizedAudioDeviceModule>());
 
   // Create the customized implementation.
   if (audioDevice->CreateCustomizedAudioDevice(std::move(frame_generator)) ==
       -1) {
-    delete audioDevice;
-    return NULL;
+    return nullptr;
   }
 
   // Ensure that the generic audio buffer can communicate with the
   // platform-specific parts.
   if (audioDevice->AttachAudioBuffer() == -1) {
-    delete audioDevice;
-    return NULL;
+    return nullptr;
   }
 
   WebRtcSpl_Init();
@@ -160,7 +158,7 @@ int64_t CustomizedAudioDeviceModule::TimeUntilNextProcess() {
 //  new reports exists.
 // ----------------------------------------------------------------------------
 
-int32_t CustomizedAudioDeviceModule::Process() {
+void CustomizedAudioDeviceModule::Process() {
   _lastProcessTime = TickTime::MillisecondTimestamp();
 
   // kPlayoutWarning
@@ -211,7 +209,7 @@ int32_t CustomizedAudioDeviceModule::Process() {
     _ptrAudioDevice->ClearRecordingError();
   }
 
-  return 0;
+  return;
 }
 
 // ============================================================================

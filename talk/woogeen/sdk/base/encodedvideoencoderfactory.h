@@ -6,7 +6,7 @@
 #define WOOGEEN_BASE_ENCODEDVIDEOENCODERFACTORY_H_
 
 #include <vector>
-#include "talk/media/webrtc/webrtcvideoencoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 
 class EncodedVideoEncoderFactory : public cricket::WebRtcVideoEncoderFactory {
  public:

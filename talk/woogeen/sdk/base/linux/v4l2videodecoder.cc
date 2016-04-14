@@ -48,9 +48,6 @@ int32_t V4L2Decoder::RegisterDecodeCompleteCallback(
 int32_t V4L2Decoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
-int32_t V4L2Decoder::Reset() {
-  return WEBRTC_VIDEO_CODEC_OK;
-}
 
 int32_t V4L2H264Decoder::Decode(const EncodedImage& input,
                                 bool missing_frames,

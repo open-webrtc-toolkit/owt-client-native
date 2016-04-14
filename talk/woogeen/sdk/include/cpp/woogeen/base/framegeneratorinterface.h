@@ -4,6 +4,8 @@
 #ifndef WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
 #define WOOGEEN_BASE_FRAMEGENERATORINTERFACE_H_
 
+#include "stdint.h"
+
 namespace woogeen {
 namespace base {
 /**

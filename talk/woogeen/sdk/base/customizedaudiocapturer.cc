@@ -5,7 +5,7 @@
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 
 namespace woogeen {
 namespace base {
@@ -158,14 +158,9 @@ int32_t CustomizedAudioCapturer::StartRecording() {
   recording_ = true;
 
   const char* thread_name = "webrtc_audio_module_capture_thread";
-  thread_rec_ = ThreadWrapper::CreateThread(RecThreadFunc, this, thread_name);
-
-  if (!thread_rec_->Start()) {
-    thread_rec_.reset();
-    recording_ = false;
-    return -1;
-  }
-  thread_rec_->SetPriority(kRealtimePriority);
+  thread_rec_.reset(new rtc::PlatformThread(RecThreadFunc, this, thread_name));
+  thread_rec_->Start();
+  thread_rec_->SetPriority(rtc::kRealtimePriority);
 
   return 0;
 }

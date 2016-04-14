@@ -6,8 +6,8 @@
 #include <thread>
 #include <future>
 #include "webrtc/base/logging.h"
-#include "talk/media/base/videocommon.h"
-#include "talk/media/base/videocapturer.h"
+#include "webrtc/media/base/videocommon.h"
+#include "webrtc/media/base/videocapturer.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"

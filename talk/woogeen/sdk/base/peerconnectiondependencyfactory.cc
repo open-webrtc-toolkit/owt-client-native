@@ -9,8 +9,8 @@
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
-#include "talk/media/webrtc/webrtcvideodecoderfactory.h"
-#include "talk/media/webrtc/webrtcvideoencoderfactory.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
@@ -124,7 +124,7 @@ void PeerConnectionDependencyFactory::
   rtc::scoped_refptr<AudioDeviceModule> adm;
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     adm = CustomizedAudioDeviceModule::Create(
-        std::move(GlobalConfiguration::GetAudioFrameGenerator()));
+        GlobalConfiguration::GetAudioFrameGenerator());
   }
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       worker_thread, signaling_thread, adm,
@@ -162,11 +162,11 @@ PeerConnectionDependencyFactory::CreateLocalMediaStream(
            pc_factory_.get(), label));
 }
 
-scoped_refptr<webrtc::VideoSourceInterface>
+scoped_refptr<webrtc::VideoTrackSourceInterface>
 PeerConnectionDependencyFactory::CreateVideoSource(
     cricket::VideoCapturer* capturer,
     const MediaConstraintsInterface* constraints) {
-  return pc_thread_->Invoke<scoped_refptr<webrtc::VideoSourceInterface>>(
+  return pc_thread_->Invoke<scoped_refptr<webrtc::VideoTrackSourceInterface>>(
                        Bind(&PeerConnectionFactoryInterface::CreateVideoSource,
                             pc_factory_.get(), capturer, constraints))
       .get();
@@ -175,7 +175,7 @@ PeerConnectionDependencyFactory::CreateVideoSource(
 scoped_refptr<VideoTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalVideoTrack(
     const std::string& id,
-    webrtc::VideoSourceInterface* video_source) {
+    webrtc::VideoTrackSourceInterface* video_source) {
   return pc_thread_->Invoke<scoped_refptr<VideoTrackInterface>>(
                        Bind(&PeerConnectionFactoryInterface::CreateVideoTrack,
                             pc_factory_.get(), id, video_source))

@@ -13,8 +13,8 @@
 
 #include <vector>
 
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc{
 class V4L2Decoder : public VideoDecoder {
@@ -35,7 +35,6 @@ class V4L2Decoder : public VideoDecoder {
       DecodedImageCallback* callback) override;
 
   int32_t Release() override;
-  int32_t Reset() override;
 
  private:
   VideoCodec config_;

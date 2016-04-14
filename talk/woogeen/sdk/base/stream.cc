@@ -4,8 +4,9 @@
 
 #include <random>
 
-#include "talk/media/base/videocapturer.h"
-#include "talk/media/devices/devicemanager.h"
+#include "webrtc/media/base/videocapturer.h"
+#include "webrtc/modules/video_capture/video_capture_factory.h"
+#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
@@ -95,7 +96,8 @@ void Stream::Attach(VideoRendererARGBInterface& renderer){
   }
   // TODO: delete it when detach or stream is disposed.
   WebrtcVideoRendererARGBImpl* renderer_impl = new WebrtcVideoRendererARGBImpl(renderer);
-  video_tracks[0]->AddRenderer(renderer_impl);
+  rtc::VideoSinkWants wants;
+  video_tracks[0]->AddOrUpdateSink(renderer_impl, wants);
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
@@ -136,19 +138,12 @@ LocalCameraStream::LocalCameraStream(
   scoped_refptr<MediaStreamInterface> stream =
       factory->CreateLocalMediaStream(media_stream_label);
   if (parameters.VideoEnabled()) {
-    rtc::scoped_ptr<cricket::DeviceManagerInterface> device_manager(
-        cricket::DeviceManagerFactory::Create());
-    device_manager->Init();
-    cricket::Device device;
-    if (!device_manager->GetVideoCaptureDevice(parameters.CameraId(),
-                                               &device)) {
+    cricket::WebRtcVideoDeviceCapturerFactory capturer_factory;
+    cricket::VideoCapturer* capturer(
+        capturer_factory.Create(cricket::Device(parameters.CameraId(), 0)));
+    if (!capturer) {
       LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
     } else {
-      rtc::scoped_ptr<cricket::VideoCapturer> capturer(
-          device_manager->CreateVideoCapturer(device));
-      ASSERT(capturer);
-      cricket::VideoCapturer* capturer_ptr = capturer.release();
-      ASSERT(capturer_ptr);
       media_constraints_->SetMandatory(
           webrtc::MediaConstraintsInterface::kMaxWidth,
           std::to_string(parameters.ResolutionWidth()));
@@ -161,8 +156,8 @@ LocalCameraStream::LocalCameraStream(
       media_constraints_->SetMandatory(
           webrtc::MediaConstraintsInterface::kMinHeight,
           std::to_string(parameters.ResolutionHeight()));
-      scoped_refptr<VideoSourceInterface> source =
-          factory->CreateVideoSource(capturer_ptr, media_constraints_);
+      scoped_refptr<VideoTrackSourceInterface> source =
+          factory->CreateVideoSource(capturer, media_constraints_);
       std::string video_track_label =
           "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
       scoped_refptr<VideoTrackInterface> video_track =
@@ -213,7 +208,7 @@ LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStre
   if (parameters->VideoEnabled()) {
     capturer_ = new CustomizedFramesCapturer(framer);
     capturer_->Init();
-    scoped_refptr<VideoSourceInterface> source =
+    scoped_refptr<VideoTrackSourceInterface> source =
         factory->CreateVideoSource(capturer_, NULL);
     std::string video_track_label =
         "VideoTrack-" + std::to_string(dis(gen));

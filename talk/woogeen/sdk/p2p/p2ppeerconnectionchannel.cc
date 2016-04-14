@@ -852,7 +852,7 @@ void P2PPeerConnectionChannel::Send(
 
 webrtc::DataBuffer P2PPeerConnectionChannel::CreateDataBuffer(
     const std::string& data) {
-  rtc::Buffer buffer(data.c_str(), data.length());
+  rtc::CopyOnWriteBuffer buffer(data.c_str(), data.length());
   webrtc::DataBuffer data_buffer(buffer, false);
   return data_buffer;
 }

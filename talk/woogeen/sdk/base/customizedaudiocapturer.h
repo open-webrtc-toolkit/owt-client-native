@@ -6,12 +6,12 @@
 #define WOOGEEN_BASE_CUSTOMIZEDAUDIOCAPTURER_H_
 
 #include <memory>
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 
 namespace woogeen {
@@ -169,7 +169,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   int recording_channel_number_;
   int recording_buffer_size_;
 
-  rtc::scoped_ptr<ThreadWrapper> thread_rec_;
+  rtc::scoped_ptr<rtc::PlatformThread> thread_rec_;
 
   bool recording_;
   uint64_t last_call_record_millis_;

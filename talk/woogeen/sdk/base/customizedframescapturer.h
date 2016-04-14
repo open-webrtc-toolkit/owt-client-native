@@ -33,7 +33,7 @@
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include <memory>
 #endif
-#include "talk/media/base/videocapturer.h"
+#include "webrtc/media/base/videocapturer.h"
 #include "webrtc/base/stream.h"
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/bind.h"
@@ -62,7 +62,7 @@ class CustomizedFramesCapturer : public VideoCapturer {
 
  protected:
   // Override virtual methods of parent class VideoCapturer.
-  virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs);
+  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
 
   // Read a frame and determine how long to wait for the next frame.
   virtual void ReadFrame();

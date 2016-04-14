@@ -25,7 +25,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "talk/media/webrtc/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/linux/v4l2videodecoder.h"
 #pragma once
 // Declaration of V4l2 based decoder factory.

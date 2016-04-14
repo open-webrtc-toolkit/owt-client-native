@@ -6,7 +6,7 @@
 #define WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
 
 #include <functional>
-#include "talk/app/webrtc/jsep.h"
+#include "webrtc/api/jsep.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 
 namespace woogeen {

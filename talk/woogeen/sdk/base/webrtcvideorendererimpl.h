@@ -5,17 +5,19 @@
 #ifndef WOOGEEN_BASE_WEBRTCVIDEORENDERERIMPL_H_
 #define WOOGEEN_BASE_WEBRTCVIDEORENDERERIMPL_H_
 
-#include "talk/app/webrtc/mediastreaminterface.h"
-#include "talk/media/base/videoframe.h"
+#include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/media/base/videosinkinterface.h"
+#include "webrtc/media/base/videoframe.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/videorendererinterface.h"
 
 namespace woogeen {
 namespace base {
-class WebrtcVideoRendererARGBImpl : public webrtc::VideoRendererInterface {
+class WebrtcVideoRendererARGBImpl
+    : public rtc::VideoSinkInterface<cricket::VideoFrame> {
  public:
   WebrtcVideoRendererARGBImpl(VideoRendererARGBInterface& renderer)
       : renderer_(renderer) {}
-  virtual void RenderFrame(const cricket::VideoFrame* frame) override;
+  virtual void OnFrame(const cricket::VideoFrame& frame) override;
   virtual ~WebrtcVideoRendererARGBImpl() {}
 
  private:
