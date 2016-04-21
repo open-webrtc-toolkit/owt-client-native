@@ -30,7 +30,7 @@
 //
 #include <d3d9.h>
 #include <dxva2api.h>
-#include "webrtc/common_video/interface/video_frame_buffer.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
 #pragma once
 
 class NativeD3DSurfaceHandleImpl{

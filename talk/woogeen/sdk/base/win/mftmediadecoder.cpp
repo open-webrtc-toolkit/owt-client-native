@@ -203,25 +203,6 @@ MSDKVideoDecoder::PendingSampleInfo::PendingSampleInfo(
 
 MSDKVideoDecoder::PendingSampleInfo::~PendingSampleInfo(){}
 
-int32_t MSDKVideoDecoder::Reset(){
-    if (!inited_){
-        LOG(LS_ERROR) << "Decoder not inited, failed to reset.";
-    }
-    state_ = kResetting;
-    pending_input_buffer.clear();
-    pending_output_samples_.clear();
-    ntp_time_ms_.clear();
-    timestamps_.clear();
-    HRESULT hr = decoder_->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
-
-    if (FAILED(hr)){
-        state_ = kStopped;
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    state_ = kNormal;
-    return WEBRTC_VIDEO_CODEC_OK;
-}
-
 int32_t MSDKVideoDecoder::Release(){
     pending_input_buffer.clear();
     pending_output_samples_.clear();

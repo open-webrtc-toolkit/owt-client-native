@@ -31,19 +31,20 @@
 //In case  receveived data is native buffer that contains a surface as well as dev manager ptr, we will get
 // d3d device from dev manager and then render the surface.
 //
-#include "talk/app/webrtc/mediastreaminterface.h"
+#include "webrtc/api/mediastreaminterface.h"
 #pragma once
 
-class D3DVideoRenderer : public webrtc::VideoRendererInterface{
+class D3DVideoRenderer : public rtc::VideoSinkInterface<cricket::VideoFrame>{
 public:
     D3DVideoRenderer(HWND wnd, int width, int height, webrtc::VideoTrackInterface* track_to_render);
     virtual ~D3DVideoRenderer();
 
-    //VideoRendererInterface implementation
-    virtual void SetSize(int width, int height);
-    virtual void RenderFrame(const cricket::VideoFrame* frame);
+    //VideoSinkInterface implementation
+    virtual void OnFrame(const cricket::VideoFrame& frame) override;
 
 protected:
+    void SetSize(int width, int height);
+
     HWND wnd_;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> rendered_track_;
     int width_;

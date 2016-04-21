@@ -41,7 +41,7 @@ public:
 
     int Encode(const webrtc::VideoFrame& input_image,
         const webrtc::CodecSpecificInfo* codec_specific_info,
-        const std::vector<webrtc::VideoFrameType>* frame_types) override;
+        const std::vector<webrtc::FrameType>* frame_types) override;
 
     int RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) override;
 
@@ -59,7 +59,7 @@ private:
         size_t max_payload_size);
     void CheckOnEncoderThread();
     int EncodeOnEncoderThread(const webrtc::VideoFrame& frame, const webrtc::CodecSpecificInfo* codec_specific_info,
-        const std::vector<webrtc::VideoFrameType>* frame_types);
+        const std::vector<webrtc::FrameType>* frame_types);
     // Search for H.264 start codes.
     int32_t NextNaluPosition(uint8_t *buffer, size_t buffer_size);
     mfxU16 H264VideoMFTEncoder::H264GetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);

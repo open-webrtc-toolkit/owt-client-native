@@ -25,7 +25,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "talk/media/webrtc/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #pragma once
 // Declaration of MSDK based decoder factory.
 class MSDKVideoDecoderFactory

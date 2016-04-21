@@ -25,7 +25,7 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "talk/media/webrtc/webrtcvideoencoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include <vector>
 
 #pragma once

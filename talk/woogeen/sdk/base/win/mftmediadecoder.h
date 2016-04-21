@@ -27,9 +27,8 @@
 #include <utility>
 #include <vector>
 
-#include "talk/app/webrtc/videosourceinterface.h"
-#include "talk/media/devices/devicemanager.h"
-#include "talk/app/webrtc/test/fakeconstraints.h"
+#include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/test/fakeconstraints.h"
 #include "webrtc/base/common.h"
 //#include "webrtc/base/json.h"
 #include "webrtc/base/logging.h"
@@ -38,11 +37,11 @@
 #include "webrtc/base/thread.h"
 
 //For decoder and encoder factory
-#include "talk/media/webrtc/webrtcvideodecoderfactory.h"
-#include "talk/media/webrtc/webrtcvideoencoderfactory.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/common_video/interface/i420_buffer_pool.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 
 #include "third_party/libyuv/include/libyuv.h"
 
@@ -113,7 +112,6 @@ public:
 
     int32_t Release() override;
 
-    int32_t Reset() override;
     // rtc::MessageHandler implementation.
     void OnMessage(rtc::Message* msg) override;
 

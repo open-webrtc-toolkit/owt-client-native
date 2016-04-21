@@ -281,7 +281,7 @@ mfxU16 H264VideoMFTEncoder::H264GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesP
 int H264VideoMFTEncoder::Encode(
     const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
-    const std::vector<webrtc::VideoFrameType>* frame_types) {
+    const std::vector<webrtc::FrameType>* frame_types) {
     //Delegate the encoding task to encoder thread.
     mfxStatus sts = MFX_ERR_NONE;
     mfxFrameSurface1* pSurf = NULL; // dispatching pointer
@@ -361,7 +361,7 @@ int H264VideoMFTEncoder::Encode(
     bool is_keyframe_required = false;
     if (frame_types){
         for (auto frame_type : *frame_types) {
-            if (frame_type == webrtc::kKeyFrame){
+            if (frame_type == webrtc::kVideoFrameKey){
                 is_keyframe_required = true;
                 break;
             }
@@ -427,7 +427,7 @@ int H264VideoMFTEncoder::Encode(
     encodedFrame._completeFrame = true;
     encodedFrame.capture_time_ms_ = input_image.render_time_ms();
     encodedFrame._timeStamp = input_image.timestamp();
-    encodedFrame._frameType = is_keyframe_required ? webrtc::kKeyFrame : webrtc::kDeltaFrame;
+    encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
 
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
@@ -479,7 +479,7 @@ int H264VideoMFTEncoder::Encode(
 //worker thread.
 int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
-    const std::vector<webrtc::VideoFrameType>* frame_types) {
+    const std::vector<webrtc::FrameType>* frame_types) {
     mfxStatus sts = MFX_ERR_NONE;
     mfxFrameSurface1* pSurf = NULL; // dispatching pointer
     mfxU16 nEncSurfIdx = 0;
@@ -552,7 +552,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     bool is_keyframe_required = false;
     if (frame_types) {
         for (auto frame_type : *frame_types) {
-            if (frame_type == webrtc::kKeyFrame) {
+            if (frame_type == webrtc::kVideoFrameKey) {
                 is_keyframe_required = true;
                 break;
             }
@@ -610,7 +610,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     encodedFrame._completeFrame = true;
     encodedFrame.capture_time_ms_ = input_image.render_time_ms();
     encodedFrame._timeStamp = input_image.timestamp();
-    encodedFrame._frameType = is_keyframe_required ? webrtc::kKeyFrame : webrtc::kDeltaFrame;
+    encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
 
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));

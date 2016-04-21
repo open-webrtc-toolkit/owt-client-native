@@ -32,18 +32,18 @@
 #include "talk/woogeen/sdk/base/win/d3dvideorenderer.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 
-#include "talk/media/base/videoframe.h"
-#include "talk/media/base/videorenderer.h"
+#include "webrtc/media/base/videoframe.h"
 
 #include <d3d9.h>
 
 D3DVideoRenderer::D3DVideoRenderer(HWND wnd, int width, int height, webrtc::VideoTrackInterface* track_to_render)
   : wnd_(wnd), width_(width), height_(height), rendered_track_(track_to_render){
-    rendered_track_->AddRenderer(this);
+    rtc::VideoSinkWants wants;
+    rendered_track_->AddOrUpdateSink(this, wants);
 }
 
 D3DVideoRenderer::~D3DVideoRenderer(){
-    rendered_track_->RemoveRenderer(this);
+    rendered_track_->RemoveSink(this);
 }
 
 void D3DVideoRenderer::SetSize(int width, int height){
@@ -51,19 +51,14 @@ void D3DVideoRenderer::SetSize(int width, int height){
     height_ = height;
 }
 
-
 //
 //TODO: if the rotation is specified for a D3D surface, we need to
 //create extra texture for rotation. This is not yet implemented.
 //
-void D3DVideoRenderer::RenderFrame(const cricket::VideoFrame* video_frame){
-    if (!video_frame)
-        return;
-
-    LOG(LS_ERROR) << "D3DVideoRenderer::RenderFrame called";
+void D3DVideoRenderer::OnFrame(const cricket::VideoFrame& video_frame){
     //Do we need to Lock the renderframe call? since we have the device lock here it seems
     //no neccessary.
-    const cricket::VideoFrame* frame = video_frame->GetCopyWithRotationApplied();
+    const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
     SetSize(static_cast<int>(frame->GetWidth()), static_cast<int>(frame->GetHeight()));
 
     if (frame->GetNativeHandle() == nullptr){//We're not handling DXVA buffer

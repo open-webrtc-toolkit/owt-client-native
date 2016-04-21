@@ -14,15 +14,6 @@
 enum { kMSDKCodecPollMs = 10 };
 enum { MSDK_MSG_HANDLE_INPUT = 0 };
 
-int32_t H264MSDKVideoDecoder::Reset() {
-    if (!inited_){
-        LOG(LS_ERROR) << "Decoder not inited, failed to reset.";
-    }
-    ntp_time_ms_.clear();
-    timestamps_.clear();
-    return WEBRTC_VIDEO_CODEC_OK;
-}
-
 int32_t H264MSDKVideoDecoder::Release() {
     if (d3d9_ != nullptr){
         d3d9_->Release();
