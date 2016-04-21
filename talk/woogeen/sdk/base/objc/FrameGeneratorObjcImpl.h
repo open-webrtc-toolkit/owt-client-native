@@ -14,7 +14,7 @@ class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
  public:
   explicit AudioFrameGeneratorObjcImpl(
       id<RTCAudioFrameGeneratorProtocol> generator)
-      : objc_generator_(generator), buffer_size_for_10ms_(0) {
+      : objc_generator_(generator) {
       }
 
   virtual uint32_t GenerateFramesForNext10Ms(uint8_t* buffer,
@@ -24,7 +24,6 @@ class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
 
  private:
   id<RTCAudioFrameGeneratorProtocol> objc_generator_;
-  int buffer_size_for_10ms_;
 };
 
 /// This class cast objc video frame generator to C++ one. Only I420 raw frame

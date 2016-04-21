@@ -18,6 +18,7 @@ namespace conference {
 class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
  public:
   ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer);
+  virtual ~ConferenceClientObserverObjcImpl(){};
 
  protected:
   virtual void OnStreamAdded(
