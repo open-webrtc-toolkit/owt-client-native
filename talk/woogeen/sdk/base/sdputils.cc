@@ -2,7 +2,11 @@
  * Intel License
  */
 
+#if defined(WEBRTC_LINUX)
+#include <regex.h>
+#else
 #include <regex>
+#endif
 #include <sstream>
 #include <vector>
 #include <unordered_map>
@@ -28,18 +32,62 @@ static const std::unordered_map<MediaCodec::VideoCodec,
 
 std::string SdpUtils::SetMaximumVideoBandwidth(const std::string& sdp,
                                                int bitrate) {
+#if defined(WEBRTC_LINUX)
+  regex_t regex;
+  int status;
+  int matches = 1;
+  regmatch_t m;
+  status = regcomp(&regex,"a=mid:video\r\n", REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+  if(status != 0) {
+    regfree(&regex);
+    return sdp;
+  }
+  status = regexec(&regex, sdp.c_str(), matches, &m, 0);
+  if(status !=0) {
+    regfree(&regex);
+    return sdp;
+  }
+  std::stringstream new_string;
+  new_string << sdp.substr(0, m.rm_eo) << "b=AS: "<< bitrate << "\r\n"
+             << sdp.substr(m.rm_eo, std::string::npos);
+  regfree(&regex);
+  return new_string.str();
+#else
   std::regex reg("a=mid:video\r\n");
   std::stringstream sdp_line_width_bitrate;
   sdp_line_width_bitrate << "a=mid:video\r\nb=AS: " << bitrate << "\r\n";
   return std::regex_replace(sdp, reg, sdp_line_width_bitrate.str());
+#endif
 }
 
 std::string SdpUtils::SetMaximumAudioBandwidth(const std::string& sdp,
                                                int bitrate) {
+#if defined(WEBRTC_LINUX)
+  regex_t regex;
+  int status;
+  int matches = 1;
+  regmatch_t m;
+  status = regcomp(&regex,"a=mid:audio\r\n", REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+  if(status != 0) {
+    regfree(&regex);
+    return sdp;
+  }
+  status = regexec(&regex, sdp.c_str(), matches, &m, 0);
+  if(status !=0) {
+    regfree(&regex);
+    return sdp;
+  }
+  std::stringstream new_string;
+  new_string << sdp.substr(0, m.rm_eo) << "b=AS: "<< bitrate << "\r\n"
+             << sdp.substr(m.rm_eo, std::string::npos);
+  regfree(&regex);
+  return new_string.str();
+#else
   std::regex reg("a=mid:audio\r\n");
   std::stringstream sdp_line_width_bitrate;
   sdp_line_width_bitrate << "a=mid:audio\r\nb=AS: " << bitrate << "\r\n";
   return std::regex_replace(sdp, reg, sdp_line_width_bitrate.str());
+#endif
 }
 
 std::string SdpUtils::SetPreferAudioCodec(const std::string& original_sdp,
@@ -65,6 +113,85 @@ std::string SdpUtils::SetPreferVideoCodec(const std::string& original_sdp,
 std::string SdpUtils::SetPreferCodec(const std::string& sdp,
                                      const std::string& codec_name,
                                      bool is_audio) {
+#if defined(WEBRTC_LINUX)
+#define MAX_RTP_MATCHES 10
+  regex_t regex_m_line;
+  regex_t regex_rtp_map;
+  std::string media_type;
+  int status;
+  media_type = is_audio ? "audio" : "video";
+  std::string m_line_reg = "m=" + media_type +".*\r\n";
+  std::string rtp_line_reg = "a=rtpmap:([[:digit:]]+) " + codec_name + ".*\r\n";
+  int matches = MAX_RTP_MATCHES; //For safety, allow at most 10 matches. Actually we only need 1.
+  regmatch_t m[MAX_RTP_MATCHES];
+  regmatch_t r[MAX_RTP_MATCHES];
+  status = regcomp(&regex_m_line,m_line_reg.c_str(),
+                   REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+  if (status != 0) {
+    LOG(LS_INFO) <<"Failed to comiple mline regex";
+    regfree(&regex_m_line);
+    return sdp;
+  }
+  status = regcomp(&regex_rtp_map, rtp_line_reg.c_str(),
+                  REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+  if (status != 0) {
+    LOG(LS_INFO) <<"Failed to comiple rtpmap regex";
+    regfree(&regex_m_line);
+    regfree(&regex_rtp_map);
+    return sdp;
+  }
+  status = regexec(&regex_rtp_map, sdp.c_str(), matches, r, 0);
+  if (status != 0){
+    LOG(LS_INFO) <<"Failed to find match for rtpmap";
+    regfree(&regex_m_line);
+    regfree(&regex_rtp_map);
+    return sdp;
+  }
+
+  std::string codec_value(sdp.substr(r[1].rm_so, r[1].rm_eo-r[1].rm_so));
+  LOG(LS_INFO) << "RTP map found for " << codec_name << ": "
+            << codec_value;
+
+  status = regexec(&regex_m_line, sdp.c_str(), matches, m, 0);
+  if (status !=0) {
+    LOG(LS_INFO) << "Failed to find match for mline";
+    regfree(&regex_rtp_map);
+    regfree(&regex_m_line);
+    return sdp;
+  }
+  std::string m_line(sdp.substr(m[0].rm_so, m[0].rm_eo-m[0].rm_so));
+  std::vector<std::string> m_line_vector;
+  std::stringstream original_m_line_stream(m_line);
+  std::string item;
+  while (std::getline(original_m_line_stream, item, ' ')) {
+    m_line_vector.push_back(item);
+  }
+  if (m_line_vector.size() < 3) {
+    LOG(LS_INFO) << "Wrong SDP format description: " << m_line;
+    regfree(&regex_rtp_map);
+    regfree(&regex_m_line);
+    return sdp;
+  }
+  std::stringstream m_line_stream;
+  for (int i=0; i<3; i++) {
+    m_line_stream << m_line_vector[i] << " ";
+  }
+  m_line_stream << codec_value;
+  for (int i = 3, m_line_vector_size = m_line_vector.size();
+       i < m_line_vector_size; i++) {
+    if (m_line_vector[i] != codec_value) {
+      m_line_stream << " " << m_line_vector[i];
+    }
+  }
+
+  std::stringstream new_sdp;
+  new_sdp << sdp.substr(0, m[0].rm_so) << m_line_stream.str()
+          << sdp.substr(m[0].rm_eo, std::string::npos);
+  regfree(&regex_rtp_map);
+  regfree(&regex_m_line);
+  return new_sdp.str();
+
+#else
   std::string media_type;
   media_type = is_audio ? "audio" : "video";
   std::regex reg_m_line("m=" + media_type + ".*(?=[\r]?[\n]?)");
@@ -112,6 +239,7 @@ std::string SdpUtils::SetPreferCodec(const std::string& sdp,
   }
   LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
   return std::regex_replace(sdp, reg_m_line, m_line_stream.str());
+#endif
 }
 }
 }
