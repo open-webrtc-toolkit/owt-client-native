@@ -4,10 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
-#import "talk/app/webrtc/objc/public/RTCMediaConstraints.h"
-#import "talk/app/webrtc/objc/public/RTCVideoCapturer.h"
-#import "talk/app/webrtc/objc/RTCMediaStream+Internal.h"
-#import "talk/app/webrtc/objc/RTCVideoCapturer+Internal.h"
+#import "webrtc/api/objc/RTCMediaConstraints.h"
+#import "webrtc/api/objc/RTCMediaStream+Private.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCLocalCameraStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"

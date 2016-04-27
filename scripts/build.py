@@ -27,9 +27,9 @@ ARCH_PARAM_DICT = {'arm':['out_ios', 'iphoneos'], 'arm64':['out_ios64',
     'iphoneos'], 'ia32':['out_sim','iphonesimulator'],'x64':['out_sim',
     'iphonesimulator']}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-HEADER_LIST = ['talk/app/webrtc/objc/public/RTCICEServer.h',
-    'talk/app/webrtc/objc/public/RTCVideoRenderer.h',
-    'talk/app/webrtc/objc/public/RTCEAGLVideoView.h',
+HEADER_LIST = ['webrtc/api/objc/RTCIceServer.h',
+    'webrtc/api/objc/RTCVideoRenderer.h',
+    'webrtc/api/objc/RTCEAGLVideoView.h',
     'talk/woogeen/sdk/base/objc/public/*', 'talk/woogeen/sdk/p2p/objc/public/*',
     'talk/woogeen/sdk/conference/objc/public/*']
 
@@ -39,6 +39,8 @@ def runhooks(arch, ssl_root):
   env.setdefault('GYP_DEFINES', 'OS=ios')
   env['GYP_DEFINES']+=(' target_arch='+arch)
   env['GYP_DEFINES']+=' use_objc_h264=1'
+  env['GYP_DEFINES']+=' ios_deployment_target=7.0'
+  env['GYP_DEFINES']+=' clang_xcode=1'
   if(ssl_root):
     env['GYP_DEFINES']+=(' ssl_root='+ssl_root)
   env.setdefault('GYP_GENERATOR_FLAGS', '')

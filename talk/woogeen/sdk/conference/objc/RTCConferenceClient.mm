@@ -4,7 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #import <string>
-#import "talk/app/webrtc/objc/RTCICEServer+Internal.h"
+#import "webrtc/api/objc/RTCIceServer+Private.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
@@ -29,11 +29,11 @@
   woogeen::conference::ConferenceClientConfiguration* nativeConfig =
       new woogeen::conference::ConferenceClientConfiguration();
   std::vector<woogeen::base::IceServer> iceServers;
-  for (RTCICEServer* server in config.ICEServers) {
+  for (RTCIceServer* server in config.ICEServers) {
     woogeen::base::IceServer iceServer;
-    iceServer.urls.push_back(server.iceServer.uri);
-    iceServer.username=server.iceServer.username;
-    iceServer.password=server.iceServer.password;
+    iceServer.urls = server.nativeServer.urls;
+    iceServer.username = server.nativeServer.username;
+    iceServer.password = server.nativeServer.password;
     iceServers.push_back(iceServer);
   }
   nativeConfig->ice_servers = iceServers;
@@ -83,8 +83,10 @@
   _nativeConferenceClient->Join(
       nativeToken,
       [=](std::shared_ptr<woogeen::conference::User> user) {
+        RTCConferenceUser* conferenceUser =
+            [[RTCConferenceUser alloc] initWithNativeUser:user];
         if (onSuccess != nil)
-          onSuccess([[RTCConferenceUser alloc]initWithNativeUser: user]);
+          onSuccess(conferenceUser);
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];

@@ -1,8 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import "talk/app/webrtc/objc/public/RTCMediaStream.h"
-#import "talk/app/webrtc/objc/public/RTCVideoCapturer.h"
-#import "talk/app/webrtc/objc/public/RTCVideoCapturer.h"
+#import "webrtc/api/objc/RTCMediaStream.h"
 
 @class RTCMediaConstraints;
 

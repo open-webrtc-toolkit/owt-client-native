@@ -1,8 +1,7 @@
-#include "rtcpeerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#import "talk/app/webrtc/objc/RTCMediaStream+Internal.h"
-#import "talk/app/webrtc/objc/RTCMediaConstraints+Internal.h"
-#import "talk/app/webrtc/objc/RTCVideoCapturer+Internal.h"
+#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
+#import "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#import "webrtc/api/objc/RTCMediaStream+Private.h"
+#import "webrtc/api/objc/RTCMediaConstraints+Private.h"
 
 @interface RTCPeerConnectionDependencyFactory ()
 
@@ -39,7 +38,7 @@ static RTCPeerConnectionDependencyFactory* sharedFactory;
   rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream =
       self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream(
           [label UTF8String]);
-  return [[RTCMediaStream alloc] initWithMediaStream:nativeMediaStream];
+  return [[RTCMediaStream alloc] initWithNativeMediaStream:nativeMediaStream];
 }
 
 @end

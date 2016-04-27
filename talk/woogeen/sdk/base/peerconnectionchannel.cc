@@ -43,6 +43,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
                          .get();
   if (!peer_connection_.get()) {
     LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
+    RTC_DCHECK(false);
     return false;
   }
   if (pc_thread_ == nullptr) {

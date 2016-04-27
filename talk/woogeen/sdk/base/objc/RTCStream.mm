@@ -3,8 +3,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/app/webrtc/objc/public/RTCVideoTrack.h"
-#import "talk/app/webrtc/objc/RTCMediaStream+Internal.h"
+#import "webrtc/api/objc/RTCVideoTrack.h"
+#import "webrtc/api/objc/RTCMediaStream+Private.h"
 #import "talk/woogeen/sdk/base/objc/public/RTCStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 
@@ -24,7 +24,7 @@
     return;
   }
   _mediaStream =
-      [[RTCMediaStream alloc] initWithMediaStream:nativeStream->MediaStream()];
+      [[RTCMediaStream alloc] initWithNativeMediaStream:nativeStream->MediaStream()];
   if ([_mediaStream.videoTracks count] == 0)
     return;
   [[_mediaStream.videoTracks objectAtIndex:0] addRenderer:renderer];

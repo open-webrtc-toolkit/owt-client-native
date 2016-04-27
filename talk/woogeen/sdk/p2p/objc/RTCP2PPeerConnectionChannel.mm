@@ -6,7 +6,7 @@
 #import "RTCErrors.h"
 #import "RTCP2PPeerConnectionChannelObserver.h"
 #import "RTCP2PErrors.h"
-#import "talk/app/webrtc/objc/RTCICEServer+Internal.h"
+#import "webrtc/api/objc/RTCICEServer+Private.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
@@ -33,8 +33,8 @@
   const std::string nativeRemoteId = [remoteId UTF8String];
   const std::string nativeLocalId = [localId UTF8String];
   webrtc::PeerConnectionInterface::IceServers nativeIceServers;
-  for (RTCICEServer* server in config.ICEServers) {
-    nativeIceServers.push_back(server.iceServer);
+  for (RTCIceServer* server in config.ICEServers) {
+    nativeIceServers.push_back(server.nativeServer);
   }
   woogeen::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;

@@ -4,9 +4,9 @@ HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..
 # print HOME_PATH
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
-HEADER_LIST = ['talk/app/webrtc/objc/public/RTCICEServer.h',
-    'talk/app/webrtc/objc/public/RTCVideoRenderer.h',
-    'talk/app/webrtc/objc/public/RTCEAGLVideoView.h',
+HEADER_LIST = ['webrtc/api/objc/RTCIceServer.h',
+    'webrtc/api/objc/RTCVideoRenderer.h',
+    'webrtc/api/objc/RTCEAGLVideoView.h',
     'talk/woogeen/sdk/base/objc/public/*', 'talk/woogeen/sdk/p2p/objc/public/*',
     'talk/woogeen/sdk/conference/objc/public/*']
 if not os.path.exists(OUT_HEADER_PATH):

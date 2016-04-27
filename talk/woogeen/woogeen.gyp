@@ -244,9 +244,10 @@
             'woogeen_sdk_base',
             'woogeen_sdk_p2p',
             'woogeen_sdk_conf',
-            '<(DEPTH)/talk/app/webrtc/legacy_objc_api.gyp:libjingle_peerconnection_objc',
+            '<(DEPTH)/webrtc/api/api.gyp:rtc_api_objc',
           ],
           'include_dirs' : [
+            '<(DEPTH)/webrtc/api/objc',
             'sdk/base/objc/public',
             'sdk/p2p/objc/public',
             'sdk/conference/objc/public',
@@ -324,6 +325,9 @@
             'sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h',
             'sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.mm',
           ],
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+          },
         },  # target woogeen_sdk_objc
       ],  # targets
     }],  # condition
