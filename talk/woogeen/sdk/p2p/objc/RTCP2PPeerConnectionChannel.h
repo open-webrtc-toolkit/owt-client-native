@@ -4,11 +4,11 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RTCLocalStream.h"
-#import "RTCP2PSignalingSenderProtocol.h"
-#import "RTCP2PSignalingReceiverProtocol.h"
-#import "RTCP2PPeerConnectionChannelObserver.h"
-#import "RTCPeerClientConfiguration.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingSenderProtocol.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingReceiverProtocol.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCPeerClientConfiguration.h"
 
 @interface RTCP2PPeerConnectionChannel
     : NSObject<RTCP2PSignalingReceiverProtocol>

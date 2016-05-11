@@ -2,7 +2,7 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/base/objc/public/RTCMediaFormat.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCMediaFormat.h"
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
 

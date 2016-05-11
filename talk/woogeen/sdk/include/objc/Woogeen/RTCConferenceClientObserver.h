@@ -27,11 +27,12 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTOBSERVER_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTOBSERVER_H_
 
-#import "RTCLocalStream.h"
-#import "RTCRemoteStream.h"
-#import "RTCConferenceUser.h"
+#import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCRemoteStream.h"
+#import "Woogeen/RTCConferenceUser.h"
 
 /// Observer for RTCConferenceClient.
+RTC_EXPORT
 @protocol RTCConferenceClientObserver<NSObject>
 
 /**

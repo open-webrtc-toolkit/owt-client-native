@@ -24,34 +24,33 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
-#define WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
+#ifndef p2p_RTCP2PClientConfiguration_h
+#define p2p_RTCP2PClientConfiguration_h
 
-typedef NS_ENUM(NSInteger, VideoCodec) {
-  VideoCodecVP8 = 1,
-  VideoCodecH264 = 2,
-};
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCIceServer.h>
+#import <Woogeen/RTCMediaCodec.h>
 
-typedef NS_ENUM(NSInteger, AudioCodec) {
-  AudioCodecOpus = 1,
-  AudioCodecIsac = 2,
-  AudioCodecG722 = 3,
-  AudioCodecPcmu = 4,
-  AudioCodecPcma = 5,
-};
+/**
+ @brief Configuration for RTCPeerClient
 
-/*
-  @brief An instance of this class indicates preference for codecs.
-  @detail It is not guaranteed to use preferred codec, if remote side doesn't
-  support preferred codec, it will use other codec.
-*/
-@interface RTCMediaCodec : NSObject
+ This configuration is used while creating RTCPeerClient. Changing this
+ configuration does NOT impact RTCPeerClient already created.
+ */
+RTC_EXPORT
+@interface RTCPeerClientConfiguration : NSObject
 
-/// Preference for audio codec. Default is Opus.
-@property(nonatomic, readwrite) NSInteger audioCodec;
-/// Preference for video codec. Default is H.264.
-@property(nonatomic, readwrite) NSInteger videoCodec;
+@property(nonatomic, strong, readwrite) NSArray* ICEServers;
+/// Media codec preference
+@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
+/**
+ @brief Max outgoing audio bandwidth, unit: kbps.
+ @detail Please be noticed different codecs may support different bitrate ranges.
+ */
+@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
+/// Max outgoing video bandwidth, unit: kbps.
+@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
 
 @end
 
-#endif  // WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
+#endif

@@ -24,18 +24,21 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
 
-#import "Foundation/Foundation.h"
-#import "CoreGraphics/CoreGraphics.h"
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
 
-/// Options for subscribing a remote stream.
-@interface RTCConferenceSubscribeOptions : NSObject
+/// Observer for RTCRemoteMixedStream.
+RTC_EXPORT
+@protocol RTCRemoteMixedStreamObserver<NSObject>
 
-- (CGSize)resolution;
-- (void)setResolution:(CGSize)resolution;
+/**
+  @brief Triggers when video layout is changed.
+*/
+- (void)onVideoLayoutChanged;
 
 @end
 
-#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_

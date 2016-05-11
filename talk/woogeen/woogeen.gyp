@@ -248,13 +248,12 @@
             'woogeen_sdk_base',
             'woogeen_sdk_p2p',
             'woogeen_sdk_conf',
-            '<(DEPTH)/webrtc/api/api.gyp:rtc_api_objc',
+            '<(webrtc_root)/sdk/sdk.gyp:rtc_sdk_peerconnection_objc',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
           ],
           'include_dirs' : [
-            '<(DEPTH)/webrtc/api/objc',
-            'sdk/base/objc/public',
-            'sdk/p2p/objc/public',
-            'sdk/conference/objc/public',
+            '<(webrtc_root)/sdk/objc/Framework/Headers/WebRTC',
+            'sdk/include/objc',
           ],
           'sources': [
             'sdk/base/objc/public/RTCLocalStream.h',

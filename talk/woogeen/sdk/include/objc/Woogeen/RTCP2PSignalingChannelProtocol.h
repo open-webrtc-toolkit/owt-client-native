@@ -5,7 +5,7 @@
 #ifndef p2p_SignalingChannelProtocol_h
 #define p2p_SignalingChannelProtocol_h
 
-#import "RTCErrors.h"
+#import "Woogeen/RTCErrors.h"
 
 /**
  @brief Signaling channel will notify observer when event triggers.
@@ -30,6 +30,7 @@
 
  Developers may utilize their own signaling server by implmenting this protocol.
  */
+RTC_EXPORT
 @protocol RTCP2PSignalingChannelProtocol<NSObject>
 
 /**

@@ -26,13 +26,16 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <WebRTC/RTCMacros.h>
 
 /**
  @brief frame generator interface for audio
  @detail Sample rate and channel numbers cannot be changed once the generator is
  created. Currently, only 16 bit little-endian PCM is supported.
 */
+RTC_EXPORT
 @protocol RTCAudioFrameGeneratorProtocol<NSObject>
+
 /**
  @brief Generate frames for next 10ms.
  @param buffer Points to the start address for frame data. The memory is
@@ -56,6 +59,7 @@
  protocol. Height, width and frame rate cannot be changed once generator is
  created.
  */
+RTC_EXPORT
 @protocol RTCVideoFrameGeneratorProtocol<NSObject>
 /**
  @brief Generate next video frame

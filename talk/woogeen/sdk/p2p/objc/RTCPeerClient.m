@@ -2,8 +2,8 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "RTCPeerClient.h"
-#import "RTCP2PErrors.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCPeerClient.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PErrors.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
 
 @interface RTCPeerClient ()

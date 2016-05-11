@@ -24,19 +24,19 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
+#ifndef WOOGEEN_BASE_OBJC_RTCMEDIAFORMAT_H_
+#define WOOGEEN_BASE_OBJC_RTCMEDIAFORMAT_H_
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <WebRTC/RTCMacros.h>
 
-/// Observer for RTCRemoteMixedStream.
-@protocol RTCRemoteMixedStreamObserver<NSObject>
+// This class describes a media stream's format
+RTC_EXPORT
+@interface RTCVideoFormat : NSObject
 
-/**
-  @brief Triggers when video layout is changed.
-*/
-- (void)onVideoLayoutChanged;
+- (CGSize)resolution;
 
 @end
 
-#endif  // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_
+#endif

@@ -6,7 +6,7 @@
 #define WOOGEEN_CONFERENCE_OBJC_REMOTEMIXEDSTREAMOBSERVEROBJCIMPL_H_
 
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
-#import "talk/woogeen/sdk/conference/objc/public/RTCRemoteMixedStreamObserver.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteMixedStreamObserver.h"
 
 namespace woogeen {
 namespace conference {

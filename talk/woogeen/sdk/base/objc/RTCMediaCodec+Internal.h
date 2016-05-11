@@ -5,7 +5,7 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCMEDIACODEC_INTERNAL_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCMEDIACODEC_INTERNAL_H_
 
-#import "talk/woogeen/sdk/base/objc/public/RTCMediaCodec.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCMediaCodec.h"
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
 

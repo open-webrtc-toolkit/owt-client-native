@@ -24,38 +24,32 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+// Base SDK
+#import <Woogeen/RTCMacros.h>
+#import <Woogeen/RTCMediaCodec.h>
+#import <Woogeen/RTCMediaFormat.h>
+#import <Woogeen/RTCErrors.h>
+#import <Woogeen/RTCStream.h>
+#import <Woogeen/RTCLocalStream.h>
+#import <Woogeen/RTCLocalCameraStream.h>
+#import <Woogeen/RTCLocalCustomizedStream.h>
+#import <Woogeen/RTCRemoteStream.h>
+#import <Woogeen/RTCRemoteCameraStream.h>
+#import <Woogeen/RTCRemoteMixedStream.h>
+#import <Woogeen/RTCRemoteMixedStreamObserver.h>
+#import <Woogeen/RTCRemoteScreenStream.h>
+#import <Woogeen/RTCIceServer.h>
+#import <Woogeen/RTCGlobalConfiguration.h>
+#import <Woogeen/RTCFrameGeneratorProtocol.h>
 
-/**
-  @brief This class contains parameters and methods that needed for creating a
-  local camera stream.
+// P2P SDK
+#import <Woogeen/RTCPeerClient.h>
+#import <Woogeen/RTCP2PErrors.h>
 
-  When a stream is created, it will not be impacted if these parameters are
-  changed.
-*/
-@interface RTCLocalCameraStreamParameters : NSObject
+// Conference SDK
+#import <Woogeen/RTCConferenceClient.h>
+#import <Woogeen/RTCConferenceErrors.h>
 
-/**
-  @brief Initialize a LocalCameraStreamParameters.
-  @param videoEnabled Indicates if video is enabled for this stream.
-  @param audioEnabled Indicates if audio is enabled for this stream.
-*/
-- (instancetype)initWithVideoEnabled:(BOOL)videoEnabled
-                        audioEnabled:(BOOL)audioEnabled;
-/**
-  @brief Set the video resolution.
-
-  If the resolution specified is not supported on current device, creation will
-  failed.
-  @param width The width of the video.
-  @param height The height of the video.
-*/
-- (void)setResolutionWidth:(int)width height:(int)height;
-/**
-  @brief Set the ID of the camera to be used.
-  @param cameraId Camera ID.
-*/
-- (void)setCameraId:(NSString*)cameraId;
-
-@end
+// Following headers are part of sample implementations
+#import <Woogeen/RTCVideoRenderer.h>
+#import <Woogeen/RTCEAGLVideoView.h>

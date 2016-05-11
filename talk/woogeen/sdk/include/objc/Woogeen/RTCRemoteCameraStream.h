@@ -24,32 +24,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef p2p_RTCP2PClientConfiguration_h
-#define p2p_RTCP2PClientConfiguration_h
+#import "Woogeen/RTCRemoteStream.h"
 
-#import <Foundation/Foundation.h>
-#import "RTCICEServer.h"
-#import "RTCMediaCodec.h"
-
-/**
- @brief Configuration for RTCPeerClient
-
- This configuration is used while creating RTCPeerClient. Changing this
- configuration does NOT impact RTCPeerClient already created.
- */
-@interface RTCPeerClientConfiguration : NSObject
-
-@property(nonatomic, strong, readwrite) NSArray* ICEServers;
-/// Media codec preference
-@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
-/**
- @brief Max outgoing audio bandwidth, unit: kbps.
- @detail Please be noticed different codecs may support different bitrate ranges.
- */
-@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
-/// Max outgoing video bandwidth, unit: kbps.
-@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
-
+/// This class represent a remote stream captured from a camera and/or mic.
+RTC_EXPORT
+@interface RTCRemoteCameraStream : RTCRemoteStream
 @end
-
-#endif

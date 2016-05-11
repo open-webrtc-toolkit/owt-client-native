@@ -25,7 +25,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "RTCRemoteStream.h"
+#import "Woogeen/RTCRemoteStream.h"
 
 /// @cond
 

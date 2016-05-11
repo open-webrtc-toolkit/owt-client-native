@@ -24,8 +24,23 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "RTCRemoteStream.h"
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_
 
-/// This class represent a remote stream captured from a camera and/or mic.
-@interface RTCRemoteCameraStream : RTCRemoteStream
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
+
+/// This class represent an attendee in a conference.
+RTC_EXPORT
+@interface RTCConferenceUser : NSObject
+
+// Get user's ID.
+- (NSString*)getUserId;
+// Get user's name.
+- (NSString*)getName;
+// Get user's role.
+- (NSString*)getRole;
+
 @end
+
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_

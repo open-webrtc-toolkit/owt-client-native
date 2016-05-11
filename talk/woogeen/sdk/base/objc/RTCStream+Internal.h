@@ -2,7 +2,7 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/base/objc/public/RTCStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCStream.h"
 
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"

@@ -28,14 +28,16 @@
 #define p2p_PeerClient_h
 
 #import <Foundation/Foundation.h>
-#import "RTCP2PSignalingChannelProtocol.h"
-#import "RTCPeerClientObserver.h"
-#import "RTCP2PSignalingSenderProtocol.h"
-#import "RTCLocalStream.h"
-#import "RTCP2PPeerConnectionChannelObserver.h"
-#import "RTCPeerClientConfiguration.h"
+#import <WebRTC/RTCMacros.h>
+#import "Woogeen/RTCP2PSignalingChannelProtocol.h"
+#import "Woogeen/RTCPeerClientObserver.h"
+#import "Woogeen/RTCP2PSignalingSenderProtocol.h"
+#import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCP2PPeerConnectionChannelObserver.h"
+#import "Woogeen/RTCPeerClientConfiguration.h"
 
 /// An async client for P2P WebRTC sessions
+RTC_EXPORT
 @interface RTCPeerClient : NSObject<RTCP2PPeerConnectionChannelObserver,
                                     RTCP2PSignalingSenderProtocol,
                                     RTCP2PSignalingChannelObserver>

@@ -6,7 +6,7 @@
 #define WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
-#include "talk/woogeen/sdk/base/objc/public/RTCFrameGeneratorProtocol.h"
+#include "talk/woogeen/sdk/include/objc/Woogeen/RTCFrameGeneratorProtocol.h"
 
 namespace woogeen {
 namespace base {

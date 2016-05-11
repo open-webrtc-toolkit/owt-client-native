@@ -3,16 +3,16 @@
  */
 
 #import "Foundation/Foundation.h"
-#import "RTCErrors.h"
-#import "RTCP2PPeerConnectionChannelObserver.h"
-#import "RTCP2PErrors.h"
-#import "webrtc/api/objc/RTCICEServer+Private.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PErrors.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
+#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 

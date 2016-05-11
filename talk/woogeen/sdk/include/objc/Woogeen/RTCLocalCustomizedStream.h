@@ -24,21 +24,23 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCLocalCustomizedStreamParameters.h"
 
-#import "RTCRemoteStream.h"
-#import "RTCRemoteMixedStreamObserver.h"
-
-/// This class represent a mixed remote stream.
-@interface RTCRemoteMixedStream : RTCRemoteStream
-
--(NSArray*)supportedVideoFormats;
 /**
-  @brief Add an observer for RTCRemoteMixedStream.
+ @brief This class represent a local stream with customized video input
+ @detail It pulls video frame from video frame generator which is set in
+ RTCLocalCustomizedStreamParameters.
+ */
+RTC_EXPORT
+@interface RTCLocalCustomizedStream : RTCLocalStream
+
+/**
+  Initialize a RTCLocalCustomizedStream with parameters.
+  @param parameters Parameters for creating the stream. The stream will not be
+  impacted if changing parameters after it is created.
 */
-- (void)addObserver:(id<RTCRemoteMixedStreamObserver>)observer;
+- (instancetype)initWithParameters:
+    (RTCLocalCustomizedStreamParameters*)parameters;
 
 @end
-
-#endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_

@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#import "RTCP2PPeerClientConfiguration.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PPeerClientConfiguration.h"
 
 @implementation RTCP2PPeerClientConfiguration {
 }

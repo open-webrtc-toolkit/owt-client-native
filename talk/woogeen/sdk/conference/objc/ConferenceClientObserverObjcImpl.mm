@@ -10,8 +10,8 @@
 
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteScreenStream.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteCameraStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 

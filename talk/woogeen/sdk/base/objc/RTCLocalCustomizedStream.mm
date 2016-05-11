@@ -4,7 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
-#import "talk/woogeen/sdk/base/objc/public/RTCLocalCustomizedStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalCustomizedStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalCustomizedStreamParameters+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"

@@ -24,30 +24,37 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
+#define WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_
+
 #import <Foundation/Foundation.h>
-#import "RTCFrameGeneratorProtocol.h"
+#import <WebRTC/RTCMacros.h>
 
-/**
-  @brief This class contains parameters and methods that needed for creating a
-  RTCLocalCustomizedStream.
+typedef NS_ENUM(NSInteger, VideoCodec) {
+  VideoCodecVP8 = 1,
+  VideoCodecH264 = 2,
+};
 
-  After a stream is created, it will not be impacted if these parameters are
-  changed.
+typedef NS_ENUM(NSInteger, AudioCodec) {
+  AudioCodecOpus = 1,
+  AudioCodecIsac = 2,
+  AudioCodecG722 = 3,
+  AudioCodecPcmu = 4,
+  AudioCodecPcma = 5,
+};
+
+/*
+  @brief An instance of this class indicates preference for codecs.
+  @detail It is not guaranteed to use preferred codec, if remote side doesn't
+  support preferred codec, it will use other codec.
 */
-@interface RTCLocalCustomizedStreamParameters : NSObject
+@interface RTCMediaCodec : NSObject
 
-/**
-  @brief Initialize a RTCLocalCustomizedStreamParameters instance.
-  @param videoEnabled Indicates if video is enabled for this stream.
-  @param audioEnabled Indicates if audio is enabled for this stream.
-*/
-- (instancetype)initWithVideoEnabled:(BOOL)videoEnabled
-                        audioEnabled:(BOOL)audioEnabled;
+/// Preference for audio codec. Default is Opus.
+@property(nonatomic, readwrite) NSInteger audioCodec;
+/// Preference for video codec. Default is H.264.
+@property(nonatomic, readwrite) NSInteger videoCodec;
 
-/**
- @brief Set video frame generator for this stream. Video frames will be pulled
- from this generator.
-*/
-- (void)setVideoFrameGenerator:
-    (id<RTCVideoFrameGeneratorProtocol>)videoFrameGenerator;
 @end
+
+#endif  // WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_

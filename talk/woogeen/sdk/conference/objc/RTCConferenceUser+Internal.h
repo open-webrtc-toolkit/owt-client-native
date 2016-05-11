@@ -2,7 +2,7 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/conference/objc/public/RTCConferenceUser.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceUser.h"
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/user.h"
 

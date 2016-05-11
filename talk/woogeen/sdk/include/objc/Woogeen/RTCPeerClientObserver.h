@@ -28,10 +28,11 @@
 #define p2p_PeerClientObserver_h
 
 #import <Foundation/Foundation.h>
-#import "RTCLocalStream.h"
-#import "RTCRemoteStream.h"
+#import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCRemoteStream.h"
 
 /// Observer for RTCPeerClient
+RTC_EXPORT
 @protocol RTCPeerClientObserver<NSObject>
 
 /**

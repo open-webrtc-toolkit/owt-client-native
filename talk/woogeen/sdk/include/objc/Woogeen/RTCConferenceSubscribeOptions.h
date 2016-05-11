@@ -24,17 +24,20 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_OBJC_RTCMEDIAFORMAT_H_
-#define WOOGEEN_BASE_OBJC_RTCMEDIAFORMAT_H_
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_
 
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <WebRTC/RTCMacros.h>
 
-// This class describes a media stream's format
-@interface RTCVideoFormat : NSObject
+RTC_EXPORT
+/// Options for subscribing a remote stream.
+@interface RTCConferenceSubscribeOptions : NSObject
 
 - (CGSize)resolution;
+- (void)setResolution:(CGSize)resolution;
 
 @end
 
-#endif
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCESUBSCRIBEOPTIONS_H_

@@ -24,17 +24,23 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "RTCLocalStream.h"
-#import "RTCLocalCameraStreamParameters.h"
+#import <Foundation/Foundation.h>
+#import "Woogeen/RTCFrameGeneratorProtocol.h"
+#import <WebRTC/RTCMacros.h>
 
-/// This class represent a local stream captured from camera, mic.
-@interface RTCLocalCameraStream : RTCLocalStream
+RTC_EXPORT
+@interface RTCGlobalConfiguration : NSObject
 
 /**
-  Initialize a RTCLocalCameraStream with parameters.
-  @param parameters Parameters for creating the stream. The stream will not be
-  impacted if chaning parameters after it is created.
-*/
-- (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters;
+ @brief Sets customized audio input enabled or not.
+ @detail When it is enabled, SDK will fetch audio frames from
+ |audioFrameGenerator| instead of hardware audio devices, like mic.
+ @param enabled Customized audio input enabled or not.
+ @param audioFrameGenerator An implementation which feeds audio frames to SDK.
+ If |enabled| is NO, generator will be ignored.
+ */
++ (void)setCustomizedAudioInputEnabled:(BOOL)enabled
+                   audioFrameGenerator:
+                       (id<RTCAudioFrameGeneratorProtocol>)audioFrameGenerator;
 
 @end

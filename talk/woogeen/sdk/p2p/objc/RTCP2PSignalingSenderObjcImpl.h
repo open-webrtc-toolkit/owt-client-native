@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#import "RTCP2PSignalingSenderProtocol.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingSenderProtocol.h"
 
 #include <string>
 #include <functional>

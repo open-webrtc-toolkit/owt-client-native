@@ -13,6 +13,9 @@ import os
 import subprocess
 import argparse
 import sys
+import shutil
+import fileinput
+import re
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
@@ -20,6 +23,8 @@ OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_FAT_LIB_NAME = 'libwoogeen-fat.a'
 # The lib contains all target architectures and external libs(OpenSSL).
 OUT_LIB_NAME = 'libwoogeen.a'
+OUT_FRAMEWORK_NAME = "Woogeen.framework"
+OUT_FRAMEWORK_ROOT = os.path.join(OUT_PATH, OUT_FRAMEWORK_NAME)
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 # Parameters for each architectures, key is arch name, value is parameters.
 # value format: [output path, debug/release path]
@@ -27,11 +32,16 @@ ARCH_PARAM_DICT = {'arm':['out_ios', 'iphoneos'], 'arm64':['out_ios64',
     'iphoneos'], 'ia32':['out_sim','iphonesimulator'],'x64':['out_sim',
     'iphonesimulator']}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-HEADER_LIST = ['webrtc/api/objc/RTCIceServer.h',
-    'webrtc/api/objc/RTCVideoRenderer.h',
-    'webrtc/api/objc/RTCEAGLVideoView.h',
-    'talk/woogeen/sdk/base/objc/public/*', 'talk/woogeen/sdk/p2p/objc/public/*',
-    'talk/woogeen/sdk/conference/objc/public/*']
+WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMacros.h']
+HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/woogeen/sdk/include/objc/Woogeen/*']
+LIB_BLACK_LIST = ['video_capture']
+FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
+    'supportingfiles', 'objc', 'Info.plist')
+FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
+    'supportingfiles', 'objc', 'module.modulemap')
 
 def runhooks(arch, ssl_root):
   env = os.environ.copy()
@@ -57,8 +67,8 @@ def getoutputpath(arch, scheme):
 
 def ninjabuild(arch, scheme):
   out_path=getoutputpath(arch, scheme)
-  for target_name in ['AppRTCDemo', 'woogeen_sdk_base', 'woogeen_sdk_p2p',
-                      'woogeen_sdk_conf','woogeen_sdk_objc']:
+  for target_name in ['rtc_sdk_common_objc', 'AppRTCDemo', 'rtc_sdk_framework_objc', 'woogeen_sdk_base', 'woogeen_sdk_p2p',
+      'woogeen_sdk_base', 'woogeen_sdk_p2p', 'woogeen_sdk_conf', 'woogeen_sdk_objc']:
     if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
       return False
   # Combine all.a together by libtool.
@@ -68,18 +78,41 @@ def ninjabuild(arch, scheme):
       cwd=HOME_PATH, shell=True)
   return True
 
+def replaceheaderimport():
+  '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
+  for filename in os.listdir(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers')):
+    if filename.endswith('.h'):
+      filepath = os.path.join(OUT_FRAMEWORK_ROOT, 'Headers', filename)
+      for line in fileinput.input(filepath, inplace=1):
+        print re.sub('#import <WebRTC/','#import <Woogeen/', line.rstrip())
+      # Add a new line at the end of file
+      with open(filepath, 'a') as file:
+        file.write('\n')
+
 def copyheaders():
-  if not os.path.exists(OUT_HEADER_PATH):
-    os.makedirs(OUT_HEADER_PATH)
   for header in HEADER_LIST:
-    subprocess.call(['cp %s %s'%(header, OUT_HEADER_PATH)], cwd=HOME_PATH,
-        shell=True)
+    subprocess.call(['cp %s %s/'%(header, os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))], cwd=HOME_PATH,
+    shell=True)
+  replaceheaderimport()
 
 def getexternalliblist(ssl_root):
   libs = []
   libs.append('%s/lib/iOS/libcrypto.a'%ssl_root)
   libs.append('%s/lib/iOS/libssl.a'%ssl_root)
   return libs
+
+def buildframework():
+  '''Create Woogeen.framework in out/'''
+  if os.path.exists(OUT_FRAMEWORK_ROOT):
+    shutil.rmtree(OUT_FRAMEWORK_ROOT)
+  os.makedirs(OUT_FRAMEWORK_ROOT)
+  os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))
+  os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Modules'))
+  os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Resources'))
+  copyheaders()
+  shutil.copy(FRAMEWORK_INFO_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Info.plist'))
+  shutil.copy(FRAMEWORK_MODULE_MAP_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Modules', 'module.modulemap'))
+  shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'Woogeen'))
 
 def dist(arch_list, scheme, ssl_root):
   out_fat_lib_path = os.path.join(OUT_PATH, OUT_FAT_LIB_NAME)
@@ -88,6 +121,8 @@ def dist(arch_list, scheme, ssl_root):
     os.remove(out_fat_lib_path)
   if os.path.exists(out_lib_path):
     os.remove(out_lib_path)
+  if not os.path.exists(OUT_PATH):
+    os.makedirs(OUT_PATH)
   argu = ['libtool', '-o', out_fat_lib_path]
   for target_arch in arch_list:
     argu.append('%s/libwoogeen.a'%getoutputpath(target_arch, scheme))
@@ -97,10 +132,12 @@ def dist(arch_list, scheme, ssl_root):
   argu_external.append(out_fat_lib_path)
   argu_external.extend(getexternalliblist(ssl_root))
   subprocess.call(argu_external, cwd=HOME_PATH)
-  os.remove(out_fat_lib_path)
+  if(os.path.exists(out_fat_lib_path)):
+    os.remove(out_fat_lib_path)
   if scheme == 'release':
     subprocess.call(['strip', '-S', '-x', '%s/out/libwoogeen.a'%HOME_PATH],
         cwd=HOME_PATH)
+  buildframework()
   return True
 
 # Return 0 if build success
@@ -131,7 +168,6 @@ def main():
       if not ninjabuild(arch_item, opts.scheme):
         return 1
   dist(opts.arch, opts.scheme, opts.ssl_root)
-  copyheaders()
   print 'Done.'
   return 0
 

@@ -24,30 +24,32 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
-
 #import <Foundation/Foundation.h>
-#import "RTCMediaCodec.h"
+#import <WebRTC/RTCMacros.h>
+#import <WebRTC/RTCVideoRenderer.h>
 
-/// Configuration for creating a RTCConferenceClient
-/**
-  This configuration is used while creating RTCConferenceClient. Changing this
-  configuration does NOT impact RTCConferenceClient already created.
-*/
-@interface RTCConferenceClientConfiguration : NSObject
+/// Base class of all streams in the SDK
+RTC_EXPORT
+@interface RTCStream : NSObject
 
-@property(nonatomic, strong, readwrite) NSArray* ICEServers;
-/// Media codec preference
-@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
-/**
- @brief Max outgoing audio bandwidth, unit: kbps.
- @detail Please be noticed different codecs may support different bitrate ranges.
- */
-@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
-/// Max outgoing video bandwidth, unit: kbps.
-@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
+/// @cond
+// Init a RTCStream instance.
+- (id)init;
+/// @endcond
+
+/// Attach the stream to a renderer. The render doesn't retain this stream.
+- (void)attach:(NSObject<RTCVideoRenderer>*)renderer;
+
+/// Enable audio tracks
+- (void)disableAudio;
+
+/// Disable audio tracks
+- (void)disableVideo;
+
+/// Enable video tracks
+- (void)enableAudio;
+
+/// Disable video tracks
+- (void)enableVideo;
 
 @end
-
-#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_

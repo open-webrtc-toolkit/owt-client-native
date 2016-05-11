@@ -27,14 +27,16 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENT_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENT_H_
 
-#import "RTCLocalStream.h"
-#import "RTCRemoteStream.h"
-#import "RTCConferenceClientObserver.h"
-#import "RTCConferenceClientConfiguration.h"
-#import "RTCConferenceSubscribeOptions.h"
-#import "RTCConferenceUser.h"
+#import <WebRTC/RTCMacros.h>
+#import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCRemoteStream.h"
+#import "Woogeen/RTCConferenceClientObserver.h"
+#import "Woogeen/RTCConferenceClientConfiguration.h"
+#import "Woogeen/RTCConferenceSubscribeOptions.h"
+#import "Woogeen/RTCConferenceUser.h"
 
 /// An asynchronous class for app to communicate with a conference in MCU
+RTC_EXPORT
 @interface RTCConferenceClient : NSObject
 
 /**

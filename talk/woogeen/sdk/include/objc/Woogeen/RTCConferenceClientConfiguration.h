@@ -24,21 +24,31 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_
-#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
 
-#import "Foundation/Foundation.h"
+#import <Foundation/Foundation.h>
+#import "Woogeen/RTCMediaCodec.h"
 
-/// This class represent an attendee in a conference.
-@interface RTCConferenceUser : NSObject
+/// Configuration for creating a RTCConferenceClient
+/**
+  This configuration is used while creating RTCConferenceClient. Changing this
+  configuration does NOT impact RTCConferenceClient already created.
+*/
+RTC_EXPORT
+@interface RTCConferenceClientConfiguration : NSObject
 
-// Get user's ID.
-- (NSString*)getUserId;
-// Get user's name.
-- (NSString*)getName;
-// Get user's role.
-- (NSString*)getRole;
+@property(nonatomic, strong, readwrite) NSArray* ICEServers;
+/// Media codec preference
+@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
+/**
+ @brief Max outgoing audio bandwidth, unit: kbps.
+ @detail Please be noticed different codecs may support different bitrate ranges.
+ */
+@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
+/// Max outgoing video bandwidth, unit: kbps.
+@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
 
 @end
 
-#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCEUSER_H_
+#endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_

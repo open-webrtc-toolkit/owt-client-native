@@ -24,9 +24,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "RTCStream.h"
+#import "Woogeen/RTCStream.h"
 
 /// This class represent a local stream.
+RTC_EXPORT
 @interface RTCLocalStream : RTCStream
 
 @end

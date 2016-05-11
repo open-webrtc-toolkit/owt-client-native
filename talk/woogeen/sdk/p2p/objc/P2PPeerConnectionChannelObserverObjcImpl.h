@@ -4,7 +4,7 @@
 
 #include <string>
 #include <functional>
-#include "RTCP2PPeerConnectionChannelObserver.h"
+#include "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 
 namespace woogeen {

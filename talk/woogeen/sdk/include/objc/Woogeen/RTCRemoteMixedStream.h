@@ -24,21 +24,22 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
-#import "RTCFrameGeneratorProtocol.h"
+#ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+#define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
 
-@interface RTCGlobalConfiguration : NSObject
+#import "Woogeen/RTCRemoteStream.h"
+#import "Woogeen/RTCRemoteMixedStreamObserver.h"
 
+/// This class represent a mixed remote stream.
+RTC_EXPORT
+@interface RTCRemoteMixedStream : RTCRemoteStream
+
+-(NSArray*)supportedVideoFormats;
 /**
- @brief Sets customized audio input enabled or not.
- @detail When it is enabled, SDK will fetch audio frames from
- |audioFrameGenerator| instead of hardware audio devices, like mic.
- @param enabled Customized audio input enabled or not.
- @param audioFrameGenerator An implementation which feeds audio frames to SDK.
- If |enabled| is NO, generator will be ignored.
- */
-+ (void)setCustomizedAudioInputEnabled:(BOOL)enabled
-                   audioFrameGenerator:
-                       (id<RTCAudioFrameGeneratorProtocol>)audioFrameGenerator;
+  @brief Add an observer for RTCRemoteMixedStream.
+*/
+- (void)addObserver:(id<RTCRemoteMixedStreamObserver>)observer;
 
 @end
+
+#endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_

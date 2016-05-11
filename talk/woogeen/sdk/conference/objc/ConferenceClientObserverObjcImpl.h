@@ -9,8 +9,8 @@
 #include <mutex>
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 
-#import "talk/woogeen/sdk/conference/objc/public/RTCConferenceClientObserver.h"
-#import "talk/woogeen/sdk/base/objc/public/RTCRemoteStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen//RTCConferenceClientObserver.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteStream.h"
 
 namespace woogeen {
 namespace conference {

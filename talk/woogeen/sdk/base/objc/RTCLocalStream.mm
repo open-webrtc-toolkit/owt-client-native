@@ -3,7 +3,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/base/objc/public/RTCLocalStream.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalStream.h"
 
 @implementation RTCLocalStream
 
