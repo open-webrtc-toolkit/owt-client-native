@@ -157,7 +157,7 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
         return NULL;
     }
 
-    uint8* destination;
+    uint8_t* destination;
     DWORD max_length = 0;
     DWORD current_length = 0;
     hr = buffer->Lock(&destination, &max_length, &current_length);
@@ -196,7 +196,7 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
 }
 
 MSDKVideoDecoder::PendingSampleInfo::PendingSampleInfo(
-    int32 buffer_id, IMFSample* sample)
+    int32_t buffer_id, IMFSample* sample)
     :input_buffer_id(buffer_id){
     output_sample = sample;
 }

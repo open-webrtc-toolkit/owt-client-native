@@ -43,7 +43,7 @@
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 
-#include "third_party/libyuv/include/libyuv.h"
+//#include "third_party/libyuv/include/libyuv.h"
 
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include <atlbase.h>
