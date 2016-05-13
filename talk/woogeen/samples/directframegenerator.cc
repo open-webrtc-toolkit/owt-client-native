@@ -4,6 +4,8 @@
 #include <fstream>
 #include "directframegenerator.h"
 
+using namespace woogeen::base;
+
 enum PixelFormat rtsp_get_format(AVCodecContext* ctx, const enum PixelFormat* fmt){
   return AV_PIX_FMT_YUV420P;
 }
@@ -93,13 +95,13 @@ void DirectFrameGenerator::Init() {
   }
 
   switch (m_type) {
-    case I420:
+    case VideoFrameGeneratorInterface::I420:
       m_context->video_codec_id = AV_CODEC_ID_RAWVIDEO;
       break;
-    case VP8:
+    case VideoFrameGeneratorInterface::VP8:
       m_context->video_codec_id = AV_CODEC_ID_VP8;
       break;
-    case H264:
+    case VideoFrameGeneratorInterface::H264:
       m_context->video_codec_id = AV_CODEC_ID_H264;
       break;
     default:
@@ -163,22 +165,25 @@ void DirectFrameGenerator::Init() {
   }
 }
 
-int DirectFrameGenerator::GetFrameSize() {
+uint32_t DirectFrameGenerator::GetNextFrameSize() {
   return m_frame_data_size;
 }
+
 int DirectFrameGenerator::GetHeight() {
   return m_height;
 }
+
 int DirectFrameGenerator::GetWidth() {
   return m_width;
 }
+
 int DirectFrameGenerator::GetFps() {
   return m_fps;
 }
 
-woogeen::base::FrameGeneratorInterface::VideoFrameCodec DirectFrameGenerator::GetType() {
+VideoFrameGeneratorInterface::VideoFrameCodec DirectFrameGenerator::GetType() {
   //return m_type;
-  return woogeen::base::FrameGeneratorInterface::VideoFrameCodec::I420;
+  return VideoFrameGeneratorInterface::I420;
 }
 
 void DirectFrameGenerator::ReadFrame() {
@@ -217,7 +222,7 @@ void DirectFrameGenerator::ReadFrame() {
 int count = 0;
 #endif
 
-void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
+uint32_t DirectFrameGenerator::GenerateNextFrame(uint8_t* frame_buffer, const uint32_t capacity) {
   ReadFrame();
   if (m_avPacket.stream_index == m_videoStreamIndex) {  // packet is video
     if (m_avPacket.flags & AV_PKT_FLAG_KEY) {
@@ -225,6 +230,11 @@ void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
     }
     fprintf(stdout, "Receive video frame packet with size %d \n",
             m_avPacket.size);
+    if (capacity < m_avPacket.size || frame_buffer == nullptr) {
+      av_free_packet(&m_avPacket);
+      av_init_packet(&m_avPacket);
+      return 0;
+    }
 //    m_frame_data_size = m_avPacket.size;
 #ifdef CAPTURE_FROM_IPCAM
     count++;
@@ -244,7 +254,7 @@ void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
     if(len<0){
       av_free_packet(&m_avPacket);
       av_init_packet(&m_avPacket);
-      GenerateNextFrame(frame_buffer);
+      return GenerateNextFrame(frame_buffer, capacity);
     }
     if(got_frame){
       int width = m_frame->width;
@@ -253,30 +263,29 @@ void DirectFrameGenerator::GenerateNextFrame(uint8** frame_buffer) {
       int qsize = width*height/4;
       int frame_size = msize + 2*qsize;
       m_frame_data_size = frame_size;
-      *frame_buffer = new uint8[frame_size];
-      memcpy(*frame_buffer, m_frame->data[0], msize);
-      memcpy(*frame_buffer+msize, m_frame->data[1], qsize);
-      memcpy(*frame_buffer+msize+qsize, m_frame->data[2], qsize);
+      memcpy(frame_buffer, m_frame->data[0], msize);
+      memcpy(frame_buffer+msize, m_frame->data[1], qsize);
+      memcpy(frame_buffer+msize+qsize, m_frame->data[2], qsize);
       av_free_packet(&m_avPacket);
       av_init_packet(&m_avPacket);
     }else{
       av_free_packet(&m_avPacket);
       av_init_packet(&m_avPacket);
-      GenerateNextFrame(frame_buffer);
+      return GenerateNextFrame(frame_buffer, capacity);
     }
 #endif
     //Copy the resulting frame data to frame buffer.
 #if 0
-    *frame_buffer = new uint8[m_frame_data_size];  // important: buffer will be
-                                                   // deleted by raw frame
-                                                   // capturer
-    memmove(*frame_buffer, m_avPacket.data, m_frame_data_size);
+    memmove(frame_buffer, m_avPacket.data, m_frame_data_size);
 #endif
   } else {
     av_free_packet(&m_avPacket);
     av_init_packet(&m_avPacket);
-    GenerateNextFrame(frame_buffer);
+    return GenerateNextFrame(frame_buffer, capacity);
   }
+
   av_free_packet(&m_avPacket);
   av_init_packet(&m_avPacket);
+
+  return m_frame_data_size;
 }

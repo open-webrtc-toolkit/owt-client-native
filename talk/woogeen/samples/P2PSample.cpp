@@ -6,9 +6,15 @@
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/stream.h"
 #include "p2psocketsignalingchannel.h"
+#ifdef USE_FILE_SOURCE
 #include "fileframegenerator.h"
+#endif
+#ifdef USE_ENCODED_SOURCE
 #include "encodedframegenerator.h"
+#endif
+#ifdef USE_RTSP_SOURCE
 #include "directframegenerator.h"
+#endif
 
 
 using namespace std;
@@ -28,7 +34,7 @@ int main(int argc, char** argv)
   cin.ignore();
   /*std::string url = argv[1];
   std::string to = argv[2];*/
-  std::string url = "http://10.239.196.5:8095";
+  std::string url = "http://192.168.1.102:8095";
   std::string to = "12";
   pc->Connect(url, nullptr, nullptr);
   cout << "Press Enter to invite remote user." << std::endl;
@@ -36,10 +42,7 @@ int main(int argc, char** argv)
   pc->Invite(to, nullptr, nullptr);
   cout << "Press Enter to publish local stream." << std::endl;
   cin.ignore();
-  /*LocalCameraStreamParameters lcsp(LocalCameraStreamParameters(true, false));
-  LocalCameraStream stream(std::make_shared<LocalCameraStreamParameters>(lcsp));
-  std::shared_ptr<LocalCameraStream> shared_stream(std::make_shared<LocalCameraStream>(stream));*/
-#if 1
+#ifdef USE_RTSP_SOURCE
   DirectFrameGenerator::Options options;
   options.width = 1280;
   options.height = 720;
@@ -54,13 +57,19 @@ int main(int argc, char** argv)
   lcsp.reset(new LocalCustomizedStreamParameters(true, true));
   std::shared_ptr<LocalStream> shared_stream;
   shared_stream.reset(new LocalCustomizedStream(lcsp, generator.get()));
-#else
+#elif defined(USE_ENCODED_SOURCE) || defined(USE_FILE_SOURCE)
   FileFrameGenerator* framer = new FileFrameGenerator(640, 480, 20);
   //EncodedFrameGenerator* framer = new EncodedFrameGenerator(1920, 1080, 20, ENCODED_H264);
   std::shared_ptr<LocalCustomizedStreamParameters> lcsp;
   lcsp.reset(new LocalCustomizedStreamParameters(true, true));
   std::shared_ptr<LocalStream> shared_stream;
   shared_stream.reset(new LocalCustomizedStream(lcsp, framer));
+#else
+  std::shared_ptr<woogeen::base::LocalCameraStreamParameters> lscp;
+  lscp.reset(new woogeen::base::LocalCameraStreamParameters(true, true));
+  lscp->Resolution(320, 240);
+  std::shared_ptr<LocalStream> shared_stream;
+  shared_stream.reset(new woogeen::base::LocalCameraStream(*lscp));
 #endif
   pc->Publish(to, shared_stream, nullptr, nullptr);
   cout << "Press Enter to exit." << std::endl;

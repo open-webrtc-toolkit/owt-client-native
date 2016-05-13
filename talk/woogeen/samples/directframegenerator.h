@@ -17,7 +17,6 @@ extern "C" {
 #include <libavutil/mathematics.h>
 }
 
-
 class TimeoutHandler {
 public:
   TimeoutHandler(int32_t timeout)
@@ -42,7 +41,7 @@ private:
   int64_t m_lastTime;
 };
 
-class DirectFrameGenerator : public woogeen::base::FrameGeneratorInterface {
+class DirectFrameGenerator : public woogeen::base::VideoFrameGeneratorInterface {
 public:
   struct Options {
     std::string url;
@@ -52,7 +51,7 @@ public:
     int height;
     int fps;
     bool useLocal;
-    VideoFrameCodec type;
+    woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec type;
     Options()
       : url(""),
       transport("udp"),
@@ -60,29 +59,28 @@ public:
       width(0),
       height(0),
       useLocal(false),
-      type(I420) {}
+      type(woogeen::base::VideoFrameGeneratorInterface::I420) {}
   };
 
   DirectFrameGenerator(const Options& options);
   ~DirectFrameGenerator();
 
-  int GetFrameSize();
-
-  void Init();
-  void ReadFrame();
-  void GenerateNextFrame(uint8** frame_buffer);
-
+  uint32_t GetNextFrameSize();
+  uint32_t GenerateNextFrame(uint8_t* frame_buffer, const uint32_t capacity);
   int GetHeight();
   int GetWidth();
   int GetFps();
-  VideoFrameCodec GetType();
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec GetType();
 
 private:
+  void Init();
+  void ReadFrame();
+
   int m_width;
   int m_height;
   int m_fps;
-  VideoFrameCodec m_type;
-  int m_frame_data_size;
+  woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec m_type;
+  uint32_t m_frame_data_size;
   std::string m_url;
   AVDictionary* m_transportOpts;
   bool m_localCamera;
