@@ -128,7 +128,7 @@ LocalCameraStream::LocalCameraStream(
   if (!parameters.VideoEnabled() && !parameters.AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
-  scoped_refptr<PeerConnectionDependencyFactory> factory =
+  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -136,13 +136,47 @@ LocalCameraStream::LocalCameraStream(
   std::string media_stream_label =
       "MediaStream-" + std::to_string(dis(gen));  // TODO: use UUID.
   scoped_refptr<MediaStreamInterface> stream =
-      factory->CreateLocalMediaStream(media_stream_label);
+      pcd_factory->CreateLocalMediaStream(media_stream_label);
+
+  // Create video track
   if (parameters.VideoEnabled()) {
-    cricket::WebRtcVideoDeviceCapturerFactory capturer_factory;
-    cricket::VideoCapturer* capturer(
-        capturer_factory.Create(cricket::Device(parameters.CameraId(), 0)));
+    cricket::WebRtcVideoDeviceCapturerFactory factory;
+    cricket::VideoCapturer* capturer = nullptr;
+    if (!parameters.CameraId().empty()) {
+      capturer = factory.Create(cricket::Device(parameters.CameraId(), 0));
+    }
+
     if (!capturer) {
-      LOG(LS_ERROR) << "GetVideoCaptureDevice failed";
+      LOG(LS_WARNING) << "Cannot open the specified camera. Use the default one.";
+      std::vector<std::string> device_names;
+      {
+        std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+            webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+        if (!info) {
+          LOG(LS_ERROR) << "CreateDeviceInfo failed";
+        } else {
+          int num_devices = info->NumberOfDevices();
+          for (int i = 0; i < num_devices; ++i) {
+            const uint32_t kSize = 256;
+            char name[kSize] = {0};
+            char id[kSize] = {0};
+            if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
+              device_names.push_back(name);
+            }
+          }
+        }
+      }
+
+      for (const auto& name : device_names) {
+        capturer = factory.Create(cricket::Device(name, 0));
+        if (capturer) {
+          break;
+        }
+      }
+    }
+
+    if (!capturer) {
+      LOG(LS_ERROR) << "WebRtcVideoDeviceCapturerFactory.Create failed";
     } else {
       media_constraints_->SetMandatory(
           webrtc::MediaConstraintsInterface::kMaxWidth,
@@ -156,22 +190,26 @@ LocalCameraStream::LocalCameraStream(
       media_constraints_->SetMandatory(
           webrtc::MediaConstraintsInterface::kMinHeight,
           std::to_string(parameters.ResolutionHeight()));
+
       scoped_refptr<VideoTrackSourceInterface> source =
-          factory->CreateVideoSource(capturer, media_constraints_);
+          pcd_factory->CreateVideoSource(capturer, media_constraints_);
       std::string video_track_label =
           "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
       scoped_refptr<VideoTrackInterface> video_track =
-          factory->CreateLocalVideoTrack(video_track_label, source);
+          pcd_factory->CreateLocalVideoTrack(video_track_label, source);
       stream->AddTrack(video_track);
     }
   }
+
+  // Create audio track
   if (parameters.AudioEnabled()) {
     std::string audio_track_label =
         "AudioTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
     scoped_refptr<AudioTrackInterface> audio_track =
-        factory->CreateLocalAudioTrack(audio_track_label);
+        pcd_factory->CreateLocalAudioTrack(audio_track_label);
     stream->AddTrack(audio_track);
   }
+
   media_stream_ = stream;
   media_stream_->AddRef();
 }

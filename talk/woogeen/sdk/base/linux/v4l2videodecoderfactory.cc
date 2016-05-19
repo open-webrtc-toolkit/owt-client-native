@@ -10,7 +10,8 @@
 V4L2VideoDecoderFactory::V4L2VideoDecoderFactory() {
     supported_codec_types_.clear();
     supported_codec_types_.push_back(webrtc::kVideoCodecH264);
-    supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
+    // At present we use VP8 decoder from upstream instead of V4L2 Dec
+    //supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
 }
 
 
