@@ -248,7 +248,6 @@ uint32_t DirectFrameGenerator::GenerateNextFrame(uint8_t* frame_buffer, const ui
     }
 #endif
 
-#if 1
     int len, got_frame;
     len = avcodec_decode_video2(m_decoderContext, m_frame, &got_frame, &m_avPacket);
     if(len<0){
@@ -273,11 +272,6 @@ uint32_t DirectFrameGenerator::GenerateNextFrame(uint8_t* frame_buffer, const ui
       av_init_packet(&m_avPacket);
       return GenerateNextFrame(frame_buffer, capacity);
     }
-#endif
-    //Copy the resulting frame data to frame buffer.
-#if 0
-    memmove(frame_buffer, m_avPacket.data, m_frame_data_size);
-#endif
   } else {
     av_free_packet(&m_avPacket);
     av_init_packet(&m_avPacket);

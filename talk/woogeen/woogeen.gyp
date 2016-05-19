@@ -405,11 +405,13 @@
               'cflags!': ['-fno-exceptions'],
               'cflags_cc': ['-fno-exceptions'],
               'libraries': [
-                '<(DEPTH)/talk/woogeen/samples/libs/libsioclient.a',
+                '-Wl,--start-group -lssl -lcrypto',
+                '<(DEPTH)/talk/woogeen/samples/libs/libsioclient_tls.a',
                 '<(DEPTH)/talk/woogeen/samples/libs/libasiotoken.a',
                 '<(DEPTH)/talk/woogeen/samples/libs/libboost_date_time.a',
                 '<(DEPTH)/talk/woogeen/samples/libs/libboost_random.a',
                 '<(DEPTH)/talk/woogeen/samples/libs/libboost_system.a',
+                '-Wl,--end-group',
               ],
             }, # target woogeen_conf_sample
           ]

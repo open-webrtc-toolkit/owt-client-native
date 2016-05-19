@@ -2,6 +2,7 @@
 //
 
 #include <iostream>
+
 #include "woogeen/p2p/peerclient.h"
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/stream.h"
@@ -15,7 +16,6 @@
 #ifdef USE_RTSP_SOURCE
 #include "directframegenerator.h"
 #endif
-
 
 using namespace std;
 
