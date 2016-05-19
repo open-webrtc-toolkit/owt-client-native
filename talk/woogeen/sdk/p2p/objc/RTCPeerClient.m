@@ -126,6 +126,12 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [channel unpublish:stream onSuccess:onSuccess onFailure:onFailure];
 }
 
+-(void)getConnectionStats:(NSString*)targetId{
+  RTCP2PPeerConnectionChannel* channel =
+      [self getPeerConnectionChannel:targetId];
+  [channel getConnectionStats];
+}
+
 - (RTCP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId {
   RTCP2PPeerConnectionChannel* channel =
       [_peerConnectionChannels objectForKey:targetId];

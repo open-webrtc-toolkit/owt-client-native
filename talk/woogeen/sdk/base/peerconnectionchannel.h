@@ -26,6 +26,16 @@ struct SetSessionDescriptionMessage : public rtc::MessageData {
   webrtc::SessionDescriptionInterface* description;
 };
 
+struct GetStatsMessage : public rtc::MessageData {
+  explicit GetStatsMessage(FunctionalStatsObserver* observer,
+                           webrtc::MediaStreamTrackInterface* track,
+                           webrtc::PeerConnectionInterface::StatsOutputLevel level)
+      : observer(observer), track(track), level(level) {}
+  rtc::scoped_refptr<FunctionalStatsObserver> observer;
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track;
+  webrtc::PeerConnectionInterface::StatsOutputLevel level;
+};
+
 struct PeerConnectionChannelConfiguration
     : public webrtc::PeerConnectionInterface::RTCConfiguration {
  public:
@@ -49,7 +59,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   bool InitializePeerConnection();
   const webrtc::SessionDescriptionInterface* LocalDescription();
 
-  // Subclasses should prepare observers for these two functions and post
+  // Subclasses should prepare observers for these functions and post
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
@@ -98,6 +108,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     kMessageTypeAddStream,
     kMessageTypeRemoveStream,
     kMessageTypeClosePeerConnection,
+    kMessageTypeGetStats,
   };
 
   Thread* pc_thread_;

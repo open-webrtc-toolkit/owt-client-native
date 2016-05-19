@@ -238,6 +238,12 @@
       });
 }
 
+- (void)getConnectionStats {
+  // TODO: Not finished.
+  NSLog(@"Objc Getconnectionstats");
+  _nativeChannel->GetConnectionStats(nullptr, nullptr);
+}
+
 - (void)onIncomingSignalingMessage:(NSString*)message {
   _nativeChannel->OnIncomingSignalingMessage([message UTF8String]);
 }

@@ -56,6 +56,7 @@
         'sdk/include/cpp/woogeen/base/exception.h',
         'sdk/include/cpp/woogeen/base/videorendererinterface.h',
         'sdk/include/cpp/woogeen/base/framegeneratorinterface.h',
+        'sdk/include/cpp/woogeen/base/connectionstats.h',
       ],
       'export_dependent_settings': [
         '<(DEPTH)/webrtc/api/api.gyp:libjingle_peerconnection',

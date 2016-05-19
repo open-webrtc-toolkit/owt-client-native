@@ -198,6 +198,9 @@
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure;
 
+// TODO: not finished.
+-(void)getConnectionStats:(NSString*)targetId;
+
 @end
 
 #endif

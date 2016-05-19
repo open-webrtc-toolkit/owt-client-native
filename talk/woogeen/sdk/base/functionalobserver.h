@@ -7,6 +7,7 @@
 
 #include <functional>
 #include "webrtc/api/jsep.h"
+#include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 
 namespace woogeen {
@@ -51,6 +52,22 @@ class FunctionalSetSessionDescriptionObserver
  private:
   std::function<void()> on_success_;
   std::function<void(const std::string& error)> on_failure_;
+};
+
+// A StatsObserver implementation used to invoke user defined function when get
+// stats result.
+class FunctionalStatsObserver : public webrtc::StatsObserver {
+ public:
+  static rtc::scoped_refptr<FunctionalStatsObserver> Create(
+      std::function<void(const webrtc::StatsReports&)> on_complete);
+  virtual void OnComplete(const webrtc::StatsReports& reports);
+
+ protected:
+  FunctionalStatsObserver(
+      std::function<void(const webrtc::StatsReports&)> on_complete);
+
+ private:
+  std::function<void(const webrtc::StatsReports&)> on_complete_;
 };
 }
 }

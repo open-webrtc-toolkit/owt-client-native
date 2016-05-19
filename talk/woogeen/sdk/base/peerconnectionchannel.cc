@@ -62,6 +62,7 @@ PeerConnectionChannel::LocalDescription() {
 }
 
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
+  RTC_CHECK(peer_connection_);
   if (peer_connection_->signaling_state() ==
       webrtc::PeerConnectionInterface::SignalingState::kClosed) {
     LOG(LS_WARNING)
@@ -168,6 +169,14 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
               msg->pdata);
       peer_connection_->RemoveStream(param->data());
+      delete param;
+      break;
+    }
+    case kMessageTypeGetStats: {
+      rtc::TypedMessageData<GetStatsMessage*>* param =
+          static_cast<rtc::TypedMessageData<GetStatsMessage*>*>(msg->pdata);
+      peer_connection_->GetStats(param->data()->observer, param->data()->track,
+                                 param->data()->level);
       delete param;
       break;
     }

@@ -35,6 +35,7 @@
         onFailure:(void (^)(NSError*))onFailure;
 - (void)stopWithOnSuccess:(void (^)())onSuccess
                 onFailure:(void (^)(NSError*))onFailure;
+- (void)getConnectionStats;  // TODO: not finished
 - (void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 - (void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 - (NSString*)getRemoteUserId;

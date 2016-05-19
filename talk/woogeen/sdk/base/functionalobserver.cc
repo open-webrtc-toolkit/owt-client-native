@@ -61,5 +61,20 @@ void FunctionalSetSessionDescriptionObserver::OnFailure(
     on_failure_(error);
   }
 }
+
+FunctionalStatsObserver::FunctionalStatsObserver(
+    std::function<void(const webrtc::StatsReports&)> on_complete)
+    : on_complete_(on_complete) {}
+
+rtc::scoped_refptr<FunctionalStatsObserver> FunctionalStatsObserver::Create(
+    std::function<void(const webrtc::StatsReports&)> on_complete) {
+  return new rtc::RefCountedObject<FunctionalStatsObserver>(on_complete);
+}
+
+void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
+  if (on_complete_ != nullptr) {
+    on_complete_(reports);
+  }
+}
 }
 }
