@@ -2,8 +2,7 @@
  * Intel License
  */
 
-#include <random>
-
+#include "webrtc/base/helpers.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
@@ -11,8 +10,8 @@
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
-#include "woogeen/base/framegeneratorinterface.h"
-#include "woogeen/base/stream.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 
 namespace woogeen {
 namespace base {
@@ -130,13 +129,9 @@ LocalCameraStream::LocalCameraStream(
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(1, 99999999);
-  std::string media_stream_label =
-      "MediaStream-" + std::to_string(dis(gen));  // TODO: use UUID.
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   scoped_refptr<MediaStreamInterface> stream =
-      pcd_factory->CreateLocalMediaStream(media_stream_label);
+      pcd_factory->CreateLocalMediaStream(media_stream_id);
 
   // Create video track
   if (parameters.VideoEnabled()) {
@@ -193,20 +188,18 @@ LocalCameraStream::LocalCameraStream(
 
       scoped_refptr<VideoTrackSourceInterface> source =
           pcd_factory->CreateVideoSource(capturer, media_constraints_);
-      std::string video_track_label =
-          "VideoTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
+      std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
       scoped_refptr<VideoTrackInterface> video_track =
-          pcd_factory->CreateLocalVideoTrack(video_track_label, source);
+          pcd_factory->CreateLocalVideoTrack(video_track_id, source);
       stream->AddTrack(video_track);
     }
   }
 
   // Create audio track
   if (parameters.AudioEnabled()) {
-    std::string audio_track_label =
-        "AudioTrack-" + std::to_string(dis(gen));  // TODO: use UUID.
+    std::string audio_track_id(rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
-        pcd_factory->CreateLocalAudioTrack(audio_track_label);
+        pcd_factory->CreateLocalAudioTrack("AudioTrack-" + audio_track_id);
     stream->AddTrack(audio_track);
   }
 
@@ -230,35 +223,31 @@ LocalCustomizedStream::~LocalCustomizedStream() {
   capturer_ = nullptr;
 }
 
-LocalCustomizedStream::LocalCustomizedStream(std::shared_ptr<LocalCustomizedStreamParameters> parameters, VideoFrameGeneratorInterface* framer) {
+LocalCustomizedStream::LocalCustomizedStream(
+    std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+    VideoFrameGeneratorInterface* framer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> factory =
       PeerConnectionDependencyFactory::Get();
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(1, 99999999);
-  std::string media_stream_label =
-      "MediaStream-" + std::to_string(dis(gen));
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   scoped_refptr<MediaStreamInterface> stream =
-      factory->CreateLocalMediaStream(media_stream_label);
+      factory->CreateLocalMediaStream(media_stream_id);
   if (parameters->VideoEnabled()) {
     capturer_ = new CustomizedFramesCapturer(framer);
     capturer_->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
         factory->CreateVideoSource(capturer_, NULL);
-    std::string video_track_label =
-        "VideoTrack-" + std::to_string(dis(gen));
+    std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
-        factory->CreateLocalVideoTrack(video_track_label, source);
+        factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
   if (parameters->AudioEnabled()) {
-    std::string audio_track_label =
-        "AudioTrack-" + std::to_string(dis(gen));
+    std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
-        factory->CreateLocalAudioTrack(audio_track_label);
+        factory->CreateLocalAudioTrack(audio_track_id);
     stream->AddTrack(audio_track);
   }
   media_stream_ = stream;
