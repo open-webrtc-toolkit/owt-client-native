@@ -9,10 +9,19 @@
 
 @implementation RTCRemoteStream
 
-- (NSString*)getRemoteUserId {
+- (std::shared_ptr<woogeen::base::RemoteStream>)nativeRemoteStream {
   std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
-  std::shared_ptr<woogeen::base::RemoteStream> remoteStream =
-      std::static_pointer_cast<woogeen::base::RemoteStream>(stream);
+  return std::static_pointer_cast<woogeen::base::RemoteStream>(stream);
+}
+
+- (NSString*)streamId {
+  auto remoteStream = [self nativeRemoteStream];
+  return [NSString stringWithCString:remoteStream->Id().c_str()
+                            encoding:[NSString defaultCStringEncoding]];
+}
+
+- (NSString*)getRemoteUserId {
+  auto remoteStream = [self nativeRemoteStream];
   return [NSString stringWithCString:remoteStream->From().c_str()
                             encoding:[NSString defaultCStringEncoding]];
 }
