@@ -12,7 +12,7 @@
       'target_name': 'woogeen_p2p_sample',
       'type': 'executable',
       'sources': [
-        'samples/P2PSample.cpp',
+        'samples/p2psample.cpp',
         'samples/fileframegenerator.cc',
         'samples/fileframegenerator.h',
         'samples/encodedframegenerator.cc',
@@ -52,7 +52,7 @@
       'target_name': 'woogeen_conf_sample',
       'type': 'executable',
       'sources': [
-        'samples/ConfSample.cpp',
+        'samples/conferencesample.cpp',
         'samples/conferenceobserver.cc',
         'samples/conferenceobserver.h',
         'samples/fileframegenerator.cc',

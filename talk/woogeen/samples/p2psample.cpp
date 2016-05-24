@@ -1,4 +1,4 @@
-// P2PSample.cpp : Defines the entry point for the console application.
+// p2psample.cpp : Defines the entry point for the console application.
 //
 
 #include <iostream>

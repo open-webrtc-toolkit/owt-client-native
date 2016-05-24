@@ -1,7 +1,7 @@
 //
 //Intel License
 //
-// ConfSample.cpp : Defines the entry point for the console application.
+// conferencesample.cpp : Defines the entry point for the console application.
 //
 #include <iostream>
 #include <unistd.h>
