@@ -50,6 +50,7 @@
         'sdk/base/sdputils.cc',
         'sdk/base/mediautils.h',
         'sdk/base/mediautils.cc',
+        'sdk/base/deviceutils.cc',
         'sdk/include/cpp/woogeen/base/stream.h',
         'sdk/include/cpp/woogeen/base/clientconfiguration.h',
         'sdk/include/cpp/woogeen/base/localcamerastreamparameters.h',
@@ -57,6 +58,7 @@
         'sdk/include/cpp/woogeen/base/videorendererinterface.h',
         'sdk/include/cpp/woogeen/base/framegeneratorinterface.h',
         'sdk/include/cpp/woogeen/base/connectionstats.h',
+        'sdk/include/cpp/woogeen/base/deviceutils.h',
       ],
       'export_dependent_settings': [
         '<(DEPTH)/webrtc/api/api.gyp:libjingle_peerconnection',

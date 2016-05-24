@@ -50,7 +50,11 @@ class LocalCameraStreamParameters final {
   LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
   /**
     @brief Set the ID of the camera to be used.
-    @param camera_id Camera ID.
+    @param camera_id Camera ID. On Windows, camera ID is the DevicePath of
+    capturer device. DevicePath is a unique string that identifies the device.
+    Please refer
+    https://msdn.microsoft.com/en-us/library/windows/desktop/dd377566.aspx for
+    detailed information about DevicePath.
   */
   void CameraId(const std::string& camera_id);
   /**

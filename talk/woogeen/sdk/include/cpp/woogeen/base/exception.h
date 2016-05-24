@@ -52,6 +52,26 @@ class Exception {
  private:
   const std::string& message_;
 };
+
+class StreamException : public Exception {
+ public:
+  enum ExceptionType : int {
+    kUnkown = 1100,  // General stream exceptions
+    // kLocal* for local stream exceptions
+    kLocalDeviceNotFound = 1102,
+    kLocalInvalidOption = 1104,
+    kLocalNotSupported = 1105,
+  };
+
+  StreamException();
+  StreamException(const ExceptionType& type);
+  StreamException(const ExceptionType& type, const std::string& message);
+
+  ExceptionType Type();
+
+ private:
+  enum ExceptionType type_;
+};
 }
 }
 

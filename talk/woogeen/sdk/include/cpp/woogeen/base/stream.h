@@ -28,6 +28,8 @@
 #define WOOGEEN_BASE_STREAM_H_
 
 #include <memory>
+#include "woogeen/base/exception.h"
+#include "woogeen/base/macros.h"
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/videorendererinterface.h"
 
@@ -159,12 +161,30 @@ class RemoteScreenStream : public RemoteStream {
 class LocalCameraStream : public LocalStream {
  public:
   /**
+    Create a LocalCameraStream with parameters.
+    @param parameters Parameters for creating the stream. The stream will not be
+    impacted if chaning parameters after it is created.
+    @param error_code If creation successes, it will be 0, otherwise, it will be
+    the error code occurred.
+    @return Returns a shared pointer for created stream. Returns nullptr if
+    failed.
+  */
+  static std::shared_ptr<LocalCameraStream> Create(
+      const LocalCameraStreamParameters& parameters,
+      int& error_code);
+  /** @cond */
+  /**
     Initialize a LocalCameraStream with parameters.
     @param parameters Parameters for creating the stream. The stream will not be
     impacted if chaning parameters after it is created.
   */
-  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters);
+  WOOGEEN_DEPRECATED explicit LocalCameraStream(
+      const LocalCameraStreamParameters& parameters);
   ~LocalCameraStream();
+protected:
+ explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
+                            int& error_code);
+ /** @endcond */
 };
 
 /// This class represent a local stream which use frame generator to generate frames.

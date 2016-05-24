@@ -24,35 +24,29 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
-#define WOOGEEN_P2P_P2PEXCEPTION_H_
+#ifndef WOOGEEN_BASE_DEVICEUTILS_H_
+#define WOOGEEN_BASE_DEVICEUTILS_H_
 
-#include "woogeen/base/exception.h"
+#include <vector>
+#include <string>
+#include "woogeen/base/mediaformat.h"
 
 namespace woogeen {
-namespace p2p {
-
-/// This class reprensents a P2P exception.
-class P2PException : public woogeen::base::Exception {
+namespace base {
+class DeviceUtils {
  public:
-  enum ExceptionType : int {
-    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
-    kConnAuthFailed = 2121,
-    kMessageTargetUnreachable = 2201,
-    kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
-    kClientInvalidState = 2403,
-  };
-
-  P2PException();
-  P2PException(const ExceptionType& type);
-  P2PException(const ExceptionType& type, const std::string& message);
-
-  ExceptionType Type();
-
- private:
-  enum ExceptionType type_;
+  /// Get video capturer IDs.
+  static std::vector<std::string> VideoCapturerIds();
+  /**
+   Get supported resolutions for a specific video capturer.
+   @param id The ID of specific video capturer.
+   @return Supported resolution for the specific video capturer. If the name is
+   invalid, it returns an empty vector.
+   */
+  static std::vector<Resolution> VideoCapturerSupportedResolutions(
+      const std::string& id);
 };
 }
 }
 
-#endif  // WOOGEEN_P2P_P2PEXCEPTION_H_
+#endif  // WOOGEEN_BASE_DEVICEUTILS_H_

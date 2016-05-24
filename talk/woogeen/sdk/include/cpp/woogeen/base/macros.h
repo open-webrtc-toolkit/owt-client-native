@@ -24,35 +24,20 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
-#define WOOGEEN_P2P_P2PEXCEPTION_H_
+#ifndef WOOGEEN_BASE_MACROS_H_
+#define WOOGEEN_BASE_MACROS_H_
 
-#include "woogeen/base/exception.h"
+#if __cplusplus > 201402L
+#define WOOGEEN_DEPRECATED [[deprecated]]
+#else
+#ifdef __GNUC__
+#define WOOGEEN_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define WOOGEEN_DEPRECATED __declspec(deprecated)
+#else
+#pragma message("Deprecation is not implemented in this compiler.")
+#define WOOGEEN_DEPRECATED
+#endif
+#endif
 
-namespace woogeen {
-namespace p2p {
-
-/// This class reprensents a P2P exception.
-class P2PException : public woogeen::base::Exception {
- public:
-  enum ExceptionType : int {
-    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
-    kConnAuthFailed = 2121,
-    kMessageTargetUnreachable = 2201,
-    kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
-    kClientInvalidState = 2403,
-  };
-
-  P2PException();
-  P2PException(const ExceptionType& type);
-  P2PException(const ExceptionType& type, const std::string& message);
-
-  ExceptionType Type();
-
- private:
-  enum ExceptionType type_;
-};
-}
-}
-
-#endif  // WOOGEEN_P2P_P2PEXCEPTION_H_
+#endif  // WOOGEEN_BASE_MACROS_H_

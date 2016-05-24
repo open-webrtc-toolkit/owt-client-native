@@ -10,6 +10,7 @@
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 
@@ -108,7 +109,7 @@ LocalStream::~LocalStream(){
 }
 
 LocalCameraStream::~LocalCameraStream() {
-  LOG(LS_INFO) << "Destory LocalCameraStream.";
+  LOG(LS_INFO) << "Destroy LocalCameraStream.";
   if (media_stream_ != nullptr) {
     // Remove all tracks before dispose stream.
     auto audio_tracks = media_stream_->GetAudioTracks();
@@ -120,6 +121,95 @@ LocalCameraStream::~LocalCameraStream() {
       media_stream_->RemoveTrack(*it);
     }
   }
+}
+
+std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(
+    const LocalCameraStreamParameters& parameters,
+    int& error_code) {
+  error_code = 0;
+  std::shared_ptr<LocalCameraStream> stream(
+      new LocalCameraStream(parameters, error_code));
+  if (error_code != 0) {
+    return nullptr;
+  } else {
+    return stream;
+  }
+}
+
+LocalCameraStream::LocalCameraStream(
+    const LocalCameraStreamParameters& parameters,
+    int& error_code) {
+  if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
+    LOG(LS_ERROR)
+        << "Cannot create a LocalCameraStream without audio and video.";
+    error_code = StreamException::kLocalInvalidOption;
+    return;
+  }
+  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+      PeerConnectionDependencyFactory::Get();
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  scoped_refptr<MediaStreamInterface> stream =
+      pcd_factory->CreateLocalMediaStream(media_stream_id);
+  // Create audio track
+  if (parameters.AudioEnabled()) {
+    std::string audio_track_id(rtc::CreateRandomUuid());
+    scoped_refptr<AudioTrackInterface> audio_track =
+        pcd_factory->CreateLocalAudioTrack("AudioTrack-" + audio_track_id);
+    stream->AddTrack(audio_track);
+  }
+  // Create video track.
+  if (parameters.VideoEnabled()) {
+    cricket::WebRtcVideoDeviceCapturerFactory factory;
+    cricket::VideoCapturer* capturer = nullptr;
+    // TODO: Check nullptr for CameraId.
+    if (!parameters.CameraId().empty()) {
+      std::string camera_name;  // Empty camera name. We use ID for comparison.
+      capturer =
+          factory.Create(cricket::Device(camera_name, parameters.CameraId()));
+    }
+    if (!capturer) {
+      LOG(LS_ERROR)
+          << "Cannot open video capturer " << parameters.CameraId()
+          << ". Please make sure camera ID is correct and it is not in use.";
+      error_code = StreamException::kLocalDeviceNotFound;
+      return;
+    }
+    // Check supported resolution
+    auto supported_resolution =
+        DeviceUtils::VideoCapturerSupportedResolutions(parameters.CameraId());
+    auto resolution_iterator = std::find(
+        supported_resolution.begin(), supported_resolution.end(),
+        Resolution(parameters.ResolutionWidth(), parameters.ResolutionHeight()));
+    if (resolution_iterator == supported_resolution.end()) {
+      LOG(LS_ERROR) << "Resolution " << parameters.ResolutionWidth() << "x"
+                    << parameters.ResolutionHeight()
+                    << " is not supported by video capturer "
+                    << parameters.CameraId();
+      error_code = StreamException::kLocalNotSupported;
+      return;
+    }
+    media_constraints_->SetMandatory(
+        webrtc::MediaConstraintsInterface::kMaxWidth,
+        std::to_string(parameters.ResolutionWidth()));
+    media_constraints_->SetMandatory(
+        webrtc::MediaConstraintsInterface::kMaxHeight,
+        std::to_string(parameters.ResolutionHeight()));
+    media_constraints_->SetMandatory(
+        webrtc::MediaConstraintsInterface::kMinWidth,
+        std::to_string(parameters.ResolutionWidth()));
+    media_constraints_->SetMandatory(
+        webrtc::MediaConstraintsInterface::kMinHeight,
+        std::to_string(parameters.ResolutionHeight()));
+
+    scoped_refptr<VideoTrackSourceInterface> source =
+        pcd_factory->CreateVideoSource(capturer, media_constraints_);
+    std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
+    scoped_refptr<VideoTrackInterface> video_track =
+        pcd_factory->CreateLocalVideoTrack(video_track_id, source);
+    stream->AddTrack(video_track);
+  }
+  media_stream_ = stream;
+  media_stream_->AddRef();
 }
 
 LocalCameraStream::LocalCameraStream(
@@ -138,7 +228,9 @@ LocalCameraStream::LocalCameraStream(
     cricket::WebRtcVideoDeviceCapturerFactory factory;
     cricket::VideoCapturer* capturer = nullptr;
     if (!parameters.CameraId().empty()) {
-      capturer = factory.Create(cricket::Device(parameters.CameraId(), 0));
+      std::string camera_name;  // Empty camera name. We use ID for comparison.
+      capturer =
+          factory.Create(cricket::Device(camera_name, parameters.CameraId()));
     }
 
     if (!capturer) {
