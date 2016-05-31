@@ -299,6 +299,16 @@ LocalCameraStream::LocalCameraStream(
   media_stream_->AddRef();
 }
 
+void LocalCameraStream::Close() {
+  RTC_CHECK(media_stream_);
+  for (auto const& audio_track : media_stream_->GetAudioTracks()) {
+    media_stream_->RemoveTrack(audio_track);
+  }
+  for (auto const& video_track : media_stream_->GetVideoTracks()) {
+    media_stream_->RemoveTrack(video_track);
+  }
+}
+
 LocalCustomizedStream::~LocalCustomizedStream() {
   LOG(LS_INFO) << "Destory LocalCameraStream.";
   if (media_stream_ != nullptr) {
