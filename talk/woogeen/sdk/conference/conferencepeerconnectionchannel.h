@@ -10,11 +10,12 @@
 #include <unordered_map>
 #include <chrono>
 #include <random>
+
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/conference/subscribeoptions.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/subscribeoptions.h"
 
 namespace woogeen {
 namespace conference {
@@ -117,6 +118,12 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
 
   // Socket.IO event
   virtual void OnSignalingMessage(sio::message::ptr message);
+
+  // Get statistics data for the specific stream.
+  void GetConnectionStats(
+      std::shared_ptr<Stream> stream,
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  protected:
   void CreateOffer();

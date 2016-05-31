@@ -63,17 +63,92 @@ void FunctionalSetSessionDescriptionObserver::OnFailure(
 }
 
 FunctionalStatsObserver::FunctionalStatsObserver(
-    std::function<void(const webrtc::StatsReports&)> on_complete)
+    std::function<void(std::shared_ptr<ConnectionStats>)> on_complete)
     : on_complete_(on_complete) {}
 
 rtc::scoped_refptr<FunctionalStatsObserver> FunctionalStatsObserver::Create(
-    std::function<void(const webrtc::StatsReports&)> on_complete) {
+    std::function<void(std::shared_ptr<ConnectionStats>)> on_complete) {
   return new rtc::RefCountedObject<FunctionalStatsObserver>(on_complete);
 }
 
 void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
   if (on_complete_ != nullptr) {
-    on_complete_(reports);
+    std::shared_ptr<ConnectionStats> connection_stats(new ConnectionStats());
+    AdaptReason adapt_reason = ADAPT_UNKNOWN;
+    for (const auto* report : reports) {
+      ReportType rType = GetReportType(report);
+      switch (rType) {
+      case REPORT_AUDIO_RECEIVER:
+         connection_stats->audio_receiver_reports[report->id()->ToString()] = AudioReceiverReportPtr(new AudioReceiverReport(
+            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        break;
+      case REPORT_AUDIO_SENDER:
+        connection_stats->audio_sender_reports[report->id()->ToString()] = AudioSenderReportPtr(new AudioSenderReport(
+            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        break;
+      case  REPORT_VIDEO_RECEIVER:
+        connection_stats->video_receiver_reports[report->id()->ToString()] = VideoReceiverReportPtr(new VideoReceiverReport(
+            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFirsSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePlisSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameNacksSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameHeightReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateOutput)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        break;
+      case REPORT_VIDEO_SENDER:
+        adapt_reason = ADAPT_UNKNOWN;
+        if (report->FindValue(webrtc::StatsReport::kStatsValueNameCpuLimitedResolution)->bool_val())
+          adapt_reason = ADAPT_CPU_LIMITATION;
+        else if (report->FindValue(webrtc::StatsReport::kStatsValueNameBandwidthLimitedResolution)->bool_val())
+          adapt_reason = ADAPT_BANDWIDTH_LIMITATION;
+        else if (report->FindValue(webrtc::StatsReport::kStatsValueNameViewLimitedResolution)->bool_val())
+          adapt_reason = ADAPT_VIEW_LIMITATION;
+
+        connection_stats->video_sender_reports[report->id()->ToString()] = VideoSenderReportPtr(new VideoSenderReport(
+            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFirsReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNamePlisReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameNacksReceived)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameHeightSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateSent)->int_val(),
+            adapt_reason,
+            report->FindValue(webrtc::StatsReport::kStatsValueNameAdaptationChanges)->int_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
+            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        break;
+      case REPORT_VIDEO_BWE:
+        connection_stats->video_bandwidth_stats.available_send_bandwidth =
+            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth)->int_val();
+        connection_stats->video_bandwidth_stats.available_receive_bandwidth =
+            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth)->int_val();
+        connection_stats->video_bandwidth_stats.transmit_bitrate =
+            report->FindValue(webrtc::StatsReport::kStatsValueNameTransmitBitrate)->int_val();
+        connection_stats->video_bandwidth_stats.retransmit_bitrate =
+            report->FindValue(webrtc::StatsReport::kStatsValueNameRetransmitBitrate)->int_val();
+        break;
+      default:
+        break;
+      }
+    }
+
+    on_complete_(connection_stats);
   }
 }
 }

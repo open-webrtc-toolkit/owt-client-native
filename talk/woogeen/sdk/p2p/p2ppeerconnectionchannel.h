@@ -14,7 +14,6 @@
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/connectionstats.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2pexception.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
@@ -101,8 +100,9 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void Stop(std::function<void()> on_success,
             std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
-  // Get statistics data for the connection.
+  // Get statistics data for the specific stream.
   void GetConnectionStats(
+      std::shared_ptr<Stream> stream,
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
@@ -147,9 +147,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
   virtual void OnSetRemoteSessionDescriptionSuccess();
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
-
-  // GetStatsObserver
-  virtual void OnGetStatsComplete(const webrtc::StatsReports&);
 
   enum SessionState : int;
   enum NegotiationState : int;
@@ -221,8 +218,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                                                 // ready.
   std::mutex pending_messages_mutex_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
-
-  webrtc::MediaStreamTrackInterface* track_;
 };
 }
 }

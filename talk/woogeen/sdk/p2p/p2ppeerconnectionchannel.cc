@@ -586,10 +586,6 @@ void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
   Stop(nullptr, nullptr);
 }
 
-void P2PPeerConnectionChannel::OnGetStatsComplete(const webrtc::StatsReports&){
-  LOG(LS_INFO) << "Get stats complete.";
-}
-
 bool P2PPeerConnectionChannel::CheckNullPointer(
     uintptr_t pointer,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
@@ -621,7 +617,6 @@ void P2PPeerConnectionChannel::Publish(
     return;
   }
   RTC_CHECK(stream->MediaStream());
-  track_=*(stream->MediaStream()->GetVideoTracks().begin());
   if (published_streams_.find(stream->MediaStream()->label()) !=
       published_streams_.end()) {
     if (on_failure) {
@@ -720,23 +715,18 @@ void P2PPeerConnectionChannel::Stop(
 }
 
 void P2PPeerConnectionChannel::GetConnectionStats(
+    std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure){
   LOG(LS_INFO) << "Get connection stats";
 
-  FunctionalStatsObserver* observer = FunctionalStatsObserver::Create(
-      std::bind(&P2PPeerConnectionChannel::OnGetStatsComplete, this,
-                std::placeholders::_1));
+  FunctionalStatsObserver* observer = FunctionalStatsObserver::Create(on_success);
   GetStatsMessage* stats_message = new GetStatsMessage(
-      observer, track_,
+      observer, stream->MediaStream(),
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
   rtc::TypedMessageData<GetStatsMessage*>* param =
       new rtc::TypedMessageData<GetStatsMessage*>(stats_message);
   pc_thread_->Post(this, kMessageTypeGetStats, param);
-  if (on_success) {
-    // TODO: send message to pc thread.
-    on_success(std::make_shared<ConnectionStats>(ConnectionStats()));
-  }
 }
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {

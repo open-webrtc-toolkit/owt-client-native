@@ -20,7 +20,7 @@
       },
       'dependencies': [
         '<(DEPTH)/webrtc/api/api.gyp:libjingle_peerconnection',
-        '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv'
+        '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',
       ],
       'include_dirs': [
         'sdk/include/cpp',

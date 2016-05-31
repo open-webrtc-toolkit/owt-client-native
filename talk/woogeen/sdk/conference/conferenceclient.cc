@@ -390,6 +390,19 @@ void ConferenceClient::SetRegion(
   signaling_channel_->SetRegion(stream->Id(), region_id, on_success, on_failure);
 }
 
+void ConferenceClient::GetConnectionStats(
+    std::shared_ptr<Stream> stream,
+    std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  auto pcc = GetConferencePeerConnectionChannel(stream);
+  if (pcc == nullptr) {
+    LOG(LS_WARNING) << "Tried to get connection statistics from unknown stream.";
+    return;
+  }
+
+  pcc->GetConnectionStats(stream, on_success, on_failure);
+}
+
 void ConferenceClient::OnStreamAdded(sio::message::ptr stream) {
   TriggerOnStreamAdded(stream);
 }

@@ -33,6 +33,7 @@
 
 namespace woogeen {
 namespace base {
+
 class DeviceUtils {
  public:
   /// Get video capturer IDs.

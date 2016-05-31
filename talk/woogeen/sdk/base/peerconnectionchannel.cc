@@ -173,10 +173,8 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       break;
     }
     case kMessageTypeGetStats: {
-      rtc::TypedMessageData<GetStatsMessage*>* param =
-          static_cast<rtc::TypedMessageData<GetStatsMessage*>*>(msg->pdata);
-      peer_connection_->GetStats(param->data()->observer, param->data()->track,
-                                 param->data()->level);
+      GetStatsMessage* param = static_cast<GetStatsMessage*>(msg->pdata);
+      peer_connection_->GetStats(param->observer, nullptr, param->level);
       delete param;
       break;
     }

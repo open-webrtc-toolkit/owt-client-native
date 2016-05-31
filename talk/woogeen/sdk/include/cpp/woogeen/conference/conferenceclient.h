@@ -31,7 +31,9 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+
 #include "woogeen/base/clientconfiguration.h"
+#include "woogeen/base/connectionstats.h"
 #include "woogeen/base/globalconfiguration.h"
 #include "woogeen/base/stream.h"
 #include "woogeen/conference/user.h"
@@ -137,7 +139,9 @@ class ConferenceClientObserver {
     @param user The user left.
   */
   virtual void OnUserLeft(std::shared_ptr<const conference::User>){};
-  /// Triggered when server is disconnected.
+  /**
+    @brief Triggers when server is disconnected.
+  */
   virtual void OnServerDisconnected(){};
 };
 
@@ -290,6 +294,14 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
+  /**
+    @brief Get a stream's connection statistics
+  */
+  void GetConnectionStats(
+      std::shared_ptr<Stream> stream,
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
  protected:
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,
@@ -324,6 +336,8 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   // |stream|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
+  // Get the |ConferencePeerConnectionChannel| instance associated with specific
+  // |stream_id|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(const std::string& stream_id) const;
   void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info);

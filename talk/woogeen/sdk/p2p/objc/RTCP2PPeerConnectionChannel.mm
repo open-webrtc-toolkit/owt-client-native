@@ -241,7 +241,7 @@
 - (void)getConnectionStats {
   // TODO: Not finished.
   NSLog(@"Objc Getconnectionstats");
-  _nativeChannel->GetConnectionStats(nullptr, nullptr);
+  _nativeChannel->GetConnectionStats(nullptr, nullptr, nullptr);
 }
 
 - (void)onIncomingSignalingMessage:(NSString*)message {

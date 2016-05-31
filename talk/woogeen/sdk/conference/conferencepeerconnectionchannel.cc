@@ -5,6 +5,7 @@
 #include <vector>
 #include <thread>
 #include <future>
+
 #include "webrtc/base/logging.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/media/base/videocapturer.h"
@@ -274,11 +275,9 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
   }
   scoped_refptr<FunctionalSetSessionDescriptionObserver> observer =
       FunctionalSetSessionDescriptionObserver::Create(
-          std::bind(&ConferencePeerConnectionChannel::
-                        OnSetRemoteSessionDescriptionSuccess,
+          std::bind(&ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess,
                     this),
-          std::bind(&ConferencePeerConnectionChannel::
-                        OnSetRemoteSessionDescriptionFailure,
+          std::bind(&ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure,
                     this, std::placeholders::_1));
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
@@ -311,6 +310,7 @@ void ConferencePeerConnectionChannel::Publish(
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
+
   if (publish_success_callback_) {
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
@@ -528,6 +528,19 @@ void ConferencePeerConnectionChannel::Stop(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Stop session.";
+}
+
+void ConferencePeerConnectionChannel::GetConnectionStats(
+    std::shared_ptr<Stream> stream,
+    std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  LOG(LS_INFO) << "Get connection stats";
+
+  scoped_refptr<FunctionalStatsObserver> observer = FunctionalStatsObserver::Create(on_success);
+  GetStatsMessage* stats_message = new GetStatsMessage(
+      observer.get(), stream->MediaStream(),
+      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+  pc_thread_->Post(this, kMessageTypeGetStats, stats_message);
 }
 
 void ConferencePeerConnectionChannel::OnSignalingMessage(

@@ -27,12 +27,14 @@ struct SetSessionDescriptionMessage : public rtc::MessageData {
 };
 
 struct GetStatsMessage : public rtc::MessageData {
-  explicit GetStatsMessage(FunctionalStatsObserver* observer,
-                           webrtc::MediaStreamTrackInterface* track,
-                           webrtc::PeerConnectionInterface::StatsOutputLevel level)
-      : observer(observer), track(track), level(level) {}
+  explicit GetStatsMessage(
+      FunctionalStatsObserver* observer,
+      webrtc::MediaStreamInterface* stream,
+      webrtc::PeerConnectionInterface::StatsOutputLevel level)
+      : observer(observer), stream(stream), level(level) {}
+
   rtc::scoped_refptr<FunctionalStatsObserver> observer;
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track;
+  webrtc::MediaStreamInterface* stream;
   webrtc::PeerConnectionInterface::StatsOutputLevel level;
 };
 
