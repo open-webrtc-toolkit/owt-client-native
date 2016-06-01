@@ -195,7 +195,7 @@ struct ConnectionStats {
   /// Video receiver reports
   VideoReceiverReports video_receiver_reports;
 };
-};
-};
+} // namespace base
+} // namespace woogeen
 
 #endif  // WOOGEEN_BASE_CONNECTIONSTATS_H_
