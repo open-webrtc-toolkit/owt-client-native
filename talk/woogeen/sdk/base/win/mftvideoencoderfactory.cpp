@@ -27,6 +27,7 @@
 
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
 #include "talk/woogeen/sdk/base/win/h264_video_mft_encoder.h"
+#include "talk/woogeen/sdk/base/win/h265_msdk_encoder.h"
 
 #define MAX_VIDEO_WIDTH 3840
 #define MAX_VIDEO_HEIGHT 2160
@@ -37,12 +38,19 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory(){
     //Possibly enable this for KBL/CNL
     bool is_vp8_hw_supported = false;
     bool is_h264_hw_supported = true;
+    // TODO(jianlin): find a way from MSDK to check h265 HW encoding support.
+    // As we have SW, GAA & HW h265 encoding support, try loading plugins might be
+    // a good way to determine that.
+    bool is_h265_hw_supported = true;
 
-    if (is_vp8_hw_supported){
+    if (is_vp8_hw_supported) {
         supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecVP8, "VP8", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
     }
-    if (is_h264_hw_supported){
+    if (is_h264_hw_supported) {
         supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecH264, "H264", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
+    }
+    if (is_h265_hw_supported) {
+        supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecH265, "H265", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
     }
 }
 
@@ -53,8 +61,10 @@ webrtc::VideoEncoder* MSDKVideoEncoderFactory::CreateVideoEncoder(webrtc::VideoC
         return NULL;
     }
     for (std::vector<VideoCodec>::const_iterator it = supported_codecs_.begin(); it != supported_codecs_.end(); ++it){
-        if (it->type == type){
+        if ((*it).type == type && type == webrtc::kVideoCodecH264) {
             return new H264VideoMFTEncoder();
+        } else if ((*it).type == type && type == webrtc::kVideoCodecH265) {
+            return new H265VideoMFTEncoder();
         }
     }
     return NULL;

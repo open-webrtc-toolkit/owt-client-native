@@ -49,6 +49,8 @@ struct MediaCodec {
   enum VideoCodec : int {
     VP8 = 1,
     H264,
+    VP9,
+    H265,
   };
 
   explicit MediaCodec() : video_codec(H264), audio_codec(OPUS) {}

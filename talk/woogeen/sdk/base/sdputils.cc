@@ -25,10 +25,12 @@ static const std::unordered_map<MediaCodec::AudioCodec,
     {MediaCodec::AudioCodec::PCMU, "PCMU"},
     {MediaCodec::AudioCodec::PCMA, "PCMA"}};
 static const std::unordered_map<MediaCodec::VideoCodec,
-                                const std::string,
-                                std::hash<int>> video_codec_names = {
-    {MediaCodec::VideoCodec::VP8, "VP8"},
-    {MediaCodec::VideoCodec::H264, "H264"}};
+    const std::string,
+    std::hash<int>> video_codec_names = {
+{MediaCodec::VideoCodec::VP8, "VP8"},
+{MediaCodec::VideoCodec::H264, "H264"},
+{MediaCodec::VideoCodec::VP9, "VP9"},
+{MediaCodec::VideoCodec::H265, "H265"} };
 
 std::string SdpUtils::SetMaximumVideoBandwidth(const std::string& sdp,
                                                int bitrate) {

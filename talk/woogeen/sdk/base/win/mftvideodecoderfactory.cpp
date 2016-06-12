@@ -32,6 +32,8 @@
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
 #include "talk/woogeen/sdk/base/win/h264_msdk_decoder.h"
+#include "talk/woogeen/sdk/base/win/h265_msdk_decoder.h"
+
 MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
   :decoder_window_(hWnd){
     supported_codec_types_.clear();
@@ -45,6 +47,11 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
     bool is_h264_hw_supported = true;
     if (is_h264_hw_supported) {
         supported_codec_types_.push_back(webrtc::kVideoCodecH264);
+    }
+//TODO: add logic to detect plugin by MSDK.
+    bool is_h265_hw_supported = true;
+    if (is_h265_hw_supported) {
+        supported_codec_types_.push_back(webrtc::kVideoCodecH265);
     }
 }
 
@@ -63,9 +70,10 @@ webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoC
         ++it) {
         if (*it == type && type == webrtc::kVideoCodecVP8) {
             return new MSDKVideoDecoder(type, decoder_window_);
-        }
-        else if (*it == type && type == webrtc::kVideoCodecH264) {
+        } else if (*it == type && type == webrtc::kVideoCodecH264) {
             return new H264MSDKVideoDecoder(type, decoder_window_);
+        } else if (*it == type && type == webrtc::kVideoCodecH265) {
+            return new H265MSDKVideoDecoder(type, decoder_window_);
         }
     }
     return NULL;

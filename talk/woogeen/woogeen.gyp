@@ -3,6 +3,9 @@
 #
 
 {
+  'variables': {
+    'disable_h265%': 0,
+  },
   'includes': [
     '../build/common.gypi',
   ],
@@ -101,6 +104,14 @@
              '-ldxva2.lib',
             ],
           },
+        }],
+        ['disable_h265==0 and OS=="win"', {
+          'sources': [
+            'sdk/base/win/h265_msdk_decoder.cpp',
+            'sdk/base/win/h265_msdk_decoder.h',
+            'sdk/base/win/h265_msdk_encoder.cpp',
+            'sdk/base/win/h265_msdk_encoder.h',
+          ],
         }],
         ['OS=="linux"', {
           'sources': [
