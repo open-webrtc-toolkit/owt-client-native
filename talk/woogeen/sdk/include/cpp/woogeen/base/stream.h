@@ -27,10 +27,9 @@
 #ifndef WOOGEEN_BASE_STREAM_H_
 #define WOOGEEN_BASE_STREAM_H_
 
-#include <memory>
 #include "woogeen/base/exception.h"
-#include "woogeen/base/macros.h"
 #include "woogeen/base/localcamerastreamparameters.h"
+#include "woogeen/base/macros.h"
 #include "woogeen/base/videorendererinterface.h"
 
 namespace webrtc {
@@ -59,6 +58,8 @@ class StreamObserver {
 
 };
 
+class WebrtcVideoRendererARGBImpl;
+
 /// Base class of all streams with media stream
 class Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;
@@ -80,8 +81,10 @@ class Stream {
   virtual void EnableAudio();
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
-  /// Attach the stream to a renderer, so it can be displayed.
-  virtual void Attach(VideoRendererARGBInterface& renderer);
+  /// Attach the stream to a renderer.
+  virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
+  /// Detach the stream from its renderer.
+  virtual void DetachVideoRenderer();
 
  protected:
   Stream(const std::string& id);
@@ -95,10 +98,11 @@ class Stream {
   void SetAudioTracksEnabled(bool enabled);
   void SetVideoTracksEnabled(bool enabled);
   std::string id_;
+  WebrtcVideoRendererARGBImpl* renderer_impl_;
 };
 
 /**
-  @brief This class represent a local stream.
+  @brief This class represents a local stream.
   @detail A local stream can be published to remote side.
 */
 class LocalStream : public Stream {
@@ -137,7 +141,7 @@ class RemoteStream : public Stream {
   bool has_video_ = true;
 };
 
-/// This class represent a remote stream captured from a camera and/or mic.
+/// This class represents a remote stream captured from a camera and/or mic.
 class RemoteCameraStream : public RemoteStream {
  public:
   /** @cond */
@@ -147,7 +151,7 @@ class RemoteCameraStream : public RemoteStream {
   /** @endcond */
 };
 
-/// This class represent a remote stream captured from screen sharing.
+/// This class represents a remote stream captured from screen sharing.
 class RemoteScreenStream : public RemoteStream {
  public:
   /** @cond */
@@ -157,7 +161,7 @@ class RemoteScreenStream : public RemoteStream {
   /** @endcond */
 };
 
-/// This class represent a local stream captured from camera, mic.
+/// This class represents a local stream captured from camera, mic.
 class LocalCameraStream : public LocalStream {
  public:
   /**
@@ -195,7 +199,7 @@ protected:
  /** @endcond */
 };
 
-/// This class represent a local stream which use frame generator to generate frames.
+/// This class represents a local stream which use frame generator to generate frames.
 class LocalCustomizedStream : public LocalStream {
   public:
   /**
@@ -212,7 +216,8 @@ class LocalCustomizedStream : public LocalStream {
   private:
    CustomizedFramesCapturer* capturer_;
 };
-}
-}
+
+} // namespace base
+} // namespace woogeen
 
 #endif  // WOOGEEN_BASE_STREAM_H_

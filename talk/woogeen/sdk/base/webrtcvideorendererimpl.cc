@@ -7,6 +7,7 @@
 
 namespace woogeen {
 namespace base {
+
 void WebrtcVideoRendererARGBImpl::OnFrame(
     const cricket::VideoFrame& video_frame) {
   const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
@@ -19,5 +20,6 @@ void WebrtcVideoRendererARGBImpl::OnFrame(
   std::unique_ptr<ARGBBuffer> argb_buffer(new ARGBBuffer{buffer, resolution});
   renderer_.RenderFrame(std::move(argb_buffer));
 }
+
 }
 }

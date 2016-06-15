@@ -12,6 +12,7 @@
 
 namespace woogeen {
 namespace base {
+
 class WebrtcVideoRendererARGBImpl
     : public rtc::VideoSinkInterface<cricket::VideoFrame> {
  public:

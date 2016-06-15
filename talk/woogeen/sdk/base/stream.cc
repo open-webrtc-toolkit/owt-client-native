@@ -4,12 +4,12 @@
 
 #include "webrtc/base/helpers.h"
 #include "webrtc/media/base/videocapturer.h"
-#include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-#include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
+#include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
@@ -17,24 +17,27 @@
 namespace woogeen {
 namespace base {
 
-Stream::Stream() : media_stream_(nullptr), id_("") {}
+Stream::Stream() : media_stream_(nullptr), id_(""), renderer_impl_(nullptr) {}
 
-Stream::Stream(const std::string& id) : media_stream_(nullptr), id_(id) {}
+Stream::Stream(const std::string& id) : media_stream_(nullptr), id_(id), renderer_impl_(nullptr) {}
 
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
 }
 
-Stream::~Stream(){
-  if(media_stream_)
+Stream::~Stream() {
+  DetachVideoRenderer();
+
+  if (media_stream_)
     media_stream_->Release();
 }
 
 void Stream::MediaStream(MediaStreamInterface* media_stream) {
   RTC_CHECK(media_stream);
-  if(media_stream_!=nullptr){
+  if (media_stream_!=nullptr) {
     media_stream_->Release();
   }
+
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
@@ -81,30 +84,50 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   }
 }
 
-void Stream::Attach(VideoRendererARGBInterface& renderer){
+void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (media_stream_ == nullptr) {
     ASSERT(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to an renderer.";
     return;
   }
+
   auto video_tracks=media_stream_->GetVideoTracks();
-  if(video_tracks.size()==0){
+  if (video_tracks.size()==0) {
     LOG(LS_ERROR) << "Attach failed because of no video tracks.";
     return;
-  }else if (video_tracks.size()>1){
+  } else if (video_tracks.size()>1) {
     LOG(LS_WARNING) << "There are more than one video tracks, the first one will be attachecd to renderer.";
   }
-  // TODO: delete it when detach or stream is disposed.
-  WebrtcVideoRendererARGBImpl* renderer_impl = new WebrtcVideoRendererARGBImpl(renderer);
-  rtc::VideoSinkWants wants;
-  video_tracks[0]->AddOrUpdateSink(renderer_impl, wants);
+
+  // Detach from the first stream.
+  if (renderer_impl_) {
+    video_tracks[0]->RemoveSink(renderer_impl_);
+    delete renderer_impl_;
+    renderer_impl_ = nullptr;
+  }
+
+  renderer_impl_ = new WebrtcVideoRendererARGBImpl(renderer);
+  video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
-LocalStream::LocalStream():media_constraints_(new MediaConstraintsImpl){
+void Stream::DetachVideoRenderer() {
+  if (media_stream_ == nullptr || renderer_impl_ == nullptr)
+    return;
+
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if(video_tracks.size() == 0)
+    return;
+
+  // Detach from the first stream.
+  video_tracks[0]->RemoveSink(renderer_impl_);
+  delete renderer_impl_;
+  renderer_impl_ = nullptr;
 }
 
-LocalStream::~LocalStream(){
+LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
+
+LocalStream::~LocalStream() {
   delete media_constraints_;
 }
 
@@ -129,11 +152,10 @@ std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(
   error_code = 0;
   std::shared_ptr<LocalCameraStream> stream(
       new LocalCameraStream(parameters, error_code));
-  if (error_code != 0) {
+  if (error_code != 0)
     return nullptr;
-  } else {
+  else
     return stream;
-  }
 }
 
 LocalCameraStream::LocalCameraStream(
@@ -256,9 +278,8 @@ LocalCameraStream::LocalCameraStream(
 
       for (const auto& name : device_names) {
         capturer = factory.Create(cricket::Device(name, 0));
-        if (capturer) {
+        if (capturer)
           break;
-        }
       }
     }
 
@@ -301,12 +322,14 @@ LocalCameraStream::LocalCameraStream(
 
 void LocalCameraStream::Close() {
   RTC_CHECK(media_stream_);
-  for (auto const& audio_track : media_stream_->GetAudioTracks()) {
+
+  DetachVideoRenderer();
+
+  for (auto const& audio_track : media_stream_->GetAudioTracks())
     media_stream_->RemoveTrack(audio_track);
-  }
-  for (auto const& video_track : media_stream_->GetVideoTracks()) {
+
+  for (auto const& video_track : media_stream_->GetVideoTracks())
     media_stream_->RemoveTrack(video_track);
-  }
 }
 
 LocalCustomizedStream::~LocalCustomizedStream() {
@@ -314,13 +337,12 @@ LocalCustomizedStream::~LocalCustomizedStream() {
   if (media_stream_ != nullptr) {
     // Remove all tracks before dispose stream.
     auto audio_tracks = media_stream_->GetAudioTracks();
-    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
+    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it)
       media_stream_->RemoveTrack(*it);
-    }
+
     auto video_tracks = media_stream_->GetVideoTracks();
-    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it) {
+    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
       media_stream_->RemoveTrack(*it);
-    }
   }
   capturer_ = nullptr;
 }
@@ -346,6 +368,7 @@ LocalCustomizedStream::LocalCustomizedStream(
         factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
+
   if (parameters->AudioEnabled()) {
     std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
