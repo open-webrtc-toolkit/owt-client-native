@@ -67,7 +67,7 @@ def getoutputpath(arch, scheme):
 
 def ninjabuild(arch, scheme):
   out_path=getoutputpath(arch, scheme)
-  for target_name in ['rtc_sdk_common_objc', 'AppRTCDemo', 'rtc_sdk_framework_objc', 'woogeen_sdk_base', 'woogeen_sdk_p2p',
+  for target_name in ['AppRTCDemo', 'rtc_sdk_peerconnection_objc',
       'woogeen_sdk_base', 'woogeen_sdk_p2p', 'woogeen_sdk_conf', 'woogeen_sdk_objc']:
     if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
       return False

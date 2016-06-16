@@ -60,6 +60,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual ~PeerConnectionChannel();
   bool InitializePeerConnection();
   const webrtc::SessionDescriptionInterface* LocalDescription();
+  PeerConnectionInterface::SignalingState SignalingState() const;
 
   // Subclasses should prepare observers for these functions and post
   // message to PeerConnectionChannel.

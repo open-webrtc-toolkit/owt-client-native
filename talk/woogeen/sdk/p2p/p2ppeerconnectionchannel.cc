@@ -27,16 +27,6 @@ enum P2PPeerConnectionChannel::SessionState : int {
   kSessionStateConnected,   // Indicates PeerConnection has been established.
 };
 
-enum P2PPeerConnectionChannel::NegotiationState : int {
-  kNegotiationStateNone = 1,  // Indicates not in renegotiation.
-  kNegotiationStateSent,  // Indicates a negotiation request has been sent to
-                          // remote user.
-  kNegotiationStateReceived,  // Indicates local side has received a negotiation
-                              // request from remote user.
-  kNegotiationStateAccepted,  // Indicates local side has accepted remote user's
-                              // negotiation request.
-};
-
 // Signaling message type
 const string kMessageTypeKey = "type";
 const string kMessageDataKey = "data";
@@ -46,7 +36,6 @@ const string kChatDeny = "chat-denied";
 const string kChatStop = "chat-closed";
 const string kChatSignal = "chat-signal";
 const string kChatNegotiationNeeded = "chat-negotiation-needed";
-const string kChatNegotiationAccepted = "chat-negotiation-accepted";
 const string kStreamType = "stream-type";
 
 // Stream type member key
@@ -73,8 +62,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       signaling_sender_(sender),
       local_id_(local_id),
       remote_id_(remote_id),
+      is_caller_(false),
       session_state_(kSessionStateReady),
-      negotiation_state_(kNegotiationStateNone),
       negotiation_needed_(false),
       last_disconnect_(
           std::chrono::time_point<std::chrono::system_clock>::max()),
@@ -113,9 +102,11 @@ void P2PPeerConnectionChannel::Accept(
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (session_state_ != kSessionStatePending)
     return;
+  is_caller_ = false;
   InitializePeerConnection();
   SendAcceptance(on_success, on_failure);
   ChangeSessionState(kSessionStateMatched);
+  CreateDataChannel(kDataChannelLabelForTextMessage);
 }
 
 void P2PPeerConnectionChannel::Deny(
@@ -155,8 +146,6 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     Json::Value signal;
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &signal);
     OnMessageSignal(signal);
-  } else if (message_type == kChatNegotiationAccepted) {
-    OnMessageNegotiationAcceptance();
   } else if (message_type == kChatNegotiationNeeded) {
     OnMessageNegotiationNeeded();
   } else if (message_type == kStreamType) {
@@ -174,11 +163,6 @@ void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
   session_state_ = state;
 }
 
-void P2PPeerConnectionChannel::ChangeNegotiationState(NegotiationState state) {
-  LOG(LS_INFO) << "PeerConnectionChannel change negotiation state : " << state;
-  negotiation_state_ = state;
-}
-
 void P2PPeerConnectionChannel::AddObserver(
     P2PPeerConnectionChannelObserver* observer) {
   observers_.push_back(observer);
@@ -192,6 +176,7 @@ void P2PPeerConnectionChannel::RemoveObserver(
 
 void P2PPeerConnectionChannel::CreateOffer() {
   LOG(LS_INFO) << "Create offer.";
+  negotiation_needed_ = false;
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
       FunctionalCreateSessionDescriptionObserver::Create(
           std::bind(
@@ -224,14 +209,6 @@ void P2PPeerConnectionChannel::CreateAnswer() {
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create answer";
   pc_thread_->Post(this, kMessageTypeCreateAnswer, message_observer);
-}
-
-void P2PPeerConnectionChannel::SendNegotiationAccepted() {
-  Json::Value json;
-  json[kMessageTypeKey] = kChatNegotiationAccepted;
-  SendSignalingMessage(json, nullptr, nullptr);
-  ChangeNegotiationState(kNegotiationStateAccepted);
-  negotiation_needed_ = false;
 }
 
 void P2PPeerConnectionChannel::SendSignalingMessage(
@@ -284,9 +261,10 @@ void P2PPeerConnectionChannel::OnMessageAcceptance() {
        it != observers_.end(); ++it) {
     (*it)->OnAccepted(remote_id_);
   }
+  is_caller_ = true;
   InitializePeerConnection();
   ChangeSessionState(kSessionStateConnecting);
-  CreateOffer();
+  CreateDataChannel(kDataChannelLabelForTextMessage);
 }
 
 void P2PPeerConnectionChannel::OnMessageStop() {
@@ -322,21 +300,11 @@ void P2PPeerConnectionChannel::OnMessageDeny() {
 }
 
 void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
-  LOG(LS_INFO)
-      << "Received negotiation needed event, current negotiation state:"
-      << negotiation_state_;
+  LOG(LS_INFO) << "Received negotiation needed event";
   negotiation_needed_ = true;
-  if (negotiation_state_ == kNegotiationStateNone ||
-      (negotiation_state_ == kNegotiationStateSent &&
-       local_id_.compare(remote_id_) < 0)) {
-    ChangeNegotiationState(kNegotiationStateAccepted);
-    SendNegotiationAccepted();
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
+    CreateOffer();
   }
-}
-
-void P2PPeerConnectionChannel::OnMessageNegotiationAcceptance() {
-  LOG(LS_INFO) << "Post create offer";
-  CreateOffer();
 }
 
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
@@ -411,10 +379,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(
   LOG(LS_INFO) << "Signaling state changed: " << new_state;
   switch (new_state) {
     case PeerConnectionInterface::SignalingState::kStable:
-      if (!pending_publish_streams_.empty() ||
-          pending_unpublish_streams_.empty())
-        DrainPendingStreams();
-      ChangeNegotiationState(kNegotiationStateNone);
+      CheckWaitedList();
       break;
     default:
       break;
@@ -462,10 +427,16 @@ void P2PPeerConnectionChannel::OnDataChannel(
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
   LOG(LS_INFO) << "On negotiation needed.";
-  Json::Value json;
-  json[kMessageTypeKey] = kChatNegotiationNeeded;
-  SendSignalingMessage(json, nullptr, nullptr);
-  ChangeNegotiationState(kNegotiationStateSent);
+  if (!is_caller_) {
+    Json::Value json;
+    json[kMessageTypeKey] = kChatNegotiationNeeded;
+    SendSignalingMessage(json, nullptr, nullptr);
+  } else if (SignalingState() ==
+             PeerConnectionInterface::SignalingState::kStable) {
+    CreateOffer();
+  } else {
+    negotiation_needed_ = true;
+  }
 }
 
 void P2PPeerConnectionChannel::OnIceConnectionChange(
@@ -640,9 +611,8 @@ void P2PPeerConnectionChannel::Publish(
     t.detach();
   }
   LOG(LS_INFO) << "Session state: " << session_state_;
-  LOG(LS_INFO) << "Negotiation state: " << negotiation_state_;
   if (session_state_ == SessionState::kSessionStateConnected &&
-      negotiation_state_ == NegotiationState::kNegotiationStateNone)
+      SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();
 }
 
@@ -678,7 +648,7 @@ void P2PPeerConnectionChannel::Unpublish(
     t.detach();
   }
   if (session_state_ == SessionState::kSessionStateConnected &&
-      negotiation_state_ == NegotiationState::kNegotiationStateNone)
+      SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();
 }
 
@@ -807,7 +777,8 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
       !pending_unpublish_streams_.empty()) {
     DrainPendingStreams();
   } else if (negotiation_needed_) {
-    SendNegotiationAccepted();
+    RTC_DCHECK(is_caller_);
+    CreateOffer();
   }
 }
 

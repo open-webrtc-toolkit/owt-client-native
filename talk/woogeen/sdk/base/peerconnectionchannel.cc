@@ -61,6 +61,12 @@ PeerConnectionChannel::LocalDescription() {
   return peer_connection_->local_description();
 }
 
+PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
+    const {
+  RTC_CHECK(peer_connection_);
+  return peer_connection_->signaling_state();
+}
+
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
   RTC_CHECK(peer_connection_);
   if (peer_connection_->signaling_state() ==

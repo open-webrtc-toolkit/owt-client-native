@@ -117,7 +117,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
   void OnMessageNegotiationNeeded();
-  void OnMessageNegotiationAcceptance();
   void OnMessageStreamType(Json::Value& type_info);
 
   // PeerConnectionObserver
@@ -153,7 +152,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
 
  private:
   void ChangeSessionState(SessionState state);
-  void ChangeNegotiationState(NegotiationState state);
   void SendSignalingMessage(
       const Json::Value& data,
       std::function<void()> success,
@@ -161,7 +159,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
-  void SendNegotiationAccepted();
   void SendAcceptance(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<P2PException>)> on_failure);
@@ -184,18 +181,13 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
   std::string remote_id_;
+  bool is_caller_;
   SessionState session_state_;
-  NegotiationState negotiation_state_;
-  bool negotiation_needed_;  // Indicates if negotiation needed event is
-                             // triggered but haven't send out negotiation
-                             // request.
-  std::unordered_map<std::string, std::string> remote_stream_type_;  // Key is
-                                                                     // remote
-                                                                     // media
-                                                                     // stream's
-                                                                     // label,
-                                                                     // value is
-                                                                     // type.
+  // Indicates if negotiation needed event is triggered or received negotiation
+  // request from remote side, but haven't send out offer.
+  bool negotiation_needed_;
+  // Key is remote media stream's label, value is type.
+  std::unordered_map<std::string, std::string> remote_stream_type_;
   std::vector<std::shared_ptr<LocalStream>>
       pending_publish_streams_;  // Streams need to be published.
   std::vector<std::shared_ptr<LocalStream>>
