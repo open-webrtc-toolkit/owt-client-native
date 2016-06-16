@@ -53,8 +53,8 @@
       'type': 'executable',
       'sources': [
         'samples/conferencesample.cpp',
-        'samples/conferenceobserver.cc',
-        'samples/conferenceobserver.h',
+        'samples/conferencesampleobserver.cc',
+        'samples/conferencesampleobserver.h',
         'samples/fileframegenerator.cc',
         'samples/fileframegenerator.h',
         'samples/fileaudioframegenerator.cc',

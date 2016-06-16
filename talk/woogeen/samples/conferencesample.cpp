@@ -13,7 +13,7 @@
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/stream.h"
 #include "woogeen/conference/conferenceclient.h"
-#include "conferenceobserver.h"
+#include "conferencesampleobserver.h"
 #ifdef USE_FILE_SOURCE
 #include "fileframegenerator.h"
 #endif

@@ -3,15 +3,17 @@
 *Intel License
 *
 */
-#include "conferenceobserver.h"
-#include "woogeen/conference/remotemixedstream.h"
 #include <iostream>
+
+#include "woogeen/conference/remotemixedstream.h"
+#include "conferencesampleobserver.h"
 
 using namespace std;
 using namespace woogeen::base;
 using namespace woogeen::conference;
+
 ConferenceSampleObserver::ConferenceSampleObserver(shared_ptr<ConferenceClient> client)
-  :client_(client){
+  :client_(client) {
 }
 
 void ConferenceSampleObserver::OnStreamAdded(shared_ptr<RemoteMixedStream> stream) {
