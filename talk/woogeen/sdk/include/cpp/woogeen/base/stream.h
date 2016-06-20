@@ -82,6 +82,10 @@ class Stream {
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
   /// Attach the stream to a renderer.
+  WOOGEEN_DEPRECATED virtual void Attach(VideoRendererARGBInterface& renderer){
+    AttachVideoRenderer(renderer);
+  }
+  /// Attach the stream to a renderer.
   virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
