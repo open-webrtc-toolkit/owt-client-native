@@ -183,11 +183,12 @@ LocalCameraStream::LocalCameraStream(
   if (parameters.VideoEnabled()) {
     cricket::WebRtcVideoDeviceCapturerFactory factory;
     cricket::VideoCapturer* capturer = nullptr;
-    // TODO: Check nullptr for CameraId.
     if (!parameters.CameraId().empty()) {
-      std::string camera_name;  // Empty camera name. We use ID for comparison.
-      capturer =
-          factory.Create(cricket::Device(camera_name, parameters.CameraId()));
+      // TODO(jianjun): When create capturer, we will compare ID first. If
+      // failed, fallback to compare name. Comparing name is deprecated, remove
+      // it when it is old enough.
+      capturer = factory.Create(
+          cricket::Device(parameters.CameraId(), parameters.CameraId()));
     }
     if (!capturer) {
       LOG(LS_ERROR)

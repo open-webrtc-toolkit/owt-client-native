@@ -56,7 +56,7 @@ RTC_EXPORT
 - (void)setResolutionWidth:(int)width height:(int)height;
 /**
   @brief Set the ID of the camera to be used.
-  @param cameraId Camera ID.
+  @param cameraId AVCaptureDevice's unique ID.
 */
 - (void)setCameraId:(NSString*)cameraId;
 

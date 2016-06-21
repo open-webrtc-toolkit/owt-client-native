@@ -35,7 +35,18 @@ RTC_EXPORT
   Initialize a RTCLocalCameraStream with parameters.
   @param parameters Parameters for creating the stream. The stream will not be
   impacted if chaning parameters after it is created.
+  @return On success, an initialized RTCLocalCameraStream object. On failure, it
+  returns nil.
 */
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters;
+/**
+  Initialize a RTCLocalCameraStream with parameters.
+  @param parameters Parameters for creating the stream. The stream will not be
+  impacted if chaning parameters after it is created.
+  @return On success, an initialized RTCLocalCameraStream object. If nil, the
+  outError parameter contains an NSError instance describing the problem.
+*/
+- (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters
+                             error:(NSError* _Nullable*)outError;
 
 @end

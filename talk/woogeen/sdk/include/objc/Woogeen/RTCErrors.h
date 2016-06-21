@@ -25,3 +25,10 @@
  */
 
 NSString* const RTCErrorDomain = @"com.intel.webrtc";
+
+typedef NS_ENUM(NSInteger, WoogeenStreamErrors) {
+  WoogeenStreamErrorUnknown = 1100,
+  WoogeenStreamErrorLocalDeviceNotFound = 1102,
+  WoogeenStreamErrorLocalInvalidOption = 1104,
+  WoogeenStreamErrorLocalNotSupported = 1105
+};
