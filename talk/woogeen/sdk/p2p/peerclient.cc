@@ -109,6 +109,15 @@ void PeerClient::Stop(
   pcc->Stop(on_success, on_failure);
 }
 
+void PeerClient::GetConnectionStats(
+    const std::string& target_id,
+    std::function<void(std::shared_ptr<woogeen::base::ConnectionStats>)>
+        on_success,
+    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->GetConnectionStats(on_success, on_failure);
+}
+
 void PeerClient::OnMessage(const std::string& message,
                            const std::string& sender) {
   auto pcc = GetPeerConnectionChannel(sender);

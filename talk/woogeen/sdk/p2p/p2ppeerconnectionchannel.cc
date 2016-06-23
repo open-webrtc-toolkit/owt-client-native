@@ -685,18 +685,35 @@ void P2PPeerConnectionChannel::Stop(
 }
 
 void P2PPeerConnectionChannel::GetConnectionStats(
-    std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure){
+  if (on_success == nullptr) {
+    if (on_failure != nullptr) {
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientInvalidArgument,
+                           "on_success cannot be nullptr. Please provide "
+                           "on_success to get connection stats data."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  if(session_state_!=kSessionStateConnected){
+    if (on_failure != nullptr) {
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientInvalidState,
+                           "Cannot get connection stats in this state. Please "
+                           "try it after connection is established."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   LOG(LS_INFO) << "Get connection stats";
-
-  FunctionalStatsObserver* observer = FunctionalStatsObserver::Create(on_success);
+  rtc::scoped_refptr<FunctionalStatsObserver> observer =
+      FunctionalStatsObserver::Create(std::move(on_success));
   GetStatsMessage* stats_message = new GetStatsMessage(
-      observer, stream->MediaStream(),
+      observer, nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-  rtc::TypedMessageData<GetStatsMessage*>* param =
-      new rtc::TypedMessageData<GetStatsMessage*>(stats_message);
-  pc_thread_->Post(this, kMessageTypeGetStats, param);
+  pc_thread_->Post(this, kMessageTypeGetStats, stats_message);
 }
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {

@@ -100,9 +100,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void Stop(std::function<void()> on_success,
             std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
-  // Get statistics data for the specific stream.
+  // Get statistics data for the specific connection.
   void GetConnectionStats(
-      std::shared_ptr<Stream> stream,
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<P2PException>)> on_failure);
 

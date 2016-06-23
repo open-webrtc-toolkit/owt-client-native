@@ -31,6 +31,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
+#include "woogeen/base/connectionstats.h"
 #include "woogeen/base/stream.h"
 #include "woogeen/p2p/p2psignalingchannelinterface.h"
 #include "woogeen/p2p/p2psignalingsenderinterface.h"
@@ -44,14 +45,13 @@ namespace base {
 
 namespace p2p{
 
-using namespace base;
 /**
  @brief Configuration for PeerClient
 
  This configuration is used while creating PeerClient. Changing this
  configuration does NOT impact PeerClient already created.
 */
-struct PeerClientConfiguration : ClientConfiguration {};
+struct PeerClientConfiguration : woogeen::base::ClientConfiguration {};
 
 class P2PPeerConnectionChannelObserverCppImpl;
 class P2PPeerConnectionChannel;
@@ -107,25 +107,25 @@ class PeerClientObserver {
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteCameraStream> stream){};
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is available.
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteScreenStream> stream){};
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is removed.
    @param stream The remote stream removed.
    */
   virtual void OnStreamRemoved(
-      std::shared_ptr<RemoteCameraStream> stream){};
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is removed.
    @param stream The remote stream removed.
    */
   virtual void OnStreamRemoved(
-      std::shared_ptr<RemoteScreenStream> stream){};
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream){};
 };
 
 /// An async client for P2P WebRTC sessions
@@ -216,7 +216,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
 
   /**
    @brief Stop a WebRTC session.
-   @param targetId Remote user's ID.
+   @param target_id Remote user's ID.
    @param target_id Success callback will be invoked if send stop event
    successfully.
    @param on_failure Failure callback will be invoked if one of the following
@@ -243,7 +243,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
                     3. Haven't connected to remote client.
    */
   void Publish(const std::string& target_id,
-               std::shared_ptr<LocalStream> stream,
+               std::shared_ptr<woogeen::base::LocalStream> stream,
                std::function<void()> on_success,
                std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
@@ -261,19 +261,18 @@ class PeerClient : protected P2PSignalingSenderInterface,
                    4. The stream haven't been published.
    */
   void Unpublish(const std::string& target_id,
-                 std::shared_ptr<LocalStream> stream,
+                 std::shared_ptr<woogeen::base::LocalStream> stream,
                  std::function<void()> on_success,
                  std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   /**
    @brief Send a message to remote client
-   @param targetId Remote user's ID.
+   @param target_id Remote user's ID.
    @param message The message to be sent.
    @param on_success Success callback will be invoked if send deny event
    successfully.
    @param on_failure Failure callback will be invoked if one of the following
-   cases
-   happened.
+   cases happened.
    1. PeerClient is disconnected from the server.
    2. Target ID is null or target user is offline.
    3. There is no WebRTC session with target user.
@@ -282,6 +281,22 @@ class PeerClient : protected P2PSignalingSenderInterface,
             const std::string& message,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<P2PException>)> on_failure);
+
+  /**
+   @brief Get the connection statistics with target client.
+   @param target_id Remote user's ID.
+   @param on_success Success callback will be invoked if get statistics
+   information successes.
+   @param on_failure Failure callback will be invoked if one of the following
+   cases happened.
+   1. PeerClient is disconnected from the server.
+   2. Target ID is invalid.
+   3. There is no WebRTC session with target user.
+  */
+  void GetConnectionStats(
+      const std::string& target_id,
+      std::function<void(std::shared_ptr<woogeen::base::ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   /*! Add an observer for peer client.
     @param observer Add this object to observer list.
@@ -322,19 +337,20 @@ class PeerClient : protected P2PSignalingSenderInterface,
                       const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteCameraStream> stream);
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream);
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteScreenStream> stream);
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream);
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<RemoteCameraStream> stream);
+      std::shared_ptr<woogeen::base::RemoteCameraStream> stream);
   virtual void OnStreamRemoved(
-      std::shared_ptr<RemoteScreenStream> stream);
+      std::shared_ptr<woogeen::base::RemoteScreenStream> stream);
 
  private:
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
       const std::string& target_id);
-  PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
+  woogeen::base::PeerConnectionChannelConfiguration
+  GetPeerConnectionChannelConfiguration();
   // Trigger events.
   template <typename T1, typename T2>
   void OnEvent1(T1 func, T2 arg1);
