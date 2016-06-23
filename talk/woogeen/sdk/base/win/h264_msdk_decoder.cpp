@@ -33,6 +33,7 @@ int32_t H264MSDKVideoDecoder::Release() {
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
     MSDK_SAFE_DELETE(m_pMFXAllocator);
     MSDK_SAFE_DELETE(m_pmfxAllocatorParams);
+    inited_ = false;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
