@@ -41,7 +41,10 @@ struct GetStatsMessage : public rtc::MessageData {
 struct PeerConnectionChannelConfiguration
     : public webrtc::PeerConnectionInterface::RTCConfiguration {
  public:
-  explicit PeerConnectionChannelConfiguration() : RTCConfiguration() {}
+  explicit PeerConnectionChannelConfiguration() : RTCConfiguration() {
+    candidate_network_policy =
+        webrtc::PeerConnectionInterface::kCandidateNetworkPolicyLowCost;
+  }
   MediaCodec media_codec;
   /// Max outgoing video bandwidth, unit: kbps.
   int max_video_bandwidth;
