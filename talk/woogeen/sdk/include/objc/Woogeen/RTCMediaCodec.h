@@ -33,6 +33,7 @@
 typedef NS_ENUM(NSInteger, VideoCodec) {
   VideoCodecVP8 = 1,
   VideoCodecH264 = 2,
+  VideoCodecVP9 = 3,
 };
 
 typedef NS_ENUM(NSInteger, AudioCodec) {
