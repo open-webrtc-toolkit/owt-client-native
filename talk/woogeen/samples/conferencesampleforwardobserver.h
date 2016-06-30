@@ -4,8 +4,8 @@
 *
 */
 
-#ifndef CONFERENCE_FORWARD_OBSERVER_H_
-#define CONFERENCE_FORWARD_OBSERVER_H_
+#ifndef CONFERENCE_SAMPLE_FORWARD_OBSERVER_H_
+#define CONFERENCE_SAMPLE_FORWARD_OBSERVER_H_
 
 #include "woogeen/base/stream.h"
 #include "woogeen/conference/conferenceclient.h"
