@@ -4,26 +4,19 @@
 // testclient.cc : Defines the entry point for the console application.
 //
 #include <iostream>
-#include "woogeen/conference/conferenceclient.h"
-#include "woogeen/base/localcamerastreamparameters.h"
-#include "woogeen/base/stream.h"
-#include "p2psocketsignalingchannel.h"
-#include "fileframegenerator.h"
-#include "encodedframegenerator.h"
-#include "fileaudioframegenerator.h"
-#include "talk/woogeen/include/asio_token.h"
-#include "conferenceobserver.h"
 #include <unistd.h>
 
+#include "talk/woogeen/include/asio_token.h"
+#include "woogeen/base/localcamerastreamparameters.h"
+#include "woogeen/base/stream.h"
+#include "woogeen/conference/conferenceclient.h"
+#include "encodedframegenerator.h"
+#include "fileframegenerator.h"
+#include "fileaudioframegenerator.h"
+#include "p2psocketsignalingchannel.h"
+#include "conferencesampleforwardobserver.h"
+
 using namespace std;
-
-/*std::function<void(std::shared_ptr<User>)>join_room_success {
-
-}
-
-std::function<void(std::unique_ptr<ConferenceException>)>join_room_failure {
-
-}*/
 
 int main(int argc, char** argv)
 {
@@ -123,7 +116,7 @@ int main(int argc, char** argv)
   scheme.append(suffix);
   std::shared_ptr<ConferenceClient> room(new ConferenceClient(configuration));
 
-  ConferenceSampleObserver *observer = new ConferenceSampleObserver(room);
+  ConferenceSampleForwardObserver *observer = new ConferenceSampleForwardObserver(room);
   room->AddObserver(*observer);
 //  cout << "Press Enter to connect room." << std::endl;
  // cin.ignore();

@@ -83,5 +83,38 @@
         '-Wl,--end-group',
       ],
     }, # target woogeen_conf_sample
+    {
+      'target_name': 'testclient',
+      'type': 'executable',
+      'sources': [
+        'samples/testclient.cc',
+        'samples/conferencesampleforwardobserver.cc',
+        'samples/conferencesampleforwardobserver.h',
+        'samples/fileframegenerator.cc',
+        'samples/fileframegenerator.h',
+        'samples/fileaudioframegenerator.cc',
+        'samples/fileaudioframegenerator.h',
+        'samples/encodedframegenerator.cc',
+        'samples/encodedframegenerator.h',
+      ],
+      'dependencies': [
+        '<(DEPTH)/talk/woogeen/woogeen.gyp:woogeen_sdk_base',
+        '<(DEPTH)/talk/woogeen/woogeen.gyp:woogeen_sdk_conf',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
+      ],
+      'include_dirs': [
+        'include',
+        'sdk/include/cpp',
+      ],
+      'cflags!': ['-fno-exceptions'],
+      'cflags_cc': ['-fno-exceptions'],
+      'libraries': [
+        '<(DEPTH)/talk/woogeen/samples/libs/libsioclient.a',
+        '<(DEPTH)/talk/woogeen/samples/libs/libasiotoken.a',
+        '<(DEPTH)/talk/woogeen/samples/libs/libboost_date_time.a',
+        '<(DEPTH)/talk/woogeen/samples/libs/libboost_random.a',
+        '<(DEPTH)/talk/woogeen/samples/libs/libboost_system.a',
+      ],
+    }, # target testclient
   ],
 }
