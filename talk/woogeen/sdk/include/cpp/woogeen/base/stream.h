@@ -138,7 +138,7 @@ class RemoteStream : public Stream {
   void MediaStream(MediaStreamInterface* media_stream);
 
  private:
-  std::string& remote_user_id_;
+  std::string remote_user_id_;
   // Indicates whether this stream can be subscribed with audio or video.
   // It does NOT mean the media stream has audio/video tracks.
   bool has_audio_ = true;
