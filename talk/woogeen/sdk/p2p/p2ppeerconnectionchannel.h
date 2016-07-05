@@ -66,6 +66,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       const std::string& local_id,
       const std::string& remote_id,
       P2PSignalingSenderInterface* sender);
+  virtual ~P2PPeerConnectionChannel();
   // Add a P2PPeerConnectionChannel observer so it will be notified when this
   // object have some events.
   void AddObserver(P2PPeerConnectionChannelObserver* observer);
@@ -176,6 +177,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Send all messages in pending message list.
   void DrainPendingMessages();
   void TriggerOnStopped();
+  // Cleans all variables associated with last peerconnection.
+  void CleanLastPeerConnection();
 
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
@@ -198,6 +201,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::mutex pending_unpublish_streams_mutex_;
   std::mutex published_streams_mutex_;
   std::vector<P2PPeerConnectionChannelObserver*> observers_;
+  // Store remote SDP if it cannot be set currently.
+  SetSessionDescriptionMessage* set_remote_sdp_task_;
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect"

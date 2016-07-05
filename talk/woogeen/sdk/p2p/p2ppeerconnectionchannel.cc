@@ -65,12 +65,22 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       is_caller_(false),
       session_state_(kSessionStateReady),
       negotiation_needed_(false),
+      set_remote_sdp_task_(nullptr),
       last_disconnect_(
           std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
       callback_thread_(new PeerConnectionThread) {
   callback_thread_->Start();
   RTC_CHECK(signaling_sender_);
+}
+
+P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
+  if (set_remote_sdp_task_)
+    delete set_remote_sdp_task_;
+  if (signaling_sender_)
+    delete signaling_sender_;
+  if (callback_thread_)
+    delete callback_thread_;
 }
 
 void P2PPeerConnectionChannel::Invite(
@@ -345,8 +355,16 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
                 this, std::placeholders::_1));
     SetSessionDescriptionMessage* msg =
         new SetSessionDescriptionMessage(observer.get(), desc);
-    LOG(LS_INFO) << "Post set remote desc";
-    pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
+    if (type == "offer" &&
+        SignalingState() != webrtc::PeerConnectionInterface::kStable) {
+      if (set_remote_sdp_task_) {
+        delete set_remote_sdp_task_;
+      }
+      set_remote_sdp_task_ = msg;
+    } else {
+      LOG(LS_INFO) << "Post set remote desc";
+      pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
+    }
   } else if (type == "candidates") {
     string sdp_mid;
     string candidate;
@@ -379,7 +397,15 @@ void P2PPeerConnectionChannel::OnSignalingChange(
   LOG(LS_INFO) << "Signaling state changed: " << new_state;
   switch (new_state) {
     case PeerConnectionInterface::SignalingState::kStable:
-      CheckWaitedList();
+      if (set_remote_sdp_task_) {
+        LOG(LS_INFO) << "Set stored remote description.";
+        pc_thread_->Post(this, kMessageTypeSetRemoteDescription,
+                         set_remote_sdp_task_);
+        // Ownership will be transferred to message handler
+        set_remote_sdp_task_ = nullptr;
+      } else {
+        CheckWaitedList();
+      }
       break;
     default:
       break;
@@ -428,9 +454,14 @@ void P2PPeerConnectionChannel::OnDataChannel(
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
   LOG(LS_INFO) << "On negotiation needed.";
   if (!is_caller_) {
-    Json::Value json;
-    json[kMessageTypeKey] = kChatNegotiationNeeded;
-    SendSignalingMessage(json, nullptr, nullptr);
+    if (session_state_ == kSessionStateConnecting ||
+        session_state_ == kSessionStateConnected) {
+      Json::Value json;
+      json[kMessageTypeKey] = kChatNegotiationNeeded;
+      SendSignalingMessage(json, nullptr, nullptr);
+    }
+    // If session is not connected, offer will be sent later. Nothing to do
+    // here.
   } else if (SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable) {
     CreateOffer();
@@ -474,6 +505,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
       TriggerOnStopped();
+      CleanLastPeerConnection();
       break;
     default:
       break;
@@ -576,6 +608,15 @@ void P2PPeerConnectionChannel::TriggerOnStopped() {
        it != observers_.end(); it++) {
     (*it)->OnStopped(remote_id_);
   }
+}
+
+void P2PPeerConnectionChannel::CleanLastPeerConnection() {
+  if (set_remote_sdp_task_) {
+    delete set_remote_sdp_task_;
+    set_remote_sdp_task_ = nullptr;
+  }
+  negotiation_needed_ = false;
+  last_disconnect_ = std::chrono::time_point<std::chrono::system_clock>::max();
 }
 
 void P2PPeerConnectionChannel::Publish(

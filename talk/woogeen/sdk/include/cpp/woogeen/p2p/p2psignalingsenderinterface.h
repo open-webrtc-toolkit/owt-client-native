@@ -41,6 +41,7 @@ namespace p2p {
 */
 class P2PSignalingSenderInterface {
  public:
+  virtual ~P2PSignalingSenderInterface() {}
   /// Send a signaling message.
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,

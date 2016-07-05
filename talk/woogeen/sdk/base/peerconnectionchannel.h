@@ -22,6 +22,10 @@ struct SetSessionDescriptionMessage : public rtc::MessageData {
       webrtc::SessionDescriptionInterface* desc)
       : observer(observer), description(desc) {}
 
+  virtual ~SetSessionDescriptionMessage() {
+    delete description;
+  }
+
   rtc::scoped_refptr<FunctionalSetSessionDescriptionObserver> observer;
   webrtc::SessionDescriptionInterface* description;
 };
