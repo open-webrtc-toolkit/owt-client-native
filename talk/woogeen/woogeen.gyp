@@ -283,6 +283,8 @@
             'sdk/base/objc/public/RTCRemoteScreenStream.h',
             'sdk/base/objc/public/RTCGlobalConfiguration.h'
             'sdk/base/objc/public/RTCFrameGeneratorProtocol.h'
+            'sdk/base/objc/AVFoundationVideoCapturerFactory.h',
+            'sdk/base/objc/AVFoundationVideoCapturerFactory.mm',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.h',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.mm',
             'sdk/base/objc/RTCStream+Internal.h',

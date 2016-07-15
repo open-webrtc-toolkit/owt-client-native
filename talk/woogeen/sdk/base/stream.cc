@@ -8,6 +8,9 @@
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
+#if defined(WEBRTC_IOS)
+#include "talk/woogeen/sdk/base/objc/AVFoundationVideoCapturerFactory.h"
+#endif
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
@@ -184,11 +187,15 @@ LocalCameraStream::LocalCameraStream(
     cricket::WebRtcVideoDeviceCapturerFactory factory;
     cricket::VideoCapturer* capturer = nullptr;
     if (!parameters.CameraId().empty()) {
+#if defined(WEBRTC_IOS)
+      capturer = AVFoundationVideoCapturerFactory::Create(parameters);
+#else
       // TODO(jianjun): When create capturer, we will compare ID first. If
       // failed, fallback to compare name. Comparing name is deprecated, remove
       // it when it is old enough.
       capturer = factory.Create(
           cricket::Device(parameters.CameraId(), parameters.CameraId()));
+#endif
     }
     if (!capturer) {
       LOG(LS_ERROR)
