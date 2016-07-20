@@ -111,8 +111,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CreateAnswer();
 
   // Received messages from remote client.
-  void OnMessageInvitation();
-  void OnMessageAcceptance();
+  void OnMessageInvitation(Json::Value& ua);
+  void OnMessageAcceptance(Json::Value& ua);
   void OnMessageStop();
   void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
@@ -179,6 +179,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void TriggerOnStopped();
   // Cleans all variables associated with last peerconnection.
   void CleanLastPeerConnection();
+  // Returns user agent info as JSON object.
+  Json::Value UaInfo();
+  // Set remote capability flags based on UA.
+  void HandleRemoteCapability(Json::Value& ua);
 
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
@@ -214,6 +218,11 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                                                 // ready.
   std::mutex pending_messages_mutex_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
+  // Indicates whether remote client supports WebRTC Plan B
+  // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
+  // If plan B is not supported, at most one audio/video track is supported.
+  bool remote_side_supports_plan_b_;
+  bool remote_side_supports_remove_stream_;
 };
 }
 }

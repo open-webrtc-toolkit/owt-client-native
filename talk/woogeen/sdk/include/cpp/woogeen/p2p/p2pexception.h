@@ -39,6 +39,7 @@ class P2PException : public woogeen::base::Exception {
     kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
     kConnAuthFailed = 2121,
     kMessageTargetUnreachable = 2201,
+    kClientUnsupportedMethod = 2401,
     kClientInvalidArgument = 2402,  // TODO(jianjun): sync with other SDK.
     kClientInvalidState = 2403,
   };

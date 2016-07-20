@@ -7,6 +7,7 @@
 #include "webrtc/base/logging.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
+#include "talk/woogeen/sdk/base/sysinfo.h"
 
 namespace woogeen {
 namespace p2p {
@@ -51,6 +52,15 @@ const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 const string kIceCandidateSdpNameKey = "candidate";
 
+// UA member key
+const string kUaKey = "ua";
+const string kUaSdkKey = "sdk";
+const string kUaSdkTypeKey = "type";
+const string kUaSdkVersionKey = "version";
+const string kUaRuntimeKey = "runtime";
+const string kUaRuntimeNameKey = "name";
+const string kUaRuntimeVersionKey = "version";
+
 const string kDataChannelLabelForTextMessage = "message";
 
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
@@ -69,7 +79,9 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       last_disconnect_(
           std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
-      callback_thread_(new PeerConnectionThread) {
+      callback_thread_(new PeerConnectionThread),
+      remote_side_supports_plan_b_(false),
+      remote_side_supports_remove_stream_(false) {
   callback_thread_->Start();
   RTC_CHECK(signaling_sender_);
 }
@@ -81,6 +93,21 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
     delete signaling_sender_;
   if (callback_thread_)
     delete callback_thread_;
+}
+
+Json::Value P2PPeerConnectionChannel::UaInfo() {
+  Json::Value ua;
+  Json::Value sdk;
+  sdk[kUaSdkTypeKey] = SysInfo::SdkType();
+  sdk[kUaSdkVersionKey] = SysInfo::SdkVersion();
+  // Runtime values will be empty string on native SDK and will be browser info
+  // on JavaScript SDK
+  Json::Value runtime;
+  runtime[kUaRuntimeNameKey] = "";
+  runtime[kUaRuntimeVersionKey] = "";
+  ua[kUaSdkKey] = sdk;
+  ua[kUaRuntimeKey] = runtime;
+  return ua;
 }
 
 void P2PPeerConnectionChannel::Invite(
@@ -103,6 +130,8 @@ void P2PPeerConnectionChannel::Invite(
       nullptr);  // Just try to clean up remote side. No callback is needed.
   Json::Value json;
   json[kMessageTypeKey] = kChatInvitation;
+  Json::Value ua = UaInfo();
+  json[kUaKey] = ua;
   SendSignalingMessage(json, on_success, on_failure);
   ChangeSessionState(kSessionStateOffered);
 }
@@ -145,11 +174,15 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     return;
   }
   if (message_type == kChatInvitation) {
-    OnMessageInvitation();
+    Json::Value ua;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
+    OnMessageInvitation(ua);
   } else if (message_type == kChatStop) {
     OnMessageStop();
   } else if (message_type == kChatAccept) {
-    OnMessageAcceptance();
+    Json::Value ua;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
+    OnMessageAcceptance(ua);
   } else if (message_type == kChatDeny) {
     OnMessageDeny();
   } else if (message_type == kChatSignal) {
@@ -238,7 +271,7 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
       });
 }
 
-void P2PPeerConnectionChannel::OnMessageInvitation() {
+void P2PPeerConnectionChannel::OnMessageInvitation(Json::Value& ua) {
   switch (session_state_) {
     case kSessionStateReady:
     case kSessionStatePending:
@@ -260,7 +293,7 @@ void P2PPeerConnectionChannel::OnMessageInvitation() {
   }
 }
 
-void P2PPeerConnectionChannel::OnMessageAcceptance() {
+void P2PPeerConnectionChannel::OnMessageAcceptance(Json::Value& ua) {
   LOG(LS_INFO) << "Remote user accepted invitation.";
   if (session_state_ != kSessionStateOffered &&
       session_state_ != kSessionStateMatched)
@@ -638,6 +671,18 @@ void P2PPeerConnectionChannel::Publish(
       on_failure(std::move(e));
     }
   }
+  if (!remote_side_supports_plan_b_ &&
+      published_streams_.size() + pending_publish_streams_.size() > 0) {
+    if (on_failure != nullptr) {
+      LOG(LS_WARNING) << "Remote side does not support Plan B, so at most one "
+                         "audio/video track can be published.";
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientUnsupportedMethod,
+                           "Cannot publish multiple streams to remote side."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   RTC_CHECK(stream->MediaStream());
   if (published_streams_.find(stream->MediaStream()->label()) !=
       published_streams_.end()) {
@@ -672,7 +717,17 @@ void P2PPeerConnectionChannel::Unpublish(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    LOG(LS_WARNING) << "Local stream cannot be nullptr.";
+    return;
+  }
+  if (!remote_side_supports_remove_stream_) {
+    if (on_failure != nullptr) {
+      LOG(LS_WARNING) << "Remote side not support removeStream.";
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientUnsupportedMethod,
+                           "Remote side does not support unpublish."));
+      on_failure(std::move(e));
+    }
     return;
   }
   RTC_CHECK(stream->MediaStream());
@@ -737,7 +792,7 @@ void P2PPeerConnectionChannel::Stop(
 
 void P2PPeerConnectionChannel::GetConnectionStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure){
+    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (on_success == nullptr) {
     if (on_failure != nullptr) {
       std::unique_ptr<P2PException> e(
@@ -748,7 +803,7 @@ void P2PPeerConnectionChannel::GetConnectionStats(
     }
     return;
   }
-  if(session_state_!=kSessionStateConnected){
+  if (session_state_ != kSessionStateConnected) {
     if (on_failure != nullptr) {
       std::unique_ptr<P2PException> e(
           new P2PException(P2PException::kClientInvalidState,
@@ -813,6 +868,8 @@ void P2PPeerConnectionChannel::SendAcceptance(
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   Json::Value json;
   json[kMessageTypeKey] = kChatAccept;
+  Json::Value ua = UaInfo();
+  json[kUaKey] = ua;
   SendSignalingMessage(json, on_success, on_failure);
 }
 
@@ -922,6 +979,20 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
       data_channel_->Send(CreateDataBuffer(**it));
     }
     pending_messages_.clear();
+  }
+}
+
+void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
+  Json::Value sdk;
+  rtc::GetValueFromJsonObject(ua, kUaSdkKey, &sdk);
+  std::string runtime_type;
+  rtc::GetStringFromJsonObject(ua, kUaRuntimeNameKey, &runtime_type);
+  if (runtime_type.compare("FireFox") == 0) {
+    remote_side_supports_remove_stream_ = false;
+    remote_side_supports_plan_b_ = false;
+  } else {
+    remote_side_supports_remove_stream_ = true;
+    remote_side_supports_plan_b_ = true;
   }
 }
 }

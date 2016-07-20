@@ -55,6 +55,8 @@
         'sdk/base/mediautils.cc',
         'sdk/base/deviceutils.cc',
         'sdk/base/logging.cc',
+        'sdk/base/sysinfo.h',
+        'sdk/base/sysinfo.cc',
         'sdk/include/cpp/woogeen/base/stream.h',
         'sdk/include/cpp/woogeen/base/clientconfiguration.h',
         'sdk/include/cpp/woogeen/base/localcamerastreamparameters.h',
