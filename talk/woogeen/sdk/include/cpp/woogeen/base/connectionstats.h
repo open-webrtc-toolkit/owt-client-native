@@ -28,29 +28,20 @@
 #define WOOGEEN_BASE_CONNECTIONSTATS_H_
 
 #include <chrono>
-#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+#include "woogeen/base/mediaformat.h"
 
 namespace woogeen {
 namespace base {
 
-/// Define adapt reason
-enum AdaptReason {
-  /// Adapt for CPU limitation
-  ADAPT_CPU_LIMITATION = 1,
-  /// Adapt for bandwidth limitation
-  ADAPT_BANDWIDTH_LIMITATION,
-  /// Adapt for view limitation
-  ADAPT_VIEW_LIMITATION,
-  /// Unknown reason
-  ADAPT_UNKNOWN = 99,
-};
-
 /// Define audio sender report
 struct AudioSenderReport {
   AudioSenderReport(int64_t bytes_sent, int32_t packets_sent,
-                    int32_t packets_lost, int64_t rtt_ms, std::string codec_name)
+                    int32_t packets_lost, int64_t round_trip_time, std::string codec_name)
       : bytes_sent(bytes_sent), packets_sent(packets_sent), packets_lost(packets_lost)
-      , rtt_ms(rtt_ms), codec_name(codec_name) {}
+      , round_trip_time(round_trip_time), codec_name(codec_name) {}
   /// Audio bytes sent
   int64_t bytes_sent;
   /// Audio packets sent
@@ -58,7 +49,7 @@ struct AudioSenderReport {
   /// Audio packets lost during sending
   int32_t packets_lost;
   /// RTT for audio sending with unit of millisecond
-  int64_t rtt_ms;
+  int64_t round_trip_time;
   /// Audio codec name for sending
   std::string codec_name;
 };
@@ -66,9 +57,9 @@ struct AudioSenderReport {
 /// Define audio receiver report
 struct AudioReceiverReport {
   AudioReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd,
-                      int32_t packets_lost, int32_t delay_estimated_ms, std::string codec_name)
+                      int32_t packets_lost, int32_t estimated_delay, std::string codec_name)
       : bytes_rcvd(bytes_rcvd), packets_rcvd(packets_rcvd), packets_lost(packets_lost)
-      , delay_estimated_ms(delay_estimated_ms), codec_name(codec_name) {}
+      , estimated_delay(estimated_delay), codec_name(codec_name) {}
   /// Audio bytes received
   int64_t bytes_rcvd;
   /// Audio packets received
@@ -76,7 +67,7 @@ struct AudioReceiverReport {
   /// Audio packets lost during receiving
   int32_t packets_lost;
   /// Audio delay estimated with unit of millisecond
-  int32_t delay_estimated_ms;
+  int32_t estimated_delay;
   /// Audio codec name for receiving
   std::string codec_name;
 };
@@ -84,13 +75,25 @@ struct AudioReceiverReport {
 /// Define video sender report
 struct VideoSenderReport {
   VideoSenderReport(int64_t bytes_sent, int32_t packets_sent, int32_t packets_lost,
-                    int32_t firs_rcvd, int32_t plis_rcvd, int32_t nacks_rcvd, int32_t sent_frame_height,
-                    int32_t sent_frame_width, int32_t framerate_sent, AdaptReason last_adapt_reason,
-                    int32_t adapt_changes, int64_t rtt_ms, std::string codec_name)
+                    int32_t fir_count, int32_t pli_count, int32_t nack_count, int32_t sent_frame_height,
+                    int32_t sent_frame_width, int32_t framerate_sent, int32_t last_adapt_reason,
+                    int32_t adapt_changes, int64_t round_trip_time, std::string codec_name)
       : bytes_sent(bytes_sent), packets_sent(packets_sent), packets_lost(packets_lost)
-      , firs_rcvd(firs_rcvd), plis_rcvd(plis_rcvd), nacks_rcvd(nacks_rcvd), sent_frame_height(sent_frame_height)
-      , sent_frame_width(sent_frame_width), framerate_sent(framerate_sent), last_adapt_reason(last_adapt_reason)
-      , adapt_changes(adapt_changes), rtt_ms(rtt_ms), codec_name(codec_name) {}
+      , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count), frame_resolution_sent(Resolution(sent_frame_height, sent_frame_height))
+      , framerate_sent(framerate_sent), last_adapt_reason(last_adapt_reason)
+      , adapt_changes(adapt_changes), round_trip_time(round_trip_time), codec_name(codec_name) {}
+
+  /// Define adapt reason
+  enum class AdaptReason : int32_t {
+    kUnknown = 0,
+    /// Adapt for CPU limitation
+    kCpuLimitation = 1,
+    /// Adapt for bandwidth limitation
+    kBandwidthLimitation = 2,
+    /// Adapt for view limitation
+    kViewLimitation = 4,
+  };
+
   /// Video bytes sent
   int64_t bytes_sent;
   /// Video packets sent
@@ -98,23 +101,21 @@ struct VideoSenderReport {
   /// Video packets lost during sending
   int32_t packets_lost;
   /// Number of FIR received
-  int32_t firs_rcvd;
+  int32_t fir_count;
   /// Number of PLI received
-  int32_t plis_rcvd;
+  int32_t pli_count;
   /// Number of NACK received
-  int32_t nacks_rcvd;
-  /// Video frame height sent
-  int32_t sent_frame_height;
-  /// Video frame width sent
-  int32_t sent_frame_width;
+  int32_t nack_count;
+  /// Video frame resolution sent
+  Resolution frame_resolution_sent;
   /// Video framerate sent
   int32_t framerate_sent;
   /// Video adapt reason
-  AdaptReason last_adapt_reason;
+  int32_t last_adapt_reason;
   /// Video adapt changes
   int32_t adapt_changes;
   /// RTT for video sending with unit of millisecond
-  int64_t rtt_ms;
+  int64_t round_trip_time;
   /// Video codec name for sending
   std::string codec_name;
 };
@@ -122,13 +123,13 @@ struct VideoSenderReport {
 /// Define video receiver report
 struct VideoReceiverReport {
   VideoReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd, int32_t packets_lost,
-                      int32_t firs_sent, int32_t plis_sent, int32_t nacks_sent, int32_t rcvd_frame_height,
+                      int32_t fir_count, int32_t pli_count, int32_t nack_count, int32_t rcvd_frame_height,
                       int32_t rcvd_frame_width, int32_t framerate_rcvd, int32_t framerate_output,
-                      int32_t current_delay_ms, std::string codec_name)
+                      int32_t delay, std::string codec_name)
       : bytes_rcvd(bytes_rcvd), packets_rcvd(packets_rcvd), packets_lost(packets_lost)
-      , firs_sent(firs_sent), plis_sent(plis_sent), nacks_sent(nacks_sent), rcvd_frame_width(rcvd_frame_width)
-      , rcvd_frame_height(rcvd_frame_height), framerate_rcvd(framerate_rcvd), framerate_output(framerate_output)
-      , current_delay_ms(current_delay_ms), codec_name(codec_name) {}
+      , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count)
+      , frame_resolution_rcvd(Resolution(rcvd_frame_width, rcvd_frame_height)), framerate_output(framerate_output)
+      , delay(delay), codec_name(codec_name) {}
   /// Video bytes received
   int64_t bytes_rcvd;
   /// Video packets received
@@ -136,21 +137,19 @@ struct VideoReceiverReport {
   /// Video packets lost during receiving
   int32_t packets_lost;
   /// Number of FIR sent
-  int32_t firs_sent;
+  int32_t fir_count;
   /// Number of PLI sent
-  int32_t plis_sent;
+  int32_t pli_count;
   /// Number of PLI sent
-  int32_t nacks_sent;
-  /// Video frame width received
-  int32_t rcvd_frame_width;
-  /// Video frame height received
-  int32_t rcvd_frame_height;
+  int32_t nack_count;
+  /// Video frame resolution received
+  Resolution frame_resolution_rcvd;
   /// Video framerate received
   int32_t framerate_rcvd;
   /// Video framerate output
   int32_t framerate_output;
   /// Current video delay with unit of millisecond
-  int32_t current_delay_ms;
+  int32_t delay;
   /// Video codec name for receiving
   std::string codec_name;
 };
@@ -159,24 +158,24 @@ struct VideoReceiverReport {
 struct VideoBandwidthStats {
   VideoBandwidthStats() : available_send_bandwidth(0), available_receive_bandwidth(0)
                         , transmit_bitrate(0), retransmit_bitrate(0) {}
-  /// Available video bandwidth for sending
+  /// Available video bandwidth for sending, unit: bps
   int32_t available_send_bandwidth;
-  /// Available video bandwidth for receiving
+  /// Available video bandwidth for receiving, unit: bps
   int32_t available_receive_bandwidth;
-  /// Video bitrate of transmit
+  /// Video bitrate of transmit, unit: bps
   int32_t transmit_bitrate;
-  /// Video bitrate of retransmit
+  /// Video bitrate of retransmit, unit: bps
   int32_t retransmit_bitrate;
 };
 
 typedef std::unique_ptr<AudioSenderReport> AudioSenderReportPtr;
-typedef std::map<std::string, AudioSenderReportPtr> AudioSenderReports;
+typedef std::vector<AudioSenderReportPtr> AudioSenderReports;
 typedef std::unique_ptr<AudioReceiverReport> AudioReceiverReportPtr;
-typedef std::map<std::string, AudioReceiverReportPtr> AudioReceiverReports;
+typedef std::vector<AudioReceiverReportPtr> AudioReceiverReports;
 typedef std::unique_ptr<VideoSenderReport> VideoSenderReportPtr;
-typedef std::map<std::string, VideoSenderReportPtr> VideoSenderReports;
+typedef std::vector<VideoSenderReportPtr> VideoSenderReports;
 typedef std::unique_ptr<VideoReceiverReport> VideoReceiverReportPtr;
-typedef std::map<std::string, VideoReceiverReportPtr> VideoReceiverReports;
+typedef std::vector<VideoReceiverReportPtr> VideoReceiverReports;
 
 /// Connection statistics
 struct ConnectionStats {

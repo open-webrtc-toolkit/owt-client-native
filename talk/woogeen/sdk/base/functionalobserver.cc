@@ -74,28 +74,35 @@ rtc::scoped_refptr<FunctionalStatsObserver> FunctionalStatsObserver::Create(
 void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
   if (on_complete_ != nullptr) {
     std::shared_ptr<ConnectionStats> connection_stats(new ConnectionStats());
-    AdaptReason adapt_reason = ADAPT_UNKNOWN;
+    int32_t adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kUnknown);
     for (const auto* report : reports) {
-      ReportType rType = GetReportType(report);
-      switch (rType) {
+      ReportType report_type = GetReportType(report);
+      switch (report_type) {
       case REPORT_AUDIO_RECEIVER:
-         connection_stats->audio_receiver_reports[report->id()->ToString()] = AudioReceiverReportPtr(new AudioReceiverReport(
+      {
+        std::unique_ptr<AudioReceiverReport> audio_recv_report_ptr(new AudioReceiverReport(
             report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+         connection_stats->audio_receiver_reports.push_back(std::move(audio_recv_report_ptr));
         break;
+      }
       case REPORT_AUDIO_SENDER:
-        connection_stats->audio_sender_reports[report->id()->ToString()] = AudioSenderReportPtr(new AudioSenderReport(
+      {
+        std::unique_ptr<AudioSenderReport> audio_send_report_ptr(new AudioSenderReport(
             report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        connection_stats->audio_sender_reports.push_back(std::move(audio_send_report_ptr));
         break;
+      }
       case  REPORT_VIDEO_RECEIVER:
-        connection_stats->video_receiver_reports[report->id()->ToString()] = VideoReceiverReportPtr(new VideoReceiverReport(
+      {
+        std::unique_ptr<VideoReceiverReport> video_recv_report_ptr(new VideoReceiverReport(
             report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
@@ -108,17 +115,19 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateOutput)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        connection_stats->video_receiver_reports.push_back(std::move(video_recv_report_ptr));
         break;
+      }
       case REPORT_VIDEO_SENDER:
-        adapt_reason = ADAPT_UNKNOWN;
+      {
+        adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kUnknown);
         if (report->FindValue(webrtc::StatsReport::kStatsValueNameCpuLimitedResolution)->bool_val())
-          adapt_reason = ADAPT_CPU_LIMITATION;
+          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kCpuLimitation);
         else if (report->FindValue(webrtc::StatsReport::kStatsValueNameBandwidthLimitedResolution)->bool_val())
-          adapt_reason = ADAPT_BANDWIDTH_LIMITATION;
+          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kBandwidthLimitation);
         else if (report->FindValue(webrtc::StatsReport::kStatsValueNameViewLimitedResolution)->bool_val())
-          adapt_reason = ADAPT_VIEW_LIMITATION;
-
-        connection_stats->video_sender_reports[report->id()->ToString()] = VideoSenderReportPtr(new VideoSenderReport(
+          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kViewLimitation);
+        std::unique_ptr<VideoSenderReport> video_send_report_ptr(new VideoSenderReport(
             report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
@@ -132,8 +141,11 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             report->FindValue(webrtc::StatsReport::kStatsValueNameAdaptationChanges)->int_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
             report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
+        connection_stats->video_sender_reports.push_back(std::move(video_send_report_ptr));
         break;
+      }
       case REPORT_VIDEO_BWE:
+      {
         connection_stats->video_bandwidth_stats.available_send_bandwidth =
             report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth)->int_val();
         connection_stats->video_bandwidth_stats.available_receive_bandwidth =
@@ -143,6 +155,7 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
         connection_stats->video_bandwidth_stats.retransmit_bitrate =
             report->FindValue(webrtc::StatsReport::kStatsValueNameRetransmitBitrate)->int_val();
         break;
+      }
       default:
         break;
       }
