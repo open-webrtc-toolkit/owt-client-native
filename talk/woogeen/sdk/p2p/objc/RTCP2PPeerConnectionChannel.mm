@@ -9,6 +9,7 @@
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
 #import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
+#import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
@@ -238,9 +239,32 @@
       });
 }
 
-- (void)getConnectionStats {
-  // TODO: Not finished.
-  NSLog(@"Objc Getconnectionstats");
+- (void)getConnectionStatsWithOnSuccess:(void (^)(RTCConnectionStats*))onSuccess
+                              onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->GetConnectionStats(
+      [=](std::shared_ptr<woogeen::base::ConnectionStats> native_stats) {
+        if (onSuccess) {
+          onSuccess([[RTCConnectionStats alloc]
+              initWithNativeStats:*native_stats.get()]);
+        }
+      },
+      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:RTCErrorDomain
+                      code:WoogeenP2PErrorUnknown
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              [NSString
+                                  stringWithCString:e->Message().c_str()
+                                           encoding:
+                                               [NSString
+                                                   defaultCStringEncoding]],
+                              NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
 - (void)onIncomingSignalingMessage:(NSString*)message {

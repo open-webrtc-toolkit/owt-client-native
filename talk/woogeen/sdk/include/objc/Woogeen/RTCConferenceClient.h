@@ -34,6 +34,7 @@
 #import "Woogeen/RTCConferenceClientConfiguration.h"
 #import "Woogeen/RTCConferenceSubscribeOptions.h"
 #import "Woogeen/RTCConferenceUser.h"
+#import "Woogeen/RTCConnectionStats.h"
 
 /// An asynchronous class for app to communicate with a conference in MCU
 RTC_EXPORT
@@ -151,6 +152,13 @@ RTC_EXPORT
          regionId:(NSString*)regionId
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure;
+
+/**
+  @brief Get a stream's connection statistics
+*/
+- (void)getConnectionStatsForStream:(RTCStream*)stream
+                          onSuccess:(void (^)(RTCConnectionStats*))onSuccess
+                          onFailure:(void (^)(NSError*))onFailure;
 /**
   @brief Leave current conference.
 */

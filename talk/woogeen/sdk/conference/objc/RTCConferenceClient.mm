@@ -4,7 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #import <string>
-#import "webrtc/api/objc/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
+#import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
@@ -302,6 +303,23 @@
       [=]() {
         if (onSuccess) {
           onSuccess();
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)getConnectionStatsForStream:(RTCStream*)stream
+                          onSuccess:(void (^)(RTCConnectionStats*))onSuccess
+                          onFailure:(void (^)(NSError*))onFailure {
+  auto nativeStreamRefPtr = [stream nativeStream];
+  _nativeConferenceClient->GetConnectionStats(
+      nativeStreamRefPtr,
+      [=](std::shared_ptr<woogeen::base::ConnectionStats> native_stats) {
+        if (onSuccess) {
+          onSuccess([[RTCConnectionStats alloc]
+              initWithNativeStats:*native_stats]);
         }
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {

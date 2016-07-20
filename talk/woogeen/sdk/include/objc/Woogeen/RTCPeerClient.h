@@ -29,6 +29,7 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+#import "Woogeen/RTCConnectionStats.h"
 #import "Woogeen/RTCP2PSignalingChannelProtocol.h"
 #import "Woogeen/RTCPeerClientObserver.h"
 #import "Woogeen/RTCP2PSignalingSenderProtocol.h"
@@ -186,7 +187,7 @@ RTC_EXPORT
 /**
  @brief Unpublish the stream to the remote client.
  @param stream The stream which will be removed.
- @param to Target user's ID.
+ @param targetId Target user's ID.
  @param onSuccess Success callback will be invoked it the stream is unpublished.
  @param onFailure Failure callback will be invoked if one of these cases
  happened:
@@ -200,8 +201,19 @@ RTC_EXPORT
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure;
 
-// TODO: not finished.
--(void)getConnectionStats:(NSString*)targetId;
+/**
+ @brief Get the connection stats between a remote client
+ @param targetId Target user's ID.
+ @param onSuccess Success callback will be invoked it the stream is unpublished.
+ @param onFailure Failure callback will be invoked if one of these cases
+ happened:
+                 1. PeerClient is disconnected from server.
+                 2. Target ID is nil or user is offline.
+                 3. Haven't connected to remote client.
+ */
+- (void)getConnectionStats:(NSString*)targetId
+                 onSuccess:(void (^)(RTCConnectionStats*))onSuccess
+                 onFailure:(void (^)(NSError*))onFailure;
 
 @end
 

@@ -273,6 +273,7 @@
             'sdk/include/objc',
           ],
           'sources': [
+            'sdk/base/objc/public/RTCConnectionStats.h',
             'sdk/base/objc/public/RTCLocalStream.h',
             'sdk/base/objc/public/RTCErrors.h',
             'sdk/base/objc/public/RTCStream.h',
@@ -286,9 +287,11 @@
             'sdk/base/objc/public/RTCRemoteCameraStream.h',
             'sdk/base/objc/public/RTCRemoteScreenStream.h',
             'sdk/base/objc/public/RTCGlobalConfiguration.h'
-            'sdk/base/objc/public/RTCFrameGeneratorProtocol.h'
+            'sdk/base/objc/public/RTCFrameGeneratorProtocol.h',
             'sdk/base/objc/AVFoundationVideoCapturerFactory.h',
             'sdk/base/objc/AVFoundationVideoCapturerFactory.mm',
+            'sdk/base/objc/RTCConnectionStats+Internal.h',
+            'sdk/base/objc/RTCConnectionStats.mm',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.h',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.mm',
             'sdk/base/objc/RTCStream+Internal.h',

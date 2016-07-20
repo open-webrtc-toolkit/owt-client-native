@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConnectionStats.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalStream.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingSenderProtocol.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingReceiverProtocol.h"
@@ -35,7 +36,8 @@
         onFailure:(void (^)(NSError*))onFailure;
 - (void)stopWithOnSuccess:(void (^)())onSuccess
                 onFailure:(void (^)(NSError*))onFailure;
-- (void)getConnectionStats;  // TODO: not finished
+- (void)getConnectionStatsWithOnSuccess:(void (^)(RTCConnectionStats*))onSuccess
+                              onFailure:(void (^)(NSError*))onFailure;
 - (void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 - (void)removeObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer;
 - (NSString*)getRemoteUserId;
