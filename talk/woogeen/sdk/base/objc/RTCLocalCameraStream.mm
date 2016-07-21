@@ -64,4 +64,14 @@
   }
 }
 
+
+- (void)close {
+  std::shared_ptr<woogeen::base::LocalCameraStream> nativeStream =
+      std::static_pointer_cast<woogeen::base::LocalCameraStream>(
+          [super nativeStream]);
+  if (nativeStream == nullptr)
+    return;
+  nativeStream->Close();
+}
+
 @end
