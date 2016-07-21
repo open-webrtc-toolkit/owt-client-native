@@ -489,13 +489,19 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
   std::string remote_id = stream_info->get_map()["from"]->get_string();
   auto audio = stream_info->get_map()["audio"];
-  if (audio == nullptr || audio->get_flag() != sio::message::flag_boolean) {
+  if (audio == nullptr || (audio->get_flag() != sio::message::flag_boolean &&
+                           audio->get_flag() != sio::message::flag_object)) {
     ASSERT(false);
     LOG(LS_ERROR) << "Audio info for stream " << id
                   << "is invalid, this stream will be ignored.";
     return;
   }
-  bool has_audio = audio->get_bool();
+  bool has_audio = false;
+  if (audio->get_flag() == sio::message::flag_boolean) {
+    has_audio = audio->get_bool();
+  } else {
+    has_audio = true;
+  }
   auto video = stream_info->get_map()["video"];
   if (video == nullptr || (video->get_flag() != sio::message::flag_object &&
                            video->get_flag() != sio::message::flag_boolean)) {
