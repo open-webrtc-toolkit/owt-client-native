@@ -33,6 +33,7 @@
 #import <Woogeen/RTCLocalStream.h>
 #import <Woogeen/RTCLocalCameraStream.h>
 #import <Woogeen/RTCLocalCustomizedStream.h>
+#import <Woogeen/RTCLogging.h>
 #import <Woogeen/RTCRemoteStream.h>
 #import <Woogeen/RTCRemoteCameraStream.h>
 #import <Woogeen/RTCRemoteMixedStream.h>
