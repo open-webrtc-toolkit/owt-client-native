@@ -257,7 +257,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
           return;
         }
         if (message->get_string() == "initializing") {
-          if (msg.size() == 1) {  // Subscribe
+          if (event_name == "subscribe") {
             on_success();
             return;
           }
