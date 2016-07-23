@@ -628,6 +628,16 @@ void P2PPeerConnectionChannel::Publish(
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
+  if (session_state_!=SessionState::kSessionStateConnected){
+    std::string error_message(
+        "Cannot publish a stream when connection is not established.");
+    LOG(LS_WARNING) << error_message;
+    if (on_failure) {
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientInvalidState, error_message));
+      on_failure(std::move(e));
+    }
+  }
   RTC_CHECK(stream->MediaStream());
   if (published_streams_.find(stream->MediaStream()->label()) !=
       published_streams_.end()) {
