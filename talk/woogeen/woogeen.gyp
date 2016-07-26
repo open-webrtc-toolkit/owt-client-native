@@ -32,6 +32,7 @@
       'sources': [
         'sdk/base/peerconnectiondependencyfactory.h',
         'sdk/base/peerconnectiondependencyfactory.cc',
+        'sdk/base/eventtrigger.h',
         'sdk/base/functionalobserver.h',
         'sdk/base/functionalobserver.cc',
         'sdk/base/mediaconstraintsimpl.h',

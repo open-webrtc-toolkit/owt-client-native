@@ -351,11 +351,6 @@ class PeerClient : protected P2PSignalingSenderInterface,
       const std::string& target_id);
   woogeen::base::PeerConnectionChannelConfiguration
   GetPeerConnectionChannelConfiguration();
-  // Trigger events.
-  template <typename T1, typename T2>
-  void OnEvent1(T1 func, T2 arg1);
-  template <typename T1, typename T2, typename T3>
-  void OnEvent2(T1 func, T2 arg1, T3 arg2);
 
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>

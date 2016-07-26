@@ -6,6 +6,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
+#import "WebRTC/RTCLogging.h"
 
 #include "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 
@@ -54,26 +55,43 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
+  remote_streams_[stream->Id()]=remote_stream;
   [_observer onStreamAdded:remote_stream];
-  NSLog(@"On stream added.");
+  NSLog(@"On camera stream added.");
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
-  // TODO: handle screen stream.
+  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
+      [RTCRemoteScreenStream alloc] initWithNativeStream:stream];
+  remote_streams_[stream->Id()]=remote_stream;
+  [_observer onStreamAdded:remote_stream];
+  NSLog(@"On screen stream added.");
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
-  [_observer onStreamRemoved:remote_stream];
-  NSLog(@"On stream removed.");
+  TriggerStreamRemoved(
+      std::static_pointer_cast<woogeen::base::RemoteStream>(stream));
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
-  // TODO: handle screen stream.
+  TriggerStreamRemoved(
+      std::static_pointer_cast<woogeen::base::RemoteStream>(stream));
+}
+
+void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(
+    std::shared_ptr<woogeen::base::RemoteStream> stream) {
+  if (remote_streams_.find(stream->Id()) == remote_streams_.end()) {
+    RTCLogError(@"Invalid stream to be removed.");
+    RTC_DCHECK(false);
+    return;
+  }
+  RTCRemoteStream* remote_stream = remote_streams_[stream->Id()];
+  [_observer onStreamRemoved:remote_stream];
+  remote_streams_.erase(stream->Id());
+  NSLog(@"On stream removed.");
 }
 }
 }

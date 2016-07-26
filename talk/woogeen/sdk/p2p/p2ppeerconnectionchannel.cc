@@ -4,10 +4,11 @@
 
 #include <vector>
 #include <thread>
-#include "webrtc/base/logging.h"
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/woogeen/sdk/base/eventtrigger.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
+#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "webrtc/base/logging.h"
 
 namespace woogeen {
 namespace p2p {
@@ -448,29 +449,74 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 }
 
 void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
-  if (remote_stream_type_.find(stream->label()) ==
-      remote_stream_type_.end())  // This stream is invalid.
-    return;
-  std::shared_ptr<RemoteCameraStream> remote_stream(
-      new RemoteCameraStream(stream, remote_id_));
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
-       it != observers_.end(); ++it) {
-    (*it)->OnStreamAdded(remote_stream);
+  LOG(LS_INFO) << "P2PPeerConnectionChannel::OnAddStream";
+  if (remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
+    LOG(LS_WARNING) << "Missing stream type info for newly added stream.";
+    RTC_DCHECK(false);
+  }
+  if (remote_stream_type_[stream->label()] == "screen") {
+    std::shared_ptr<RemoteScreenStream> remote_stream(
+        new RemoteScreenStream(stream, remote_id_));
+    LOG(LS_INFO) << "Add screen stream";
+    EventTrigger::OnEvent1<
+        P2PPeerConnectionChannelObserver*,
+        std::allocator<P2PPeerConnectionChannelObserver*>,
+        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+            std::shared_ptr<RemoteScreenStream>),
+        std::shared_ptr<RemoteScreenStream>>(
+        observers_, &P2PPeerConnectionChannelObserver::OnStreamAdded,
+        remote_stream);
+    remote_streams_[stream->label()] = remote_stream;
+  } else {
+    LOG(LS_INFO) << "Add camera stream.";
+    std::shared_ptr<RemoteCameraStream> remote_stream(
+        new RemoteCameraStream(stream, remote_id_));
+    EventTrigger::OnEvent1<
+        P2PPeerConnectionChannelObserver*,
+        std::allocator<P2PPeerConnectionChannelObserver*>,
+        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+            std::shared_ptr<RemoteCameraStream>),
+        std::shared_ptr<RemoteCameraStream>>(
+        observers_, &P2PPeerConnectionChannelObserver::OnStreamAdded,
+        remote_stream);
+    remote_streams_[stream->label()] = remote_stream;
   }
 }
 
 void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
-  if (remote_stream_type_.find(stream->label()) ==
-      remote_stream_type_.end())  // This stream is invalid.
+  if (remote_streams_.find(stream->label()) == remote_streams_.end() ||
+      remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
+    LOG(LS_WARNING) << "Remove an invalid stream.";
+    RTC_DCHECK(false);
     return;
-  std::shared_ptr<RemoteCameraStream> remote_stream(
-      new RemoteCameraStream(stream, remote_id_));
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
-       it != observers_.end(); ++it) {
-    (*it)->OnStreamRemoved(remote_stream);
   }
+  if (remote_stream_type_[stream->label()] == "screen") {
+    std::shared_ptr<RemoteScreenStream> remote_stream =
+        std::static_pointer_cast<RemoteScreenStream>(
+            remote_streams_[stream->label()]);
+    EventTrigger::OnEvent1<
+        P2PPeerConnectionChannelObserver*,
+        std::allocator<P2PPeerConnectionChannelObserver*>,
+        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+            std::shared_ptr<RemoteScreenStream>),
+        std::shared_ptr<RemoteScreenStream>>(
+        observers_, &P2PPeerConnectionChannelObserver::OnStreamRemoved,
+        remote_stream);
+  } else {
+    std::shared_ptr<RemoteCameraStream> remote_stream =
+        std::static_pointer_cast<RemoteCameraStream>(
+            remote_streams_[stream->label()]);
+    EventTrigger::OnEvent1<
+        P2PPeerConnectionChannelObserver*,
+        std::allocator<P2PPeerConnectionChannelObserver*>,
+        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+            std::shared_ptr<RemoteCameraStream>),
+        std::shared_ptr<RemoteCameraStream>>(
+        observers_, &P2PPeerConnectionChannelObserver::OnStreamRemoved,
+        remote_stream);
+  }
+  remote_streams_.erase(stream->label());
+  remote_stream_type_.erase(stream->label());
 }
 
 void P2PPeerConnectionChannel::OnDataChannel(
