@@ -68,16 +68,17 @@ void ConferenceSocketSignalingChannel::Connect(
   rtc::GetStringFromJsonObject(jsonToken, "tokenId", &token_id);
   rtc::GetStringFromJsonObject(jsonToken, "signature", &signature);
   socket_client_->socket();
-  socket_client_->set_socket_close_listener([this](std::string const& nsp) {
-    LOG(LS_INFO) << "Socket.IO disconnected.";
-    if (disconnect_complete_) {
-      disconnect_complete_();
-    }
-    disconnect_complete_ = nullptr;
-    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-      (*it)->OnServerDisconnected();
-    }
-  });
+  socket_client_->set_close_listener(
+      [this](sio::client::close_reason const& reason) {
+        LOG(LS_INFO) << "Socket.IO disconnected.";
+        if (disconnect_complete_) {
+          disconnect_complete_();
+        }
+        disconnect_complete_ = nullptr;
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnServerDisconnected();
+        }
+      });
   socket_client_->set_open_listener([=](void) {
     sio::message::ptr token_message = sio::object_message::create();
     token_message->get_map()["host"] = sio::string_message::create(host);
