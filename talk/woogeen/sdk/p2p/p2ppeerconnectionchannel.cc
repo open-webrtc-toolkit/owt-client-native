@@ -175,13 +175,13 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
   }
   if (message_type == kChatInvitation) {
     Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
+    rtc::GetValueFromJsonObject(json_message, kUaKey, &ua);
     OnMessageInvitation(ua);
   } else if (message_type == kChatStop) {
     OnMessageStop();
   } else if (message_type == kChatAccept) {
     Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
+    rtc::GetValueFromJsonObject(json_message, kUaKey, &ua);
     OnMessageAcceptance(ua);
   } else if (message_type == kChatDeny) {
     OnMessageDeny();
@@ -272,6 +272,7 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
 }
 
 void P2PPeerConnectionChannel::OnMessageInvitation(Json::Value& ua) {
+  HandleRemoteCapability(ua);
   switch (session_state_) {
     case kSessionStateReady:
     case kSessionStatePending:
@@ -305,6 +306,7 @@ void P2PPeerConnectionChannel::OnMessageAcceptance(Json::Value& ua) {
     (*it)->OnAccepted(remote_id_);
   }
   is_caller_ = true;
+  HandleRemoteCapability(ua);
   InitializePeerConnection();
   ChangeSessionState(kSessionStateConnecting);
   CreateDataChannel(kDataChannelLabelForTextMessage);
@@ -983,17 +985,21 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
 }
 
 void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
-  Json::Value sdk;
-  rtc::GetValueFromJsonObject(ua, kUaSdkKey, &sdk);
-  std::string runtime_type;
-  rtc::GetStringFromJsonObject(ua, kUaRuntimeNameKey, &runtime_type);
-  if (runtime_type.compare("FireFox") == 0) {
+  Json::Value runtime;
+  rtc::GetValueFromJsonObject(ua, kUaRuntimeKey, &runtime);
+  std::string runtime_name;
+  rtc::GetStringFromJsonObject(runtime, kUaRuntimeNameKey, &runtime_name);
+  if (runtime_name.compare("FireFox") == 0) {
     remote_side_supports_remove_stream_ = false;
     remote_side_supports_plan_b_ = false;
   } else {
     remote_side_supports_remove_stream_ = true;
     remote_side_supports_plan_b_ = true;
   }
+  LOG(LS_INFO) << "Remote side supports removing stream? "
+               << remote_side_supports_remove_stream_;
+  LOG(LS_INFO) << "Remote side supports WebRTC Plan B? "
+               << remote_side_supports_plan_b_;
 }
 }
 }
