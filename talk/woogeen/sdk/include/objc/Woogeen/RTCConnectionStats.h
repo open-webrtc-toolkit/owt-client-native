@@ -150,8 +150,9 @@ RTC_EXPORT
 
 /// Time stamp of connection statistics generation.
 @property(nonatomic, readonly) NSDate* timeStamp;
-/// Reports for media channels. There are four kinds of channels: AudioSender,
-/// VideoSender, AudioReceiver, VideoReceiver.
+/// Reports for media channels. Element can be one of the following types:
+/// RTCAudioSenderStats, RTCVideoSenderStats, RTCAudioReceiverStats,
+/// RTCVideoReceiverStats.
 @property(nonatomic, readonly) NSArray* mediaChannelStats;
 /// Video bandwidth statistics.
 @property(nonatomic, readonly) RTCVideoBandwidthStats* videoBandwidthStats;
