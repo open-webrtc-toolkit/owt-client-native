@@ -321,6 +321,11 @@ void ConferencePeerConnectionChannel::Publish(
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
 
+  media_constraints_.SetMandatory(
+      webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, false);
+  media_constraints_.SetMandatory(
+      webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, false);
+
   sio::message::ptr options = sio::object_message::create();
   options->get_map()["state"] = sio::string_message::create("erizo");
   if (stream->MediaStream()->GetAudioTracks().size() == 0) {
