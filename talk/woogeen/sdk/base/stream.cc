@@ -36,8 +36,12 @@ Stream::~Stream() {
 }
 
 void Stream::MediaStream(MediaStreamInterface* media_stream) {
-  RTC_CHECK(media_stream);
-  if (media_stream_!=nullptr) {
+  if (media_stream == nullptr) {
+    RTC_DCHECK(false);
+    return;
+  }
+
+  if (media_stream_ != nullptr) {
     media_stream_->Release();
   }
 
@@ -94,23 +98,24 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
     return;
   }
 
-  auto video_tracks=media_stream_->GetVideoTracks();
-  if (video_tracks.size()==0) {
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
     LOG(LS_ERROR) << "Attach failed because of no video tracks.";
     return;
-  } else if (video_tracks.size()>1) {
-    LOG(LS_WARNING) << "There are more than one video tracks, the first one will be attachecd to renderer.";
+  } else if (video_tracks.size() > 1) {
+    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+                       "will be attachecd to renderer.";
   }
 
-  // Detach from the first stream.
-  if (renderer_impl_) {
-    video_tracks[0]->RemoveSink(renderer_impl_);
-    delete renderer_impl_;
-    renderer_impl_ = nullptr;
-  }
+  WebrtcVideoRendererARGBImpl* old_renderer =
+      renderer_impl_ ? renderer_impl_ : nullptr;
 
   renderer_impl_ = new WebrtcVideoRendererARGBImpl(renderer);
   video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
+
+  if (old_renderer)
+    delete old_renderer;
+
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
