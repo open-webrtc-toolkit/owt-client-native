@@ -10,6 +10,7 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace woogeen {
 namespace conference {
@@ -26,6 +27,7 @@ const std::string play_pause_failure_message =
 ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
+      crit_sect_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
       signaling_channel_connected_(false) {
 }
 
@@ -34,15 +36,19 @@ ConferenceClient::~ConferenceClient() {
 }
 
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
+  crit_sect_.Enter();
   observers_.push_back(observer);
+  crit_sect_.Leave();
 }
 
 void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
+  crit_sect_.Enter();
   observers_.erase(std::find_if(
       observers_.begin(), observers_.end(),
       [&](std::reference_wrapper<ConferenceClientObserver> o) -> bool {
         return &observer == &(o.get());
       }));
+  crit_sect_.Leave();
 }
 
 void ConferenceClient::Join(
@@ -568,9 +574,11 @@ void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
   if(ParseUser(user_info, &user_raw)){
     std::shared_ptr<User> user(user_raw);
     participants[user->Id()] = user;
+    crit_sect_.Enter();
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnUserJoined(user);
     }
+    crit_sect_.Leave();
   }
 }
 
@@ -590,9 +598,12 @@ void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
   }
   auto user = user_it->second;
   participants.erase(user_it);
+  crit_sect_.Enter();
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnUserLeft(user);
   }
+
+  crit_sect_.Leave();
 }
 
 bool ConferenceClient::ParseUser(sio::message::ptr user_message,
@@ -710,6 +721,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   }
   auto stream = stream_it->second;
   auto type=stream_type->second;
+  crit_sect_.Enter();
   switch(type){
     case kStreamTypeCamera:
     {
@@ -736,6 +748,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
       break;
     }
   }
+  crit_sect_.Leave();
   added_streams_.erase(stream_it);
   added_stream_type_.erase(stream_type);
 }

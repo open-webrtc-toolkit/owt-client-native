@@ -50,6 +50,10 @@ namespace base {
 }
 }
 
+namespace webrtc {
+  class CriticalSectionWrapper;
+}
+
 namespace woogeen {
 namespace conference {
 
@@ -66,6 +70,7 @@ struct ConferenceClientConfiguration : ClientConfiguration {};
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 class ConferenceSocketSignalingChannel;
+
 
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
@@ -352,6 +357,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
 
   ConferenceClientConfiguration configuration_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
+  webrtc::CriticalSectionWrapper& crit_sect_;
   bool signaling_channel_connected_;
   // Key woogeen::Stream's ID, value is MediaStream's label
   std::unordered_map<std::string, std::string> publish_id_label_map_;
