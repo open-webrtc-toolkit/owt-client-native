@@ -79,7 +79,7 @@ struct VideoSenderReport {
                     int32_t sent_frame_width, int32_t framerate_sent, int32_t last_adapt_reason,
                     int32_t adapt_changes, int64_t round_trip_time, std::string codec_name)
       : bytes_sent(bytes_sent), packets_sent(packets_sent), packets_lost(packets_lost)
-      , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count), frame_resolution_sent(Resolution(sent_frame_height, sent_frame_height))
+      , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count), frame_resolution_sent(Resolution(sent_frame_width, sent_frame_height))
       , framerate_sent(framerate_sent), last_adapt_reason(last_adapt_reason)
       , adapt_changes(adapt_changes), round_trip_time(round_trip_time), codec_name(codec_name) {}
 
