@@ -165,6 +165,16 @@ void ConferenceClient::Publish(
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
+  if (publish_pcs_.find(stream->MediaStream()->label()) != publish_pcs_.end()) {
+    LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
+                     "more than once.";
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Duplicated stream."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
