@@ -196,12 +196,26 @@ void ConferenceClient::Subscribe(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
+  LOG(LS_INFO) << "Stream ID: "<<stream->Id();
+  if (added_stream_type_.find(stream->Id()) == added_stream_type_.end()) {
+    RTC_NOTREACHED();
+    return;
+  }
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
   subscribe_pcs_[stream->Id()] = pcc;
-  pcc->Subscribe(stream, options, on_success, on_failure);
+  if (added_stream_type_[stream->Id()] == kStreamTypeMix) {
+    pcc->Subscribe(std::static_pointer_cast<RemoteMixedStream>(stream), options,
+                   on_success, on_failure);
+  } else if (added_stream_type_[stream->Id()] == kStreamTypeScreen) {
+    pcc->Subscribe(std::static_pointer_cast<RemoteScreenStream>(stream),
+                   options, on_success, on_failure);
+  } else if (added_stream_type_[stream->Id()] == kStreamTypeCamera) {
+    pcc->Subscribe(std::static_pointer_cast<RemoteCameraStream>(stream),
+                   options, on_success, on_failure);
+  }
 }
 
 void ConferenceClient::Unpublish(
@@ -536,21 +550,21 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
+      added_streams_[id] = remote_stream;
+      added_stream_type_[id] = StreamType::kStreamTypeMix;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
         (*its).get().OnStreamAdded(remote_stream);
       }
-      added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeMix;
     } else if (device == "screen") {
       auto remote_stream = std::make_shared<RemoteScreenStream>(id, remote_id);
       LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
+      added_streams_[id] = remote_stream;
+      added_stream_type_[id] = StreamType::kStreamTypeScreen;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
         (*its).get().OnStreamAdded(remote_stream);
       }
-      added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeScreen;
     }
   } else {
     bool has_video(true);
@@ -558,14 +572,14 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       has_video = false;
     }
     auto remote_stream = std::make_shared<RemoteCameraStream>(id, remote_id);
-    LOG(LS_INFO) << "OnStreamAdded: camera stream.";
+    LOG(LS_INFO) << "OnStreamAdded: camera stream << " << id;
     remote_stream->has_audio_ = has_audio;
     remote_stream->has_video_ = has_video;
+    added_streams_[id] = remote_stream;
+    added_stream_type_[id] = StreamType::kStreamTypeCamera;
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnStreamAdded(remote_stream);
     }
-    added_streams_[id] = remote_stream;
-    added_stream_type_[id] = StreamType::kStreamTypeCamera;
   }
 }
 

@@ -13,6 +13,7 @@
 #include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 
 namespace woogeen {
 namespace conference {
@@ -416,6 +417,77 @@ void ConferencePeerConnectionChannel::Subscribe(
   signaling_channel_->SendInitializationMessage(sio_options, "", [this]() {
     CreateOffer();
   }, on_failure);  // TODO: on_failure
+}
+
+void ConferencePeerConnectionChannel::Subscribe(
+    std::shared_ptr<RemoteMixedStream> stream,
+    const SubscribeOptions& subscribe_options,
+    std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (subscribe_options.resolution.width != 0 ||
+      subscribe_options.resolution.height != 0) {
+    auto supported_formats = stream->SupportedVideoFormats();
+    if (std::find_if(supported_formats.begin(), supported_formats.end(),
+                     [&](const VideoFormat& format) {
+                       return format.resolution == subscribe_options.resolution;
+                     }) != supported_formats.end()) {
+      Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+                subscribe_options, on_success, on_failure);
+    } else {
+      LOG(LS_ERROR) << "Subscribe unsupported resolution.";
+      if (on_failure != nullptr) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Unsupported resolution."));
+        on_failure(std::move(e));
+      }
+    }
+  } else {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream), subscribe_options,
+              on_success, on_failure);
+  }
+}
+
+void ConferencePeerConnectionChannel::Subscribe(
+    std::shared_ptr<RemoteScreenStream> stream,
+    const SubscribeOptions& subscribe_options,
+    std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (subscribe_options.resolution.width != 0 ||
+      subscribe_options.resolution.height != 0) {
+    LOG(LS_ERROR) << "Screen sharing stream does not support resolution settings. "
+                     "Please don't change resolution.";
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown,
+          "Cannot specify resolution settings for screen sharing stream."));
+      on_failure(std::move(e));
+      }
+  } else {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+                  subscribe_options, on_success, on_failure);
+  }
+}
+
+
+void ConferencePeerConnectionChannel::Subscribe(
+    std::shared_ptr<RemoteCameraStream> stream,
+    const SubscribeOptions& subscribe_options,
+    std::function<void(std::shared_ptr<RemoteStream> stream)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (subscribe_options.resolution.width != 0 ||
+      subscribe_options.resolution.height != 0) {
+    LOG(LS_ERROR) << "Camera stream does not support resolution settings. "
+                     "Please don't change resolution.";
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown,
+          "Cannot specify resolution settings for camera stream."));
+      on_failure(std::move(e));
+      }
+  } else {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+                  subscribe_options, on_success, on_failure);
+  }
 }
 
 void ConferencePeerConnectionChannel::Unpublish(
