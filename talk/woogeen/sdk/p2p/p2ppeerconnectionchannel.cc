@@ -82,7 +82,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       reconnect_timeout_(10),
       callback_thread_(new PeerConnectionThread),
       remote_side_supports_plan_b_(false),
-      remote_side_supports_remove_stream_(false) {
+      remote_side_supports_remove_stream_(false),
+      is_creating_offer_(false) {
   callback_thread_->Start();
   RTC_CHECK(signaling_sender_);
 }
@@ -219,6 +220,16 @@ void P2PPeerConnectionChannel::RemoveObserver(
 }
 
 void P2PPeerConnectionChannel::CreateOffer() {
+  {
+    std::lock_guard<std::mutex> lock(is_creating_offer_mutex_);
+    if (is_creating_offer_) {
+      // Store creating offer request.
+      negotiation_needed_ = true;
+      return;
+    } else {
+      is_creating_offer_ = true;
+    }
+  }
   LOG(LS_INFO) << "Create offer.";
   negotiation_needed_ = false;
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -642,6 +653,12 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
 
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   LOG(LS_INFO) << "Set local sdp success.";
+  {
+    std::lock_guard<std::mutex> lock(is_creating_offer_mutex_);
+    if (is_creating_offer_) {
+      is_creating_offer_ = false;
+    }
+  }
   auto desc = LocalDescription();
   string sdp;
   desc->ToString(&sdp);
@@ -946,6 +963,7 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
 }
 
 void P2PPeerConnectionChannel::CheckWaitedList() {
+  LOG(LS_INFO) << "CheckWaitedList";
   if (!pending_publish_streams_.empty() ||
       !pending_unpublish_streams_.empty()) {
     DrainPendingStreams();

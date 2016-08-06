@@ -226,6 +226,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // If plan B is not supported, at most one audio/video track is supported.
   bool remote_side_supports_plan_b_;
   bool remote_side_supports_remove_stream_;
+  bool is_creating_offer_;  // It will be true during creating and setting offer.
+  std::mutex is_creating_offer_mutex_;
 };
 }
 }
