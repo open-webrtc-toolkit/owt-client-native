@@ -13,12 +13,12 @@ bug fixes and known issues.
 The Intel CS for WebRTC Client SDK for Windows supports Windows 7 and later versions.
 
 # 3 Getting started {#section3}
-The release package includes one sample application to get you started quickly with the SDK. The following
-three static libraries are provided in the SDK along with their respective headers:
+The Intel CS for WebRTC Client SDK for Windows should be built with Microsoft Visual Studio\* 2015. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x86.
 
-- woogeen.lib - this library includes all the WebRTC features.
-- sioclient.lib - this library includes Socket.IO C++ client without TLS features.
-- sioclient_tls.lib - this library includes the Socket.IO C++ client with TLS features.
+The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK along with their headers:
+
+- woogeen-debug.lib - this library includes all the WebRTC features for debug usages.
+- woogeen-release.lib - this library includes all the WebRTC features for release usages.
 
 woogeen.lib references libraries in Windows SDK for DXVA support. Your application must statically link
 mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib and dxva2.lib to build. Depending on your signaling
