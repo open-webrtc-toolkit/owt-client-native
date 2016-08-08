@@ -52,6 +52,7 @@ def runhooks(arch, ssl_root):
   env['GYP_DEFINES']+=' use_objc_h264=1'
   env['GYP_DEFINES']+=' ios_deployment_target=7.0'
   env['GYP_DEFINES']+=' clang_xcode=1'
+  env['GYP_DEFINES']+=' openssl_is_boringssl=0'
   if(ssl_root):
     env['GYP_DEFINES']+=(' ssl_root='+ssl_root)
   env.setdefault('GYP_GENERATOR_FLAGS', '')
