@@ -611,8 +611,6 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
     std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  LOG(LS_INFO) << "Get connection stats";
-
   scoped_refptr<FunctionalStatsObserver> observer = FunctionalStatsObserver::Create(on_success);
   GetStatsMessage* stats_message = new GetStatsMessage(
       observer.get(), stream->MediaStream(),
