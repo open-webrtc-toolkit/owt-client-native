@@ -33,7 +33,7 @@ connections, link your application with sioclient_tls.lib; otherwise, link it wi
 The sioclient_tls.lib included in release package has been enhanced to verify server's certificate. Handshake fails if the server is using an invalid certificate.
 
 # 5 NAT and firewall traversal {#section5}
-Intel CS for WebRTC Client SDK for C++ fully supports NAT and firewall traversal with STUN / TURN / ICE. The rfc5766-turn-server version 3.2.3.6 from https://code.google.com/p/rfc5766-turn-server/ has been verified.
+Intel CS for WebRTC Client SDK for C++ fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 
 # 6 Customize signaling channel {#section6}
 Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel
