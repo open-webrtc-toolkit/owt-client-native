@@ -165,7 +165,7 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     m_mfxEncParams.mfx.CodecId = MFX_CODEC_AVC;
     m_mfxEncParams.mfx.CodecProfile = MFX_PROFILE_AVC_BASELINE;
     //m_mfxEncParams.mfx.CodecLevel = MFX_LEVEL_AVC_3;
-    m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BEST_SPEED;
+    m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
     m_mfxEncParams.mfx.TargetKbps = codec_settings->width*codec_settings->height/1000;  //in-kbps
     m_mfxEncParams.mfx.RateControlMethod = MFX_RATECONTROL_CBR;
     m_mfxEncParams.mfx.NumSlice = 0;
