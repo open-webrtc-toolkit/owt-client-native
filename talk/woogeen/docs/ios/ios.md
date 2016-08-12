@@ -22,6 +22,8 @@ The release package includes two sample applications to get you started quickly 
 - libsioclient.a - this library includes Socket.IO C++ client without TLS features.
 - libsioclient_tls.a - this library includes the Socket.IO C++ client with TLS features.
 
+Please add -ObjC to "Other Linker Flags" in the your project's build settings.
+
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp).
 
