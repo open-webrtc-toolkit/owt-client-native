@@ -8,7 +8,7 @@ This SDK is interoperable with the Intel CS WebRTC Client SDK for JavaScript\* a
 Refer to the Release Notes for the latest information in the SDK release package, including features, bug fixes and known issues.
 
 # 2 Supported platforms {#section2}
-The Intel CS for WebRTC Client SDK for iOS supports in iOS 7.0 and later versions.
+The Intel CS for WebRTC Client SDK for iOS supports in iOS 8.0 and later versions.
 
 The following devices have been tested using this SDK:
 
@@ -54,9 +54,5 @@ Here is a list of known issues:
 
 # 9 Video codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is only supported in iOS 8 or later.
-
-# 10 Intel CS for WebRTC websites {#section10}
-+ [Home page](http://webrtc.intel.com)
-+ [Forum](https://software.intel.com/en-us/forums/intel-collaboration-suite-for-webrtc)
 
 > Note: \* Other names and brands may be claimed as the property of others.

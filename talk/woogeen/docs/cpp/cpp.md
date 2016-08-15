@@ -74,8 +74,4 @@ The encoded frame provider needs to implement its own frame generator extends fr
 
 Customized audio frames provider should implement {@link woogeen.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16 bit little-endian PCM is supported. Please use {@link woogeen.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
 
-# 10 Intel CS for WebRTC websites {#section10}
-+ [Home page](http://webrtc.intel.com)
-+ [Forum](https://software.intel.com/en-us/forums/intel-collaboration-suite-for-webrtc)
-
 > Note: \* Other names and brands may be claimed as the property of others.</i>
