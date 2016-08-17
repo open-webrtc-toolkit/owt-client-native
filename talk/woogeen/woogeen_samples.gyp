@@ -88,6 +88,7 @@
       'type': 'executable',
       'sources': [
         'samples/testclient.cc',
+        'samples/conferencesampleobserver.cc',
         'samples/conferencesampleforwardobserver.cc',
         'samples/conferencesampleforwardobserver.h',
         'samples/fileframegenerator.cc',

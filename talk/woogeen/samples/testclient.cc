@@ -4,19 +4,27 @@
 // testclient.cc : Defines the entry point for the console application.
 //
 #include <iostream>
-#include <unistd.h>
-
-#include "talk/woogeen/include/asio_token.h"
+#include "woogeen/conference/conferenceclient.h"
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/stream.h"
-#include "woogeen/conference/conferenceclient.h"
-#include "encodedframegenerator.h"
-#include "fileframegenerator.h"
-#include "fileaudioframegenerator.h"
 #include "p2psocketsignalingchannel.h"
+#include "fileframegenerator.h"
+#include "encodedframegenerator.h"
+#include "fileaudioframegenerator.h"
+#include "talk/woogeen/include/asio_token.h"
+#include "conferencesampleobserver.h"
 #include "conferencesampleforwardobserver.h"
+#include <unistd.h>
 
 using namespace std;
+
+/*std::function<void(std::shared_ptr<User>)>join_room_success {
+
+}
+
+std::function<void(std::unique_ptr<ConferenceException>)>join_room_failure {
+
+}*/
 
 int main(int argc, char** argv)
 {
@@ -33,6 +41,10 @@ int main(int argc, char** argv)
   int width;
   int height;
   int fps;
+  bool publish = true;
+  bool subscribe = true;
+  //true for mix mode, false for forward mode
+  bool mode = true;
 
   if(argc >= 2){
     std::string hosturl(argv[1]);
@@ -81,14 +93,35 @@ int main(int argc, char** argv)
     height = 480;
   }
 
-   if(argc >= 6){
+  if(argc >= 6){
     fps = atoi(argv[5]);
   }else{
     fps = 20;
   }
 
   if(argc >= 7){
-    std::string path(argv[6]);
+    std::string ps(argv[6]);
+    cout <<" ============ps param:"<<ps;
+    if ((ps.find("p") == std::string::npos) && (ps.find("P") == std::string::npos)) {
+      cout <<" ============false publish==========";
+      publish = false;
+    }
+
+    if ((ps.find("s") == std::string::npos) && (ps.find("S") == std::string::npos)) {
+      cout <<" ============false subscribe==========";
+      subscribe = false;
+    }
+  }
+
+  if(argc >= 8){
+    std::string sMode(argv[7]);
+    if ((sMode.find("f") != std::string::npos) | (sMode.find("F") != std::string::npos)) {
+      mode = false;
+    }
+  }
+
+  if(argc >= 9){
+    std::string path(argv[8]);
     audiopath.append(path);
     audiopath.append("/audio_long16.pcm");
     videopath.append(path);
@@ -116,8 +149,21 @@ int main(int argc, char** argv)
   scheme.append(suffix);
   std::shared_ptr<ConferenceClient> room(new ConferenceClient(configuration));
 
-  ConferenceSampleForwardObserver *observer = new ConferenceSampleForwardObserver(room);
-  room->AddObserver(*observer);
+  ConferenceSampleObserver *observer = nullptr;
+  ConferenceSampleForwardObserver *forwardobserver = nullptr;
+  if(subscribe) {
+    if(mode) {
+      cout <<" ============Mix mode==========";
+      observer = new ConferenceSampleObserver(room);
+      room->AddObserver(*observer);
+    }
+    else {
+      cout <<" ============Forward mode==========";
+      forwardobserver = new ConferenceSampleForwardObserver(room);
+      room->AddObserver(*forwardobserver);
+    }
+  }
+
 //  cout << "Press Enter to connect room." << std::endl;
  // cin.ignore();
 
@@ -133,13 +179,15 @@ int main(int argc, char** argv)
   if (token != "") {
       room->Join(token,
           [=](std::shared_ptr<User> user) {
-              room->Publish(shared_stream,
-              [=] {
+              if(publish) {
+                room->Publish(shared_stream,
+                [=] {
                       cout <<" ============Publish succeed==========";
                   },
-              [=](std::unique_ptr<ConferenceException> err) {
+                [=](std::unique_ptr<ConferenceException> err) {
                   cout <<" ============Publish failed===========";
-              });
+                });
+              }
 
               cout << "Join succeeded!" << endl;
                     },
@@ -172,6 +220,10 @@ int main(int argc, char** argv)
   if(observer) {
     delete observer;
     observer = nullptr;
+  }
+  if(forwardobserver) {
+    delete forwardobserver;
+    forwardobserver = nullptr;
   }
   return 0;
 }
