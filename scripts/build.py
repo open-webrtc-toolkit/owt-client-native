@@ -45,6 +45,14 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
+SDK_TARGETS = ['AppRTCDemo', 'woogeen']
+# common_video_unittests and modules_unittests are not enabled because some failure cases.
+TEST_TARGETS=['common_audio_unittests', 'rtc_pc_unittests', 'system_wrappers_unittests',
+    'voice_engine_unittests']
+TEST_ARCH = 'x64'  # Tests run on simulator
+TEST_SCHEME = 'debug'
+TEST_SDK_VERSION = '10.1'
+TEST_SIMULATOR_DEVICE = 'iPhone 7'
 
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
@@ -67,21 +75,14 @@ def gngen(arch, ssl_root, scheme):
 def getoutputpath(arch, scheme):
   return 'out/%s-%s'%(SCHEME_DICT.get(scheme), ARCH_PARAM_DICT.get(arch))
 
-def ninjabuild(arch, scheme):
+def ninjabuild(arch, scheme, targets):
   out_path=getoutputpath(arch, scheme)
-  libwoogeen_path = os.path.join(out_path,'obj','talk','woogeen','libwoogeen.a')
-  if(os.path.exists(libwoogeen_path)):
-    os.remove(libwoogeen_path)
-  for target_name in ['AppRTCDemo', 'woogeen']:
-    # AppRTCDemo is unnecessary, put it here may detect potential link errors.
-    subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)
-  # We don't use exit code to detect error because libtool may report warning for
-  # "same member name".
-  # https://groups.google.com/a/chromium.org/forum/#!msg/chromium-dev/WQntNV0zscw/rAxe0APmStoJ
-  if(os.path.exists(libwoogeen_path)):
-    return True
-  else:
-    return False
+  for target_name in targets:
+    if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
+      return False
+  subprocess.call(['libtool -o %s/libwoogeen.a %s/*.a'%(out_path, out_path)],
+      cwd=HOME_PATH, shell=True)
+  return True
 
 def replaceheaderimport():
   '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
@@ -146,6 +147,18 @@ def dist(arch_list, scheme, ssl_root):
   buildframework()
   return True
 
+# Run unit tests on simulator. Return True if all tests are passed.
+def runtest(ssl_root):
+  print 'Start running unit tests.'
+  if not ninjabuild(TEST_ARCH, TEST_SCHEME, SDK_TARGETS+TEST_TARGETS):
+    return False
+  for test_target in TEST_TARGETS:
+    if subprocess.call(['./iossim', '-d', TEST_SIMULATOR_DEVICE, '-s',
+        TEST_SDK_VERSION, '%s.app'%test_target],
+        cwd=getoutputpath(TEST_ARCH, TEST_SCHEME)):
+      return False
+  return True
+
 # Return 0 if build success
 def main():
   parser = argparse.ArgumentParser()
@@ -158,6 +171,8 @@ def main():
       help='Skip explicitly ninja file generation.')
   parser.add_argument('--clean', default=False, action='store_true',
       help='Clean before build.')
+  parser.add_argument('--skip_tests', default=False, action='store_true',
+      help='Skip unit tests.')
   opts=parser.parse_args()
   opts.arch=opts.target_arch.split(',')
   if not opts.scheme in SCHEME_DICT:
@@ -171,9 +186,15 @@ def main():
       if not opts.skip_gn_gen:
         if not gngen(arch_item, opts.ssl_root, opts.scheme):
           return 1
-      if not ninjabuild(arch_item, opts.scheme):
+      if not ninjabuild(arch_item, opts.scheme, SDK_TARGETS):
         return 1
   dist(opts.arch, opts.scheme, opts.ssl_root)
+  if not opts.skip_tests:
+    if not opts.skip_gn_gen:
+      if not gngen(TEST_ARCH, opts.ssl_root, TEST_SCHEME):
+        return 1
+    if not runtest(opts.ssl_root):
+      return 1
   print 'Done.'
   return 0
 
