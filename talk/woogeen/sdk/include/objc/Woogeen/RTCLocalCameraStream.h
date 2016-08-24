@@ -27,6 +27,8 @@
 #import "Woogeen/RTCLocalStream.h"
 #import "Woogeen/RTCLocalCameraStreamParameters.h"
 
+@class RTCVideoSource;
+
 /// This class represent a local stream captured from camera, mic.
 RTC_EXPORT
 @interface RTCLocalCameraStream : RTCLocalStream
@@ -48,6 +50,19 @@ RTC_EXPORT
 */
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters
                              error:(NSError* _Nullable*)outError;
+
+/**
+  Initialize a RTCLocalCameraStream with specific video source.
+  @param isAudioEnabled Indicates whether audio is enabled.
+  @param videoSource RTCLocalCameraStream created will have a video track use
+  |videoSource| as its source. Changing |videoSource| will impact the video
+  track in current stream.
+  @return On success, an initialized RTCLocalCameraStream object. If nil, the
+  outError parameter contains an NSError instance describing the problem.
+*/
+- (instancetype)initWithAudioEnabled:(BOOL)isAudioEnabled
+                         VideoSource:(RTCVideoSource*)VideoSource
+                               error:(NSError* _Nullable*)outError;
 
 /**
   @brief Close the stream. Its underlying media source is no longer providing

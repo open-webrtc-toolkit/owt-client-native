@@ -24,35 +24,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Base SDK
-#import <Woogeen/RTCAVFoundationVideoSource.h>
-#import <Woogeen/RTCMacros.h>
-#import <Woogeen/RTCMediaCodec.h>
-#import <Woogeen/RTCMediaFormat.h>
-#import <Woogeen/RTCErrors.h>
-#import <Woogeen/RTCStream.h>
-#import <Woogeen/RTCLocalStream.h>
-#import <Woogeen/RTCLocalCameraStream.h>
-#import <Woogeen/RTCLocalCustomizedStream.h>
-#import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
-#import <Woogeen/RTCLogging.h>
-#import <Woogeen/RTCRemoteStream.h>
-#import <Woogeen/RTCRemoteCameraStream.h>
-#import <Woogeen/RTCRemoteMixedStream.h>
-#import <Woogeen/RTCRemoteMixedStreamObserver.h>
-#import <Woogeen/RTCRemoteScreenStream.h>
-#import <Woogeen/RTCIceServer.h>
-#import <Woogeen/RTCGlobalConfiguration.h>
-#import <Woogeen/RTCFrameGeneratorProtocol.h>
+#import <WebRTC/RTCAVFoundationVideoSource.h>
 
-// P2P SDK
-#import <Woogeen/RTCPeerClient.h>
-#import <Woogeen/RTCP2PErrors.h>
+@interface RTCAVFoundationVideoSource (Woogeen)
 
-// Conference SDK
-#import <Woogeen/RTCConferenceClient.h>
-#import <Woogeen/RTCConferenceErrors.h>
+- (instancetype)initWithConstraints:(RTCMediaConstraints*)constraints;
 
-// Following headers are part of sample implementations
-#import <Woogeen/RTCVideoRenderer.h>
-#import <Woogeen/RTCEAGLVideoView.h>
+@end

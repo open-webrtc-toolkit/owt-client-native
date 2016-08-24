@@ -34,6 +34,7 @@
 
 namespace webrtc {
   class MediaStreamInterface;
+  class VideoTrackSourceInterface;
 }
 
 namespace woogeen {
@@ -182,6 +183,22 @@ class LocalCameraStream : public LocalStream {
       int& error_code);
   /** @cond */
   /**
+    Create a RTCLocalCameraStream with specific video source.
+    @param is_audio_enabled Indicates whether audio is enabled.
+    @param video_source LocalCameraStream created will have a video track use
+    |video_source| as its source. Changing |video_source| will impact the video
+    track in current stream.
+    @param error_code If creation successes, it will be 0, otherwise, it will be
+    the error code occurred.
+    @return Returns a shared pointer for created stream. Returns nullptr if
+    failed.
+  */
+  static std::shared_ptr<LocalCameraStream> Create(
+      const bool is_audio_enabled,
+      /* Consider to change this parameter to be a reference */
+      webrtc::VideoTrackSourceInterface* video_source,
+      int& error_code);
+  /**
     Initialize a LocalCameraStream with parameters.
     @param parameters Parameters for creating the stream. The stream will not be
     impacted if chaning parameters after it is created.
@@ -197,10 +214,15 @@ class LocalCameraStream : public LocalStream {
     instead.
   */
   void Close();
-protected:
- explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
-                            int& error_code);
- /** @endcond */
+
+ protected:
+  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
+                             int& error_code);
+  explicit LocalCameraStream(
+      const bool is_audio_enabled,
+      webrtc::VideoTrackSourceInterface* video_source,
+      int& error_code);
+  /** @endcond */
 };
 
 /// This class represents a local stream which use frame generator to generate frames.

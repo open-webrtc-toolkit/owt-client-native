@@ -291,6 +291,7 @@
             'sdk/base/objc/public/RTCFrameGeneratorProtocol.h',
             'sdk/base/objc/AVFoundationVideoCapturerFactory.h',
             'sdk/base/objc/AVFoundationVideoCapturerFactory.mm',
+            'sdk/base/objc/RTCAVFoundationVideoSource+Woogeen.mm',
             'sdk/base/objc/RTCConnectionStats+Internal.h',
             'sdk/base/objc/RTCConnectionStats.mm',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.h',
