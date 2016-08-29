@@ -11,8 +11,8 @@ namespace base {
 void WebrtcVideoRendererARGBImpl::OnFrame(
     const cricket::VideoFrame& video_frame) {
   const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
-  Resolution resolution(static_cast<int>(frame->GetWidth()),
-                        static_cast<int>(frame->GetHeight()));
+  Resolution resolution(static_cast<int>(frame->width()),
+                        static_cast<int>(frame->height()));
   uint8_t* buffer = new uint8_t[resolution.width * resolution.height * 4];
   frame->ConvertToRgbBuffer(cricket::FOURCC_ARGB, buffer,
                             resolution.width * resolution.height * 4,

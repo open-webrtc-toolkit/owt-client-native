@@ -81,7 +81,7 @@ private:
     mfxFrameSurface1* m_pEncSurfaces; // frames array for encoder
     mfxU32 m_nFramesProcessed;
     MemType m_memType_;
-    rtc::scoped_ptr<MFTEncoderThread> encoder_thread_;
+    std::unique_ptr<MFTEncoderThread> encoder_thread_;
     bool inited_;
 #ifdef WOOGEEN_DEBUG_H264_ENC
     FILE *output;

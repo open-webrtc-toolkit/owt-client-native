@@ -7,7 +7,6 @@
 #include "talk/woogeen/sdk/base/win/h265_msdk_encoder.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/thread.h"
 #include "libyuv/convert_from.h"
@@ -82,8 +81,9 @@ int H265VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     //MSDK does not require all operations dispatched to the same thread. We however always use dedicated thread
     rtc::ThreadManager::Instance()->CurrentThread()->SetAllowBlockingCalls(true);
     return encoder_thread_->Invoke<int>(
-        rtc::Bind(&H265VideoMFTEncoder::InitEncodeOnEncoderThread, this, codec_settings, number_of_cores, max_payload_size));
-
+        RTC_FROM_HERE,
+        rtc::Bind(&H265VideoMFTEncoder::InitEncodeOnEncoderThread, this,
+                  codec_settings, number_of_cores, max_payload_size));
 }
 
 mfxStatus H265ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD) {
@@ -392,11 +392,14 @@ int H265VideoMFTEncoder::Encode(
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
-        int ret = libyuv::I420ToNV12(
-            input_image.buffer(webrtc::kYPlane), input_image.stride(webrtc::kYPlane),
-            input_image.buffer(webrtc::kUPlane), input_image.stride(webrtc::kUPlane),
-            input_image.buffer(webrtc::kVPlane), input_image.stride(webrtc::kVPlane),
-            pData.Y, pitch, pData.UV, pitch, w, h);
+        int ret =
+            libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
+                               input_image.video_frame_buffer()->StrideY(),
+                               input_image.video_frame_buffer()->DataU(),
+                               input_image.video_frame_buffer()->StrideU(),
+                               input_image.video_frame_buffer()->DataV(),
+                               input_image.video_frame_buffer()->StrideV(),
+                               pData.Y, pitch, pData.UV, pitch, w, h);
 #ifdef WOOGEEN_DEBUG_H265_ENC
         if (count == 30) {
             fclose(input);
@@ -593,19 +596,20 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
 #ifdef WOOGEEN_DEBUG_H265_ENC
     if (input != nullptr && count < 30){
-        fwrite((void*)(input_image.buffer(webrtc::kYPlane)), w*h, 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kUPlane)), w*h / 4, 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kVPlane)), w*h / 4, 1, input);
+        fwrite((void*)(input_image.video_frame_buffer()->DataY(),), w*h, 1, input);
+        fwrite((void*)(input_image.video_frame_buffer()->DataU(),), w*h / 4, 1, input);
+        fwrite((void*)(input_image.video_frame_buffer()->DataV(),), w*h / 4, 1, input);
     }
 #endif
 
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
-        int ret = libyuv::I420ToNV12(
-            input_image.buffer(webrtc::kYPlane), input_image.stride(webrtc::kYPlane),
-            input_image.buffer(webrtc::kUPlane), input_image.stride(webrtc::kUPlane),
-            input_image.buffer(webrtc::kVPlane), input_image.stride(webrtc::kVPlane),
-            pData.Y, pitch, pData.UV, pitch, w, h
-            );
+      int ret = libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
+                                   input_image.video_frame_buffer()->StrideY(),
+                                   input_image.video_frame_buffer()->DataU(),
+                                   input_image.video_frame_buffer()->StrideU(),
+                                   input_image.video_frame_buffer()->DataV(),
+                                   input_image.video_frame_buffer()->StrideV(),
+                                   pData.Y, pitch, pData.UV, pitch, w, h);
 #ifdef WOOGEEN_DEBUG_H265_ENC
         if (count == 30){
             fclose(input);

@@ -7,7 +7,6 @@
 
 #include <memory>
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
@@ -35,7 +34,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
       AudioDeviceModule::AudioLayer& audioLayer) const override;
 
   // Main initializaton and termination
-  int32_t Init() override;
+  AudioDeviceGeneric::InitStatus Init() override;
   int32_t Terminate() override;
   bool Initialized() const override;
 
@@ -149,8 +148,6 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
 
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
 
-  void VolumeOverloud(int16_t level) override;
-
  private:
   static bool RecThreadFunc(void*);
   static bool PlayThreadFunc(void*);
@@ -169,7 +166,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   int recording_channel_number_;
   int recording_buffer_size_;
 
-  rtc::scoped_ptr<rtc::PlatformThread> thread_rec_;
+  std::unique_ptr<rtc::PlatformThread> thread_rec_;
 
   bool recording_;
   uint64_t last_call_record_millis_;

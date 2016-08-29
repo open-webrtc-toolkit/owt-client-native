@@ -119,7 +119,7 @@ void ConferencePeerConnectionChannel::CreateOffer() {
       new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create offer";
-  pc_thread_->Post(this, kMessageTypeCreateOffer, data);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
 }
 
 void ConferencePeerConnectionChannel::CreateAnswer() {
@@ -137,7 +137,7 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
       message_observer = new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create answer";
-  pc_thread_->Post(this, kMessageTypeCreateAnswer, message_observer);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateAnswer, message_observer);
 }
 
 void ConferencePeerConnectionChannel::OnSignalingChange(
@@ -227,7 +227,7 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
   LOG(LS_INFO) << "Post set local desc";
-  pc_thread_->Post(this, kMessageTypeSetLocalDescription, msg);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetLocalDescription, msg);
 }
 
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
@@ -283,7 +283,7 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
   LOG(LS_INFO) << "Post set remote desc";
-  pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription, msg);
 }
 
 bool ConferencePeerConnectionChannel::CheckNullPointer(
@@ -343,22 +343,21 @@ void ConferencePeerConnectionChannel::Publish(
     // Resolution
     auto video_track_source =
         stream->MediaStream()->GetVideoTracks()[0]->GetSource();
-    cricket::VideoCapturer* captuere = video_track_source->GetVideoCapturer();
-    // |video_format| is expected format, actually format may be different from
-    // it. It depends on capturer module.
-    auto video_format = captuere->GetCaptureFormat();
-    auto resolution_string = MediaUtils::GetResolutionName(
-        Resolution(video_format->width, video_format->height));
-    video_options->get_map()["resolution"] =
-        sio::string_message::create(resolution_string);
-    options->get_map()["video"] = video_options;
+    VideoTrackSourceInterface::Stats stats;
+    if (video_track_source->GetStats(&stats)) {
+      auto resolution_string = MediaUtils::GetResolutionName(
+          Resolution(stats.input_width, stats.input_height));
+      video_options->get_map()["resolution"] =
+          sio::string_message::create(resolution_string);
+      options->get_map()["video"] = video_options;
+    }
   }
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->label(), [stream, this]() {
         rtc::ScopedRefMessageData<MediaStreamInterface>* param =
             new rtc::ScopedRefMessageData<MediaStreamInterface>(
                 stream->MediaStream());
-        pc_thread_->Post(this, kMessageTypeAddStream, param);
+        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
         CreateOffer();
       }, on_failure);
 }
@@ -615,7 +614,7 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
   GetStatsMessage* stats_message = new GetStatsMessage(
       observer.get(), stream->MediaStream(),
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-  pc_thread_->Post(this, kMessageTypeGetStats, stats_message);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
 }
 
 void ConferencePeerConnectionChannel::OnSignalingMessage(

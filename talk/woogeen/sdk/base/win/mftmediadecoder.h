@@ -147,7 +147,7 @@ private:
     // Type of video codec.
     webrtc::VideoCodecType codecType_;
 
-    rtc::scoped_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
+    std::unique_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
     IMFTransform* decoder_;
 
     typedef std::list<IMFSample*> PendingInputs;

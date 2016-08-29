@@ -32,7 +32,6 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
 
 namespace woogeen {
@@ -59,7 +58,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
     // Stop() is called externally or Quit() is called by OnMessage().
     if (capturer_) {
       capturer_->ReadFrame();
-      rtc::Thread::Current()->Post(this);
+      rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
       rtc::Thread::Current()->ProcessMessages(kForever);
     }
 
@@ -71,7 +70,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
   virtual void OnMessage(rtc::Message* /*pmsg*/) {
     if (capturer_) {
       capturer_->ReadFrame();
-      rtc::Thread::Current()->PostDelayed(waiting_time_ms, this);
+      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, waiting_time_ms, this);
     } else {
       rtc::Thread::Current()->Quit();
     }
@@ -213,10 +212,11 @@ void CustomizedFramesCapturer::ReadFrame() {
     return;
   }
   captured_frame_.time_stamp =
-      webrtc::TickTime::MillisecondTimestamp() * rtc::kNumNanosecsPerMillisec;
+      rtc::TimeMillis() * rtc::kNumNanosecsPerMillisec;
   captured_frame_.data_size = frame_size;
   captured_frame_.data = frame_buffer_.get();
   worker_thread_->Invoke<void>(
+      RTC_FROM_HERE,
       rtc::Bind(&CustomizedFramesCapturer::SendCapturedFrame, this));
 }
 

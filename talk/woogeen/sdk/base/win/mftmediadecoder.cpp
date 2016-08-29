@@ -294,20 +294,21 @@ Version MSDKVideoDecoder::GetOSVersion() {
 }
 
 void MSDKVideoDecoder::CheckOnCodecThread() {
-    RTC_CHECK(decoder_thread_ == rtc::ThreadManager::Instance()->CurrentThread())
-        << "Running on wrong thread!";
+  RTC_CHECK(decoder_thread_.get() ==
+            rtc::ThreadManager::Instance()->CurrentThread())
+      << "Running on wrong thread!";
 }
 
-WOW64Status MSDKVideoDecoder::GetWOW64Status(){
-    typedef BOOL(WINAPI* IsWow64ProcessFunc)(HANDLE, PBOOL);
-    IsWow64ProcessFunc is_wow64_process = reinterpret_cast<IsWow64ProcessFunc>(GetProcAddress(GetModuleHandle(L"kernel32.dll"),
-        "IsWow64Process"));
-    if (!is_wow64_process)
-        return WOW64_DISABLED;
-    BOOL is_wow64 = FALSE;
-    if (!(*is_wow64_process)(GetCurrentProcess(), &is_wow64))
-        return WOW64_UNKNOWN;
-    return is_wow64 ? WOW64_ENABLED : WOW64_DISABLED;
+WOW64Status MSDKVideoDecoder::GetWOW64Status() {
+  typedef BOOL(WINAPI * IsWow64ProcessFunc)(HANDLE, PBOOL);
+  IsWow64ProcessFunc is_wow64_process = reinterpret_cast<IsWow64ProcessFunc>(
+      GetProcAddress(GetModuleHandle(L"kernel32.dll"), "IsWow64Process"));
+  if (!is_wow64_process)
+    return WOW64_DISABLED;
+  BOOL is_wow64 = FALSE;
+  if (!(*is_wow64_process)(GetCurrentProcess(), &is_wow64))
+    return WOW64_UNKNOWN;
+  return is_wow64 ? WOW64_ENABLED : WOW64_DISABLED;
 }
 
 bool MSDKVideoDecoder::CreateD3DDeviceManager(){
@@ -512,7 +513,7 @@ int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, in
     if (&codec_ != codecSettings)
         codec_ = *codecSettings;
 
-    return decoder_thread_->Invoke<int32_t>(
+    return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
 
@@ -662,7 +663,7 @@ int32_t MSDKVideoDecoder::Decode(
     }
     //LOG(LS_ERROR) << "Requesting decoding image: ntp_time:" << inputImage.ntp_time_ms_ << " width: " << inputImage._encodedWidth << " height: "
     //    << inputImage._encodedHeight << " length " << inputImage._length << " size " << inputImage._size;
-    return decoder_thread_->Invoke<int32_t>(
+    return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&MSDKVideoDecoder::DecodeOnCodecThread, this, inputImage));
 }
 
@@ -742,7 +743,7 @@ int32_t MSDKVideoDecoder::DecodeInternal(IMFSample* sample){
         if (hr = MF_E_NOTACCEPTING){
             pending_input_buffer.push_back(sample);
             //send message to decoder thread to handle the pending input buffer.
-            decoder_thread_->PostDelayed(kMSDKCodecPollMs, this, MSDK_MSG_HANDLE_INPUT);
+            decoder_thread_->PostDelayed(RTC_FROM_HERE, kMSDKCodecPollMs, this, MSDK_MSG_HANDLE_INPUT);
             return WEBRTC_VIDEO_CODEC_OK;
         }
         DoDecode();

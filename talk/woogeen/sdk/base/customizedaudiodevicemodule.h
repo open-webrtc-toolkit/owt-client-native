@@ -166,18 +166,21 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int32_t SetLoudspeakerStatus(bool enable) override;
   int32_t GetLoudspeakerStatus(bool* enabled) const override;
 
-  bool BuiltInAECIsEnabled() const override;
+  // Only supported on Android.
   bool BuiltInAECIsAvailable() const override;
-  int32_t EnableBuiltInAEC(bool enable) override;
   bool BuiltInAGCIsAvailable() const override;
-  int32_t EnableBuiltInAGC(bool enable) override;
   bool BuiltInNSIsAvailable() const override;
+
+  // Enables the built-in audio effects. Only supported on Android.
+  int32_t EnableBuiltInAEC(bool enable) override;
+  int32_t EnableBuiltInAGC(bool enable) override;
   int32_t EnableBuiltInNS(bool enable) override;
 
+// Only supported on iOS.
+#if defined(WEBRTC_IOS)
   int GetPlayoutAudioParameters(AudioParameters* params) const override;
   int GetRecordAudioParameters(AudioParameters* params) const override;
-
-  void VolumeOverloud(int16_t level) override;
+#endif  // WEBRTC_IOS
 
  private:
   int32_t CreateCustomizedAudioDevice(

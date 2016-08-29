@@ -69,9 +69,10 @@ PeerConnectionDependencyFactory::CreatePeerConnection(
     const webrtc::MediaConstraintsInterface* constraints,
     webrtc::PeerConnectionObserver* observer) {
   return pc_thread_
-      ->Invoke<scoped_refptr<webrtc::PeerConnectionInterface>>(Bind(
-          &PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread,
-          this, config, constraints, observer))
+      ->Invoke<scoped_refptr<webrtc::PeerConnectionInterface>>(
+          RTC_FROM_HERE, Bind(&PeerConnectionDependencyFactory::
+                                  CreatePeerConnectionOnCurrentThread,
+                              this, config, constraints, observer))
       .get();
 }
 
@@ -103,8 +104,8 @@ void PeerConnectionDependencyFactory::
   signaling_thread->SetName("signaling_thread", NULL);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
       << "Failed to start threads";
-  rtc::scoped_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-  rtc::scoped_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
+  std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+  std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
 #if defined(WEBRTC_WIN)
   if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
     encoder_factory.reset(new MSDKVideoEncoderFactory());
@@ -147,7 +148,8 @@ void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
   LOG(LS_INFO)
       << "PeerConnectionDependencyFactory::CreatePeerConnectionFactory()";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Invoke<void>(Bind(&PeerConnectionDependencyFactory::
+  pc_thread_->Invoke<void>(RTC_FROM_HERE,
+                           Bind(&PeerConnectionDependencyFactory::
                                     CreatePeerConnectionFactoryOnCurrentThread,
                                 this));
   RTC_CHECK(pc_factory_.get());
@@ -158,6 +160,7 @@ PeerConnectionDependencyFactory::CreateLocalMediaStream(
     const std::string& label) {
   RTC_CHECK(pc_thread_);
   return pc_thread_->Invoke<scoped_refptr<webrtc::MediaStreamInterface>>(
+      RTC_FROM_HERE,
       Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream,
            pc_factory_.get(), label));
 }
@@ -166,9 +169,11 @@ scoped_refptr<webrtc::VideoTrackSourceInterface>
 PeerConnectionDependencyFactory::CreateVideoSource(
     cricket::VideoCapturer* capturer,
     const MediaConstraintsInterface* constraints) {
-  return pc_thread_->Invoke<scoped_refptr<webrtc::VideoTrackSourceInterface>>(
-                       Bind(&PeerConnectionFactoryInterface::CreateVideoSource,
-                            pc_factory_.get(), capturer, constraints))
+  return pc_thread_
+      ->Invoke<scoped_refptr<webrtc::VideoTrackSourceInterface>>(
+          RTC_FROM_HERE,
+          Bind(&PeerConnectionFactoryInterface::CreateVideoSource,
+               pc_factory_.get(), capturer, constraints))
       .get();
 }
 
@@ -176,7 +181,7 @@ scoped_refptr<VideoTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalVideoTrack(
     const std::string& id,
     webrtc::VideoTrackSourceInterface* video_source) {
-  return pc_thread_->Invoke<scoped_refptr<VideoTrackInterface>>(
+  return pc_thread_->Invoke<scoped_refptr<VideoTrackInterface>>(RTC_FROM_HERE,
                        Bind(&PeerConnectionFactoryInterface::CreateVideoTrack,
                             pc_factory_.get(), id, video_source))
       .get();
@@ -184,7 +189,7 @@ PeerConnectionDependencyFactory::CreateLocalVideoTrack(
 
 scoped_refptr<AudioTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
-  return pc_thread_->Invoke<scoped_refptr<AudioTrackInterface>>(
+  return pc_thread_->Invoke<scoped_refptr<AudioTrackInterface>>(RTC_FROM_HERE,
                        Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
                             pc_factory_.get(), id, nullptr))
       .get();

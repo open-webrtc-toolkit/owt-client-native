@@ -84,7 +84,7 @@ class CustomizedFramesCapturer : public VideoCapturer {
   std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
       frame_buffer_;  // Pointer to a reuseable memory for video frames.
   rtc::Thread* worker_thread_;  // Set in Start(), unset in Stop();
-  rtc::scoped_ptr<rtc::AsyncInvoker> async_invoker_;
+  std::unique_ptr<rtc::AsyncInvoker> async_invoker_;
   rtc::CriticalSection lock_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesCapturer);

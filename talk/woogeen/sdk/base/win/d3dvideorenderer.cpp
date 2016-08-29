@@ -59,22 +59,24 @@ void D3DVideoRenderer::OnFrame(const cricket::VideoFrame& video_frame){
     //Do we need to Lock the renderframe call? since we have the device lock here it seems
     //no neccessary.
     const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
-    SetSize(static_cast<int>(frame->GetWidth()), static_cast<int>(frame->GetHeight()));
+    SetSize(static_cast<int>(frame->width()), static_cast<int>(frame->height()));
 
-    if (frame->GetNativeHandle() == nullptr){//We're not handling DXVA buffer
-        NativeD3DSurfaceHandleImpl *nativeHandle = reinterpret_cast<NativeD3DSurfaceHandleImpl*>(frame->GetNativeHandle());
-        IDirect3DDeviceManager9 *dev_manager = nativeHandle->GetD3DManager();
-        IDirect3DSurface9 * surface = nativeHandle->GetSurface();
+    if (frame->video_frame_buffer()->native_handle() == nullptr){//We're not handling DXVA buffer
+      NativeD3DSurfaceHandleImpl* nativeHandle =
+          reinterpret_cast<NativeD3DSurfaceHandleImpl*>(
+              frame->video_frame_buffer()->native_handle());
+      IDirect3DDeviceManager9* dev_manager = nativeHandle->GetD3DManager();
+      IDirect3DSurface9* surface = nativeHandle->GetSurface();
 
-        if (dev_manager == nullptr || surface == nullptr)
-            return;
+      if (dev_manager == nullptr || surface == nullptr)
+        return;
 
-        IDirect3DDevice9 *pDevice;
-        HANDLE hDevice = 0;
-        HRESULT hr = dev_manager->OpenDeviceHandle(&hDevice);
-        if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to open the d3d device handle";
-            return;
+      IDirect3DDevice9* pDevice;
+      HANDLE hDevice = 0;
+      HRESULT hr = dev_manager->OpenDeviceHandle(&hDevice);
+      if (FAILED(hr)) {
+        LOG(LS_ERROR) << "Failed to open the d3d device handle";
+        return;
         }
 
         hr = dev_manager->LockDevice(hDevice, &pDevice, FALSE);

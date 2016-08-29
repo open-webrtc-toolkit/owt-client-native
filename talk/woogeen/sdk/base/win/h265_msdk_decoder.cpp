@@ -39,7 +39,7 @@ int32_t H265MSDKVideoDecoder::Release() {
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
     MSDK_SAFE_DELETE(m_pMFXAllocator);
     MSDK_SAFE_DELETE(m_pmfxAllocatorParams);
-	inited_ = false;
+    inited_ = false;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -65,7 +65,7 @@ H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type, HWND dec
     m_pInputSurfaces = nullptr;
     videoParamExtracted = false;
 #ifdef WOOGEEN_DEBUG_H265_DEC
-	input = fopen("input.h265", "wb");
+    input = fopen("input.h265", "wb");
 #endif
 }
 
@@ -78,8 +78,9 @@ H265MSDKVideoDecoder::~H265MSDKVideoDecoder() {
 }
 
 void H265MSDKVideoDecoder::CheckOnCodecThread() {
-    RTC_CHECK(decoder_thread_ == rtc::ThreadManager::Instance()->CurrentThread())
-        << "Running on wrong thread!";
+  RTC_CHECK(decoder_thread_.get() ==
+            rtc::ThreadManager::Instance()->CurrentThread())
+      << "Running on wrong thread!";
 }
 
 bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
@@ -150,7 +151,7 @@ int32_t H265MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings
     if (&codec_ != codecSettings)
         codec_ = *codecSettings;
 
-    return decoder_thread_->Invoke<int32_t>(
+    return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&H265MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
 
@@ -308,121 +309,134 @@ int32_t H265MSDKVideoDecoder::Decode(
     ReadFromInputStream(&m_mfxBS, inputImage._buffer, inputImage._length);
 
 #ifdef WOOGEEN_DEBUG_H265_DEC
-	//
-	if (e_count < 30 && input != nullptr) {
-		fwrite((void*)inputImage._buffer, inputImage._length, 1, input);
+    //
+    if (e_count < 30 && input != nullptr) {
+      fwrite((void*)inputImage._buffer, inputImage._length, 1, input);
     } else if (e_count == 30 && input != nullptr) {
-		fclose(input);
-		input = nullptr;
-	}
-	e_count++;
-	//
+      fclose(input);
+      input = nullptr;
+    }
+    e_count++;
+//
 #endif
-    if (inited_ && !videoParamExtracted) {
-        //We have not extracted the video params required for decoding. Doing it here.
-        sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
-        if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
-            //we successfully get the video params. It's time now to really initialize the decoder.
-            mfxU16 nSurfNum = 0;
-            mfxFrameAllocRequest request;
-            MSDK_ZERO_MEMORY(request);
-            sts = m_pmfxDEC->QueryIOSurf(&m_mfxVideoParams, &request);
-            if (MFX_WRN_PARTIAL_ACCELERATION == sts) {
-                sts = MFX_ERR_NONE;
-            }
-            if (MFX_ERR_NONE != sts) {
-                return WEBRTC_VIDEO_CODEC_ERROR;
-            }
+  if (inited_ && !videoParamExtracted) {
+    // We have not extracted the video params required for decoding. Doing it
+    // here.
+    sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
+    if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
+      // we successfully get the video params. It's time now to really
+      // initialize the decoder.
+      mfxU16 nSurfNum = 0;
+      mfxFrameAllocRequest request;
+      MSDK_ZERO_MEMORY(request);
+      sts = m_pmfxDEC->QueryIOSurf(&m_mfxVideoParams, &request);
+      if (MFX_WRN_PARTIAL_ACCELERATION == sts) {
+        sts = MFX_ERR_NONE;
+      }
+      if (MFX_ERR_NONE != sts) {
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
 
-            mfxIMPL impl = 0;
-            sts = m_mfxSession.QueryIMPL(&impl);
+      mfxIMPL impl = 0;
+      sts = m_mfxSession.QueryIMPL(&impl);
 
-            if ((request.NumFrameSuggested < m_mfxVideoParams.AsyncDepth) && (impl & MFX_IMPL_HARDWARE_ANY)) {
-                LOG(LS_ERROR) << "Invalid num suggested.";
-                return WEBRTC_VIDEO_CODEC_ERROR;
-            }
-            nSurfNum = MSDK_MAX(request.NumFrameSuggested, 1);
-            sts = m_pMFXAllocator->Alloc(m_pMFXAllocator->pthis, &request, &m_mfxResponse);
-            if (MFX_ERR_NONE != sts) {
-                LOG(LS_ERROR) << "Failed on allocator's alloc method";
-                return WEBRTC_VIDEO_CODEC_ERROR;
-            }
-            nSurfNum = m_mfxResponse.NumFrameActual;
-            //Allocate both the input and output surfaces.
-            //m_pInputSurfaces = (msdkFrameSurface*)calloc(nSurfNum, sizeof(msdkFrameSurface));
-            m_pInputSurfaces = new mfxFrameSurface1[nSurfNum];
-            if (nullptr == m_pInputSurfaces) {
-                LOG(LS_ERROR) << "Failed allocating input surfaces.";
-                return WEBRTC_VIDEO_CODEC_ERROR;
-            }
+      if ((request.NumFrameSuggested < m_mfxVideoParams.AsyncDepth) &&
+          (impl & MFX_IMPL_HARDWARE_ANY)) {
+        LOG(LS_ERROR) << "Invalid num suggested.";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      nSurfNum = MSDK_MAX(request.NumFrameSuggested, 1);
+      sts = m_pMFXAllocator->Alloc(m_pMFXAllocator->pthis, &request,
+                                   &m_mfxResponse);
+      if (MFX_ERR_NONE != sts) {
+        LOG(LS_ERROR) << "Failed on allocator's alloc method";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      nSurfNum = m_mfxResponse.NumFrameActual;
+      // Allocate both the input and output surfaces.
+      // m_pInputSurfaces = (msdkFrameSurface*)calloc(nSurfNum,
+      // sizeof(msdkFrameSurface));
+      m_pInputSurfaces = new mfxFrameSurface1[nSurfNum];
+      if (nullptr == m_pInputSurfaces) {
+        LOG(LS_ERROR) << "Failed allocating input surfaces.";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
 
-            for (int i = 0; i < nSurfNum; i++) {
-                memset(&(m_pInputSurfaces[i]), 0, sizeof(mfxFrameSurface1));
-                MSDK_MEMCPY_VAR(m_pInputSurfaces[i].Info, &(request.Info), sizeof(mfxFrameInfo));
-                m_pInputSurfaces[i].Data.MemId = m_mfxResponse.mids[i];
-            }
-            //Finally we're done with all configurations and we're OK to init the decoder
+      for (int i = 0; i < nSurfNum; i++) {
+        memset(&(m_pInputSurfaces[i]), 0, sizeof(mfxFrameSurface1));
+        MSDK_MEMCPY_VAR(m_pInputSurfaces[i].Info, &(request.Info),
+                        sizeof(mfxFrameInfo));
+        m_pInputSurfaces[i].Data.MemId = m_mfxResponse.mids[i];
+      }
+      // Finally we're done with all configurations and we're OK to init the
+      // decoder
 
-            sts = m_pmfxDEC->Init(&m_mfxVideoParams);
-            if (MFX_ERR_NONE != sts) {
-                LOG(LS_ERROR) << "Failed to init the decoder.";
-                return WEBRTC_VIDEO_CODEC_ERROR;
-            }
+      sts = m_pmfxDEC->Init(&m_mfxVideoParams);
+      if (MFX_ERR_NONE != sts) {
+        LOG(LS_ERROR) << "Failed to init the decoder.";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
 
-            videoParamExtracted = true;
-        }
-        else{
-            //with current bitstream, if we're not able to extract the video param and thus not able to
-            //continue decoding. return directly.
-            return WEBRTC_VIDEO_CODEC_ERROR;
-        }
+      videoParamExtracted = true;
+    } else {
+      // with current bitstream, if we're not able to extract the video param
+      // and thus not able to
+      // continue decoding. return directly.
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
+  }
 
-    if (inputImage._completeFrame){
-        m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
+  if (inputImage._completeFrame) {
+    m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
+  }
+
+  mfxSyncPoint syncp;
+
+  // If we get video param changed, that means we need to continue with
+  // decoding.
+  while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_SURFACE == sts) {
+    mfxU16 moreIdx =
+        H265DecGetFreeSurface(m_pInputSurfaces, m_mfxResponse.NumFrameActual);
+    if (moreIdx != MSDK_INVALID_SURF_IDX) {
+      mfxFrameSurface1* moreFreeSurf = &m_pInputSurfaces[moreIdx];
+      sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
+                                        &syncp);
+    } else {
+      MSDK_SLEEP(1);
+      continue;
     }
-
-    mfxSyncPoint syncp;
-
-    //If we get video param changed, that means we need to continue with decoding.
-    while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_SURFACE == sts) {
-        mfxU16 moreIdx = H265DecGetFreeSurface(m_pInputSurfaces, m_mfxResponse.NumFrameActual);
-        if (moreIdx != MSDK_INVALID_SURF_IDX) {
-            mfxFrameSurface1 *moreFreeSurf = &m_pInputSurfaces[moreIdx];
-            sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface, &syncp);
-        } else {
-            MSDK_SLEEP(1);
-            continue;
+    if (sts == MFX_ERR_NONE && syncp != nullptr) {
+      sts = m_mfxSession.SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
+      if (sts >= MFX_ERR_NONE) {
+        // This means we have an output surface ready to be read from the
+        // stream.
+        // Invoke the renderer to render the frame. Theoretically we should get
+        // d3d9 device handle from dev manager.
+        // Not doing this as experiment for delay concern.
+        HRESULT hr;
+        CComPtr<IDirect3DSurface9> pBackBuffer;
+        hr =
+            device_->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+        if (FAILED(hr)) {
+          // LOG(LS_ERROR) << "Failed to get back buffer from d3d device.";
+          return WEBRTC_VIDEO_CODEC_ERROR;
         }
-        if (sts == MFX_ERR_NONE && syncp != nullptr) {
-            sts = m_mfxSession.SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
-            if (sts >= MFX_ERR_NONE) {
-                //This means we have an output surface ready to be read from the stream.
-                //Invoke the renderer to render the frame. Theoretically we should get d3d9 device handle from dev manager.
-                //Not doing this as experiment for delay concern.
-                HRESULT hr;
-                CComPtr<IDirect3DSurface9> pBackBuffer;
-                hr = device_->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-                if (FAILED(hr)) {
-                    //LOG(LS_ERROR) << "Failed to get back buffer from d3d device.";
-                    return WEBRTC_VIDEO_CODEC_ERROR;
-                }
-                mfxHDLPair *dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
-                hr = device_->StretchRect((IDirect3DSurface9*)dxMemId->first, nullptr, pBackBuffer, NULL, D3DTEXF_NONE);
-                if (FAILED(hr)) {
-                    return WEBRTC_VIDEO_CODEC_ERROR;
-                }
-                hr = device_->Present(NULL, NULL, NULL, NULL);
-                if (FAILED(hr)) {
-                    return WEBRTC_VIDEO_CODEC_ERROR;
-                }
-            }
+        mfxHDLPair* dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
+        hr = device_->StretchRect((IDirect3DSurface9*)dxMemId->first, nullptr,
+                                  pBackBuffer, NULL, D3DTEXF_NONE);
+        if (FAILED(hr)) {
+          return WEBRTC_VIDEO_CODEC_ERROR;
         }
-        else if (MFX_ERR_MORE_DATA == sts) {
-            return WEBRTC_VIDEO_CODEC_OK;
+        hr = device_->Present(NULL, NULL, NULL, NULL);
+        if (FAILED(hr)) {
+          return WEBRTC_VIDEO_CODEC_ERROR;
         }
+      }
+    } else if (MFX_ERR_MORE_DATA == sts) {
+      return WEBRTC_VIDEO_CODEC_OK;
     }
-    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 mfxStatus H265MSDKVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize) {
     MSDK_CHECK_POINTER(pBitstream, MFX_ERR_NULL_PTR);

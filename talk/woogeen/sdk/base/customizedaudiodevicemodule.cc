@@ -5,9 +5,9 @@
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
 #include "webrtc/base/refcount.h"
+#include "webrtc/base/timeutils.cc"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
@@ -75,7 +75,7 @@ CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
       _ptrCbAudioDeviceObserver(NULL),
       _ptrAudioDevice(NULL),
       _id(0),
-      _lastProcessTime(TickTime::MillisecondTimestamp()),
+      _lastProcessTime(rtc::TimeMillis()),
       _initialized(false),
       _lastError(kAdmErrNone),
       _outputAdm(nullptr) {
@@ -146,7 +146,7 @@ CustomizedAudioDeviceModule::~CustomizedAudioDeviceModule() {
 // ----------------------------------------------------------------------------
 
 int64_t CustomizedAudioDeviceModule::TimeUntilNextProcess() {
-  int64_t now = TickTime::MillisecondTimestamp();
+  int64_t now = rtc::TimeMillis();
   int64_t deltaProcess = kAdmMaxIdleTimeProcess - (now - _lastProcessTime);
   return deltaProcess;
 }
@@ -159,7 +159,7 @@ int64_t CustomizedAudioDeviceModule::TimeUntilNextProcess() {
 // ----------------------------------------------------------------------------
 
 void CustomizedAudioDeviceModule::Process() {
-  _lastProcessTime = TickTime::MillisecondTimestamp();
+  _lastProcessTime = rtc::TimeMillis();
 
   // kPlayoutWarning
   if (_ptrAudioDevice->PlayoutWarning()) {
@@ -249,7 +249,7 @@ int32_t CustomizedAudioDeviceModule::Init() {
   if (!_ptrAudioDevice)
     return -1;
 
-  if (_ptrAudioDevice->Init() == -1) {
+  if (_ptrAudioDevice->Init() == AudioDeviceGeneric::InitStatus::OK) {
     return -1;
   }
 
@@ -1248,11 +1248,6 @@ int32_t CustomizedAudioDeviceModule::GetLoudspeakerStatus(bool* enabled) const {
   return _outputAdm->GetLoudspeakerStatus(enabled);
 }
 
-bool CustomizedAudioDeviceModule::BuiltInAECIsEnabled() const {
-  CHECK_INITIALIZED_BOOL();
-  return _ptrAudioDevice->BuiltInAECIsEnabled();
-}
-
 bool CustomizedAudioDeviceModule::BuiltInAECIsAvailable() const {
   CHECK_INITIALIZED_BOOL();
   return _ptrAudioDevice->BuiltInAECIsAvailable();
@@ -1283,6 +1278,7 @@ int32_t CustomizedAudioDeviceModule::EnableBuiltInNS(bool enable) {
   return _ptrAudioDevice->EnableBuiltInNS(enable);
 }
 
+#if defined(WEBRTC_IOS)
 int CustomizedAudioDeviceModule::GetPlayoutAudioParameters(
     AudioParameters* params) const {
   return _outputAdm->GetPlayoutAudioParameters(params);
@@ -1292,14 +1288,12 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
     AudioParameters* params) const {
   return _ptrAudioDevice->GetRecordAudioParameters(params);
 }
-
-void CustomizedAudioDeviceModule::VolumeOverloud(int16_t level) {
-  _outputAdm->VolumeOverloud(level);
-}
+#endif  // WEBRTC_IOS
 
 void CustomizedAudioDeviceModule::CreateOutputAdm(){
   if(_outputAdm==nullptr){
-    _outputAdm=webrtc::AudioDeviceModuleImpl::Create(0);
+    _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
+        0, AudioDeviceModule::kPlatformDefaultAudio);
   }
 }
 }

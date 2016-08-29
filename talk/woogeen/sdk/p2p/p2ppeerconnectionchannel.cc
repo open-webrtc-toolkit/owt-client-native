@@ -245,7 +245,7 @@ void P2PPeerConnectionChannel::CreateOffer() {
       new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create offer";
-  pc_thread_->Post(this, kMessageTypeCreateOffer, data);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
 }
 
 void P2PPeerConnectionChannel::CreateAnswer() {
@@ -263,7 +263,7 @@ void P2PPeerConnectionChannel::CreateAnswer() {
       message_observer = new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create answer";
-  pc_thread_->Post(this, kMessageTypeCreateAnswer, message_observer);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateAnswer, message_observer);
 }
 
 void P2PPeerConnectionChannel::SendSignalingMessage(
@@ -328,7 +328,8 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      pc_thread_->Send(this, kMessageTypeClosePeerConnection, nullptr);
+      pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
+                       nullptr);
       ChangeSessionState(kSessionStateReady);
       break;
     case kSessionStatePending:
@@ -410,7 +411,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
       set_remote_sdp_task_ = msg;
     } else {
       LOG(LS_INFO) << "Post set remote desc";
-      pc_thread_->Post(this, kMessageTypeSetRemoteDescription, msg);
+      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription, msg);
     }
   } else if (type == "candidates") {
     string sdp_mid;
@@ -425,7 +426,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
     rtc::TypedMessageData<webrtc::IceCandidateInterface*>* param =
         new rtc::TypedMessageData<webrtc::IceCandidateInterface*>(
             ice_candidate);
-    pc_thread_->Post(this, kMessageTypeSetRemoteIceCandidate, param);
+    pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteIceCandidate, param);
   }
 }
 
@@ -446,7 +447,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(
     case PeerConnectionInterface::SignalingState::kStable:
       if (set_remote_sdp_task_) {
         LOG(LS_INFO) << "Set stored remote description.";
-        pc_thread_->Post(this, kMessageTypeSetRemoteDescription,
+        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription,
                          set_remote_sdp_task_);
         // Ownership will be transferred to message handler
         set_remote_sdp_task_ = nullptr;
@@ -642,7 +643,7 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
   LOG(LS_INFO) << "Post set local desc";
-  pc_thread_->Post(this, kMessageTypeSetLocalDescription, msg);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetLocalDescription, msg);
 }
 
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
@@ -830,7 +831,8 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      pc_thread_->Post(this, kMessageTypeClosePeerConnection, nullptr);
+      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
+                       nullptr);
     case kSessionStateMatched:
       SendStop(nullptr, nullptr);
       ChangeSessionState(kSessionStateReady);
@@ -884,7 +886,7 @@ void P2PPeerConnectionChannel::GetConnectionStats(
   GetStatsMessage* stats_message = new GetStatsMessage(
       observer, nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-  pc_thread_->Post(this, kMessageTypeGetStats, stats_message);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
 }
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {
@@ -906,7 +908,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       LOG(LS_INFO) << "Post add stream";
-      pc_thread_->Post(this, kMessageTypeAddStream, param);
+      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
     }
     pending_publish_streams_.clear();
   }
@@ -922,7 +924,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       LOG(LS_INFO) << "Post remove stream";
-      pc_thread_->Post(this, kMessageTypeRemoveStream, param);
+      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeRemoveStream, param);
     }
     pending_unpublish_streams_.clear();
   }
@@ -958,7 +960,7 @@ void P2PPeerConnectionChannel::SendDeny(
 void P2PPeerConnectionChannel::ClosePeerConnection() {
   LOG(LS_INFO) << "Close peer connection.";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Send(this, kMessageTypeClosePeerConnection, nullptr);
+  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
   ChangeSessionState(kSessionStateReady);
 }
 
@@ -999,7 +1001,7 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
 void P2PPeerConnectionChannel::CreateDataChannel(const std::string& label) {
   rtc::TypedMessageData<std::string>* data =
       new rtc::TypedMessageData<std::string>(label);
-  pc_thread_->Post(this, kMessageTypeCreateDataChannel, data);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateDataChannel, data);
 }
 
 void P2PPeerConnectionChannel::Send(

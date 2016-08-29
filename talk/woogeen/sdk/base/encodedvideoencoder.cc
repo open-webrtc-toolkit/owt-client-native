@@ -7,8 +7,8 @@
 #include "talk/woogeen/sdk/base/encodedvideoencoder.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/buffer.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/include/module_common_types.h"
@@ -50,7 +50,8 @@ int EncodedVideoEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   uint8_t* data = static_cast<uint8_t*>(video_frame_buffer->native_handle());
-  int data_size = video_frame_buffer->size();
+  int data_size = webrtc::CalcBufferSize(webrtc::kI420, input_image.width(),
+                                         input_image.height());
   if (data == nullptr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }

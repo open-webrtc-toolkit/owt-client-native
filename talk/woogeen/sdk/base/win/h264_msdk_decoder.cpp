@@ -69,7 +69,7 @@ H264MSDKVideoDecoder::~H264MSDKVideoDecoder() {
 }
 
 void H264MSDKVideoDecoder::CheckOnCodecThread() {
-    RTC_CHECK(decoder_thread_ == rtc::ThreadManager::Instance()->CurrentThread())
+    RTC_CHECK(decoder_thread_.get() == rtc::ThreadManager::Instance()->CurrentThread())
         << "Running on wrong thread!";
 }
 
@@ -134,14 +134,16 @@ int32_t H264MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings
         LOG(LS_ERROR) << "NULL codec settings";
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    RTC_CHECK(codecSettings->codecType == codecType_) << "Unsupported codec type" << codecSettings->codecType << " for " << codecType_;
+    RTC_CHECK(codecSettings->codecType == codecType_)
+        << "Unsupported codec type" << codecSettings->codecType << " for "
+        << codecType_;
     timestamps_.clear();
     ntp_time_ms_.clear();
 
     if (&codec_ != codecSettings)
         codec_ = *codecSettings;
 
-    return decoder_thread_->Invoke<int32_t>(
+    return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&H264MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
 

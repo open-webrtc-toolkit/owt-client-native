@@ -30,8 +30,8 @@ int32_t CustomizedAudioCapturer::ActiveAudioLayer(
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::Init() {
-  return 0;
+AudioDeviceGeneric::InitStatus CustomizedAudioCapturer::Init() {
+  return AudioDeviceGeneric::InitStatus::OK;
 }
 
 int32_t CustomizedAudioCapturer::Terminate() {
@@ -375,8 +375,6 @@ void CustomizedAudioCapturer::ClearPlayoutError() {}
 void CustomizedAudioCapturer::ClearRecordingWarning() {}
 
 void CustomizedAudioCapturer::ClearRecordingError() {}
-
-void CustomizedAudioCapturer::VolumeOverloud(int16_t level) {}
 
 void CustomizedAudioCapturer::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {

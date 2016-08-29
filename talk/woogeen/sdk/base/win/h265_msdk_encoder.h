@@ -87,7 +87,7 @@ private:
     mfxBitstream            m_mfxBS; // contains encoded data
     mfxU32 m_nFramesProcessed;
     H265MemType m_memType_;
-    rtc::scoped_ptr<H265EncoderThread> encoder_thread_;
+    std::unique_ptr<H265EncoderThread> encoder_thread_;
     bool inited_;
 #ifdef WOOGEEN_DEBUG_H265_ENC
     FILE *output;

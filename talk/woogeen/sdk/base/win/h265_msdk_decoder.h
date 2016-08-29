@@ -80,7 +80,7 @@ private:
 
     // Type of video codec.
     webrtc::VideoCodecType codecType_;
-    rtc::scoped_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
+    std::unique_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
     mfxStatus ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize);
     void WipeMfxBitstream(mfxBitstream* pBitstream);
     void ReadFromInputStream(mfxBitstream* pBitstream, uint8_t *data, size_t len);
