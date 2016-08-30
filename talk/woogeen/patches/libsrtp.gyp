@@ -6,9 +6,6 @@
   'variables': {
     'use_openssl%': 1,
   },
-  'includes': [
-    '../../webrtc/build/ssl.gypi',
-  ],
   'target_defaults': {
     'defines': [
       'HAVE_CONFIG_H',
@@ -190,6 +187,18 @@
       ],
       'conditions': [
         ['use_openssl==1', {
+          'conditions': [
+            ['openssl_is_boringssl==1', {
+              'dependencies': [
+                '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
+              ],
+            }],
+            ['openssl_is_boringssl==0', {
+              'include_dirs':[
+                '<(ssl_root)/include',
+              ],
+            }],
+          ],
           'sources!': [
             'srtp/crypto/cipher/aes_cbc.c',
             'srtp/crypto/cipher/aes_icm.c',
@@ -206,18 +215,6 @@
             'srtp/crypto/include/aes_gcm_ossl.h',
             'srtp/crypto/include/aes_icm_ossl.h',
             'srtp/crypto/rng/rand_source_ossl.c',
-          ],
-          'conditions': [
-            ['openssl_is_boringssl==1', {
-              'dependencies': [
-                '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
-              ],
-            }],
-            ['openssl_is_boringssl==0', {
-              'include_dirs': [
-                '<(ssl_root)/include',
-              ],
-            }],
           ],
         }],
       ],
@@ -306,9 +303,14 @@
         'srtp/test/getopt_s.c',
       ],
       'conditions': [
-        ['use_openssl==1', {
+        ['use_openssl==1 and openssl_is_boringssl==1', {
           'dependencies': [
             '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
+          ],
+        }],
+        ['use_openssl==1 and openssl_is_boringssl==0', {
+          'include_dirs':[
+            '<(ssl_root)/include',
           ],
         }],
       ],

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import "webrtc/api/objc/RTCMediaStream.h"
+#import "RTCMediaStream.h"
 
 @class RTCMediaConstraints;
 

@@ -295,6 +295,7 @@
             'sdk/base/objc/RTCConnectionStats.mm',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.h',
             'sdk/base/objc/RTCPeerConnectionDependencyFactory.mm',
+            'sdk/base/objc/RTCErrors.m',
             'sdk/base/objc/RTCStream+Internal.h',
             'sdk/base/objc/RTCStream.mm',
             'sdk/base/objc/RTCLocalCameraStream.mm',

@@ -5,9 +5,6 @@
   'variables': {
     'libsctp_target_type%': 'static_library',
   },
-  'includes': [
-    '../../webrtc/build/ssl.gypi',
-  ],
   'target_defaults': {
     'defines': [
       'SCTP_PROCESS_LEVEL_LOCKS',
@@ -19,6 +16,18 @@
     'include_dirs': [
       'usrsctplib/usrsctplib/',
       'usrsctplib/usrsctplib/netinet',
+    ],
+    'conditions': [
+      ['openssl_is_boringssl==1', {
+        'dependencies': [
+          '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
+        ],
+      }],
+      ['openssl_is_boringssl==0', {
+        'include_dirs':[
+          '<(ssl_root)/include',
+        ],
+      }],
     ],
     'direct_dependent_settings': {
       'include_dirs': [
@@ -149,16 +158,6 @@
         }, {  # OS != "win",
           'defines': [
             'NON_WINDOWS_DEFINE',
-          ],
-        }],
-        ['openssl_is_boringssl==1',{
-          'dependencies': [
-            '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
-          ],
-        }],
-        ['openssl_is_boringssl==0',{
-          'include_dirs': [
-            '<(ssl_root)/include',
           ],
         }],
       ],  # conditions

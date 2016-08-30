@@ -24,7 +24,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-NSString* const RTCErrorDomain = @"com.intel.webrtc";
+extern NSString* const RTCErrorDomain;
 
 typedef NS_ENUM(NSInteger, WoogeenStreamErrors) {
   WoogeenStreamErrorUnknown = 1100,

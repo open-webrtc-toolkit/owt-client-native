@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
+//  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "webrtc/api/objc/RTCMediaStream.h"
+#import "RTCMediaStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteStream.h"
 
