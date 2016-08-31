@@ -147,9 +147,9 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
       case REPORT_VIDEO_BWE:
       {
         connection_stats->video_bandwidth_stats.available_send_bandwidth =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth)->int_val();
-        connection_stats->video_bandwidth_stats.available_receive_bandwidth =
             report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth)->int_val();
+        connection_stats->video_bandwidth_stats.available_receive_bandwidth =
+            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth)->int_val();
         connection_stats->video_bandwidth_stats.transmit_bitrate =
             report->FindValue(webrtc::StatsReport::kStatsValueNameTransmitBitrate)->int_val();
         connection_stats->video_bandwidth_stats.retransmit_bitrate =
