@@ -1,0 +1,173 @@
+import("//webrtc/build/webrtc.gni")
+#import("//third_party/protobuf/proto_library.gni")
+
+declare_args() {
+  include_internal_audio_device = true
+}
+
+static_library("woogeen"){
+  deps = [
+    ":woogeen_sdk_base",
+    ":woogeen_sdk_p2p",
+    ":woogeen_sdk_conf",
+    "//third_party/protobuf:protobuf_lite",
+    "//webrtc",
+    "//webrtc/system_wrappers:system_wrappers_default",
+  ]
+  complete_static_lib = true
+}
+
+source_set("woogeen_sdk_base") {
+  sources = [
+    "sdk/base/peerconnectiondependencyfactory.h",
+    "sdk/base/peerconnectiondependencyfactory.cc",
+    "sdk/base/eventtrigger.h",
+    "sdk/base/functionalobserver.h",
+    "sdk/base/functionalobserver.cc",
+    "sdk/base/mediaconstraintsimpl.h",
+    "sdk/base/stream.cc",
+    "sdk/base/localcamerastreamparameters.cc",
+    "sdk/base/exception.cc",
+    "sdk/base/peerconnectionchannel.h",
+    "sdk/base/peerconnectionchannel.cc",
+    "sdk/base/encodedvideoencoder.h",
+    "sdk/base/encodedvideoencoder.cc",
+    "sdk/base/encodedvideoencoderfactory.h",
+    "sdk/base/encodedvideoencoderfactory.cc",
+    "sdk/base/globalconfiguration.cc",
+    "sdk/base/webrtcvideorendererimpl.h",
+    "sdk/base/webrtcvideorendererimpl.cc",
+    "sdk/base/customizedframescapturer.cc",
+    "sdk/base/customizedframescapturer.h",
+    "sdk/base/sdputils.h",
+    "sdk/base/sdputils.cc",
+    "sdk/base/mediautils.h",
+    "sdk/base/mediautils.cc",
+    "sdk/base/deviceutils.cc",
+    "sdk/base/logging.cc",
+    "sdk/base/sysinfo.h",
+    "sdk/base/sysinfo.cc",
+    "sdk/include/cpp/woogeen/base/stream.h",
+    "sdk/include/cpp/woogeen/base/clientconfiguration.h",
+    "sdk/include/cpp/woogeen/base/localcamerastreamparameters.h",
+    "sdk/include/cpp/woogeen/base/exception.h",
+    "sdk/include/cpp/woogeen/base/videorendererinterface.h",
+    "sdk/include/cpp/woogeen/base/framegeneratorinterface.h",
+    "sdk/include/cpp/woogeen/base/connectionstats.h",
+    "sdk/include/cpp/woogeen/base/deviceutils.h",
+    "sdk/include/cpp/woogeen/base/logging.h",
+  ]
+
+  public_deps = [
+    "//webrtc/api:libjingle_peerconnection",
+    "//third_party/libyuv:libyuv",
+  ]
+
+  include_dirs = [
+    "sdk/include/cpp",
+    "include/msdk",
+  ]
+
+  defines = [
+    "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
+  ]
+
+  if (is_win) {
+    sources += [
+      "sdk/base/win/mftmediadecoder.h",
+      "sdk/base/win/mftmediadecoder.cpp",
+      "sdk/base/win/mftvideodecoderfactory.cpp",
+      "sdk/base/win/mftvideodecoderfactory.h",
+      "sdk/base/win/d3dvideorenderer.h",
+      "sdk/base/win/d3dvideorenderer.cpp",
+      "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/d3dnativeframe.cpp",
+      "sdk/base/win/mftvideoencoderfactory.cpp",
+      "sdk/base/win/mftvideoencoderfactory.h",
+      "sdk/base/win/h264_video_mft_encoder.cpp",
+      "sdk/base/win/h264_video_mft_encoder.h",
+      "sdk/base/win/h264_msdk_decoder.cpp",
+      "sdk/base/win/h264_msdk_decoder.h",
+    ]
+
+    cflags = [
+      # TODO: Bug 799, 800
+      "/wd4189",  # Unused variables
+      "/wd4267",  # Conversion truncation
+      "/wd4389",  # Signed/unsigned mismatch
+    ]
+
+    if (rtc_use_h265) {
+      sources += [
+        "sdk/base/win/h265_msdk_decoder.cpp",
+        "sdk/base/win/h265_msdk_decoder.h",
+        "sdk/base/win/h265_msdk_encoder.cpp",
+        "sdk/base/win/h265_msdk_encoder.h",
+      ]
+    }
+  }
+
+  if (is_linux) {
+    sources += [
+      "sdk/base/linux/v4l2videodecoderfactory.h",
+      "sdk/base/linux/v4l2videodecoderfactory.cc",
+      "sdk/base/linux/v4l2videodecoder.h",
+      "sdk/base/linux/v4l2videodecoder.cc",
+    ]
+  }
+
+  if (include_internal_audio_device) {
+    sources += [
+      "sdk/base/customizedaudiodevicemodule.h",
+      "sdk/base/customizedaudiodevicemodule.cc",
+      "sdk/base/customizedaudiocapturer.h",
+      "sdk/base/customizedaudiocapturer.cc",
+    ]
+  }
+}
+
+source_set("woogeen_sdk_p2p") {
+  deps = [
+    ":woogeen_sdk_base",
+    "//third_party/jsoncpp:jsoncpp",
+  ]
+
+  include_dirs = ["sdk/include/cpp"]
+
+  sources = [
+    "sdk/p2p/p2ppeerconnectionchannel.h",
+    "sdk/p2p/p2ppeerconnectionchannel.cc",
+    "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
+    "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.cc",
+    "sdk/p2p/peerclient.cc",
+    "sdk/p2p/p2pexception.cc",
+    "sdk/include/cpp/woogeen/p2p/p2psignalingreceiverinterface.h",
+    "sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h",
+    "sdk/include/cpp/woogeen/p2p/p2pexception.h",
+    "sdk/include/cpp/woogeen/p2p/p2psignalingchannelinterface.h",
+    "sdk/include/cpp/woogeen/p2p/peerclient.h",
+  ]
+}
+
+source_set("woogeen_sdk_conf") {
+  deps = [
+    ":woogeen_sdk_base",
+    "//third_party/jsoncpp:jsoncpp",
+  ]
+
+  include_dirs = ["sdk/include/cpp"]
+
+  sources = [
+    "sdk/conference/conferenceexception.cc",
+    "sdk/conference/conferenceclient.cc",
+    "sdk/conference/conferencepeerconnectionchannel.h",
+    "sdk/conference/conferencepeerconnectionchannel.cc",
+    "sdk/conference/conferencesocketsignalingchannel.h",
+    "sdk/conference/conferencesocketsignalingchannel.cc",
+    "sdk/conference/remotemixedstream.cc",
+    "sdk/include/cpp/woogeen/conference/conferenceexception.h",
+    "sdk/include/cpp/woogeen/conference/conferenceclient.h",
+    "sdk/include/cpp/woogeen/conference/user.h",
+    "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
+  ]
+}

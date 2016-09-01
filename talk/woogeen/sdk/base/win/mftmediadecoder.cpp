@@ -740,7 +740,7 @@ int32_t MSDKVideoDecoder::DecodeInternal(IMFSample* sample){
         DoDecode();
 
         hr = decoder_->ProcessInput(0, sample, 0);
-        if (hr = MF_E_NOTACCEPTING){
+        if (hr == MF_E_NOTACCEPTING){
             pending_input_buffer.push_back(sample);
             //send message to decoder thread to handle the pending input buffer.
             decoder_thread_->PostDelayed(RTC_FROM_HERE, kMSDKCodecPollMs, this, MSDK_MSG_HANDLE_INPUT);
