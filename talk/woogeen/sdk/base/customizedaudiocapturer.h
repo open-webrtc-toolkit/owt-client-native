@@ -164,7 +164,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   size_t recording_frames_in_10ms_;
   int recording_sample_rate_;
   int recording_channel_number_;
-  int recording_buffer_size_;
+  uint32_t recording_buffer_size_;
 
   std::unique_ptr<rtc::PlatformThread> thread_rec_;
 

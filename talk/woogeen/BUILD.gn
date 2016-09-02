@@ -1,5 +1,8 @@
 import("//webrtc/build/webrtc.gni")
-#import("//third_party/protobuf/proto_library.gni")
+
+if (is_ios) {
+  import("//build/config/ios/rules.gni")
+}
 
 declare_args() {
   include_internal_audio_device = true
@@ -124,6 +127,11 @@ source_set("woogeen_sdk_base") {
       "sdk/base/customizedaudiocapturer.cc",
     ]
   }
+
+  if(is_clang){
+    # Bug 804. Fix Chromium style checker warnings.
+    configs -= [ "//build/config/clang:find_bad_constructs"]
+  }
 }
 
 source_set("woogeen_sdk_p2p") {
@@ -147,6 +155,11 @@ source_set("woogeen_sdk_p2p") {
     "sdk/include/cpp/woogeen/p2p/p2psignalingchannelinterface.h",
     "sdk/include/cpp/woogeen/p2p/peerclient.h",
   ]
+
+  if(is_clang){
+    # Bug 804. Fix Chromium style checker warnings.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
 }
 
 source_set("woogeen_sdk_conf") {
@@ -170,4 +183,120 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/user.h",
     "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
   ]
+
+  if(is_clang){
+    # Bug 804. Fix Chromium style checker warnings.
+    configs -= [ "//build/config/clang:find_bad_constructs"]
+  }
+}
+
+if (is_ios) {
+  static_library("woogeen_sdk_objc") {
+    deps = [
+      ":woogeen_sdk_base",
+      ":woogeen_sdk_p2p",
+      ":woogeen_sdk_conf",
+      "//third_party/jsoncpp",
+      "//webrtc/sdk:rtc_sdk_peerconnection_objc",
+      "//webrtc/system_wrappers:system_wrappers_default",
+    ]
+
+    include_dirs = [
+      "//webrtc/sdk/objc/Framework/Headers/WebRTC",
+      "sdk/include/cpp",
+      "sdk/include/objc",
+    ]
+
+    configs += ["//build/config/compiler:enable_arc"]
+
+    sources = [
+      "sdk/base/objc/public/RTCConnectionStats.h",
+      "sdk/base/objc/public/RTCLocalStream.h",
+      "sdk/base/objc/public/RTCErrors.h",
+      "sdk/base/objc/public/RTCStream.h",
+      "sdk/base/objc/public/RTCRemoteStream.h",
+      "sdk/base/objc/public/RTCLocalCameraStream.h",
+      "sdk/base/objc/public/RTCLocalCameraStreamParameters.h",
+      "sdk/base/objc/public/RTCLocalCustomizedStream.h",
+      "sdk/base/objc/public/RTCLocalCustomizedStreamParameters.h",
+      "sdk/base/objc/public/RTCMediaCodec.h",
+      "sdk/base/objc/public/RTCMediaFormat.h",
+      "sdk/base/objc/public/RTCRemoteCameraStream.h",
+      "sdk/base/objc/public/RTCRemoteScreenStream.h",
+      "sdk/base/objc/public/RTCGlobalConfiguration.h",
+      "sdk/base/objc/public/RTCFrameGeneratorProtocol.h",
+      "sdk/base/objc/AVFoundationVideoCapturerFactory.h",
+      "sdk/base/objc/AVFoundationVideoCapturerFactory.mm",
+      "sdk/base/objc/RTCConnectionStats+Internal.h",
+      "sdk/base/objc/RTCConnectionStats.mm",
+      "sdk/base/objc/RTCPeerConnectionDependencyFactory.h",
+      "sdk/base/objc/RTCPeerConnectionDependencyFactory.mm",
+      "sdk/base/objc/RTCErrors.m",
+      "sdk/base/objc/RTCStream+Internal.h",
+      "sdk/base/objc/RTCStream.mm",
+      "sdk/base/objc/RTCLocalCameraStream.mm",
+      "sdk/base/objc/RTCLocalCameraStreamParameters.mm",
+      "sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h",
+      "sdk/base/objc/RTCLocalCustomizedStream.mm",
+      "sdk/base/objc/RTCLocalCustomizedStreamParameters.mm",
+      "sdk/base/objc/RTCLocalCustomizedStreamParameters+Internal.h",
+      "sdk/base/objc/RTCLocalStream.mm",
+      "sdk/base/objc/RTCLocalStream+Internal.h",
+      "sdk/base/objc/RTCMediaCodec+Internal.h",
+      "sdk/base/objc/RTCMediaCodec.mm",
+      "sdk/base/objc/RTCMediaFormat+Internal.h",
+      "sdk/base/objc/RTCMediaFormat.mm",
+      "sdk/base/objc/RTCRemoteStream.mm",
+      "sdk/base/objc/RTCRemoteCameraStream.mm",
+      "sdk/base/objc/RTCRemoteScreenStream.mm",
+      "sdk/base/objc/RTCGlobalConfiguration.mm",
+      "sdk/base/objc/FrameGeneratorObjcImpl.h",
+      "sdk/base/objc/FrameGeneratorObjcImpl.mm",
+      "sdk/p2p/objc/public/RTCP2PErrors.h",
+      "sdk/p2p/objc/public/RTCP2PPeerConnectionChannelObserver.h",
+      "sdk/p2p/objc/public/RTCP2PSignalingSenderProtocol.h",
+      "sdk/p2p/objc/public/RTCP2PSignalingReceiverProtocol.h",
+      "sdk/p2p/objc/public/RTCPeerClient.h",
+      "sdk/p2p/objc/public/RTCPeerClientConfiguration.h",
+      "sdk/p2p/objc/public/RTCPeerClientObserver.h",
+      "sdk/p2p/objc/public/RTCP2PSignalingChannelProtocol.h",
+      "sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h",
+      "sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.mm",
+      "sdk/p2p/objc/RTCP2PPeerConnectionChannel.h",
+      "sdk/p2p/objc/RTCP2PPeerConnectionChannel.mm",
+      "sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h",
+      "sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.mm",
+      "sdk/p2p/objc/RTCPeerClient.m",
+      "sdk/p2p/objc/RTCPeerClientConfiguration.m",
+      "sdk/conference/objc/public/RTCConferenceClient.h",
+      "sdk/conference/objc/public/RTCConferenceClientConfiguration.h",
+      "sdk/conference/objc/public/RTCConferenceClientObserver.h",
+      "sdk/conference/objc/public/RTCRemoteMixedStream.h",
+      "sdk/conference/objc/public/RTCConferenceErrors.h",
+      "sdk/conference/objc/public/RTCConferenceUser.h",
+      "sdk/conference/objc/public/RTCConferenceSubscribeOptions.h",
+      "sdk/conference/objc/public/RTCRemoteMixedStreamObserver.h",
+      "sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h",
+      "sdk/conference/objc/RTCConferenceSubscribeOptions.mm",
+      "sdk/conference/objc/RTCRemoteMixedStream.mm",
+      "sdk/conference/objc/RTCConferenceClient.mm",
+      "sdk/conference/objc/RTCConferenceClientConfiguration.mm",
+      "sdk/conference/objc/RTCConferenceUser+Internal.h",
+      "sdk/conference/objc/RTCConferenceUser.mm",
+      "sdk/conference/objc/ConferenceClientObserverObjcImpl.h",
+      "sdk/conference/objc/ConferenceClientObserverObjcImpl.mm",
+      "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h",
+      "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.mm",
+    ]
+
+    # Bug 805.
+    cflags = ["-Wno-nullability-completeness"]
+
+    if(is_clang){
+      # Bug 804. Fix Chromium style checker warnings.
+      configs -= [ "//build/config/clang:find_bad_constructs"]
+    }
+
+    complete_static_lib = true
+  }
 }
