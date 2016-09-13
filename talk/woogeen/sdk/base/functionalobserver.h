@@ -6,6 +6,7 @@
 #define WOOGEEN_BASE_FUNCTIONALOBSERVER_H_
 
 #include <functional>
+#include <unordered_map>
 
 #include "webrtc/api/jsep.h"
 #include "webrtc/api/peerconnectioninterface.h"
@@ -76,6 +77,9 @@ class FunctionalStatsObserver : public webrtc::StatsObserver {
     REPORT_VIDEO_SENDER,
     REPORT_VIDEO_RECEIVER,
     REPORT_VIDEO_BWE,
+    REPORT_LOCAL_CANDIDATE,
+    REPORT_REMOTE_CANDIDATE,
+    REPORT_CANDIDATE_PAIR,
     REPORT_TYPE_UKNOWN = 99,
   };
 
@@ -83,36 +87,61 @@ class FunctionalStatsObserver : public webrtc::StatsObserver {
 
   ReportType GetReportType(const webrtc::StatsReport* report) {
     //check if it's ssrc report
-    bool isSending = 0;
-    bool isVideo = 0;
-    bool isSSRC = false;
-    bool isBWE = false;
+    bool is_sending(0);
+    bool is_video(0);
+    bool is_ssrc(false);
+    bool is_bwe(false);
+    bool is_local_candidate(false);
+    bool is_remote_candidate(false);
+    bool is_candidate_pair(false);
     if (report->type() == webrtc::StatsReport::kStatsReportTypeSsrc) {
-      isSSRC = true;
+      is_ssrc = true;
       if (report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)) //this is sending
-        isSending = true;
+        is_sending = true;
 
       if (report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent)
           || report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthReceived))
-        isVideo = true;
+        is_video = true;
 
-    } else if(report->type() == webrtc::StatsReport::kStatsReportTypeBwe){
-      isBWE = true;
+    } else if (report->type() == webrtc::StatsReport::kStatsReportTypeBwe) {
+      is_bwe = true;
+    } else if (report->type() ==
+               webrtc::StatsReport::kStatsReportTypeIceLocalCandidate) {
+      is_local_candidate = true;
+    } else if (report->type() ==
+               webrtc::StatsReport::kStatsReportTypeIceRemoteCandidate) {
+      is_remote_candidate = true;
+    } else if (report->type() == webrtc::StatsReport::kStatsReportTypeCandidatePair){
+      is_candidate_pair = true;
     }
 
-    if (isSSRC & isSending & !isVideo) {
+    if (is_ssrc & is_sending & !is_video) {
       return REPORT_AUDIO_SENDER;
-    } else if (isSSRC & !isSending & !isVideo) {
+    } else if (is_ssrc & !is_sending & !is_video) {
       return REPORT_AUDIO_RECEIVER;
-    } else if (isSSRC & isSending & isVideo) {
+    } else if (is_ssrc & is_sending & is_video) {
       return REPORT_VIDEO_SENDER;
-    } else if (isSSRC & !isSending & isVideo) {
+    } else if (is_ssrc & !is_sending & is_video) {
       return REPORT_VIDEO_RECEIVER;
-    } else if (isBWE) {
+    } else if (is_bwe) {
       return REPORT_VIDEO_BWE;
-    } else
+    } else if (is_local_candidate) {
+      return REPORT_LOCAL_CANDIDATE;
+    } else if (is_remote_candidate) {
+      return REPORT_REMOTE_CANDIDATE;
+    } else if (is_candidate_pair) {
+      return REPORT_CANDIDATE_PAIR;
+    } else {
       return REPORT_TYPE_UKNOWN;
+    }
   }
+
+  IceCandidateType GetCandidateType(const std::string& type);
+  TransportProtocolType GetTransportProtocolType(const std::string& protocol);
+  std::shared_ptr<IceCandidateReport> GetIceCandidateReport(const webrtc::StatsReport& report);
+
+  std::unordered_map<std::string, std::shared_ptr<IceCandidateReport>> local_candidate_map_;
+  std::unordered_map<std::string, std::shared_ptr<IceCandidateReport>> remote_candidate_map_;
 };
 }
 }

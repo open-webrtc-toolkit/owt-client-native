@@ -24,33 +24,29 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_CLIENTCONFIGURATION_H_
-#define WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
 
-#include <vector>
-#include <string>
-#include "woogeen/base/mediaformat.h"
-#include "woogeen/base/network.h"
-
-namespace woogeen {
-namespace base{
-
-/// Client configurations
-struct ClientConfiguration {
-  ClientConfiguration() : max_audio_bandwidth(0), max_video_bandwidth(0){};
-  /// List of ICE servers
-  std::vector<IceServer> ice_servers;
-  /// Media codec preference
-  MediaCodec media_codec;
-  /**
-   @brief Max outgoing audio bandwidth, unit: kbps.
-   @detail Please be noticed different codecs may support different bitrate ranges.
-   */
-  int max_audio_bandwidth;
-  /// Max outgoing video bandwidth, unit: kbps.
-  int max_video_bandwidth;
+/// Define ICE candidate types.
+typedef NS_ENUM(NSUInteger, RTCIceCandidateType) {
+  /// Host candidate.
+  RTCIceCandidateTypeHost = 1,
+  /// Server reflexive candidate.
+  RTCIceCandidateTypeSrflx,
+  /// Peer reflexive candidate.
+  RTCIceCandidateTypePrflx,
+  /// Relayed candidate.
+  RTCIceCandidateTypeRelay,
+  /// Unknown.
+  RTCIceCandidateTypeUnknown = 99,
 };
-}
-}
 
-#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+/// Defines transport protocol.
+typedef NS_ENUM(NSUInteger, RTCTransportProtocolType) {
+  /// TCP.
+  RTCTransportProtocolTypeTcp = 1,
+  /// UDP.
+  RTCTransportProtocolTypeUdp,
+  /// Unknown.
+  RTCTransportProtocolTypeUnknown = 99,
+};

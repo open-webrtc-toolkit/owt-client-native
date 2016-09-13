@@ -41,3 +41,15 @@
 - (instancetype)initWithNativeStats:
     (const woogeen::base::VideoBandwidthStats&)stats;
 @end
+
+@interface RTCIceCandidateStats (Internal)
+- (instancetype)initWithNativeStats:
+    (const woogeen::base::IceCandidateReport&)stats;
+@end
+
+@interface RTCIceCandidatePairStats (Internal)
+- (instancetype)initWithNativeStats:
+                    (const woogeen::base::IceCandidatePairReport&)stats
+                  localIceCandidate:(RTCIceCandidateStats*)localIceCandidate
+                 remoteIceCandidate:(RTCIceCandidateStats*)remoteIceCandidate;
+@end

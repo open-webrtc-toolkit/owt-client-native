@@ -27,6 +27,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+#import "Woogeen/RTCNetwork.h"
 
 RTC_EXPORT
 @interface RTCMediaChannelStats : NSObject
@@ -140,9 +141,44 @@ RTC_EXPORT
 @property(nonatomic, readonly) NSUInteger transmitBitrate;
 /// Video bitrate of retransmit. Unit: bps.
 @property(nonatomic, readonly) NSUInteger retransmitBitrate;
+/// Target encoding bitrate, unit: bps.
+@property(nonatomic, readonly) NSUInteger targetEncodingBitrate;
+/// Actual encoding bitrate, unit: bps.
+@property(nonatomic, readonly) NSUInteger actualEncodingBitrate;
 
 @end
 
+RTC_EXPORT
+/// Define ICE candidate report.
+@interface RTCIceCandidateStats : NSObject
+/// The ID of this stats report.
+@property(nonatomic, readonly) NSString* statsId;
+/// The IP address of the candidate.
+@property(nonatomic, readonly) NSString* ip;
+/// The port number of the candidate.
+@property(nonatomic, readonly) NSUInteger port;
+/// Candidate type.
+@property(nonatomic, readonly) RTCIceCandidateType candidateType;
+/// Transport protocol.
+@property(nonatomic, readonly) RTCTransportProtocolType protocol;
+/// Calculated as defined in RFC5245.
+@property(nonatomic, readonly) NSUInteger priority;
+
+@end
+
+RTC_EXPORT
+/// Define ICE candidate pair report.
+@interface RTCIceCandidatePairStats : NSObject
+/// The ID of this stats report.
+@property(nonatomic, readonly) NSString* statsId;
+/// Indicate whether transport is active.
+@property(nonatomic, readonly) BOOL isActive;
+/// Local candidate of this pair.
+@property(nonatomic, readonly) RTCIceCandidateStats* localIceCandidate;
+/// Remote candidate of this pair.
+@property(nonatomic, readonly) RTCIceCandidateStats* remoteIceCandidate;
+
+@end
 
 /// Connection statistics
 RTC_EXPORT
@@ -153,8 +189,14 @@ RTC_EXPORT
 /// Reports for media channels. Element can be one of the following types:
 /// RTCAudioSenderStats, RTCVideoSenderStats, RTCAudioReceiverStats,
 /// RTCVideoReceiverStats.
-@property(nonatomic, readonly) NSArray* mediaChannelStats;
+@property(nonatomic, readonly) NSArray<RTCMediaChannelStats*>* mediaChannelStats;
 /// Video bandwidth statistics.
 @property(nonatomic, readonly) RTCVideoBandwidthStats* videoBandwidthStats;
+/// Reports for local ICE candidate stats.
+@property(nonatomic, readonly) NSArray<RTCIceCandidateStats*>* localIceCandidateStats;
+/// Reports for remote ICE candidate stats.
+@property(nonatomic, readonly) NSArray<RTCIceCandidateStats*>* remoteIceCandidateStats;
+/// Reports for ICE candidate pair stats.
+@property(nonatomic, readonly) NSArray<RTCIceCandidatePairStats*>* iceCandidatePairStats;
 
 @end

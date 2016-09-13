@@ -5,7 +5,13 @@
 #import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
-@implementation RTCConnectionStats
+#include <unordered_map>
+#include "webrtc/base/checks.h"
+
+@implementation RTCConnectionStats {
+  std::unordered_map<std::string, RTCIceCandidateStats*> _localCandidateMap;
+  std::unordered_map<std::string, RTCIceCandidateStats*> _remoteCandidateMap;
+}
 
 - (instancetype)initWithNativeStats:
     (const woogeen::base::ConnectionStats&)stats {
@@ -13,6 +19,7 @@
     _timeStamp = [NSDate date];
     _videoBandwidthStats = [[RTCVideoBandwidthStats alloc]
         initWithNativeStats:stats.video_bandwidth_stats];
+
     NSMutableArray* mediaChannelStats = [[NSMutableArray alloc] init];
     for (auto& audio_sender : stats.audio_sender_reports) {
       [mediaChannelStats
@@ -35,6 +42,37 @@
                         initWithNativeStats:*video_receiver.get()]];
     }
     _mediaChannelStats = mediaChannelStats;
+
+    NSMutableArray<RTCIceCandidateStats*>* localCandidateStatsArray =
+        [[NSMutableArray alloc] init];
+    for (auto& local_candidate : stats.local_ice_candidate_reports) {
+      RTCIceCandidateStats* localIceCandidate = [[RTCIceCandidateStats alloc]
+          initWithNativeStats:*local_candidate.get()];
+      [localCandidateStatsArray addObject:localIceCandidate];
+      _localCandidateMap[local_candidate->id] = localIceCandidate;
+    }
+    _localIceCandidateStats = localCandidateStatsArray;
+
+    NSMutableArray<RTCIceCandidateStats*>* remoteCandidateStatsArray =
+        [[NSMutableArray alloc] init];
+    for (auto& remote_candidate : stats.remote_ice_candidate_reports) {
+      RTCIceCandidateStats* remoteIceCandidate = [[RTCIceCandidateStats alloc]
+          initWithNativeStats:*remote_candidate.get()];
+      [remoteCandidateStatsArray addObject:remoteIceCandidate];
+      _remoteCandidateMap[remote_candidate->id] = remoteIceCandidate;
+    }
+    _remoteIceCandidateStats = remoteCandidateStatsArray;
+
+    NSMutableArray<RTCIceCandidatePairStats*>* candidatePairArray =
+        [[NSMutableArray alloc] init];
+    for (auto& candidate_pair : stats.ice_candidate_pair_reports) {
+      [candidatePairArray
+          addObject:[[RTCIceCandidatePairStats alloc]
+                        initWithNativeStats:*candidate_pair.get()
+                          localIceCandidate:_localCandidateMap[candidate_pair ->local_ice_candidate->id]
+                         remoteIceCandidate:_remoteCandidateMap[candidate_pair->remote_ice_candidate->id]]];
+    }
+    _iceCandidatePairStats = candidatePairArray;
   }
   return self;
 }
@@ -147,8 +185,72 @@
     _availableReceiveBandwidth = (NSUInteger)stats.available_receive_bandwidth;
     _transmitBitrate = (NSUInteger)stats.transmit_bitrate;
     _retransmitBitrate = (NSUInteger)stats.retransmit_bitrate;
+    _targetEncodingBitrate = (NSUInteger)stats.target_encoding_bitrate;
+    _actualEncodingBitrate = (NSUInteger)stats.actual_encoding_bitrate;
   }
   return self;
 }
 
+@end
+
+
+@implementation RTCIceCandidateStats
+
+- (RTCIceCandidateType)getCandidateType:(woogeen::base::IceCandidateType)type {
+  switch (type) {
+    case woogeen::base::IceCandidateType::kHost:
+      return RTCIceCandidateTypeHost;
+    case woogeen::base::IceCandidateType::kSrflx:
+      return RTCIceCandidateTypeSrflx;
+    case woogeen::base::IceCandidateType::kPrflx:
+      return RTCIceCandidateTypePrflx;
+    case woogeen::base::IceCandidateType::kRelay:
+      return RTCIceCandidateTypeRelay;
+    default:
+      RTC_DCHECK(false);
+      return RTCIceCandidateTypeUnknown;
+  }
+}
+
+- (RTCTransportProtocolType)getProtocolType:
+    (woogeen::base::TransportProtocolType)type {
+  switch (type) {
+    case woogeen::base::TransportProtocolType::kTcp:
+      return RTCTransportProtocolTypeTcp;
+    case woogeen::base::TransportProtocolType::kUdp:
+      return RTCTransportProtocolTypeUdp;
+    default:
+      RTC_DCHECK(false);
+      return RTCTransportProtocolTypeUnknown;
+  }
+}
+
+- (instancetype)initWithNativeStats:
+    (const woogeen::base::IceCandidateReport&)stats {
+  if (self = [super init]) {
+    _statsId = [NSString stringForStdString:stats.id];
+    _ip = [NSString stringForStdString:stats.ip];
+    _port = (NSUInteger)stats.port;
+    _candidateType = [self getCandidateType:stats.candidate_type];
+    _protocol = [self getProtocolType:stats.protocol];
+    _priority = (NSUInteger)stats.priority;
+  }
+  return self;
+}
+
+@end
+
+@implementation RTCIceCandidatePairStats
+- (instancetype)initWithNativeStats:
+                    (const woogeen::base::IceCandidatePairReport&)stats
+                  localIceCandidate:(RTCIceCandidateStats*)localIceCandidate
+                 remoteIceCandidate:(RTCIceCandidateStats*)remoteIceCandidate {
+  if (self = [super init]) {
+    _statsId = [NSString stringForStdString:stats.id];
+    _isActive = stats.is_active;
+    _localIceCandidate = localIceCandidate;
+    _remoteIceCandidate = remoteIceCandidate;
+  }
+  return self;
+}
 @end

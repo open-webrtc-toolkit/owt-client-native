@@ -24,33 +24,47 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_BASE_CLIENTCONFIGURATION_H_
-#define WOOGEEN_BASE_CLIENTCONFIGURATION_H_
-
-#include <vector>
-#include <string>
-#include "woogeen/base/mediaformat.h"
-#include "woogeen/base/network.h"
+#ifndef WOOGEEN_BASE_NETWORK_H_
+#define WOOGEEN_BASE_NETWORK_H_
 
 namespace woogeen {
-namespace base{
+namespace base {
 
-/// Client configurations
-struct ClientConfiguration {
-  ClientConfiguration() : max_audio_bandwidth(0), max_video_bandwidth(0){};
-  /// List of ICE servers
-  std::vector<IceServer> ice_servers;
-  /// Media codec preference
-  MediaCodec media_codec;
-  /**
-   @brief Max outgoing audio bandwidth, unit: kbps.
-   @detail Please be noticed different codecs may support different bitrate ranges.
-   */
-  int max_audio_bandwidth;
-  /// Max outgoing video bandwidth, unit: kbps.
-  int max_video_bandwidth;
+/// Defines ICE server.
+struct IceServer {
+  /// URLs for this group of ICE server.
+  std::vector<std::string> urls;
+  /// Username.
+  std::string username;
+  /// Password.
+  std::string password;
 };
+
+/// Defines ICE candidate types.
+enum class IceCandidateType : int {
+  /// Host candidate.
+  kHost = 1,
+  /// Server reflexive candidate.
+  kSrflx,
+  /// Peer reflexive candidate.
+  kPrflx,
+  /// Relayed candidate.
+  kRelay,
+  /// Unknown.
+  kUnknown = 99,
+};
+
+/// Defines transport protocol.
+enum class TransportProtocolType : int {
+  /// TCP.
+  kTcp = 1,
+  /// UDP.
+  kUdp,
+  /// Unknown.
+  kUnknown=99,
+};
+
 }
 }
 
-#endif  // WOOGEEN_BASE_CLIENTCONFIGURATION_H_
+#endif  // WOOGEEN_BASE_NETWORK_H_
