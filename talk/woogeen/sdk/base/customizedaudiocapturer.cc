@@ -411,7 +411,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
       current_time - last_call_record_millis_ >= 10) {
     if (frame_generator_->GenerateFramesForNext10Ms(recording_buffer_.get(),
                                                     recording_buffer_size_) !=
-        recording_buffer_size_) {
+        static_cast<uint32_t>(recording_buffer_size_)) {
       crit_sect_.Leave();
       RTC_DCHECK(false);
       LOG(LS_ERROR) << "Get audio frames failed.";
