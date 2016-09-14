@@ -13,9 +13,9 @@ EncodedFrameGenerator::EncodedFrameGenerator(const std::string& input_filename, 
   /*type_ = woogeen::base::VideoFrameCodec::H264;
   fd = fopen("./source.h264", "rb");*/
   if(codecType == ENCODED_VP8){
-    type_ = woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec::VP8;
+    type_ = woogeen::base::VideoFrameGeneratorInterface::VP8;
   }else if(codecType == ENCODED_H264){
-    type_ = woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec::H264;
+    type_ = woogeen::base::VideoFrameGeneratorInterface::H264;
   }
 
   std::cout << "width:" << width_ << " height:" << height_ << " fps:" << fps_ << " codec:" << type_;

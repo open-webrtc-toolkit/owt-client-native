@@ -12,14 +12,14 @@
       'target_name': 'woogeen_p2p_sample',
       'type': 'executable',
       'sources': [
-        'samples/p2psample.cpp',
+        'samples/p2psample.cc',
         'samples/fileframegenerator.cc',
         'samples/fileframegenerator.h',
         'samples/encodedframegenerator.cc',
         'samples/encodedframegenerator.h',
         'samples/directframegenerator.cc',
         'samples/directframegenerator.h',
-        'samples/p2psocketsignalingchannel.cpp',
+        'samples/p2psocketsignalingchannel.cc',
         'samples/p2psocketsignalingchannel.h',
       ],
       'dependencies': [
@@ -52,7 +52,7 @@
       'target_name': 'woogeen_conf_sample',
       'type': 'executable',
       'sources': [
-        'samples/conferencesample.cpp',
+        'samples/conferencesample.cc',
         'samples/conferencesampleobserver.cc',
         'samples/conferencesampleobserver.h',
         'samples/fileframegenerator.cc',

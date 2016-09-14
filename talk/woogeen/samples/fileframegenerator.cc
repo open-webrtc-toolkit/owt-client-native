@@ -9,7 +9,7 @@
 FileFrameGenerator::FileFrameGenerator(int width, int height, int fps) {
   width_ = width;
   height_ = height;
-  type_ = woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec::I420;
+  type_ = woogeen::base::VideoFrameGeneratorInterface::I420;
   fps_ = fps;
   int size = width_ * height_;
   int qsize = size / 4;
