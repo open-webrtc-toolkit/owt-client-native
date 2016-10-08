@@ -249,7 +249,7 @@ int32_t CustomizedAudioDeviceModule::Init() {
   if (!_ptrAudioDevice)
     return -1;
 
-  if (_ptrAudioDevice->Init() == AudioDeviceGeneric::InitStatus::OK) {
+  if (_ptrAudioDevice->Init() != AudioDeviceGeneric::InitStatus::OK) {
     return -1;
   }
 
