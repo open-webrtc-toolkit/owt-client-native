@@ -17,6 +17,10 @@ static_library("woogeen"){
     "//webrtc",
     "//webrtc/system_wrappers:system_wrappers_default",
   ]
+
+  if(is_ios) {
+    deps+=[ ":woogeen_sdk_objc" ]
+  }
   complete_static_lib = true
 }
 
@@ -191,7 +195,7 @@ source_set("woogeen_sdk_conf") {
 }
 
 if (is_ios) {
-  static_library("woogeen_sdk_objc") {
+  source_set("woogeen_sdk_objc") {
     deps = [
       ":woogeen_sdk_base",
       ":woogeen_sdk_p2p",
@@ -296,7 +300,5 @@ if (is_ios) {
       # Bug 804. Fix Chromium style checker warnings.
       configs -= [ "//build/config/clang:find_bad_constructs"]
     }
-
-    complete_static_lib = true
   }
 }

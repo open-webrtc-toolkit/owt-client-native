@@ -26,11 +26,9 @@ OUT_LIB_NAME = 'libwoogeen.a'
 OUT_FRAMEWORK_NAME = "Woogeen.framework"
 OUT_FRAMEWORK_ROOT = os.path.join(OUT_PATH, OUT_FRAMEWORK_NAME)
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
-# Parameters for each architectures, key is arch name, value is parameters.
-# value format: [output path, debug/release path]
-ARCH_PARAM_DICT = {'arm':['out_ios', 'iphoneos'], 'arm64':['out_ios64',
-    'iphoneos'], 'ia32':['out_sim','iphonesimulator'],'x64':['out_sim',
-    'iphonesimulator']}
+# Parameters for each architectures, key is arch name, value is output path
+ARCH_PARAM_DICT = {'arm':'device-arm32', 'arm64':'device-arm64',
+    'x86':'simulator-x86','x64':'simulator-x64'}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
 WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
@@ -44,41 +42,41 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
 
-def runhooks(arch, ssl_root):
-  env = os.environ.copy()
-  env.setdefault('GYP_CROSSCOMPILE','1')
-  env.setdefault('GYP_DEFINES', 'OS=ios')
-  env['GYP_DEFINES']+=(' target_arch='+arch)
-  env['GYP_DEFINES']+=' use_objc_h264=1'
-  env['GYP_DEFINES']+=' ios_deployment_target=7.0'
-  env['GYP_DEFINES']+=' clang_xcode=1'
-  env['GYP_DEFINES']+=' openssl_is_boringssl=0'
-  if(ssl_root):
-    env['GYP_DEFINES']+=(' ssl_root='+ssl_root)
-  env.setdefault('GYP_GENERATOR_FLAGS', '')
-  env['GYP_GENERATOR_FLAGS']+=(" output_dir="+ARCH_PARAM_DICT.get(arch)[0])
-  env.setdefault('GYP_GENERATORS', 'ninja')
-  ret=subprocess.call(['gclient', 'runhooks'], cwd=HOME_PATH, env=env)
+def gngen(arch, ssl_root, scheme):
+  gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
+      'ios_deployment_target="7.0" use_xcode_clang=true'%arch
+  if(scheme=='release'):
+    gn_args += (' is_debug=false')
+  else:
+    gn_args += (' is_debug=true')
+  if ssl_root:
+    gn_args += (' woogeen_use_openssl=true woogeen_openssl_header_root="%s" '\
+        'woogeen_openssl_lib_root="%s"'%(ssl_root+'/include',ssl_root+'/lib'))
+  gn_args+='\''
+  ret = subprocess.call(['gn gen %s %s'%(getoutputpath(arch,scheme), gn_args)],
+      cwd=HOME_PATH, shell=True)
   if ret == 0:
     return True
   return False
 
 def getoutputpath(arch, scheme):
-  return '%s/%s-%s'%(ARCH_PARAM_DICT.get(arch)[0], SCHEME_DICT.get(scheme),
-         ARCH_PARAM_DICT.get(arch)[1])
+  return 'out/%s-%s'%(SCHEME_DICT.get(scheme), ARCH_PARAM_DICT.get(arch))
 
 def ninjabuild(arch, scheme):
   out_path=getoutputpath(arch, scheme)
-  for target_name in ['AppRTCDemo', 'rtc_sdk_peerconnection_objc',
-      'woogeen_sdk_base', 'woogeen_sdk_p2p', 'woogeen_sdk_conf', 'woogeen_sdk_objc']:
-    if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
-      return False
-  # Combine all.a together by libtool.
-  if (os.path.exists(os.path.join(HOME_PATH, out_path, 'libwoogeen.a'))):
-    os.remove(os.path.join(HOME_PATH, out_path, 'libwoogeen.a'))
-  subprocess.call(['libtool -o %s/libwoogeen.a %s/*.a'%(out_path, out_path)],
-      cwd=HOME_PATH, shell=True)
-  return True
+  libwoogeen_path = os.path.join(out_path,'obj','talk','woogeen','libwoogeen.a')
+  if(os.path.exists(libwoogeen_path)):
+    os.remove(libwoogeen_path)
+  for target_name in ['AppRTCDemo', 'woogeen']:
+    # AppRTCDemo is unnecessary, put it here may detect potential link errors.
+    subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)
+  # We don't use exit code to detect error because libtool may report warning for
+  # "same member name".
+  # https://groups.google.com/a/chromium.org/forum/#!msg/chromium-dev/WQntNV0zscw/rAxe0APmStoJ
+  if(os.path.exists(libwoogeen_path)):
+    return True
+  else:
+    return False
 
 def replaceheaderimport():
   '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
@@ -99,8 +97,8 @@ def copyheaders():
 
 def getexternalliblist(ssl_root):
   libs = []
-  libs.append('%s/lib/iOS/libcrypto.a'%ssl_root)
-  libs.append('%s/lib/iOS/libssl.a'%ssl_root)
+  libs.append('%s/lib/libcrypto.a'%ssl_root)
+  libs.append('%s/lib/libssl.a'%ssl_root)
   return libs
 
 def buildframework():
@@ -127,12 +125,13 @@ def dist(arch_list, scheme, ssl_root):
     os.makedirs(OUT_PATH)
   argu = ['libtool', '-o', out_fat_lib_path]
   for target_arch in arch_list:
-    argu.append('%s/libwoogeen.a'%getoutputpath(target_arch, scheme))
+    argu.append('%s/obj/talk/woogeen/libwoogeen.a'%getoutputpath(target_arch, scheme))
   subprocess.call(argu, cwd=HOME_PATH)
   # Combine external libs.
   argu_external = ['libtool', '-o', out_lib_path]
   argu_external.append(out_fat_lib_path)
-  argu_external.extend(getexternalliblist(ssl_root))
+  if ssl_root:
+    argu_external.extend(getexternalliblist(ssl_root))
   subprocess.call(argu_external, cwd=HOME_PATH)
   if(os.path.exists(out_fat_lib_path)):
     os.remove(out_fat_lib_path)
@@ -147,11 +146,11 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--arch', default='arm64', dest='target_arch',
       help='Target architectures. Could be multiple values seperated by comma.')
-  parser.add_argument('--ssl_root', required=True, help='Path for OpenSSL.')
+  parser.add_argument('--ssl_root', help='Path for OpenSSL.')
   parser.add_argument('--scheme', default='debug',
       help='Schemes for building. Supported value: debug, release')
-  parser.add_argument('--skip_runhooks', default=False, action='store_true',
-      help='Skip gclient runhooks.')
+  parser.add_argument('--skip_gn_gen', default=False, action='store_true',
+      help='Skip explicitly ninja file generation.')
   parser.add_argument('--clean', default=False, action='store_true',
       help='Clean before build.')
   opts=parser.parse_args()
@@ -164,8 +163,8 @@ def main():
       print >> sys.stderr, ("Invalid arch value.")
       return 1
     else:
-      if not opts.skip_runhooks:
-        if not runhooks(arch_item, opts.ssl_root):
+      if not opts.skip_gn_gen:
+        if not gngen(arch_item, opts.ssl_root, opts.scheme):
           return 1
       if not ninjabuild(arch_item, opts.scheme):
         return 1
