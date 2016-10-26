@@ -5,6 +5,7 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #define WOOGEEN_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 
+#include <mutex>
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/base/bind.h"
@@ -78,6 +79,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   HWND render_window_; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
 #endif
   bool encoded_frame_;
+  static std::mutex get_pc_dependency_factory_mutex_;
 };
 }
 }  // namespace woogeen

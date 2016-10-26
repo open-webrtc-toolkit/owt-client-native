@@ -37,6 +37,8 @@ PeerConnectionThread::~PeerConnectionThread() {
 rtc::scoped_refptr<PeerConnectionDependencyFactory>
     PeerConnectionDependencyFactory::dependency_factory_;
 
+std::mutex PeerConnectionDependencyFactory::get_pc_dependency_factory_mutex_;
+
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
       callback_thread_(new PeerConnectionThread){
@@ -77,6 +79,7 @@ PeerConnectionDependencyFactory::CreatePeerConnection(
 }
 
 PeerConnectionDependencyFactory* PeerConnectionDependencyFactory::Get() {
+  std::lock_guard<std::mutex> lock(get_pc_dependency_factory_mutex_);
   if (!dependency_factory_.get()) {
     dependency_factory_ =
         new rtc::RefCountedObject<PeerConnectionDependencyFactory>();
