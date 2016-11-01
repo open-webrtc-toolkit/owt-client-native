@@ -3,7 +3,10 @@
  */
 
 #import "Woogeen/RTCAVFoundationVideoSource+Woogeen.h"
+#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionFactory+Woogeen.h"
+#import "Woogeen/RTCAVFoundationVideoSource+Woogeen.h"
 #import "webrtc/sdk/objc/Framework/Classes/AVFoundationVideoCapturer.h"
+#import "webrtc/sdk/objc/Framework/Classes/RTCAVFoundationVideoSource+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCMediaConstraints+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCVideoSource+Private.h"
 
@@ -12,14 +15,20 @@
 @implementation RTCAVFoundationVideoSource (Woogeen)
 
 - (instancetype)initWithConstraints:(RTCMediaConstraints*)constraints {
-  rtc::scoped_ptr<webrtc::AVFoundationVideoCapturer> capturer;
-  capturer.reset(new webrtc::AVFoundationVideoCapturer());
-  auto peerconnectionDependencyFactory =
-      woogeen::base::PeerConnectionDependencyFactory::Get();
-  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source =
-      peerconnectionDependencyFactory->CreateVideoSource(
-          capturer.release(), constraints.nativeConstraints.get());
-  return [super initWithNativeVideoSource:source];
+  RTCPeerConnectionFactory* factory = [RTCPeerConnectionFactory sharedInstance];
+  return [self initWithFactory:factory constraints:constraints];
+}
+
+- (void)setFilter:(id<RTCVideoFrameFilterProtocol>)filter {
+  self.capturer->SetFilter(filter);
+}
+
+- (void)removeFilter {
+  self.capturer->RemoveFilter();
+}
+
+- (void)setOutputPixelFormat:(OSType)outputPixelFormat {
+  self.capturer->SetOutputPixelFormat(outputPixelFormat);
 }
 
 @end

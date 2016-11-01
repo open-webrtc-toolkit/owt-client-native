@@ -98,8 +98,11 @@ PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
 
 void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
+  LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
   if (!rtc::InitializeSSL()) {
     LOG(LS_ERROR) << "Failed to initialize SSL.";
+    RTC_NOTREACHED();
+    return;
   }
   rtc::Thread* worker_thread = new rtc::Thread();
   worker_thread->SetName("worker_thread", NULL);
@@ -134,6 +137,8 @@ void PeerConnectionDependencyFactory::
       worker_thread, signaling_thread, adm,
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
+
+  LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>
@@ -196,6 +201,11 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
                        Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
                             pc_factory_.get(), id, nullptr))
       .get();
+}
+
+rtc::scoped_refptr<PeerConnectionFactoryInterface>
+PeerConnectionDependencyFactory::PeerConnectionFactory() const {
+  return pc_factory_;
 }
 }
 }

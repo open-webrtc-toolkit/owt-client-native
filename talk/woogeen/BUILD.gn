@@ -214,6 +214,7 @@ if (is_ios) {
     configs += ["//build/config/compiler:enable_arc"]
 
     sources = [
+      "sdk/base/objc/public/RTCAVFoundationVideoSource+Woogeen.h",
       "sdk/base/objc/public/RTCConnectionStats.h",
       "sdk/base/objc/public/RTCLocalStream.h",
       "sdk/base/objc/public/RTCErrors.h",
@@ -231,10 +232,13 @@ if (is_ios) {
       "sdk/base/objc/public/RTCFrameGeneratorProtocol.h",
       "sdk/base/objc/AVFoundationVideoCapturerFactory.h",
       "sdk/base/objc/AVFoundationVideoCapturerFactory.mm",
+      "sdk/base/objc/RTCAVFoundationVideoSource+Woogeen.mm",
       "sdk/base/objc/RTCConnectionStats+Internal.h",
       "sdk/base/objc/RTCConnectionStats.mm",
       "sdk/base/objc/RTCPeerConnectionDependencyFactory.h",
       "sdk/base/objc/RTCPeerConnectionDependencyFactory.mm",
+      "sdk/base/objc/RTCPeerConnectionFactory+Woogeen.h",
+      "sdk/base/objc/RTCPeerConnectionFactory+Woogeen.mm",
       "sdk/base/objc/RTCErrors.m",
       "sdk/base/objc/RTCStream+Internal.h",
       "sdk/base/objc/RTCStream.mm",

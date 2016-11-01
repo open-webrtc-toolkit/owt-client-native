@@ -214,15 +214,13 @@ class LocalCameraStream : public LocalStream {
     instead.
   */
   void Close();
-
- protected:
-  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
-                             int& error_code);
-  explicit LocalCameraStream(
-      const bool is_audio_enabled,
-      webrtc::VideoTrackSourceInterface* video_source,
-      int& error_code);
-  /** @endcond */
+protected:
+ explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
+                            int& error_code);
+ explicit LocalCameraStream(const bool is_audio_enabled,
+                            webrtc::VideoTrackSourceInterface* video_source,
+                            int& error_code);
+ /** @endcond */
 };
 
 /// This class represents a local stream which use frame generator to generate frames.

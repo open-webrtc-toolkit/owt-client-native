@@ -37,7 +37,8 @@ WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCLogging.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoSource.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h']
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameFilterProtocol.h']
 HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/woogeen/sdk/include/objc/Woogeen/*']
 LIB_BLACK_LIST = ['video_capture']
 FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',

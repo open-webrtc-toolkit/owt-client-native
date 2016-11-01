@@ -50,6 +50,9 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       cricket::VideoCapturer* capturer,
       const MediaConstraintsInterface* constraints);
+  // Returns current |pc_factory_|.
+  rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
+      const;
 
   ~PeerConnectionDependencyFactory();
  protected:

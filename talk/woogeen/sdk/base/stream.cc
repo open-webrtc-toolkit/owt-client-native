@@ -261,31 +261,6 @@ LocalCameraStream::LocalCameraStream(
 }
 
 LocalCameraStream::LocalCameraStream(
-      const bool is_audio_enabled,
-      webrtc::VideoTrackSourceInterface* video_source,
-      int& error_code){
-  RTC_CHECK(video_source);
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
-      PeerConnectionDependencyFactory::Get();
-  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
-  scoped_refptr<MediaStreamInterface> stream =
-      pcd_factory->CreateLocalMediaStream(media_stream_id);
-  // Create audio track
-  if (is_audio_enabled) {
-    std::string audio_track_id(rtc::CreateRandomUuid());
-    scoped_refptr<AudioTrackInterface> audio_track =
-        pcd_factory->CreateLocalAudioTrack("AudioTrack-" + audio_track_id);
-    stream->AddTrack(audio_track);
-  }
-  std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
-  scoped_refptr<VideoTrackInterface> video_track =
-      pcd_factory->CreateLocalVideoTrack(video_track_id, video_source);
-  stream->AddTrack(video_track);
-  media_stream_ = stream;
-  media_stream_->AddRef();
-}
-
-LocalCameraStream::LocalCameraStream(
     const LocalCameraStreamParameters& parameters) {
   if (!parameters.VideoEnabled() && !parameters.AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
@@ -367,6 +342,31 @@ LocalCameraStream::LocalCameraStream(
     stream->AddTrack(audio_track);
   }
 
+  media_stream_ = stream;
+  media_stream_->AddRef();
+}
+
+LocalCameraStream::LocalCameraStream(
+      const bool is_audio_enabled,
+      webrtc::VideoTrackSourceInterface* video_source,
+      int& error_code){
+  RTC_CHECK(video_source);
+  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+      PeerConnectionDependencyFactory::Get();
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  scoped_refptr<MediaStreamInterface> stream =
+      pcd_factory->CreateLocalMediaStream(media_stream_id);
+  // Create audio track
+  if (is_audio_enabled) {
+    std::string audio_track_id(rtc::CreateRandomUuid());
+    scoped_refptr<AudioTrackInterface> audio_track =
+        pcd_factory->CreateLocalAudioTrack("AudioTrack-" + audio_track_id);
+    stream->AddTrack(audio_track);
+  }
+  std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
+  scoped_refptr<VideoTrackInterface> video_track =
+      pcd_factory->CreateLocalVideoTrack(video_track_id, video_source);
+  stream->AddTrack(video_track);
   media_stream_ = stream;
   media_stream_->AddRef();
 }
