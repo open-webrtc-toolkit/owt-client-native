@@ -28,6 +28,8 @@
 #import <UIKit/UIKit.h>
 #import <WebRTC/RTCMacros.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
   @brief This class contains parameters and methods that needed for creating a
   local camera stream.
@@ -61,3 +63,5 @@ RTC_EXPORT
 - (void)setCameraId:(NSString*)cameraId;
 
 @end
+
+NS_ASSUME_NONNULL_END

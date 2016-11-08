@@ -30,6 +30,8 @@
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// Observer for RTCRemoteMixedStream.
 RTC_EXPORT
 @protocol RTCRemoteMixedStreamObserver<NSObject>
@@ -40,5 +42,7 @@ RTC_EXPORT
 - (void)onVideoLayoutChanged;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif  // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAMOBSERVER_H_

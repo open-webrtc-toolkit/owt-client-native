@@ -26,7 +26,11 @@
 
 #import "Woogeen/RTCRemoteStream.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This class represent a remote stream captured from a camera and/or mic.
 RTC_EXPORT
 @interface RTCRemoteCameraStream : RTCRemoteStream
 @end
+
+NS_ASSUME_NONNULL_END

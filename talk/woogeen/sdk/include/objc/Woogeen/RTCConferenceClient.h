@@ -36,6 +36,8 @@
 #import "Woogeen/RTCConferenceUser.h"
 #import "Woogeen/RTCConnectionStats.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// An asynchronous class for app to communicate with a conference in MCU
 RTC_EXPORT
 @interface RTCConferenceClient : NSObject
@@ -50,30 +52,30 @@ RTC_EXPORT
   @param token Includes the room info which is encrypted.
 */
 - (void)joinWithToken:(NSString*)token
-            onSuccess:(void (^)(RTCConferenceUser*))onSuccess
-            onFailure:(void (^)(NSError*))onFailure;
+            onSuccess:(nullable void (^)(RTCConferenceUser*))onSuccess
+            onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Publish the stream to the current room.
   @param stream The stream to be published.
 */
 - (void)publish:(RTCLocalStream*)stream
-      onSuccess:(void (^)())onSuccess
-      onFailure:(void (^)(NSError*))onFailure;
+      onSuccess:(nullable void (^)())onSuccess
+      onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Un-publish the stream from the current room.
   @param stream The stream to be unpublished.
 */
 - (void)unpublish:(RTCLocalStream*)stream
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)())onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(RTCRemoteStream*)stream
-        onSuccess:(void (^)(RTCRemoteStream*))onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)(RTCRemoteStream*))onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
@@ -82,22 +84,22 @@ RTC_EXPORT
 */
 - (void)subscribe:(RTCRemoteStream*)stream
         withOptions:(RTCConferenceSubscribeOptions*)options
-        onSuccess:(void (^)(RTCRemoteStream*))onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)(RTCRemoteStream*))onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Un-subscribe the stream from the current room.
   @param stream The stream to be unsubscribed.
 */
 - (void)unsubscribe:(RTCRemoteStream*)stream
-          onSuccess:(void (^)())onSuccess
-          onFailure:(void (^)(NSError*))onFailure;
+          onSuccess:(nullable void (^)())onSuccess
+          onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Send messsage to all participants in the conference.
   @param message The message to be sent.
 */
 - (void)send:(NSString*)message
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure;
+   onSuccess:(nullable void (^)())onSuccess
+   onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Continue to transmit specified stream's audio data.
   @detail If |stream| is a remote stream, MCU will continue to send audio data
@@ -106,8 +108,8 @@ RTC_EXPORT
   @param This stream's audio will be played.
 */
 - (void)playAudio:(RTCStream*)stream
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)())onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Stop transmitting specified stream's audio data.
   @detail If |stream| is a remote stream, MCU will stop sending audio data to
@@ -116,8 +118,8 @@ RTC_EXPORT
   @param This stream's audio will be paused.
 */
 - (void)pauseAudio:(RTCStream*)stream
-         onSuccess:(void (^)())onSuccess
-         onFailure:(void (^)(NSError*))onFailure;
+         onSuccess:(nullable void (^)())onSuccess
+         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Continue to transmit specified stream's video data.
   @detail If |stream| is a remote stream, MCU will continue to send video data
@@ -126,8 +128,8 @@ RTC_EXPORT
   @param This stream's video will be played.
 */
 - (void)playVideo:(RTCStream*)stream
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)())onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Stop transmitting specified stream's video data.
   @detail If |stream| is a remote stream, MCU will stop sending video data to
@@ -136,34 +138,35 @@ RTC_EXPORT
   @param This stream's video will be played.
 */
 - (void)pauseVideo:(RTCStream*)stream
-         onSuccess:(void (^)())onSuccess
-         onFailure:(void (^)(NSError*))onFailure;
+         onSuccess:(nullable void (^)())onSuccess
+         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Get a remote stream's region
 */
 - (void)getRegion:(RTCRemoteStream*)stream
-        onSuccess:(void (^)(NSString*))onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)(NSString*))onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Set a remote stream's region
 */
 - (void)setRegion:(RTCRemoteStream*)stream
          regionId:(NSString*)regionId
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)())onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Get a stream's connection statistics
 */
 - (void)getConnectionStatsForStream:(RTCStream*)stream
-                          onSuccess:(void (^)(RTCConnectionStats*))onSuccess
-                          onFailure:(void (^)(NSError*))onFailure;
+                          onSuccess:
+                              (nullable void (^)(RTCConnectionStats*))onSuccess
+                          onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Leave current conference.
 */
-- (void)leaveWithOnSuccess:(void (^)())onSuccess
-                 onFailure:(void (^)(NSError*))onFailure;
+- (void)leaveWithOnSuccess:(nullable void (^)())onSuccess
+                 onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Add an observer for ConferenceClient.
 */
@@ -176,5 +179,7 @@ RTC_EXPORT
 /// @endcond
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif  // WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENT_H_

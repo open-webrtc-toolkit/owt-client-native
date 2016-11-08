@@ -297,9 +297,6 @@ if (is_ios) {
       "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.mm",
     ]
 
-    # Bug 805.
-    cflags = ["-Wno-nullability-completeness"]
-
     if(is_clang){
       # Bug 804. Fix Chromium style checker warnings.
       configs -= [ "//build/config/clang:find_bad_constructs"]

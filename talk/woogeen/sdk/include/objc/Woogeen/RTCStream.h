@@ -28,6 +28,8 @@
 #import <WebRTC/RTCMacros.h>
 #import <WebRTC/RTCVideoRenderer.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// Base class of all streams in the SDK
 RTC_EXPORT
 @interface RTCStream : NSObject
@@ -53,3 +55,5 @@ RTC_EXPORT
 - (void)enableVideo;
 
 @end
+
+NS_ASSUME_NONNULL_END

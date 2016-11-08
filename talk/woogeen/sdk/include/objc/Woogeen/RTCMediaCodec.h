@@ -30,6 +30,8 @@
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NS_ENUM(NSInteger, VideoCodec) {
   VideoCodecVP8 = 1,
   VideoCodecH264 = 2,
@@ -57,5 +59,7 @@ typedef NS_ENUM(NSInteger, AudioCodec) {
 @property(nonatomic, readwrite) NSInteger videoCodec;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif  // WOOGEEN_BASE_OBJC_RTCMEDIACODEC_H_

@@ -30,6 +30,8 @@
 #import "Woogeen/RTCRemoteStream.h"
 #import "Woogeen/RTCRemoteMixedStreamObserver.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This class represent a mixed remote stream.
 RTC_EXPORT
 @interface RTCRemoteMixedStream : RTCRemoteStream
@@ -43,3 +45,5 @@ RTC_EXPORT
 @end
 
 #endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_
+
+NS_ASSUME_NONNULL_END

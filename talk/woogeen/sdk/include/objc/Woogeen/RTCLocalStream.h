@@ -26,8 +26,12 @@
 
 #import "Woogeen/RTCStream.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This class represent a local stream.
 RTC_EXPORT
 @interface RTCLocalStream : RTCStream
 
 @end
+
+NS_ASSUME_NONNULL_END

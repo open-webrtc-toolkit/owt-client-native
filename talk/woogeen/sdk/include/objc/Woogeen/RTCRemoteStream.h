@@ -26,6 +26,8 @@
 
 #import "Woogeen/RTCStream.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This class represents a remote stream.
 RTC_EXPORT
 @interface RTCRemoteStream : RTCStream
@@ -42,3 +44,5 @@ RTC_EXPORT
 - (NSString*)getRemoteUserId;
 
 @end
+
+NS_ASSUME_NONNULL_END

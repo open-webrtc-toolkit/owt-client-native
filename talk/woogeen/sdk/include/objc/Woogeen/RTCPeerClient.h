@@ -37,6 +37,8 @@
 #import "Woogeen/RTCP2PPeerConnectionChannelObserver.h"
 #import "Woogeen/RTCPeerClientConfiguration.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// An async client for P2P WebRTC sessions
 RTC_EXPORT
 @interface RTCPeerClient : NSObject<RTCP2PPeerConnectionChannelObserver,
@@ -76,8 +78,8 @@ RTC_EXPORT
                 2. Invalid token.
  */
 - (void)connect:(NSString*)token
-      onSuccess:(void (^)(NSString*))onSuccess
-      onFailure:(void (^)(NSError*))onFailure;
+      onSuccess:(nullable void (^)(NSString*))onSuccess
+      onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Disconnect from the signaling server.
@@ -89,8 +91,8 @@ RTC_EXPORT
  happened:
                 1. PeerClient haven't connected to a signaling server.
  */
-- (void)disconnectWithOnSuccess:(void (^)())onSuccess
-                      onFailure:(void (^)(NSError*))onFailure;
+- (void)disconnectWithOnSuccess:(nullable void (^)())onSuccess
+                      onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Invite a remote user to start a WebRTC session.
@@ -103,8 +105,8 @@ RTC_EXPORT
                 2. Target ID is nil or target user is offline.
  */
 - (void)invite:(NSString*)targetId
-     onSuccess:(void (^)())onSuccess
-     onFailure:(void (^)(NSError*))onFailure;
+     onSuccess:(nullable void (^)())onSuccess
+     onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Accept a remote user's request to start a WebRTC session.
@@ -118,8 +120,8 @@ RTC_EXPORT
                 3. Haven't received an invitation from target user.
  */
 - (void)accept:(NSString*)targetId
-     onSuccess:(void (^)())onSuccess
-     onFailure:(void (^)(NSError*))onFailure;
+     onSuccess:(nullable void (^)())onSuccess
+     onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Deny a remote user's request to start a WebRTC session.
@@ -133,8 +135,8 @@ RTC_EXPORT
                 3. Haven't received an invitation from target user.
  */
 - (void)deny:(NSString*)targetId
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure;
+   onSuccess:(nullable void (^)())onSuccess
+   onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Send a message to remote client
@@ -150,8 +152,8 @@ RTC_EXPORT
  */
 - (void)send:(NSString*)targetId
      message:(NSString*)message
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure;
+   onSuccess:(nullable void (^)())onSuccess
+   onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Stop a WebRTC session.
@@ -165,8 +167,8 @@ RTC_EXPORT
                 3. There is no WebRTC session with target user.
  */
 - (void)stop:(NSString*)targetId
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure;
+   onSuccess:(nullable void (^)())onSuccess
+   onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Publish a stream to the remote client.
@@ -181,8 +183,8 @@ RTC_EXPORT
  */
 - (void)publish:(RTCLocalStream*)stream
              to:(NSString*)targetId
-      onSuccess:(void (^)())onSuccess
-      onFailure:(void (^)(NSError*))onFailure;
+      onSuccess:(nullable void (^)())onSuccess
+      onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Unpublish the stream to the remote client.
@@ -198,8 +200,8 @@ RTC_EXPORT
  */
 - (void)unpublish:(RTCLocalStream*)stream
                to:(NSString*)targetId
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure;
+        onSuccess:(nullable void (^)())onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
  @brief Get the connection stats between a remote client
@@ -212,9 +214,11 @@ RTC_EXPORT
                  3. Haven't connected to remote client.
  */
 - (void)getConnectionStats:(NSString*)targetId
-                 onSuccess:(void (^)(RTCConnectionStats*))onSuccess
-                 onFailure:(void (^)(NSError*))onFailure;
+                 onSuccess:(nullable void (^)(RTCConnectionStats*))onSuccess
+                 onFailure:(nullable void (^)(NSError*))onFailure;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif

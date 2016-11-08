@@ -27,6 +27,8 @@
 #import "Woogeen/RTCLocalStream.h"
 #import "Woogeen/RTCLocalCustomizedStreamParameters.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  @brief This class represent a local stream with customized video input
  @detail It pulls video frame from video frame generator which is set in
@@ -44,3 +46,5 @@ RTC_EXPORT
     (RTCLocalCustomizedStreamParameters*)parameters;
 
 @end
+
+NS_ASSUME_NONNULL_END

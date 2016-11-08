@@ -114,8 +114,10 @@
 - (void)subscribe:(RTCRemoteStream*)stream
         onSuccess:(void (^)(RTCRemoteStream*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
+  RTCConferenceSubscribeOptions* options =
+      [[RTCConferenceSubscribeOptions alloc] init];
   [self subscribe:stream
-      withOptions:nil
+      withOptions:options
         onSuccess:onSuccess
         onFailure:onFailure];
 }

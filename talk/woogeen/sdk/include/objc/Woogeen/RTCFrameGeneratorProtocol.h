@@ -28,6 +28,8 @@
 #import <UIKit/UIKit.h>
 #import <WebRTC/RTCMacros.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  @brief frame generator interface for audio
  @detail Sample rate and channel numbers cannot be changed once the generator is
@@ -80,3 +82,5 @@ RTC_EXPORT
 */
 - (NSUInteger)frameRate;
 @end
+
+NS_ASSUME_NONNULL_END

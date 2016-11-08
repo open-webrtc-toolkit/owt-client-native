@@ -29,6 +29,8 @@
 
 @class RTCVideoSource;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This class represent a local stream captured from camera, mic.
 RTC_EXPORT
 @interface RTCLocalCameraStream : RTCLocalStream
@@ -49,7 +51,7 @@ RTC_EXPORT
   outError parameter contains an NSError instance describing the problem.
 */
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters
-                             error:(NSError* _Nullable*)outError;
+                             error:(NSError**)outError;
 
 /**
   Initialize a RTCLocalCameraStream with specific video source.
@@ -62,7 +64,7 @@ RTC_EXPORT
 */
 - (instancetype)initWithAudioEnabled:(BOOL)isAudioEnabled
                          VideoSource:(RTCVideoSource*)VideoSource
-                               error:(NSError* _Nullable*)outError;
+                               error:(NSError**)outError;
 
 /**
   @brief Close the stream. Its underlying media source is no longer providing
@@ -74,3 +76,5 @@ RTC_EXPORT
 - (void)close;
 
 @end
+
+NS_ASSUME_NONNULL_END
