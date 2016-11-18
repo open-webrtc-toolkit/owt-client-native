@@ -6,6 +6,7 @@
 #import "RTCMediaStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteStream.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
 @implementation RTCRemoteStream
 
@@ -16,14 +17,12 @@
 
 - (NSString*)streamId {
   auto remoteStream = [self nativeRemoteStream];
-  return [NSString stringWithCString:remoteStream->Id().c_str()
-                            encoding:[NSString defaultCStringEncoding]];
+  return [NSString stringForStdString:remoteStream->Id()];
 }
 
 - (NSString*)getRemoteUserId {
   auto remoteStream = [self nativeRemoteStream];
-  return [NSString stringWithCString:remoteStream->From().c_str()
-                            encoding:[NSString defaultCStringEncoding]];
+  return [NSString stringForStdString:remoteStream->From()];
 }
 
 @end

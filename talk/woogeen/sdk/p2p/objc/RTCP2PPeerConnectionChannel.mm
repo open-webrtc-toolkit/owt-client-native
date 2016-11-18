@@ -13,6 +13,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
@@ -63,15 +64,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -89,15 +85,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -115,15 +106,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -143,15 +129,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -172,15 +153,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -200,15 +176,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -226,15 +197,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }
@@ -254,15 +220,10 @@
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
                       code:WoogeenP2PErrorUnknown
-                  userInfo:
-                      [[NSDictionary alloc]
-                          initWithObjectsAndKeys:
-                              [NSString
-                                  stringWithCString:e->Message().c_str()
-                                           encoding:
-                                               [NSString
-                                                   defaultCStringEncoding]],
-                              NSLocalizedDescriptionKey, nil]];
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
 }

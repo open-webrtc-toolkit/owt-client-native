@@ -14,6 +14,7 @@
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
 namespace woogeen {
 namespace conference {
@@ -96,15 +97,8 @@ void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
 
 void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id,
                                                          std::string& message) {
-  [observer_
-      onMessageReceivedFrom:[NSString
-                                stringWithCString:sender_id.c_str()
-                                         encoding:[NSString
-                                                      defaultCStringEncoding]]
-                    message:[NSString
-                                stringWithCString:message.c_str()
-                                         encoding:[NSString
-                                                      defaultCStringEncoding]]];
+  [observer_ onMessageReceivedFrom:[NSString stringForStdString:sender_id]
+                           message:[NSString stringForStdString:message]];
 }
 
 void ConferenceClientObserverObjcImpl::OnUserJoined(

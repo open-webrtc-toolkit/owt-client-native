@@ -1,10 +1,9 @@
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
+//  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import <string>
-#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 #import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
@@ -17,7 +16,9 @@
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
+#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 
 @implementation RTCConferenceClient {
   std::unique_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;
@@ -66,10 +67,7 @@
                 code:WoogeenConferenceErrorUnknown
             userInfo:[[NSDictionary alloc]
                          initWithObjectsAndKeys:
-                             [NSString
-                                 stringWithCString:e->Message().c_str()
-                                          encoding:[NSString
-                                                       defaultCStringEncoding]],
+                             [NSString stringForStdString:e->Message()],
                              NSLocalizedDescriptionKey, nil]];
   onFailure(err);
 }

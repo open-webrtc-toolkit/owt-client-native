@@ -1,8 +1,9 @@
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
+//  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
 /*
 @implementation RTCConferencePermission {
@@ -49,18 +50,15 @@ woogeen::conference::Permission>)permission {
 }
 
 - (NSString*)getUserId {
-  return [NSString stringWithCString:_nativeUser->Id().c_str()
-                            encoding:[NSString defaultCStringEncoding]];
+  return [NSString stringForStdString:_nativeUser->Id()];
 }
 
 - (NSString*)getName {
-  return [NSString stringWithCString:_nativeUser->Name().c_str()
-                            encoding:[NSString defaultCStringEncoding]];
+  return [NSString stringForStdString:_nativeUser->Name()];
 }
 
 - (NSString*)getRole {
-  return [NSString stringWithCString:_nativeUser->Role().c_str()
-                            encoding:[NSString defaultCStringEncoding]];
+  return [NSString stringForStdString:_nativeUser->Role()];
 }
 
 /*
