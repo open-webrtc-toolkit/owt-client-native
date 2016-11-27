@@ -85,54 +85,17 @@ class FunctionalStatsObserver : public webrtc::StatsObserver {
 
   std::function<void(std::shared_ptr<ConnectionStats>)> on_complete_;
 
-  ReportType GetReportType(const webrtc::StatsReport* report) {
-    //check if it's ssrc report
-    bool is_sending(0);
-    bool is_video(0);
-    bool is_ssrc(false);
-    bool is_bwe(false);
-    bool is_local_candidate(false);
-    bool is_remote_candidate(false);
-    bool is_candidate_pair(false);
-    if (report->type() == webrtc::StatsReport::kStatsReportTypeSsrc) {
-      is_ssrc = true;
-      if (report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)) //this is sending
-        is_sending = true;
-
-      if (report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent)
-          || report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthReceived))
-        is_video = true;
-
-    } else if (report->type() == webrtc::StatsReport::kStatsReportTypeBwe) {
-      is_bwe = true;
-    } else if (report->type() ==
-               webrtc::StatsReport::kStatsReportTypeIceLocalCandidate) {
-      is_local_candidate = true;
-    } else if (report->type() ==
-               webrtc::StatsReport::kStatsReportTypeIceRemoteCandidate) {
-      is_remote_candidate = true;
-    } else if (report->type() == webrtc::StatsReport::kStatsReportTypeCandidatePair){
-      is_candidate_pair = true;
-    }
-
-    if (is_ssrc & is_sending & !is_video) {
-      return REPORT_AUDIO_SENDER;
-    } else if (is_ssrc & !is_sending & !is_video) {
-      return REPORT_AUDIO_RECEIVER;
-    } else if (is_ssrc & is_sending & is_video) {
-      return REPORT_VIDEO_SENDER;
-    } else if (is_ssrc & !is_sending & is_video) {
-      return REPORT_VIDEO_RECEIVER;
-    } else if (is_bwe) {
-      return REPORT_VIDEO_BWE;
-    } else if (is_local_candidate) {
-      return REPORT_LOCAL_CANDIDATE;
-    } else if (is_remote_candidate) {
-      return REPORT_REMOTE_CANDIDATE;
-    } else if (is_candidate_pair) {
-      return REPORT_CANDIDATE_PAIR;
+  ReportType GetReportType(const webrtc::StatsReport* report);
+  template <class T>
+  T GetValue(std::function<T(const webrtc::StatsReport::Value&)> get_value,
+             const webrtc::StatsReport* report,
+             const webrtc::StatsReport::StatsValueName name,
+             T default_value) {
+    auto item = report->FindValue(name);
+    if (item) {
+      return get_value(*item);
     } else {
-      return REPORT_TYPE_UKNOWN;
+      return default_value;
     }
   }
 

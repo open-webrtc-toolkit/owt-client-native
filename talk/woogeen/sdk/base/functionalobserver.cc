@@ -80,131 +80,177 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
       switch (report_type) {
       case REPORT_AUDIO_RECEIVER:
       {
-        std::unique_ptr<AudioReceiverReport> audio_recv_report_ptr(new AudioReceiverReport(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
-         connection_stats->audio_receiver_reports.push_back(std::move(audio_recv_report_ptr));
+        std::unique_ptr<AudioReceiverReport> audio_recv_report_ptr(
+            new AudioReceiverReport(
+                GetValue<int64_t>(
+                    &webrtc::StatsReport::Value::int64_val, report,
+                    webrtc::StatsReport::kStatsValueNameBytesReceived, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNamePacketsReceived, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsLost,
+                              -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, -1),
+                GetValue<std::string>(
+                    &webrtc::StatsReport::Value::string_val, report,
+                    webrtc::StatsReport::kStatsValueNameCodecName, "")));
+        connection_stats->audio_receiver_reports.push_back(
+            std::move(audio_recv_report_ptr));
         break;
       }
       case REPORT_AUDIO_SENDER:
       {
-        std::unique_ptr<AudioSenderReport> audio_send_report_ptr(new AudioSenderReport(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
-        connection_stats->audio_sender_reports.push_back(std::move(audio_send_report_ptr));
+        std::unique_ptr<AudioSenderReport> audio_send_report_ptr(
+            new AudioSenderReport(
+                GetValue<int64_t>(
+                    &webrtc::StatsReport::Value::int64_val, report,
+                    webrtc::StatsReport::kStatsValueNameBytesSent, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsSent,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsLost,
+                              -1),
+                GetValue<int64_t>(&webrtc::StatsReport::Value::int64_val,
+                                  report,
+                                  webrtc::StatsReport::kStatsValueNameRtt, -1),
+                report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
+                    ->string_val()));
+        connection_stats->audio_sender_reports.push_back(
+            std::move(audio_send_report_ptr));
         break;
       }
       case  REPORT_VIDEO_RECEIVER:
       {
-        std::unique_ptr<VideoReceiverReport> video_recv_report_ptr(new VideoReceiverReport(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesReceived)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFirsSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePlisSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameNacksSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameHeightReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateOutput)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCurrentDelayMs)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameJitterBufferMs)->int_val()));
-        connection_stats->video_receiver_reports.push_back(std::move(video_recv_report_ptr));
+        std::unique_ptr<VideoReceiverReport> video_recv_report_ptr(
+            new VideoReceiverReport(
+                GetValue<int64_t>(
+                    &webrtc::StatsReport::Value::int64_val, report,
+                    webrtc::StatsReport::kStatsValueNameBytesReceived, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNamePacketsReceived, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsLost,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNameFirsSent, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePlisSent, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNameNacksSent,
+                              -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameHeightReceived,
+                    -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameWidthReceived, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameRateReceived, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameRateOutput, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, -1),
+                report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
+                    ->string_val(),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameJitterBufferMs, -1)));
+        connection_stats->video_receiver_reports.push_back(
+            std::move(video_recv_report_ptr));
         break;
       }
       case REPORT_VIDEO_SENDER:
       {
-        adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kUnknown);
-        if (report->FindValue(webrtc::StatsReport::kStatsValueNameCpuLimitedResolution)->bool_val())
-          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kCpuLimitation);
-        else if (report->FindValue(webrtc::StatsReport::kStatsValueNameBandwidthLimitedResolution)->bool_val())
-          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kBandwidthLimitation);
-        else if (report->FindValue(webrtc::StatsReport::kStatsValueNameViewLimitedResolution)->bool_val())
-          adapt_reason = static_cast<int32_t>(VideoSenderReport::AdaptReason::kViewLimitation);
-        std::unique_ptr<VideoSenderReport> video_send_report_ptr(new VideoSenderReport(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameBytesSent)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePacketsLost)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFirsReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNamePlisReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameNacksReceived)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameHeightSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameFrameRateSent)->int_val(),
-            adapt_reason,
-            report->FindValue(webrtc::StatsReport::kStatsValueNameAdaptationChanges)->int_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameRtt)->int64_val(),
-            report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)->string_val()));
-        connection_stats->video_sender_reports.push_back(std::move(video_send_report_ptr));
+        adapt_reason =
+            static_cast<int32_t>(VideoSenderReport::AdaptReason::kUnknown);
+        if (report
+                ->FindValue(
+                    webrtc::StatsReport::kStatsValueNameCpuLimitedResolution)
+                ->bool_val())
+          adapt_reason = static_cast<int32_t>(
+              VideoSenderReport::AdaptReason::kCpuLimitation);
+        else if (report
+                     ->FindValue(webrtc::StatsReport::
+                                     kStatsValueNameBandwidthLimitedResolution)
+                     ->bool_val())
+          adapt_reason = static_cast<int32_t>(
+              VideoSenderReport::AdaptReason::kBandwidthLimitation);
+        else if (report
+                     ->FindValue(webrtc::StatsReport::
+                                     kStatsValueNameViewLimitedResolution)
+                     ->bool_val())
+          adapt_reason = static_cast<int32_t>(
+              VideoSenderReport::AdaptReason::kViewLimitation);
+        std::unique_ptr<VideoSenderReport> video_send_report_ptr(
+            new VideoSenderReport(
+                GetValue<int64_t>(
+                    &webrtc::StatsReport::Value::int64_val, report,
+                    webrtc::StatsReport::kStatsValueNameBytesSent, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsSent,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePacketsLost,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNameFirsReceived,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNamePlisReceived,
+                              -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNameNacksReceived,
+                              -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameHeightSent, -1),
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameFrameWidthSent, -1),
+                GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                              webrtc::StatsReport::kStatsValueNameFrameRateSent,
+                              -1),
+                adapt_reason,
+                GetValue<int>(
+                    &webrtc::StatsReport::Value::int_val, report,
+                    webrtc::StatsReport::kStatsValueNameAdaptationChanges, -1),
+                GetValue<int64_t>(&webrtc::StatsReport::Value::int64_val,
+                                  report,
+                                  webrtc::StatsReport::kStatsValueNameRtt, -1),
+                report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
+                    ->string_val()));
+        connection_stats->video_sender_reports.push_back(
+            std::move(video_send_report_ptr));
         break;
       }
       case REPORT_VIDEO_BWE:
       {
         connection_stats->video_bandwidth_stats.available_send_bandwidth =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth)->int_val();
+            GetValue<int>(
+                &webrtc::StatsReport::Value::int_val, report,
+                webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth, -1);
         connection_stats->video_bandwidth_stats.available_receive_bandwidth =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth)->int_val();
+            GetValue<int>(
+                &webrtc::StatsReport::Value::int_val, report,
+                webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth,
+                -1);
         connection_stats->video_bandwidth_stats.transmit_bitrate =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameTransmitBitrate)->int_val();
+            GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                          webrtc::StatsReport::kStatsValueNameTransmitBitrate,
+                          -1);
         connection_stats->video_bandwidth_stats.retransmit_bitrate =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameRetransmitBitrate)->int_val();
-        connection_stats->video_bandwidth_stats.target_encoding_bitrate =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameTargetEncBitrate)->int_val();
-        connection_stats->video_bandwidth_stats.actual_encoding_bitrate =
-            report->FindValue(webrtc::StatsReport::kStatsValueNameActualEncBitrate)->int_val();
-        break;
-      }
-      case REPORT_LOCAL_CANDIDATE:
-      {
-        auto candidate_report = GetIceCandidateReport(*report);
-        connection_stats->local_ice_candidate_reports.push_back(candidate_report);
-        local_candidate_map_[candidate_report->id] = candidate_report;
-        break;
-      }
-      case REPORT_REMOTE_CANDIDATE:
-      {
-        auto candidate_report = GetIceCandidateReport(*report);
-        connection_stats->remote_ice_candidate_reports.push_back(candidate_report);
-        remote_candidate_map_[candidate_report->id] = candidate_report;
-        break;
-      }
-      default:
-        break;
-      }
-    }
-
-    // Second round loop for reports depend on other reports(i.e. has points that link to other reports)
-    for (const auto* report : reports) {
-      ReportType report_type = GetReportType(report);
-      switch (report_type) {
-      case REPORT_CANDIDATE_PAIR:
-      {
-        auto local_candidate_ptr(local_candidate_map_.find(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameLocalCandidateId)->ToString()));
-        auto remote_candidate_ptr(remote_candidate_map_.find(
-            report->FindValue(webrtc::StatsReport::kStatsValueNameRemoteCandidateId)->ToString()));
-        if (local_candidate_ptr == local_candidate_map_.end() ||
-            remote_candidate_ptr == remote_candidate_map_.end()) {
-          RTC_DCHECK(false);
-          break;
-        }
-        std::shared_ptr<IceCandidateReport> local_candidate(
-            local_candidate_ptr->second);
-        std::shared_ptr<IceCandidateReport> remote_candidate(
-            remote_candidate_ptr->second);
-        std::shared_ptr<IceCandidatePairReport> candidate_pair_report(new IceCandidatePairReport(
-          report->id()->ToString(),
-          report->FindValue(webrtc::StatsReport::kStatsValueNameActiveConnection)->bool_val(),
-          local_candidate,
-          remote_candidate));
-        connection_stats->ice_candidate_pair_reports.push_back(candidate_pair_report);
+            GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
+                          webrtc::StatsReport::kStatsValueNameRetransmitBitrate,
+                          -1);
         break;
       }
       default:
@@ -254,6 +300,42 @@ std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateRepo
       GetCandidateType(std::string(report.FindValue(webrtc::StatsReport::kStatsValueNameCandidateType)->static_string_val())),
       report.FindValue(webrtc::StatsReport::kStatsValueNameCandidatePriority)->int_val()));
    return candidate_report_ptr;
+}
+
+FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
+    const webrtc::StatsReport* report) {
+  // Check if it's ssrc report.
+  bool isSending = 0;
+  bool isVideo = 0;
+  bool isSSRC = false;
+  bool isBWE = false;
+  if (report->type() == webrtc::StatsReport::kStatsReportTypeSsrc) {
+    isSSRC = true;
+    if (report->FindValue(
+            webrtc::StatsReport::kStatsValueNameBytesSent))  // this is sending
+      isSending = true;
+
+    if (report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent) ||
+        report->FindValue(
+            webrtc::StatsReport::kStatsValueNameFrameWidthReceived))
+      isVideo = true;
+
+  } else if (report->type() == webrtc::StatsReport::kStatsReportTypeBwe) {
+    isBWE = true;
+  }
+
+  if (isSSRC & isSending & !isVideo) {
+    return REPORT_AUDIO_SENDER;
+  } else if (isSSRC & !isSending & !isVideo) {
+    return REPORT_AUDIO_RECEIVER;
+  } else if (isSSRC & isSending & isVideo) {
+    return REPORT_VIDEO_SENDER;
+  } else if (isSSRC & !isSending & isVideo) {
+    return REPORT_VIDEO_RECEIVER;
+  } else if (isBWE) {
+    return REPORT_VIDEO_BWE;
+  } else
+    return REPORT_TYPE_UKNOWN;
 }
 
 }
