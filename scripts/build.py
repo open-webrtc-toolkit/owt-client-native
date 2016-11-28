@@ -80,8 +80,6 @@ def ninjabuild(arch, scheme, targets):
   for target_name in targets:
     if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
       return False
-  subprocess.call(['libtool -o %s/libwoogeen.a %s/*.a'%(out_path, out_path)],
-      cwd=HOME_PATH, shell=True)
   return True
 
 def replaceheaderimport(headers_target_folder):
