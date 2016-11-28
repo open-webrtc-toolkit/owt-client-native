@@ -84,22 +84,22 @@ def ninjabuild(arch, scheme, targets):
       cwd=HOME_PATH, shell=True)
   return True
 
-def replaceheaderimport():
+def replaceheaderimport(headers_target_folder):
   '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
-  for filename in os.listdir(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers')):
+  for filename in headers_target_folder:
     if filename.endswith('.h'):
-      filepath = os.path.join(OUT_FRAMEWORK_ROOT, 'Headers', filename)
+      filepath = os.path.join(headers_target_folder, filename)
       for line in fileinput.input(filepath, inplace=1):
         print re.sub('#import <WebRTC/','#import <Woogeen/', line.rstrip())
       # Add a new line at the end of file
       with open(filepath, 'a') as file:
         file.write('\n')
 
-def copyheaders():
+def copyheaders(headers_target_folder):
   for header in HEADER_LIST:
-    subprocess.call(['cp %s %s/'%(header, os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))], cwd=HOME_PATH,
+    subprocess.call(['cp %s %s/'%(header, headers_target_folder)], cwd=HOME_PATH,
     shell=True)
-  replaceheaderimport()
+  replaceheaderimport(headers_target_folder)
 
 def getexternalliblist(ssl_root):
   libs = []
@@ -115,7 +115,7 @@ def buildframework():
   os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))
   os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Modules'))
   os.makedirs(os.path.join(OUT_FRAMEWORK_ROOT, 'Resources'))
-  copyheaders()
+  copyheaders(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))
   shutil.copy(FRAMEWORK_INFO_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Info.plist'))
   shutil.copy(FRAMEWORK_MODULE_MAP_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Modules', 'module.modulemap'))
   shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'Woogeen'))
