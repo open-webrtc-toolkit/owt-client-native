@@ -9,13 +9,48 @@
 
 namespace woogeen {
 namespace base {
-class SysInfo {
- public:
-  // Returns the type of this SDK.
-  static std::string SdkType();
 
-  // Returns the version of this SDK.
-  static std::string SdkVersion();
+/// WooGeen SDK info.
+struct SdkInfo {
+  SdkInfo(const std::string& type, const std::string& version)
+      : type(type), version(version) {}
+  const std::string type;
+  const std::string version;
+};
+
+/// Operating system info.
+struct OsInfo {
+  OsInfo(const std::string& name, const std::string& version)
+      : name(name), version(version) {}
+  const std::string name;
+  const std::string version;
+};
+
+/// WebRTC runtime info.
+struct RuntimeInfo {
+  RuntimeInfo(const std::string& name, const std::string& version)
+      : name(name), version(version) {}
+  const std::string name;
+  const std::string version;
+};
+
+/// System information.
+class SysInfo final{
+ public:
+  /// Get system info.
+  static SysInfo GetInstance();
+
+  const SdkInfo sdk;
+  const OsInfo os;
+  const RuntimeInfo runtime;
+
+ private:
+  SysInfo(const SdkInfo sdk_info,
+          const OsInfo os_info,
+          const RuntimeInfo runtime_info);
+  static std::string SdkType();
+  static std::string OsName();
+  static std::string OsVersion();
 };
 }
 }

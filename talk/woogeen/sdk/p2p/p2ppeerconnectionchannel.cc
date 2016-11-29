@@ -100,13 +100,14 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
 Json::Value P2PPeerConnectionChannel::UaInfo() {
   Json::Value ua;
   Json::Value sdk;
-  sdk[kUaSdkTypeKey] = SysInfo::SdkType();
-  sdk[kUaSdkVersionKey] = SysInfo::SdkVersion();
+  SysInfo sys_info = SysInfo::GetInstance();
+  sdk[kUaSdkTypeKey] = sys_info.sdk.type;
+  sdk[kUaSdkVersionKey] = sys_info.sdk.version;
   // Runtime values will be empty string on native SDK and will be browser info
   // on JavaScript SDK
   Json::Value runtime;
-  runtime[kUaRuntimeNameKey] = "";
-  runtime[kUaRuntimeVersionKey] = "";
+  runtime[kUaRuntimeNameKey] = sys_info.runtime.name;
+  runtime[kUaRuntimeVersionKey] = sys_info.runtime.version;
   ua[kUaSdkKey] = sdk;
   ua[kUaRuntimeKey] = runtime;
   return ua;

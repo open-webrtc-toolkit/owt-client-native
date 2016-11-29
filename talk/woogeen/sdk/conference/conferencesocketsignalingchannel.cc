@@ -5,7 +5,9 @@
 #include <iostream>
 #include <thread>
 #include <algorithm>
+#include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
+#include "webrtc/base/base64.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
@@ -49,9 +51,28 @@ void ConferenceSocketSignalingChannel::Connect(
     const std::string& token,
     std::function<void(sio::message::ptr room_info)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  Json::Value jsonToken;
+  if (!rtc::Base64::IsBase64Encoded(token)) {
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Invalid token."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  std::string token_decoded("");
+  if (!rtc::Base64::Decode(token, rtc::Base64::DO_STRICT, &token_decoded,
+                           nullptr)) {
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Invalid token."));
+      // TODO: Use async instead.
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  Json::Value json_token;
   Json::Reader reader;
-  if (!reader.parse(token, jsonToken)) {
+  if (!reader.parse(token_decoded, json_token)) {
     std::cout << "Error parse token." << std::endl;
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
@@ -62,11 +83,7 @@ void ConferenceSocketSignalingChannel::Connect(
   }
   std::string scheme("http://");
   std::string host;
-  std::string signature;
-  std::string token_id;
-  rtc::GetStringFromJsonObject(jsonToken, "host", &host);
-  rtc::GetStringFromJsonObject(jsonToken, "tokenId", &token_id);
-  rtc::GetStringFromJsonObject(jsonToken, "signature", &signature);
+  rtc::GetStringFromJsonObject(json_token, "host", &host);
   socket_client_->socket();
   socket_client_->set_close_listener(
       [this](sio::client::close_reason const& reason) {
@@ -80,13 +97,31 @@ void ConferenceSocketSignalingChannel::Connect(
         }
       });
   socket_client_->set_open_listener([=](void) {
-    sio::message::ptr token_message = sio::object_message::create();
-    token_message->get_map()["host"] = sio::string_message::create(host);
-    token_message->get_map()["tokenId"] = sio::string_message::create(token_id);
-    token_message->get_map()["signature"] =
-        sio::string_message::create(signature);
+    woogeen::base::SysInfo sys_info(woogeen::base::SysInfo::GetInstance());
+    sio::message::ptr login_message = sio::object_message::create();
+    login_message->get_map()["token"] = sio::string_message::create(token);
+    sio::message::ptr ua_message = sio::object_message::create();
+    sio::message::ptr sdk_message = sio::object_message::create();
+    sdk_message->get_map()["type"] =
+        sio::string_message::create(sys_info.sdk.type);
+    sdk_message->get_map()["version"] =
+        sio::string_message::create(sys_info.sdk.version);
+    ua_message->get_map()["sdk"] = sdk_message;
+    sio::message::ptr os_message = sio::object_message::create();
+    os_message->get_map()["name"] =
+        sio::string_message::create(sys_info.os.name);
+    os_message->get_map()["version"] =
+        sio::string_message::create(sys_info.os.version);
+    ua_message->get_map()["os"] = os_message;
+    sio::message::ptr runtime_message = sio::object_message::create();
+    runtime_message->get_map()["name"] =
+        sio::string_message::create(sys_info.runtime.name);
+    runtime_message->get_map()["version"] =
+        sio::string_message::create(sys_info.runtime.version);
+    ua_message->get_map()["runtime"] = runtime_message;
+    login_message->get_map()["userAgent"] = ua_message;
     socket_client_->socket()->emit(
-        "token", token_message, [=](sio::message::list const& msg) {
+        "login", login_message, [=](sio::message::list const& msg) {
           if (msg.size() < 2) {
             std::cout << "Received unkown message while sending token."
                       << std::endl;

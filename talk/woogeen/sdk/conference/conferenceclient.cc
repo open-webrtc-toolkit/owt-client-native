@@ -64,25 +64,14 @@ void ConferenceClient::Join(
     }
     return;
   }
-  std::string token_decoded("");
+  std::string token_base64(token);
   if (!rtc::Base64::IsBase64Encoded(token)) {
     LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
                        "please pass it without modification.";
-    token_decoded = token;
-  } else {
-    if (!rtc::Base64::Decode(token, rtc::Base64::DO_STRICT, &token_decoded,
-                             nullptr)) {
-      if (on_failure) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Invalid token."));
-        // TODO: Use async instead.
-        on_failure(std::move(e));
-      }
-      return;
-    }
+    token_base64 = rtc::Base64::Encode(token);
   }
   signaling_channel_->AddObserver(*this);
-  signaling_channel_->Connect(token_decoded, [=](sio::message::ptr info) {
+  signaling_channel_->Connect(token_base64, [=](sio::message::ptr info) {
     signaling_channel_connected_ = true;
     // Get current user's ID.
     std::string user_id;

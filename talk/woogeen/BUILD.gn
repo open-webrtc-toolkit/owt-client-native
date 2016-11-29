@@ -1,3 +1,7 @@
+#
+# Intel License
+#
+
 import("//webrtc/build/webrtc.gni")
 
 if (is_ios) {
@@ -260,6 +264,7 @@ if (is_ios) {
       "sdk/base/objc/RTCGlobalConfiguration.mm",
       "sdk/base/objc/FrameGeneratorObjcImpl.h",
       "sdk/base/objc/FrameGeneratorObjcImpl.mm",
+      "sdk/base/sysinfoios.mm",
       "sdk/p2p/objc/public/RTCP2PErrors.h",
       "sdk/p2p/objc/public/RTCP2PPeerConnectionChannelObserver.h",
       "sdk/p2p/objc/public/RTCP2PSignalingSenderProtocol.h",
