@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
+//  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
 #ifndef conference_ConferenceSocketSignalingChannel_h
@@ -16,7 +16,8 @@
 namespace woogeen {
 namespace conference {
 
-class ConferenceSocketSignalingChannel {
+class ConferenceSocketSignalingChannel
+    : public std::enable_shared_from_this<ConferenceSocketSignalingChannel> {
  public:
   explicit ConferenceSocketSignalingChannel();
   ~ConferenceSocketSignalingChannel();
@@ -75,9 +76,17 @@ class ConferenceSocketSignalingChannel {
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  private:
+  /// Fires upon a new ticket is received.
+  void OnReconnectionTicket(const std::string& ticket);
+  void RefreshReconnectionTicket();
+  void TriggerOnServerDisconnected();
+
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
   std::function<void()> disconnect_complete_;
+  std::string reconnection_ticket_;
+  int reconnection_attempted_;
+  bool is_reconnection_;
 };
 }
 }

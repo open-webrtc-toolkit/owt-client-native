@@ -20,7 +20,7 @@ std::string SysInfo::SdkType() {
 #endif
 }
 
-#if defined(WebRTC_WIN)
+#if defined(WEBRTC_WIN)
 std::string SysInfo::OsName() {
   return "Windows NT";
 }
@@ -52,7 +52,7 @@ std::string SysInfo::OsVersion() {
 #endif  // WEBRTC_LINUX
 
 SysInfo SysInfo::GetInstance() {
-  SdkInfo sdk(kSdkVersion, SdkType());
+  SdkInfo sdk(SdkType(), kSdkVersion);
   OsInfo os(OsName(), OsVersion());
   RuntimeInfo runtime(kRuntimeName, kRuntimeVersion);
   return SysInfo(sdk, os, runtime);

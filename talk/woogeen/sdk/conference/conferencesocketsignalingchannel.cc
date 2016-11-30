@@ -1,10 +1,14 @@
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
+//  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
 #include <iostream>
 #include <thread>
 #include <algorithm>
+#include <ctime>
+#if defined(WEBRTC_IOS)
+#include <CoreFoundation/CFDate.h>
+#endif
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/base/base64.h"
@@ -12,6 +16,7 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/json.h"
+#include "webrtc/base/timeutils.h"
 
 namespace woogeen {
 namespace conference {
@@ -23,14 +28,26 @@ const std::string kEventNameOnCustomMessage = "custom_message";
 const std::string kEventNameStreamControl = "control";
 const std::string kEventNameGetRegion = "getRegion";
 const std::string kEventNameSetRegion = "setRegion";
+const std::string kEventNameRefreshReconnectionTicket = "refreshReconnectionTicket";
+const std::string kEventNameLogout = "logout";
 const std::string kEventNameOnAddStream = "add_stream";
 const std::string kEventNameOnRemoveStream = "remove_stream";
 const std::string kEventNameOnUpdateStream = "update_stream";
 const std::string kEventNameOnUserJoin = "user_join";
 const std::string kEventNameOnUserLeave = "user_leave";
+const std::string kEventNameOnDrop = "drop";
+
+// The epoch of Mach kernel is 2001/1/1 00:00:00, while Linux is 1970/1/1 00:00:00.
+const uint64_t kMachLinuxTimeDelta = 978307200;
+
+const int kReconnectionAttempts = 10;
+const int kReconnectionDelay = 2000;
 
 ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
-    : socket_client_(new sio::client()) {}
+    : socket_client_(new sio::client()),
+      reconnection_ticket_(""),
+      reconnection_attempted_(0),
+      is_reconnection_(false) {}
 
 ConferenceSocketSignalingChannel::~ConferenceSocketSignalingChannel() {
   delete socket_client_;
@@ -70,10 +87,12 @@ void ConferenceSocketSignalingChannel::Connect(
     }
     return;
   }
+  reconnection_ticket_ = "";
+  is_reconnection_ = false;
   Json::Value json_token;
   Json::Reader reader;
   if (!reader.parse(token_decoded, json_token)) {
-    std::cout << "Error parse token." << std::endl;
+    LOG(LS_ERROR) << "Parsing token failed.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
           ConferenceException::kUnkown, "Invalid token."));
@@ -84,84 +103,137 @@ void ConferenceSocketSignalingChannel::Connect(
   std::string scheme("http://");
   std::string host;
   rtc::GetStringFromJsonObject(json_token, "host", &host);
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
   socket_client_->socket();
+  socket_client_->set_reconnect_attempts(kReconnectionAttempts);
+  socket_client_->set_reconnect_delay(kReconnectionDelay);
   socket_client_->set_close_listener(
-      [this](sio::client::close_reason const& reason) {
-        LOG(LS_INFO) << "Socket.IO disconnected.";
-        if (disconnect_complete_) {
-          disconnect_complete_();
-        }
-        disconnect_complete_ = nullptr;
-        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-          (*it)->OnServerDisconnected();
-        }
+      [](sio::client::close_reason const& reason) {
+        LOG(LS_INFO) << "Socket.IO disconnected. Reason: " << reason;
       });
+  socket_client_->set_fail_listener([weak_this]() {
+    LOG(LS_ERROR) << "Socket.IO connection failed.";
+    auto that = weak_this.lock();
+    if (that) {
+      that->is_reconnection_ = false;
+      that->reconnection_attempted_++;
+      if (that->reconnection_attempted_ >= kReconnectionAttempts) {
+        that->TriggerOnServerDisconnected();
+      }
+    }
+  });
+  socket_client_->set_reconnecting_listener([weak_this](){
+    LOG(LS_INFO) << "Socket.IO reconnecting.";
+    auto that = weak_this.lock();
+    if (that) {
+      if (that->reconnection_ticket_ != "") {
+        // It will be reset when a reconnection is success (open listener) or
+        // fail (fail listener).
+        that->is_reconnection_ = true;
+      }
+    }
+  });
   socket_client_->set_open_listener([=](void) {
-    woogeen::base::SysInfo sys_info(woogeen::base::SysInfo::GetInstance());
-    sio::message::ptr login_message = sio::object_message::create();
-    login_message->get_map()["token"] = sio::string_message::create(token);
-    sio::message::ptr ua_message = sio::object_message::create();
-    sio::message::ptr sdk_message = sio::object_message::create();
-    sdk_message->get_map()["type"] =
-        sio::string_message::create(sys_info.sdk.type);
-    sdk_message->get_map()["version"] =
-        sio::string_message::create(sys_info.sdk.version);
-    ua_message->get_map()["sdk"] = sdk_message;
-    sio::message::ptr os_message = sio::object_message::create();
-    os_message->get_map()["name"] =
-        sio::string_message::create(sys_info.os.name);
-    os_message->get_map()["version"] =
-        sio::string_message::create(sys_info.os.version);
-    ua_message->get_map()["os"] = os_message;
-    sio::message::ptr runtime_message = sio::object_message::create();
-    runtime_message->get_map()["name"] =
-        sio::string_message::create(sys_info.runtime.name);
-    runtime_message->get_map()["version"] =
-        sio::string_message::create(sys_info.runtime.version);
-    ua_message->get_map()["runtime"] = runtime_message;
-    login_message->get_map()["userAgent"] = ua_message;
-    socket_client_->socket()->emit(
-        "login", login_message, [=](sio::message::list const& msg) {
-          if (msg.size() < 2) {
-            std::cout << "Received unkown message while sending token."
-                      << std::endl;
-            if (on_failure != nullptr) {
-              std::unique_ptr<ConferenceException> e(new ConferenceException(
-                  ConferenceException::kUnkown,
-                  "Received unkown message from server."));
-              on_failure(std::move(e));
+    if (!is_reconnection_) {
+      woogeen::base::SysInfo sys_info(woogeen::base::SysInfo::GetInstance());
+      sio::message::ptr login_message = sio::object_message::create();
+      login_message->get_map()["token"] = sio::string_message::create(token);
+      sio::message::ptr ua_message = sio::object_message::create();
+      sio::message::ptr sdk_message = sio::object_message::create();
+      sdk_message->get_map()["type"] =
+          sio::string_message::create(sys_info.sdk.type);
+      sdk_message->get_map()["version"] =
+          sio::string_message::create(sys_info.sdk.version);
+      ua_message->get_map()["sdk"] = sdk_message;
+      sio::message::ptr os_message = sio::object_message::create();
+      os_message->get_map()["name"] =
+          sio::string_message::create(sys_info.os.name);
+      os_message->get_map()["version"] =
+          sio::string_message::create(sys_info.os.version);
+      ua_message->get_map()["os"] = os_message;
+      sio::message::ptr runtime_message = sio::object_message::create();
+      runtime_message->get_map()["name"] =
+          sio::string_message::create(sys_info.runtime.name);
+      runtime_message->get_map()["version"] =
+          sio::string_message::create(sys_info.runtime.version);
+      ua_message->get_map()["runtime"] = runtime_message;
+      login_message->get_map()["userAgent"] = ua_message;
+      socket_client_->socket()->emit(
+          "login", login_message, [=](sio::message::list const& msg) {
+            if (msg.size() < 2) {
+              LOG(LS_ERROR) << "Received unknown message while sending token.";
+              if (on_failure != nullptr) {
+                std::unique_ptr<ConferenceException> e(new ConferenceException(
+                    ConferenceException::kUnkown,
+                    "Received unknown message from server."));
+                on_failure(std::move(e));
+              }
+              return;
             }
-            return;
-          }
-          if (on_success == nullptr)
-            return;
-          sio::message::ptr ack =
-              msg.at(0);  // The first element indicates the state.
-          std::string state = ack->get_string();
-          if (state == "error" || state == "timeout") {
-            std::cout << "Server returns " << state
-                      << " while joining a conference." << std::endl;
-            if (on_failure != nullptr) {
-              std::unique_ptr<ConferenceException> e(new ConferenceException(
-                  ConferenceException::kUnkown,
-                  "Received error message from server."));
-              on_failure(std::move(e));
+            sio::message::ptr ack =
+                msg.at(0);  // The first element indicates the state.
+            std::string state = ack->get_string();
+            if (state == "error" || state == "timeout") {
+              LOG(LS_ERROR) << "Server returns " << state
+                            << " while joining a conference.";
+              if (on_failure != nullptr) {
+                std::unique_ptr<ConferenceException> e(new ConferenceException(
+                    ConferenceException::kUnkown,
+                    "Received error message from server."));
+                on_failure(std::move(e));
+              }
+              return;
             }
-            return;
-          }
-          // The second element is room info, please refer to MCU
-          // erizoController's implementation for detailed message format.
-          sio::message::ptr message = msg.at(1);
-          std::cout << "Message length: " << msg.size() << std::endl;
-          on_success(message);
-        });
+            // The second element is room info, please refer to MCU
+            // erizoController's implementation for detailed message format.
+            sio::message::ptr message = msg.at(1);
+            auto reconnection_ticket_ptr =
+                message->get_map()["reconnectionTicket"];
+            if (reconnection_ticket_ptr) {
+              OnReconnectionTicket(reconnection_ticket_ptr->get_string());
+            }
+            if (on_success != nullptr) {
+              on_success(message);
+            }
+          });
+      is_reconnection_ = false;
+      reconnection_attempted_ = 0;
+    } else {
+      socket_client_->socket()->emit(
+          "relogin", reconnection_ticket_, [=](sio::message::list const& msg) {
+            if (msg.size() < 2) {
+              LOG(LS_WARNING)
+                  << "Received unknown message while reconnection ticket.";
+              socket_client_->close();
+              return;
+            }
+            sio::message::ptr ack =
+                msg.at(0);  // The first element indicates the state.
+            std::string state = ack->get_string();
+            if (state == "error" || state == "timeout") {
+              LOG(LS_WARNING)
+                  << "Server returns " << state
+                  << " when relogin. Maybe an invalid reconnection ticket.";
+              socket_client_->close();
+              return;
+            }
+            // The second element is room info, please refer to MCU
+            // erizoController's implementation for detailed message format.
+            sio::message::ptr message = msg.at(1);
+            if (message->get_flag() == sio::message::flag_string) {
+              OnReconnectionTicket(message->get_string());
+            }
+            LOG(LS_VERBOSE) << "Reconnection success";
+          });
+    }
   });
   socket_client_->socket()->on(
       kEventNameOnAddStream,
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received on add stream." << std::endl;
+            LOG(LS_VERBOSE) << "Received on add stream.";
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnStreamAdded(data);
             }
@@ -171,7 +243,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received custom message." << std::endl;
+            LOG(LS_VERBOSE) << "Received custom message.";
             std::string from = data->get_map()["from"]->get_string();
             std::string message = data->get_map()["data"]->get_string();
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
@@ -183,7 +255,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux([&](
           std::string const& name, sio::message::ptr const& data, bool is_ack,
           sio::message::list& ack_resp) {
-        std::cout << "Received user join message." << std::endl;
+        LOG(LS_VERBOSE) << "Received user join message.";
         if (data == nullptr || data->get_flag() != sio::message::flag_object ||
             data->get_map()["user"] == nullptr ||
             data->get_map()["user"]->get_flag() != sio::message::flag_object) {
@@ -199,7 +271,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux([&](
           std::string const& name, sio::message::ptr const& data, bool is_ack,
           sio::message::list& ack_resp) {
-        std::cout << "Received user leave message." << std::endl;
+        LOG(LS_VERBOSE) << "Received user leave message.";
         if (data == nullptr || data->get_flag() != sio::message::flag_object ||
             data->get_map()["user"] == nullptr ||
             data->get_map()["user"]->get_flag() != sio::message::flag_object) {
@@ -215,7 +287,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received on remove stream." << std::endl;
+            LOG(LS_VERBOSE) << "Received on remove stream.";
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnStreamRemoved(data);
             }
@@ -225,7 +297,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received on update stream." << std::endl;
+            LOG(LS_VERBOSE) << "Received on update stream.";
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnStreamUpdated(data);
             }
@@ -235,10 +307,18 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::cout << "Received signaling message from erizo." << std::endl;
+            LOG(LS_VERBOSE) << "Received signaling message from erizo.";
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnSignalingMessage(data);
             }
+          }));
+  socket_client_->socket()->on(
+      kEventNameOnDrop,
+      sio::socket::event_listener_aux(
+          [&](std::string const& name, sio::message::ptr const& data,
+              bool is_ack, sio::message::list& ack_resp) {
+            LOG(LS_INFO) << "Received drop message.";
+            socket_client_->set_reconnect_attempts(0);
           }));
   socket_client_->connect(scheme.append(host));
 }
@@ -254,7 +334,8 @@ void ConferenceSocketSignalingChannel::Disconnect(
     }
     return;
   }
-  disconnect_complete_=on_success;
+  socket_client_->socket()->emit(kEventNameLogout);
+  disconnect_complete_ = on_success;
   socket_client_->close();
 }
 
@@ -456,6 +537,85 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
                                   "Negative acknowledgement from server."));
       on_failure(std::move(e));
     }
+  }
+}
+
+void ConferenceSocketSignalingChannel::OnReconnectionTicket(
+    const std::string& ticket) {
+  LOG(LS_VERBOSE) << "On reconnection ticket: " << ticket;
+  reconnection_ticket_ = ticket;
+  uint64_t now(0);
+// rtc::TimeMillis() seems not work well on iOS. It returns half of the actual
+// value on iPhone 6.
+#if defined(WEBRTC_IOS)
+  now = CFAbsoluteTimeGetCurrent();
+  now += kMachLinuxTimeDelta;
+  now *= 1000;
+#else
+  now = rtc::TimeMillis();
+#endif
+  std::string ticket_decoded(
+      rtc::Base64::Decode(reconnection_ticket_, rtc::Base64::DO_STRICT));
+  Json::Value ticket_json;
+  Json::Reader ticket_reader;
+  if (!ticket_reader.parse(ticket_decoded, ticket_json)) {
+    RTC_NOTREACHED();
+    LOG(LS_WARNING) << "Cannot parse reconnection ticket.";
+    return;
+  }
+  Json::Value expiration_json;
+  std::string expiration_str;
+  if (rtc::GetValueFromJsonObject(ticket_json, "notAfter", &expiration_json)) {
+    expiration_str = expiration_json.asString();
+    auto expiration_time = std::stoll(expiration_str);
+    int delay(expiration_time - now);
+    if (delay < 0) {
+      LOG(LS_WARNING)
+          << "Reconnection ticket expiration time is earlier than now.";
+      delay = 5 * 60 * 1000;  // Set delay to 5 mins.
+    }
+    LOG(LS_VERBOSE) << "Reconnection ticket will expire in: " << delay / 1000
+                    << "seconds";
+    std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+        shared_from_this();
+    std::thread([weak_this, delay]() {
+      auto that = weak_this.lock();
+      if (!that) {
+        return;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+      that->RefreshReconnectionTicket();
+    }).detach();
+  }
+}
+
+void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
+  socket_client_->socket()->emit(
+      kEventNameRefreshReconnectionTicket, nullptr,
+      [=](sio::message::list const& ack) {
+        if (ack.size() != 2) {
+          RTC_NOTREACHED();
+          LOG(LS_WARNING) << "Wired ack for refreshing reconnection ticket.";
+          return;
+        }
+        std::string state = ack.at(0)->get_string();
+        std::string message = ack.at(1)->get_string();
+        if (state != "success") {
+          LOG(LS_WARNING) << "Refresh reconnection ticket failed. Error: "
+                          << message;
+          return;
+        };
+        OnReconnectionTicket(message);
+      });
+}
+
+void ConferenceSocketSignalingChannel::TriggerOnServerDisconnected(){
+  if (disconnect_complete_) {
+    disconnect_complete_();
+  }
+  disconnect_complete_ = nullptr;
+  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+    (*it)->OnServerDisconnected();
   }
 }
 }
