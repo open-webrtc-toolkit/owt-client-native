@@ -55,4 +55,9 @@ Here is a list of known issues:
 # 9 Video codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is only supported in iOS 8 or later.
 
+# 10 Video frame filter {#section10}
+Video frame filter allows app to modify captured video frames before sending to video sink or encoder.
+
+To enable video frame filter, you should implement a filter conforming to RTCVideoFrameFilterProtocol. Then you can apply this filter to a specific RTCAVFoundationVideoSource by `- (void)setFilter:(id<RTCVideoFrameFilterProtocol>)filter`. We enhanced RTCAVFoundationVideoSource, so it can output frames with kCVPixelFormatType_420YpCbCr8BiPlanarFullRange(default) or kCVPixelFormatType_32BGRA.
+
 > Note: \* Other names and brands may be claimed as the property of others.
