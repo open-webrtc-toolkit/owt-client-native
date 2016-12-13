@@ -541,6 +541,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     return;
   }
   if (video->get_flag() == sio::message::flag_object &&
+      video->get_map()["device"] &&
       video->get_map()["device"]->get_string() != "camera") {
     std::string device(video->get_map()["device"]->get_string());
     if (device == "mcu") {
