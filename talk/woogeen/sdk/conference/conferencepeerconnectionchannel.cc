@@ -349,8 +349,10 @@ void ConferencePeerConnectionChannel::Publish(
           Resolution(stats.input_width, stats.input_height));
       video_options->get_map()["resolution"] =
           sio::string_message::create(resolution_string);
-      options->get_map()["video"] = video_options;
+    } else {
+      LOG(LS_WARNING) << "Failed to get resolution info.";
     }
+    options->get_map()["video"] = video_options;
   }
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->label(), [stream, this]() {
