@@ -86,7 +86,7 @@ def ninjabuild(arch, scheme, targets):
 
 def replaceheaderimport(headers_target_folder):
   '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
-  for filename in headers_target_folder:
+  for filename in os.listdir(headers_target_folder):
     if filename.endswith('.h'):
       filepath = os.path.join(headers_target_folder, filename)
       for line in fileinput.input(filepath, inplace=1):
