@@ -243,10 +243,16 @@ if (current_cpu == "arm") {
     outputs = [
       "$target_gen_dir/{{source_name_part}}.S",
     ]
+    if (is_ios) {
+      ads2gas_script =
+          "//third_party/libvpx/source/libvpx/build/make/ads2gas_apple.pl"
+    } else {
+      ads2gas_script =
+          "//third_party/libvpx/source/libvpx/build/make/ads2gas.pl"
+    }
     args = [
       "-s",
-      rebase_path("//third_party/libvpx/source/libvpx/build/make/ads2gas.pl",
-                  root_build_dir),
+      rebase_path(ads2gas_script, root_build_dir),
       "-i",
       "{{source}}",
       "-o",
