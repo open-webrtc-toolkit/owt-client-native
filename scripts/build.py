@@ -51,7 +51,7 @@ TEST_TARGETS=['common_audio_unittests', 'rtc_pc_unittests', 'system_wrappers_uni
     'voice_engine_unittests']
 TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
-TEST_SDK_VERSION = '10.1'
+TEST_SDK_VERSION = '10.2'
 TEST_SIMULATOR_DEVICE = 'iPhone 7'
 
 def gngen(arch, ssl_root, scheme):
