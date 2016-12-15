@@ -34,7 +34,16 @@ namespace conference {
 
 /// Options for subscribing a remote stream.
 struct SubscribeOptions {
+  enum class VideoQualityLevel : int {
+    kBestQuality = 1,
+    kBetterQuality,
+    kStandard,
+    kBetterSpeed,
+    kBestSpeed
+  };
+  explicit SubscribeOptions() : video_quality_level(VideoQualityLevel::kStandard) {}
   woogeen::base::Resolution resolution;
+  VideoQualityLevel video_quality_level;
 };
 }
 }

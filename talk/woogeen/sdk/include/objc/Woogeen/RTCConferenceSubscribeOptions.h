@@ -31,12 +31,20 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <WebRTC/RTCMacros.h>
 
+typedef NS_ENUM(NSInteger, RTCConferenceVideoQualityLevel) {
+  RTCConferenceVideoQualityLevelBestQuality,
+  RTCConferenceVideoQualityLevelBetterQuality,
+  RTCConferenceVideoQualityLevelStandard,
+  RTCConferenceVideoQualityLevelBetterSpeed,
+  RTCConferenceVideoQualityLevelBestSpeed
+};
+
 RTC_EXPORT
 /// Options for subscribing a remote stream.
 @interface RTCConferenceSubscribeOptions : NSObject
 
-- (CGSize)resolution;
-- (void)setResolution:(CGSize)resolution;
+@property(nonatomic, readwrite) CGSize resolution;
+@property(nonatomic, readwrite) RTCConferenceVideoQualityLevel videoQualityLevel;
 
 @end
 

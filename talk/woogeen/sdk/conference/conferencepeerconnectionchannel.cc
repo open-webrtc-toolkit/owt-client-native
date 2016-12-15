@@ -389,20 +389,41 @@ void ConferencePeerConnectionChannel::Subscribe(
   sio::message::ptr sio_options = sio::object_message::create();
   sio_options->get_map()["streamId"] =
       sio::string_message::create(stream->Id());
+  sio::message::ptr video_options = sio::object_message::create();
   if (stream->has_video_) {
     if (subscribe_options.resolution.width != 0 &&
         subscribe_options.resolution.height != 0) {
-      sio::message::ptr video_options = sio::object_message::create();
       sio::message::ptr resolution_options = sio::object_message::create();
       resolution_options->get_map()["width"] =
           sio::int_message::create(subscribe_options.resolution.width);
       resolution_options->get_map()["height"] =
           sio::int_message::create(subscribe_options.resolution.height);
       video_options->get_map()["resolution"] = resolution_options;
-      sio_options->get_map()["video"] = video_options;
-    } else {
-      sio_options->get_map()["video"] = sio::bool_message::create(true);
     }
+    std::string quality_level("Standard");
+    switch (subscribe_options.video_quality_level) {
+      case SubscribeOptions::VideoQualityLevel::kStandard:
+        break;
+      case SubscribeOptions::VideoQualityLevel::kBestQuality:
+        quality_level = "BestQuality";
+        break;
+      case SubscribeOptions::VideoQualityLevel::kBetterQuality:
+        quality_level = "BetterQuality";
+        break;
+      case SubscribeOptions::VideoQualityLevel::kBetterSpeed:
+        quality_level = "BetterSpeed";
+        break;
+      case SubscribeOptions::VideoQualityLevel::kBestSpeed:
+        quality_level = "BestSpeed";
+        break;
+      default:
+        RTC_NOTREACHED();
+        break;
+    }
+    sio::message::ptr quality_options =
+        sio::string_message::create(quality_level);
+    video_options->get_map()["quality_level"] = quality_options;
+    sio_options->get_map()["video"] = video_options;
   } else {
     LOG(LS_INFO) << "Subscribe an audio only stream.";
     sio_options->get_map()["video"] = sio::bool_message::create(false);
