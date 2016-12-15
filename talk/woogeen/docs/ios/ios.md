@@ -27,9 +27,9 @@ Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp).
 
-The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a.
+The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a. Conference sample use libsioclient_tls_no_verification.a by default. This lib enables TLS but does not verify server's certification. It was provided for evaluation use only. Do not use it in production environments.
 
-The libsioclient_tls.a included in release package has been enhanced so it will verify server's certificate. If the server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (v1.6.1) by yourself.
+The libsioclient_tls.a included in release package has been enhanced so it will verify server's certificate. If the server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (commit 725a8e0e17ecead64574fd9879bd7029b0bf25fa) by yourself.
 
 # 5 Background modes {#section5}
 Socket connections are disconnected when the device is locked. If your app must remain connected with server, "VoIP" needs to be added to your app's background modes. For detailed information about background execution, please refer to the [iOS developer library](https://developer.apple.com/library/ios/documentation/iPhone/Conceptual/iPhoneOSProgrammingGuide/BackgroundExecution/BackgroundExecution.html).
@@ -47,10 +47,8 @@ Here is a list of known issues:
 
 - Conference recording is not supported.
 - Subscribe streams with audio/video only option is not supported.
-- Get connection stats is not supported.
 - Bitrate control is not supported. It may costs up to 2Mbps per connection.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
-- Bitcode is not supported. Please disable bitcode when building apps.
 
 # 9 Video codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is only supported in iOS 8 or later.
