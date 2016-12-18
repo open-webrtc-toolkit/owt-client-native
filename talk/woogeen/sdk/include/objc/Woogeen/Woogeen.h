@@ -26,6 +26,7 @@
 
 // Base SDK
 #import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
+#import <Woogeen/RTCCameraPreviewView.h>
 #import <Woogeen/RTCMacros.h>
 #import <Woogeen/RTCMediaCodec.h>
 #import <Woogeen/RTCMediaConstraints.h>
@@ -44,6 +45,7 @@
 #import <Woogeen/RTCIceServer.h>
 #import <Woogeen/RTCGlobalConfiguration.h>
 #import <Woogeen/RTCFrameGeneratorProtocol.h>
+#import <Woogeen/RTCVideoFrame.h>
 
 // P2P SDK
 #import <Woogeen/RTCPeerClient.h>
