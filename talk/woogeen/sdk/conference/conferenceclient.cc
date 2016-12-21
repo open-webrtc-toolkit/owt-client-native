@@ -297,15 +297,6 @@ void ConferenceClient::Send(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  if (message == "") {
-    LOG(LS_WARNING) << "Cannot send empty message.";
-    if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid message."));
-      on_failure(std::move(e));
-    }
-    return;
-  }
   signaling_channel_->SendCustomMessage(message, receiver, on_success,
                                         on_failure);
 }
