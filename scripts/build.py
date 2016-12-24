@@ -1,12 +1,12 @@
-# Copyright (c) 2015 Intel Corporation. All Rights Reserved.
+# Copyright (c) 2016 Intel Corporation. All Rights Reserved.
 
 '''Script to build WebRTC libs.
 
-It builds libwoogeen which includes WebRTC lib, WooGeen base, p2p and conference
+It builds Woogeen framework which includes WebRTC lib, WooGeen base, p2p and conference
 lib. By default, it builds libs for all iOS on all architecturs. You can specify
 a target architectur by --arch argument.
 
-Output lib is located in out/libwoogeen.a, headers are located in out/headers.
+Output framework is located in out/Woogeen.framework.
 '''
 
 import os
@@ -16,6 +16,9 @@ import sys
 import shutil
 import fileinput
 import re
+
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','mac'))
+import sdk_info
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
@@ -47,13 +50,13 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
-SDK_TARGETS = ['AppRTCDemo', 'woogeen']
+SDK_TARGETS = ['woogeen']
+APP_TARGETS = ['AppRTCDemo']
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['common_audio_unittests', 'rtc_pc_unittests', 'system_wrappers_unittests',
     'voice_engine_unittests']
 TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
-TEST_SDK_VERSION = '10.2'
 TEST_SIMULATOR_DEVICE = 'iPhone 7'
 
 def gngen(arch, ssl_root, scheme):
@@ -121,40 +124,40 @@ def buildframework():
   shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'Woogeen'))
 
 def dist(arch_list, scheme, ssl_root):
-  out_fat_lib_path = os.path.join(OUT_PATH, OUT_FAT_LIB_NAME)
   out_lib_path = os.path.join(OUT_PATH, OUT_LIB_NAME)
-  if os.path.exists(out_fat_lib_path):
-    os.remove(out_fat_lib_path)
   if os.path.exists(out_lib_path):
     os.remove(out_lib_path)
   if not os.path.exists(OUT_PATH):
     os.makedirs(OUT_PATH)
-  argu = ['libtool', '-o', out_fat_lib_path]
+  argu = ['libtool', '-o', out_lib_path]
   for target_arch in arch_list:
     argu.append('%s/obj/talk/woogeen/libwoogeen.a'%getoutputpath(target_arch, scheme))
-  subprocess.call(argu, cwd=HOME_PATH)
-  # Combine external libs.
-  argu_external = ['libtool', '-o', out_lib_path]
-  argu_external.append(out_fat_lib_path)
+  # Add external libs.
   if ssl_root:
-    argu_external.extend(getexternalliblist(ssl_root))
-  subprocess.call(argu_external, cwd=HOME_PATH)
-  if(os.path.exists(out_fat_lib_path)):
-    os.remove(out_fat_lib_path)
+    argu.extend(getexternalliblist(ssl_root))
+  subprocess.call(argu, cwd=HOME_PATH)
   if scheme == 'release':
     subprocess.call(['strip', '-S', '-x', '%s/out/libwoogeen.a'%HOME_PATH],
         cwd=HOME_PATH)
   buildframework()
   return True
 
+# Get iOS simulator SDK version
+def getsdkversion():
+  settings = {}
+  sdk_info.FillXcodeVersion(settings)
+  sdk_info.FillSDKPathAndVersion(settings, 'iphonesimulator', settings['xcode_version'])
+  return settings['sdk_version']
+
 # Run unit tests on simulator. Return True if all tests are passed.
 def runtest(ssl_root):
   print 'Start running unit tests.'
-  if not ninjabuild(TEST_ARCH, TEST_SCHEME, SDK_TARGETS+TEST_TARGETS):
+  # Build app targets checks link issue.
+  if not ninjabuild(TEST_ARCH, TEST_SCHEME, SDK_TARGETS + APP_TARGETS + TEST_TARGETS):
     return False
   for test_target in TEST_TARGETS:
     if subprocess.call(['./iossim', '-d', TEST_SIMULATOR_DEVICE, '-s',
-        TEST_SDK_VERSION, '%s.app'%test_target],
+        getsdkversion(), '%s.app'%test_target],
         cwd=getoutputpath(TEST_ARCH, TEST_SCHEME)):
       return False
   return True
