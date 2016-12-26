@@ -84,16 +84,16 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             new AudioReceiverReport(
                 GetValue<int64_t>(
                     &webrtc::StatsReport::Value::int64_val, report,
-                    webrtc::StatsReport::kStatsValueNameBytesReceived, -1),
+                    webrtc::StatsReport::kStatsValueNameBytesReceived, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNamePacketsReceived, -1),
+                    webrtc::StatsReport::kStatsValueNamePacketsReceived, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsLost,
-                              -1),
+                              0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, -1),
+                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, 0),
                 GetValue<std::string>(
                     &webrtc::StatsReport::Value::string_val, report,
                     webrtc::StatsReport::kStatsValueNameCodecName, "")));
@@ -107,16 +107,16 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             new AudioSenderReport(
                 GetValue<int64_t>(
                     &webrtc::StatsReport::Value::int64_val, report,
-                    webrtc::StatsReport::kStatsValueNameBytesSent, -1),
+                    webrtc::StatsReport::kStatsValueNameBytesSent, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsSent,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsLost,
-                              -1),
+                              0),
                 GetValue<int64_t>(&webrtc::StatsReport::Value::int64_val,
                                   report,
-                                  webrtc::StatsReport::kStatsValueNameRtt, -1),
+                                  webrtc::StatsReport::kStatsValueNameRtt, 0),
                 report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
                     ->string_val()));
         connection_stats->audio_sender_reports.push_back(
@@ -129,41 +129,42 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             new VideoReceiverReport(
                 GetValue<int64_t>(
                     &webrtc::StatsReport::Value::int64_val, report,
-                    webrtc::StatsReport::kStatsValueNameBytesReceived, -1),
+                    webrtc::StatsReport::kStatsValueNameBytesReceived, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNamePacketsReceived, -1),
+                    webrtc::StatsReport::kStatsValueNamePacketsReceived, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsLost,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
-                              webrtc::StatsReport::kStatsValueNameFirsSent, -1),
+                              webrtc::StatsReport::kStatsValueNameFirsSent, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
-                              webrtc::StatsReport::kStatsValueNamePlisSent, -1),
+                              webrtc::StatsReport::kStatsValueNamePlisSent, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNameNacksSent,
-                              -1),
+                              0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
                     webrtc::StatsReport::kStatsValueNameFrameHeightReceived,
-                    -1),
+                    0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameFrameWidthReceived, -1),
+                    webrtc::StatsReport::kStatsValueNameFrameWidthReceived, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameFrameRateReceived, -1),
+                    webrtc::StatsReport::kStatsValueNameFrameRateReceived, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameFrameRateOutput, -1),
+                    webrtc::StatsReport::kStatsValueNameFrameRateOutput, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, -1),
+                    webrtc::StatsReport::kStatsValueNameCurrentDelayMs, 0),
                 report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
                     ->string_val(),
+                // TODO: Jitter should be double.
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameJitterBufferMs, -1)));
+                    webrtc::StatsReport::kStatsValueNameJitterBufferMs, 0)));
         connection_stats->video_receiver_reports.push_back(
             std::move(video_recv_report_ptr));
         break;
@@ -194,38 +195,38 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
             new VideoSenderReport(
                 GetValue<int64_t>(
                     &webrtc::StatsReport::Value::int64_val, report,
-                    webrtc::StatsReport::kStatsValueNameBytesSent, -1),
+                    webrtc::StatsReport::kStatsValueNameBytesSent, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsSent,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePacketsLost,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNameFirsReceived,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNamePlisReceived,
-                              -1),
+                              0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNameNacksReceived,
-                              -1),
+                              0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameFrameHeightSent, -1),
+                    webrtc::StatsReport::kStatsValueNameFrameHeightSent, 0),
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameFrameWidthSent, -1),
+                    webrtc::StatsReport::kStatsValueNameFrameWidthSent, 0),
                 GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                               webrtc::StatsReport::kStatsValueNameFrameRateSent,
-                              -1),
+                              0),
                 adapt_reason,
                 GetValue<int>(
                     &webrtc::StatsReport::Value::int_val, report,
-                    webrtc::StatsReport::kStatsValueNameAdaptationChanges, -1),
+                    webrtc::StatsReport::kStatsValueNameAdaptationChanges, 0),
                 GetValue<int64_t>(&webrtc::StatsReport::Value::int64_val,
                                   report,
-                                  webrtc::StatsReport::kStatsValueNameRtt, -1),
+                                  webrtc::StatsReport::kStatsValueNameRtt, 0),
                 report->FindValue(webrtc::StatsReport::kStatsValueNameCodecName)
                     ->string_val()));
         connection_stats->video_sender_reports.push_back(
@@ -237,20 +238,20 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
         connection_stats->video_bandwidth_stats.available_send_bandwidth =
             GetValue<int>(
                 &webrtc::StatsReport::Value::int_val, report,
-                webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth, -1);
+                webrtc::StatsReport::kStatsValueNameAvailableSendBandwidth, 0);
         connection_stats->video_bandwidth_stats.available_receive_bandwidth =
             GetValue<int>(
                 &webrtc::StatsReport::Value::int_val, report,
                 webrtc::StatsReport::kStatsValueNameAvailableReceiveBandwidth,
-                -1);
+                0);
         connection_stats->video_bandwidth_stats.transmit_bitrate =
             GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                           webrtc::StatsReport::kStatsValueNameTransmitBitrate,
-                          -1);
+                          0);
         connection_stats->video_bandwidth_stats.retransmit_bitrate =
             GetValue<int>(&webrtc::StatsReport::Value::int_val, report,
                           webrtc::StatsReport::kStatsValueNameRetransmitBitrate,
-                          -1);
+                          0);
         break;
       }
       default:
