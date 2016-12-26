@@ -197,7 +197,14 @@ void ConferenceClient::Subscribe(
   }
   LOG(LS_INFO) << "Stream ID: "<<stream->Id();
   if (added_stream_type_.find(stream->Id()) == added_stream_type_.end()) {
-    RTC_NOTREACHED();
+    std::string failure_message(
+        "Subscribing an invalid stream. Please check whether this stream is "
+        "removed.");
+    if (on_failure != nullptr) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, failure_message));
+      on_failure(std::move(e));
+    }
     return;
   }
   PeerConnectionChannelConfiguration config =
