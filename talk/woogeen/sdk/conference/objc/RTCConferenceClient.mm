@@ -190,6 +190,21 @@
       });
 }
 
+- (void)send:(NSString*)message
+     receiver:(NSString*)receiver
+    onSuccess:(void (^)())onSuccess
+    onFailure:(void (^)(NSError*))onFailure {
+  _nativeConferenceClient->Send(
+      [message UTF8String], [receiver UTF8String],
+      [=] {
+        if (onSuccess != nil)
+          onSuccess();
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
 - (void)playAudio:(RTCStream*)stream
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {

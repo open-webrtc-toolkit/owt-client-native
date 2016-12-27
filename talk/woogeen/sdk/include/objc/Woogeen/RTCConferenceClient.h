@@ -94,10 +94,19 @@ RTC_EXPORT
           onSuccess:(nullable void (^)())onSuccess
           onFailure:(nullable void (^)(NSError*))onFailure;
 /**
-  @brief Send messsage to all participants in the conference.
+  @brief Send message to all participants in the conference.
   @param message The message to be sent.
 */
 - (void)send:(NSString*)message
+   onSuccess:(nullable void (^)())onSuccess
+   onFailure:(nullable void (^)(NSError*))onFailure;
+/**
+  @brief Send message to specific participant in the conference.
+  @param message The message to be sent.
+  @param receiver The user who receives this message.
+*/
+- (void)send:(NSString*)message
+    receiver:(NSString*)receiver
    onSuccess:(nullable void (^)())onSuccess
    onFailure:(nullable void (^)(NSError*))onFailure;
 /**
