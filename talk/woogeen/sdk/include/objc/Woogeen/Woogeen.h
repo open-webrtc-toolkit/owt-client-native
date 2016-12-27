@@ -24,37 +24,39 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// WebRTC (headers copied from WebRTC project)
+#import <Woogeen/RTCAVFoundationVideoSource.h>
+#import <Woogeen/RTCCameraPreviewView.h>
+#import <Woogeen/RTCEAGLVideoView.h>
+#import <Woogeen/RTCIceServer.h>
+#import <Woogeen/RTCLogging.h>
+#import <Woogeen/RTCMacros.h>
+#import <Woogeen/RTCMediaConstraints.h>
+#import <Woogeen/RTCVideoFrame.h>
+#import <Woogeen/RTCVideoRenderer.h>
+#import <Woogeen/RTCVideoSource.h>
+
 // Base SDK
 #import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
-#import <Woogeen/RTCCameraPreviewView.h>
-#import <Woogeen/RTCMacros.h>
-#import <Woogeen/RTCMediaCodec.h>
-#import <Woogeen/RTCMediaConstraints.h>
-#import <Woogeen/RTCMediaFormat.h>
 #import <Woogeen/RTCErrors.h>
-#import <Woogeen/RTCStream.h>
-#import <Woogeen/RTCLocalStream.h>
+#import <Woogeen/RTCFrameGeneratorProtocol.h>
+#import <Woogeen/RTCGlobalConfiguration.h>
 #import <Woogeen/RTCLocalCameraStream.h>
 #import <Woogeen/RTCLocalCustomizedStream.h>
-#import <Woogeen/RTCLogging.h>
-#import <Woogeen/RTCRemoteStream.h>
+#import <Woogeen/RTCLocalStream.h>
+#import <Woogeen/RTCMediaCodec.h>
+#import <Woogeen/RTCMediaFormat.h>
 #import <Woogeen/RTCRemoteCameraStream.h>
 #import <Woogeen/RTCRemoteMixedStream.h>
 #import <Woogeen/RTCRemoteMixedStreamObserver.h>
 #import <Woogeen/RTCRemoteScreenStream.h>
-#import <Woogeen/RTCIceServer.h>
-#import <Woogeen/RTCGlobalConfiguration.h>
-#import <Woogeen/RTCFrameGeneratorProtocol.h>
-#import <Woogeen/RTCVideoFrame.h>
+#import <Woogeen/RTCRemoteStream.h>
+#import <Woogeen/RTCStream.h>
 
 // P2P SDK
-#import <Woogeen/RTCPeerClient.h>
 #import <Woogeen/RTCP2PErrors.h>
+#import <Woogeen/RTCPeerClient.h>
 
 // Conference SDK
 #import <Woogeen/RTCConferenceClient.h>
 #import <Woogeen/RTCConferenceErrors.h>
-
-// Following headers are part of sample implementations
-#import <Woogeen/RTCVideoRenderer.h>
-#import <Woogeen/RTCEAGLVideoView.h>
