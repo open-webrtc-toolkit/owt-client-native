@@ -195,6 +195,15 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   // method is a shortcut to check whether this channel is used to publish or
   // subscribe a stream, and returns the stream's ID.
   std::string GetStreamId() const;
+  void TryToGetResolution(
+    sio::message::ptr options,
+    std::shared_ptr<LocalStream> stream,
+    unsigned int retry,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  void SendPublishMessage(
+    sio::message::ptr options,
+    std::shared_ptr<LocalStream> stream,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   int session_id_;

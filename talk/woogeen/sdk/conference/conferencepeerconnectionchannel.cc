@@ -50,6 +50,9 @@ const int kSessionIdBase =
 const int kMessageSeqBase = 1;
 const int kTiebreakerUpperBound = 429496723;  // ditto
 
+const int kGetResolutionRetryLimit = 5;
+const int kGetResolutionRetryDelay = 1;  // Unit: second.
+
 // Stream option member key
 const string kStreamOptionStreamIdKey = "streamId";
 const string kStreamOptionStateKey = "state";
@@ -336,32 +339,16 @@ void ConferencePeerConnectionChannel::Publish(
   }
   if (stream->MediaStream()->GetVideoTracks().size() == 0) {
     options->get_map()["video"] = sio::bool_message::create(false);
+    SendPublishMessage(options, stream, on_failure);
   } else {
     sio::message::ptr video_options = sio::object_message::create();
     video_options->get_map()["device"] = sio::string_message::create(
         "camera");  // Currently only camera streams.
-    // Resolution
-    auto video_track_source =
-        stream->MediaStream()->GetVideoTracks()[0]->GetSource();
-    VideoTrackSourceInterface::Stats stats;
-    if (video_track_source->GetStats(&stats)) {
-      auto resolution_string = MediaUtils::GetResolutionName(
-          Resolution(stats.input_width, stats.input_height));
-      video_options->get_map()["resolution"] =
-          sio::string_message::create(resolution_string);
-    } else {
-      LOG(LS_WARNING) << "Failed to get resolution info.";
-    }
     options->get_map()["video"] = video_options;
+    // Get resolution depends on stats report. Resolution value may not
+    // available before stream has video data. So we need some retries.
+    TryToGetResolution(options, stream, 0, on_failure);
   }
-  signaling_channel_->SendInitializationMessage(
-      options, stream->MediaStream()->label(), [stream, this]() {
-        rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-            new rtc::ScopedRefMessageData<MediaStreamInterface>(
-                stream->MediaStream());
-        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
-        CreateOffer();
-      }, on_failure);
 }
 
 void ConferencePeerConnectionChannel::Subscribe(
@@ -690,6 +677,64 @@ int ConferencePeerConnectionChannel::RandomInt(int lower_bound,
   std::mt19937 mt(rd());
   std::uniform_int_distribution<int> dist(1, kTiebreakerUpperBound);
   return dist(mt);
+}
+
+void ConferencePeerConnectionChannel::TryToGetResolution(
+    sio::message::ptr options,
+    std::shared_ptr<LocalStream> stream,
+    unsigned int retry,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (stream->MediaStream()->GetVideoTracks().size() == 0) {
+    LOG(LS_WARNING) << "Stream does not have video track. This could happen "
+                       "when video track is removed after publishing.";
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnkown, "Stream is no longer valid."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+  auto video_track_source =
+      stream->MediaStream()->GetVideoTracks()[0]->GetSource();
+  VideoTrackSourceInterface::Stats stats;
+  if (video_track_source->GetStats(&stats)) {
+    auto resolution_string = MediaUtils::GetResolutionName(
+        Resolution(stats.input_width, stats.input_height));
+    options->get_map()["video"]->get_map()["resolution"] =
+        sio::string_message::create(resolution_string);
+    SendPublishMessage(options, stream, on_failure);
+  } else {
+    if (retry >= kGetResolutionRetryLimit) {
+      LOG(LS_WARNING) << "Failed to get resolution info.";
+      options->get_map()["video"]->get_map()["resolution"] =
+          sio::string_message::create("unknown");
+      SendPublishMessage(options, stream, on_failure);
+    } else {
+      LOG(LS_WARNING) << "Failed to get resolution info. Retry after "
+                      << kGetResolutionRetryDelay << " second(s).";
+      std::thread([this, options, stream, retry, on_failure]() {
+        std::this_thread::sleep_for(
+            std::chrono::seconds(kGetResolutionRetryDelay));
+        TryToGetResolution(options, stream, retry + 1, on_failure);
+      }).detach();
+    }
+  }
+}
+
+void ConferencePeerConnectionChannel::SendPublishMessage(
+    sio::message::ptr options,
+    std::shared_ptr<LocalStream> stream,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  signaling_channel_->SendInitializationMessage(
+      options, stream->MediaStream()->label(),
+      [stream, this]() {
+        rtc::ScopedRefMessageData<MediaStreamInterface>* param =
+            new rtc::ScopedRefMessageData<MediaStreamInterface>(
+                stream->MediaStream());
+        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
+        CreateOffer();
+      },
+      on_failure);
 }
 }
 }
