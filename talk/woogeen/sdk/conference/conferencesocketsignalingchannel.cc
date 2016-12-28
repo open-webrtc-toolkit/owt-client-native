@@ -114,8 +114,13 @@ void ConferenceSocketSignalingChannel::Connect(
   socket_client_->set_reconnect_attempts(kReconnectionAttempts);
   socket_client_->set_reconnect_delay(kReconnectionDelay);
   socket_client_->set_close_listener(
-      [](sio::client::close_reason const& reason) {
+      [weak_this](sio::client::close_reason const& reason) {
         LOG(LS_INFO) << "Socket.IO disconnected. Reason: " << reason;
+        auto that = weak_this.lock();
+        if (that && (that->reconnection_attempted_ >= kReconnectionAttempts ||
+                     that->disconnect_complete_)) {
+          that->TriggerOnServerDisconnected();
+        }
       });
   socket_client_->set_fail_listener([weak_this]() {
     LOG(LS_ERROR) << "Socket.IO connection failed.";
