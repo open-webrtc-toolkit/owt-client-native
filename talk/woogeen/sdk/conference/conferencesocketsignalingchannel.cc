@@ -55,6 +55,11 @@ ConferenceSocketSignalingChannel::~ConferenceSocketSignalingChannel() {
 
 void ConferenceSocketSignalingChannel::AddObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
+  if (std::find(observers_.begin(), observers_.end(), &observer) !=
+      observers_.end()) {
+    LOG(LS_INFO) << "Adding duplicated observer.";
+    return;
+  }
   observers_.push_back(&observer);
 }
 
