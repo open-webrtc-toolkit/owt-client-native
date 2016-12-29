@@ -127,7 +127,6 @@ void ConferenceSocketSignalingChannel::Connect(
     auto that = weak_this.lock();
     if (that) {
       that->is_reconnection_ = false;
-      that->reconnection_attempted_++;
       if (that->reconnection_attempted_ >= kReconnectionAttempts) {
         that->TriggerOnServerDisconnected();
       }
@@ -141,6 +140,7 @@ void ConferenceSocketSignalingChannel::Connect(
         // It will be reset when a reconnection is success (open listener) or
         // fail (fail listener).
         that->is_reconnection_ = true;
+        that->reconnection_attempted_++;
       }
     }
   });
