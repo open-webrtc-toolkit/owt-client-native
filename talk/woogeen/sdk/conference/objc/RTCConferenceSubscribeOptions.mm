@@ -10,6 +10,14 @@
   CGSize _resolution;
 }
 
+- (instancetype)init {
+  if ((self = [super init])) {
+    self.resolution = CGSizeMake(0, 0);
+    self.videoQualityLevel = RTCConferenceVideoQualityLevelStandard;
+  }
+  return self;
+}
+
 - (CGSize)resolution {
   return _resolution;
 }

@@ -43,6 +43,8 @@ RTC_EXPORT
 /// Options for subscribing a remote stream.
 @interface RTCConferenceSubscribeOptions : NSObject
 
+-(instancetype)init;
+
 @property(nonatomic, readwrite) CGSize resolution;
 @property(nonatomic, readwrite) RTCConferenceVideoQualityLevel videoQualityLevel;
 
