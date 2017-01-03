@@ -102,9 +102,7 @@ source_set("woogeen_sdk_base") {
     ]
 
     cflags = [
-      # TODO: Bug 799, 800
-      "/wd4189",  # Unused variables
-      "/wd4267",  # Conversion truncation
+      # TODO: Bug 800
       "/wd4389",  # Signed/unsigned mismatch
     ]
 

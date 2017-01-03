@@ -771,8 +771,6 @@ int32_t MSDKVideoDecoder::DoDecode(){
     //In any case, we just create output samples by ourselves instead of using MFT allocated(if any)
     //dxva is enabled, this means we have to use output buffer provided by MFT instead of allocating it by ourselves.
 
-    int output_buffer_size = stream_info.cbSize;
-
     hr = decoder_->ProcessOutput(0,  //No flags
         1,  //# of streams to pull from
         &output_data_buffer,

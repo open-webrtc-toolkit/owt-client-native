@@ -331,7 +331,6 @@ int H264VideoMFTEncoder::Encode(
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
-        int ret =
             libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
                                input_image.video_frame_buffer()->StrideY(),
                                input_image.video_frame_buffer()->DataU(),
@@ -526,7 +525,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
 #endif
 
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
-      int ret = libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
+        libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
                                    input_image.video_frame_buffer()->StrideY(),
                                    input_image.video_frame_buffer()->DataU(),
                                    input_image.video_frame_buffer()->StrideU(),
