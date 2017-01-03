@@ -28,6 +28,7 @@
 #define WOOGEEN_CONFERENCE_OBJC_RTCCONFERENCECLIENTCONFIGURATION_H_
 
 #import <Foundation/Foundation.h>
+#import <WebRTC/RTCConfiguration.h>
 #import "Woogeen/RTCMediaCodec.h"
 
 /// Configuration for creating a RTCConferenceClient
@@ -48,6 +49,13 @@ RTC_EXPORT
 @property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
 /// Max outgoing video bandwidth, unit: kbps.
 @property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
+
+/// Candidate collection policy. If you do not want cellular network when WiFi
+/// is available, please use RTCCandidateNetworkPolicyLowCost. Using low cost
+/// policy may not have good network experience. Default policy is collecting
+/// all candidates.
+@property(nonatomic, assign, readwrite)
+    RTCCandidateNetworkPolicy candidateNetworkPolicy;
 
 @end
 

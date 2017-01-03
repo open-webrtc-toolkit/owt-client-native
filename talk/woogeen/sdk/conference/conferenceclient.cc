@@ -711,6 +711,13 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
   config.media_codec = configuration_.media_codec;
   config.max_audio_bandwidth = configuration_.max_audio_bandwidth;
   config.max_video_bandwidth = configuration_.max_video_bandwidth;
+  config.candidate_network_policy =
+      (configuration_.candidate_network_policy ==
+       ClientConfiguration::CandidateNetworkPolicy::kLowCost)
+          ? webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
+                kCandidateNetworkPolicyLowCost
+          : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
+                kCandidateNetworkPolicyAll;
   return config;
 }
 

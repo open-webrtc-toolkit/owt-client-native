@@ -52,6 +52,7 @@ struct PeerConnectionChannelConfiguration
   int max_video_bandwidth;
   /// Max outgoing audio bandwidth, unit: kbps.
   int max_audio_bandwidth;
+  /// Indicate whether this PeerConnection is used for sending encoded frame.
   bool encoded_video_frame_;
 };
 

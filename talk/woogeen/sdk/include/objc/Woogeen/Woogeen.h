@@ -27,6 +27,7 @@
 // WebRTC (headers copied from WebRTC project)
 #import <Woogeen/RTCAVFoundationVideoSource.h>
 #import <Woogeen/RTCCameraPreviewView.h>
+#import <Woogeen/RTCConfiguration.h>
 #import <Woogeen/RTCEAGLVideoView.h>
 #import <Woogeen/RTCIceServer.h>
 #import <Woogeen/RTCLogging.h>

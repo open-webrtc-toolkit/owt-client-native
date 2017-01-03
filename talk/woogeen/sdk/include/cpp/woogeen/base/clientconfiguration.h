@@ -37,7 +37,13 @@ namespace base{
 
 /// Client configurations
 struct ClientConfiguration {
-  ClientConfiguration() : max_audio_bandwidth(0), max_video_bandwidth(0){};
+  enum class CandidateNetworkPolicy : int { kAll = 1, kLowCost };
+
+  ClientConfiguration()
+      : max_audio_bandwidth(0),
+        max_video_bandwidth(0),
+        candidate_network_policy(CandidateNetworkPolicy::kAll){};
+
   /// List of ICE servers
   std::vector<IceServer> ice_servers;
   /// Media codec preference
@@ -49,6 +55,11 @@ struct ClientConfiguration {
   int max_audio_bandwidth;
   /// Max outgoing video bandwidth, unit: kbps.
   int max_video_bandwidth;
+  /// Candidate collection policy. If you do not want cellular network when WiFi
+  /// is available, please use CandidateNetworkPolicy::kLowCost. Using low cost
+  /// policy may not have good network experience. Default policy is collecting
+  /// all candidates.
+  CandidateNetworkPolicy candidate_network_policy;
 };
 }
 }

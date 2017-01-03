@@ -45,6 +45,10 @@
       [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];
   nativeConfig->media_codec.video_codec =
       [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];
+  nativeConfig->candidate_network_policy =
+      ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
+          ? woogeen::base::ClientConfiguration::CandidateNetworkPolicy::kLowCost
+          : woogeen::base::ClientConfiguration::CandidateNetworkPolicy::kAll;
   std::unique_ptr<woogeen::conference::ConferenceClient> nativeConferenceClient(
       new woogeen::conference::ConferenceClient(*nativeConfig));
   _nativeConferenceClient = std::move(nativeConferenceClient);

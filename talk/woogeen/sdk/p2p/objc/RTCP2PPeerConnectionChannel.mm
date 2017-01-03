@@ -46,6 +46,12 @@
       [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];
   nativeConfig.media_codec.video_codec =
       [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];
+  nativeConfig.candidate_network_policy =
+      ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
+          ? webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
+                kCandidateNetworkPolicyLowCost
+          : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
+                kCandidateNetworkPolicyAll;
   _nativeChannel = new woogeen::p2p::P2PPeerConnectionChannel(
       nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;

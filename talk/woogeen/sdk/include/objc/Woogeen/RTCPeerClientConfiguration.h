@@ -28,7 +28,7 @@
 #define p2p_RTCP2PClientConfiguration_h
 
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCIceServer.h>
+#import <WebRTC/RTCConfiguration.h>
 #import <Woogeen/RTCMediaCodec.h>
 
 /**
@@ -50,6 +50,13 @@ RTC_EXPORT
 @property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
 /// Max outgoing video bandwidth, unit: kbps.
 @property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
+
+/// Candidate collection policy. If you do not want cellular network when WiFi
+/// is available, please use RTCCandidateNetworkPolicyLowCost. Using low cost
+/// policy may not have good network experience. Default policy is collecting
+/// all candidates.
+@property(nonatomic, readwrite, assign)
+    RTCCandidateNetworkPolicy candidateNetworkPolicy;
 
 @end
 

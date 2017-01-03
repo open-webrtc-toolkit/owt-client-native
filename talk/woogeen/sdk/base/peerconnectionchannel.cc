@@ -244,8 +244,6 @@ void PeerConnectionChannel::OnIceGatheringChange(
 
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()
     : RTCConfiguration() {
-  candidate_network_policy =
-      webrtc::PeerConnectionInterface::kCandidateNetworkPolicyLowCost;
 #if (defined(WEBRTC_IOS) || defined(WEBRTC_WIN)) && !defined(OPENSSL_IS_BORINGSSL)
   // TODO(jianjunz): Use RSA on iOS when build with external OpenSSL. Looks like
   // ECDSA P256 cannot work well with external OpenSSL on iOS.
