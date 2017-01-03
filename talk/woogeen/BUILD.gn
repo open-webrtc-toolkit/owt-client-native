@@ -101,11 +101,6 @@ source_set("woogeen_sdk_base") {
       "sdk/base/win/h264_msdk_decoder.h",
     ]
 
-    cflags = [
-      # TODO: Bug 800
-      "/wd4389",  # Signed/unsigned mismatch
-    ]
-
     if (rtc_use_h265) {
       sources += [
         "sdk/base/win/h265_msdk_decoder.cpp",
