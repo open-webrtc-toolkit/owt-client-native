@@ -50,8 +50,9 @@ RTC_EXPORT
 /**
   @brief Set the video resolution.
 
+  Currently, supported resolutions are 352*288, 640*480, 1280*720 and 1920*1080.
   If the resolution specified is not supported on current device, creation will
-  failed.
+  fail.
   @param width The width of the video.
   @param height The height of the video.
 */
