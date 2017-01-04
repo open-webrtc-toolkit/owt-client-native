@@ -50,15 +50,24 @@ struct ClientConfiguration {
   MediaCodec media_codec;
   /**
    @brief Max outgoing audio bandwidth, unit: kbps.
-   @detail Please be noticed different codecs may support different bitrate ranges.
+   @detail Please be noticed different codecs may support different bitrate
+   ranges. If you set a bandwidth limitation which is not supported by selected
+   codec, connection will fail.
    */
   int max_audio_bandwidth;
-  /// Max outgoing video bandwidth, unit: kbps.
+  /**
+   @brief Max outgoing video bandwidth, unit: kbps.
+   @detail Please be noticed different codecs may support different bitrate
+   ranges. If you set a bandwidth limitation which is not supported by selected
+   codec, connection will fail.
+   */
   int max_video_bandwidth;
-  /// Candidate collection policy. If you do not want cellular network when WiFi
-  /// is available, please use CandidateNetworkPolicy::kLowCost. Using low cost
-  /// policy may not have good network experience. Default policy is collecting
-  /// all candidates.
+  /**
+   @brief Candidate collection policy.
+   @detail If you do not want cellular network when WiFi is available, please
+   use CandidateNetworkPolicy::kLowCost. Using low cost policy may not have good
+   network experience. Default policy is collecting all candidates.
+   */
   CandidateNetworkPolicy candidate_network_policy;
 };
 }

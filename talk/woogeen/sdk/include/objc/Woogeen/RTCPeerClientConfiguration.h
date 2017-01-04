@@ -45,16 +45,25 @@ RTC_EXPORT
 @property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 /**
  @brief Max outgoing audio bandwidth, unit: kbps.
- @detail Please be noticed different codecs may support different bitrate ranges.
+ @detail Please be noticed different codecs may support different bitrate
+ ranges. If you set a bandwidth limitation which is not supported by selected
+ codec, connection will fail.
  */
 @property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
-/// Max outgoing video bandwidth, unit: kbps.
+/**
+ @brief Max outgoing video bandwidth, unit: kbps.
+ @detail Please be noticed different codecs may support different bitrate
+ ranges. If you set a bandwidth limitation which is not supported by selected
+ codec, connection will fail.
+ */
 @property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
 
-/// Candidate collection policy. If you do not want cellular network when WiFi
-/// is available, please use RTCCandidateNetworkPolicyLowCost. Using low cost
-/// policy may not have good network experience. Default policy is collecting
-/// all candidates.
+/**
+ @brief Candidate collection policy.
+ @detail If you do not want cellular network when WiFi is available, please use
+ RTCCandidateNetworkPolicyLowCost. Using low cost policy may not have good
+ network experience. Default policy is collecting all candidates.
+ */
 @property(nonatomic, readwrite, assign)
     RTCCandidateNetworkPolicy candidateNetworkPolicy;
 
