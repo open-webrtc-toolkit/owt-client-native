@@ -79,7 +79,6 @@ int H265VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     bitrate_ = codec_settings->startBitrate * 1000;
     codecType_ = codec_settings->codecType;
     //MSDK does not require all operations dispatched to the same thread. We however always use dedicated thread
-    rtc::ThreadManager::Instance()->CurrentThread()->SetAllowBlockingCalls(true);
     return encoder_thread_->Invoke<int>(
         RTC_FROM_HERE,
         rtc::Bind(&H265VideoMFTEncoder::InitEncodeOnEncoderThread, this,
