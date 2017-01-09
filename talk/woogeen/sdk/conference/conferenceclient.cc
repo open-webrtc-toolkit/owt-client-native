@@ -154,15 +154,19 @@ void ConferenceClient::Publish(
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
-  if (publish_pcs_.find(stream->MediaStream()->label()) != publish_pcs_.end()) {
-    LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
-                     "more than once.";
-    if (on_failure) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Duplicated stream."));
-      on_failure(std::move(e));
+  {
+    const std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    if (publish_pcs_.find(stream->MediaStream()->label()) !=
+        publish_pcs_.end()) {
+      LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
+                       "more than once.";
+      if (on_failure) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Duplicated stream."));
+        on_failure(std::move(e));
+      }
+      return;
     }
-    return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
@@ -171,7 +175,10 @@ void ConferenceClient::Publish(
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
-  publish_pcs_[stream->MediaStream()->label()] = pcc;
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    publish_pcs_[stream->MediaStream()->label()] = pcc;
+  }
   pcc->Publish(stream, on_success, on_failure);
 }
 
@@ -207,11 +214,27 @@ void ConferenceClient::Subscribe(
     }
     return;
   }
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    if (subscribe_pcs_.find(stream->Id()) != subscribe_pcs_.end()) {
+      std::string failure_message(
+          "Cannot subscribe a stream that is subscribing.");
+      if (on_failure != nullptr) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, failure_message));
+        on_failure(std::move(e));
+      }
+      return;
+    }
+  }
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
-  subscribe_pcs_[stream->Id()] = pcc;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    subscribe_pcs_[stream->Id()] = pcc;
+  }
   if (added_stream_type_[stream->Id()] == kStreamTypeMix) {
     pcc->Subscribe(std::static_pointer_cast<RemoteMixedStream>(stream), options,
                    on_success, on_failure);
@@ -239,20 +262,25 @@ void ConferenceClient::Unpublish(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  auto pcc_it = publish_pcs_.find(stream->MediaStream()->label());
-  if (pcc_it == publish_pcs_.end()) {
-    LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
-    if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid stream."));
-      on_failure(std::move(e));
-    }
-  } else {
-    pcc_it->second->Unpublish(stream, [=]() {
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    auto pcc_it = publish_pcs_.find(stream->MediaStream()->label());
+    if (pcc_it == publish_pcs_.end()) {
+      LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+      if (on_failure != nullptr) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Invalid stream."));
+        on_failure(std::move(e));
+      }
+    } else {
+      pcc_it->second->Unpublish(stream,
+                                [=]() {
+                                  if (on_success != nullptr)
+                                    on_success();
+                                },
+                                on_failure);
       publish_pcs_.erase(pcc_it);
-      if (on_success != nullptr)
-        on_success();
-    }, on_failure);
+    }
   }
 }
 
@@ -268,20 +296,25 @@ void ConferenceClient::Unsubscribe(
     return;
   }
   LOG(LS_INFO) << "About to unsubscribe stream " << stream->Id();
-  auto pcc_it = subscribe_pcs_.find(stream->Id());
-  if (pcc_it == subscribe_pcs_.end()) {
-    LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
-    if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid stream."));
-      on_failure(std::move(e));
-    }
-  } else {
-    pcc_it->second->Unsubscribe(stream, [=]() {
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    auto pcc_it = subscribe_pcs_.find(stream->Id());
+    if (pcc_it == subscribe_pcs_.end()) {
+      LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+      if (on_failure != nullptr) {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnkown, "Invalid stream."));
+        on_failure(std::move(e));
+      }
+    } else {
+      pcc_it->second->Unsubscribe(stream,
+                                  [=]() {
+                                    if (on_success != nullptr)
+                                      on_success();
+                                  },
+                                  on_failure);
       subscribe_pcs_.erase(pcc_it);
-      if (on_success != nullptr)
-        on_success();
-    }, on_failure);
+    }
   }
 }
 
@@ -374,9 +407,15 @@ void ConferenceClient::Leave(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  publish_id_label_map_.clear();
-  publish_pcs_.clear();
-  subscribe_pcs_.clear();
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    publish_id_label_map_.clear();
+    publish_pcs_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    subscribe_pcs_.clear();
+  }
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 
@@ -654,30 +693,39 @@ ConferenceClient::GetConferencePeerConnectionChannel(
     LOG(LS_ERROR) << "Cannot get PeerConnectionChannel for a null stream.";
     return nullptr;
   }
-  auto pcc_it = subscribe_pcs_.find(stream->Id());
-  if (pcc_it != subscribe_pcs_.end()) {
-    return pcc_it->second;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    auto pcc_it = subscribe_pcs_.find(stream->Id());
+    if (pcc_it != subscribe_pcs_.end()) {
+      return pcc_it->second;
+    }
   }
   if (stream->MediaStream() == nullptr) {
     LOG(LS_ERROR) << "Cannot find publish PeerConnectionChannel for a stream "
                      "without media stream.";
     return nullptr;
   }
-  pcc_it = publish_pcs_.find(stream->MediaStream()->label());
-  if (pcc_it != publish_pcs_.end()) {
-    return pcc_it->second;
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    auto pcc_it = publish_pcs_.find(stream->MediaStream()->label());
+    if (pcc_it != publish_pcs_.end()) {
+      return pcc_it->second;
+    }
+    LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific stream.";
+    return nullptr;
   }
-  LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific stream.";
-  return nullptr;
 }
 
 std::shared_ptr<ConferencePeerConnectionChannel>
 ConferenceClient::GetConferencePeerConnectionChannel(
     const std::string& stream_id) const {
-  // Search subscribe pcs.
-  auto pcc_it = subscribe_pcs_.find(stream_id);
-  if (pcc_it != subscribe_pcs_.end()) {
-    return pcc_it->second;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto pcc_it = subscribe_pcs_.find(stream_id);
+    if (pcc_it != subscribe_pcs_.end()) {
+      return pcc_it->second;
+    }
   }
   std::string id;
   // If stream_id is local stream's ID, find it's label because publish_pcs use
@@ -688,9 +736,12 @@ ConferenceClient::GetConferencePeerConnectionChannel(
   } else {
     id = stream_id;
   }
-  pcc_it = publish_pcs_.find(id);
-  if (pcc_it != publish_pcs_.end()) {
-    return pcc_it->second;
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    auto pcc_it = publish_pcs_.find(id);
+    if (pcc_it != publish_pcs_.end()) {
+      return pcc_it->second;
+    }
   }
   LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific stream.";
   return nullptr;

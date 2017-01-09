@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -365,10 +366,12 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       publish_pcs_;
+  mutable std::mutex publish_pcs_mutex_;
   // Key is woogeen::Stream's ID
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       subscribe_pcs_;
+  mutable std::mutex subscribe_pcs_mutex_;
   // Key is woogeen::Stream's ID
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
