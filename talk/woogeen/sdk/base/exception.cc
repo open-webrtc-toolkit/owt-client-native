@@ -15,7 +15,7 @@ std::string Exception::Message() {
   return message_;
 }
 
-StreamException::StreamException() : StreamException(kUnkown) {}
+StreamException::StreamException() : StreamException(kUnknown) {}
 
 StreamException::StreamException(const enum ExceptionType& type)
     : StreamException(type, "Unkown stream exception.") {}

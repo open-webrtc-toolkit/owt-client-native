@@ -56,7 +56,7 @@ class Exception {
 class StreamException : public Exception {
  public:
   enum ExceptionType : int {
-    kUnkown = 1100,  // General stream exceptions
+    kUnknown = 1100,  // General stream exceptions
     // kLocal* for local stream exceptions
     kLocalDeviceNotFound = 1102,
     kLocalInvalidOption = 1104,

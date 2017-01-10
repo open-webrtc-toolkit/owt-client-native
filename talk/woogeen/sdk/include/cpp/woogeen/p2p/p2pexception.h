@@ -36,7 +36,7 @@ namespace p2p {
 class P2PException : public woogeen::base::Exception {
  public:
   enum ExceptionType : int {
-    kUnkown = 2001,  // TODO(jianjun): sync with other SDKs.
+    kUnknown = 2001,  // TODO(jianjun): sync with other SDKs.
     kConnAuthFailed = 2121,
     kMessageTargetUnreachable = 2201,
     kClientUnsupportedMethod = 2401,

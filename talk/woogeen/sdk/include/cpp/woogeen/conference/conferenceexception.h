@@ -36,7 +36,7 @@ namespace conference {
 class ConferenceException : public woogeen::base::Exception {
  public:
   enum Type : int {
-    kUnkown = 3001,  // TODO(jianjun): sync with other SDKs.
+    kUnknown = 3001,  // TODO(jianjun): sync with other SDKs.
   };
 
   ConferenceException();

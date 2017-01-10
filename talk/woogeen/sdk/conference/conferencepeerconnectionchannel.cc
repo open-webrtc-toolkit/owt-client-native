@@ -296,7 +296,7 @@ bool ConferencePeerConnectionChannel::CheckNullPointer(
     return true;
   if (on_failure != nullptr) {
     std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnkown, "Nullptr is not allowed."));
+        ConferenceException::kUnknown, "Nullptr is not allowed."));
     on_failure(std::move(e));
   }
   return false;
@@ -318,7 +318,7 @@ void ConferencePeerConnectionChannel::Publish(
   if (publish_success_callback_) {
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Publishing this stream."));
+          ConferenceException::kUnknown, "Publishing this stream."));
       on_failure(std::move(e));
     }
   }
@@ -367,7 +367,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   if (subscribe_success_callback_) {
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Subscribing this stream."));
+          ConferenceException::kUnknown, "Subscribing this stream."));
       on_failure(std::move(e));
     }
   }
@@ -446,7 +446,7 @@ void ConferencePeerConnectionChannel::Subscribe(
       LOG(LS_ERROR) << "Subscribe unsupported resolution.";
       if (on_failure != nullptr) {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Unsupported resolution."));
+            ConferenceException::kUnknown, "Unsupported resolution."));
         on_failure(std::move(e));
       }
     }
@@ -467,7 +467,7 @@ void ConferencePeerConnectionChannel::Subscribe(
                      "Please don't change resolution.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown,
+          ConferenceException::kUnknown,
           "Cannot specify resolution settings for screen sharing stream."));
       on_failure(std::move(e));
       }
@@ -489,7 +489,7 @@ void ConferencePeerConnectionChannel::Subscribe(
                      "Please don't change resolution.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown,
+          ConferenceException::kUnknown,
           "Cannot specify resolution settings for camera stream."));
       on_failure(std::move(e));
       }
@@ -511,7 +511,7 @@ void ConferencePeerConnectionChannel::Unpublish(
     LOG(LS_ERROR) << "Stream ID doesn't match published stream.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid stream to be unpublished."));
+          ConferenceException::kUnknown, "Invalid stream to be unpublished."));
       on_failure(std::move(e));
     }
     return;
@@ -519,7 +519,7 @@ void ConferencePeerConnectionChannel::Unpublish(
   if (publish_success_callback_ != nullptr) {  // Publishing
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown,
+          ConferenceException::kUnknown,
           "Cannot unpublish a stream during publishing."));
       on_failure(std::move(e));
     }
@@ -542,7 +542,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
     LOG(LS_ERROR) << "Stream ID doesn't match subscribed stream.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid stream to be unsubscribed."));
+          ConferenceException::kUnknown, "Invalid stream to be unsubscribed."));
       on_failure(std::move(e));
     }
     return;
@@ -550,7 +550,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
   if (subscribe_success_callback_ != nullptr) {  // Subscribing
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown,
+          ConferenceException::kUnknown,
           "Cannot unsubscribe a stream during subscribing."));
       on_failure(std::move(e));
     }
@@ -689,7 +689,7 @@ void ConferencePeerConnectionChannel::TryToGetResolution(
                        "when video track is removed after publishing.";
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Stream is no longer valid."));
+          ConferenceException::kUnknown, "Stream is no longer valid."));
       on_failure(std::move(e));
     }
     return;

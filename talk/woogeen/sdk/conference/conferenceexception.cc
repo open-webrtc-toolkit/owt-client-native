@@ -7,7 +7,7 @@
 namespace woogeen {
 namespace conference {
 
-ConferenceException::ConferenceException() : ConferenceException(kUnkown) {}
+ConferenceException::ConferenceException() : ConferenceException(kUnknown) {}
 
 ConferenceException::ConferenceException(const enum Type& type)
     : ConferenceException(type, "Unkown P2P exception.") {}

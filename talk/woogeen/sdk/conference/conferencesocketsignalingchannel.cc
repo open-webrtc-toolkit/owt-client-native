@@ -76,7 +76,7 @@ void ConferenceSocketSignalingChannel::Connect(
   if (!rtc::Base64::IsBase64Encoded(token)) {
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid token."));
+          ConferenceException::kUnknown, "Invalid token."));
       on_failure(std::move(e));
     }
     return;
@@ -86,7 +86,7 @@ void ConferenceSocketSignalingChannel::Connect(
                            nullptr)) {
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid token."));
+          ConferenceException::kUnknown, "Invalid token."));
       // TODO: Use async instead.
       on_failure(std::move(e));
     }
@@ -100,7 +100,7 @@ void ConferenceSocketSignalingChannel::Connect(
     LOG(LS_ERROR) << "Parsing token failed.";
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Invalid token."));
+          ConferenceException::kUnknown, "Invalid token."));
       on_failure(std::move(e));
     }
     return;
@@ -175,7 +175,7 @@ void ConferenceSocketSignalingChannel::Connect(
               LOG(LS_ERROR) << "Received unknown message while sending token.";
               if (on_failure != nullptr) {
                 std::unique_ptr<ConferenceException> e(new ConferenceException(
-                    ConferenceException::kUnkown,
+                    ConferenceException::kUnknown,
                     "Received unknown message from server."));
                 on_failure(std::move(e));
               }
@@ -189,7 +189,7 @@ void ConferenceSocketSignalingChannel::Connect(
                             << " while joining a conference.";
               if (on_failure != nullptr) {
                 std::unique_ptr<ConferenceException> e(new ConferenceException(
-                    ConferenceException::kUnkown,
+                    ConferenceException::kUnknown,
                     "Received error message from server."));
                 on_failure(std::move(e));
               }
@@ -339,7 +339,7 @@ void ConferenceSocketSignalingChannel::Disconnect(
   if (!socket_client_->opened()) {
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, "Socket.IO is not connected."));
+          ConferenceException::kUnknown, "Socket.IO is not connected."));
       on_failure(std::move(e));
     }
     return;
@@ -377,7 +377,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
               << "The first element of publish ack is not a string.";
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                ConferenceException::kUnkown,
+                ConferenceException::kUnknown,
                 "Received unkown message from server."));
             on_failure(std::move(e));
           }
@@ -402,13 +402,13 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
                    msg.at(1)->get_flag() == sio::message::flag_string) {
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                ConferenceException::kUnkown, msg.at(1)->get_string()));
+                ConferenceException::kUnknown, msg.at(1)->get_string()));
             on_failure(std::move(e));
           }
         } else {
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                ConferenceException::kUnkown,
+                ConferenceException::kUnknown,
                 "Ack for initializing message is not expected."));
             on_failure(std::move(e));
           }
@@ -521,7 +521,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     LOG(LS_WARNING) << "The first element of emit ack is not a string.";
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnkown,
+          new ConferenceException(ConferenceException::kUnknown,
                                   "Received unkown message from server."));
       on_failure(std::move(e));
     }
@@ -543,7 +543,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     }
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnkown,
+          new ConferenceException(ConferenceException::kUnknown,
                                   "Negative acknowledgement from server."));
       on_failure(std::move(e));
     }

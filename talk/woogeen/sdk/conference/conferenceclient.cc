@@ -58,7 +58,7 @@ void ConferenceClient::Join(
   if (signaling_channel_connected_){
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnkown,
+          new ConferenceException(ConferenceException::kUnknown,
                                   "Already connected to conference server."));
       on_failure(std::move(e));
     }
@@ -79,7 +79,7 @@ void ConferenceClient::Join(
       LOG(LS_ERROR) << "Room info doesn't contain client ID.";
       if(on_failure){
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Received unkown message from MCU."));
+            ConferenceException::kUnknown, "Received unknown message from MCU."));
         // TODO: Use async instead.
         on_failure(std::move(e));
       }
@@ -106,7 +106,7 @@ void ConferenceClient::Join(
               on_success(user);
             } else if (on_failure) {
               std::unique_ptr<ConferenceException> e(new ConferenceException(
-                  ConferenceException::kUnkown,
+                  ConferenceException::kUnknown,
                   "Failed to parse current user's info"));
               // TODO: Use async instead.
               on_failure(std::move(e));
@@ -118,7 +118,7 @@ void ConferenceClient::Join(
           LOG(LS_ERROR) << "Cannot find current user's info in user list.";
           if (on_failure) {
             std::unique_ptr<ConferenceException> e(
-                new ConferenceException(ConferenceException::kUnkown,
+                new ConferenceException(ConferenceException::kUnknown,
                                         "Received unknown message from MCU."));
             // TODO: Use async instead.
             on_failure(std::move(e));
@@ -162,7 +162,7 @@ void ConferenceClient::Publish(
                        "more than once.";
       if (on_failure) {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Duplicated stream."));
+            ConferenceException::kUnknown, "Duplicated stream."));
         on_failure(std::move(e));
       }
       return;
@@ -209,7 +209,7 @@ void ConferenceClient::Subscribe(
         "removed.");
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnkown, failure_message));
+          ConferenceException::kUnknown, failure_message));
       on_failure(std::move(e));
     }
     return;
@@ -221,7 +221,7 @@ void ConferenceClient::Subscribe(
           "Cannot subscribe a stream that is subscribing.");
       if (on_failure != nullptr) {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, failure_message));
+            ConferenceException::kUnknown, failure_message));
         on_failure(std::move(e));
       }
       return;
@@ -269,7 +269,7 @@ void ConferenceClient::Unpublish(
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Invalid stream."));
+            ConferenceException::kUnknown, "Invalid stream."));
         on_failure(std::move(e));
       }
     } else {
@@ -303,7 +303,7 @@ void ConferenceClient::Unsubscribe(
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnkown, "Invalid stream."));
+            ConferenceException::kUnknown, "Invalid stream."));
         on_failure(std::move(e));
       }
     } else {
@@ -522,7 +522,7 @@ bool ConferenceClient::CheckNullPointer(
     return true;
   if (on_failure != nullptr) {
     std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnkown, failure_message));
+        ConferenceException::kUnknown, failure_message));
     on_failure(std::move(e));
   }
   return false;
@@ -534,7 +534,7 @@ bool ConferenceClient::CheckSignalingChannelOnline(
     return true;
   if (on_failure != nullptr) {
     std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnkown, "Conference server is not connected."));
+        ConferenceException::kUnknown, "Conference server is not connected."));
     on_failure(std::move(e));
   }
   return false;
