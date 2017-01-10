@@ -452,10 +452,17 @@ void ConferenceClient::GetConnectionStats(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   auto pcc = GetConferencePeerConnectionChannel(stream);
   if (pcc == nullptr) {
-    LOG(LS_WARNING) << "Tried to get connection statistics from unknown stream.";
+    if (on_failure) {
+      std::unique_ptr<ConferenceException> e(
+          new ConferenceException(ConferenceException::kUnknown,
+                                  "Stream is not published or subscribed."));
+
+      on_failure(std::move(e));
+    }
+    LOG(LS_WARNING)
+        << "Tried to get connection statistics from unknown stream.";
     return;
   }
-
   pcc->GetConnectionStats(stream, on_success, on_failure);
 }
 
