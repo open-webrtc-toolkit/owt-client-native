@@ -336,17 +336,20 @@ void ConferenceSocketSignalingChannel::Connect(
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (!socket_client_->opened()) {
-    if (on_failure) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Socket.IO is not connected."));
-      on_failure(std::move(e));
-    }
-    return;
+  if (!socket_client_->opened() && reconnection_attempted_ == 0 && on_failure) {
+    // Socket.IO is not connected and not reconnecting.
+    std::unique_ptr<ConferenceException> e(new ConferenceException(
+        ConferenceException::kUnknown, "Socket.IO is not connected."));
+    on_failure(std::move(e));
+    // TODO: A corner case is execute Disconnect before first reconnection
+    // attempt. So we don't return, still try to close socket.
   }
-  socket_client_->socket()->emit(kEventNameLogout);
+  reconnection_attempted_ = kReconnectionAttempts;
   disconnect_complete_ = on_success;
-  socket_client_->close();
+  if (socket_client_->opened()) {
+    socket_client_->socket()->emit(kEventNameLogout);
+    socket_client_->close();
+  }
 }
 
 void ConferenceSocketSignalingChannel::SendInitializationMessage(
