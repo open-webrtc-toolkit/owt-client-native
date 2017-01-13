@@ -63,7 +63,7 @@ TEST_SIMULATOR_DEVICE = 'iPhone 7'
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
       'ios_deployment_target="7.0" use_xcode_clang=true rtc_use_objc_h264=true '\
-      'rtc_libvpx_build_vp9=true'%arch
+      'rtc_libvpx_build_vp9=false'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
   else:

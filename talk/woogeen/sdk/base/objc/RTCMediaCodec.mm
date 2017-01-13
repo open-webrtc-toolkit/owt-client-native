@@ -26,8 +26,7 @@ static std::unordered_map<NSInteger,
                           const woogeen::base::MediaCodec::VideoCodec>
     videoCodecMap = {
         {VideoCodecVP8, woogeen::base::MediaCodec::VideoCodec::VP8},
-        {VideoCodecH264, woogeen::base::MediaCodec::VideoCodec::H264},
-        {VideoCodecVP9, woogeen::base::MediaCodec::VideoCodec::VP9}};
+        {VideoCodecH264, woogeen::base::MediaCodec::VideoCodec::H264}};
 
 + (woogeen::base::MediaCodec::AudioCodec)nativeAudioCodec:
     (NSInteger)audioCodec {
