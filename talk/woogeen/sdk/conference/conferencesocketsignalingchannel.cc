@@ -347,8 +347,9 @@ void ConferenceSocketSignalingChannel::Disconnect(
   reconnection_attempted_ = kReconnectionAttempts;
   disconnect_complete_ = on_success;
   if (socket_client_->opened()) {
-    socket_client_->socket()->emit(kEventNameLogout);
-    socket_client_->close();
+    socket_client_->socket()->emit(
+        kEventNameLogout, nullptr,
+        [=](sio::message::list const& msg) { socket_client_->close(); });
   }
 }
 
