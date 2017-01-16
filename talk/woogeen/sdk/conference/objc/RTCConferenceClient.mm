@@ -195,7 +195,7 @@
 }
 
 - (void)send:(NSString*)message
-     receiver:(NSString*)receiver
+           to:(NSString*)receiver
     onSuccess:(void (^)())onSuccess
     onFailure:(void (^)(NSError*))onFailure {
   _nativeConferenceClient->Send(

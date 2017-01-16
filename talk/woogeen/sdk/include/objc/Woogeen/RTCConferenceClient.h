@@ -103,10 +103,10 @@ RTC_EXPORT
 /**
   @brief Send message to specific participant in the conference.
   @param message The message to be sent.
-  @param receiver The user who receives this message.
+  @param to The user who receives this message.
 */
 - (void)send:(NSString*)message
-    receiver:(NSString*)receiver
+          to:(NSString*)receiver
    onSuccess:(nullable void (^)())onSuccess
    onFailure:(nullable void (^)(NSError*))onFailure;
 /**
