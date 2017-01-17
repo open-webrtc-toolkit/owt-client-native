@@ -12,7 +12,7 @@ The Intel CS for WebRTC Client SDK for iOS supports in iOS 8.0 and later version
 
 The following devices have been tested using this SDK:
 
-- iPhone* 5, 5s and 6
+- iPhone* 5, 5s, 6 and 7 Plus
 - iPad Air*
 
 # 3 Getting started {#section3}
@@ -26,6 +26,8 @@ Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp).
+
+Please make sure your app has network access before making Socket.IO connection. As Socket.IO cpp client uses low level network APIs, iOS system may not ask user for network permission. Thus, Socket.IO connection will fail because app does not have network access.
 
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a. Conference sample use libsioclient_tls_no_verification.a by default. This lib enables TLS but does not verify server's certification. It was provided for evaluation use only. Do not use it in production environments.
 
