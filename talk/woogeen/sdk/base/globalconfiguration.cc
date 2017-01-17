@@ -16,5 +16,9 @@ HWND GlobalConfiguration::render_window_ =
 bool GlobalConfiguration::encoded_frame_ = false;
 std::unique_ptr<AudioFrameGeneratorInterface>
     GlobalConfiguration::audio_frame_generator_ = nullptr;
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+std::unique_ptr<VideoDecoderInterface>
+    GlobalConfiguration::video_decoder_ = nullptr;
+#endif
 }
 }

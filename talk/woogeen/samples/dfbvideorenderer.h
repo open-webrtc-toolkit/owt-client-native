@@ -4,8 +4,8 @@
 
 //This is the DirectFB implementation of video renderer for Linux.
 //It does not require a windows system to be present.
-#ifndef __DFB_VIDEO_RENDERER_H__
-#define __DFB_VIDEO_RENDERER_H__
+#ifndef DFB_VIDEO_RENDERER_H_
+#define DFB_VIDEO_RENDERER_H_
 
 #include "woogeen/base/videorendererinterface.h"
 #include <directfb/directfb.h>
@@ -18,8 +18,8 @@ public:
 
 private:
   int screen_width, screen_height;
-  IDirectFB *dfb;
-  IDirectFBSurface *primary;
+  IDirectFB* dfb;
+  IDirectFBSurface* primary;
 };
 
-#endif
+#endif //DFB_VIDEO_RENDERER_H_

@@ -14,10 +14,11 @@
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
-#elif defined(WEBRTC_LINUX)
-#include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
-#elif defined(WEBRTC_IOS)
+#endif
+#if defined(WEBRTC_IOS)
 #include "webrtc/sdk/objc/Framework/Classes/videotoolboxvideocodecfactory.h"
+#else
+#include "talk/woogeen/sdk/base/customizedvideodecoderfactory.h"
 #endif
 #include "woogeen/base/clientconfiguration.h"
 #include "woogeen/base/globalconfiguration.h"
@@ -105,6 +106,7 @@ void PeerConnectionDependencyFactory::
     RTC_NOTREACHED();
     return;
   }
+
   rtc::Thread* worker_thread = new rtc::Thread();
   worker_thread->SetName("worker_thread", NULL);
   rtc::Thread* signaling_thread = new rtc::Thread();
@@ -113,18 +115,23 @@ void PeerConnectionDependencyFactory::
       << "Failed to start threads";
   std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
   std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
-#if defined(WEBRTC_WIN)
-  if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
-    encoder_factory.reset(new MSDKVideoEncoderFactory());
-    decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
-  }
-#elif defined(WEBRTC_LINUX)
-  decoder_factory.reset(new V4L2VideoDecoderFactory());
-#elif defined(WEBRTC_IOS)
+
+#if defined(WEBRTC_IOS)
   encoder_factory.reset(new webrtc::VideoToolboxVideoEncoderFactory());
   decoder_factory.reset(new webrtc::VideoToolboxVideoDecoderFactory());
+#else
+  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled())
+    decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
+  else {
+#if defined(WEBRTC_WIN)
+    if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
+      encoder_factory.reset(new MSDKVideoEncoderFactory());
+      decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
+    }
 #endif
-  // Encoded video frame
+  }
+#endif
+  // Encoded video frame enabled
   if (encoded_frame_)
   {
     encoder_factory.reset(new EncodedVideoEncoderFactory());

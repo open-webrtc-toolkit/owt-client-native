@@ -78,6 +78,7 @@ source_set("woogeen_sdk_base") {
     "sdk/include/cpp/woogeen/base/localcamerastreamparameters.h",
     "sdk/include/cpp/woogeen/base/logging.h",
     "sdk/include/cpp/woogeen/base/stream.h",
+    "sdk/include/cpp/woogeen/base/videodecoderinterface.h",
     "sdk/include/cpp/woogeen/base/videorendererinterface.h",
   ]
 
@@ -121,12 +122,12 @@ source_set("woogeen_sdk_base") {
     }
   }
 
-  if (is_linux) {
+  if (!is_ios) {
     sources += [
-      "sdk/base/linux/v4l2videodecoder.cc",
-      "sdk/base/linux/v4l2videodecoder.h",
-      "sdk/base/linux/v4l2videodecoderfactory.cc",
-      "sdk/base/linux/v4l2videodecoderfactory.h",
+      "sdk/base/customizedvideodecoderfactory.h",
+      "sdk/base/customizedvideodecoderfactory.cc",
+      "sdk/base/customizedvideodecoderproxy.h",
+      "sdk/base/customizedvideodecoderproxy.cc",
     ]
   }
 

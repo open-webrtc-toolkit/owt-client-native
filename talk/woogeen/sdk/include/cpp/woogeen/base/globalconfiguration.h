@@ -29,6 +29,9 @@
 
 #include <memory>
 #include "woogeen/base/framegeneratorinterface.h"
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+#include "woogeen/base/videodecoderinterface.h"
+#endif
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
@@ -80,7 +83,17 @@ class GlobalConfiguration {
       audio_frame_generator_ = std::move(audio_frame_generator);
   }
 
-private:
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  /**
+   @brief This function sets the customized video decoder to decode the encoded images.
+   @param Customized video decoder
+   */
+  static void SetCustomizedVideoDecoderEnabled(
+      std::unique_ptr<VideoDecoderInterface> external_video_decoder) {
+    video_decoder_ = std::move(external_video_decoder);
+  }
+#endif
+ private:
   GlobalConfiguration() {}
   virtual ~GlobalConfiguration() {}
 #if defined(WEBRTC_WIN)
@@ -128,6 +141,27 @@ private:
    */
   static bool encoded_frame_;
   static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  /**
+   @brief This function returns flag indicating whether customized video decoder is enabled or not
+   @return Boolean flag indicating whether customized video decoder is enabled or not
+   */
+  static bool GetCustomizedVideoDecoderEnabled() {
+    return video_decoder_ ? true : false;
+  }
+  /**
+   @brief This function gets customized video decoder
+   @return Customized video decoder
+   */
+  static std::unique_ptr<VideoDecoderInterface> GetCustomizedVideoDecoder() {
+    return std::move(video_decoder_);
+  }
+
+  /**
+   * Customized video decoder. Default is nullptr.
+   */
+  static std::unique_ptr<VideoDecoderInterface> video_decoder_;
+#endif
 };
 
 }
