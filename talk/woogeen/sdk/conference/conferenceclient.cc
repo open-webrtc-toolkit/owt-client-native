@@ -501,6 +501,15 @@ void ConferenceClient::OnStreamUpdated(sio::message::ptr stream) {
 
 void ConferenceClient::OnServerDisconnected() {
   signaling_channel_connected_ = false;
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    publish_id_label_map_.clear();
+    publish_pcs_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    subscribe_pcs_.clear();
+  }
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnServerDisconnected();
   }
@@ -508,7 +517,10 @@ void ConferenceClient::OnServerDisconnected() {
 
 void ConferenceClient::OnStreamId(const std::string& id,
                                   const std::string& publish_stream_label) {
-  publish_id_label_map_[id] = publish_stream_label;
+  {
+    std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    publish_id_label_map_[id] = publish_stream_label;
+  }
   auto pcc = GetConferencePeerConnectionChannel(id);
   RTC_CHECK(pcc != nullptr);
   pcc->SetStreamId(id);
@@ -735,16 +747,17 @@ ConferenceClient::GetConferencePeerConnectionChannel(
     }
   }
   std::string id;
-  // If stream_id is local stream's ID, find it's label because publish_pcs use
-  // label as key.
-  auto label_it = publish_id_label_map_.find(stream_id);
-  if (label_it != publish_id_label_map_.end()) {
-    id = label_it->second;
-  } else {
-    id = stream_id;
-  }
   {
     std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    // If stream_id is local stream's ID, find it's label because publish_pcs
+    // use
+    // label as key.
+    auto label_it = publish_id_label_map_.find(stream_id);
+    if (label_it != publish_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream_id;
+    }
     auto pcc_it = publish_pcs_.find(id);
     if (pcc_it != publish_pcs_.end()) {
       return pcc_it->second;

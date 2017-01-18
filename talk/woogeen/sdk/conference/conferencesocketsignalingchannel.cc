@@ -211,10 +211,11 @@ void ConferenceSocketSignalingChannel::Connect(
       reconnection_attempted_ = 0;
     } else {
       socket_client_->socket()->emit(
-          "relogin", reconnection_ticket_, [=](sio::message::list const& msg) {
+          "relogin", reconnection_ticket_, [&](sio::message::list const& msg) {
             if (msg.size() < 2) {
               LOG(LS_WARNING)
                   << "Received unknown message while reconnection ticket.";
+              reconnection_attempted_ = kReconnectionAttempts;
               socket_client_->close();
               return;
             }
@@ -225,6 +226,7 @@ void ConferenceSocketSignalingChannel::Connect(
               LOG(LS_WARNING)
                   << "Server returns " << state
                   << " when relogin. Maybe an invalid reconnection ticket.";
+              reconnection_attempted_ = kReconnectionAttempts;
               socket_client_->close();
               return;
             }
