@@ -49,11 +49,10 @@ Here is a list of known issues:
 
 - Conference recording is not supported.
 - Subscribe streams with audio/video only option is not supported.
-- Bitrate control is not supported. It may costs up to 2Mbps per connection.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 
 # 9 Video codecs {#section9}
-Both VP8 and H.264 are supported. H.264 is only supported in iOS 8 or later.
+Both VP8 and H.264 are supported.
 
 # 10 Video frame filter {#section10}
 Video frame filter allows app to modify captured video frames before sending to video sink or encoder.
