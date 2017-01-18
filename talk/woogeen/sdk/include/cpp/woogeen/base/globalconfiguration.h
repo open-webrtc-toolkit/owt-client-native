@@ -55,6 +55,7 @@ class GlobalConfiguration {
      render_window_ = decoder_window;
   }
 #endif
+  /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
    @param enabled Capturing frame is encoded or not.
@@ -62,6 +63,7 @@ class GlobalConfiguration {
   static void SetEncodedVideoFrameEnabled(bool enabled) {
      encoded_frame_ = enabled;
   }
+  /** @endcond */
   /**
    @brief This function sets the audio input to be an instance of
    AudioFrameGeneratorInterface.

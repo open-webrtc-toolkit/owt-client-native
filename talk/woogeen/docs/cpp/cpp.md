@@ -62,13 +62,7 @@ Hardware acceleration for decoding of VP8/H.264/H.265, and encoding of H.264/H.2
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # 9 Publish streams with customized frames {#section9}
-Customized video frames can be i420 frame from yuv file, encoded frame from IP Camera or H264/VP8 files. There is a
-{@link woogeen.base.GlobalConfiguration GlobalConfiguration} API to enble encoded frame setting, but no raw frame is allowed for this setting. If it is the encoded
-frame, the encoding pipeline will be bypassed and sent to remote side directly. The encoded frame provider should generate
-key frame in proper interval to avoid key frame dropped in network, which causes remote side frame decoding error and
-picture quality recovery in long time. Also note if H264 is selected, codec hardware acceleration must be enabled in order to subscribe remote streams.
-
-The encoded frame provider needs to implement its own frame generator extends from
+Customized video frames can be i420 frame from yuv file. The customized video frame provider needs to implement its own frame generator extends from
 {@link woogeen.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 
