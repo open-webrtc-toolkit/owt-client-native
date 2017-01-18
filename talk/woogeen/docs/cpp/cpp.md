@@ -48,17 +48,17 @@ message is coming or connection is lost.
 Here is a list of known issues:
 
 - Conference recording is not supported.
-- Subscribe streams with audio/video only option is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - woogeen.lib is compiled as 32 bit library.
 - Bandwidth setting for publishing H264 stream does not take effect.
+- H.256 is only supported on Intel<sup>®</sup> 6th and 7th generation Core(TM) platforms.
 
 # 8 Video codecs {#section8}
-For the decoder, if hardware acceleration is not enabled, only VP8 is supported. If hardware acceleration is enabled, both
-VP8 and H.264 are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
-Most of the Intel<sup>®</sup> 5th and 6th Generation Core(TM) Platforms support VP8 hardware decodeing.
+For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
+VP9, H.264 and H.265 are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
+Most of the Intel<sup>®</sup> 5th, 6th and 7th generation Core(TM) platforms support VP8 hardware decoding.
 
-Hardware acceleration for decoding of VP8/H264, and encoding of H264, is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API,
+Hardware acceleration for decoding of VP8/H.264/H.265, and encoding of H.264/H.265, is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API,
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # 9 Publish streams with customized frames {#section9}
