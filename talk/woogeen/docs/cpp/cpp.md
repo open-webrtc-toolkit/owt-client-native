@@ -44,28 +44,29 @@ for P2P sessions can be customized by implementing `P2PSignalingChannelInterface
 can invoke its methods to notify `PeerClient` during your customized signaling channel implementation when a new
 message is coming or connection is lost.
 
-# 7 Known issues {#section7}
-Here is a list of known issues:
-
-- Conference recording is not supported.
-- If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
-- woogeen.lib is compiled as 32 bit library.
-- Bandwidth setting for publishing H264 stream does not take effect.
-- HEVC is supported on 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms.
-
-# 8 Video codecs {#section8}
+# 7 Video codecs {#section7}
 For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
 VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
 Most of the 5th and 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
+Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
 
 Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC, is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API,
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
-# 9 Publish streams with customized frames {#section9}
+# 8 Publish streams with customized frames {#section8}
 Customized video frames can be i420 frame from yuv file. The customized video frame provider needs to implement its own frame generator extends from
 {@link woogeen.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 
 Customized audio frames provider should implement {@link woogeen.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16 bit little-endian PCM is supported. Please use {@link woogeen.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
 
+# 9 Known issues {#section9}
+Here is a list of known issues:
+
+- Conference recording is not supported.
+- If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
+- woogeen.lib is compiled as 32 bit library.
+- Bandwidth setting for publishing H264 stream does not take effect.
+
 > Note: \* Other names and brands may be claimed as the property of others.</i>
+
