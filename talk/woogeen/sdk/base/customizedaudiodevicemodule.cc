@@ -946,7 +946,6 @@ int32_t CustomizedAudioDeviceModule::InitPlayout() {
 
 int32_t CustomizedAudioDeviceModule::InitRecording() {
   CHECK_INITIALIZED();
-  _audioDeviceBuffer.InitRecording();
   return (_ptrAudioDevice->InitRecording());
 }
 
@@ -997,6 +996,7 @@ bool CustomizedAudioDeviceModule::Playing() const {
 
 int32_t CustomizedAudioDeviceModule::StartRecording() {
   CHECK_INITIALIZED();
+  _audioDeviceBuffer.StartRecording();
   return (_ptrAudioDevice->StartRecording());
 }
 // ----------------------------------------------------------------------------
@@ -1005,6 +1005,7 @@ int32_t CustomizedAudioDeviceModule::StartRecording() {
 
 int32_t CustomizedAudioDeviceModule::StopRecording() {
   CHECK_INITIALIZED();
+  _audioDeviceBuffer.StopRecording();
   return (_ptrAudioDevice->StopRecording());
 }
 

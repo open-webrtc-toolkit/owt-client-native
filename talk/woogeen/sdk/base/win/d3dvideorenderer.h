@@ -34,13 +34,13 @@
 #include "webrtc/api/mediastreaminterface.h"
 #pragma once
 
-class D3DVideoRenderer : public rtc::VideoSinkInterface<cricket::VideoFrame>{
+class D3DVideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame>{
 public:
     D3DVideoRenderer(HWND wnd, int width, int height, webrtc::VideoTrackInterface* track_to_render);
     virtual ~D3DVideoRenderer();
 
     //VideoSinkInterface implementation
-    virtual void OnFrame(const cricket::VideoFrame& frame) override;
+    virtual void OnFrame(const webrtc::VideoFrame& frame) override;
 
 protected:
     void SetSize(int width, int height);

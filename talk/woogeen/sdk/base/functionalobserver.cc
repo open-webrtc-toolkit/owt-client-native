@@ -185,12 +185,6 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
                      ->bool_val())
           adapt_reason = static_cast<int32_t>(
               VideoSenderReport::AdaptReason::kBandwidthLimitation);
-        else if (report
-                     ->FindValue(webrtc::StatsReport::
-                                     kStatsValueNameViewLimitedResolution)
-                     ->bool_val())
-          adapt_reason = static_cast<int32_t>(
-              VideoSenderReport::AdaptReason::kViewLimitation);
         std::unique_ptr<VideoSenderReport> video_send_report_ptr(
             new VideoSenderReport(
                 GetValue<int64_t>(

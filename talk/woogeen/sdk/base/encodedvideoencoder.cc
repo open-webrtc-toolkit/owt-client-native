@@ -135,9 +135,9 @@ int EncodedVideoEncoder::Encode(
     }
   }
 
-  int result = callback_->Encoded(encodedframe, &info, &header);
-  if (result != 0) {
-    LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result;
+  const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
+  if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
+    LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   return WEBRTC_VIDEO_CODEC_OK;

@@ -48,11 +48,13 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(HWND hWnd)
     if (is_h264_hw_supported) {
         supported_codec_types_.push_back(webrtc::kVideoCodecH264);
     }
+#ifndef DISABLE_H265
 //TODO: add logic to detect plugin by MSDK.
     bool is_h265_hw_supported = true;
     if (is_h265_hw_supported) {
         supported_codec_types_.push_back(webrtc::kVideoCodecH265);
     }
+#endif
 }
 
 
@@ -72,8 +74,10 @@ webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoC
             return new MSDKVideoDecoder(type, decoder_window_);
         } else if (*it == type && type == webrtc::kVideoCodecH264) {
             return new H264MSDKVideoDecoder(type, decoder_window_);
+#ifndef DISABLE_H265
         } else if (*it == type && type == webrtc::kVideoCodecH265) {
             return new H265MSDKVideoDecoder(type, decoder_window_);
+#endif
         }
     }
     return NULL;

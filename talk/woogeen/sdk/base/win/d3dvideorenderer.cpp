@@ -55,16 +55,15 @@ void D3DVideoRenderer::SetSize(int width, int height){
 //TODO: if the rotation is specified for a D3D surface, we need to
 //create extra texture for rotation. This is not yet implemented.
 //
-void D3DVideoRenderer::OnFrame(const cricket::VideoFrame& video_frame){
+void D3DVideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame){
     //Do we need to Lock the renderframe call? since we have the device lock here it seems
     //no neccessary.
-    const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
-    SetSize(static_cast<int>(frame->width()), static_cast<int>(frame->height()));
+    SetSize(video_frame.width(), video_frame.height());
 
-    if (frame->video_frame_buffer()->native_handle() == nullptr){//We're not handling DXVA buffer
+    if (video_frame.video_frame_buffer()->native_handle() == nullptr) {  // We're not handling DXVA buffer
+      auto frame = webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(), video_frame.rotation());
       NativeD3DSurfaceHandleImpl* nativeHandle =
-          reinterpret_cast<NativeD3DSurfaceHandleImpl*>(
-              frame->video_frame_buffer()->native_handle());
+          reinterpret_cast<NativeD3DSurfaceHandleImpl*>(frame->native_handle());
       IDirect3DDeviceManager9* dev_manager = nativeHandle->GetD3DManager();
       IDirect3DSurface9* surface = nativeHandle->GetSurface();
 

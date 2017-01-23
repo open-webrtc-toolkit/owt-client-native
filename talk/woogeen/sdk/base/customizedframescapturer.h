@@ -33,6 +33,7 @@
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include <memory>
 #endif
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/base/stream.h"
 #include "webrtc/base/stringutils.h"
@@ -52,7 +53,6 @@ class CustomizedFramesCapturer : public VideoCapturer {
   static const char* kRawFrameDeviceName;
 
   void Init();
-  void SendCapturedFrame();
   // Override virtual methods of parent class VideoCapturer.
   virtual CaptureState Start(
       const cricket::VideoFormat& capture_format) override;
@@ -73,16 +73,17 @@ class CustomizedFramesCapturer : public VideoCapturer {
  private:
   class CustomizedFramesThread;  // Forward declaration, defined in .cc.
 
+  int I420DataSize(int height, int stride_y, int stride_u, int stride_v);
+
   VideoFrameGeneratorInterface* frame_generator_;
-  CapturedFrame captured_frame_;
   CustomizedFramesThread* frames_generator_thread;
   int width_;
   int height_;
   int fps_;
   VideoFrameGeneratorInterface::VideoFrameCodec frame_type_;
   uint32_t frame_buffer_capacity_;
-  std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
-      frame_buffer_;  // Pointer to a reuseable memory for video frames.
+  rtc::scoped_refptr<webrtc::I420Buffer> frame_buffer_; // Reuseable buffer for video frames.
+  // Consider to use NativeHandleBuffer if you want to support encoded frame.
   rtc::Thread* worker_thread_;  // Set in Start(), unset in Stop();
   std::unique_ptr<rtc::AsyncInvoker> async_invoker_;
   rtc::CriticalSection lock_;

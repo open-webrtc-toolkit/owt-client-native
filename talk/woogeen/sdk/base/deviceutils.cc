@@ -14,7 +14,7 @@ namespace base {
 std::vector<std::string> DeviceUtils::VideoCapturerIds() {
   std::vector<std::string> device_ids;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-      webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+      webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
     LOG(LS_ERROR) << "CreateDeviceInfo failed";
   } else {
@@ -36,7 +36,7 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   std::vector<Resolution> resolutions;
   webrtc::VideoCaptureCapability capability;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-      webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+      webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
     LOG(LS_ERROR) << "CreateDeviceInfo failed";
   } else {

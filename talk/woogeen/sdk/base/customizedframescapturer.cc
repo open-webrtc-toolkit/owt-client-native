@@ -116,21 +116,9 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
 }
 
 void CustomizedFramesCapturer::Init() {
-  // Enumerate the supported formats. We have only one supported format.
-  if (frame_type_ == VideoFrameGeneratorInterface::I420) {
-    captured_frame_.fourcc = FOURCC_I420;
-  } else if (frame_type_ == VideoFrameGeneratorInterface::VP8) {
-    captured_frame_.fourcc = FOURCC_VP80;
-  } else if (frame_type_ == VideoFrameGeneratorInterface::H264) {
-    captured_frame_.fourcc = FOURCC_H264;
-  }
-  captured_frame_.pixel_height = 1;
-  captured_frame_.pixel_width = 1;
-  captured_frame_.width = width_;
-  captured_frame_.height = height_;
-
+  // Only I420 frame is supported. Encoded frame is not supported here.
   VideoFormat format(width_, height_, VideoFormat::kMinimumInterval,
-                     captured_frame_.fourcc);
+                     cricket::FOURCC_I420);
   std::vector<VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
@@ -185,17 +173,27 @@ bool CustomizedFramesCapturer::GetPreferredFourccs(
   return true;
 }
 
-void CustomizedFramesCapturer::SendCapturedFrame() {
-  SignalFrameCaptured(this, &captured_frame_);
+int CustomizedFramesCapturer::I420DataSize(int height,
+                                           int stride_y,
+                                           int stride_u,
+                                           int stride_v) {
+  return stride_y * height + (stride_u + stride_v) * ((height + 1) / 2);
 }
 
 void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
   if (size > frame_buffer_capacity_ || !frame_buffer_) {
     LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
-    auto new_size = size * 2;
-    frame_buffer_.reset(static_cast<uint8_t*>(
-        webrtc::AlignedMalloc(new_size * sizeof(uint8_t), 16)));
-    frame_buffer_capacity_ = new_size;
+    width_ = frame_generator_->GetWidth();
+    height_ = frame_generator_->GetHeight();
+    int stride_y = width_;
+    int stride_uv = (width_ + 1) / 2;
+    frame_buffer_= webrtc::I420Buffer::Create(width_, height_, stride_y, stride_uv, stride_uv);
+    frame_buffer_capacity_ =
+        I420DataSize(height_, stride_y, stride_uv, stride_uv);
+    if (frame_buffer_capacity_ < size) {
+      LOG(LS_ERROR) << "User provides invalid data size. Expected size: "
+                    << frame_buffer_capacity_ << ", user wants: " << size;
+    }
   }
 }
 
@@ -206,18 +204,15 @@ void CustomizedFramesCapturer::ReadFrame() {
   auto frame_size = frame_generator_->GetNextFrameSize();
   AdjustFrameBuffer(frame_size);
   if (frame_generator_->GenerateNextFrame(
-          frame_buffer_.get(), frame_buffer_capacity_) != frame_size) {
+          frame_buffer_->MutableDataY(), frame_buffer_capacity_) != frame_size) {
     RTC_DCHECK(false);
     LOG(LS_ERROR) << "Failed to get video frame.";
     return;
   }
-  captured_frame_.time_stamp =
-      rtc::TimeMillis() * rtc::kNumNanosecsPerMillisec;
-  captured_frame_.data_size = frame_size;
-  captured_frame_.data = frame_buffer_.get();
-  worker_thread_->Invoke<void>(
-      RTC_FROM_HERE,
-      rtc::Bind(&CustomizedFramesCapturer::SendCapturedFrame, this));
+
+  webrtc::VideoFrame captureFrame(frame_buffer_, 0, rtc::TimeMillis(),
+                                  webrtc::kVideoRotation_0);
+  OnFrame(captureFrame, width_, height_);
 }
 
 }  // namespace base

@@ -14,11 +14,11 @@ namespace woogeen {
 namespace base {
 
 class WebrtcVideoRendererARGBImpl
-    : public rtc::VideoSinkInterface<cricket::VideoFrame> {
+    : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   WebrtcVideoRendererARGBImpl(VideoRendererARGBInterface& renderer)
       : renderer_(renderer) {}
-  virtual void OnFrame(const cricket::VideoFrame& frame) override;
+  virtual void OnFrame(const webrtc::VideoFrame& frame) override;
   virtual ~WebrtcVideoRendererARGBImpl() {}
 
  private:
