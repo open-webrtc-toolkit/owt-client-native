@@ -125,21 +125,12 @@ static_library("usrsctp") {
   }
 
   if (is_win) {
-    defines += [
-      "__Userspace_os_Windows",
-
-      # Manually setting WINVER and _WIN32_WINNT is needed because Chrome
-      # sets WINVER to a newer version of  windows. But compiling usrsctp
-      # this way would is incompatible  with windows XP.
-      "WINVER=0x0502",
-      "_WIN32_WINNT=0x0502",
-    ]
-    configs -= [ "//build/config/win:winver" ]
+    defines += [ "__Userspace_os_Windows" ]
   } else {
     defines += [ "NON_WINDOWS_DEFINE" ]
   }
 
-  if(!woogeen_use_openssl){
+  if (!woogeen_use_openssl) {
     deps = [
       "//third_party/boringssl",
     ]

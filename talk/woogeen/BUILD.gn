@@ -12,6 +12,14 @@ declare_args() {
   include_internal_audio_device = true
 }
 
+if (is_ios || is_mac) {
+  config("woogeen_sdk_objc_warnings_config"){
+    # Bug 1375. Fix -Wobjc-missing-property-synthesis warnings.
+    cflags_objc = [ "-Wno-objc-missing-property-synthesis" ]
+    cflags_objcc = [ "-Wno-objc-missing-property-synthesis" ]
+  }
+}
+
 static_library("woogeen"){
   deps = [
     ":woogeen_sdk_base",
@@ -193,6 +201,7 @@ source_set("woogeen_sdk_conf") {
 
 if (is_ios) {
   source_set("woogeen_sdk_objc") {
+
     deps = [
       ":woogeen_sdk_base",
       ":woogeen_sdk_p2p",
@@ -208,7 +217,10 @@ if (is_ios) {
       "sdk/include/objc",
     ]
 
-    configs += ["//build/config/compiler:enable_arc"]
+    configs += [
+      "//build/config/compiler:enable_arc",
+      ":woogeen_sdk_objc_warnings_config",
+    ]
 
     sources = [
       "sdk/base/objc/public/RTCAVFoundationVideoSource+Woogeen.h",

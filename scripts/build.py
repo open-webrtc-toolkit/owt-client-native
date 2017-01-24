@@ -41,6 +41,7 @@ WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoSource.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameFilterProtocol.h',
@@ -52,7 +53,7 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
 SDK_TARGETS = ['woogeen']
-APP_TARGETS = ['AppRTCDemo']
+APP_TARGETS = ['AppRTCMobile']
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['common_audio_unittests', 'rtc_pc_unittests', 'system_wrappers_unittests',
     'voice_engine_unittests']
@@ -62,8 +63,8 @@ TEST_SIMULATOR_DEVICE = 'iPhone 7'
 
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
-      'ios_deployment_target="7.0" use_xcode_clang=true rtc_use_objc_h264=true '\
-      'rtc_libvpx_build_vp9=false woogeen_workarounds_for_m54=true'%arch
+      'ios_deployment_target="7.0" use_xcode_clang=true rtc_libvpx_build_vp9=false '\
+      'woogeen_workarounds_for_m54=true'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
   else:
