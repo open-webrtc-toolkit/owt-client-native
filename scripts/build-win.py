@@ -17,10 +17,10 @@ HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_LIB = 'woogeen.lib'
 LIB_BLACK_LIST = ['video_capture']
-# TODO: Disabled tests: common_video_unittests, modules_unittests, rtc_media_unittests, rtc_unittests, video_engine_tests
-PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests', 'modules_tests', 'peerconnection_unittests',
-    'rtc_pc_unittests', 'system_wrappers_unittests', 'test_support_unittests', 'tools_unittests','voice_engine_unittests',
-    'xmllite_xmpp_unittests']
+PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
+    'modules_tests', 'modules_unittests', 'peerconnection_unittests', 'rtc_pc_unittests',
+    'rtc_stats_unittests', 'rtc_unittests', 'system_wrappers_unittests', 'test_support_unittests',
+    'tools_unittests', 'voice_engine_unittests']
 NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 def _getlibs(scheme):
@@ -48,7 +48,7 @@ def _mergelibs(scheme):
 
 # Run unit tests on simulator. Return True if all tests are passed.
 def runtest(scheme):
-  test_root_path = os.path.join(OUT_PATH, scheme)
+  test_root_path = os.path.join(OUT_PATH, '%s-x86'%scheme)
   for test_target in PARALLEL_TEST_TARGET_LIST:
     if subprocess.call(['python', 'third_party\gtest-parallel\gtest-parallel', '%s\%s.exe'%(test_root_path, test_target)],
         cwd=os.path.join(HOME_PATH)):
