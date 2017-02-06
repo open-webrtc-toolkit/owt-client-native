@@ -14,9 +14,10 @@
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
-#endif
-#if defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX)
 #include "talk/woogeen/sdk/base/linux/v4l2videodecoderfactory.h"
+#elif defined(WEBRTC_IOS)
+#include "webrtc/sdk/objc/Framework/Classes/videotoolboxvideocodecfactory.h"
 #endif
 #include "woogeen/base/clientconfiguration.h"
 #include "woogeen/base/globalconfiguration.h"
@@ -119,6 +120,9 @@ void PeerConnectionDependencyFactory::
   }
 #elif defined(WEBRTC_LINUX)
   decoder_factory.reset(new V4L2VideoDecoderFactory());
+#elif defined(WEBRTC_IOS)
+  encoder_factory.reset(new webrtc::VideoToolboxVideoEncoderFactory());
+  decoder_factory.reset(new webrtc::VideoToolboxVideoDecoderFactory());
 #endif
   // Encoded video frame
   if (encoded_frame_)
