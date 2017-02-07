@@ -533,8 +533,8 @@ int H265VideoMFTEncoder::Encode(
         header.fragmentationPlType[i] = 0;
         header.fragmentationTimeDiff[i] = 0;
     }
-    int result = callback_->Encoded(encodedFrame, &info, &header);
-    if (result != 0) {
+    const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
+    if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
         delete[] pbsData;
         bs.DataLength = 0;  //Mark we don't need the data anymore.
         bs.DataOffset = 0;
@@ -730,9 +730,9 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         header.fragmentationTimeDiff[i] = 0;
     }
 
-    int result = callback_->Encoded(encodedFrame, &info, &header);
-    if (result != 0) {
-        LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result;
+    const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
+    if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
+        LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
