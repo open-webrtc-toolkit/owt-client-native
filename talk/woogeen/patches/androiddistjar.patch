@@ -1,0 +1,236 @@
+From 19fd830703e8cd3fc25a9d93fc59f17357845a0e Mon Sep 17 00:00:00 2001
+From: agrieve <agrieve@chromium.org>
+Date: Tue, 17 Jan 2017 07:33:23 -0800
+Subject: [PATCH] android: Create a GN template for create_dist_jar.py
+
+BUG=648244
+
+Review-Url: https://codereview.chromium.org/2623243002
+Cr-Original-Commit-Position: refs/heads/master@{#444054}
+Cr-Mirrored-From: https://chromium.googlesource.com/chromium/src
+Cr-Mirrored-Commit: 77ad9ee9d1c3ca1ef984900a31cb206bf885b936
+---
+ android/gyp/write_build_config.py |  18 ++++---
+ config/android/internal_rules.gni |   7 +--
+ config/android/rules.gni          | 104 +++++++++++++++++++++++++++++++-------
+ 3 files changed, 102 insertions(+), 27 deletions(-)
+
+diff --git a/android/gyp/write_build_config.py b/android/gyp/write_build_config.py
+index 3a529af..98d1d7d 100755
+--- a/android/gyp/write_build_config.py
++++ b/android/gyp/write_build_config.py
+@@ -342,6 +342,7 @@ def main(argv):
+       'android_resources': ['build_config', 'resources_zip'],
+       'android_apk': ['build_config', 'jar_path', 'dex_path', 'resources_zip'],
+       'deps_dex': ['build_config', 'dex_path'],
++      'dist_jar': ['build_config'],
+       'resource_rewriter': ['build_config'],
+       'group': ['build_config'],
+   }
+@@ -456,10 +457,10 @@ def main(argv):
+       deps_info['incremental_install_script_path'] = (
+           options.incremental_install_script_path)
+
++  if options.type in ('java_binary', 'java_library', 'android_apk', 'dist_jar'):
+     # Classpath values filled in below (after applying tested_apk_config).
+     config['javac'] = {}
+
+-
+   if options.type in ('java_binary', 'java_library'):
+     # Only resources might have srcjars (normal srcjar targets are listed in
+     # srcjar_deps). A resource's srcjar contains the R.java file for those
+@@ -548,7 +549,7 @@ def main(argv):
+   if options.type in ['android_apk', 'deps_dex']:
+     deps_dex_files = [c['dex_path'] for c in all_library_deps]
+
+-  if options.type in ('java_binary', 'java_library', 'android_apk'):
++  if options.type in ('java_binary', 'java_library', 'android_apk', 'dist_jar'):
+     javac_classpath = [c['jar_path'] for c in direct_library_deps]
+     java_full_classpath = [c['jar_path'] for c in all_library_deps]
+
+@@ -627,7 +628,7 @@ def main(argv):
+     dex_config = config['final_dex']
+     dex_config['dependency_dex_files'] = deps_dex_files
+
+-  if options.type in ('java_binary', 'java_library', 'android_apk'):
++  if options.type in ('java_binary', 'java_library', 'android_apk', 'dist_jar'):
+     config['javac']['classpath'] = javac_classpath
+     config['javac']['interface_classpath'] = [
+         _AsInterfaceJar(p) for p in javac_classpath]
+@@ -635,14 +636,19 @@ def main(argv):
+       'full_classpath': java_full_classpath
+     }
+
+-  if options.type == 'android_apk':
++  if options.type in ('android_apk', 'dist_jar'):
+     dependency_jars = [c['jar_path'] for c in all_library_deps]
+-    all_interface_jars = [
+-        _AsInterfaceJar(p) for p in dependency_jars + [options.jar_path]]
++    all_interface_jars = [_AsInterfaceJar(p) for p in dependency_jars]
++    if options.type == 'android_apk':
++      all_interface_jars.append(_AsInterfaceJar(options.jar_path))
++
+     config['dist_jar'] = {
+       'dependency_jars': dependency_jars,
+       'all_interface_jars': all_interface_jars,
+     }
++
++  if options.type == 'android_apk':
++    dependency_jars = [c['jar_path'] for c in all_library_deps]
+     manifest = AndroidManifest(options.android_manifest)
+     deps_info['package_name'] = manifest.GetPackageName()
+     if not options.tested_apk_config and manifest.GetInstrumentation():
+diff --git a/config/android/internal_rules.gni b/config/android/internal_rules.gni
+index 102e98c..32a00a1 100644
+--- a/config/android/internal_rules.gni
++++ b/config/android/internal_rules.gni
+@@ -59,7 +59,7 @@ template("write_build_config") {
+   # Don't need to enforce naming scheme for these targets since we never
+   # consider them in dependency chains.
+   if (!_is_prebuilt_binary && type != "android_apk" && type != "java_binary" &&
+-      type != "resource_rewriter") {
++      type != "resource_rewriter" && type != "dist_jar") {
+     set_sources_assignment_filter(_java_target_whitelist)
+     _parent_invoker = invoker.invoker
+     _target_label =
+@@ -86,8 +86,9 @@ template("write_build_config") {
+
+     assert(type == "android_apk" || type == "java_library" ||
+            type == "android_resources" || type == "deps_dex" ||
+-           type == "android_assets" || type == "resource_rewriter" ||
+-           type == "java_binary" || type == "group" || type == "java_prebuilt")
++           type == "dist_jar" || type == "android_assets" ||
++           type == "resource_rewriter" || type == "java_binary" ||
++           type == "group" || type == "java_prebuilt")
+
+     forward_variables_from(invoker,
+                            [
+diff --git a/config/android/rules.gni b/config/android/rules.gni
+index 1db01006..7abf41c 100644
+--- a/config/android/rules.gni
++++ b/config/android/rules.gni
+@@ -1195,6 +1195,86 @@ if (enable_java_templates) {
+     }
+   }
+
++  # Combines all dependent .jar files into a single .jar file.
++  #
++  # Variables:
++  #   output: Path to the output jar.
++  #   override_build_config: Use a pre-existing .build_config. Must be of type
++  #     "apk".
++  #   use_interface_jars: Use all dependent interface .jars rather than
++  #     implementation .jars.
++  #   direct_deps_only: Do not recurse on deps.
++  #   data, deps, testonly, visibility: Usual meaning.
++  #
++  # Example
++  #   dist_jar("lib_fatjar") {
++  #     deps = [ ":my_java_lib" ]
++  #   }
++  template("dist_jar") {
++    if (defined(invoker.override_build_config)) {
++      _build_config = invoker.override_build_config
++    } else {
++      _build_config = "$target_gen_dir/$target_name.build_config"
++      _build_config_target_name = "${target_name}__build_config"
++
++      write_build_config(_build_config_target_name) {
++        forward_variables_from(invoker, [ "testonly" ])
++        type = "dist_jar"
++        if (defined(invoker.deps)) {
++          possible_config_deps = invoker.deps
++        }
++        build_config = _build_config
++      }
++    }
++
++    action(target_name) {
++      forward_variables_from(invoker,
++                             [
++                               "data",
++                               "deps",
++                               "testonly",
++                               "visibility",
++                             ])
++      script = "//build/android/gyp/create_dist_jar.py"
++      depfile = "$target_gen_dir/$target_name.d"
++
++      inputs = [
++        _build_config,
++      ]
++
++      outputs = [
++        invoker.output,
++      ]
++
++      if (defined(_build_config_target_name)) {
++        deps += [ ":$_build_config_target_name" ]
++      }
++
++      args = [
++        "--depfile",
++        rebase_path(depfile, root_build_dir),
++        "--output",
++        rebase_path(invoker.output, root_build_dir),
++      ]
++
++      _rebased_build_config = rebase_path(_build_config, root_build_dir)
++      if (defined(invoker.direct_deps_only) && invoker.direct_deps_only) {
++        if (defined(invoker.use_interface_jars) && invoker.use_interface_jars) {
++          args += [ "--inputs=@FileArg($_rebased_build_config:javac:interface_classpath)" ]
++        } else {
++          args +=
++              [ "--inputs=@FileArg($_rebased_build_config:javac:classpath)" ]
++        }
++      } else {
++        if (defined(invoker.use_interface_jars) && invoker.use_interface_jars) {
++          args += [ "--inputs=@FileArg($_rebased_build_config:dist_jar:all_interface_jars)" ]
++        } else {
++          args += [ "--inputs=@FileArg($_rebased_build_config:dist_jar:dependency_jars)" ]
++        }
++      }
++    }
++  }
++
+   # Declare an Android library target
+   #
+   # This target creates an Android library containing java code and Android
+@@ -1832,28 +1912,16 @@ if (enable_java_templates) {
+     # able to just do that calculation at build time instead.
+     if (defined(invoker.dist_ijar_path)) {
+       _dist_ijar_path = invoker.dist_ijar_path
+-      action("${_template_name}_dist_ijar") {
+-        script = "//build/android/gyp/create_dist_jar.py"
+-        depfile = "$target_gen_dir/$target_name.d"
+-        inputs = [
+-          _build_config,
+-        ]
+-        outputs = [
+-          "${_dist_ijar_path}",
+-        ]
++      dist_jar("${_template_name}_dist_ijar") {
++        override_build_config = _build_config
++        output = _dist_ijar_path
+         data = [
+           _dist_ijar_path,
+         ]
+-        args = [
+-          "--depfile",
+-          rebase_path(depfile, root_build_dir),
+-          "--output",
+-          rebase_path("${_dist_ijar_path}", root_build_dir),
+-          "--inputs=@FileArg($_rebased_build_config:dist_jar:all_interface_jars)",
+-        ]
++        use_interface_jars = true
+         deps = [
+-          ":$build_config_target",  # Generates the build config file.
+-          ":$java_target",  # Generates the jar file.
++          ":$build_config_target",
++          ":$java_target",
+         ]
+       }
+     }
+--
+2.7.4
+
