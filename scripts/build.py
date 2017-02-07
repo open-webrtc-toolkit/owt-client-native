@@ -55,7 +55,8 @@ FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
 SDK_TARGETS = ['woogeen']
 APP_TARGETS = ['AppRTCMobile']
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
-TEST_TARGETS=['common_audio_unittests', 'rtc_pc_unittests', 'system_wrappers_unittests',
+TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
+    'modules_tests', 'rtc_pc_unittests', 'system_wrappers_unittests', 'test_support_unittests',
     'voice_engine_unittests']
 TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
