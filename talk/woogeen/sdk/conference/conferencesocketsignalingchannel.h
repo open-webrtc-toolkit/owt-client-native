@@ -6,6 +6,8 @@
 #define conference_ConferenceSocketSignalingChannel_h
 
 #include <memory>
+#include <future>
+#include <random>
 #include <unordered_map>
 #include "talk/woogeen/include/sio_client.h"
 #include "talk/woogeen/include/sio_message.h"
@@ -72,6 +74,7 @@ class ConferenceSocketSignalingChannel
  protected:
   virtual void OnEmitAck(
       sio::message::list const& msg,
+      int failure_callback_token,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
@@ -80,9 +83,18 @@ class ConferenceSocketSignalingChannel
   void OnReconnectionTicket(const std::string& ticket);
   void RefreshReconnectionTicket();
   void TriggerOnServerDisconnected();
+  int RandomIntToken() {
+      std::random_device rd;
+      std::mt19937 mt(rd());
+      const int kUpperBound = 429496723;  // ditto
+      std::uniform_int_distribution<int> dist(1, kUpperBound);
+      return dist(mt);
+  }
 
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
+  mutable std::mutex failure_callbacks_mutex;
+  std::unordered_map<int, std::function<void(std::unique_ptr<ConferenceException>)>> pending_failure_callbacks_;
   std::function<void()> disconnect_complete_;
   std::string reconnection_ticket_;
   int reconnection_attempted_;

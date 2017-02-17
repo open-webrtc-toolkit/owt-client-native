@@ -110,6 +110,7 @@ void ConferenceSocketSignalingChannel::Connect(
   std::string scheme("http://");
   std::string host;
   rtc::GetStringFromJsonObject(json_token, "host", &host);
+  int failure_callback_token = RandomIntToken();
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   socket_client_->socket();
@@ -123,12 +124,29 @@ void ConferenceSocketSignalingChannel::Connect(
                      that->disconnect_complete_)) {
           that->TriggerOnServerDisconnected();
         }
+        // Clear all pending failure callbacks in the list without invoking them. This
+        // might not be neccessary as the list should be empty.
+        {
+          std::lock_guard<std::mutex> lock(that->failure_callbacks_mutex);
+          that->pending_failure_callbacks_.clear();
+        }
       });
   socket_client_->set_fail_listener([weak_this]() {
     LOG(LS_ERROR) << "Socket.IO connection failed.";
     auto that = weak_this.lock();
     if (that) {
       that->is_reconnection_ = false;
+      {
+        std::lock_guard<std::mutex> lock(that->failure_callbacks_mutex);
+        for (auto it = that->pending_failure_callbacks_.begin(); it != that->pending_failure_callbacks_.end(); ++it) {
+          auto current_callback = it->second;
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Connection failed."));
+            current_callback(std::move(e));
+        }
+        that->pending_failure_callbacks_.clear();
+      }
+
       if (that->reconnection_attempted_ >= kReconnectionAttempts) {
         that->TriggerOnServerDisconnected();
       }
@@ -147,6 +165,8 @@ void ConferenceSocketSignalingChannel::Connect(
     }
   });
   socket_client_->set_open_listener([=](void) {
+    // At this time the connect failure callback is still in pending list. No need
+    // to add a new entry in the pending list.
     if (!is_reconnection_) {
       woogeen::base::SysInfo sys_info(woogeen::base::SysInfo::GetInstance());
       sio::message::ptr login_message = sio::object_message::create();
@@ -173,6 +193,13 @@ void ConferenceSocketSignalingChannel::Connect(
       login_message->get_map()["userAgent"] = ua_message;
       socket_client_->socket()->emit(
           "login", login_message, [=](sio::message::list const& msg) {
+            {
+              std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+              auto pending_ack = pending_failure_callbacks_.find(failure_callback_token);
+              if (pending_ack != pending_failure_callbacks_.end()) {
+                pending_failure_callbacks_.erase(failure_callback_token);
+              }
+            }
             if (msg.size() < 2) {
               LOG(LS_ERROR) << "Received unknown message while sending token.";
               if (on_failure != nullptr) {
@@ -214,6 +241,13 @@ void ConferenceSocketSignalingChannel::Connect(
     } else {
       socket_client_->socket()->emit(
           "relogin", reconnection_ticket_, [&](sio::message::list const& msg) {
+            {
+              std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+              auto pending_ack = pending_failure_callbacks_.find(failure_callback_token);
+              if (pending_ack != pending_failure_callbacks_.end()) {
+                pending_failure_callbacks_.erase(failure_callback_token);
+              }
+            }
             if (msg.size() < 2) {
               LOG(LS_WARNING)
                   << "Received unknown message while reconnection ticket.";
@@ -334,6 +368,12 @@ void ConferenceSocketSignalingChannel::Connect(
             LOG(LS_INFO) << "Received drop message.";
             socket_client_->set_reconnect_attempts(0);
           }));
+  // Store the failure callback in case of socketio failure. This is the last call.
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->connect(scheme.append(host));
 }
 
@@ -351,9 +391,23 @@ void ConferenceSocketSignalingChannel::Disconnect(
   reconnection_attempted_ = kReconnectionAttempts;
   disconnect_complete_ = on_success;
   if (socket_client_->opened()) {
+    // Add the failure callback to pending list.
+    int failure_callback_token = RandomIntToken();
+    {
+      std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+      if (on_failure != nullptr)
+        pending_failure_callbacks_[failure_callback_token] = on_failure;
+    }
+    // Clear all pending failure callbacks after successful disconnect
     socket_client_->socket()->emit(
         kEventNameLogout, nullptr,
-        [=](sio::message::list const& msg) { socket_client_->close(); });
+        [=](sio::message::list const& msg) {
+          {
+            std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+            pending_failure_callbacks_.clear();
+          }
+          socket_client_->close();
+        });
   }
 }
 
@@ -371,8 +425,22 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
     event_name = "publish";
   else
     event_name = "subscribe";
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(
       event_name, message_list, [=](sio::message::list const& msg) {
+        //Remove current failure callback from pending list.
+        {
+          std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+          auto pending_ack = pending_failure_callbacks_.find(failure_callback_token);
+          if (pending_ack != pending_failure_callbacks_.end()) {
+            pending_failure_callbacks_.erase(failure_callback_token);
+          }
+        }
         LOG(LS_INFO) << "Received ack from server.";
         if (on_success == nullptr) {
           LOG(LS_WARNING) << "Does not implement success callback. Make sure "
@@ -429,8 +497,9 @@ void ConferenceSocketSignalingChannel::SendSdp(
     sio::message::ptr message,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  // TODO: Add failure callback to pending list when there is ACK for this.
   socket_client_->socket()->emit(kEventNameSignalingMessage, message);
-  if (on_success) {  // MCU doesn't ack for this event.
+  if (on_success) {  // TODO: MCU doesn't ack for this event.
     on_success();
   }
 }
@@ -441,9 +510,15 @@ void ConferenceSocketSignalingChannel::SendStreamEvent(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr message = sio::string_message::create(stream_id);
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(event, message,
                                  [=](sio::message::list const& msg) {
-                                   OnEmitAck(msg, on_success, on_failure);
+                                   OnEmitAck(msg, failure_callback_token, on_success, on_failure);
                                  });
 }
 
@@ -462,9 +537,15 @@ void ConferenceSocketSignalingChannel::SendCustomMessage(
   }
   send_message->get_map()["type"] = sio::string_message::create("data");
   send_message->get_map()["data"] = sio::string_message::create(message);
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(kEventNameCustomMessage, send_message,
                                  [=](sio::message::list const& msg) {
-                                   OnEmitAck(msg, on_success, on_failure);
+                                   OnEmitAck(msg, failure_callback_token, on_success, on_failure);
                                  });
 }
 void ConferenceSocketSignalingChannel::SendStreamControlMessage(
@@ -478,9 +559,15 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
   payload->get_map()["streamId"] = sio::string_message::create(stream_id);
   send_message->get_map()["type"] = sio::string_message::create("control");
   send_message->get_map()["payload"] = payload;
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(kEventNameCustomMessage, send_message,
                                  [=](sio::message::list const& msg) {
-                                   OnEmitAck(msg, on_success, on_failure);
+                                   OnEmitAck(msg, failure_callback_token, on_success, on_failure);
                                  });
 }
 
@@ -490,9 +577,15 @@ void ConferenceSocketSignalingChannel::GetRegion(
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(
       kEventNameGetRegion, send_message, [=](sio::message::list const& msg) {
-        OnEmitAck(msg, [on_success, msg] {
+        OnEmitAck(msg, failure_callback_token, [on_success, msg] {
           if (on_success == nullptr)
             return;
           sio::message::ptr region_ptr = msg.at(1);
@@ -514,16 +607,31 @@ void ConferenceSocketSignalingChannel::SetRegion(
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
   send_message->get_map()["region"] = sio::string_message::create(region_id);
+  int failure_callback_token = RandomIntToken();
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    if (on_failure != nullptr)
+      pending_failure_callbacks_[failure_callback_token] = on_failure;
+  }
   socket_client_->socket()->emit(kEventNameSetRegion, send_message,
                                  [=](sio::message::list const& msg) {
-                                   OnEmitAck(msg, on_success, on_failure);
+                                   OnEmitAck(msg, failure_callback_token, on_success, on_failure);
                                  });
 }
 
 void ConferenceSocketSignalingChannel::OnEmitAck(
     sio::message::list const& msg,
+    int failure_callback_token,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  //Remove failure callback from pending list.
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex);
+    auto pending_ack = pending_failure_callbacks_.find(failure_callback_token);
+    if (pending_ack != pending_failure_callbacks_.end()) {
+      pending_failure_callbacks_.erase(failure_callback_token);
+    }
+  }
   sio::message::ptr ack = msg.at(0);
   if (ack->get_flag() != sio::message::flag_string) {
     LOG(LS_WARNING) << "The first element of emit ack is not a string.";
