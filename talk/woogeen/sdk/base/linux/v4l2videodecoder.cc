@@ -9,44 +9,55 @@
  */
 
 #include "talk/woogeen/sdk/base/linux/v4l2videodecoder.h"
+
 namespace webrtc {
-V4L2Decoder::V4L2Decoder() : callback_(NULL) {}
+V4L2Decoder::V4L2Decoder() : decoded_image_callback_(nullptr) {}
 
 int32_t V4L2Decoder::InitDecode(const VideoCodec* config,
                                 int32_t number_of_cores) {
   config_ = *config;
-  size_t width = config->width;
-  size_t height = config->height;
-  frame_.CreateEmptyFrame(static_cast<int>(width),
-                          static_cast<int>(height),
-                          static_cast<int>(width),
-                          static_cast<int>((width + 1) / 2),
-                          static_cast<int>((width + 1) / 2));
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t V4L2Decoder::Decode(const EncodedImage& input,
+int32_t V4L2Decoder::Decode(const EncodedImage& input_image,
                             bool missing_frames,
                             const RTPFragmentationHeader* fragmentation,
                             const CodecSpecificInfo* codec_specific_info,
                             int64_t render_time_ms) {
-  frame_.set_timestamp(input._timeStamp);
-  frame_.set_ntp_time_ms(input.ntp_time_ms_);
-  frame_.set_render_time_ms(render_time_ms);
+  if (!decoded_image_callback_) {
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
 
-  callback_->Decoded(frame_);
+  if (!input_image._buffer || !input_image._length) {
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
+
+  // TODO(chunbo): Check the codec information
+  // if (codec_specific_info &&
+  //     codec_specific_info->codecType != kVideoCodecH264) {
+  //   return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  // }
+
+  // TODO(chunbo): Fetch VideoFrame from the result of the decoder
+  // Obtain the |video_frame| containing the decoded image.
+  // decoded_image_callback_->Decoded(video_frame);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t V4L2Decoder::RegisterDecodeCompleteCallback(
     DecodedImageCallback* callback) {
-  callback_ = callback;
+  decoded_image_callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t V4L2Decoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+const char* V4L2Decoder::ImplementationName() const {
+  return "woogeen";
 }
 
 int32_t V4L2H264Decoder::Decode(const EncodedImage& input,
@@ -72,4 +83,5 @@ int32_t V4L2H264Decoder::Decode(const EncodedImage& input,
                              codec_specific_info,
                              render_time_ms);
 }
+
 }

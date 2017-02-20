@@ -36,10 +36,11 @@ class V4L2Decoder : public VideoDecoder {
 
   int32_t Release() override;
 
+  const char* ImplementationName() const override;
+
  private:
   VideoCodec config_;
-  VideoFrame frame_;
-  DecodedImageCallback* callback_;
+  DecodedImageCallback* decoded_image_callback_;
 };
 
 class V4L2H264Decoder : public V4L2Decoder {

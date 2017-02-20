@@ -37,8 +37,10 @@ const std::string kEventNameOnUserJoin = "user_join";
 const std::string kEventNameOnUserLeave = "user_leave";
 const std::string kEventNameOnDrop = "drop";
 
+#if defined(WEBRTC_IOS)
 // The epoch of Mach kernel is 2001/1/1 00:00:00, while Linux is 1970/1/1 00:00:00.
 const uint64_t kMachLinuxTimeDelta = 978307200;
+#endif
 
 const int kReconnectionAttempts = 10;
 const int kReconnectionDelay = 2000;
