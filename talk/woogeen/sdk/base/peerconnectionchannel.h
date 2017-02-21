@@ -68,6 +68,10 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   const webrtc::SessionDescriptionInterface* LocalDescription();
   PeerConnectionInterface::SignalingState SignalingState() const;
 
+  // Apply the bitrate settings on all tracks available. Failing to set any of them
+  // will result in a false return, with remaining settings applicable still applied.
+  // Subclasses can override this to implementation specific bitrate allocation policies.
+  bool ApplyBitrateSettings();
   // Subclasses should prepare observers for these functions and post
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;

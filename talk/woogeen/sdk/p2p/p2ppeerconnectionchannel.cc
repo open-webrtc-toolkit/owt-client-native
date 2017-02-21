@@ -661,6 +661,8 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
       is_creating_offer_ = false;
     }
   }
+  // Setting maximum bandwidth here
+  ApplyBitrateSettings();
   auto desc = LocalDescription();
   string sdp;
   desc->ToString(&sdp);

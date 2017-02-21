@@ -240,6 +240,8 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
 
 void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   LOG(LS_INFO) << "Set local sdp success.";
+  // For conference, it's now OK to set bandwidth
+  ApplyBitrateSettings();
   auto desc = LocalDescription();
   string sdp;
   desc->ToString(&sdp);

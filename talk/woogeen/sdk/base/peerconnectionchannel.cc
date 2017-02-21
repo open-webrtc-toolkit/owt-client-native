@@ -55,6 +55,47 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   return true;
 }
 
+bool PeerConnectionChannel::ApplyBitrateSettings() {
+  RTC_CHECK(peer_connection_);
+  bool ret = false;
+
+  std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
+      peer_connection_->GetSenders();
+  if (senders.size() == 0) {
+    LOG(LS_WARNING) << "Cannot set max bitrate without stream added.";
+    return ret;
+  }
+
+  for (auto sender : senders) {
+    auto sender_track = sender->track();
+    if (sender_track != nullptr) {
+      webrtc::RtpParameters rtp_parameters = sender->GetParameters();
+      for (size_t idx = 0; idx < rtp_parameters.encodings.size(); idx++) {
+        // TODO(jianlin): It may not be appropriate to set the same settings
+        // on all encodings. Update the logic when moving per-stream settings
+        // from ClientConfiguration to PublishOption
+        if (sender_track->kind() ==
+            webrtc::MediaStreamTrackInterface::kVideoKind) {
+          rtp_parameters.encodings[idx].max_bitrate_bps =
+              (configuration_.max_video_bandwidth > 0)
+                  ? (configuration_.max_video_bandwidth * 1024)
+                  : 0;
+          ret |= sender->SetParameters(rtp_parameters);
+        } else if (sender_track->kind() ==
+                   webrtc::MediaStreamTrackInterface::kAudioKind) {
+          rtp_parameters.encodings[idx].max_bitrate_bps =
+              (configuration_.max_audio_bandwidth > 0)
+                  ? (configuration_.max_audio_bandwidth * 1024)
+                  : 0;
+          ret |= sender->SetParameters(rtp_parameters);
+        }
+      }
+    }
+  }
+
+  return ret;
+}
+
 const webrtc::SessionDescriptionInterface*
 PeerConnectionChannel::LocalDescription() {
   RTC_CHECK(peer_connection_);
@@ -139,14 +180,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       if (!desc->ToString(&sdp_string)) {
         LOG(LS_ERROR) << "Error parsing local description.";
         ASSERT(false);
-      }
-      if (configuration_.max_audio_bandwidth != 0) {
-        sdp_string = SdpUtils::SetMaximumAudioBandwidth(
-            sdp_string, configuration_.max_audio_bandwidth);
-      }
-      if (configuration_.max_video_bandwidth != 0) {
-        sdp_string = SdpUtils::SetMaximumVideoBandwidth(
-            sdp_string, configuration_.max_video_bandwidth);
       }
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
