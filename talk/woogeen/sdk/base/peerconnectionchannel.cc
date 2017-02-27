@@ -276,23 +276,6 @@ void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
 
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()
-    : RTCConfiguration() {
-#if (defined(WEBRTC_IOS) || defined(WEBRTC_WIN)) && !defined(OPENSSL_IS_BORINGSSL)
-  // TODO(jianjunz): Use RSA on iOS when build with external OpenSSL. Looks like
-  // ECDSA P256 cannot work well with external OpenSSL on iOS.
-  // http://shilv018.sh.intel.com/bugzilla_WebRTC/show_bug.cgi?id=915
-  if (certificates.empty()) {
-    rtc::scoped_refptr<rtc::RTCCertificate> certificate =
-        rtc::RTCCertificateGenerator::GenerateCertificate(
-            rtc::KeyParams(rtc::KT_RSA), rtc::Optional<uint64_t>());
-    if (!certificate) {
-      LOG(LS_ERROR) << "Failed to create certificate.";
-      RTC_NOTREACHED();
-    } else {
-      certificates.push_back(certificate);
-    }
-  }
-#endif
-}
+    : RTCConfiguration() {}
 }
 }
