@@ -127,6 +127,9 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
+  // Initialize an ICE restarat.
+  void IceRestart();
+
   // Set published stream's ID. This ID is assgined by MCU.
   // This is the reason why a local stream cannot publish twice.
   void SetStreamId(const std::string& id);
@@ -190,6 +193,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
       const;
   void DrainIceCandidates();
+  void DoIceRestart();
   // Get published or subscribed stream ID.
   // Currently, a ConferencePeerConnectionChannel manages only one stream, this
   // method is a shortcut to check whether this channel is used to publish or
@@ -227,6 +231,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   // deep copy
   std::vector<sio::message::ptr> ice_candidates_;
   std::mutex candidates_mutex_;
+  bool ice_restart_needed_;
   std::vector<ConferencePeerConnectionChannelObserver*> observers_;
   Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };

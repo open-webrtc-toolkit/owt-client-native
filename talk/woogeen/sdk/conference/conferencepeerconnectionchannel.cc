@@ -82,6 +82,7 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
       signaling_channel_(signaling_channel),
       session_id_(kSessionIdBase),
       message_seq_(kMessageSeqBase),
+      ice_restart_needed_(false),
       callback_thread_(new PeerConnectionThread) {
   callback_thread_->Start();
   InitializePeerConnection();
@@ -125,6 +126,23 @@ void ConferencePeerConnectionChannel::CreateOffer() {
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
 }
 
+void ConferencePeerConnectionChannel::IceRestart() {
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
+    DoIceRestart();
+  } else {
+    ice_restart_needed_ = true;
+  }
+}
+
+void ConferencePeerConnectionChannel::DoIceRestart() {
+  LOG(LS_INFO) << "ICE restart";
+  RTC_DCHECK(SignalingState() ==
+             PeerConnectionInterface::SignalingState::kStable);
+  media_constraints_.SetMandatory(
+      webrtc::MediaConstraintsInterface::kIceRestart, true);
+  this->CreateOffer();
+}
+
 void ConferencePeerConnectionChannel::CreateAnswer() {
   LOG(LS_INFO) << "Create answer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -148,7 +166,16 @@ void ConferencePeerConnectionChannel::OnSignalingChange(
   LOG(LS_INFO) << "Signaling state changed: " << new_state;
   signaling_state_ = new_state;
   if (new_state == webrtc::PeerConnectionInterface::SignalingState::kStable) {
-    DrainIceCandidates();
+    if (ice_restart_needed_) {
+      ice_restart_needed_ = false;
+      {
+        std::lock_guard<std::mutex> lock(candidates_mutex_);
+        ice_candidates_.clear();
+      }
+      DoIceRestart();
+    } else {
+      DrainIceCandidates();
+    }
   }
 }
 
