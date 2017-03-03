@@ -50,6 +50,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       cricket::VideoCapturer* capturer,
       const MediaConstraintsInterface* constraints);
+  rtc::NetworkMonitorInterface* NetworkMonitor();
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
@@ -70,6 +71,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
       const webrtc::MediaConstraintsInterface* constraints,
       webrtc::PeerConnectionObserver* observer);
+  void CreateNetworkMonitorOnCurrentThread();
 
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>
@@ -83,6 +85,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #endif
   bool encoded_frame_;
   static std::mutex get_pc_dependency_factory_mutex_;
+  rtc::NetworkMonitorInterface* network_monitor_;
 };
 }
 }  // namespace woogeen

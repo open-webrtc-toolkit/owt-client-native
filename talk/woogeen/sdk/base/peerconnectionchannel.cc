@@ -52,6 +52,11 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   }
   RTC_CHECK(peer_connection_);
   RTC_CHECK(pc_thread_);
+  rtc::NetworkMonitorInterface* network_monitor=factory_->NetworkMonitor();
+  if (network_monitor) {
+    network_monitor->SignalNetworksChanged.connect(
+        this, &PeerConnectionChannel::OnNetworksChanged);
+  }
   return true;
 }
 
@@ -274,6 +279,10 @@ void PeerConnectionChannel::OnIceConnectionChange(
 
 void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
+
+void PeerConnectionChannel::OnNetworksChanged(){
+  LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
+}
 
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()
     : RTCConfiguration() {}

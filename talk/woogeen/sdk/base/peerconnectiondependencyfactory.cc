@@ -14,10 +14,11 @@
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
-#endif
-#if defined(WEBRTC_IOS)
+#elif defined(WEBRTC_IOS)
+#include "talk/woogeen/sdk/base/ios/networkmonitorios.h"
 #include "webrtc/sdk/objc/Framework/Classes/videotoolboxvideocodecfactory.h"
-#else
+#endif
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/customizedvideodecoderfactory.h"
 #endif
 #include "woogeen/base/clientconfiguration.h"
@@ -43,7 +44,8 @@ std::mutex PeerConnectionDependencyFactory::get_pc_dependency_factory_mutex_;
 
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
-      callback_thread_(new PeerConnectionThread){
+      callback_thread_(new PeerConnectionThread),
+      network_monitor_(nullptr) {
 #if defined(WEBRTC_WIN)
   if (GlobalConfiguration::GetCodecHardwareAccelerationEnabled() && (GlobalConfiguration::GetRenderWindow() != nullptr)){
         render_hardware_acceleration_enabled_ = true;
@@ -217,6 +219,28 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
 PeerConnectionDependencyFactory::PeerConnectionFactory() const {
   return pc_factory_;
+}
+
+rtc::NetworkMonitorInterface* PeerConnectionDependencyFactory::NetworkMonitor(){
+#if defined(WEBRTC_IOS)
+  pc_thread_->Invoke<void>(
+      RTC_FROM_HERE,
+      Bind(
+          &PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread,
+          this));
+  return network_monitor_;
+#else
+  return nullptr;
+#endif
+}
+
+void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
+#if defined(WEBRTC_IOS)
+  if (!network_monitor_) {
+    network_monitor_ = new NetworkMonitorIos();
+    network_monitor_->Start();
+  }
+#endif
 }
 }
 }

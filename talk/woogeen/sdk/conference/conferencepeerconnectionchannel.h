@@ -172,6 +172,8 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   virtual void OnSetRemoteSessionDescriptionSuccess();
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
 
+  virtual void OnNetworksChanged();
+
   enum SessionState : int;
   enum NegotiationState : int;
 

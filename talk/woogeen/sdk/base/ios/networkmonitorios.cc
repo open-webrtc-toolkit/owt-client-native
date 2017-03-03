@@ -1,0 +1,96 @@
+/*
+ * Copyright (c) 2017 Intel Corporation. All rights reserved.
+ */
+
+#include <algorithm>
+
+#include "webrtc/base/task_queue.h"
+
+#include "talk/woogeen/sdk/base/ios/networkmonitorios.h"
+
+namespace woogeen {
+namespace base {
+
+NetworkMonitorIos::NetworkMonitorIos() : reachability_(nullptr) {
+  Init();
+}
+
+NetworkMonitorIos::~NetworkMonitorIos() {
+  Stop();
+  CFRelease(reachability_);
+}
+
+void NetworkMonitorIos::StartReachabilityNotifications() {
+  RTC_DCHECK(reachability_);
+  SCNetworkReachabilityContext reachability_context = {
+      0,     // version
+      this,  // user data
+      NULL,  // retain
+      NULL,  // release
+      NULL   // description
+  };
+  if (SCNetworkReachabilitySetCallback(reachability_,
+                                       &NetworkMonitorIos::ReachabilityCallback,
+                                       &reachability_context)) {
+    LOG(LS_INFO) << "SCNetworkReachabilitySetCallback";
+  }
+
+  if (!SCNetworkReachabilitySetCallback(
+          reachability_, &NetworkMonitorIos::ReachabilityCallback,
+          &reachability_context)) {
+    LOG(LS_ERROR) << "Could not set network reachability callback";
+    reachability_ = nullptr;
+  } else if (!SCNetworkReachabilitySetDispatchQueue(
+                 reachability_, dispatch_get_global_queue(
+                                    DISPATCH_QUEUE_PRIORITY_DEFAULT, 0))) {
+    LOG(LS_ERROR)
+        << "Could not schedule network reachability on dispatch queue.";
+    reachability_ = nullptr;
+  }
+  LOG(LS_INFO) << "StartReachabilityNotifications";
+}
+
+void NetworkMonitorIos::StopReachabilityNotifications() {
+  RTC_DCHECK(reachability_);
+  SCNetworkReachabilitySetDispatchQueue(reachability_, nullptr);
+}
+
+// static
+void NetworkMonitorIos::ReachabilityCallback(SCNetworkReachabilityRef target,
+                                             SCNetworkConnectionFlags flags,
+                                             void* notifier) {
+  LOG(LS_INFO) << "NetworkMonitorIos::ReachabilityCallback";
+
+  NetworkMonitorIos* network_monitor_ios =
+      static_cast<NetworkMonitorIos*>(notifier);
+  network_monitor_ios->OnNetworksChanged();
+}
+
+rtc::AdapterType NetworkMonitorIos::GetAdapterType(
+    const std::string& interface_name) {
+  RTC_NOTREACHED();
+  return rtc::AdapterType::ADAPTER_TYPE_UNKNOWN;
+}
+
+void NetworkMonitorIos::Init() {
+  // Check reachability for 0.0.0.0.
+  struct sockaddr_in addr = {0};
+  addr.sin_len = sizeof(addr);
+  addr.sin_family = AF_INET;
+  reachability_ = SCNetworkReachabilityCreateWithAddress(
+      kCFAllocatorDefault, reinterpret_cast<struct sockaddr*>(&addr));
+}
+
+void NetworkMonitorIos::Start() {
+  StartReachabilityNotifications();
+}
+
+void NetworkMonitorIos::Stop() {
+  StopReachabilityNotifications();
+}
+
+rtc::NetworkMonitorInterface* NetworkMonitorFactoryIos::CreateNetworkMonitor() {
+  return new NetworkMonitorIos();
+}
+}
+}

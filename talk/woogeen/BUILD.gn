@@ -94,6 +94,13 @@ source_set("woogeen_sdk_base") {
 
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
 
+  if (is_ios) {
+    sources += [
+      "sdk/base/ios/networkmonitorios.h",
+      "sdk/base/ios/networkmonitorios.cc",
+    ]
+  }
+
   if (is_win) {
     sources += [
       "sdk/base/win/d3dnativeframe.cpp",

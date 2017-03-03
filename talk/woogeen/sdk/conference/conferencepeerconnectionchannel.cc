@@ -9,6 +9,7 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/media/base/videocapturer.h"
+
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
@@ -769,6 +770,10 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
         CreateOffer();
       },
       on_failure);
+}
+
+void ConferencePeerConnectionChannel::OnNetworksChanged(){
+  LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
 }
 }
 }

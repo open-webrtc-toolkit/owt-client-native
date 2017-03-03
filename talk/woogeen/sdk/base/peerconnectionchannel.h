@@ -6,10 +6,16 @@
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 
 #include "webrtc/base/messagehandler.h"
+#include "webrtc/base/sigslot.h"
+
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
+
+namespace rtc {
+class NetworkMonitorInterface;
+}
 
 namespace woogeen {
 namespace base {
@@ -58,7 +64,8 @@ struct PeerConnectionChannelConfiguration
 
 class PeerConnectionChannel : public rtc::MessageHandler,
                               public webrtc::PeerConnectionObserver,
-                              public webrtc::DataChannelObserver {
+                              public webrtc::DataChannelObserver,
+                              public sigslot::has_slots<> {
  public:
   PeerConnectionChannel(PeerConnectionChannelConfiguration configuration);
 
@@ -111,6 +118,9 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void OnSetRemoteSessionDescriptionSuccess();
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
 
+  // Fired when networks changed. (Only works on iOS)
+  virtual void OnNetworksChanged();
+
   enum MessageType : int {
     kMessageTypeCreateOffer = 101,
     kMessageTypeCreateAnswer,
@@ -122,6 +132,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     kMessageTypeRemoveStream,
     kMessageTypeClosePeerConnection,
     kMessageTypeGetStats,
+    kMessageTypeCreateNetworkMonitor=201,
   };
 
   Thread* pc_thread_;
