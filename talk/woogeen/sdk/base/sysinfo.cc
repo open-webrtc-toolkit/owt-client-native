@@ -10,9 +10,9 @@
 namespace woogeen {
 namespace base {
 
-static const std::string kSdkVersion("3.3");
+static const std::string kSdkVersion("3.4");
 static const std::string kRuntimeName("WebRTC");
-static const std::string kRuntimeVersion("54");
+static const std::string kRuntimeVersion("57");
 static const std::string kUnknown("Unknown");
 
 std::string SysInfo::SdkType() {
