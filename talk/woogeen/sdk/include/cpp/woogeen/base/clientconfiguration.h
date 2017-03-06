@@ -42,7 +42,7 @@ struct ClientConfiguration {
   ClientConfiguration()
       : max_audio_bandwidth(0),
         max_video_bandwidth(0),
-        candidate_network_policy(CandidateNetworkPolicy::kAll){};
+        candidate_network_policy(CandidateNetworkPolicy::kAll) {};
 
   /// List of ICE servers
   std::vector<IceServer> ice_servers;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2017 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
 #ifndef WOOGEEN_BASE_STREAM_H_
 #define WOOGEEN_BASE_STREAM_H_
 
+#include <unordered_map>
 #include "woogeen/base/exception.h"
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/macros.h"
@@ -49,6 +50,8 @@ namespace base {
 class MediaConstraintsImpl;
 
 class CustomizedFramesCapturer;
+
+class BasicDesktopCapturer;
 
 class VideoFrameGeneratorInterface;
 
@@ -112,8 +115,21 @@ class Stream {
 */
 class LocalStream : public Stream {
  public:
+  enum class StreamDeviceType : int {
+    // TODO(jianlin): For now we treat customized raw/encoded input as
+    // camera device. Better has clear device type negotation with MCU
+    // for this.
+    kStreamDeviceTypeCamera = 101,
+    kStreamDeviceTypeScreen,
+    kStreamDeviceTypeUnknown = 200
+  };
   LocalStream();
   virtual ~LocalStream();
+  /** @cond */
+  virtual StreamDeviceType GetStreamDeviceType() {
+    return StreamDeviceType::kStreamDeviceTypeUnknown;
+  }
+  /** @endcond */
  protected:
   MediaConstraintsImpl* media_constraints_;
 };
@@ -214,31 +230,81 @@ class LocalCameraStream : public LocalStream {
     instead.
   */
   void Close();
-protected:
- explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
-                            int& error_code);
- explicit LocalCameraStream(const bool is_audio_enabled,
-                            webrtc::VideoTrackSourceInterface* video_source,
-                            int& error_code);
- /** @endcond */
+
+  StreamDeviceType GetStreamDeviceType() final {
+    return StreamDeviceType::kStreamDeviceTypeCamera;
+  }
+
+ protected:
+  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
+                             int& error_code);
+  explicit LocalCameraStream(const bool is_audio_enabled,
+                             webrtc::VideoTrackSourceInterface* video_source,
+                             int& error_code);
+  /** @endcond */
 };
 
 /// This class represents a local stream which use frame generator to generate frames.
 class LocalCustomizedStream : public LocalStream {
   public:
-  /**
-    Initialize a LocalCustomizedStream with parameters.
-    @param parameters Parameters for creating the stream. The stream will not be
-    impacted if chaning parameters after it is created.
-    @param framer An instance implemented VideoFrameGeneratorInterface.
-  */
+   /**
+     Initialize a LocalCustomizedStream with parameters.
+     @param parameters Parameters for creating the stream. The stream will not
+     be impacted if changing parameters after it is created.
+     @param framer An instance implemented VideoFrameGeneratorInterface.
+   */
    explicit LocalCustomizedStream(
        std::shared_ptr<LocalCustomizedStreamParameters> parameters,
        VideoFrameGeneratorInterface* framer);
    ~LocalCustomizedStream();
-
+   /** @cond */
+   // Temporarily use camera type for customized stream.
+   StreamDeviceType GetStreamDeviceType() final {
+     return StreamDeviceType::kStreamDeviceTypeCamera;
+   }
+   /** @endcond */
   private:
    CustomizedFramesCapturer* capturer_;
+};
+
+/// This class represents a local stream which uses local screen/app to generate
+/// frames.
+class LocalScreenStream : public LocalStream {
+ public:
+  /**
+    Initialize a LocalScreenStream with parameters.
+    @param parameters Parameters for creating the stream. The stream will
+    not be impacted if changing parameters after it is created.
+  */
+  explicit LocalScreenStream(
+      std::shared_ptr<LocalDesktopStreamParameters> parameters);
+  virtual ~LocalScreenStream();
+  /**
+    Get a list of (id, title) pair that enumerates apps/screen available for
+    sharing.
+    @param source_list the caller provided map which will be filled with
+    available sources to capture from.
+    @return Return true if successfully get the list; Return false if fail
+    to get the list, or stream device type is screen.
+  */
+  bool GetCurrentSourceList(std::unordered_map<int, std::string>* source_list);
+  /**
+    Set the window to be captured from if current source type is application.
+    @param source_id The id retrieved from previous GetCurentSourceList()
+    call. Note the window id might be invalid when calling
+    SetCurrentCaptureSource().
+    @return Returns true if set the capture window target successfully.Returns
+    false on failing to set the capture window target, or stream device type is
+    screen.
+  */
+  bool SetCurrentCaptureSource(int source_id);
+  /** @cond */
+  StreamDeviceType GetStreamDeviceType() final {
+    return StreamDeviceType::kStreamDeviceTypeScreen;
+  }
+  /** @endcond */
+ private:
+  BasicDesktopCapturer* capturer_;
 };
 
 } // namespace base

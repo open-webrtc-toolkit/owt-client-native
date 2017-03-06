@@ -36,5 +36,20 @@ void LocalCameraStreamParameters::Resolution(int width, int height) {
 void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
   stream_name_ = stream_name;
 }
+
+LocalDesktopStreamParameters::LocalDesktopStreamParameters(
+    bool video_enabled,
+    bool audio_enabled,
+    DesktopSourceType source_type,
+    DesktopCapturePolicy capture_policy)
+    : video_enabled_(video_enabled),
+      audio_enabled_(audio_enabled),
+      fps_(30),
+      source_type_(source_type),
+      capture_policy_(capture_policy) {}
+
+void LocalDesktopStreamParameters::Fps(int fps) {
+  fps_ = fps;
+}
 }
 }

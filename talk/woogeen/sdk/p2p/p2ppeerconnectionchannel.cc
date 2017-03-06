@@ -905,7 +905,13 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       json[kMessageTypeKey] = kStreamType;
       Json::Value stream_info;
       stream_info[kStreamIdKey] = media_stream->label();
-      stream_info[kStreamTypeKey] = "video";
+      if (stream->GetStreamDeviceType() ==
+          woogeen::base::LocalStream::StreamDeviceType::
+              kStreamDeviceTypeScreen) {
+        stream_info[kStreamTypeKey] = "screen";
+      } else {
+        stream_info[kStreamTypeKey] = "video";
+      }
       json[kMessageDataKey] = stream_info;
       SendSignalingMessage(json, nullptr, nullptr);
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =

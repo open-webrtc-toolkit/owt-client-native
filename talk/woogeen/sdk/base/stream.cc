@@ -6,7 +6,9 @@
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#include "talk/woogeen/sdk/base/desktopcapturer.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #if defined(WEBRTC_IOS)
 #include "talk/woogeen/sdk/base/objc/AVFoundationVideoCapturerFactory.h"
@@ -383,6 +385,78 @@ void LocalCameraStream::Close() {
     media_stream_->RemoveTrack(video_track);
 }
 
+bool LocalScreenStream::SetCurrentCaptureSource(int source_id) {
+  if (capturer_ == nullptr) {
+    LOG(LS_ERROR) << "Cannot set capture source without capturer.";
+    return false;
+  }
+  return capturer_->SetCaptureWindow(source_id);
+}
+
+bool LocalScreenStream::GetCurrentSourceList(
+    std::unordered_map<int, std::string>* source_list) {
+  if (capturer_ == nullptr) {
+    LOG(LS_ERROR) << "Enumeration of source not allowed without capturer.";
+    return false;
+  }
+
+  return capturer_->GetCurrentWindowList(source_list);
+}
+
+LocalScreenStream::~LocalScreenStream() {
+  LOG(LS_INFO) << "Destory LocalScreenStream.";
+  if (media_stream_ != nullptr) {
+    // Remove all tracks before dispose stream.
+    auto audio_tracks = media_stream_->GetAudioTracks();
+    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it)
+      media_stream_->RemoveTrack(*it);
+
+    auto video_tracks = media_stream_->GetVideoTracks();
+    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
+      media_stream_->RemoveTrack(*it);
+  }
+  capturer_ = nullptr;
+}
+
+LocalScreenStream::LocalScreenStream(
+    std::shared_ptr<LocalDesktopStreamParameters> parameters) {
+  if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
+    LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
+  }
+  scoped_refptr<PeerConnectionDependencyFactory> factory =
+      PeerConnectionDependencyFactory::Get();
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  scoped_refptr<MediaStreamInterface> stream =
+      factory->CreateLocalMediaStream(media_stream_id);
+  if (parameters->VideoEnabled()) {
+    webrtc::DesktopCaptureOptions options =
+        webrtc::DesktopCaptureOptions::CreateDefault();
+    // options.set_allow_directx_capturer(true);
+    if (parameters->SourceType() ==
+        LocalDesktopStreamParameters::DesktopSourceType::kFullScreen) {
+      capturer_ = new BasicScreenCapturer(options);
+    } else {
+      capturer_ = new BasicWindowCapturer(options);
+    }
+    capturer_->Init();
+    scoped_refptr<VideoTrackSourceInterface> source =
+        factory->CreateVideoSource(capturer_, nullptr);
+    std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
+    scoped_refptr<VideoTrackInterface> video_track =
+        factory->CreateLocalVideoTrack(video_track_id, source);
+    stream->AddTrack(video_track);
+  }
+
+  if (parameters->AudioEnabled()) {
+    std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
+    scoped_refptr<AudioTrackInterface> audio_track =
+        factory->CreateLocalAudioTrack(audio_track_id);
+    stream->AddTrack(audio_track);
+  }
+  media_stream_ = stream;
+  media_stream_->AddRef();
+}
+
 LocalCustomizedStream::~LocalCustomizedStream() {
   LOG(LS_INFO) << "Destory LocalCameraStream.";
   if (media_stream_ != nullptr) {
@@ -413,7 +487,7 @@ LocalCustomizedStream::LocalCustomizedStream(
     capturer_ = new CustomizedFramesCapturer(framer);
     capturer_->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
-        factory->CreateVideoSource(capturer_, NULL);
+        factory->CreateVideoSource(capturer_, nullptr);
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         factory->CreateLocalVideoTrack(video_track_id, source);

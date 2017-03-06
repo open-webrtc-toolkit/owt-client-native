@@ -133,6 +133,84 @@ class LocalCustomizedStreamParameters final {
   bool video_enabled_;
   bool audio_enabled_;
 };
+
+/**
+@brief This class contains parameters and methods that's needed for creating a
+local stream with certain screen or window as source.
+
+When a stream is created, it will not be impacted if these parameters are
+changed.
+*/
+class LocalDesktopStreamParameters final {
+ public:
+  enum class DesktopCapturePolicy : int {
+    /// Default capture policy.
+    kDefault = 0,
+    /// With this policy set, on windows, use DirectX for desktop capture if
+    /// possisble.
+    kEnableDirectX = 1,
+    /// With this policy set, enable platform specific window effects if
+    /// possible.
+    kEnableEffects = 2,
+    /// With this policy set, capturer will provide update region information to
+    /// caller.
+    kEnableUpdateDetection = 4,
+    /// With this policy set, capturer can send out scaled captured frame.
+    kEnableMagnification = 8
+  };
+
+  enum class DesktopSourceType : int {
+    /// Capture from whole screen
+    kFullScreen = 1,
+    /// Capture from application
+    kApplication
+  };
+
+  /**
+  @brief Initialize a LocalDesktopStreamParameters.
+  @param video_enabled Indicates if video is enabled for this stream.
+  @param audio_anabled Indicates if audio is enabled for this stream.
+  @param soruce_type Indicates if capture from screen or an app.
+  @param capture_policy the OR of any of the DesktopCapturePolicy options.
+  */
+  LocalDesktopStreamParameters(
+      bool video_enabled,
+      bool audio_enabled,
+      DesktopSourceType source_type,
+      DesktopCapturePolicy capture_policy = DesktopCapturePolicy::kDefault);
+
+  ~LocalDesktopStreamParameters() {}
+
+  /**
+  @brief Get video is enabled or not for this stream.
+  @return true or false.
+  */
+  bool VideoEnabled() const { return video_enabled_; }
+  /**
+  @brief Get audio is enabled or not for this stream.
+  @return true or false.
+  */
+  bool AudioEnabled() const { return audio_enabled_; }
+  /** @cond */
+  /**
+  @brief Set the frame rate.
+  The actual frame rate of window/screen capturing may be lower than this.
+  @param fps The frame rate of the captured screen/window.
+  */
+  void Fps(int fps);
+  int Fps() const { return fps_; }
+
+  DesktopSourceType SourceType() const { return source_type_; }
+
+  DesktopCapturePolicy CapturePolicy() const { return capture_policy_; }
+
+ private:
+  bool video_enabled_;
+  bool audio_enabled_;
+  int fps_;
+  DesktopSourceType source_type_;
+  DesktopCapturePolicy capture_policy_;
+};
 }
 }
 

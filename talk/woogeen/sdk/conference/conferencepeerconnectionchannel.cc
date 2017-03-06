@@ -372,7 +372,7 @@ void ConferencePeerConnectionChannel::Publish(
   } else {
     sio::message::ptr video_options = sio::object_message::create();
     video_options->get_map()["device"] = sio::string_message::create(
-        "camera");  // Currently only camera streams.
+        "camera");  // By default it is camera stream.
     options->get_map()["video"] = video_options;
     // Get resolution depends on stats report. Resolution value may not
     // available before stream has video data. So we need some retries.
@@ -726,6 +726,11 @@ void ConferencePeerConnectionChannel::TryToGetResolution(
   auto video_track_source =
       stream->MediaStream()->GetVideoTracks()[0]->GetSource();
   VideoTrackSourceInterface::Stats stats;
+  if (stream->GetStreamDeviceType() ==
+      woogeen::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+    options->get_map()["video"]->get_map()["device"] =
+        sio::string_message::create("screen");
+  }
   if (video_track_source->GetStats(&stats)) {
     auto resolution_string = MediaUtils::GetResolutionName(
         Resolution(stats.input_width, stats.input_height));
