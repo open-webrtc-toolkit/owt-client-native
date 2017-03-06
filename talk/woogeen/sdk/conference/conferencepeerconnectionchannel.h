@@ -28,6 +28,7 @@ using namespace woogeen::base;
 // TODO: Modify this for conference.
 class ConferencePeerConnectionChannelObserver {
  public:
+  virtual ~ConferencePeerConnectionChannelObserver(){};
   // Triggered when received an invitation.
   virtual void OnInvited(const std::string& remote_id) = 0;
   // Triggered when remote user accepted the invitation.

@@ -76,6 +76,7 @@ class ConferenceSocketSignalingChannel;
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
+  virtual ~ConferenceSocketSignalingChannelObserver(){};
   virtual void OnUserJoined(std::shared_ptr<sio::message> user) = 0;
   virtual void OnUserLeft(std::shared_ptr<sio::message> user) = 0;
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) = 0;

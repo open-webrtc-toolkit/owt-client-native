@@ -22,7 +22,7 @@ class ConferenceSocketSignalingChannel
     : public std::enable_shared_from_this<ConferenceSocketSignalingChannel> {
  public:
   explicit ConferenceSocketSignalingChannel();
-  ~ConferenceSocketSignalingChannel();
+  virtual ~ConferenceSocketSignalingChannel();
 
   virtual void AddObserver(ConferenceSocketSignalingChannelObserver& observer);
   virtual void RemoveObserver(
