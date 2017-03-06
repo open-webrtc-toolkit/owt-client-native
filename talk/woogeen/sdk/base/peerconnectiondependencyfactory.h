@@ -80,8 +80,8 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       pc_thread_;  // This thread performs all operations on pcfactory and pc.
   Thread* callback_thread_;  // This thread performs all callbacks.
 #if defined(WEBRTC_WIN)
-  bool render_hardware_acceleration_enabled_; //Enabling HW acceleration for VP8 & H264 enc/dec
-  HWND render_window_; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
+  bool render_hardware_acceleration_enabled_;  // Enabling HW acceleration for
+                                               // VP8, H.264 & HEVC enc/dec
 #endif
   bool encoded_frame_;
   static std::mutex get_pc_dependency_factory_mutex_;

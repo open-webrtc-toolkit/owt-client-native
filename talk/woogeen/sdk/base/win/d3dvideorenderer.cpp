@@ -1,115 +1,140 @@
 /*
-* libjingle
-* Copyright 2012 Google Inc.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*  1. Redistributions of source code must retain the above copyright notice,
-*     this list of conditions and the following disclaimer.
-*  2. Redistributions in binary form must reproduce the above copyright notice,
-*     this list of conditions and the following disclaimer in the documentation
-*     and/or other materials provided with the distribution.
-*  3. The name of the author may not be used to endorse or promote products
-*     derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-* EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-* OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-* ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-//
-//C++ SDK specific video renderer implementation. This render will check if native buffer impl ptr is set or not.
-//If received buffer is i420 data, will create a new D3D device for rendering the I420 frame.
-//
+ * Intel License
+ */
+#include <atlbase.h>
+#include <codecapi.h>
+#include <combaseapi.h>
+#include <d3d9.h>
+#include <dxva2api.h>
+#include <Windows.h>
 #include "talk/woogeen/sdk/base/win/d3dvideorenderer.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
-
 #include "webrtc/media/base/videoframe.h"
 
-#include <d3d9.h>
+namespace woogeen {
+namespace base {
 
-D3DVideoRenderer::D3DVideoRenderer(HWND wnd, int width, int height, webrtc::VideoTrackInterface* track_to_render)
-  : wnd_(wnd), width_(width), height_(height), rendered_track_(track_to_render){
-    rtc::VideoSinkWants wants;
-    rendered_track_->AddOrUpdateSink(this, wants);
+D3DVideoRenderer::D3DVideoRenderer(HWND wnd,
+                                   webrtc::VideoTrackInterface* track_to_render)
+    : wnd_(wnd), rendered_track_(track_to_render) {
+  rtc::VideoSinkWants wants;
+  rendered_track_->AddOrUpdateSink(this, wants);
 }
 
-D3DVideoRenderer::~D3DVideoRenderer(){
-    rendered_track_->RemoveSink(this);
-}
-
-void D3DVideoRenderer::SetSize(int width, int height){
-    width_ = width;
-    height_ = height;
+D3DVideoRenderer::~D3DVideoRenderer() {
+  rendered_track_->RemoveSink(this);
 }
 
 //
-//TODO: if the rotation is specified for a D3D surface, we need to
-//create extra texture for rotation. This is not yet implemented.
+// TODO: if the rotation is specified for a D3D surface, we need to
+// create extra texture for rotation. This is not yet implemented.
 //
-void D3DVideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame){
-    //Do we need to Lock the renderframe call? since we have the device lock here it seems
-    //no neccessary.
-    SetSize(video_frame.width(), video_frame.height());
+void D3DVideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
+  // Do we need to Lock the renderframe call? since we have the device lock here
+  // it seems
+  // no neccessary.
+  if (video_frame.video_frame_buffer()->native_handle() !=
+      nullptr) {  // We're not handling DXVA buffer
+    // auto frame = webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
+    // video_frame.rotation());
+    NativeD3DSurfaceHandle* nativeHandle =
+        reinterpret_cast<NativeD3DSurfaceHandle*>(
+            video_frame.video_frame_buffer()->native_handle());
+    IDirect3DDeviceManager9* dev_manager = nativeHandle->dev_manager_;
+    IDirect3DSurface9* surface = nativeHandle->surface_;
+    // int codec_width = nativeHandle->width_;
+    // int codec_height = nativeHandle->height_;
+    UINT dev_manager_reset_token = nativeHandle->dev_manager_reset_token_;
 
-    if (video_frame.video_frame_buffer()->native_handle() == nullptr) {  // We're not handling DXVA buffer
-      auto frame = webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(), video_frame.rotation());
-      NativeD3DSurfaceHandleImpl* nativeHandle =
-          reinterpret_cast<NativeD3DSurfaceHandleImpl*>(frame->native_handle());
-      IDirect3DDeviceManager9* dev_manager = nativeHandle->GetD3DManager();
-      IDirect3DSurface9* surface = nativeHandle->GetSurface();
+    // dev manager is created by decoder. MUST NOT be nullptr.
+    if (dev_manager == nullptr)
+      return;
 
-      if (dev_manager == nullptr || surface == nullptr)
+    // a null surface indicates the decoder requesting D3D9 device from
+    // renderer.
+    // create it here using the window
+    if (surface == nullptr) {
+      if (!IsWindow(wnd_))  // Simple validity check in case the window is
+                            // already destroyed.
         return;
 
-      IDirect3DDevice9* pDevice;
-      HANDLE hDevice = 0;
-      HRESULT hr = dev_manager->OpenDeviceHandle(&hDevice);
+      RECT r;
+      HRESULT hr;
+
+      hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9_);
       if (FAILED(hr)) {
-        LOG(LS_ERROR) << "Failed to open the d3d device handle";
+        LOG(LS_ERROR) << "Failed to create d3d9 context for device creation";
         return;
-        }
+      }
 
-        hr = dev_manager->LockDevice(hDevice, &pDevice, FALSE);
-        if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to lock device";
-            dev_manager->CloseDeviceHandle(hDevice);
-            return;
-        }
-        pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 255), 1.0f, 0);
+      D3DPRESENT_PARAMETERS present_params = {0};
 
-        IDirect3DSurface9* back_buffer;
-        hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
-        if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to get backbuffer";
-            dev_manager->UnlockDevice(hDevice, FALSE);
-            dev_manager->CloseDeviceHandle(hDevice);
-            return;
-        }
-        //We don't need to lock the back_buffer as we're not directly copying frame to
-        //it.
-        hr = pDevice->StretchRect(surface, NULL, back_buffer, NULL, D3DTEXF_NONE);
-        if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to blit the video frame";
-            dev_manager->UnlockDevice(hDevice, FALSE);
-            dev_manager->CloseDeviceHandle(hDevice);
-            return;
-        }
+      GetClientRect((HWND)wnd_, &r);
+      present_params.BackBufferWidth = r.right - r.left;
+      present_params.BackBufferHeight = r.bottom - r.top;
+      present_params.BackBufferFormat =
+          D3DFMT_X8R8G8B8;  // Only apply this if we're rendering full screen
+      present_params.BackBufferCount = 1;
+      present_params.SwapEffect = D3DSWAPEFFECT_DISCARD;
+      present_params.hDeviceWindow = wnd_;
+      // present_params.AutoDepthStencilFormat = D3DFMT_D24S8;
+      present_params.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+      present_params.Flags =
+          D3DPRESENTFLAG_LOCKABLE_BACKBUFFER | D3DPRESENTFLAG_VIDEO;
+      present_params.Windowed = TRUE;
+      present_params.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
-        pDevice->Present(NULL, NULL, NULL, NULL);
-        surface->Release();
-        dev_manager->UnlockDevice(hDevice, FALSE);
+      hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, wnd_,
+                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING |
+                                     D3DCREATE_FPU_PRESERVE |
+                                     D3DCREATE_MULTITHREADED,
+                                 &present_params, NULL, &device_);
 
-        dev_manager->CloseDeviceHandle(hDevice);
+      if (FAILED(hr)) {
+        LOG(LS_ERROR) << "Failed to create d3d9 device";
+        return;
+      }
+
+      hr = dev_manager->ResetDevice(device_, dev_manager_reset_token);
+      if (FAILED(hr)) {
+        LOG(LS_ERROR) << "Failed to set device to device manager";
+        return;
+      }
+      IDirect3DQuery9* query_;
+      hr = device_->CreateQuery(D3DQUERYTYPE_EVENT, &query_);
+      if (FAILED(hr)) {
+        LOG(LS_ERROR) << "Failed to create query";
+        return;
+      }
+      hr = query_->Issue(D3DISSUE_END);
+      // Finish the creation. No render this time. Return directly.
+      return;
+    }
+    IDirect3DDevice9* pDevice;
+    HANDLE hDevice = 0;
+    HRESULT hr = dev_manager->OpenDeviceHandle(&hDevice);
+    if (FAILED(hr)) {
+      LOG(LS_ERROR) << "Failed to open the d3d device handle";
+      return;
     }
 
-    return;
+    // Our renderer does not need to lock the device.
+    hr = dev_manager->LockDevice(hDevice, &pDevice, FALSE);
+    if (FAILED(hr)) {
+      LOG(LS_ERROR) << "Failed to lock device";
+      dev_manager->CloseDeviceHandle(hDevice);
+      return;
+    }
+    pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 255), 1.0f, 0);
+    pDevice->Present(NULL, NULL, NULL, NULL);
+
+    dev_manager->UnlockDevice(hDevice, FALSE);
+
+    dev_manager->CloseDeviceHandle(hDevice);
+  }
+
+  return;
+}
+
+}
 }

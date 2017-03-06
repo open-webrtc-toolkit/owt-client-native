@@ -3,7 +3,10 @@
 */
 
 #include "talk/woogeen/sdk/base/win/h265_msdk_decoder.h"
+#include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/base/scoped_ref_ptr.h"
+// TODO(jianlin): MSDK header files must be after WebRTC headers
+// to avoid compilation errors. Add neccessary defs to avoid this.
 #include "sysmem_allocator.h"
 #include "d3d_allocator.h"
 #include "sample_defs.h"
@@ -14,7 +17,6 @@
 #include <fstream>
 #endif
 
-#define WOOGEEN_CPP_SDK
 #define MSDK_BS_INIT_SIZE (1024*1024)
 
 enum { kMSDKCodecPollMs = 10 };
@@ -43,27 +45,27 @@ int32_t H265MSDKVideoDecoder::Release() {
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type, HWND decoder_window)
-    :codecType_(type),
-    decoder_wnd_(decoder_window),
-    timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-    inited_(false),
-    width_(0),
-    height_(0),
-    decoder_thread_(new rtc::Thread()) {
-    decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
-    RTC_CHECK(decoder_thread_->Start()) << "Failed to start MSDK video decoder thread";
-    d3d9_ = nullptr;
-    device_ = nullptr;
-    dev_manager_ = nullptr;
-    m_pmfxDEC = NULL;
-    MSDK_ZERO_MEMORY(m_mfxVideoParams);
+H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
+    : codecType_(type),
+      timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
+      inited_(false),
+      width_(0),
+      height_(0),
+      decoder_thread_(new rtc::Thread()) {
+  decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
+  RTC_CHECK(decoder_thread_->Start())
+      << "Failed to start MSDK video decoder thread";
+  d3d9_ = nullptr;
+  device_ = nullptr;
+  dev_manager_ = nullptr;
+  m_pmfxDEC = NULL;
+  MSDK_ZERO_MEMORY(m_mfxVideoParams);
 
-    m_pMFXAllocator = NULL;
-    m_pmfxAllocatorParams = NULL;
-    MSDK_ZERO_MEMORY(m_mfxResponse);
-    m_pInputSurfaces = nullptr;
-    videoParamExtracted = false;
+  m_pMFXAllocator = NULL;
+  m_pmfxAllocatorParams = NULL;
+  MSDK_ZERO_MEMORY(m_mfxResponse);
+  m_pInputSurfaces = nullptr;
+  m_video_param_extracted = false;
 #ifdef WOOGEEN_DEBUG_H265_DEC
     input = fopen("input.h265", "wb");
 #endif
@@ -96,22 +98,24 @@ bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
         LOG(LS_ERROR) << "Failed to get desktop window";
     }
     RECT r;
-    GetClientRect((HWND)decoder_wnd_, &r);
+    GetClientRect((HWND)video_window, &r);
     present_params.BackBufferWidth = r.right - r.left;
     present_params.BackBufferHeight = r.bottom - r.top;
     present_params.BackBufferFormat = D3DFMT_X8R8G8B8; //Only apply this if we're rendering full screen
     present_params.BackBufferCount = 1;
     present_params.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    present_params.hDeviceWindow = decoder_wnd_;
+    present_params.hDeviceWindow = video_window;
     //present_params.AutoDepthStencilFormat = D3DFMT_D24S8;
     present_params.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     present_params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER|D3DPRESENTFLAG_VIDEO;
     present_params.Windowed = TRUE;
     present_params.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
-    hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, decoder_wnd_,
-        D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED,
-        &present_params, NULL, &device_);
+    hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, video_window,
+                               D3DCREATE_SOFTWARE_VERTEXPROCESSING |
+                                   D3DCREATE_FPU_PRESERVE |
+                                   D3DCREATE_MULTITHREADED,
+                               &present_params, NULL, &device_);
 
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to create d3d9 device";
@@ -160,7 +164,7 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
     CheckOnCodecThread();
 
     //Set videoParamExtracted flag to false to make sure the delayed DecoderHeader call will happen after Init.
-    videoParamExtracted = false;
+	m_video_param_extracted = false;
 
     mfxStatus sts;
     mfxInitParam initParam;
@@ -297,14 +301,19 @@ int32_t H265MSDKVideoDecoder::Decode(
     const webrtc::RTPFragmentationHeader* fragmentation,
     const webrtc::CodecSpecificInfo* codecSpecificInfo,
     int64_t renderTimeMs) {
-    //The decoding process involves following steps:
-    //1. Create the input sample with inputImage
-    //2. Call ProcessInput to send the buffer to mft
-    //3. If any of the ProcessInput returns MF_E_NOTACCEPTING, intenrally calls ProcessOutput until MF_E_TRANFORM_NEED_MORE_INPUT
-    //4. Invoke the callback to send decoded image to renderer.
+    // The decoding process involves following steps:
+    // 1. Create the input sample with inputImage
+    // 2. Call ProcessInput to send the buffer to mft
+    // 3. If any of the ProcessInput returns MF_E_NOTACCEPTING, intenrally
+    // calls ProcessOutput until MF_E_TRANFORM_NEED_MORE_INPUT
+    // 4. Invoke the callback to send decoded image to renderer.
     mfxStatus sts = MFX_ERR_NONE;
+    HRESULT hr;
+    bool device_opened = false;
     mfxFrameSurface1 *pOutputSurface = nullptr;
-    m_mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;  //We're using D3D9 surface for HW acceleration. 
+    m_mfxVideoParams.IOPattern =
+        MFX_IOPATTERN_OUT_VIDEO_MEMORY;  // We're using D3D9 surface for HW
+                                         // acceleration.
     m_mfxVideoParams.AsyncDepth = 4;
     ReadFromInputStream(&m_mfxBS, inputImage._buffer, inputImage._length);
 
@@ -319,7 +328,7 @@ int32_t H265MSDKVideoDecoder::Decode(
     e_count++;
 //
 #endif
-  if (inited_ && !videoParamExtracted) {
+  if (inited_ && !m_video_param_extracted) {
     // We have not extracted the video params required for decoding. Doing it
     // here.
     sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
@@ -377,7 +386,7 @@ int32_t H265MSDKVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
-      videoParamExtracted = true;
+	  m_video_param_extracted = true;
     } else {
       // with current bitstream, if we're not able to extract the video param
       // and thus not able to
@@ -410,24 +419,42 @@ int32_t H265MSDKVideoDecoder::Decode(
       if (sts >= MFX_ERR_NONE) {
         // This means we have an output surface ready to be read from the
         // stream.
-        // Invoke the renderer to render the frame. Theoretically we should get
-        // d3d9 device handle from dev manager.
-        // Not doing this as experiment for delay concern.
-        HRESULT hr;
-        CComPtr<IDirect3DSurface9> pBackBuffer;
-        hr =
-            device_->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+        HANDLE hHandle = nullptr;
+        if (!device_opened) {
+          hr = dev_manager_->OpenDeviceHandle(&hHandle);
+          if (FAILED(hr)) {
+            LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
+            return WEBRTC_VIDEO_CODEC_ERROR;
+          }
+        }
+        IDirect3DDevice9* device;
+        hr = dev_manager_->LockDevice(hHandle, &device, false);
         if (FAILED(hr)) {
-          // LOG(LS_ERROR) << "Failed to get back buffer from d3d device.";
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
+
         mfxHDLPair* dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
-        hr = device_->StretchRect((IDirect3DSurface9*)dxMemId->first, nullptr,
-                                  pBackBuffer, NULL, D3DTEXF_NONE);
-        if (FAILED(hr)) {
-          return WEBRTC_VIDEO_CODEC_ERROR;
+
+        if (callback_) {
+          woogeen::base::NativeD3DSurfaceHandle* d3d_context =
+              new woogeen::base::NativeD3DSurfaceHandle;
+          d3d_context->dev_manager_ = dev_manager_;
+          d3d_context->dev_manager_reset_token_ = dev_manager_reset_token_;
+          d3d_context->width_ = width_;
+          d3d_context->height_ = height_;
+          d3d_context->surface_ = (IDirect3DSurface9*)dxMemId->first;
+
+          rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
+              new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+                  (void*)d3d_context, width_, height_);
+          webrtc::VideoFrame decoded_frame(buffer, inputImage._timeStamp, 0,
+                                           webrtc::kVideoRotation_0);
+          decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
+          callback_->Decoded(decoded_frame);
         }
-        hr = device_->Present(NULL, NULL, NULL, NULL);
+
+        dev_manager_->UnlockDevice(hHandle, false);
+        hr = dev_manager_->CloseDeviceHandle(hHandle);
         if (FAILED(hr)) {
           return WEBRTC_VIDEO_CODEC_ERROR;
         }

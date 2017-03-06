@@ -1,36 +1,12 @@
 /*
-* libjingle
-* Copyright 2012 Google Inc.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*  1. Redistributions of source code must retain the above copyright notice,
-*     this list of conditions and the following disclaimer.
-*  2. Redistributions in binary form must reproduce the above copyright notice,
-*     this list of conditions and the following disclaimer in the documentation
-*     and/or other materials provided with the distribution.
-*  3. The name of the author may not be used to endorse or promote products
-*     derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-* EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-* OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-* ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Intel License
+ */
 #include <utility>
 #include <vector>
 
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/test/fakeconstraints.h"
 #include "webrtc/base/common.h"
-//#include "webrtc/base/json.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/checks.h"
@@ -43,12 +19,9 @@
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 
-//#include "third_party/libyuv/include/libyuv.h"
-
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include <atlbase.h>
 #include <codecapi.h>
-//#include <ks.h>
 #include <combaseapi.h>
 #include <wmcodecdsp.h>
 #include <mfapi.h>
@@ -95,7 +68,7 @@ public:
         kStopped,
         kFlushing,
     };
-    MSDKVideoDecoder(webrtc::VideoCodecType codecType, HWND decoder_window);
+    MSDKVideoDecoder(webrtc::VideoCodecType codecType);
     virtual ~MSDKVideoDecoder();
 
     int32_t InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores)
@@ -168,8 +141,8 @@ private:
     IDirect3D9Ex* d3d9_;
     IDirect3DDevice9Ex* device_;
     IDirect3DDeviceManager9* dev_manager_;
+    UINT dev_manager_reset_token_;
     IDirect3DQuery9* query_;
-    NativeD3DSurfaceHandleImpl native_handle_;
     bool key_frame_required_;
     bool inited_;
     volatile State state_;
@@ -188,5 +161,4 @@ private:
     webrtc::CriticalSectionWrapper& timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
-    HWND decoder_wnd_;
 };

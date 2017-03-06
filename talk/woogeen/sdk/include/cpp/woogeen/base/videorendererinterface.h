@@ -29,7 +29,12 @@
 
 #include <memory>
 #include "woogeen/base/mediaformat.h"
-
+#if defined(WEBRTC_WIN)
+#include <Windows.h>
+#endif
+#if defined(WEBRTC_LINUX)
+#include <X11/Xlib.h>
+#endif
 namespace woogeen {
 namespace base {
 
@@ -42,6 +47,48 @@ struct ARGBBuffer {
 
   ~ARGBBuffer() { delete buffer; }
 };
+
+/// VideoRenderWindow wraps a native Window handle
+#if defined(WEBRTC_WIN)
+class VideoRenderWindow {
+ public:
+  VideoRenderWindow() : wnd_(nullptr) {}
+  virtual ~VideoRenderWindow() {}
+  /**
+    Set the render window handle for VideoRenderWindow instance.
+    @param wnd Window handle that will be used for rendering.
+  */
+  void SetWindowHandle(HWND wnd) { wnd_ = wnd; }
+  /**
+    Get the window handle that will be used for rendering.
+    @return Returns the window handle.
+  */
+  HWND GetWindowHandle() { return wnd_; }
+
+ private:
+  HWND wnd_;
+};
+#endif
+#if defined(WEBRTC_LINUX)
+class VideoRenderWindow {
+ public:
+  VideoRenderWindow() : wnd_(nullptr) {}
+  virtual ~VideoRenderWindow() {}
+  /**
+    Set the render window handle for VideoRenderWindow instance.
+    @param wnd Window handle that will be used for rendering.
+  */
+  void SetWindowHandle(Window wnd) { wnd_ = wnd; }
+  /**
+    Get the window handle that will be used for rendering.
+    @return Returns the window handle.
+  */
+  Window GetWindowHandle() { return wnd_; }
+
+ private:
+  Window wnd_;
+};
+#endif
 
 /// Interface for rendering VideoFrames from a VideoTrack
 class VideoRendererARGBInterface {

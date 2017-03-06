@@ -94,6 +94,7 @@ source_set("woogeen_sdk_base") {
 
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
 
+
   if (is_ios) {
     sources += [
       "sdk/base/ios/networkmonitorios.h",
@@ -103,20 +104,19 @@ source_set("woogeen_sdk_base") {
 
   if (is_win) {
     sources += [
-      "sdk/base/win/d3dnativeframe.cpp",
       "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/d3dvideorenderer.cpp",
-      "sdk/base/win/d3dvideorenderer.h",
-      "sdk/base/win/h264_msdk_decoder.cpp",
-      "sdk/base/win/h264_msdk_decoder.h",
       "sdk/base/win/h264_video_mft_encoder.cpp",
       "sdk/base/win/h264_video_mft_encoder.h",
       "sdk/base/win/mftmediadecoder.cpp",
       "sdk/base/win/mftmediadecoder.h",
-      "sdk/base/win/mftvideodecoderfactory.cpp",
-      "sdk/base/win/mftvideodecoderfactory.h",
       "sdk/base/win/mftvideoencoderfactory.cpp",
       "sdk/base/win/mftvideoencoderfactory.h",
+      "sdk/base/win/mftvideodecoderfactory.cpp",
+      "sdk/base/win/mftvideodecoderfactory.h",
+      "sdk/base/win/external_msdk_decoder.cpp",
+      "sdk/base/win/external_msdk_decoder.h",
+      "sdk/base/win/videorendererwin.cpp",
+      "sdk/base/win/videorendererwin.h",
     ]
 
     if (rtc_use_h265) {

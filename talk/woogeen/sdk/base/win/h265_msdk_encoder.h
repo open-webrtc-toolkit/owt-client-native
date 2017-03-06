@@ -1,20 +1,15 @@
 /*
-/*
 * Intel License
 */
-
-
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_H265_VIDEO_MFT_ENCODER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_H265_VIDEO_MFT_ENCODER_H_
-
 
 #include "base_allocator.h"
 #include "mfxvideo.h"
 #include "mfxvideo++.h"
 #include "mfxplugin++.h"
-
-#include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include <vector>
+#include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/base/thread.h"
 
 // This file provides a H264 encoder implementation using the WMF

@@ -64,6 +64,10 @@ class StreamObserver {
 
 class WebrtcVideoRendererARGBImpl;
 
+#if defined(WEBRTC_WIN)
+class WebrtcVideoRendererD3D9Impl;
+#endif
+
 /// Base class of all streams with media stream
 class Stream {
   friend class woogeen::conference::ConferencePeerConnectionChannel;
@@ -89,8 +93,14 @@ class Stream {
   WOOGEEN_DEPRECATED virtual void Attach(VideoRendererARGBInterface& renderer){
     AttachVideoRenderer(renderer);
   }
-  /// Attach the stream to a renderer.
+  /// Attach the stream to a renderer to receive ARGB frames from decoder.
   virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
+
+#if defined(WEBRTC_WIN)
+  /// Attach the stream to a renderer to receive frames from decoder.
+  /// Both I420 frame and native surface is supported.
+  virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
+#endif
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
 
@@ -107,6 +117,9 @@ class Stream {
   void SetVideoTracksEnabled(bool enabled);
   std::string id_;
   WebrtcVideoRendererARGBImpl* renderer_impl_;
+#if defined(WEBRTC_WIN)
+  WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
+#endif
 };
 
 /**

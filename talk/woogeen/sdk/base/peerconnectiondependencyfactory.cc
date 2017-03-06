@@ -47,12 +47,10 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
       callback_thread_(new PeerConnectionThread),
       network_monitor_(nullptr) {
 #if defined(WEBRTC_WIN)
-  if (GlobalConfiguration::GetCodecHardwareAccelerationEnabled() && (GlobalConfiguration::GetRenderWindow() != nullptr)){
-        render_hardware_acceleration_enabled_ = true;
-        render_window_ = GlobalConfiguration::GetRenderWindow();
+  if (GlobalConfiguration::GetVideoHardwareAccelerationEnabled()) {
+    render_hardware_acceleration_enabled_ = true;
     }else{
         render_hardware_acceleration_enabled_ = false;
-        render_window_ = nullptr;
   }
 #endif
   encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
@@ -126,9 +124,9 @@ void PeerConnectionDependencyFactory::
     decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
   else {
 #if defined(WEBRTC_WIN)
-    if (render_hardware_acceleration_enabled_ && render_window_ != nullptr) {
+    if (render_hardware_acceleration_enabled_) {
       encoder_factory.reset(new MSDKVideoEncoderFactory());
-      decoder_factory.reset(new MSDKVideoDecoderFactory(render_window_));
+      decoder_factory.reset(new MSDKVideoDecoderFactory());
     }
 #endif
   }

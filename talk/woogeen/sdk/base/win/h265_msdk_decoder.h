@@ -54,7 +54,7 @@ public:
         kStopped,
         kFlushing,
     };
-    H265MSDKVideoDecoder(webrtc::VideoCodecType codecType, HWND decoder_window);
+    H265MSDKVideoDecoder(webrtc::VideoCodecType codecType);
     virtual ~H265MSDKVideoDecoder();
 
     int32_t InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores)
@@ -97,15 +97,15 @@ private:
     mfxFrameAllocResponse   m_mfxResponse; // memory allocation response for decoder
     //msdkFrameSurface*        m_pInputSurfaces;
     mfxFrameSurface1*       m_pInputSurfaces;
-    bool                    videoParamExtracted;
+    bool                    m_video_param_extracted;
 
     //End of MSDK variables
     rtc::CriticalSection critical_section_;
     IDirect3D9Ex* d3d9_;
     IDirect3DDevice9Ex* device_;
     IDirect3DDeviceManager9* dev_manager_;
+    UINT dev_manager_reset_token_;
     IDirect3DQuery9* query_;
-    NativeD3DSurfaceHandleImpl native_handle_;
     bool key_frame_required_;
     bool inited_;
 
@@ -122,7 +122,6 @@ private:
     webrtc::CriticalSectionWrapper& timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
-    HWND decoder_wnd_;
 #ifdef WOOGEEN_DEBUG_H265_DEC
     FILE *input;
 #endif

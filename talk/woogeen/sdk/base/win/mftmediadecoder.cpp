@@ -1,37 +1,9 @@
 /*
-* libjingle
-* Copyright 2012 Google Inc.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*  1. Redistributions of source code must retain the above copyright notice,
-*     this list of conditions and the following disclaimer.
-*  2. Redistributions in binary form must reproduce the above copyright notice,
-*     this list of conditions and the following disclaimer in the documentation
-*     and/or other materials provided with the distribution.
-*  3. The name of the author may not be used to endorse or promote products
-*     derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-* EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-* OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-* ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-/*
-* Helper function to create input sample from encoded image structure.
-*/
-
+ * Intel License
+ */
+#include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
 #include "webrtc/base/scoped_ref_ptr.h"
-#define WOOGEEN_CPP_SDK
 
 const wchar_t kVPXDecoderDLLPATH[] = L"C:\\Programe Files\\Intel\\Media SDK\\";
 const wchar_t kVP8DecoderDLLName[] = L"mfx_mft_vp8vd_64.dll";
@@ -168,8 +140,6 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
         sample->Release();
         return NULL;
     }
-    //LOG(LS_ERROR) << "InputBuffer max_length: " << max_length << " current_length: " << current_length;
-    //TODO: check if max_length is larger than the length, and current_length is 0;
     memcpy(destination, inputImage._buffer, inputImage._length);
 
     hr = buffer->Unlock();
@@ -189,7 +159,8 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
     //TODO: we should possibly set the timestamp here, this will help to track input/outputs
     //sample->SetSampleTime(0);
     //sample->SetSampleDuration(0);
-    //We need to release the buffer twice?
+    // Need to release the buffer twice. Consider using CComPtr to manager the
+    // buffer.
     buffer->Release();
     buffer->Release();
     return sample;
@@ -231,22 +202,23 @@ int32_t MSDKVideoDecoder::Release(){
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type, HWND decoder_window)
-    :codecType_(type),
-    decoder_wnd_(decoder_window),
-    timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-    inited_(false),
-    width_(0),
-    height_(0),
-    state_(kUnitialized),
-    output_format_(MFVideoFormat_NV12),
-    decoder_thread_(new rtc::Thread()){
-    decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
-    RTC_CHECK(decoder_thread_->Start()) << "Failed to start MSDK video decoder thread";
-    d3d9_ = nullptr;
-    device_ = nullptr;
-    dev_manager_ = nullptr;
-    decoder_ = nullptr;
+MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
+    : codecType_(type),
+      timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
+      inited_(false),
+      width_(0),
+      height_(0),
+      state_(kUnitialized),
+      output_format_(MFVideoFormat_NV12),
+      decoder_thread_(new rtc::Thread()) {
+  decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
+  RTC_CHECK(decoder_thread_->Start())
+      << "Failed to start MSDK video decoder thread";
+  dev_manager_reset_token_ = 0;
+  d3d9_ = nullptr;
+  device_ = nullptr;
+  dev_manager_ = nullptr;
+  decoder_ = nullptr;
 }
 
 MSDKVideoDecoder::~MSDKVideoDecoder(){
@@ -323,13 +295,15 @@ bool MSDKVideoDecoder::CreateD3DDeviceManager(){
     if (video_window == NULL){
         LOG(LS_ERROR) << "Failed to get desktop window";
     }
-    present_params.BackBufferWidth = width_;
-    present_params.BackBufferHeight = height_;
+    RECT r;
+    GetClientRect((HWND)video_window, &r);
+    present_params.BackBufferWidth = r.right - r.left;
+    present_params.BackBufferHeight = r.bottom - r.top;
     present_params.BackBufferFormat = D3DFMT_UNKNOWN;
     //present_params.BackBufferFormat = D3DFMT_X8R8G8B8; //Only apply this if we're rendering full screen
     present_params.BackBufferCount = 1;
     present_params.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    present_params.hDeviceWindow = decoder_wnd_;
+    present_params.hDeviceWindow = video_window;
     //present_params.AutoDepthStencilFormat = D3DFMT_D24S8;
     present_params.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     present_params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER|D3DPRESENTFLAG_VIDEO;
@@ -345,8 +319,10 @@ bool MSDKVideoDecoder::CreateD3DDeviceManager(){
     dm.ScanLineOrdering = D3DSCANLINEORDERING_PROGRESSIVE;
     dm.Size = sizeof(dm);
 
-    hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, decoder_wnd_,
-        D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_DISABLE_PSGP_THREADING | D3DCREATE_MULTITHREADED,
+    hr = d3d9_->CreateDeviceEx(
+        D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, video_window,
+        D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE |
+            D3DCREATE_DISABLE_PSGP_THREADING | D3DCREATE_MULTITHREADED,
         &present_params, NULL, &device_);
     //hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, video_window,
     //    D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_DISABLE_PSGP_THREADING | D3DCREATE_MULTITHREADED,
@@ -355,13 +331,13 @@ bool MSDKVideoDecoder::CreateD3DDeviceManager(){
         LOG(LS_ERROR) << "Failed to create d3d9 device";
         return false;
     }
-    UINT dev_manager_reset_token = 0;
-    hr = DXVA2CreateDirect3DDeviceManager9(&dev_manager_reset_token, &dev_manager_);
+    hr = DXVA2CreateDirect3DDeviceManager9(&dev_manager_reset_token_,
+                                           &dev_manager_);
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to create D3D device manager";
         return false;
     }
-    hr = dev_manager_->ResetDevice(device_, dev_manager_reset_token);
+    hr = dev_manager_->ResetDevice(device_, dev_manager_reset_token_);
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to set device to device manager";
         return false;
@@ -381,15 +357,16 @@ bool MSDKVideoDecoder::GetStreamsInfoAndBufferReqs(){
     DWORD input_counts = 0;
     DWORD output_counts = 0;
     hr = decoder_->GetStreamCount(&input_counts, &output_counts);
-    //LOG(LS_ERROR) << "#########Input stream total number:" << input_counts << ":output_counts:" << output_counts;
+    if (FAILED(hr)) {
+      LOG(LS_ERROR) << "Failed to get stream count";
+      return false;
+    }
     hr = decoder_->GetInputStreamInfo(0, &input_stream_info);
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to get input stream info";
         return false;
     }
 
-    //LOG(LS_ERROR) << "#######Input_Stream_Info::dwFlags:" << input_stream_info.dwFlags << "::max_lookahead:" << input_stream_info.cbMaxLookahead
-    //    << "::cbAlignment:" << input_stream_info.cbAlignment << "::cbSize:" << input_stream_info.cbSize;
     in_buffer_size_ = input_stream_info.cbSize;
     return true;
 }
@@ -425,33 +402,18 @@ bool MSDKVideoDecoder::SetDecoderInputMediaType(){
     else if (codecType_ == webrtc::kVideoCodecH264){
         hr = media_type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
     }
-    //MSDN recommends setting to interlace/progressive mixed mode...
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to set sub media type";
         media_type->Release();
         return false;
     }
-
+    // MSDN recommends setting to interlace/progressive mixed mode...
     hr = media_type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to set interlace mode";
         media_type->Release();
         return false;
     }
-
-    //Provide extra attributes to avoid a format change during streaming. but we actually is not using the stride got from
-    //input so this can be ignored.
-#if 0
-    if (codec_.width >0 && codec_.height > 0){
-        //    hr = MFSetAttributeSize(media_type, MF_MT_FRAME_SIZE, codec_.width, codec_.height);
-        hr = MFSetAttributeSize(media_type, MF_MT_FRAME_SIZE, 640, 480);
-        if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to set width andheight on the decoder MFT";
-            media_type->Release();
-            return false;
-        }
-    }
-#endif
 
     hr = decoder_->SetInputType(0, media_type, 0);
     if (FAILED(hr)){
@@ -460,7 +422,7 @@ bool MSDKVideoDecoder::SetDecoderInputMediaType(){
         return false;
     }
 
-    LOG(LS_ERROR) << "Successfully set the input media type";
+    LOG(LS_INFO) << "Successfully set the input media type";
     media_type->Release();
     return true;
 }
@@ -483,26 +445,28 @@ bool MSDKVideoDecoder::SetDecoderOutputMediaType(const GUID& subtype){
                     return false;
                 }
                 hr = MFGetAttributeSize(media_type, MF_MT_FRAME_SIZE, reinterpret_cast<UINT32*>(&width_), reinterpret_cast<UINT32*>(&height_));
-
+                if (FAILED(hr)) {
+                  LOG(LS_ERROR) << "Failed to get output size";
+                  return false;
+                }
                 hr = MFGetStrideForBitmapInfoHeader(output_format_.Data1, width_, reinterpret_cast<LONG*>(&stride_));
-
-                LOG(LS_ERROR) << "The stride of image:" << stride_;
+                if (FAILED(hr)) {
+                  LOG(LS_ERROR) << "Failed to get stride.";
+                }
             }
             media_type->Release();
         }
     }
-
-    LOG(LS_ERROR) << "Finish setting the output media type.";
     return true;
 }
 
 int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores){
-
-    LOG(LS_ERROR) << "InitDecode enter";
-    //The stack is always calling InitDecode with 320x240 resolution. Force this to be 640x480 and see effect?
-    if (codecSettings == NULL){
-        LOG(LS_ERROR) << "NULL codec settings";
-        return WEBRTC_VIDEO_CODEC_ERROR;
+  LOG(LS_INFO) << "InitDecode enter";
+  // The stack is always calling InitDecode with 320x240 resolution. Force this
+  // to be 640x480 and see effect?
+  if (codecSettings == NULL) {
+    LOG(LS_ERROR) << "NULL codec settings";
+    return WEBRTC_VIDEO_CODEC_ERROR;
     }
     RTC_CHECK(codecSettings->codecType == codecType_) << "Unsupported codec type" << codecSettings->codecType << " for " << codecType_;
     timestamps_.clear();
@@ -813,7 +777,22 @@ int32_t MSDKVideoDecoder::DoDecode(){
 //renderer.
 int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
     LOG(LS_ERROR) << "ProcessingOutputSample start";
-    //CheckOnCodecThread();
+    int64_t ntp_time_ms = 0;
+    int64_t timestamp = 0;
+    {
+      webrtc::CriticalSectionScoped cs(&timestampCS_);
+      if (ntp_time_ms_.size() > 0) {
+        ntp_time_ms = ntp_time_ms_.front();
+        ntp_time_ms_.erase(ntp_time_ms_.begin());
+      }
+      if (timestamps_.size() > 0) {
+        LOG(LS_INFO) << "Setting the decoded image timestamp:"
+                     << timestamps_.front();
+
+        timestamp = timestamps_.front();
+        timestamps_.erase(timestamps_.begin());
+      }
+    }
 
     IMFMediaBuffer* buffer;
     //Sanity check to see if there is something in the sample.
@@ -848,106 +827,45 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
     int width = surface_desc.Width;
     int height = surface_desc.Height;
     D3DFORMAT format = surface_desc.Format;
-    LOG(LS_ERROR) << "Surface info - height: " << height << " width: " << width << " Format:" << format;
+    LOG(LS_INFO) << "Surface info - height: " << height << " width: " << width
+                 << " Format:" << format;
 
-    //TODO:Confirm D3D9Surface of format NV12(MAKE_FOURC_CC('N','V','1','2') will be returned here. Invoke LockRect to get the data.
-#if 0
-    D3DLOCKED_RECT lock;
-    hr = surface->LockRect(&lock, NULL, D3DLOCK_READONLY);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to lock the surface.";
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    if (lock.Pitch == 0){
-        LOG(LS_ERROR) << "!!!!Invalid pitch. returning";
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    uint8* src = (uint8*)lock.pBits;
-    int pitch = lock.Pitch;
-#endif
-    //Since we're using D3D9, we need to get the surface data from IDirect3DSurface9 object.
-    //LOG(LS_ERROR) << "Before locking the buffer";
-    //    hr = buffer->Lock(&data, &max_length, &current_length);
-    //  LOG(LS_ERROR) << "Output buffer max_length: " << max_length << " current_length:" << current_length;
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
-    //currrently we use framebuffer instead of surface for rendering
-    native_handle_.SetD3DSurfaceObject(dev_manager_, surface);
-    //frame_buffer = new rtc::RefCountedObject<D3DNativeHandleBuffer>(&native_handle_, width, height);
-#if 0  //We're not using I420 frame for rendering, so no copy here.
-    frame_buffer = decoded_frame_pool_.CreateBuffer(width, height);
+    HANDLE hHandle = nullptr;
 
-    //decoded_image_.CreateEmptyFrame(width, height, width, width / 2, width / 2);
-    libyuv::NV12ToI420(
-        src, pitch,
-        src + pitch*height_, pitch,
-        frame_buffer->MutableData(webrtc::kYPlane),
-        frame_buffer->stride(webrtc::kYPlane),
-        frame_buffer->MutableData(webrtc::kUPlane),
-        frame_buffer->stride(webrtc::kUPlane),
-        frame_buffer->MutableData(webrtc::kVPlane),
-        frame_buffer->stride(webrtc::kVPlane),
-        width, height);
-#endif
-   // webrtc::VideoFrame decoded_image_(frame_buffer, 0, 0, webrtc::kVideoRotation_0);
-    //We're currently not able to share the d3ddevicemanager to renderer. So we instead render it here.
-
-    {
-        webrtc::CriticalSectionScoped cs(&timestampCS_);
-        if (ntp_time_ms_.size() > 0) {
-            //decoded_image_.set_ntp_time_ms(ntp_time_ms_.front());
-            ntp_time_ms_.erase(ntp_time_ms_.begin());
-        }
-        if (timestamps_.size() > 0) {
-            LOG(LS_ERROR) << "Setting the decoded image timestamp:" << timestamps_.front();
-            //decoded_image_.set_timestamp(timestamps_.front());
-            timestamps_.erase(timestamps_.begin());
-        }
+    hr = dev_manager_->OpenDeviceHandle(&hHandle);
+    if (FAILED(hr)) {
+      LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-
-    IDirect3DDevice9 *pDevice;
-    HANDLE hDevice = 0;
-    hr = dev_manager_->OpenDeviceHandle(&hDevice);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to open the d3d device handle";
-        return WEBRTC_VIDEO_CODEC_ERROR;
+    IDirect3DDevice9* device;
+    hr = dev_manager_->LockDevice(hHandle, &device, false);
+    if (FAILED(hr)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-    hr = dev_manager_->LockDevice(hDevice, &pDevice, FALSE);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to lock device";
-        dev_manager_->CloseDeviceHandle(hDevice);
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 255), 1.0f, 0);
+    if (callback_) {
+      woogeen::base::NativeD3DSurfaceHandle* d3d_context =
+          new woogeen::base::NativeD3DSurfaceHandle;
+      d3d_context->dev_manager_ = dev_manager_;
+      d3d_context->dev_manager_reset_token_ = dev_manager_reset_token_;
+      d3d_context->width_ = width_;
+      d3d_context->height_ = height_;
+      d3d_context->surface_ = surface;
 
-    IDirect3DSurface9* back_buffer;
-    hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get backbuffer";
-        dev_manager_->UnlockDevice(hDevice, FALSE);
-        dev_manager_->CloseDeviceHandle(hDevice);
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    //We don't need to lock the back_buffer as we're not directly copying frame to
-    //it.
-    hr = pDevice->StretchRect(surface, NULL, back_buffer, NULL, D3DTEXF_NONE);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to blit the video frame";
-        dev_manager_->UnlockDevice(hDevice, FALSE);
-        dev_manager_->CloseDeviceHandle(hDevice);
-        return WEBRTC_VIDEO_CODEC_ERROR;
+      rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
+          new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+              (void*)d3d_context, width_, height_);
+      webrtc::VideoFrame decoded_frame(buffer, 0, 0, webrtc::kVideoRotation_0);
+      decoded_frame.set_ntp_time_ms(ntp_time_ms);
+      decoded_frame.set_timestamp(timestamp);
+      callback_->Decoded(decoded_frame);
     }
 
-    pDevice->Present(NULL, NULL, NULL, NULL);
-    back_buffer->Release();
-    surface->Release();
-    dev_manager_->UnlockDevice(hDevice, FALSE);
-
-    dev_manager_->CloseDeviceHandle(hDevice);
-//    hr = surface->UnlockRect();
-    if (callback_ != NULL){
-      //  callback_->Decoded(decoded_image_);
+    dev_manager_->UnlockDevice(hHandle, false);
+    hr = dev_manager_->CloseDeviceHandle(hHandle);
+    if (FAILED(hr)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     buffer->Release();

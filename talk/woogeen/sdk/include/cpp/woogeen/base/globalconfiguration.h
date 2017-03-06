@@ -48,14 +48,12 @@ class GlobalConfiguration {
   friend class PeerConnectionDependencyFactory;
  public:
 #if defined(WEBRTC_WIN)
-   /**
-   @brief This function sets hardware acceleration is enabled for video decoding and rendering.
-   @param enabled Enbale video decoding rendering with hardware acceleration or not.
-   @param decoder_window Which window will be used for video rendering.
-   */
-  static void SetCodecHardwareAccelerationEnabled(bool enabled, HWND decoder_window) {
-     render_hardware_acceleration_enabled_ = enabled;
-     render_window_ = decoder_window;
+  /**
+  @brief This function sets hardware acceleration is enabled for video decoding.
+  @param enabled Enbale video decoding with hardware acceleration or not.
+  */
+  static void SetVideoHardwareAccelerationEnabled(bool enabled) {
+    hardware_acceleration_enabled_ = enabled;
   }
 #endif
   /** @cond */
@@ -101,18 +99,10 @@ class GlobalConfiguration {
    @brief This function gets hardware acceleration is enabled or not.
    @return true or false.
    */
-  static bool GetCodecHardwareAccelerationEnabled() {
-     return render_hardware_acceleration_enabled_;
+  static bool GetVideoHardwareAccelerationEnabled() {
+    return hardware_acceleration_enabled_;
   }
-  /**
-   @brief This function gets rendering window for hardware acceleration.
-   @return rendering window handler.
-   */
-  static HWND GetRenderWindow() {
-     return render_window_;
-  }
-  static bool render_hardware_acceleration_enabled_; //Enabling HW acceleration for VP8 & H264 enc/dec
-  static HWND render_window_; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
+  static bool hardware_acceleration_enabled_;
 #endif
   /**
    @brief This function gets whether encoded video frame input is enabled or not.

@@ -21,7 +21,7 @@ The release package includes one sample application to get you started quickly w
 - woogeen-release.lib - this library includes all the WebRTC features for release usages.
 
 woogeen.lib references libraries in Windows SDK for DXVA support. Your application must statically link
-mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib and dxva2.lib to build. Depending on your signaling
+mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib and dxva2.lib to build. Depending on your signaling
 channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
 
 # 4 Socket.IO {#section4}

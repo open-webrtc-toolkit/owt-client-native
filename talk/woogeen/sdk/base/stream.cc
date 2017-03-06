@@ -15,6 +15,9 @@
 #endif
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
+#if defined(WEBRTC_WIN)
+#include "talk/woogeen/sdk/base/win/videorendererwin.h"
+#endif
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
@@ -22,9 +25,24 @@
 namespace woogeen {
 namespace base {
 
+#if defined(WEBRTC_WIN)
+Stream::Stream()
+    : media_stream_(nullptr),
+      id_(""),
+      renderer_impl_(nullptr),
+      d3d9_renderer_impl_(nullptr) {}
+
+Stream::Stream(const std::string& id)
+    : media_stream_(nullptr),
+      id_(id),
+      renderer_impl_(nullptr),
+      d3d9_renderer_impl_(nullptr) {}
+#else
 Stream::Stream() : media_stream_(nullptr), id_(""), renderer_impl_(nullptr) {}
 
-Stream::Stream(const std::string& id) : media_stream_(nullptr), id_(id), renderer_impl_(nullptr) {}
+Stream::Stream(const std::string& id)
+    : media_stream_(nullptr), id_(id), renderer_impl_(nullptr) {}
+#endif
 
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
@@ -96,7 +114,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
 void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (media_stream_ == nullptr) {
     ASSERT(false);
-    LOG(LS_ERROR) << "Cannot attach an audio only stream to an renderer.";
+    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
 
@@ -121,18 +139,64 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
+#if defined(WEBRTC_WIN)
+void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
+  if (media_stream_ == nullptr) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    return;
+  }
+
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
+    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  } else if (video_tracks.size() > 1) {
+    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+                       "will be attachecd to renderer.";
+  }
+
+  WebrtcVideoRendererD3D9Impl* old_renderer =
+      d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
+
+  d3d9_renderer_impl_ =
+      new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
+  video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
+
+  if (old_renderer)
+    delete old_renderer;
+
+  LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+#endif
+
 void Stream::DetachVideoRenderer() {
+#if defined(WEBRTC_WIN)
+  if (media_stream_ == nullptr ||
+      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
+    return;
+#else
   if (media_stream_ == nullptr || renderer_impl_ == nullptr)
     return;
+#endif
 
   auto video_tracks = media_stream_->GetVideoTracks();
   if(video_tracks.size() == 0)
     return;
 
   // Detach from the first stream.
-  video_tracks[0]->RemoveSink(renderer_impl_);
-  delete renderer_impl_;
-  renderer_impl_ = nullptr;
+  if (renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(renderer_impl_);
+    delete renderer_impl_;
+    renderer_impl_ = nullptr;
+  }
+#if defined(WEBRTC_WIN)
+  if (d3d9_renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
+    delete d3d9_renderer_impl_;
+    d3d9_renderer_impl_ = nullptr;
+  }
+#endif
 }
 
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}

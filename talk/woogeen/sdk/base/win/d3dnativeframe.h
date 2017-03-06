@@ -1,56 +1,23 @@
 /*
-* libjingle
-* Copyright 2012 Google Inc.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*  1. Redistributions of source code must retain the above copyright notice,
-*     this list of conditions and the following disclaimer.
-*  2. Redistributions in binary form must reproduce the above copyright notice,
-*     this list of conditions and the following disclaimer in the documentation
-*     and/or other materials provided with the distribution.
-*  3. The name of the author may not be used to endorse or promote products
-*     derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-* MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-* EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-* OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-* ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-//
-//This native frame handle  struture contains neccessary information for render to display a native frame
-//
+ * Intel License
+ */
+#ifndef WOOGEEN_BASE_WIN_D3DNATIVEFRAME_H
+#define WOOGEEN_BASE_WIN_D3DNATIVEFRAME_H
 #include <d3d9.h>
 #include <dxva2api.h>
 #include "webrtc/common_video/include/video_frame_buffer.h"
-#pragma once
 
-class NativeD3DSurfaceHandleImpl{
-public:
-    NativeD3DSurfaceHandleImpl();
-    void SetD3DSurfaceObject(IDirect3DDeviceManager9* dev_manager, IDirect3DSurface9* surface);
-
-    IDirect3DSurface9* GetSurface(){ return surface_; };
-    IDirect3DDeviceManager9 * GetD3DManager(){ return dev_manager_; }
-private:
-    IDirect3DSurface9* surface_;
-    IDirect3DDeviceManager9* dev_manager_;
+namespace woogeen {
+namespace base {
+// structure that containts d3d9 device manager
+// and d3d9 surface that contains decoded frame.
+struct NativeD3DSurfaceHandle {
+  IDirect3DSurface9* surface_;
+  IDirect3DDeviceManager9* dev_manager_;
+  UINT dev_manager_reset_token_;
+  int width_;   // width of the frame passing from decoder
+  int height_;  // height of the frame passing from decoder
 };
-
-class D3DNativeHandleBuffer : public webrtc::NativeHandleBuffer{
-public:
-    D3DNativeHandleBuffer(void* native_handle, int width, int height, int data_size);
-    //Surface release is done by the renderFrame call. so at present we don't provide dector for it.
-
-private:
-    //NativeD3DSurfaceHandleImpl native_handle_;
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> NativeToI420Buffer();
-};
+}
+}
+#endif  // WOOGEEN_BASE_WIN_D3DNATIVEFRAME_H
