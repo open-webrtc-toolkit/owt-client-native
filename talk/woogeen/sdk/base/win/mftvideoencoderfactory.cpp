@@ -28,6 +28,7 @@
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
 #include "talk/woogeen/sdk/base/win/h264_video_mft_encoder.h"
 #include "talk/woogeen/sdk/base/win/h265_msdk_encoder.h"
+#include "webrtc/common_video/h264/profile_level_id.h"
 
 #define MAX_VIDEO_WIDTH 3840
 #define MAX_VIDEO_HEIGHT 2160
@@ -46,38 +47,66 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory(){
 #endif
 
     if (is_vp8_hw_supported) {
-        supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecVP8, "VP8", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
+      supported_codecs_.push_back(cricket::VideoCodec("VP8"));
     }
     if (is_h264_hw_supported) {
-        supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecH264, "H264", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
+      supported_codecs_.push_back(cricket::VideoCodec("H264"));
     }
+    const webrtc::H264::Level level = webrtc::H264::kLevel3_1;
+
+    cricket::VideoCodec constrained_high(cricket::kH264CodecName);
+    const webrtc::H264::ProfileLevelId constrained_high_profile(
+        webrtc::H264::kProfileConstrainedHigh, level);
+    constrained_high.SetParam(
+        cricket::kH264FmtpProfileLevelId,
+        *webrtc::H264::ProfileLevelIdToString(constrained_high_profile));
+    constrained_high.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
+    constrained_high.SetParam(cricket::kH264FmtpPacketizationMode, "1");
+    supported_codecs_.push_back(constrained_high);
+
+    cricket::VideoCodec constrained_baseline(cricket::kH264CodecName);
+    const webrtc::H264::ProfileLevelId constrained_baseline_profile(
+        webrtc::H264::kProfileConstrainedBaseline, level);
+    constrained_baseline.SetParam(
+        cricket::kH264FmtpProfileLevelId,
+        *webrtc::H264::ProfileLevelIdToString(constrained_baseline_profile));
+    constrained_baseline.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
+    constrained_baseline.SetParam(cricket::kH264FmtpPacketizationMode, "1");
+    supported_codecs_.push_back(constrained_baseline);
+
 #ifndef DISABLE_H265
     if (is_h265_hw_supported) {
-        supported_codecs_.push_back(VideoCodec(webrtc::kVideoCodecH265, "H265", MAX_VIDEO_WIDTH, MAX_VIDEO_HEIGHT, MAX_VIDEO_FPS));
+      supported_codecs_.push_back(cricket::VideoCodec("H265"));
     }
 #endif
 }
 
 MSDKVideoEncoderFactory::~MSDKVideoEncoderFactory(){}
 
-webrtc::VideoEncoder* MSDKVideoEncoderFactory::CreateVideoEncoder(webrtc::VideoCodecType type){
-    if (supported_codecs_.empty()){
-        return NULL;
-    }
-    for (std::vector<VideoCodec>::const_iterator it = supported_codecs_.begin(); it != supported_codecs_.end(); ++it){
-        if ((*it).type == type && type == webrtc::kVideoCodecH264) {
-            return new H264VideoMFTEncoder();
-#ifndef DISABLE_H265
-        } else if ((*it).type == type && type == webrtc::kVideoCodecH265) {
-            return new H265VideoMFTEncoder();
-#endif
-        }
-    }
+webrtc::VideoEncoder* MSDKVideoEncoderFactory::CreateVideoEncoder(
+    const cricket::VideoCodec& codec) {
+  if (supported_codecs_.empty()) {
     return NULL;
+  }
+  for (std::vector<cricket::VideoCodec>::const_iterator it =
+           supported_codecs_.begin();
+       it != supported_codecs_.end(); ++it) {
+    if (FindMatchingCodec(supported_codecs_, codec) &&
+        !_stricmp(codec.name.c_str(), "H264")) {
+      return new H264VideoMFTEncoder();
+#ifndef DISABLE_H265
+    } else if (FindMatchingCodec(supported_codecs_, codec) &&
+               !_stricmp(codec.name.c_str(), "H265")) {
+      return new H265VideoMFTEncoder();
+#endif
+    }
+  }
+  return NULL;
 }
 
-const std::vector<MSDKVideoEncoderFactory::VideoCodec>& MSDKVideoEncoderFactory::codecs() const{
-    return supported_codecs_;
+const std::vector<cricket::VideoCodec>&
+MSDKVideoEncoderFactory::supported_codecs() const {
+  return supported_codecs_;
 }
 
 void MSDKVideoEncoderFactory::DestroyVideoEncoder(webrtc::VideoEncoder* encoder){

@@ -167,7 +167,10 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     m_mfxEncParams.mfx.TargetKbps = codec_settings->width*codec_settings->height/1000;  //in-kbps
     m_mfxEncParams.mfx.RateControlMethod = MFX_RATECONTROL_CBR;
     m_mfxEncParams.mfx.NumSlice = 0;
-    H264ConvertFrameRate(codec_settings->maxFramerate, &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN, &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
+    H264ConvertFrameRate(
+        codec_settings->maxFramerate > 30 ? 30 : codec_settings->maxBitrate,
+        &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN,
+        &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
     m_mfxEncParams.mfx.EncodedOrder = 0;
     m_mfxEncParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
 
