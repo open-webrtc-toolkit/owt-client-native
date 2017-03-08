@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <future>
+#include <queue>
 #include <random>
 #include <unordered_map>
 #include "talk/woogeen/include/sio_client.h"
@@ -74,31 +75,57 @@ class ConferenceSocketSignalingChannel
  protected:
   virtual void OnEmitAck(
       sio::message::list const& msg,
-      int failure_callback_token,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  private:
+  class SioMessage final {
+   public:
+    explicit SioMessage(
+        const int id,
+        const std::string& name,
+        const sio::message::list& message,
+        const std::function<void(sio::message::list const&)> ack,
+        const std::function<void(std::unique_ptr<ConferenceException>)>
+            on_failure)
+        : id(id),
+          name(name),
+          message(message),
+          ack(ack),
+          on_failure(on_failure){};
+    const int id;
+    const std::string name;
+    const sio::message::list message;
+    const std::function<void(sio::message::list const&)> ack;
+    const std::function<void(std::unique_ptr<ConferenceException>)> on_failure;
+  };
   /// Fires upon a new ticket is received.
   void OnReconnectionTicket(const std::string& ticket);
   void RefreshReconnectionTicket();
   void TriggerOnServerDisconnected();
-  int RandomIntToken() {
-      std::random_device rd;
-      std::mt19937 mt(rd());
-      const int kUpperBound = 429496723;  // ditto
-      std::uniform_int_distribution<int> dist(1, kUpperBound);
-      return dist(mt);
-  }
+  void Emit(const std::string& name,
+            const sio::message::list& message,
+            const std::function<void(sio::message::list const&)> ack,
+            const std::function<void(std::unique_ptr<ConferenceException>)>
+                on_failure);
+  // Clean message queue and triggered failure callback for all queued messages.
+  void DropQueuedMessages();
+  // Re-emit queued message.
+  void DrainQueuedMessages();
 
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
-  mutable std::mutex failure_callbacks_mutex;
-  std::unordered_map<int, std::function<void(std::unique_ptr<ConferenceException>)>> pending_failure_callbacks_;
+  std::function<void(std::unique_ptr<ConferenceException>)>
+      connect_failure_callback_;
   std::function<void()> disconnect_complete_;
   std::string reconnection_ticket_;
   int reconnection_attempted_;
   bool is_reconnection_;
+  // Messages may be lost if during Socket.IO reconnection. We maintain a
+  // message queue here so we can emit un-acked messages after connected.
+  std::queue<SioMessage> outgoing_messages_;
+  int outgoing_message_id_;
+  std::mutex outgoing_message_mutex_;
 };
 }
 }

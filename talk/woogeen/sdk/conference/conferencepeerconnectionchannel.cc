@@ -774,6 +774,7 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
 
 void ConferencePeerConnectionChannel::OnNetworksChanged(){
   LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
+  IceRestart();
 }
 }
 }
