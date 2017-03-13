@@ -115,14 +115,14 @@ class GlobalConfiguration {
   static HWND render_window_; //For decoder HW acceleration on windows, pc factory needs to pass the rendering window in.
 #endif
   /**
-   @brief This function gets the capturing frame type.
+   @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.
    */
   static bool GetEncodedVideoFrameEnabled() {
      return encoded_frame_;
   }
   /**
-   @brief This function gets the capturing frame type.
+   @brief This function gets whether the customized audio input is enabled or not.
    @return true or false.
    */
   static bool GetCustomizedAudioInputEnabled() {
