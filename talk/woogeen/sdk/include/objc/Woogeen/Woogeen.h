@@ -36,6 +36,7 @@
 #import <Woogeen/RTCVideoFrame.h>
 #import <Woogeen/RTCVideoRenderer.h>
 #import <Woogeen/RTCVideoSource.h>
+#import <Woogeen/RTCCameraPreviewView.h>
 
 // Base SDK
 #import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
