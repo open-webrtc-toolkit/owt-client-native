@@ -42,7 +42,7 @@ struct VideoEncodedFrame {
   const uint8_t* buffer;
   /// Encoded frame buffer length
   size_t length;
-  /// Time stamp
+  /// Frame timestamp (90kHz).
   uint32_t time_stamp;
   /// Key frame flag
   bool is_key_frame;
