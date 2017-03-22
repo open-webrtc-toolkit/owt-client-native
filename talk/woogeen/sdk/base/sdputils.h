@@ -14,12 +14,6 @@ namespace base {
 /// This class provides utilities for SDP parsing and modification
 class SdpUtils {
  public:
-  /// Set max audio bandwidth, unit is Kbps.
-  static std::string SetMaximumAudioBandwidth(const std::string& sdp,
-                                              int bitrate);
-  /// Set max video bandwidth, unit is Kbps.
-  static std::string SetMaximumVideoBandwidth(const std::string& sdp,
-                                              int bitrate);
   static std::string SetPreferAudioCodec(const std::string& sdp,
                                          MediaCodec::AudioCodec codec);
   static std::string SetPreferVideoCodec(const std::string& sdp,

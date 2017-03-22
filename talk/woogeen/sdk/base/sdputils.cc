@@ -32,66 +32,6 @@ static const std::unordered_map<MediaCodec::VideoCodec,
     {MediaCodec::VideoCodec::VP9, "VP9"},
     {MediaCodec::VideoCodec::H265, "H265"}};
 
-std::string SdpUtils::SetMaximumVideoBandwidth(const std::string& sdp,
-                                               int bitrate) {
-#if defined(WEBRTC_LINUX)
-  regex_t regex;
-  int status;
-  int matches = 1;
-  regmatch_t m;
-  status = regcomp(&regex,"a=mid:video\r\n", REG_EXTENDED|REG_NEWLINE|REG_ICASE);
-  if(status != 0) {
-    regfree(&regex);
-    return sdp;
-  }
-  status = regexec(&regex, sdp.c_str(), matches, &m, 0);
-  if(status !=0) {
-    regfree(&regex);
-    return sdp;
-  }
-  std::stringstream new_string;
-  new_string << sdp.substr(0, m.rm_eo) << "b=AS: "<< bitrate << "\r\n"
-             << sdp.substr(m.rm_eo, std::string::npos);
-  regfree(&regex);
-  return new_string.str();
-#else
-  std::regex reg("a=mid:video\r\n");
-  std::stringstream sdp_line_width_bitrate;
-  sdp_line_width_bitrate << "a=mid:video\r\nb=AS: " << bitrate << "\r\n";
-  return std::regex_replace(sdp, reg, sdp_line_width_bitrate.str());
-#endif
-}
-
-std::string SdpUtils::SetMaximumAudioBandwidth(const std::string& sdp,
-                                               int bitrate) {
-#if defined(WEBRTC_LINUX)
-  regex_t regex;
-  int status;
-  int matches = 1;
-  regmatch_t m;
-  status = regcomp(&regex,"a=mid:audio\r\n", REG_EXTENDED|REG_NEWLINE|REG_ICASE);
-  if(status != 0) {
-    regfree(&regex);
-    return sdp;
-  }
-  status = regexec(&regex, sdp.c_str(), matches, &m, 0);
-  if(status !=0) {
-    regfree(&regex);
-    return sdp;
-  }
-  std::stringstream new_string;
-  new_string << sdp.substr(0, m.rm_eo) << "b=AS: "<< bitrate << "\r\n"
-             << sdp.substr(m.rm_eo, std::string::npos);
-  regfree(&regex);
-  return new_string.str();
-#else
-  std::regex reg("a=mid:audio\r\n");
-  std::stringstream sdp_line_width_bitrate;
-  sdp_line_width_bitrate << "a=mid:audio\r\nb=AS: " << bitrate << "\r\n";
-  return std::regex_replace(sdp, reg, sdp_line_width_bitrate.str());
-#endif
-}
-
 std::string SdpUtils::SetPreferAudioCodec(const std::string& original_sdp,
                                           MediaCodec::AudioCodec codec) {
   auto codec_it = audio_codec_names.find(codec);
