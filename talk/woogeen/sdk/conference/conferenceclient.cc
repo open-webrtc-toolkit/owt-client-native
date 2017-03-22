@@ -37,6 +37,16 @@ ConferenceClient::~ConferenceClient() {
 
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
   crit_sect_.Enter();
+  std::vector<std::reference_wrapper<ConferenceClientObserver>>::iterator it =
+      std::find_if(
+          observers_.begin(), observers_.end(),
+          [&](std::reference_wrapper<ConferenceClientObserver> o) -> bool {
+      return &observer == &(o.get());
+  });
+  if (it != observers_.end()) {
+      LOG(LS_INFO) << "Adding duplicate observer.";
+      return;
+  }
   observers_.push_back(observer);
   crit_sect_.Leave();
 }
