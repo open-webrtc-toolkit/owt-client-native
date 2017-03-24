@@ -568,6 +568,43 @@ LocalCustomizedStream::LocalCustomizedStream(
   media_stream_->AddRef();
 }
 
+LocalCustomizedStream::LocalCustomizedStream(
+    std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+    VideoEncoderInterface* encoder) {
+  if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
+    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
+  }
+  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+      PeerConnectionDependencyFactory::Get();
+  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  scoped_refptr<MediaStreamInterface> stream =
+      pcd_factory->CreateLocalMediaStream(media_stream_id);
+  if (parameters->VideoEnabled()) {
+    capturer_ = new CustomizedFramesCapturer(
+      parameters->ResolutionWidth(),
+      parameters->ResolutionHeight(),
+      parameters->Fps(),
+      parameters->Bitrate(),
+      encoder);
+    capturer_->Init();
+    scoped_refptr<VideoTrackSourceInterface> source =
+        pcd_factory->CreateVideoSource(capturer_, nullptr);
+    std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
+    scoped_refptr<VideoTrackInterface> video_track =
+        pcd_factory->CreateLocalVideoTrack(video_track_id, source);
+    stream->AddTrack(video_track);
+  }
+
+  if (parameters->AudioEnabled()) {
+    std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
+    scoped_refptr<AudioTrackInterface> audio_track =
+        pcd_factory->CreateLocalAudioTrack(audio_track_id);
+    stream->AddTrack(audio_track);
+  }
+  media_stream_ = stream;
+  media_stream_->AddRef();
+}
+
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            std::string& from)
     : remote_user_id_(from) {

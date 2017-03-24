@@ -29,6 +29,7 @@
 #define WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 
 #include <string>
+#include "woogeen/base/mediaformat.h"
 
 namespace woogeen {
 namespace base{
@@ -109,15 +110,71 @@ class LocalCameraStreamParameters final {
 class LocalCustomizedStreamParameters final {
  public:
   /**
-    @brief Initialize a LocalCustomizedStreamParameters.
+    @brief Initialize a LocalCustomizedStreamParameters for YUV input.
+    Be noted the bitrate settings will be ignored for YUV input.
     @param video_enabled Indicates if video is enabled for this stream.
     @param audio_anabled Indicates if audio is enabled for this stream.
   */
   LocalCustomizedStreamParameters(bool video_enabled, bool audio_enabled) {
      video_enabled_ = video_enabled;
      audio_enabled_ = audio_enabled;
+     fps_ = 0;
+     bitrate_kbps_ = 0;
+     resolution_width_ = resolution_height_ = 0;
+  }
+  /**
+    @brief Initialize a LocalCustomizedStreamParameters for encoded input.
+    @param video_enabled Indicates if video is enabled for this stream.
+    @param audio_anabled Indicates if audio is enabled for this stream.
+    @param resolution Resolution of the encoded video.
+    @param fps FPS of the encoded video.
+    @param bitrate Bitrate of the encoded video.
+  */
+  LocalCustomizedStreamParameters(bool video_enabled, bool audio_enabled,
+    Resolution& resolution,
+    uint32_t fps, uint32_t bitrate_kbps) {
+    video_enabled_ = video_enabled;
+    audio_enabled_ = audio_enabled;
+    fps_ = fps;
+    bitrate_kbps_ = bitrate_kbps;
+    resolution_width_ = resolution.width;
+    resolution_height_ = resolution.height;
   }
   ~LocalCustomizedStreamParameters() {}
+  /**
+    @brief Set the video resolution.
+
+    If the resolution specified is not supported on current device, creation
+    will failed.
+    @param width The width of the video.
+    @param height The height of the video.
+  */
+  void Resolution(int width, int height) {
+    resolution_width_ = width;
+    resolution_height_ = height;
+  }
+  /** @cond */
+  /**
+    @brief Set the frame rate.
+
+    If the frame rate specified is not supported on current device, creation
+    will failed.
+    @param fps The frame rate of the video.
+  */
+  void Fps(int fps) {
+    fps_ = fps;
+  }
+  int ResolutionWidth() const { return resolution_width_; }
+  int ResolutionHeight() const { return resolution_height_; }
+  int Fps() const { return fps_; }
+  /**
+    @brief Set the bitrate of encoded frame.
+    @param bitrate_kbps The bitrate expected for the encoded stream.
+  */
+  void Bitrate(int bitrate_kbps) {
+      bitrate_kbps_ = bitrate_kbps;
+  }
+  uint32_t Bitrate() const { return bitrate_kbps_; }
   /**
     @brief Get video is enabled or not for this stream.
     @return true or false.
@@ -132,6 +189,10 @@ class LocalCustomizedStreamParameters final {
  private:
   bool video_enabled_;
   bool audio_enabled_;
+  size_t resolution_width_;
+  size_t resolution_height_;
+  uint32_t fps_;
+  uint32_t bitrate_kbps_;
 };
 
 /**

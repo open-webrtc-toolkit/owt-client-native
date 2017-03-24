@@ -14,12 +14,12 @@ class EncodedVideoEncoderFactory : public cricket::WebRtcVideoEncoderFactory {
   virtual ~EncodedVideoEncoderFactory();
 
   webrtc::VideoEncoder* CreateVideoEncoder(
-      webrtc::VideoCodecType type) override;
-  const std::vector<VideoCodec>& codecs() const override;
+      const cricket::VideoCodec& codec) override;
+  const std::vector<cricket::VideoCodec>& supported_codecs() const override;
   void DestroyVideoEncoder(webrtc::VideoEncoder* encoder) override;
 
  private:
-  std::vector<VideoCodec> supported_codecs_;
+  std::vector<cricket::VideoCodec> supported_codecs_;
 };
 
 #endif  // WOOGEEN_BASE_ENCODEDVIDEOENCODERFACTORY_H_

@@ -31,6 +31,7 @@
 #include "woogeen/base/exception.h"
 #include "woogeen/base/localcamerastreamparameters.h"
 #include "woogeen/base/macros.h"
+#include "woogeen/base/videoencoderinterface.h"
 #include "woogeen/base/videorendererinterface.h"
 
 namespace webrtc {
@@ -257,18 +258,36 @@ class LocalCameraStream : public LocalStream {
   /** @endcond */
 };
 
-/// This class represents a local stream which use frame generator to generate frames.
+/// This class represents a local stream which uses frame generator to generate
+//  I420 frames or depends on a video encoder to generate encoded frames.
 class LocalCustomizedStream : public LocalStream {
   public:
    /**
-     Initialize a LocalCustomizedStream with parameters.
+     Initialize a LocalCustomizedStream with parameters and frame generator.
+
+     The input of the video stream MUST be YUV frame if initializing with frame
+     generator.
+
      @param parameters Parameters for creating the stream. The stream will not
      be impacted if changing parameters after it is created.
-     @param framer An instance implemented VideoFrameGeneratorInterface.
+     @param framer Pointer to an instance implemented VideoFrameGeneratorInterface.
    */
    explicit LocalCustomizedStream(
        std::shared_ptr<LocalCustomizedStreamParameters> parameters,
        VideoFrameGeneratorInterface* framer);
+   /**
+     Initialize a LocalCustomizedStream with parameters and encoder interface.
+
+     The input of the video stream MUST be encoded frame if initializing with
+     video encoder interface.
+
+     @param parameters Parameters for creating the stream. The stream will not
+     be impacted if changing parameters after it is created.
+     @param encoder Pointer to an instance implementing VideoEncoderInterface.
+   */
+   explicit LocalCustomizedStream(
+       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+       VideoEncoderInterface* encoder);
    ~LocalCustomizedStream();
    /** @cond */
    // Temporarily use camera type for customized stream.

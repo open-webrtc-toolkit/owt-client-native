@@ -1,31 +1,7 @@
 /*
- * libjingle
- * Copyright 2004--2014 Google Inc.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  1. Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *  2. Redistributions in binary form must reproduce the above copyright notice,
- *     this list of conditions and the following disclaimer in the documentation
- *     and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Intel License
  */
 
-#include <iostream>
 #include "webrtc/base/bytebuffer.h"
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/logging.h"
@@ -33,6 +9,7 @@
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#include "talk/woogeen/sdk/base/customizedencoderbufferhandle.h"
 
 namespace woogeen {
 namespace base {
@@ -101,31 +78,50 @@ const char* CustomizedFramesCapturer::kRawFrameDeviceName =
 CustomizedFramesCapturer::CustomizedFramesCapturer(
     VideoFrameGeneratorInterface* raw_frameGenerator)
     : frame_generator_(raw_frameGenerator),
+      encoder_(nullptr),
       frames_generator_thread(nullptr),
       width_(frame_generator_->GetWidth()),
       height_(frame_generator_->GetHeight()),
       fps_(frame_generator_->GetFps()),
+      bitrate_kbps_(0),
       frame_type_(frame_generator_->GetType()),
+      frame_buffer_capacity_(0),
+      frame_buffer_(nullptr),
+      async_invoker_(nullptr) {}
+
+CustomizedFramesCapturer::CustomizedFramesCapturer(
+    int width, int height, int fps, int bitrate_kbps, VideoEncoderInterface* encoder)
+    : frame_generator_(nullptr),
+      encoder_(encoder),
+      frames_generator_thread(nullptr),
+      width_(width),
+      height_(height),
+      fps_(fps),
+      bitrate_kbps_(bitrate_kbps),
       frame_buffer_capacity_(0),
       frame_buffer_(nullptr),
       async_invoker_(nullptr) {}
 
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   Stop();
-  frame_generator_ = NULL;
+  frame_generator_ = nullptr;
+  // encoder is created by app. And needs to be freed by
+  // application. mark it to nullptr to avoid ReadFrame
+  // passing native buffer to stack.
+  encoder_ = nullptr;
 }
 
 void CustomizedFramesCapturer::Init() {
   // Only I420 frame is supported. Encoded frame is not supported here.
-  VideoFormat format(width_, height_, VideoFormat::kMinimumInterval,
+  cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
                      cricket::FOURCC_I420);
-  std::vector<VideoFormat> supported;
+  std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
 }
 
-CaptureState CustomizedFramesCapturer::Start(
-    const VideoFormat& capture_format) {
+cricket::CaptureState CustomizedFramesCapturer::Start(
+    const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
     LOG(LS_ERROR) << "Yuv Frame Generator is already running";
     return CS_FAILED;
@@ -156,10 +152,10 @@ bool CustomizedFramesCapturer::IsRunning() {
 void CustomizedFramesCapturer::Stop() {
   if (frames_generator_thread) {
     frames_generator_thread->Quit();
-    frames_generator_thread = NULL;
+    frames_generator_thread = nullptr;
     LOG(LS_INFO) << "Yuv Frame Generator stopped";
   }
-  SetCaptureFormat(NULL);
+  SetCaptureFormat(nullptr);
   worker_thread_ = nullptr;
   async_invoker_.reset();
 }
@@ -199,20 +195,34 @@ void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
 
 // Executed in the context of CustomizedFramesThread.
 void CustomizedFramesCapturer::ReadFrame() {
-  // 1. Signal the previously read frame to downstream in worker_thread.
+  // Signal the previously read frame to downstream in worker_thread.
   rtc::CritScope lock(&lock_);
-  auto frame_size = frame_generator_->GetNextFrameSize();
-  AdjustFrameBuffer(frame_size);
-  if (frame_generator_->GenerateNextFrame(
-          frame_buffer_->MutableDataY(), frame_buffer_capacity_) != frame_size) {
-    RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Failed to get video frame.";
-    return;
-  }
-
-  webrtc::VideoFrame captureFrame(frame_buffer_, 0, rtc::TimeMillis(),
+  if (frame_generator_ != nullptr) {
+    auto frame_size = frame_generator_->GetNextFrameSize();
+    AdjustFrameBuffer(frame_size);
+    if (frame_generator_->GenerateNextFrame(
+            frame_buffer_->MutableDataY(), frame_buffer_capacity_) != frame_size) {
+      RTC_DCHECK(false);
+      LOG(LS_ERROR) << "Failed to get video frame.";
+      return;
+    }
+    webrtc::VideoFrame capture_frame(frame_buffer_, 0, rtc::TimeMillis(),
                                   webrtc::kVideoRotation_0);
-  OnFrame(captureFrame, width_, height_);
+    OnFrame(capture_frame, width_, height_);
+  } else if (encoder_ != nullptr) { // video encoder interface used. Pass the encoder information.
+    CustomizedEncoderBufferHandle* encoder_context = new CustomizedEncoderBufferHandle;
+    encoder_context->encoder = encoder_;
+    encoder_context->width = width_;
+    encoder_context->height = height_;
+    encoder_context->fps = fps_;
+    encoder_context->bitrate_kbps = bitrate_kbps_;
+    rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
+        new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+           (void*)encoder_context, width_, height_);
+    webrtc::VideoFrame pending_frame(buffer, 0, rtc::TimeMillis(),
+                                    webrtc::kVideoRotation_0);
+    OnFrame(pending_frame, width_, height_);
+  }
 }
 
 }  // namespace base
