@@ -146,11 +146,6 @@ source_set("woogeen_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.h",
     ]
   }
-
-  if (is_clang) {
-    # Bug 804. Fix Chromium style checker warnings.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 }
 
 source_set("woogeen_sdk_p2p") {
@@ -174,11 +169,6 @@ source_set("woogeen_sdk_p2p") {
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
     "sdk/p2p/peerclient.cc",
   ]
-
-  if (is_clang) {
-    # Bug 804. Fix Chromium style checker warnings.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 }
 
 source_set("woogeen_sdk_conf") {
@@ -202,11 +192,6 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
-
-  if (is_clang) {
-    # Bug 804. Fix Chromium style checker warnings.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 }
 
 if (is_ios) {
@@ -315,10 +300,5 @@ if (is_ios) {
       "sdk/p2p/objc/public/RTCPeerClientConfiguration.h",
       "sdk/p2p/objc/public/RTCPeerClientObserver.h",
     ]
-
-    if (is_clang) {
-      # Bug 804. Fix Chromium style checker warnings.
-      configs -= [ "//build/config/clang:find_bad_constructs" ]
-    }
   }
 }
