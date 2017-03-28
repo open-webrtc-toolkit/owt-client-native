@@ -14,7 +14,7 @@ config("usrsctp_config") {
 config("usrsctp_warnings") {
   if (is_clang) {
     # atomic_init in user_atomic.h is a static function in a header.
-    cflags = [ "-Wno-unused-function" ]
+    cflags = [ "-Wno-unused-function", "-Wno-address-of-packed-member" ]
   }
 }
 

@@ -7,7 +7,7 @@
 #import <WebRTC/RTCMediaConstraints.h>
 #import "webrtc/sdk/objc/Framework/Classes/RTCMediaStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCVideoSource+Private.h"
-#import "talk/woogeen/sdk/include/objc/woogeen/RTCErrors.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalCameraStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"

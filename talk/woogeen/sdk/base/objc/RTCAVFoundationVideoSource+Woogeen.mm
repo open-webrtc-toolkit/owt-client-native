@@ -5,7 +5,7 @@
 #import "Woogeen/RTCAVFoundationVideoSource+Woogeen.h"
 #import "talk/woogeen/sdk/base/objc/RTCPeerConnectionFactory+Woogeen.h"
 #import "Woogeen/RTCAVFoundationVideoSource+Woogeen.h"
-#import "webrtc/sdk/objc/Framework/Classes/AVFoundationVideoCapturer.h"
+#import "webrtc/sdk/objc/Framework/Classes/avfoundationvideocapturer.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCAVFoundationVideoSource+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCMediaConstraints+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCVideoSource+Private.h"

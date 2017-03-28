@@ -3,7 +3,7 @@
  */
 
 #import "talk/woogeen/sdk/base/objc/AVFoundationVideoCapturerFactory.h"
-#import "webrtc/sdk/objc/Framework/classes/avfoundationvideocapturer.h"
+#import "webrtc/sdk/objc/Framework/Classes/avfoundationvideocapturer.h"
 
 namespace woogeen {
 namespace base {

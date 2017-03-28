@@ -12,7 +12,7 @@
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceClient.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceErrors.h"
-#import "talk/woogeen/sdk/conference/ConferenceSocketSignalingChannel.h"
+#import "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
