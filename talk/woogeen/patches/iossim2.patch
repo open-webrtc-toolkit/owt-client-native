@@ -1,0 +1,33 @@
+From 88210b6073b52cab35f9ef1f52f741f5ff95a473 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 30 Mar 2017 15:23:47 +0800
+Subject: [PATCH] Add DYLD_FRAMEWORK_PATH and DYLD_LIBRARY_PATH to xctestrun
+ file.
+
+BUG=1491
+---
+ iossim/iossim.mm | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/iossim/iossim.mm b/iossim/iossim.mm
+index 071c957..e8ea57a 100644
+--- a/iossim/iossim.mm
++++ b/iossim/iossim.mm
+@@ -236,6 +236,14 @@ void RunApplication(NSString* app_path,
+       [NSMutableDictionary dictionary];
+   [testingEnvironmentVariables setValue:[app_path lastPathComponent]
+                                  forKey:@"IDEiPhoneInternalTestBundleName"];
++  NSString* frameworkPath =
++      @"__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Frameworks";
++  [testingEnvironmentVariables setValue:frameworkPath
++                                 forKey:@"DYLD_FRAMEWORK_PATH"];
++  NSString* libraryPath =
++      @"__PLATFORMS__/iPhoneSimulator.platform/Developer/Library";
++  [testingEnvironmentVariables setValue:libraryPath
++                                 forKey:@"DYLD_LIBRARY_PATH"];
+ 
+   if (xctest_path) {
+     [testTargetName setValue:xctest_path forKey:@"TestBundlePath"];
+-- 
+2.4.4
+

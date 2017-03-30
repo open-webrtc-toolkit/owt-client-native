@@ -1,0 +1,37 @@
+diff --git a/iossim/iossim.mm b/iossim/iossim.mm
+index 82a59ac..e8ea57a 100644
+--- a/iossim/iossim.mm
++++ b/iossim/iossim.mm
+@@ -236,6 +236,14 @@ void RunApplication(NSString* app_path,
+       [NSMutableDictionary dictionary];
+   [testingEnvironmentVariables setValue:[app_path lastPathComponent]
+                                  forKey:@"IDEiPhoneInternalTestBundleName"];
++  NSString* frameworkPath =
++      @"__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Frameworks";
++  [testingEnvironmentVariables setValue:frameworkPath
++                                 forKey:@"DYLD_FRAMEWORK_PATH"];
++  NSString* libraryPath =
++      @"__PLATFORMS__/iPhoneSimulator.platform/Developer/Library";
++  [testingEnvironmentVariables setValue:libraryPath
++                                 forKey:@"DYLD_LIBRARY_PATH"];
+ 
+   if (xctest_path) {
+     [testTargetName setValue:xctest_path forKey:@"TestBundlePath"];
+@@ -267,6 +275,9 @@ void RunApplication(NSString* app_path,
+                     format:NSPropertyListXMLFormat_v1_0
+           errorDescription:&error];
+   [data writeToFile:tempFilePath atomically:YES];
++  XCRunTask* start_sim = [[[XCRunTask alloc] initWithArguments:@[
++    @"open", @"-a", @"Simulator", @"--args", @"-CurrentDeviceUDID",
++    udid]] autorelease];
+   XCRunTask* task = [[[XCRunTask alloc] initWithArguments:@[
+     @"xcodebuild", @"-xctestrun", tempFilePath, @"-destination",
+     [@"platform=iOS Simulator,id=" stringByAppendingString:udid],
+@@ -294,6 +305,7 @@ void RunApplication(NSString* app_path,
+         };
+     [task setStandardError:stderr_pipe];
+   }
++  [start_sim run];
+   [task run];
+ }
+ 

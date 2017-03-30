@@ -3,5 +3,5 @@ This folder contains modifications for untracked files. Please copy these files 
 libsrtp.gn -> third_party/libsrtp/BUILD.gn
 usrsctp.gn -> third_part/usrsctp/BUILD.gn
 
-And apply iossim.patch to src/testing.
+And apply iossim1.patch and iossim2.patch to src/testing.
 
