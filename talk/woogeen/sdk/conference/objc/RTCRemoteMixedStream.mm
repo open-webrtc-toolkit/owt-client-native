@@ -6,6 +6,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
 @implementation RTCRemoteMixedStream {
   NSArray* _supportedVideoFormats;
@@ -26,6 +27,13 @@
   std::shared_ptr<woogeen::conference::RemoteMixedStream> stream_ptr =
       std::static_pointer_cast<woogeen::conference::RemoteMixedStream>([self nativeStream]);
   stream_ptr->AddObserver(*ob);
+}
+
+- (NSString*)viewport {
+  std::shared_ptr<woogeen::conference::RemoteMixedStream> stream_ptr =
+      std::static_pointer_cast<woogeen::conference::RemoteMixedStream>(
+          [self nativeStream]);
+  return [NSString stringForStdString:stream_ptr->Viewport()];
 }
 
 @end

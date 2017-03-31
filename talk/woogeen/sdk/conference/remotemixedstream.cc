@@ -11,10 +11,12 @@ namespace woogeen {
 namespace conference {
 
 RemoteMixedStream::RemoteMixedStream(
-    std::string& id,
-    std::string& from,
+    const std::string& id,
+    const std::string& from,
+    const std::string& viewport,
     const std::vector<VideoFormat> supported_video_formats)
     : RemoteStream(id, from),
+      viewport_(viewport),
       supported_video_formats_(supported_video_formats) {}
 
 std::vector<VideoFormat> RemoteMixedStream::SupportedVideoFormats() {
@@ -31,6 +33,10 @@ void RemoteMixedStream::RemoveObserver(RemoteMixedStreamObserver& observer){
       [&](std::reference_wrapper<RemoteMixedStreamObserver> o) -> bool {
         return &observer == &(o.get());
       }));
+}
+
+std::string RemoteMixedStream::Viewport() {
+  return viewport_;
 }
 
 void RemoteMixedStream::OnVideoLayoutChanged() {

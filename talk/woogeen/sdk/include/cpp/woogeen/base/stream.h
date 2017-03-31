@@ -162,8 +162,8 @@ class RemoteStream : public Stream {
   std::string From();
 
  protected:
-  explicit RemoteStream(std::string& id, std::string& from);
-  explicit RemoteStream(MediaStreamInterface* media_stream, std::string& from);
+  explicit RemoteStream(const std::string& id, const std::string& from);
+  explicit RemoteStream(MediaStreamInterface* media_stream, const std::string& from);
 
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);

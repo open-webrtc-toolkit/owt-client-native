@@ -611,8 +611,9 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
           video_formats.push_back(video_format);
         }
       }
-      auto remote_stream =
-          std::make_shared<RemoteMixedStream>(id, remote_id, video_formats);
+      std::string viewport = stream_info->get_map()["view"]->get_string();
+      auto remote_stream = std::make_shared<RemoteMixedStream>(
+          id, remote_id, viewport, video_formats);
       LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;

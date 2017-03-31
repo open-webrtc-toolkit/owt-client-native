@@ -606,13 +606,13 @@ LocalCustomizedStream::LocalCustomizedStream(
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
-                           std::string& from)
+                           const std::string& from)
     : remote_user_id_(from) {
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
 
-RemoteStream::RemoteStream(std::string& id, std::string& from)
+RemoteStream::RemoteStream(const std::string& id, const std::string& from)
     : Stream(id), remote_user_id_(from) {}
 
 std::string RemoteStream::From() {

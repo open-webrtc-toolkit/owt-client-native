@@ -42,6 +42,19 @@ RTC_EXPORT
 */
 - (void)addObserver:(id<RTCRemoteMixedStreamObserver>)observer;
 
+/**
+  @brief A property of mixed streams which distinguishes them from other mixed
+  streams a conference room provides.
+  @detail A conference room, since Intel CS for WebRTC v3.4 and later, has been
+  extended to support multiple presentations of the mixed audio and video for
+  variant purposes. For example, in remote education scenario, the teacher and
+  students may subscribe different mixed streams with view of 'teacher' and
+  'student' respectively in the same class conference room. It is also the label
+  of a mixed stream indicating its peculiarity with a meaningful string-typed
+  value, which must be unique within a room.
+*/
+@property(readonly, strong) NSString* viewport;
+
 @end
 
 #endif // WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_H_

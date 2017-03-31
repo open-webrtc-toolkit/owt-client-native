@@ -43,9 +43,12 @@ class RemoteMixedStreamObserver : public woogeen::base::StreamObserver {
 /// This class represent a mixed remote stream.
 class RemoteMixedStream : public woogeen::base::RemoteStream {
  public:
-  RemoteMixedStream(std::string& id,
-                    std::string& from,
+  /** @cond **/
+  RemoteMixedStream(const std::string& id,
+                    const std::string& from,
+                    const std::string& viewport,
                     const std::vector<VideoFormat> supported_video_formats);
+  /** @endcond **/
 
   /// Add an observer for conferenc client.
   void AddObserver(RemoteMixedStreamObserver& observer);
@@ -58,10 +61,24 @@ class RemoteMixedStream : public woogeen::base::RemoteStream {
   */
   std::vector<VideoFormat> SupportedVideoFormats();
 
+  /**
+    @brief Returns an attribute of mixed streams which distinguishes them from
+    other mixed streams a conference room provides.
+    @detail A conference room, since Intel CS for WebRTC v3.4 and later, has
+    been extended to support multiple presentations of the mixed audio and video
+    for variant purposes. For example, in remote education scenario, the teacher
+    and students may subscribe different mixed streams with view of 'teacher'
+    and 'student' respectively in the same class conference room. It is also the
+    label of a mixed stream indicating its peculiarity with a meaningful
+    string-typed value, which must be unique within a room.
+  */
+  std::string Viewport();
+
  protected:
   virtual void OnVideoLayoutChanged();
 
  private:
+  const std::string viewport_;
   const std::vector<VideoFormat> supported_video_formats_;
   std::vector<std::reference_wrapper<RemoteMixedStreamObserver>> observers_;
 
