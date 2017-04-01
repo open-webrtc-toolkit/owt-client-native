@@ -27,43 +27,38 @@ const CLSID MEDIASUBTYPE_VP80 = {
 
 bool MSDKVideoDecoder::isVP8HWAccelerationSupported(){
     HRESULT hr;
-    CComPtr<IMFTransform> vp8_dec;
+    bool vp8_supported = false;
     hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    if (FAILED(hr)){
-        return false;
+    if (FAILED(hr)) {
+      return false;
     }
+
     hr = MFStartup(MF_VERSION, MFSTARTUP_FULL);
-    if (FAILED(hr)){
-        return false;
+    if (FAILED(hr)) {
+      ::CoUninitialize();
+      return false;
     }
-    hr = ::CoCreateInstance(
-        CLSID_WebmMfVp8Dec,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_IMFTransform,
-        (void**)&vp8_dec
-        );
-    if (FAILED(hr)){
-        MFShutdown();
-        ::CoUninitialize();
-        return false;
+
+    {
+      CComPtr<IMFTransform> vp8_dec;
+
+      hr = ::CoCreateInstance(CLSID_WebmMfVp8Dec, NULL, CLSCTX_INPROC_SERVER,
+                              IID_IMFTransform, (void**)&vp8_dec);
+      if (SUCCEEDED(hr)) {
+        CComPtr<IMFMediaType> in_type;
+        hr = vp8_dec->GetInputAvailableType(0, 0, &in_type);
+        if (SUCCEEDED(hr)) {
+          hr = vp8_dec->SetInputType(0, in_type, 0);
+          if (SUCCEEDED(hr)) {
+            vp8_supported = true;
+          }
+        }
+      }
     }
-    CComPtr<IMFMediaType> in_type;
-    hr = vp8_dec->GetInputAvailableType(0, 0, &in_type);
-    if (FAILED(hr)){
-        MFShutdown();
-        ::CoUninitialize();
-        return false;
-    }
-    hr = vp8_dec->SetInputType(0, in_type, 0);
-    if (FAILED(hr)){
-        MFShutdown();
-        ::CoUninitialize();
-        return false;
-    }
+
     MFShutdown();
-    CoUninitialize();
-    return true;
+    ::CoUninitialize();
+    return vp8_supported;
 }
 
 static IMFSample* CreateEmptySampleWithBuffer(int buffer_size){
