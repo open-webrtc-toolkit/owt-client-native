@@ -185,6 +185,7 @@ void ConferenceClient::Publish(
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
+  pcc->AddObserver(*this);
   {
     std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
     publish_pcs_[stream->MediaStream()->label()] = pcc;
@@ -241,6 +242,7 @@ void ConferenceClient::Subscribe(
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
+  pcc->AddObserver(*this);
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     subscribe_pcs_[stream->Id()] = pcc;
@@ -509,6 +511,23 @@ void ConferenceClient::OnStreamUpdated(sio::message::ptr stream) {
   TriggerOnStreamUpdated(stream);
 }
 
+void ConferenceClient::OnStreamError(sio::message::ptr stream) {
+  if (stream == nullptr || stream->get_flag() != sio::message::flag_object ||
+      stream->get_map()["streamId"] == nullptr ||
+      stream->get_map()["streamId"]->get_flag() != sio::message::flag_string) {
+    RTC_DCHECK(false);
+    return;
+  }
+  const std::string stream_id(stream->get_map()["streamId"]->get_string());
+  LOG(LS_ERROR) << "MCU reports connection failed for stream " << stream_id;
+  auto pcc = GetConferencePeerConnectionChannel(stream_id);
+  if (pcc == nullptr) {
+    RTC_DCHECK(false);
+    return;
+  }
+  pcc->OnStreamError();
+}
+
 void ConferenceClient::OnServerDisconnected() {
   signaling_channel_connected_ = false;
   {
@@ -523,6 +542,12 @@ void ConferenceClient::OnServerDisconnected() {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnServerDisconnected();
   }
+}
+
+void ConferenceClient::OnStreamError(
+    std::shared_ptr<Stream> stream,
+    std::shared_ptr<const ConferenceException> exception) {
+  TriggerOnStreamError(stream, exception);
 }
 
 void ConferenceClient::OnStreamId(const std::string& id,
@@ -860,6 +885,17 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   crit_sect_.Leave();
   added_streams_.erase(stream_it);
   added_stream_type_.erase(stream_type);
+}
+
+void ConferenceClient::TriggerOnStreamError(
+    std::shared_ptr<Stream> stream,
+    std::shared_ptr<const ConferenceException> exception) {
+  for (auto observers_it = observers_.begin(); observers_it != observers_.end();
+       ++observers_it) {
+    std::unique_ptr<ConferenceException> e(new ConferenceException(
+        exception->Type(), exception->Message()));
+    (*observers_it).get().OnStreamError(stream, std::move(e));
+  }
 }
 
 void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {

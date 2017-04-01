@@ -14,6 +14,7 @@
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceErrors.h"
 #import "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #import "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
+#import "talk/woogeen/sdk/conference/objc/RTCConferenceClient+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
@@ -23,6 +24,7 @@
 @implementation RTCConferenceClient {
   std::unique_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;
   std::vector<woogeen::conference::ConferenceClientObserverObjcImpl*> _observers;
+  NSMutableDictionary<NSString*, RTCLocalStream*>* _publishedStreams;
 }
 
 - (instancetype)initWithConfiguration:
@@ -56,7 +58,8 @@
 }
 
 - (void)addObserver:(id<RTCConferenceClientObserver>)observer {
-  auto ob = new woogeen::conference::ConferenceClientObserverObjcImpl(observer);
+  auto ob =
+      new woogeen::conference::ConferenceClientObserverObjcImpl(observer, self);
   _observers.push_back(ob);
   _nativeConferenceClient->AddObserver(*ob);
 }
@@ -105,6 +108,7 @@
   _nativeConferenceClient->Publish(
       nativeStream,
       [=]() {
+        [_publishedStreams setObject:stream forKey:[stream streamId]];
         if (onSuccess != nil)
           onSuccess();
       },
@@ -349,6 +353,14 @@
 - (void)dealloc {
   while(!_observers.empty())
     delete _observers.back(), _observers.pop_back();
+}
+
+@end
+
+@implementation RTCConferenceClient (Internal)
+
+- (RTCLocalStream*)publishedStreamWithId:(NSString*)streamId {
+  return _publishedStreams[streamId];
 }
 
 @end

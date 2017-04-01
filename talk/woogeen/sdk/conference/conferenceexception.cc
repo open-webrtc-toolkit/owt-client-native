@@ -15,5 +15,9 @@ ConferenceException::ConferenceException(const enum Type& type)
 ConferenceException::ConferenceException(const enum Type& type,
                                          const std::string& message)
     : Exception(message), type_(type) {}
+
+enum ConferenceException::Type ConferenceException::Type() const {
+  return type_;
+}
 }
 }

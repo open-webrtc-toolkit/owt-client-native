@@ -97,14 +97,27 @@ ConferencePeerConnectionChannel::~ConferencePeerConnectionChannel() {
 }
 
 void ConferencePeerConnectionChannel::AddObserver(
-    ConferencePeerConnectionChannelObserver* observer) {
+    ConferencePeerConnectionChannelObserver& observer) {
+  const std::lock_guard<std::mutex> lock(observers_mutex_);
+  std::vector<std::reference_wrapper<ConferencePeerConnectionChannelObserver>>::
+      iterator it = std::find_if(
+          observers_.begin(), observers_.end(),
+          [&](std::reference_wrapper<ConferencePeerConnectionChannelObserver> o)
+              -> bool { return &observer == &(o.get()); });
+  if (it != observers_.end()) {
+    LOG(LS_WARNING) << "Adding duplicate observer.";
+    return;
+  }
   observers_.push_back(observer);
 }
 
 void ConferencePeerConnectionChannel::RemoveObserver(
-    ConferencePeerConnectionChannelObserver* observer) {
-  observers_.erase(std::remove(observers_.begin(), observers_.end(), observer),
-                   observers_.end());
+    ConferencePeerConnectionChannelObserver& observer) {
+  const std::lock_guard<std::mutex> lock(observers_mutex_);
+  observers_.erase(std::find_if(
+      observers_.begin(), observers_.end(),
+      [&](std::reference_wrapper<ConferencePeerConnectionChannelObserver> o)
+          -> bool { return &observer == &(o.get()); }));
 }
 
 void ConferencePeerConnectionChannel::CreateOffer() {
@@ -777,6 +790,28 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
 void ConferencePeerConnectionChannel::OnNetworksChanged(){
   LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
   IceRestart();
+}
+
+void ConferencePeerConnectionChannel::OnStreamError() {
+  std::shared_ptr<const ConferenceException> e(new ConferenceException(
+      ConferenceException::kUnknown,
+      "MCU reported an error was occurred for certain stream."));
+  std::shared_ptr<Stream> error_stream;
+  if (published_stream_) {
+    Unpublish(published_stream_, nullptr, nullptr);
+    error_stream = published_stream_;
+  }
+  if (subscribed_stream_) {
+    Unsubscribe(subscribed_stream_, nullptr, nullptr);
+    error_stream = subscribed_stream_;
+  }
+  if (error_stream == nullptr) {
+    RTC_DCHECK(false);
+    return;
+  }
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnStreamError(error_stream, e);
+  }
 }
 }
 }

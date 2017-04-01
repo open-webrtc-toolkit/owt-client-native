@@ -22,27 +22,6 @@ namespace conference {
 
 using namespace woogeen::base;
 
-// ConferencePeerConnectionChannel callback interface.
-// Usually, ConferenceClient should implement these methods and notify
-// application.
-// TODO: Modify this for conference.
-class ConferencePeerConnectionChannelObserver {
- public:
-  virtual ~ConferencePeerConnectionChannelObserver(){};
-  // Triggered when received an invitation.
-  virtual void OnInvited(const std::string& remote_id) = 0;
-  // Triggered when remote user accepted the invitation.
-  virtual void OnAccepted(const std::string& remote_id) = 0;
-  // Triggered when the WebRTC session is ended.
-  virtual void OnStopped(const std::string& remote_id) = 0;
-  // Triggered when remote user denied the invitation.
-  virtual void OnDenied(const std::string& remote_id) = 0;
-  // Triggered when a new stream is added.
-  virtual void OnStreamAdded(RemoteStream* stream) = 0;
-  // Triggered when a remote stream is removed.
-  virtual void OnStreamRemoved(RemoteStream* stream) = 0;
-};
-
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with
 // MCU as well as it's signaling through Socket.IO.
 class ConferencePeerConnectionChannel : public PeerConnectionChannel {
@@ -53,10 +32,10 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   ~ConferencePeerConnectionChannel();
   // Add a ConferencePeerConnectionChannel observer so it will be notified when
   // this object have some events.
-  void AddObserver(ConferencePeerConnectionChannelObserver* observer);
+  void AddObserver(ConferencePeerConnectionChannelObserver& observer);
   // Remove a ConferencePeerConnectionChannel observer. If the observer doesn't
   // exist, it will do nothing.
-  void RemoveObserver(ConferencePeerConnectionChannelObserver* observer);
+  void RemoveObserver(ConferencePeerConnectionChannelObserver& observer);
   // Publish a local stream to the conference.
   void Publish(
       std::shared_ptr<LocalStream> stream,
@@ -143,6 +122,9 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::shared_ptr<Stream> stream,
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  // Called when MCU reports stream/connection is failed.
+  void OnStreamError();
 
  protected:
   void CreateOffer();
@@ -235,7 +217,9 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::vector<sio::message::ptr> ice_candidates_;
   std::mutex candidates_mutex_;
   bool ice_restart_needed_;
-  std::vector<ConferencePeerConnectionChannelObserver*> observers_;
+  std::mutex observers_mutex_;
+  std::vector<std::reference_wrapper<ConferencePeerConnectionChannelObserver>>
+      observers_;
 };
 }
 }

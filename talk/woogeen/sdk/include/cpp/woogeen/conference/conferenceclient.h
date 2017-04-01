@@ -72,7 +72,6 @@ class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 class ConferenceSocketSignalingChannel;
 
-
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
@@ -85,8 +84,22 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnServerDisconnected() = 0;
   virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
   virtual void OnSignalingMessage(std::shared_ptr<sio::message> message) = 0;
+  virtual void OnStreamError(std::shared_ptr<sio::message> stream) = 0;
   // Notify the ID for a published stream.
   virtual void OnStreamId(const std::string& id, const std::string& label) = 0;
+};
+
+// ConferencePeerConnectionChannel callback interface.
+// Usually, ConferenceClient should implement these methods and notify
+// application.
+class ConferencePeerConnectionChannelObserver {
+ public:
+  virtual ~ConferencePeerConnectionChannelObserver(){};
+  // Triggered when an unrecoverable error happened. Error may reported by MCU
+  // or detected by client. Currently, only errors from MCU are handled.
+  virtual void OnStreamError(
+      std::shared_ptr<Stream> stream,
+      std::shared_ptr<const ConferenceException> exception) = 0;
 };
 /** @endcond */
 
@@ -130,6 +143,20 @@ class ConferenceClientObserver {
   virtual void OnStreamRemoved(
       std::shared_ptr<RemoteMixedStream> stream){};
   /**
+    @brief Triggers when an error happened on a stream.
+    @detail This event only triggered for a stream that is being published or
+    subscribed. SDK will not try to recovery the certain stream when this event
+    is triggered. If you still need this stream, please re-publish or
+    re-subscribe.
+    @param stream The stream which is corrupted. It might be a LocalStream or
+    RemoteStream.
+    @param exception The exception happened. Currently, exceptions are reported
+    by MCU.
+  */
+  virtual void OnStreamError(
+      std::shared_ptr<Stream> stream,
+      std::unique_ptr<ConferenceException> exception){};
+  /**
     @brief Triggers when a message is received.
     @param sender_id Sender's ID.
     @param message Message received.
@@ -153,7 +180,8 @@ class ConferenceClientObserver {
 };
 
 /// An asynchronous class for app to communicate with a conference in MCU.
-class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
+class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
+                               ConferencePeerConnectionChannelObserver {
  public:
   /**
     @brief Initialize a ConferenceClient instance with specific configuration
@@ -310,6 +338,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  protected:
+  // Implementing ConferenceSocketSignalingChannelObserver.
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,
                                std::string& message) override;
@@ -319,9 +348,15 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   virtual void OnUserLeft(std::shared_ptr<sio::message> user) override;
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) override;
   virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) override;
+  virtual void OnStreamError(std::shared_ptr<sio::message> stream) override;
   virtual void OnServerDisconnected() override;
   virtual void OnStreamId(const std::string& id,
                           const std::string& publish_stream_label) override;
+
+  // Implementing ConferencePeerConnectionChannelObserver.
+  virtual void OnStreamError(
+      std::shared_ptr<Stream> stream,
+      std::shared_ptr<const ConferenceException> exception) override;
 
  private:
   /// Return true if |pointer| is not a null pointer, else return false and
@@ -352,6 +387,8 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver {
   void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamRemoved(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
+  void TriggerOnStreamError(std::shared_ptr<Stream> stream,
+                            std::shared_ptr<const ConferenceException> exception);
   // Return true if |user_info| is correct, and |*user| points to the user object
   bool ParseUser(std::shared_ptr<sio::message> user_info, User** user) const;
 

@@ -8,4 +8,6 @@
 
 @interface RTCLocalStream (Internal)
 
+- (NSString*)streamId;
+
 @end

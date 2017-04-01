@@ -43,10 +43,16 @@ class ConferenceException : public woogeen::base::Exception {
   ConferenceException(const Type& type);
   ConferenceException(const Type& type, const std::string& message);
 
-  enum Type Type();
+  /** @cond **/
+  /**
+    @brief Get the type of certain exception.
+    @detail The type is always unknown because we haven't define error code for conference mode.
+  **/
+  enum Type Type() const;
+  /** @endcond **/
 
  private:
-  enum Type type_;
+  const enum Type type_;
 };
 }
 }

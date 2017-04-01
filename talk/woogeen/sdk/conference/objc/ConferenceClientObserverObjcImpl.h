@@ -9,7 +9,8 @@
 #include <mutex>
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 
-#import "talk/woogeen/sdk/include/objc/Woogeen//RTCConferenceClientObserver.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceClient.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceClientObserver.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteStream.h"
 
 namespace woogeen {
@@ -17,7 +18,8 @@ namespace conference {
 
 class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
  public:
-  ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer);
+  ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer,
+                                   RTCConferenceClient* conferenceClient);
   virtual ~ConferenceClientObserverObjcImpl(){};
 
  protected:
@@ -35,6 +37,9 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<woogeen::conference::RemoteMixedStream> stream) override;
   virtual void OnMessageReceived(std::string& sender_id,
                                  std::string& message) override;
+  virtual void OnStreamError(
+      std::shared_ptr<Stream> stream,
+      std::unique_ptr<ConferenceException> exception) override;
   virtual void OnUserJoined(
       std::shared_ptr<const woogeen::conference::User> user) override;
   virtual void OnUserLeft(
@@ -47,8 +52,11 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<woogeen::base::RemoteStream> stream);
 
   id<RTCConferenceClientObserver> observer_;
+  __weak RTCConferenceClient* conference_client_;
   std::unordered_map<std::string, RTCRemoteStream*> remote_streams_;
   std::mutex remote_streams_mutex_;
+  std::unordered_map<std::string, RTCLocalStream*> local_streams_;
+  std::mutex local_streams_mutex_;
 };
 }
 }

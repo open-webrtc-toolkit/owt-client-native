@@ -11,7 +11,7 @@ Exception::Exception() : Exception("Unknown exception.") {}
 
 Exception::Exception(const std::string& message) : message_(message) {}
 
-std::string Exception::Message() {
+std::string Exception::Message() const {
   return message_;
 }
 
@@ -24,7 +24,7 @@ StreamException::StreamException(const enum ExceptionType& type,
                                  const std::string& message)
     : Exception(message), type_(type) {}
 
-StreamException::ExceptionType StreamException::Type() {
+StreamException::ExceptionType StreamException::Type() const {
   return type_;
 }
 

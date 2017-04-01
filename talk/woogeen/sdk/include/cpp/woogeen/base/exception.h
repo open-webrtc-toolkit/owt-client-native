@@ -37,6 +37,7 @@ class Exception {
  public:
   /// Default constructor for exceptions.
   Exception();
+  virtual ~Exception() {}
   /**
     @brief Constructor with message.
     @param message Exception message.
@@ -47,7 +48,7 @@ class Exception {
     @brief Get exception message.
     @return Exception message.
   */
-  std::string Message();
+  std::string Message() const;
 
  private:
   const std::string& message_;
@@ -67,10 +68,10 @@ class StreamException : public Exception {
   StreamException(const ExceptionType& type);
   StreamException(const ExceptionType& type, const std::string& message);
 
-  ExceptionType Type();
+  ExceptionType Type() const;
 
  private:
-  enum ExceptionType type_;
+  const enum ExceptionType type_;
 };
 }
 }

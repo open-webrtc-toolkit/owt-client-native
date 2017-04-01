@@ -37,6 +37,7 @@ const std::string kEventNameOnUpdateStream = "update_stream";
 const std::string kEventNameOnUserJoin = "user_join";
 const std::string kEventNameOnUserLeave = "user_leave";
 const std::string kEventNameOnDrop = "drop";
+const std::string kEventNameConnectionFailed = "connection_failed";
 
 #if defined(WEBRTC_IOS)
 // The epoch of Mach kernel is 2001/1/1 00:00:00, while Linux is 1970/1/1
@@ -341,6 +342,15 @@ void ConferenceSocketSignalingChannel::Connect(
               bool is_ack, sio::message::list& ack_resp) {
             LOG(LS_INFO) << "Received drop message.";
             socket_client_->set_reconnect_attempts(0);
+          }));
+  socket_client_->socket()->on(
+      kEventNameConnectionFailed,
+      sio::socket::event_listener_aux(
+          [&](std::string const& name, sio::message::ptr const& data,
+              bool is_ack, sio::message::list& ack_resp) {
+            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+              (*it)->OnStreamError(data);
+            }
           }));
   // Store |on_failure| so it can be invoked if connect failed.
   connect_failure_callback_ = on_failure;

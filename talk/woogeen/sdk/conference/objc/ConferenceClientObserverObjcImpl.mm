@@ -10,19 +10,22 @@
 
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceErrors.h"
+#import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
+#import "talk/woogeen/sdk/conference/objc/RTCConferenceClient+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 
 namespace woogeen {
 namespace conference {
 
 ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
-    id<RTCConferenceClientObserver> observer) {
-  observer_ = observer;
-}
+    id<RTCConferenceClientObserver> observer,
+    RTCConferenceClient* conference_client)
+    : observer_(observer), conference_client_(conference_client) {}
 
 void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
     const std::string& id,
@@ -77,6 +80,33 @@ void ConferenceClientObserverObjcImpl::OnStreamRemoved(
 void ConferenceClientObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<RemoteMixedStream> stream) {
   TriggerOnStreamRemoved(stream);
+}
+
+void ConferenceClientObserverObjcImpl::OnStreamError(
+    std::shared_ptr<Stream> stream,
+    std::unique_ptr<ConferenceException> exception) {
+  RTCStream* error_stream = [conference_client_
+      publishedStreamWithId:[NSString stringForStdString:stream->Id()]];
+  if (error_stream == nullptr) {
+    std::lock_guard<std::mutex> lock(remote_streams_mutex_);
+    auto remote_stream_it = remote_streams_.find(stream->Id());
+    if (remote_stream_it != remote_streams_.end()) {
+      error_stream = remote_stream_it->second;
+    }
+  }
+  if (error_stream == nullptr) {
+    RTC_DCHECK(false);
+    return;
+  }
+  const std::string error_message(exception->Message());
+  NSError* err = [[NSError alloc]
+      initWithDomain:RTCErrorDomain
+                code:WoogeenConferenceErrorUnknown
+            userInfo:[[NSDictionary alloc]
+                         initWithObjectsAndKeys:
+                             [NSString stringForStdString:error_message],
+                             NSLocalizedDescriptionKey, nil]];
+  [observer_ onStreamError:err forStream:error_stream];
 }
 
 void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(

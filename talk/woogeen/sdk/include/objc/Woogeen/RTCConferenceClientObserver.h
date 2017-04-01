@@ -50,6 +50,17 @@ RTC_EXPORT
 */
 - (void)onStreamRemoved:(RTCRemoteStream*)stream;
 /**
+  @brief Triggers when an error happened on a stream.
+  @detail This event only triggered for a stream that is being publishing or
+  subscribing. SDK will not try to recovery the certain stream when this event
+  is triggered. If you still need this stream, please re-publish or
+  re-subscribe.
+  @param stream The stream which is corrupted. It might be a RTCLocalStream or
+  RTCRemoteStream.
+  @param error The error happened. Currently, errors are reported by MCU.
+*/
+- (void)onStreamError:(NSError*)error forStream:(RTCStream*)stream;
+/**
   @brief Triggers when a message is received.
   @param senderId Sender's ID.
   @param message Message received.
