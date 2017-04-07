@@ -72,7 +72,7 @@ class VideoRenderWindow {
 #if defined(WEBRTC_LINUX)
 class VideoRenderWindow {
  public:
-  VideoRenderWindow() : wnd_(nullptr) {}
+  VideoRenderWindow() : wnd_(0) {}
   virtual ~VideoRenderWindow() {}
   /**
     Set the render window handle for VideoRenderWindow instance.
