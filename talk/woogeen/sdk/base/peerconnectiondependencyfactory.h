@@ -85,7 +85,9 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #endif
   bool encoded_frame_;
   static std::mutex get_pc_dependency_factory_mutex_;
+#if defined(WEBRTC_IOS)
   rtc::NetworkMonitorInterface* network_monitor_;
+#endif
 };
 }
 }  // namespace woogeen

@@ -44,14 +44,16 @@ std::mutex PeerConnectionDependencyFactory::get_pc_dependency_factory_mutex_;
 
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
-      callback_thread_(new PeerConnectionThread),
-      network_monitor_(nullptr) {
+      callback_thread_(new PeerConnectionThread) {
 #if defined(WEBRTC_WIN)
   if (GlobalConfiguration::GetVideoHardwareAccelerationEnabled()) {
     render_hardware_acceleration_enabled_ = true;
-    }else{
+    } else {
         render_hardware_acceleration_enabled_ = false;
   }
+#endif
+#if defined(WEBRTC_IOS)
+  network_monitor_ = nullptr;
 #endif
   encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
   pc_thread_->Start();
