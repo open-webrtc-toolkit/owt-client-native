@@ -236,7 +236,6 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::mutex candidates_mutex_;
   bool ice_restart_needed_;
   std::vector<ConferencePeerConnectionChannelObserver*> observers_;
-  Thread* callback_thread_;  // All callbacks will be executed on this thread.
 };
 }
 }

@@ -83,9 +83,7 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
       signaling_channel_(signaling_channel),
       session_id_(kSessionIdBase),
       message_seq_(kMessageSeqBase),
-      ice_restart_needed_(false),
-      callback_thread_(new PeerConnectionThread) {
-  callback_thread_->Start();
+      ice_restart_needed_(false) {
   InitializePeerConnection();
   RTC_CHECK(signaling_channel_);
 }
