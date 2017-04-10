@@ -661,6 +661,10 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
     LOG(LS_ERROR) << "Received unknown message from MCU.";
     return;
   }
+  if (message->get_map().find("type") == message->get_map().end()) {
+      LOG(LS_INFO) << "Ignore erizo message without type from MCU";
+      return;
+  }
   const std::string type = message->get_map()["type"]->get_string();
   LOG(LS_INFO) << "On signaling message: " << type;
   if (type == "answer") {
