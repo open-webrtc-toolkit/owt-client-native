@@ -20,6 +20,13 @@ if (is_ios || is_mac) {
   }
 }
 
+if (is_win) {
+  config("woogeen_sdk_cpp_warnings_config") {
+    # Bug 1531. Warning C4267 appears when building stack on Windows x64.
+    cflags = [ "/wd4267" ]
+  }
+}
+
 static_library("woogeen") {
   deps = [
     ":woogeen_sdk_base",
@@ -40,11 +47,11 @@ source_set("woogeen_sdk_base") {
   sources = [
     "sdk/base/customizedframescapturer.cc",
     "sdk/base/customizedframescapturer.h",
+    "sdk/base/customizedvideoencoderproxy.cc",
+    "sdk/base/customizedvideoencoderproxy.h",
     "sdk/base/desktopcapturer.cc",
     "sdk/base/desktopcapturer.h",
     "sdk/base/deviceutils.cc",
-    "sdk/base/customizedvideoencoderproxy.cc",
-    "sdk/base/customizedvideoencoderproxy.h",
     "sdk/base/encodedvideoencoderfactory.cc",
     "sdk/base/encodedvideoencoderfactory.h",
     "sdk/base/eventtrigger.h",
@@ -94,27 +101,26 @@ source_set("woogeen_sdk_base") {
 
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
 
-
   if (is_ios) {
     sources += [
-      "sdk/base/ios/networkmonitorios.h",
       "sdk/base/ios/networkmonitorios.cc",
+      "sdk/base/ios/networkmonitorios.h",
     ]
   }
 
   if (is_win) {
     sources += [
       "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/external_msdk_decoder.cpp",
+      "sdk/base/win/external_msdk_decoder.h",
       "sdk/base/win/h264_video_mft_encoder.cpp",
       "sdk/base/win/h264_video_mft_encoder.h",
       "sdk/base/win/mftmediadecoder.cpp",
       "sdk/base/win/mftmediadecoder.h",
-      "sdk/base/win/mftvideoencoderfactory.cpp",
-      "sdk/base/win/mftvideoencoderfactory.h",
       "sdk/base/win/mftvideodecoderfactory.cpp",
       "sdk/base/win/mftvideodecoderfactory.h",
-      "sdk/base/win/external_msdk_decoder.cpp",
-      "sdk/base/win/external_msdk_decoder.h",
+      "sdk/base/win/mftvideoencoderfactory.cpp",
+      "sdk/base/win/mftvideoencoderfactory.h",
       "sdk/base/win/videorendererwin.cpp",
       "sdk/base/win/videorendererwin.h",
     ]
@@ -131,10 +137,10 @@ source_set("woogeen_sdk_base") {
 
   if (!is_ios) {
     sources += [
-      "sdk/base/customizedvideodecoderfactory.h",
       "sdk/base/customizedvideodecoderfactory.cc",
-      "sdk/base/customizedvideodecoderproxy.h",
+      "sdk/base/customizedvideodecoderfactory.h",
       "sdk/base/customizedvideodecoderproxy.cc",
+      "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
 
@@ -145,6 +151,10 @@ source_set("woogeen_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.cc",
       "sdk/base/customizedaudiodevicemodule.h",
     ]
+  }
+
+  if (is_win) {
+    configs += [ ":woogeen_sdk_cpp_warnings_config" ]
   }
 }
 
@@ -169,6 +179,10 @@ source_set("woogeen_sdk_p2p") {
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
     "sdk/p2p/peerclient.cc",
   ]
+
+  if (is_win) {
+    configs += [ ":woogeen_sdk_cpp_warnings_config" ]
+  }
 }
 
 source_set("woogeen_sdk_conf") {
@@ -192,6 +206,10 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
+
+  if (is_win) {
+    configs += [ ":woogeen_sdk_cpp_warnings_config" ]
+  }
 }
 
 if (is_ios) {
