@@ -611,7 +611,15 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
           video_formats.push_back(video_format);
         }
       }
-      std::string viewport = stream_info->get_map()["view"]->get_string();
+      std::string viewport("");
+      if (stream_info->get_map().find("view") != stream_info->get_map().end()) {
+        RTC_DCHECK(stream_info->get_map()["view"]->get_flag() ==
+                   sio::message::flag_string);
+        std::string viewport = stream_info->get_map()["view"]->get_string();
+      } else {
+        LOG(LS_WARNING) << "Viewport info is missing. It may happen if you are "
+                           "connected to an old MCU.";
+      }
       auto remote_stream = std::make_shared<RemoteMixedStream>(
           id, remote_id, viewport, video_formats);
       LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
