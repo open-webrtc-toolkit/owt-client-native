@@ -142,7 +142,7 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
         LOG(LS_ERROR) << "Failed to unlock buffer";
     }
 
-    hr = buffer->SetCurrentLength(inputImage._length);
+    hr = buffer->SetCurrentLength(static_cast<DWORD>(inputImage._length));
     if (FAILED(hr)){
         LOG(LS_ERROR) << "Failed to lock buffer for copying image data";
         sample->RemoveAllBuffers();

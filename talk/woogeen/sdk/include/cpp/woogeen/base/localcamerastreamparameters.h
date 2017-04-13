@@ -189,8 +189,8 @@ class LocalCustomizedStreamParameters final {
  private:
   bool video_enabled_;
   bool audio_enabled_;
-  size_t resolution_width_;
-  size_t resolution_height_;
+  int resolution_width_;
+  int resolution_height_;
   uint32_t fps_;
   uint32_t bitrate_kbps_;
 };

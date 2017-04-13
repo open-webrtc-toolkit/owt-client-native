@@ -20,13 +20,6 @@ if (is_ios || is_mac) {
   }
 }
 
-if (is_win) {
-  config("woogeen_sdk_win_warnings_config") {
-    # Bug 1531. Warning C4267 appears when building stack on Windows x64.
-    cflags = [ "/wd4267" ]
-  }
-}
-
 static_library("woogeen") {
   deps = [
     ":woogeen_sdk_base",
@@ -153,9 +146,6 @@ source_set("woogeen_sdk_base") {
     ]
   }
 
-  if (is_win) {
-    configs += [ ":woogeen_sdk_win_warnings_config" ]
-  }
 
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
@@ -184,9 +174,6 @@ source_set("woogeen_sdk_p2p") {
     "sdk/p2p/peerclient.cc",
   ]
 
-  if (is_win) {
-    configs += [ ":woogeen_sdk_win_warnings_config" ]
-  }
 
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
@@ -215,9 +202,6 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
 
-  if (is_win) {
-    configs += [ ":woogeen_sdk_win_warnings_config" ]
-  }
 
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]

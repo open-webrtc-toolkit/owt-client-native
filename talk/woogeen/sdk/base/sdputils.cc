@@ -173,7 +173,7 @@ std::string SdpUtils::SetPreferCodec(const std::string& sdp,
     m_line_stream << m_line_vector[i] << " ";
   }
   m_line_stream << codec_value;
-  for (int i = 3, m_line_vector_size = m_line_vector.size();
+  for (size_t i = 3, m_line_vector_size = m_line_vector.size();
        i < m_line_vector_size; i++) {
     if (m_line_vector[i] != codec_value) {
       m_line_stream << " " << m_line_vector[i];

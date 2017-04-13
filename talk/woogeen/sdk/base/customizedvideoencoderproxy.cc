@@ -98,7 +98,7 @@ int CustomizedVideoEncoderProxy::Encode(
     // Done with the native handle buffer.
     delete encoder_buffer_handle;
     encoder_buffer_handle = nullptr;
-    Resolution resolution(width, height);
+    Resolution resolution(static_cast<int>(width), static_cast<int>(height));
     if (!external_encoder_->InitEncoderContext(resolution, fps, bitrate_kbps, media_codec)) {
       LOG(LS_ERROR) << "Failed to init external encoder context";
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -134,7 +134,7 @@ int CustomizedVideoEncoderProxy::Encode(
 
   std::unique_ptr<uint8_t[]> data(new uint8_t[buffer.size()]);
   uint8_t* data_ptr = data.get();
-  uint32_t data_size = buffer.size();
+  uint32_t data_size = static_cast<uint32_t>(buffer.size());
   std::copy(buffer.begin(), buffer.end(), data_ptr);
   webrtc::EncodedImage encodedframe(data_ptr, buffer.size(), buffer.size());
   encodedframe._encodedWidth = input_image.width();

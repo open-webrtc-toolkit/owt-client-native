@@ -500,11 +500,11 @@ void ExternalMSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream,
   if (m_mfxBS.MaxLength < len) {
     // remaining BS size is not enough to hold current image, we enlarge it the
     // gap*2.
-    mfxU32 newSize = m_mfxBS.MaxLength > len ? m_mfxBS.MaxLength * 2 : len * 2;
+    mfxU32 newSize = static_cast<mfxU32>(m_mfxBS.MaxLength > len ? m_mfxBS.MaxLength * 2 : len * 2);
     ExtendMfxBitstream(&m_mfxBS, newSize);
   }
   memmove(m_mfxBS.Data + m_mfxBS.DataLength, data, len);
-  m_mfxBS.DataLength += len;
+  m_mfxBS.DataLength += static_cast<mfxU32>(len);
   m_mfxBS.DataOffset = 0;
   return;
 }

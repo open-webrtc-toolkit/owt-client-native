@@ -409,8 +409,9 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
 
   if (last_call_record_millis_ == 0 ||
       current_time - last_call_record_millis_ >= 10) {
-    if (frame_generator_->GenerateFramesForNext10Ms(recording_buffer_.get(),
-                                                    recording_buffer_size_) !=
+    if (frame_generator_->GenerateFramesForNext10Ms(
+            recording_buffer_.get(),
+            static_cast<uint32_t>(recording_buffer_size_)) !=
         static_cast<uint32_t>(recording_buffer_size_)) {
       crit_sect_.Leave();
       RTC_DCHECK(false);
