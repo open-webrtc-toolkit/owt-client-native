@@ -202,7 +202,7 @@ void BasicScreenCapturer::OnCaptureResult(
   // The captured frame is of memory layout ABRG. convert it to I420 as
   // required.
   AdjustFrameBuffer(frame_width, frame_height);
-  libyuv::ABGRToI420(frame_data_rgba, frame_stride,
+  libyuv::ARGBToI420(frame_data_rgba, frame_stride,
                      frame_buffer_->MutableDataY(), frame_buffer_->StrideY(),
                      frame_buffer_->MutableDataU(), frame_buffer_->StrideU(),
                      frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
