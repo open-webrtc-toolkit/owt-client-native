@@ -650,6 +650,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
+      remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeMix;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
@@ -660,6 +661,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
+      remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeScreen;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
@@ -675,6 +677,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     LOG(LS_INFO) << "OnStreamAdded: camera stream << " << id;
     remote_stream->has_audio_ = has_audio;
     remote_stream->has_video_ = has_video;
+    remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
     added_streams_[id] = remote_stream;
     added_stream_type_[id] = StreamType::kStreamTypeCamera;
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
@@ -926,6 +929,35 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   }
   std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
   stream_ptr->OnVideoLayoutChanged();
+}
+
+std::unordered_map<std::string, std::string>
+ConferenceClient::AttributesFromStreamInfo(
+    std::shared_ptr<sio::message> stream_info) {
+  std::unordered_map<std::string, std::string> attributes;
+  if (stream_info->get_map().find("attributes") ==
+      stream_info->get_map().end()) {
+    // TODO: CHECK here. However, to compatible with old version, no CHECK at
+    // this time.
+    LOG(LS_WARNING) << "Cannot find attributes info.";
+    return attributes;
+  }
+  auto attributes_info = stream_info->get_map()["attributes"];
+  if (attributes_info->get_flag() != sio::message::flag_object) {
+    // TODO: CHECK here. However, to compatible with old version, no CHECK at
+    // this time.
+    LOG(LS_WARNING) << "Incorrect attribute format.";
+    return attributes;
+  }
+  auto attribute_map = attributes_info->get_map();
+  for (auto const& attribute_pair : attribute_map) {
+    if (attribute_pair.second->get_flag() != sio::message::flag_string) {
+      RTC_DCHECK(false);
+      continue;
+    }
+    attributes[attribute_pair.first] = attribute_pair.second->get_string();
+  }
+  return attributes;
 }
 }
 }

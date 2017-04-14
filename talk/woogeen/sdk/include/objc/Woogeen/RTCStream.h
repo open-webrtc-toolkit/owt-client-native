@@ -54,6 +54,13 @@ RTC_EXPORT
 /// Disable video tracks
 - (void)enableVideo;
 
+/**
+  @brief Returns a user-defined attribute dictionary.
+  @detail These attributes are defined by publisher. P2P mode always return
+  empty dictionary because it is not supported yet.
+*/
+- (NSDictionary<NSString*,NSString*>*)attributes;
+
 @end
 
 NS_ASSUME_NONNULL_END

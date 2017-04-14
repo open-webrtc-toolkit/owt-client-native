@@ -373,6 +373,12 @@ void ConferencePeerConnectionChannel::Publish(
 
   sio::message::ptr options = sio::object_message::create();
   options->get_map()["state"] = sio::string_message::create("erizo");
+  sio::message::ptr attributes_ptr = sio::object_message::create();
+  for (auto const& attr : stream->Attributes()) {
+    attributes_ptr->get_map()[attr.first] =
+        sio::string_message::create(attr.second);
+  }
+  options->get_map()[kStreamOptionAttributesKey] = attributes_ptr;
   if (stream->MediaStream()->GetAudioTracks().size() == 0) {
     options->get_map()["audio"] = sio::bool_message::create(false);
   } else {

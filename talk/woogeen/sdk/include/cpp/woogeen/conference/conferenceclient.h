@@ -389,8 +389,11 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamError(std::shared_ptr<Stream> stream,
                             std::shared_ptr<const ConferenceException> exception);
-  // Return true if |user_info| is correct, and |*user| points to the user object
+  // Return true if |user_info| is correct, and |*user| points to the user
+  // object
   bool ParseUser(std::shared_ptr<sio::message> user_info, User** user) const;
+  std::unordered_map<std::string, std::string> AttributesFromStreamInfo(
+      std::shared_ptr<sio::message> stream_info);
 
   enum StreamType: int;
 

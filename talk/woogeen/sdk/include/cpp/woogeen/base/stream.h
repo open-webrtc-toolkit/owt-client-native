@@ -97,6 +97,16 @@ class Stream {
   /// Attach the stream to a renderer to receive ARGB frames from decoder.
   virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
 
+  /**
+    @brief Returns a user-defined attribute map.
+    @detail These attributes are defined by publisher. P2P mode always return
+    empty map because it is not supported yet.
+  */
+  virtual const std::unordered_map<std::string, std::string> Attributes()
+      const {
+    return attributes_;
+  }
+
 #if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
@@ -112,6 +122,7 @@ class Stream {
   void Id(const std::string& id);
   void MediaStream(MediaStreamInterface* media_stream);
   MediaStreamInterface* media_stream_;
+  std::unordered_map<std::string, std::string> attributes_;
 
  private:
   void SetAudioTracksEnabled(bool enabled);
@@ -143,6 +154,17 @@ class LocalStream : public Stream {
   virtual StreamDeviceType GetStreamDeviceType() {
     return StreamDeviceType::kStreamDeviceTypeUnknown;
   }
+
+  using Stream::Attributes;
+  /**
+    @brief Set a user-defined attribute map.
+    @detail Remote user can get attribute map by calling Attributes(). P2P mode
+    does not support setting attributes.
+  */
+  virtual void Attributes(
+      const std::unordered_map<std::string, std::string>& attributes) {
+    attributes_ = attributes;
+  }
   /** @endcond */
  protected:
   MediaConstraintsImpl* media_constraints_;
@@ -162,8 +184,16 @@ class RemoteStream : public Stream {
   std::string From();
 
  protected:
+  /** @cond */
   explicit RemoteStream(const std::string& id, const std::string& from);
-  explicit RemoteStream(MediaStreamInterface* media_stream, const std::string& from);
+  explicit RemoteStream(MediaStreamInterface* media_stream,
+                        const std::string& from);
+  using Stream::Attributes;
+  virtual void Attributes(
+      const std::unordered_map<std::string, std::string>& attributes) {
+    attributes_ = attributes;
+  }
+  /** @endcond */
 
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);

@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCVideoTrack.h>
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCMediaStream+Private.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
@@ -53,6 +54,19 @@
   if (_nativeStream == nullptr)
     return;
   _nativeStream->EnableVideo();
+}
+
+- (NSDictionary<NSString*, NSString*>*)attributes {
+  NSMutableDictionary<NSString*, NSString*>* attrs =
+      [NSMutableDictionary dictionary];
+  if (_nativeStream == nullptr) {
+    return attrs;
+  }
+  for (auto const& attribute : _nativeStream->Attributes()) {
+    [attrs setObject:[NSString stringForStdString:attribute.second]
+              forKey:[NSString stringForStdString:attribute.first]];
+  }
+  return attrs;
 }
 
 @end
