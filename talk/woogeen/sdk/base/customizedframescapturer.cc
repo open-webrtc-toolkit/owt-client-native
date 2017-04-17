@@ -76,8 +76,8 @@ const char* CustomizedFramesCapturer::kRawFrameDeviceName =
     "CustomizedFramesGenerator";
 
 CustomizedFramesCapturer::CustomizedFramesCapturer(
-    VideoFrameGeneratorInterface* raw_frameGenerator)
-    : frame_generator_(raw_frameGenerator),
+    std::unique_ptr<VideoFrameGeneratorInterface> raw_frameGenerator)
+    : frame_generator_(std::move(raw_frameGenerator)),
       encoder_(nullptr),
       frames_generator_thread(nullptr),
       width_(frame_generator_->GetWidth()),
@@ -104,7 +104,7 @@ CustomizedFramesCapturer::CustomizedFramesCapturer(
 
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   Stop();
-  frame_generator_ = nullptr;
+  frame_generator_.reset(nullptr);
   // encoder is created by app. And needs to be freed by
   // application. mark it to nullptr to avoid ReadFrame
   // passing native buffer to stack.

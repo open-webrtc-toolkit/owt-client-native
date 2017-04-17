@@ -538,7 +538,7 @@ LocalCustomizedStream::~LocalCustomizedStream() {
 
 LocalCustomizedStream::LocalCustomizedStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoFrameGeneratorInterface* framer) {
+    std::unique_ptr<VideoFrameGeneratorInterface> framer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
   }
@@ -548,7 +548,7 @@ LocalCustomizedStream::LocalCustomizedStream(
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   if (parameters->VideoEnabled()) {
-    capturer_ = new CustomizedFramesCapturer(framer);
+    capturer_ = new CustomizedFramesCapturer(std::move(framer));
     capturer_->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
     pcd_factory->CreateVideoSource(capturer_, nullptr);

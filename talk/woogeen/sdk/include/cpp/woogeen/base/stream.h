@@ -271,10 +271,11 @@ class LocalCustomizedStream : public LocalStream {
      @param parameters Parameters for creating the stream. The stream will not
      be impacted if changing parameters after it is created.
      @param framer Pointer to an instance implemented VideoFrameGeneratorInterface.
+     This instance will be destroyed by SDK when stream is closed.
    */
    explicit LocalCustomizedStream(
        std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-       VideoFrameGeneratorInterface* framer);
+       std::unique_ptr<VideoFrameGeneratorInterface> framer);
    /**
      Initialize a LocalCustomizedStream with parameters and encoder interface.
 

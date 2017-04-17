@@ -54,8 +54,12 @@ class VideoFrameGeneratorInterface {
    frame buffer size.
    @return The size of actually frame buffer size.
    */
+  VideoFrameGeneratorInterface() {};
+
   virtual uint32_t GenerateNextFrame(uint8_t* buffer,
                                      const uint32_t capacity) = 0;
+
+  virtual ~VideoFrameGeneratorInterface() {};
   /**
    @brief This function gets the size of next video frame.
    */
@@ -76,9 +80,6 @@ class VideoFrameGeneratorInterface {
    @brief This function gets the video frame type of video frame generator.
    */
   virtual VideoFrameCodec GetType() = 0;
-
- protected:
-  virtual ~VideoFrameGeneratorInterface(){};
 };
 
 } // namespace base

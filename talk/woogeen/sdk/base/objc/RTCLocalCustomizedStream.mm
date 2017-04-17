@@ -19,14 +19,14 @@
   self = [super init];
   woogeen::base::LocalCustomizedStreamParameters local_parameters =
       *[parameters nativeParameters].get();
-  woogeen::base::VideoFrameGeneratorInterface* frame_generator =
+  std::unique_ptr<woogeen::base::VideoFrameGeneratorInterface> frame_generator(
       new woogeen::base::VideoFrameGeneratorObjcImpl(
-          [parameters videoFrameGenerator]);
+          [parameters videoFrameGenerator]));
   std::shared_ptr<woogeen::base::LocalCustomizedStream> local_stream =
       std::make_shared<woogeen::base::LocalCustomizedStream>(
           std::make_shared<woogeen::base::LocalCustomizedStreamParameters>(
               local_parameters),
-          frame_generator);
+          std::move(frame_generator));
   [super setNativeStream:local_stream];
   return self;
 }

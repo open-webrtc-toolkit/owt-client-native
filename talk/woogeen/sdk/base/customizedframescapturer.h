@@ -26,7 +26,7 @@ using namespace cricket;
 // Simulated video capturer that periodically reads frames from a file.
 class CustomizedFramesCapturer : public VideoCapturer {
  public:
-  CustomizedFramesCapturer(VideoFrameGeneratorInterface* rawFrameGenerator);
+  CustomizedFramesCapturer(std::unique_ptr<VideoFrameGeneratorInterface> rawFrameGenerator);
   CustomizedFramesCapturer(int width, int height, int fps, int bitrate_kbps, VideoEncoderInterface* encoder);
   virtual ~CustomizedFramesCapturer();
   static const char* kRawFrameDeviceName;
@@ -54,7 +54,7 @@ class CustomizedFramesCapturer : public VideoCapturer {
 
   int I420DataSize(int height, int stride_y, int stride_u, int stride_v);
 
-  VideoFrameGeneratorInterface* frame_generator_;
+  std::unique_ptr<VideoFrameGeneratorInterface> frame_generator_;
   VideoEncoderInterface* encoder_;
   CustomizedFramesThread* frames_generator_thread;
   int width_;
