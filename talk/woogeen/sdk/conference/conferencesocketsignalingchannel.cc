@@ -538,10 +538,13 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
 
 void ConferenceSocketSignalingChannel::GetRegion(
     const std::string& stream_id,
+    const std::string& mixed_stream_id,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["mixStreamId"] =
+      sio::string_message::create(mixed_stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   Emit(kEventNameGetRegion, send_message,
@@ -569,12 +572,15 @@ void ConferenceSocketSignalingChannel::GetRegion(
 
 void ConferenceSocketSignalingChannel::SetRegion(
     const std::string& stream_id,
+    const std::string& mixed_stream_id,
     const std::string& region_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
   send_message->get_map()["region"] = sio::string_message::create(region_id);
+  send_message->get_map()["mixStreamId"] =
+      sio::string_message::create(mixed_stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   Emit(kEventNameSetRegion, send_message,

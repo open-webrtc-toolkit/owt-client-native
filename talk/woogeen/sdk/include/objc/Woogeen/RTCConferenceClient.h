@@ -29,6 +29,7 @@
 
 #import <WebRTC/RTCMacros.h>
 #import "Woogeen/RTCLocalStream.h"
+#import "Woogeen/RTCRemoteMixedStream.h"
 #import "Woogeen/RTCRemoteStream.h"
 #import "Woogeen/RTCConferenceClientObserver.h"
 #import "Woogeen/RTCConferenceClientConfiguration.h"
@@ -151,18 +152,27 @@ RTC_EXPORT
          onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Get a remote stream's region
+  @param stream Whose region to get.
+  @param mixedStream Mixed stream on which the region to get.
+  @param onSuccess Success callback with region ID.
 */
-- (void)getRegion:(RTCRemoteStream*)stream
-        onSuccess:(nullable void (^)(NSString*))onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
+- (void)getRegionOfStream:(RTCRemoteStream*)stream
+            inMixedStream:(RTCRemoteMixedStream*)mixedStream
+                onSuccess:(void (^)(NSString*))onSuccess
+                onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Set a remote stream's region
+  @param stream Whose region to get.
+  @param mixedStream Mixed stream on which the region to get.
+  @param regionId Region ID to be set.
+  @param onSuccess Success callback with region ID.
 */
-- (void)setRegion:(RTCRemoteStream*)stream
-         regionId:(NSString*)regionId
-        onSuccess:(nullable void (^)())onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
+- (void)setRegionOfStream:(RTCRemoteStream*)stream
+               toRegionId:(NSString*)regionId
+                 inStream:(RTCRemoteMixedStream*)mixedStream
+                onSuccess:(nullable void (^)())onSuccess
+                onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Get a stream's connection statistics

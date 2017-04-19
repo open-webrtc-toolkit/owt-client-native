@@ -17,8 +17,9 @@
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceClient+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
+#import "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
+#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 
 @implementation RTCConferenceClient {
@@ -307,15 +308,19 @@
       });
 }
 
-- (void)getRegion:(RTCRemoteStream*)stream
-        onSuccess:(void (^)(NSString*))onSuccess
-        onFailure:(void (^)(NSError*))onFailure {
+- (void)getRegionOfStream:(RTCRemoteStream*)stream
+            inMixedStream:(RTCRemoteMixedStream*)mixedStream
+                onSuccess:(void (^)(NSString*))onSuccess
+                onFailure:(nullable void (^)(NSError*))onFailure {
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<woogeen::base::RemoteStream> nativeStream(
       std::static_pointer_cast<woogeen::base::RemoteStream>(
           nativeStreamRefPtr));
+  std::shared_ptr<woogeen::conference::RemoteMixedStream> nativeMixedStream(
+      std::static_pointer_cast<woogeen::conference::RemoteMixedStream>(
+          [mixedStream nativeStream]));
   _nativeConferenceClient->GetRegion(
-      nativeStream,
+      nativeStream, nativeMixedStream,
       [=](std::string region_id) {
         if (onSuccess) {
           onSuccess([NSString stringWithUTF8String:region_id.c_str()]);
@@ -326,17 +331,21 @@
       });
 }
 
-- (void)setRegion:(RTCRemoteStream*)stream
-         regionId:(NSString*)regionId
-        onSuccess:(void (^)())onSuccess
-        onFailure:(void (^)(NSError*))onFailure{
+- (void)setRegionOfStream:(RTCRemoteStream*)stream
+               toRegionId:(NSString*)regionId
+                 inStream:(RTCRemoteMixedStream*)mixedStream
+                onSuccess:(nullable void (^)())onSuccess
+                onFailure:(nullable void (^)(NSError*))onFailure {
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<woogeen::base::RemoteStream> nativeStream(
       std::static_pointer_cast<woogeen::base::RemoteStream>(
           nativeStreamRefPtr));
+  std::shared_ptr<woogeen::conference::RemoteMixedStream> nativeMixedStream(
+      std::static_pointer_cast<woogeen::conference::RemoteMixedStream>(
+          [mixedStream nativeStream]));
   auto nativeRegionid = [regionId UTF8String];
   _nativeConferenceClient->SetRegion(
-      nativeStream, nativeRegionid,
+      nativeStream, nativeMixedStream, nativeRegionid,
       [=]() {
         if (onSuccess) {
           onSuccess();

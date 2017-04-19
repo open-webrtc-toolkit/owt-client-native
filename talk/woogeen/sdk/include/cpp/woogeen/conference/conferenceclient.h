@@ -313,18 +313,26 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   /**
-    @brief Get a remote stream's region
+    @brief Get a remote stream's region.
+    @param stream Whose region to get.
+    @param mixed_stream Mixed stream on which the region to get.
+    @param on_success Success callback with region ID.
   */
   void GetRegion(
       std::shared_ptr<RemoteStream> stream,
+      std::shared_ptr<RemoteMixedStream> mixed_stream,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   /**
-    @brief Set a remote stream's region
+    @brief Set a remote stream's region.
+    @param stream Whose region to set.
+    @param mixed_stream Mixed stream on which the region to get.
+    @param region_id Region ID to be set.
   */
   void SetRegion(
       std::shared_ptr<RemoteStream> stream,
+      std::shared_ptr<RemoteMixedStream> mixed_stream,
       const std::string& region_id,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);

@@ -433,29 +433,35 @@ void ConferenceClient::Leave(
 
 void ConferenceClient::GetRegion(
       std::shared_ptr<RemoteStream> stream,
+      std::shared_ptr<RemoteMixedStream> mixed_stream,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure) ||
+      !CheckNullPointer((uintptr_t)mixed_stream.get(), on_failure)) {
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)){
     return;
   }
-  signaling_channel_->GetRegion(stream->Id(), on_success, on_failure);
+  signaling_channel_->GetRegion(stream->Id(), mixed_stream->Id(), on_success,
+                                on_failure);
 }
 
 void ConferenceClient::SetRegion(
     std::shared_ptr<RemoteStream> stream,
+    std::shared_ptr<RemoteMixedStream> mixed_stream,
     const std::string& region_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure) ||
+      !CheckNullPointer((uintptr_t)mixed_stream.get(), on_failure)) {
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->SetRegion(stream->Id(), region_id, on_success, on_failure);
+  signaling_channel_->SetRegion(stream->Id(), mixed_stream->Id(), region_id,
+                                on_success, on_failure);
 }
 
 void ConferenceClient::Mute(
