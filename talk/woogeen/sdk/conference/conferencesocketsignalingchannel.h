@@ -68,6 +68,28 @@ class ConferenceSocketSignalingChannel
       const std::string& region_id,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void Mute(
+      const std::string& stream_id,
+      bool mute_audio,
+      bool mute_video,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void Unmute(
+      const std::string& stream_id,
+      bool unmute_audio,
+      bool unmute_video,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void Mix(
+      const std::string& stream_id,
+      std::vector<std::string>& mixed_stream_ids,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void Unmix(
+      const std::string& stream_id,
+      std::vector<std::string>& mixed_stream_ids,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void Disconnect(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);

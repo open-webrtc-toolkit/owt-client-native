@@ -458,6 +458,92 @@ void ConferenceClient::SetRegion(
   signaling_channel_->SetRegion(stream->Id(), region_id, on_success, on_failure);
 }
 
+void ConferenceClient::Mute(
+    std::shared_ptr<Stream> stream,
+    bool mute_audio,
+    bool mute_video,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  signaling_channel_->Mute(stream->Id(), mute_audio, mute_video, on_success,
+                           on_failure);
+}
+
+void ConferenceClient::Unmute(
+    std::shared_ptr<Stream> stream,
+    bool unmute_audio,
+    bool unmute_video,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  signaling_channel_->Unmute(stream->Id(), unmute_audio, unmute_video,
+                             on_success, on_failure);
+}
+
+void ConferenceClient::Mix(
+    std::shared_ptr<Stream> stream,
+    std::vector<std::shared_ptr<RemoteMixedStream>> mixed_stream_list,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  std::vector<std::string> mixed_stream_ids;
+  for (auto mixed_stream : mixed_stream_list) {
+    if (mixed_stream.get())
+      mixed_stream_ids.push_back(mixed_stream->Id());
+  }
+  if (mixed_stream_ids.empty() && on_failure) {
+    std::unique_ptr<ConferenceException> e(new ConferenceException(
+        ConferenceException::kUnknown,
+        "No valid remote mixed stream specified for the mix request."));
+    on_failure(std::move(e));
+    return;
+  }
+  signaling_channel_->Mix(stream->Id(), mixed_stream_ids, on_success,
+                          on_failure);
+}
+
+void ConferenceClient::Unmix(
+    std::shared_ptr<Stream> stream,
+    std::vector<std::shared_ptr<RemoteMixedStream>> mixed_stream_list,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  std::vector<std::string> mixed_stream_ids;
+  for (auto mixed_stream : mixed_stream_list) {
+    if (mixed_stream.get())
+      mixed_stream_ids.push_back(mixed_stream->Id());
+  }
+  if (mixed_stream_ids.empty() && on_failure) {
+    std::unique_ptr<ConferenceException> e(new ConferenceException(
+        ConferenceException::kUnknown,
+        "No valid remote mixed stream specified for the unmix request."));
+    on_failure(std::move(e));
+    return;
+  }
+  signaling_channel_->Unmix(stream->Id(), mixed_stream_ids, on_success,
+                            on_failure);
+}
+
 void ConferenceClient::GetConnectionStats(
     std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,

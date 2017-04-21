@@ -330,6 +330,52 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
   /**
+    @brief Mute a stream on conference server so server will actively drop
+    video or(and) audio data from this stream depending on the |mute_video| and
+    |mute_audio| parameters.
+  */
+  void Mute(
+      std::shared_ptr<Stream> stream,
+      bool mute_audio,
+      bool mute_video,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Unmute a stream on conference server so server will resume receiving
+    previously muted video or(and) audio data of this stream depending on the
+    |unmute_video| and |unmute_audio| parameters.
+  */
+  void Unmute(
+      std::shared_ptr<Stream> stream,
+      bool unmute_audio,
+      bool unmute_video,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Enable mixing of specified |stream| into a series of remote mixed
+    streams. Providing empty remote stream list results in the |on_failure|
+    callback to be invoked.
+  */
+  void Mix(
+      std::shared_ptr<Stream> stream,
+      std::vector<std::shared_ptr<RemoteMixedStream>> mixed_stream_list,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Disable mixing of specified |stream| into a series of remote mixed
+    streams. Providing empty remote stream list results in the |on_failure|
+    callback to be invoked.
+  */
+  void Unmix(
+      std::shared_ptr<Stream> stream,
+      std::vector<std::shared_ptr<RemoteMixedStream>> mixed_stream_list,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
     @brief Get a stream's connection statistics
   */
   void GetConnectionStats(
