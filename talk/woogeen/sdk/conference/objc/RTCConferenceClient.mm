@@ -85,6 +85,19 @@
 - (void)joinWithToken:(NSString*)token
             onSuccess:(void (^)(RTCConferenceUser*))onSuccess
             onFailure:(void (^)(NSError*))onFailure {
+  if (token == nil) {
+    if (onFailure != nil) {
+      NSError* err = [[NSError alloc]
+          initWithDomain:RTCErrorDomain
+                    code:WoogeenConferenceErrorUnknown
+                userInfo:[[NSDictionary alloc]
+                             initWithObjectsAndKeys:@"Token cannot be nil.",
+                                                    NSLocalizedDescriptionKey,
+                                                    nil]];
+      onFailure(err);
+    }
+    return;
+  }
   const std::string nativeToken = [token UTF8String];
   _nativeConferenceClient->Join(
       nativeToken,
