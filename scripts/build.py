@@ -64,8 +64,9 @@ TEST_SCHEME = 'debug'
 TEST_SIMULATOR_DEVICE = 'iPhone 7'
 
 def gngen(arch, ssl_root, scheme):
-  gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false ios_enable_code_signing=false '\
-      'ios_deployment_target="7.0" use_xcode_clang=true rtc_libvpx_build_vp9=false '\
+  gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
+      'ios_enable_code_signing=false ios_deployment_target="7.0" use_xcode_clang=true '\
+      'rtc_libvpx_build_vp9=false enable_ios_bitcode=true '\
       'woogeen_workarounds_for_m54=true'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
