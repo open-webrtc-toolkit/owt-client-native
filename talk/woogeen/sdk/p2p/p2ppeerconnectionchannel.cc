@@ -142,8 +142,15 @@ void P2PPeerConnectionChannel::Invite(
 void P2PPeerConnectionChannel::Accept(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-  if (session_state_ != kSessionStatePending)
+  if (session_state_ != kSessionStatePending) {
+    if (on_failure) {
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientInvalidState,
+                           "Cannot accept invitation in this state."));
+      on_failure(std::move(e));
+    }
     return;
+  }
   is_caller_ = false;
   InitializePeerConnection();
   SendAcceptance(on_success, on_failure);
@@ -154,8 +161,15 @@ void P2PPeerConnectionChannel::Accept(
 void P2PPeerConnectionChannel::Deny(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-  if (session_state_ != kSessionStatePending)
+  if (session_state_ != kSessionStatePending) {
+    if (on_failure) {
+      std::unique_ptr<P2PException> e(
+          new P2PException(P2PException::kClientInvalidState,
+                           "Cannot deny invitation in this state."));
+      on_failure(std::move(e));
+    }
     return;
+  }
   SendDeny(on_success, on_failure);
   ChangeSessionState(kSessionStateReady);
 }
