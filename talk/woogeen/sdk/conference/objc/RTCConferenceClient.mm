@@ -54,6 +54,7 @@
   std::unique_ptr<woogeen::conference::ConferenceClient> nativeConferenceClient(
       new woogeen::conference::ConferenceClient(*nativeConfig));
   _nativeConferenceClient = std::move(nativeConferenceClient);
+  _publishedStreams = [[NSMutableDictionary alloc] init];
   return self;
 }
 
