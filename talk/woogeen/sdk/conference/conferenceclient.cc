@@ -617,7 +617,8 @@ void ConferenceClient::OnStreamError(sio::message::ptr stream) {
     RTC_DCHECK(false);
     return;
   }
-  pcc->OnStreamError();
+  pcc->OnStreamError(
+      std::string("MCU reported an error was occurred for certain stream."));
 }
 
 void ConferenceClient::OnServerDisconnected() {

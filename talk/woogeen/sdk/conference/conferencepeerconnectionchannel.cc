@@ -80,7 +80,8 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
       signaling_channel_(signaling_channel),
       session_id_(kSessionIdBase),
       message_seq_(kMessageSeqBase),
-      ice_restart_needed_(false) {
+      ice_restart_needed_(false),
+      connected_(false) {
   InitializePeerConnection();
   RTC_CHECK(signaling_channel_);
 }
@@ -211,13 +212,27 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
     if (publish_success_callback_) {
       std::thread t(publish_success_callback_);
       t.detach();
-      publish_success_callback_ = nullptr;
     } else if (subscribe_success_callback_) {
-      std::thread t(subscribe_success_callback_,subscribed_stream_);
+      std::thread t(subscribe_success_callback_, subscribed_stream_);
       t.detach();
-      subscribe_success_callback_ = nullptr;
     }
+    connected_ = true;
+  } else if (new_state == PeerConnectionInterface::kIceConnectionFailed ||
+             new_state == PeerConnectionInterface::kIceConnectionClosed) {
+    if (!connected_ && failure_callback_) {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnknown, "ICE failed."));
+      std::thread t(failure_callback_, std::move(e));
+      t.detach();
+    } else if (connected_) {
+      OnStreamError(
+          std::string("ICE connection state changed to failed or closed."));
+    }
+    connected_ = false;
   }
+  publish_success_callback_ = nullptr;
+  subscribe_success_callback_ = nullptr;
+  failure_callback_ = nullptr;
 }
 
 void ConferencePeerConnectionChannel::OnIceGatheringChange(
@@ -752,10 +767,10 @@ void ConferencePeerConnectionChannel::OnNetworksChanged(){
   IceRestart();
 }
 
-void ConferencePeerConnectionChannel::OnStreamError() {
-  std::shared_ptr<const ConferenceException> e(new ConferenceException(
-      ConferenceException::kUnknown,
-      "MCU reported an error was occurred for certain stream."));
+void ConferencePeerConnectionChannel::OnStreamError(
+    const std::string& error_message) {
+  std::shared_ptr<const ConferenceException> e(
+      new ConferenceException(ConferenceException::kUnknown, error_message));
   std::shared_ptr<Stream> error_stream;
   if (published_stream_) {
     Unpublish(published_stream_, nullptr, nullptr);

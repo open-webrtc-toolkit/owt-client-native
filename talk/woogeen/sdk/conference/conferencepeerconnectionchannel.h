@@ -123,8 +123,8 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
-  // Called when MCU reports stream/connection is failed.
-  void OnStreamError();
+  // Called when MCU reports stream/connection is failed or ICE failed.
+  void OnStreamError(const std::string& error_message);
 
  protected:
   void CreateOffer();
@@ -215,6 +215,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::mutex observers_mutex_;
   std::vector<std::reference_wrapper<ConferencePeerConnectionChannelObserver>>
       observers_;
+  bool connected_;
 };
 }
 }
