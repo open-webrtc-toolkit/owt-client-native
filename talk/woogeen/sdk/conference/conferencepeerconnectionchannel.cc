@@ -388,7 +388,7 @@ void ConferencePeerConnectionChannel::Publish(
     sio::message::ptr video_options = sio::object_message::create();
     if (stream->GetStreamDeviceType() ==
         woogeen::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
-      options->get_map()["video"]->get_map()["device"] =
+      video_options->get_map()["device"] =
           sio::string_message::create("screen");
     } else {
       video_options->get_map()["device"] =
