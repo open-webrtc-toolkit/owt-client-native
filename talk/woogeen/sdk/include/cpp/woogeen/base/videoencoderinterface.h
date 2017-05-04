@@ -51,6 +51,7 @@ class VideoEncoderInterface {
    @param fps Estimated frame rate expected.
    @param bitrate_kbps bitrate in kbps the caller expect the encoder to
    output at current resolution and frame rate.
+   @param video_codec codec type requested.
    @return Return true if successfully inited the encoder context; Return
    false on failing to init the encoder context.
    */

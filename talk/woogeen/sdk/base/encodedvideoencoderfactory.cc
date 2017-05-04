@@ -10,6 +10,10 @@
 EncodedVideoEncoderFactory::EncodedVideoEncoderFactory() {
     supported_codecs_.clear();
     supported_codecs_.push_back(cricket::VideoCodec("VP8"));
+    supported_codecs_.push_back(cricket::VideoCodec("VP9"));
+#ifndef DISABLE_H265
+    supported_codecs_.push_back(cricket::VideoCodec("H265"));
+#endif
     const webrtc::H264::Level level = webrtc::H264::kLevel3_1;
 
     cricket::VideoCodec constrained_high(cricket::kH264CodecName);
@@ -47,6 +51,12 @@ webrtc::VideoEncoder* EncodedVideoEncoderFactory::CreateVideoEncoder(
       codec_type = webrtc::kVideoCodecH264;
     else if(!_stricmp(codec.name.c_str(), "VP8"))
       codec_type = webrtc::kVideoCodecVP8;
+    else if (!_stricmp(codec.name.c_str(), "VP9"))
+        codec_type = webrtc::kVideoCodecVP9;
+#ifndef DISABLE_H265
+    else if (!_stricmp(codec.name.c_str(), "H265"))
+        codec_type = webrtc::kVideoCodecH265;
+#endif
     else {
       return nullptr;
     }

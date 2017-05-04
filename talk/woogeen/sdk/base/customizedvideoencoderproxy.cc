@@ -77,18 +77,22 @@ int CustomizedVideoEncoderProxy::Encode(
     uint32_t fps = encoder_buffer_handle->fps;
     uint32_t bitrate_kbps = encoder_buffer_handle->bitrate_kbps;
 
-    // TODO(jianlin): Add support for H265 and VP9.
+    // TODO(jianlin): Add support for H265 and VP9. For VP9/HEVC since the RTPFragmentation
+    // information must be extracted by parsing the bitstream, we commented out the support
+    // of them temporarily.
     MediaCodec::VideoCodec media_codec;
     if (codec_type_ == webrtc::kVideoCodecH264)
         media_codec = MediaCodec::VideoCodec::H264;
     else if (codec_type_ == webrtc::kVideoCodecVP8)
         media_codec = MediaCodec::VideoCodec::VP8;
+#if 0
 #ifndef DISABLE_H265
     else if (codec_type_ == webrtc::kVideoCodecH265)
         media_codec = MediaCodec::VideoCodec::H265;
 #endif
     else if (codec_type_ == webrtc::kVideoCodecVP9)
         media_codec = MediaCodec::VideoCodec::VP9;
+#endif
     else { //Not matching any supported format.
       LOG(LS_ERROR) << "Requested encoding format not supported";
       delete encoder_buffer_handle;
@@ -114,6 +118,8 @@ int CustomizedVideoEncoderProxy::Encode(
   } else { //normal case.
      delete encoder_buffer_handle;
      encoder_buffer_handle = nullptr;
+     if (codec_type_ != webrtc::kVideoCodecH264 || codec_type_ != webrtc::kVideoCodecVP8)
+         return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   std::vector<uint8_t> buffer;
@@ -127,7 +133,19 @@ int CustomizedVideoEncoderProxy::Encode(
     }
   }
 
+#ifdef WEBRTC_ANDROID
+  uint8_t* data_ptr = nullptr;
+  uint32_t data_size = 0;
   if(external_encoder_) {
+    data_ptr = external_encoder_->EncodeOneFrame(request_key_frame);
+    data_size = sizeof(data_ptr) / sizeof(uint8_t);
+  }
+  if(data_ptr == nullptr) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  webrtc::EncodedImage encodedframe(data_ptr, data_size, data_size);
+#else
+  if (external_encoder_) {
     if(!external_encoder_->EncodeOneFrame(buffer, request_key_frame))
       return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -156,7 +174,6 @@ int CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
     picture_id_ = (picture_id_ + 1) & 0x7FFF;
   }
-
   // Generate a header describing a single fragment.
   webrtc::RTPFragmentationHeader header;
   memset(&header, 0, sizeof(header));

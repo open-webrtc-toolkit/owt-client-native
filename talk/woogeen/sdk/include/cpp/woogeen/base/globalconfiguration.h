@@ -59,6 +59,9 @@ class GlobalConfiguration {
   /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
+   please be noted at present only vp8 and h.264 encoded frame input is supported.
+   If the client configuration sets preferred coded to vp9 or h265, the encoded
+   frame might not be sent out to remote.
    @param enabled Capturing frame is encoded or not.
    */
   static void SetEncodedVideoFrameEnabled(bool enabled) {
