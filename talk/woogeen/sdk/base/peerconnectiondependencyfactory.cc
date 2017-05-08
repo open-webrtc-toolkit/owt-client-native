@@ -6,6 +6,7 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
+#include "webrtc/system_wrappers/include/field_trial_default.h"
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
@@ -44,7 +45,8 @@ std::mutex PeerConnectionDependencyFactory::get_pc_dependency_factory_mutex_;
 
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(new PeerConnectionThread),
-      callback_thread_(new PeerConnectionThread) {
+      callback_thread_(new PeerConnectionThread),
+      field_trial_("WebRTC-H264HighProfile/Enabled/") {
 #if defined(WEBRTC_WIN)
   if (GlobalConfiguration::GetVideoHardwareAccelerationEnabled()) {
     render_hardware_acceleration_enabled_ = true;
@@ -103,6 +105,9 @@ PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
 void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
   LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
+
+  webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
+
   if (!rtc::InitializeSSL()) {
     LOG(LS_ERROR) << "Failed to initialize SSL.";
     RTC_NOTREACHED();

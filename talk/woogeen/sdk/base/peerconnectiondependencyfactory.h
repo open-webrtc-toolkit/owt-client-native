@@ -88,6 +88,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
 #if defined(WEBRTC_IOS)
   rtc::NetworkMonitorInterface* network_monitor_;
 #endif
+  std::string field_trial_;
 };
 }
 }  // namespace woogeen
