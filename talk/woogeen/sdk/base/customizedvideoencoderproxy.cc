@@ -118,7 +118,7 @@ int CustomizedVideoEncoderProxy::Encode(
   } else { //normal case.
      delete encoder_buffer_handle;
      encoder_buffer_handle = nullptr;
-     if (codec_type_ != webrtc::kVideoCodecH264 || codec_type_ != webrtc::kVideoCodecVP8)
+     if (codec_type_ != webrtc::kVideoCodecH264 && codec_type_ != webrtc::kVideoCodecVP8)
          return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
