@@ -5,6 +5,7 @@
 #include <thread>
 #include <future>
 #include "webrtc/base/base64.h"
+#include "webrtc/base/task_queue.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
@@ -28,7 +29,8 @@ ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configur
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
       crit_sect_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-      signaling_channel_connected_(false) {
+      signaling_channel_connected_(false),
+      task_queue_(new rtc::TaskQueue("ConferenceClientCallbacksAndEventsQueue")) {
 }
 
 ConferenceClient::~ConferenceClient() {
@@ -171,9 +173,11 @@ void ConferenceClient::Publish(
       LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
                        "more than once.";
       if (on_failure) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Duplicated stream."));
-        on_failure(std::move(e));
+        task_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Duplicated stream."));
+          on_failure(std::move(e));
+        });
       }
       return;
     }
@@ -228,12 +232,14 @@ void ConferenceClient::Subscribe(
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     if (subscribe_pcs_.find(stream->Id()) != subscribe_pcs_.end()) {
-      std::string failure_message(
-          "Cannot subscribe a stream that is subscribing.");
       if (on_failure != nullptr) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, failure_message));
-        on_failure(std::move(e));
+        task_queue_->PostTask([on_failure]() {
+          std::string failure_message(
+              "Cannot subscribe a stream that is subscribing.");
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, failure_message));
+          on_failure(std::move(e));
+        });
       }
       return;
     }
@@ -280,9 +286,11 @@ void ConferenceClient::Unpublish(
     if (pcc_it == publish_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Invalid stream."));
-        on_failure(std::move(e));
+        task_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Invalid stream."));
+          on_failure(std::move(e));
+        });
       }
     } else {
       pcc_it->second->Unpublish(stream,
@@ -314,9 +322,11 @@ void ConferenceClient::Unsubscribe(
     if (pcc_it == subscribe_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Invalid stream."));
-        on_failure(std::move(e));
+        task_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Invalid stream."));
+          on_failure(std::move(e));
+        });
       }
     } else {
       pcc_it->second->Unsubscribe(stream,

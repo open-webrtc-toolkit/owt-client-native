@@ -55,6 +55,10 @@ namespace webrtc {
   class CriticalSectionWrapper;
 }
 
+namespace rtc {
+  class TaskQueue;
+}
+
 namespace woogeen {
 namespace conference {
 
@@ -474,6 +478,9 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   // Key is user's ID
   std::unordered_map<std::string, std::shared_ptr<User>> participants;
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
+  // Queue for callbacks and events. Shared between ConferenceClient and all of
+  // it's ConferencePeerConnectionChannel.
+  std::shared_ptr<rtc::TaskQueue> task_queue_;
 };
 }
 }
