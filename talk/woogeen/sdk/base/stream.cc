@@ -28,20 +28,20 @@ namespace base {
 #if defined(WEBRTC_WIN)
 Stream::Stream()
     : media_stream_(nullptr),
-      id_(""),
       renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr) {}
+      d3d9_renderer_impl_(nullptr),
+      id_("") {}
 
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
-      id_(id),
       renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr) {}
+      d3d9_renderer_impl_(nullptr),
+      id_(id) {}
 #else
-Stream::Stream() : media_stream_(nullptr), id_(""), renderer_impl_(nullptr) {}
+Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), id_("") {}
 
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), id_(id), renderer_impl_(nullptr) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), id_(id) {}
 #endif
 
 MediaStreamInterface* Stream::MediaStream() const {
@@ -580,6 +580,7 @@ LocalCustomizedStream::LocalCustomizedStream(
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   if (parameters->VideoEnabled()) {
+    encoded_ = true;
     capturer_ = new CustomizedFramesCapturer(
       parameters->ResolutionWidth(),
       parameters->ResolutionHeight(),
@@ -603,6 +604,107 @@ LocalCustomizedStream::LocalCustomizedStream(
   }
   media_stream_ = stream;
   media_stream_->AddRef();
+}
+
+void LocalCustomizedStream::AttachVideoRenderer(
+    VideoRendererARGBInterface& renderer) {
+  if (encoded_) {
+    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
+    return;
+  }
+  if (media_stream_ == nullptr) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    return;
+  }
+
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
+    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  } else if (video_tracks.size() > 1) {
+    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+                       "will be attachecd to renderer.";
+  }
+
+  WebrtcVideoRendererARGBImpl* old_renderer =
+      renderer_impl_ ? renderer_impl_ : nullptr;
+
+  renderer_impl_ = new WebrtcVideoRendererARGBImpl(renderer);
+  video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
+
+  if (old_renderer)
+    delete old_renderer;
+
+  LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+
+#if defined(WEBRTC_WIN)
+void LocalCustomizedStream::AttachVideoRenderer(
+    VideoRenderWindow& render_window) {
+  if (encoded_) {
+    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
+    return;
+  }
+  if (media_stream_ == nullptr) {
+    ASSERT(false);
+    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    return;
+  }
+
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
+    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  } else if (video_tracks.size() > 1) {
+    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+                       "will be attachecd to renderer.";
+  }
+
+  WebrtcVideoRendererD3D9Impl* old_renderer =
+      d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
+
+  d3d9_renderer_impl_ =
+      new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
+  video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
+
+  if (old_renderer)
+    delete old_renderer;
+
+  LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+#endif
+void LocalCustomizedStream::DetachVideoRenderer() {
+  if (encoded_) {
+    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
+    return;
+  }
+#if defined(WEBRTC_WIN)
+  if (media_stream_ == nullptr ||
+      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
+    return;
+#else
+  if (media_stream_ == nullptr || renderer_impl_ == nullptr)
+    return;
+#endif
+
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0)
+    return;
+
+  // Detach from the first stream.
+  if (renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(renderer_impl_);
+    delete renderer_impl_;
+    renderer_impl_ = nullptr;
+  }
+#if defined(WEBRTC_WIN)
+  if (d3d9_renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
+    delete d3d9_renderer_impl_;
+    d3d9_renderer_impl_ = nullptr;
+  }
+#endif
 }
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,

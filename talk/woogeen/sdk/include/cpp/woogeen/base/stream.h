@@ -123,15 +123,14 @@ class Stream {
   void MediaStream(MediaStreamInterface* media_stream);
   MediaStreamInterface* media_stream_;
   std::unordered_map<std::string, std::string> attributes_;
-
- private:
-  void SetAudioTracksEnabled(bool enabled);
-  void SetVideoTracksEnabled(bool enabled);
-  std::string id_;
   WebrtcVideoRendererARGBImpl* renderer_impl_;
 #if defined(WEBRTC_WIN)
   WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
 #endif
+ private:
+  void SetAudioTracksEnabled(bool enabled);
+  void SetVideoTracksEnabled(bool enabled);
+  std::string id_;
 };
 
 /**
@@ -326,8 +325,19 @@ class LocalCustomizedStream : public LocalStream {
      return StreamDeviceType::kStreamDeviceTypeCamera;
    }
    /** @endcond */
+
+   /// Attach the stream to a renderer to receive ARGB frames from decoder.
+   void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
+#if defined(WEBRTC_WIN)
+   /// Attach the stream to a renderer to receive frames from decoder.
+   /// Both I420 frame and native surface is supported.
+   void AttachVideoRenderer(VideoRenderWindow& render_window);
+#endif
+   /// Detach the stream from its renderer.
+   void DetachVideoRenderer();
   private:
    CustomizedFramesCapturer* capturer_;
+   bool encoded_ = false;
 };
 
 /// This class represents a local stream which uses local screen/app to generate
