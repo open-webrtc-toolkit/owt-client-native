@@ -170,7 +170,7 @@ RTC_EXPORT
 */
 - (void)setRegionOfStream:(RTCRemoteStream*)stream
                toRegionId:(NSString*)regionId
-                 inStream:(RTCRemoteMixedStream*)mixedStream
+            inMixedStream:(RTCRemoteMixedStream*)mixedStream
                 onSuccess:(nullable void (^)())onSuccess
                 onFailure:(nullable void (^)(NSError*))onFailure;
 
