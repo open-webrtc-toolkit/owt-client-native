@@ -53,7 +53,12 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory(){
 
 #ifndef DISABLE_H265
     if (is_h265_hw_supported) {
-      supported_codecs_.push_back(cricket::VideoCodec("H265"));
+      cricket::VideoCodec main10_high(cricket::kH265CodecName);
+      main10_high.SetParam(cricket::kH265FmtpProfileSpace, "0");
+      main10_high.SetParam(cricket::kH265FmtpProfileId, "1");
+      main10_high.SetParam(cricket::kH265FmtpTierFlag, "0");
+      main10_high.SetParam(cricket::kH265FmtpLevelId, "120");
+      supported_codecs_.push_back(main10_high);
     }
 #endif
 }
