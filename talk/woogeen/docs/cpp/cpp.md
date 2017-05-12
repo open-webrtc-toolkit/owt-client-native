@@ -65,7 +65,7 @@ Here is a list of known issues:
 
 - Conference recording is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
-- woogeen.lib is compiled as 32 bit library.
+- woogeen-debug.lib & woogeen-release.lib is compiled as 32 bit library.
 - Bandwidth setting for publishing H264 stream does not take effect.
 
 > Note: \* Other names and brands may be claimed as the property of others.</i>
