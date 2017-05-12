@@ -229,6 +229,8 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
           std::string("ICE connection state changed to failed or closed."));
     }
     connected_ = false;
+  } else {
+    return;
   }
   publish_success_callback_ = nullptr;
   subscribe_success_callback_ = nullptr;
