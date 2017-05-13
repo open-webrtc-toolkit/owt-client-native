@@ -710,6 +710,8 @@ void LocalCustomizedStream::DetachVideoRenderer() {
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : remote_user_id_(from) {
+  RTC_CHECK(media_stream);
+  Id(media_stream->label());
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
