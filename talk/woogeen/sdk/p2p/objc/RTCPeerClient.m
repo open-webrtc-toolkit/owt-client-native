@@ -209,28 +209,28 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 
 - (void)onInvitedFrom:(NSString*)remoteUserId {
   NSLog(@"On invited from %@", remoteUserId);
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onInvited:remoteUserId];
   }
 }
 
 - (void)onStreamAdded:(RTCRemoteStream*)stream {
   NSLog(@"PeerClient received stream add.");
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onStreamAdded:stream];
   }
 }
 
 - (void)onStreamRemoved:(RTCRemoteStream*)stream {
   NSLog(@"PeerClient received stream removed.");
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onStreamRemoved:stream];
   }
 }
 
 - (void)onAcceptedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received accepted.");
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onAccepted:remoteUserId];
   }
 }
@@ -238,36 +238,36 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 - (void)onDeniedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received Denied.");
   [_peerConnectionChannels removeObjectForKey: remoteUserId];
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onDenied:remoteUserId];
   }
 }
 
 - (void)onDataReceivedFrom:(NSString*)remoteUserId withData:(NSString*)data {
   NSLog(@"Received data from data channel.");
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onDataReceived:remoteUserId message:data];
   }
 }
 
 - (void)onDisconnected {
   NSLog(@"PeerClient received disconnect.");
-  for (id observer in _observers) {
-    [observer onDisconnected];
+  for (id<RTCPeerClientObserver> observer in _observers) {
+    [observer onServerDisconnected];
   }
 }
 
 - (void)onStoppedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received chat stopped.");
   [_peerConnectionChannels removeObjectForKey: remoteUserId];
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onChatStopped:remoteUserId];
   }
 }
 
 - (void)onStartedFrom:(NSString*)remoteUserId {
   NSLog(@"PeerClient received chat started.");
-  for (id observer in _observers) {
+  for (id<RTCPeerClientObserver> observer in _observers) {
     [observer onChatStarted:remoteUserId];
   }
 }
