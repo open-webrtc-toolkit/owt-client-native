@@ -217,16 +217,14 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
       t.detach();
     }
     connected_ = true;
-  } else if (new_state == PeerConnectionInterface::kIceConnectionFailed ||
-             new_state == PeerConnectionInterface::kIceConnectionClosed) {
+  } else if (new_state == PeerConnectionInterface::kIceConnectionClosed) {
     if (!connected_ && failure_callback_) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
           ConferenceException::kUnknown, "ICE failed."));
       std::thread t(failure_callback_, std::move(e));
       t.detach();
     } else if (connected_) {
-      OnStreamError(
-          std::string("ICE connection state changed to failed or closed."));
+      OnStreamError(std::string("ICE connection state changed to closed."));
     }
     connected_ = false;
   } else {
