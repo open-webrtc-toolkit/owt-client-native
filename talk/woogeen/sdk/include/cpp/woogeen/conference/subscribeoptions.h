@@ -41,7 +41,12 @@ struct SubscribeOptions {
     kBetterSpeed,
     kBestSpeed
   };
-  explicit SubscribeOptions() : video_quality_level(VideoQualityLevel::kStandard) {}
+  /**
+    @brief Construct SubscribeOptions with default values.
+    @detail Default video quality is standard. MCU's setting will be ignored.
+  */
+  explicit SubscribeOptions()
+      : video_quality_level(VideoQualityLevel::kStandard) {}
   woogeen::base::Resolution resolution;
   VideoQualityLevel video_quality_level;
 };

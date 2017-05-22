@@ -43,6 +43,10 @@ RTC_EXPORT
 /// Options for subscribing a remote stream.
 @interface RTCConferenceSubscribeOptions : NSObject
 
+/**
+  @brief Construct RTCConferenceSubscribeOptions with default values.
+  @detail Default video quality is standard. MCU's setting will be ignored.
+*/
 -(instancetype)init;
 
 @property(nonatomic, readwrite) CGSize resolution;
