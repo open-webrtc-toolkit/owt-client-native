@@ -183,6 +183,31 @@ class ConferenceClientObserver {
   virtual void OnServerDisconnected(){};
 };
 
+/// Options for publishing a stream.
+struct PublishOptions {
+  /**
+   @brief Max outgoing audio bandwidth, unit: kbps.
+   @detail Please be noticed different codecs may support different bitrate
+   ranges. If you set a bandwidth limitation which is not supported by selected
+   codec, connection will fail. If it is set to 0, associated ConferenceClient's
+   max audio bandwidth will be used.
+   */
+  int max_audio_bandwidth;
+  /**
+   @brief Max outgoing video bandwidth, unit: kbps.
+   @detail Please be noticed different codecs may support different bitrate
+   ranges. If you set a bandwidth limitation which is not supported by selected
+   codec, connection will fail. If it is set to 0, associated ConferenceClient's
+   max video bandwidth will be used.
+   */
+  int max_video_bandwidth;
+  /**
+   @brief Construct PublishOptions with default values.
+   @detail Default values for max_audio_bandwidth and max_video_bandwidth are 0.
+   */
+  explicit PublishOptions() : max_audio_bandwidth(0), max_video_bandwidth(0) {}
+};
+
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
                                ConferencePeerConnectionChannelObserver {
@@ -213,6 +238,16 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   */
   void Publish(
       std::shared_ptr<LocalStream> stream,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Publish the stream to the current room.
+    @param stream The stream to be published.
+    @param options Options for publishing the stream.
+  */
+  void Publish(
+      std::shared_ptr<LocalStream> stream,
+      const PublishOptions& options,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**

@@ -158,6 +158,15 @@ void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  PublishOptions options;
+  Publish(stream, options, on_success, on_failure);
+}
+
+void ConferenceClient::Publish(
+    std::shared_ptr<LocalStream> stream,
+    const PublishOptions& options,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
@@ -187,6 +196,10 @@ void ConferenceClient::Publish(
   }
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
+  if (options.max_audio_bandwidth > 0)
+    config.max_audio_bandwidth = options.max_audio_bandwidth;
+  if (options.max_video_bandwidth > 0)
+    config.max_video_bandwidth = options.max_video_bandwidth;
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_));
   pcc->AddObserver(*this);
