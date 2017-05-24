@@ -10,11 +10,6 @@
 
 @implementation RTCRemoteStream
 
-- (std::shared_ptr<woogeen::base::RemoteStream>)nativeRemoteStream {
-  std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
-  return std::static_pointer_cast<woogeen::base::RemoteStream>(stream);
-}
-
 - (NSString*)streamId {
   auto remoteStream = [self nativeRemoteStream];
   return [NSString stringForStdString:remoteStream->Id()];
@@ -23,6 +18,15 @@
 - (NSString*)getRemoteUserId {
   auto remoteStream = [self nativeRemoteStream];
   return [NSString stringForStdString:remoteStream->From()];
+}
+
+@end
+
+@implementation RTCRemoteStream (Internal)
+
+- (std::shared_ptr<woogeen::base::RemoteStream>)nativeRemoteStream {
+  std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
+  return std::static_pointer_cast<woogeen::base::RemoteStream>(stream);
 }
 
 @end

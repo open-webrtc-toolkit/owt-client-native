@@ -12,11 +12,6 @@
 
 @implementation RTCLocalStream
 
-- (std::shared_ptr<woogeen::base::LocalStream>)nativeLocalStream {
-  std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
-  return std::static_pointer_cast<woogeen::base::LocalStream>(stream);
-}
-
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes {
   auto localStream = [self nativeLocalStream];
   std::unordered_map<std::string, std::string> attributes_map;
@@ -31,6 +26,11 @@
 @end
 
 @implementation RTCLocalStream (Internal)
+
+- (std::shared_ptr<woogeen::base::LocalStream>)nativeLocalStream {
+  std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
+  return std::static_pointer_cast<woogeen::base::LocalStream>(stream);
+}
 
 - (NSString*)streamId {
   auto nativeStream = [self nativeStream];

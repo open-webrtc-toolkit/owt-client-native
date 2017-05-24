@@ -305,43 +305,68 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
-    @brief Continue to transmit specified stream's audio data.
-    @detail If |stream| is a remote stream, MCU will continue to send audio data
-    to client. If |stream| is a local stream, client will continue to send audio
-    data to MCU. This method is expected to be called after |DisableAudio|.
+    @brief Continue to send specified stream's audio data.
   */
   void PlayAudio(
-      std::shared_ptr<Stream> stream,
+      std::shared_ptr<LocalStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
-    @brief Stop transmitting specified stream's audio data.
-    @detail If |stream| is a remote stream, MCU will stop sending audio data to
-    client. If |stream| is a local stream, client will stop sending audio data
-    to MCU.
+    @brief Stop sending specified stream's audio data.
   */
   void PauseAudio(
-      std::shared_ptr<Stream> stream,
+      std::shared_ptr<LocalStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
-    @brief Continue to transmit specified stream's video data.
-    @detail If |stream| is a remote stream, MCU will continue to send video data
-    to client. If |stream| is a local stream, client will continue to send video
-    data to MCU. This method is expected to be called after |DisableVideo|.
+    @brief Continue to send specified stream's video data.
   */
   void PlayVideo(
-      std::shared_ptr<Stream> stream,
+      std::shared_ptr<LocalStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
-    @brief Stop transmitting specified stream's video data.
-    @detail If |stream| is a remote stream, MCU will stop sending video data to
-    client. If |stream| is a local stream, client will stop sending video data
+    @brief Stop sending specified stream's video data.
+  */
+  void PauseVideo(
+      std::shared_ptr<LocalStream> stream,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Continue to receive specified stream's audio data.
+    @detail MCU will continue to send audio data to client even stream's audio
+    track is disabled.
+  */
+  void PlayAudio(
+      std::shared_ptr<RemoteStream> stream,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Stop receiving specified stream's audio data.
+    @detail MCU will stop sending audio data to client. It saves network traffic
+    if audio track is disabled.
+  */
+  void PauseAudio(
+      std::shared_ptr<RemoteStream> stream,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Continue to receive specified stream's video data.
+    @detail MCU will continue to send video data to client even stream's video
+    track is disabled or there is no video sink associated with specific stream.
+  */
+  void PlayVideo(
+      std::shared_ptr<RemoteStream> stream,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /**
+    @brief Stop receiving specified stream's video data.
+    @detail MCU will stop sending video data to client. If saves network traffic
+    if video track is disabled.
     to MCU.
   */
   void PauseVideo(
-      std::shared_ptr<Stream> stream,
+      std::shared_ptr<RemoteStream> stream,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
@@ -468,13 +493,22 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration()
       const;
   // Get the |ConferencePeerConnectionChannel| instance associated with specific
+  // |stream_id|. Return |nullptr| if not found.
+  std::shared_ptr<ConferencePeerConnectionChannel>
+  GetConferencePeerConnectionChannel(const std::string& stream_id) const;
+  // Get the |ConferencePeerConnectionChannel| instance associated with specific
   // |stream|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(std::shared_ptr<Stream> stream) const;
   // Get the |ConferencePeerConnectionChannel| instance associated with specific
-  // |stream_id|. Return |nullptr| if not found.
+  // |stream|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
-  GetConferencePeerConnectionChannel(const std::string& stream_id) const;
+  GetConferencePeerConnectionChannel(std::shared_ptr<LocalStream> stream) const;
+  // Get the |ConferencePeerConnectionChannel| instance associated with specific
+  // |stream|. Return |nullptr| if not found.
+  std::shared_ptr<ConferencePeerConnectionChannel>
+  GetConferencePeerConnectionChannel(
+      std::shared_ptr<RemoteStream> stream) const;
   void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info);
   void TriggerOnUserLeft(std::shared_ptr<sio::message> user_info);
   void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);

@@ -7,4 +7,6 @@
 
 @interface RTCRemoteStream (Internal)
 
+- (std::shared_ptr<woogeen::base::RemoteStream>)nativeRemoteStream;
+
 @end

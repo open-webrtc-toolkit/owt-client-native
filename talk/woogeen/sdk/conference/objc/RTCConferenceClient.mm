@@ -228,72 +228,93 @@
       });
 }
 
+typedef void (^SuccessBlock)();
+std::function<void()> PlayPauseSuccessCallback(SuccessBlock on_success) {
+  return [=]() {
+    if (on_success != nil)
+      on_success();
+  };
+}
+
+typedef void (^FailureBlock)(NSError*);
+std::function<void(std::unique_ptr<woogeen::conference::ConferenceException>)>
+PlayPauseFailureCallback(FailureBlock on_failure,
+                         __weak RTCConferenceClient* client) {
+  return [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+    [client triggerOnFailure:on_failure withException:(std::move(e))];
+  };
+}
+
 - (void)playAudio:(RTCStream*)stream
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {
-  auto nativeStreamRefPtr = [stream nativeStream];
-  std::shared_ptr<woogeen::base::Stream> nativeStream(
-      std::static_pointer_cast<woogeen::base::Stream>(nativeStreamRefPtr));
-  _nativeConferenceClient->PlayAudio(
-      nativeStream,
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
+  if ([stream isKindOfClass:[RTCLocalStream class]]) {
+    std::shared_ptr<woogeen::base::LocalStream> nativeStream =
+        [(RTCLocalStream*)stream nativeLocalStream];
+    _nativeConferenceClient->PlayAudio(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  } else {
+    std::shared_ptr<woogeen::base::RemoteStream> nativeStream =
+        [(RTCRemoteStream*)stream nativeRemoteStream];
+    _nativeConferenceClient->PlayAudio(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  }
 }
 
 - (void)pauseAudio:(RTCStream*)stream
          onSuccess:(void (^)())onSuccess
          onFailure:(void (^)(NSError*))onFailure {
-  auto nativeStreamRefPtr = [stream nativeStream];
-  std::shared_ptr<woogeen::base::Stream> nativeStream(
-      std::static_pointer_cast<woogeen::base::Stream>(nativeStreamRefPtr));
-  _nativeConferenceClient->PauseAudio(
-      nativeStream,
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
+  if ([stream isKindOfClass:[RTCLocalStream class]]) {
+    std::shared_ptr<woogeen::base::LocalStream> nativeStream =
+        [(RTCLocalStream*)stream nativeLocalStream];
+    _nativeConferenceClient->PauseAudio(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  } else {
+    std::shared_ptr<woogeen::base::RemoteStream> nativeStream =
+        [(RTCRemoteStream*)stream nativeRemoteStream];
+    _nativeConferenceClient->PauseAudio(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  }
 }
 
 - (void)playVideo:(RTCStream*)stream
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {
-  auto nativeStreamRefPtr = [stream nativeStream];
-  std::shared_ptr<woogeen::base::Stream> nativeStream(
-      std::static_pointer_cast<woogeen::base::Stream>(nativeStreamRefPtr));
-  _nativeConferenceClient->PlayVideo(
-      nativeStream,
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
+  if ([stream isKindOfClass:[RTCLocalStream class]]) {
+    std::shared_ptr<woogeen::base::LocalStream> nativeStream =
+        [(RTCLocalStream*)stream nativeLocalStream];
+    _nativeConferenceClient->PlayVideo(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  } else {
+    std::shared_ptr<woogeen::base::RemoteStream> nativeStream =
+        [(RTCRemoteStream*)stream nativeRemoteStream];
+    _nativeConferenceClient->PlayVideo(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  }
 }
 
 - (void)pauseVideo:(RTCStream*)stream
          onSuccess:(void (^)())onSuccess
          onFailure:(void (^)(NSError*))onFailure {
-  auto nativeStreamRefPtr = [stream nativeStream];
-  std::shared_ptr<woogeen::base::Stream> nativeStream(
-      std::static_pointer_cast<woogeen::base::Stream>(nativeStreamRefPtr));
-  _nativeConferenceClient->PauseVideo(
-      nativeStream,
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
+  if ([stream isKindOfClass:[RTCLocalStream class]]) {
+    std::shared_ptr<woogeen::base::LocalStream> nativeStream =
+        [(RTCLocalStream*)stream nativeLocalStream];
+    _nativeConferenceClient->PauseVideo(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  } else {
+    std::shared_ptr<woogeen::base::RemoteStream> nativeStream =
+        [(RTCRemoteStream*)stream nativeRemoteStream];
+    _nativeConferenceClient->PauseVideo(
+        nativeStream, PlayPauseSuccessCallback(onSuccess),
+        PlayPauseFailureCallback(onFailure, self));
+  }
 }
 
 - (void)leaveWithOnSuccess:(void (^)())onSuccess

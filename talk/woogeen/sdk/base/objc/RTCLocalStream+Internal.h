@@ -7,6 +7,7 @@
 
 @interface RTCLocalStream (Internal)
 
+- (std::shared_ptr<woogeen::base::LocalStream>)nativeLocalStream;
 - (NSString*)streamId;
 
 @end
