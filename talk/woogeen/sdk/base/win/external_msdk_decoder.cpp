@@ -497,7 +497,7 @@ mfxStatus ExternalMSDKVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream,
 void ExternalMSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream,
                                                    uint8_t* data,
                                                    size_t len) {
-  if (m_mfxBS.MaxLength < len) {
+  if (m_mfxBS.MaxLength - m_mfxBS.DataLength < len) {
     // remaining BS size is not enough to hold current image, we enlarge it the
     // gap*2.
     mfxU32 newSize = static_cast<mfxU32>(m_mfxBS.MaxLength > len ? m_mfxBS.MaxLength * 2 : len * 2);
