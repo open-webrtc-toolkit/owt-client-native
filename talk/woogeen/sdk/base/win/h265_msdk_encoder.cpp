@@ -446,8 +446,9 @@ int H265VideoMFTEncoder::Encode(
     mfxU32 bsDataSize = param.mfx.FrameInfo.Width*param.mfx.FrameInfo.Height * 4;
     //mfxU32 bsDataSize = param.mfx.BufferSizeInKB * 1000;
     mfxU8* pbsData = new mfxU8[bsDataSize];
+    mfxU8* newPbsData = nullptr;
     if (pbsData == nullptr) {
-        return WEBRTC_VIDEO_CODEC_ERROR;
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
     memset((void*)pbsData, 0, bsDataSize);
     bs.Data = pbsData;
@@ -456,21 +457,39 @@ int H265VideoMFTEncoder::Encode(
     //If the encoder does not prompt about need more data, we continue the same process.
 
     ctrl.FrameType = is_keyframe_required ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
-    if (is_keyframe_required) {
-        sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
-    }
-    else {
-        sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
-    }
-    if (MFX_ERR_NONE != sts) {
-        delete[] pbsData;
-        return WEBRTC_VIDEO_CODEC_OK;
+retry:
+    sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
+    if (MFX_WRN_DEVICE_BUSY == sts) {
+      MSDK_SLEEP(1);
+      goto retry;
+    } else if (MFX_ERR_NOT_ENOUGH_BUFFER == sts) {
+      mfxU32 newBsDataSize = bs.MaxLength * 2;
+      newPbsData = new mfxU8[newBsDataSize];
+      if (bs.DataLength > 0) {
+        memcpy(newPbsData, bs.Data, bs.DataLength);
+      }
+      delete[] pbsData;
+      pbsData = nullptr;
+      bs.Data = newPbsData;
+      bs.MaxLength = newBsDataSize;
+      goto retry;
+    } else if (MFX_ERR_NONE != sts) {
+      delete[] pbsData;
+      pbsData = nullptr;
+      return WEBRTC_VIDEO_CODEC_OK;
     }
 
     sts = m_mfxSession_.SyncOperation(sync, MSDK_WAIT_INTERVAL);
     if (MFX_ERR_NONE != sts) {
+      if (pbsData != nullptr) {
         delete[] pbsData;
-        return WEBRTC_VIDEO_CODEC_ERROR;
+        pbsData = nullptr;
+      }
+      if (newPbsData != nullptr) {
+        delete[] newPbsData;
+        newPbsData = nullptr;
+      }
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data) + bs.DataOffset;
@@ -540,7 +559,14 @@ int H265VideoMFTEncoder::Encode(
         bs.DataOffset = 0;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    delete[] pbsData;
+    if (pbsData != nullptr) {
+      delete[] pbsData;
+      pbsData = nullptr;
+    }
+    if (newPbsData != nullptr) {
+      delete[] newPbsData;
+      newPbsData = nullptr;
+    }
     m_nFramesProcessed++;
 
     bs.DataLength = 0;  //Mark we don't need the data anymore.
