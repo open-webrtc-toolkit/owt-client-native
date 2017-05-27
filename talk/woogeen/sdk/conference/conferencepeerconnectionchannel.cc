@@ -588,6 +588,7 @@ void ConferencePeerConnectionChannel::Unpublish(
     }
     return;
   }
+  connected_ = false;
   signaling_channel_->SendStreamEvent("unpublish", stream->Id(), on_success,
                                       on_failure);
 }
@@ -619,6 +620,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
     }
     return;
   }
+  connected_ = false;
   signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(), on_success,
                                       on_failure);
 }
