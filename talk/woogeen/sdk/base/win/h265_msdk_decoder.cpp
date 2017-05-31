@@ -36,6 +36,7 @@ int32_t H265MSDKVideoDecoder::Release() {
         dev_manager_ = nullptr;
     }
     WipeMfxBitstream(&m_mfxBS);
+    m_hevc_plugin_.reset();
     MSDK_SAFE_DELETE(m_pmfxDEC);
     m_mfxSession.Close();
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
@@ -164,7 +165,7 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
     CheckOnCodecThread();
 
     //Set videoParamExtracted flag to false to make sure the delayed DecoderHeader call will happen after Init.
-	m_video_param_extracted = false;
+    m_video_param_extracted = false;
 
     mfxStatus sts;
     mfxInitParam initParam;
@@ -386,7 +387,7 @@ int32_t H265MSDKVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
-	  m_video_param_extracted = true;
+      m_video_param_extracted = true;
     } else {
       // with current bitstream, if we're not able to extract the video param
       // and thus not able to
