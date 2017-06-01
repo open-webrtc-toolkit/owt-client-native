@@ -40,7 +40,7 @@
 
 #pragma once
 
-#define WOOGEEN_DEBUG_H265_DEC
+//#define WOOGEEN_DEBUG_H265_DEC
 //
 //MSDK Video Decoder declaration.
 //
