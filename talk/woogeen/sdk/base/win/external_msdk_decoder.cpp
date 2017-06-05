@@ -34,6 +34,7 @@ int32_t ExternalMSDKVideoDecoder::Release() {
     dev_manager_ = nullptr;
   }
   WipeMfxBitstream(&m_mfxBS);
+  m_vp8_plugin_.reset();
   MSDK_SAFE_DELETE(m_pmfxDEC);
   m_mfxSession.Close();
   MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
@@ -66,6 +67,8 @@ ExternalMSDKVideoDecoder::ExternalMSDKVideoDecoder(webrtc::VideoCodecType type)
   MSDK_ZERO_MEMORY(m_mfxResponse);
   m_pInputSurfaces = nullptr;
   m_video_param_extracted = false;
+  m_decBsOffset = 0;
+  m_decHeaderFrameCount = 0;
 }
 
 ExternalMSDKVideoDecoder::~ExternalMSDKVideoDecoder() {
@@ -168,7 +171,6 @@ int32_t ExternalMSDKVideoDecoder::InitDecode(
 
 int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
   LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
-  CheckOnCodecThread();
 
   // Set m_video_param_extracted flag to false to make sure the delayed
   // DecoderHeader call will happen after Init.
@@ -183,12 +185,19 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
   width_ = codec_.width;
   height_ = codec_.height;
 
-  if (inited_) {
+  if (inited_ && m_pmfxDEC != nullptr) {
     m_pmfxDEC->Close();
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
 
     if (m_pMFXAllocator) {
       m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_mfxResponse);
+    }
+    delete m_pmfxDEC;
+    m_pmfxDEC = nullptr;
+    m_pmfxDEC = new MFXVideoDECODE(m_mfxSession);
+    if (m_pmfxDEC == nullptr) {
+      m_mfxSession.Close();
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
   } else {
     sts = m_mfxSession.InitEx(initParam);
@@ -343,6 +352,7 @@ int32_t ExternalMSDKVideoDecoder::Decode(
     if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
       // Successfully get the video params. It's time now to really initialize
       // the decoder.
+      m_decHeaderFrameCount = 0;
       mfxU16 nSurfNum = 0;
       mfxFrameAllocRequest request;
       MSDK_ZERO_MEMORY(request);
@@ -394,12 +404,14 @@ int32_t ExternalMSDKVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
-	  m_video_param_extracted = true;
+      m_video_param_extracted = true;
     } else {
       // with current bitstream, if we're not able to extract the video param
-      // and thus not able to
-      // continue decoding. return directly.
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      // and thus not able to continue decoding. return err so FIR will be sent.
+      if (!(m_decHeaderFrameCount++ % 5)) {
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      return WEBRTC_VIDEO_CODEC_OK;
     }
   }
 
@@ -408,20 +420,25 @@ int32_t ExternalMSDKVideoDecoder::Decode(
   }
 
   mfxSyncPoint syncp;
+  mfxFrameSurface1* moreFreeSurf;
 
   // If we get video param changed, that means we need to continue with
   // decoding.
-  while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_SURFACE == sts) {
+  while (true) {
+  more_surface:
     mfxU16 moreIdx =
         H264DecGetFreeSurface(m_pInputSurfaces, m_mfxResponse.NumFrameActual);
     if (moreIdx != MSDK_INVALID_SURF_IDX) {
-      mfxFrameSurface1* moreFreeSurf = &m_pInputSurfaces[moreIdx];
-      sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
-                                        &syncp);
+      moreFreeSurf = &m_pInputSurfaces[moreIdx];
     } else {
-      MSDK_SLEEP(1);
-      continue;
+      LOG(LS_ERROR) << "No surface available for decoding";
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
+
+  retry:
+    m_decBsOffset = m_mfxBS.DataOffset;
+    sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
+                                      &syncp);
     if (sts == MFX_ERR_NONE && syncp != nullptr) {
       sts = m_mfxSession.SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
@@ -467,8 +484,21 @@ int32_t ExternalMSDKVideoDecoder::Decode(
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
       }
+    } else if (MFX_ERR_NONE <= sts) {
+      goto retry;
+    } else if (MFX_WRN_DEVICE_BUSY == sts) {
+      MSDK_SLEEP(1);
+      goto retry;
     } else if (MFX_ERR_MORE_DATA == sts) {
       return WEBRTC_VIDEO_CODEC_OK;
+    } else if (MFX_ERR_MORE_SURFACE == sts) {
+      goto more_surface;
+    } else if (MFX_ERR_NONE != sts) {
+      m_video_param_extracted = false;
+      InitDecodeOnCodecThread();
+      m_mfxBS.DataLength += m_mfxBS.DataOffset - m_decBsOffset;
+      m_mfxBS.DataOffset = m_decBsOffset;
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
   return WEBRTC_VIDEO_CODEC_OK;

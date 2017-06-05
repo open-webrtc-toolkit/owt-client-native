@@ -102,6 +102,8 @@ class ExternalMSDKVideoDecoder : public webrtc::VideoDecoder,
   // msdkFrameSurface*        m_pInputSurfaces;
   mfxFrameSurface1* m_pInputSurfaces;
   bool m_video_param_extracted;
+  int m_decHeaderFrameCount;  // For dec_header phase FIR request.
+  uint32_t m_decBsOffset;
 
   // End of MSDK variables
   rtc::CriticalSection critical_section_;
