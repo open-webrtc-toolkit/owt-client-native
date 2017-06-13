@@ -177,7 +177,7 @@ void P2PPeerConnectionChannel::Deny(
 void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     const std::string& message) {
   LOG(LS_INFO) << "OnIncomingMessage: " << message;
-  ASSERT(!message.empty());
+  RTC_DCHECK(!message.empty());
   Json::Reader reader;
   Json::Value json_message;
   if (!reader.parse(message, json_message)) {
@@ -475,7 +475,8 @@ void P2PPeerConnectionChannel::OnSignalingChange(
   }
 }
 
-void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
+void P2PPeerConnectionChannel::OnAddStream(
+    rtc::scoped_refptr<MediaStreamInterface> stream) {
   LOG(LS_INFO) << "P2PPeerConnectionChannel::OnAddStream";
   if (remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
     LOG(LS_WARNING) << "Missing stream type info for newly added stream.";
@@ -510,7 +511,8 @@ void P2PPeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {
   }
 }
 
-void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
+void P2PPeerConnectionChannel::OnRemoveStream(
+    rtc::scoped_refptr<MediaStreamInterface> stream) {
   if (remote_streams_.find(stream->label()) == remote_streams_.end() ||
       remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
     LOG(LS_WARNING) << "Remove an invalid stream.";
@@ -547,7 +549,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {
 }
 
 void P2PPeerConnectionChannel::OnDataChannel(
-    webrtc::DataChannelInterface* data_channel) {
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
   // If a new data channel is create, delete the old one to save resource.
   // Currently only one data channel for one connection. If we are going to
   // support multiple data channels(one for text, one for large files), replace

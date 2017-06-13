@@ -5,13 +5,14 @@
 #include <thread>
 #include <future>
 #include "webrtc/base/base64.h"
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/task_queue.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+
 
 namespace woogeen {
 namespace conference {
@@ -28,7 +29,6 @@ const std::string play_pause_failure_message =
 ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
-      crit_sect_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
       signaling_channel_connected_(false),
       task_queue_(new rtc::TaskQueue("ConferenceClientCallbacksAndEventsQueue")) {
 }
@@ -38,7 +38,7 @@ ConferenceClient::~ConferenceClient() {
 }
 
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
-  crit_sect_.Enter();
+  const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<ConferenceClientObserver>>::iterator it =
       std::find_if(
           observers_.begin(), observers_.end(),
@@ -50,17 +50,15 @@ void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
       return;
   }
   observers_.push_back(observer);
-  crit_sect_.Leave();
 }
 
 void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
-  crit_sect_.Enter();
+  const std::lock_guard<std::mutex> lock(observer_mutex_);
   observers_.erase(std::find_if(
       observers_.begin(), observers_.end(),
       [&](std::reference_wrapper<ConferenceClientObserver> o) -> bool {
         return &observer == &(o.get());
       }));
-  crit_sect_.Leave();
 }
 
 void ConferenceClient::Join(
@@ -777,7 +775,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   auto audio = stream_info->get_map()["audio"];
   if (audio == nullptr || (audio->get_flag() != sio::message::flag_boolean &&
                            audio->get_flag() != sio::message::flag_object)) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Audio info for stream " << id
                   << "is invalid, this stream will be ignored.";
     return;
@@ -791,7 +789,7 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   auto video = stream_info->get_map()["video"];
   if (video == nullptr || (video->get_flag() != sio::message::flag_object &&
                            video->get_flag() != sio::message::flag_boolean)) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Video info for stream " << id
                   << "is invalid, this stream will be ignored.";
     return;
@@ -867,11 +865,10 @@ void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
   if(ParseUser(user_info, &user_raw)){
     std::shared_ptr<User> user(user_raw);
     participants[user->Id()] = user;
-    crit_sect_.Enter();
+    const std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnUserJoined(user);
     }
-    crit_sect_.Leave();
   }
 }
 
@@ -891,12 +888,10 @@ void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
   }
   auto user = user_it->second;
   participants.erase(user_it);
-  crit_sect_.Enter();
+  const std::lock_guard<std::mutex> lock(observer_mutex_);
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnUserLeft(user);
   }
-
-  crit_sect_.Leave();
 }
 
 bool ConferenceClient::ParseUser(sio::message::ptr user_message,
@@ -1067,40 +1062,44 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   auto stream_it = added_streams_.find(id);
   auto stream_type = added_stream_type_.find(id);
   if(stream_it==added_streams_.end()||stream_type==added_stream_type_.end()){
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_WARNING) << "Invalid stream or type.";
     return;
   }
   auto stream = stream_it->second;
   auto type=stream_type->second;
-  crit_sect_.Enter();
-  switch(type){
-    case kStreamTypeCamera:
-    {
-      std::shared_ptr<RemoteCameraStream> stream_ptr=std::static_pointer_cast<RemoteCameraStream>(stream);
-      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it).get().OnStreamRemoved(stream_ptr);
+  {
+    const std::lock_guard<std::mutex> lock(observer_mutex_);
+    switch (type) {
+      case kStreamTypeCamera: {
+        std::shared_ptr<RemoteCameraStream> stream_ptr =
+            std::static_pointer_cast<RemoteCameraStream>(stream);
+        for (auto observers_it = observers_.begin();
+             observers_it != observers_.end(); ++observers_it) {
+          (*observers_it).get().OnStreamRemoved(stream_ptr);
+        }
+        break;
       }
-      break;
-    }
-    case kStreamTypeScreen:
-    {
-      std::shared_ptr<RemoteScreenStream> stream_ptr=std::static_pointer_cast<RemoteScreenStream>(stream);
-      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it).get().OnStreamRemoved(stream_ptr);
+      case kStreamTypeScreen: {
+        std::shared_ptr<RemoteScreenStream> stream_ptr =
+            std::static_pointer_cast<RemoteScreenStream>(stream);
+        for (auto observers_it = observers_.begin();
+             observers_it != observers_.end(); ++observers_it) {
+          (*observers_it).get().OnStreamRemoved(stream_ptr);
+        }
+        break;
       }
-      break;
-    }
-    case kStreamTypeMix:
-    {
-      std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
-      for(auto observers_it=observers_.begin(); observers_it!=observers_.end();++observers_it){
-        (*observers_it).get().OnStreamRemoved(stream_ptr);
+      case kStreamTypeMix: {
+        std::shared_ptr<RemoteMixedStream> stream_ptr =
+            std::static_pointer_cast<RemoteMixedStream>(stream);
+        for (auto observers_it = observers_.begin();
+             observers_it != observers_.end(); ++observers_it) {
+          (*observers_it).get().OnStreamRemoved(stream_ptr);
+        }
+        break;
       }
-      break;
     }
   }
-  crit_sect_.Leave();
   added_streams_.erase(stream_it);
   added_stream_type_.erase(stream_type);
 }

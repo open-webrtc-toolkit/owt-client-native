@@ -12,7 +12,7 @@
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/media/base/videoframe.h"
+#include "webrtc/api/video/video_frame.h"
 
 #include "woogeen/base/videoencoderinterface.h"
 #include "talk/woogeen/sdk/base/customizedvideoencoderproxy.h"
@@ -149,6 +149,7 @@ int CustomizedVideoEncoderProxy::Encode(
     if(!external_encoder_->EncodeOneFrame(buffer, request_key_frame))
       return WEBRTC_VIDEO_CODEC_ERROR;
   }
+#endif
 
   std::unique_ptr<uint8_t[]> data(new uint8_t[buffer.size()]);
   uint8_t* data_ptr = data.get();

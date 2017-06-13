@@ -91,9 +91,12 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void OnStateChange(StateType state_changed){};
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state);
-  virtual void OnAddStream(MediaStreamInterface* stream);
-  virtual void OnRemoveStream(MediaStreamInterface* stream);
-  virtual void OnDataChannel(webrtc::DataChannelInterface* data_channel);
+  virtual void OnAddStream(
+      rtc::scoped_refptr<MediaStreamInterface> stream) override;
+  virtual void OnRemoveStream(
+      rtc::scoped_refptr<MediaStreamInterface> stream) override;
+  virtual void OnDataChannel(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
   virtual void OnRenegotiationNeeded();
   virtual void OnIceConnectionChange(
       PeerConnectionInterface::IceConnectionState new_state);

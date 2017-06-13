@@ -6,11 +6,11 @@
 #define WOOGEEN_BASE_CUSTOMIZEDAUDIOCAPTURER_H_
 
 #include <memory>
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 
 namespace woogeen {
@@ -159,7 +159,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   AudioDeviceBuffer* audio_buffer_;
   std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
       recording_buffer_;  // Pointer to a useable memory for audio frames.
-  CriticalSectionWrapper& crit_sect_;
+  rtc::CriticalSection crit_sect_;
 
   size_t recording_frames_in_10ms_;
   int recording_sample_rate_;

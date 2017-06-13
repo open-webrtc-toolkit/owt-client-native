@@ -6,7 +6,7 @@
 #define WOOGEEN_BASE_ENCODEDVIDEOENCODER_H_
 
 #include <vector>
-#include "webrtc/video_encoder.h"
+#include "webrtc/api/video_codecs/video_encoder.h"
 #include "woogeen/base/videoencoderinterface.h"
 
 namespace woogeen {

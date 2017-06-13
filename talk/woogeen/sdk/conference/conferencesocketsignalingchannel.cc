@@ -12,7 +12,6 @@
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/base/base64.h"
-#include "webrtc/base/common.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/json.h"
@@ -424,7 +423,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
              return;
            }
            if (msg.at(1)->get_flag() != sio::message::flag_string) {
-             ASSERT(false);
+             RTC_DCHECK(false);
              return;
            }
            std::string stream_id = msg.at(1)->get_string();

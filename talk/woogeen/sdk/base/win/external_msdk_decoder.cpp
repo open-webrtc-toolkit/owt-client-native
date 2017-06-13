@@ -46,7 +46,7 @@ int32_t ExternalMSDKVideoDecoder::Release() {
 
 ExternalMSDKVideoDecoder::ExternalMSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
-      timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
+
       inited_(false),
       d3d9_device_created_(false),
       width_(0),

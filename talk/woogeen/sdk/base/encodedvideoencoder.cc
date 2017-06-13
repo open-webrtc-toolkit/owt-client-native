@@ -12,7 +12,7 @@
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/media/base/videoframe.h"
+#include "webrtc/api/video/video_frame.h"
 
 // H.264 start code length.
 #define H264_SC_LENGTH 4

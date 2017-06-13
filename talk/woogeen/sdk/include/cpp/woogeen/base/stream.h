@@ -336,7 +336,6 @@ class LocalCustomizedStream : public LocalStream {
    /// Detach the stream from its renderer.
    void DetachVideoRenderer();
   private:
-   CustomizedFramesCapturer* capturer_;
    bool encoded_ = false;
 };
 
@@ -376,8 +375,6 @@ class LocalScreenStream : public LocalStream {
     return StreamDeviceType::kStreamDeviceTypeScreen;
   }
   /** @endcond */
- private:
-  BasicDesktopCapturer* capturer_;
 };
 
 } // namespace base

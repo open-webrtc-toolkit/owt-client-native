@@ -6,17 +6,16 @@
 
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/test/fakeconstraints.h"
-#include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/thread.h"
 
 //For decoder and encoder factory
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
@@ -158,7 +157,7 @@ private:
     //webrtc::I420VideoFrame decoded_image_;
     webrtc::I420BufferPool decoded_frame_pool_;
     webrtc::DecodedImageCallback* callback_;
-    webrtc::CriticalSectionWrapper& timestampCS_;
+    rtc::CriticalSection timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
 };

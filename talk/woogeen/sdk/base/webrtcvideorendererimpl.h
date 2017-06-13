@@ -6,8 +6,8 @@
 #define WOOGEEN_BASE_WEBRTCVIDEORENDERERIMPL_H_
 
 #include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/media/base/videosinkinterface.h"
-#include "webrtc/media/base/videoframe.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/videorendererinterface.h"
 
 namespace woogeen {

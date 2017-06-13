@@ -193,13 +193,17 @@ PeerConnectionDependencyFactory::CreateLocalMediaStream(
 
 scoped_refptr<webrtc::VideoTrackSourceInterface>
 PeerConnectionDependencyFactory::CreateVideoSource(
-    cricket::VideoCapturer* capturer,
+    std::unique_ptr<cricket::VideoCapturer> capturer,
     const MediaConstraintsInterface* constraints) {
   return pc_thread_
       ->Invoke<scoped_refptr<webrtc::VideoTrackSourceInterface>>(
           RTC_FROM_HERE,
-          Bind(&PeerConnectionFactoryInterface::CreateVideoSource,
-               pc_factory_.get(), capturer, constraints))
+          Bind((rtc::scoped_refptr<VideoTrackSourceInterface>(
+                   PeerConnectionFactoryInterface::*)(
+                   cricket::VideoCapturer*,
+                   const MediaConstraintsInterface*)) &
+                   PeerConnectionFactoryInterface::CreateVideoSource,
+               pc_factory_.get(), capturer.release(), constraints))
       .get();
 }
 

@@ -113,7 +113,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
 
 void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (media_stream_ == nullptr) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
@@ -142,7 +142,7 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
@@ -269,7 +269,7 @@ LocalCameraStream::LocalCameraStream(
   // Create video track.
   if (parameters.VideoEnabled()) {
     cricket::WebRtcVideoDeviceCapturerFactory factory;
-    cricket::VideoCapturer* capturer = nullptr;
+    std::unique_ptr<cricket::VideoCapturer> capturer(nullptr);
     if (!parameters.CameraId().empty()) {
 #if defined(WEBRTC_IOS)
       capturer = AVFoundationVideoCapturerFactory::Create(parameters);
@@ -316,7 +316,7 @@ LocalCameraStream::LocalCameraStream(
         std::to_string(parameters.ResolutionHeight()));
 
     scoped_refptr<VideoTrackSourceInterface> source =
-        pcd_factory->CreateVideoSource(capturer, media_constraints_);
+        pcd_factory->CreateVideoSource(std::move(capturer), media_constraints_);
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
@@ -340,7 +340,7 @@ LocalCameraStream::LocalCameraStream(
   // Create video track
   if (parameters.VideoEnabled()) {
     cricket::WebRtcVideoDeviceCapturerFactory factory;
-    cricket::VideoCapturer* capturer = nullptr;
+    std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
     if (!parameters.CameraId().empty()) {
       std::string camera_name;  // Empty camera name. We use ID for comparison.
       capturer =
@@ -392,7 +392,8 @@ LocalCameraStream::LocalCameraStream(
           std::to_string(parameters.ResolutionHeight()));
 
       scoped_refptr<VideoTrackSourceInterface> source =
-          pcd_factory->CreateVideoSource(capturer, media_constraints_);
+          pcd_factory->CreateVideoSource(std::move(capturer),
+                                         media_constraints_);
       std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
       scoped_refptr<VideoTrackInterface> video_track =
           pcd_factory->CreateLocalVideoTrack(video_track_id, source);
@@ -450,21 +451,25 @@ void LocalCameraStream::Close() {
 }
 
 bool LocalScreenStream::SetCurrentCaptureSource(int source_id) {
+  return false;
+  /*
   if (capturer_ == nullptr) {
     LOG(LS_ERROR) << "Cannot set capture source without capturer.";
     return false;
   }
-  return capturer_->SetCaptureWindow(source_id);
+  return capturer_->SetCaptureWindow(source_id);*/
 }
 
 bool LocalScreenStream::GetCurrentSourceList(
     std::unordered_map<int, std::string>* source_list) {
+  return false;
+  /*
   if (capturer_ == nullptr) {
     LOG(LS_ERROR) << "Enumeration of source not allowed without capturer.";
     return false;
   }
 
-  return capturer_->GetCurrentWindowList(source_list);
+  return capturer_->GetCurrentWindowList(source_list);*/
 }
 
 LocalScreenStream::~LocalScreenStream() {
@@ -479,7 +484,6 @@ LocalScreenStream::~LocalScreenStream() {
     for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
       media_stream_->RemoveTrack(*it);
   }
-  capturer_ = nullptr;
 }
 
 LocalScreenStream::LocalScreenStream(
@@ -492,19 +496,20 @@ LocalScreenStream::LocalScreenStream(
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   scoped_refptr<MediaStreamInterface> stream =
       factory->CreateLocalMediaStream(media_stream_id);
+  std::unique_ptr<BasicDesktopCapturer> capturer(nullptr);
   if (parameters->VideoEnabled()) {
     webrtc::DesktopCaptureOptions options =
         webrtc::DesktopCaptureOptions::CreateDefault();
     // options.set_allow_directx_capturer(true);
     if (parameters->SourceType() ==
         LocalDesktopStreamParameters::DesktopSourceType::kFullScreen) {
-      capturer_ = new BasicScreenCapturer(options);
+      capturer = std::unique_ptr<BasicScreenCapturer>(new BasicScreenCapturer(options));
     } else {
-      capturer_ = new BasicWindowCapturer(options);
+      capturer = std::unique_ptr<BasicWindowCapturer>(new BasicWindowCapturer(options));
     }
-    capturer_->Init();
+    capturer->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
-        factory->CreateVideoSource(capturer_, nullptr);
+        factory->CreateVideoSource(std::move(capturer), nullptr);
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         factory->CreateLocalVideoTrack(video_track_id, source);
@@ -533,7 +538,6 @@ LocalCustomizedStream::~LocalCustomizedStream() {
     for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
       media_stream_->RemoveTrack(*it);
   }
-  capturer_ = nullptr;
 }
 
 LocalCustomizedStream::LocalCustomizedStream(
@@ -547,11 +551,13 @@ LocalCustomizedStream::LocalCustomizedStream(
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
+  std::unique_ptr<CustomizedFramesCapturer> capturer(nullptr);
   if (parameters->VideoEnabled()) {
-    capturer_ = new CustomizedFramesCapturer(std::move(framer));
-    capturer_->Init();
+    capturer = std::unique_ptr<CustomizedFramesCapturer>(
+        new CustomizedFramesCapturer(std::move(framer)));
+    capturer->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
-    pcd_factory->CreateVideoSource(capturer_, nullptr);
+    pcd_factory->CreateVideoSource(std::move(capturer), nullptr);
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
@@ -579,17 +585,18 @@ LocalCustomizedStream::LocalCustomizedStream(
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
+  std::unique_ptr<CustomizedFramesCapturer> capturer(nullptr);
   if (parameters->VideoEnabled()) {
     encoded_ = true;
-    capturer_ = new CustomizedFramesCapturer(
+    capturer = std::unique_ptr<CustomizedFramesCapturer>(new CustomizedFramesCapturer(
       parameters->ResolutionWidth(),
       parameters->ResolutionHeight(),
       parameters->Fps(),
       parameters->Bitrate(),
-      encoder);
-    capturer_->Init();
+      encoder));
+    capturer->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
-        pcd_factory->CreateVideoSource(capturer_, nullptr);
+        pcd_factory->CreateVideoSource(std::move(capturer), nullptr);
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
@@ -613,7 +620,7 @@ void LocalCustomizedStream::AttachVideoRenderer(
     return;
   }
   if (media_stream_ == nullptr) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
@@ -647,7 +654,7 @@ void LocalCustomizedStream::AttachVideoRenderer(
     return;
   }
   if (media_stream_ == nullptr) {
-    ASSERT(false);
+    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }

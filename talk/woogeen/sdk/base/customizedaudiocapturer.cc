@@ -15,7 +15,6 @@ CustomizedAudioCapturer::CustomizedAudioCapturer(
     : frame_generator_(std::move(frame_generator)),
       audio_buffer_(nullptr),
       recording_buffer_(nullptr),
-      crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
       recording_frames_in_10ms_(0),
       recording_sample_rate_(0),
       recording_channel_number_(0),
@@ -114,7 +113,7 @@ int32_t CustomizedAudioCapturer::RecordingIsAvailable(bool& available) {
 }
 
 int32_t CustomizedAudioCapturer::InitRecording() {
-  CriticalSectionScoped lock(&crit_sect_);
+  rtc::CritScope lock(&crit_sect_);
 
   if (recording_) {
     return -1;
@@ -167,7 +166,7 @@ int32_t CustomizedAudioCapturer::StartRecording() {
 
 int32_t CustomizedAudioCapturer::StopRecording() {
   {
-    CriticalSectionScoped lock(&crit_sect_);
+    rtc::CritScope lock(&crit_sect_);
     recording_ = false;
   }
 
@@ -378,7 +377,7 @@ void CustomizedAudioCapturer::ClearRecordingError() {}
 
 void CustomizedAudioCapturer::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {
-  CriticalSectionScoped lock(&crit_sect_);
+  rtc::CritScope lock(&crit_sect_);
 
   audio_buffer_ = audioBuffer;
 

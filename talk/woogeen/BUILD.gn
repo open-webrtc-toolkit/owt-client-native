@@ -2,7 +2,7 @@
 # Intel License
 #
 
-import("//webrtc/build/webrtc.gni")
+import("//webrtc/webrtc.gni")
 
 if (is_ios) {
   import("//build/config/ios/rules.gni")

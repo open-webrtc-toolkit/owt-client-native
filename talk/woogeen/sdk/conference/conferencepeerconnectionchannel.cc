@@ -190,17 +190,17 @@ void ConferencePeerConnectionChannel::OnSignalingChange(
 }
 
 void ConferencePeerConnectionChannel::OnAddStream(
-    MediaStreamInterface* stream) {
+    rtc::scoped_refptr<MediaStreamInterface> stream) {
   LOG(LS_INFO) << "On add stream.";
   if (subscribed_stream_ != nullptr)
     subscribed_stream_->MediaStream(stream);
 }
 
 void ConferencePeerConnectionChannel::OnRemoveStream(
-    MediaStreamInterface* stream) {}
+    rtc::scoped_refptr<MediaStreamInterface> stream) {}
 
 void ConferencePeerConnectionChannel::OnDataChannel(
-    webrtc::DataChannelInterface* data_channel) {}
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
 
 void ConferencePeerConnectionChannel::OnRenegotiationNeeded() {}
 
@@ -638,7 +638,7 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
   else if (stream == subscribed_stream_)
     action = in_action;
   else
-    ASSERT(false);
+    RTC_DCHECK(false);
   signaling_channel_->SendStreamControlMessage(stream->Id(), action, on_success,
                                                on_failure);
 }
@@ -725,7 +725,7 @@ void ConferencePeerConnectionChannel::DrainIceCandidates() {
 void ConferencePeerConnectionChannel::SetStreamId(const std::string& id) {
   LOG(LS_INFO) << "Setting stream ID " << id;
   if (published_stream_ == nullptr) {
-    ASSERT(false);
+    RTC_DCHECK(false);
   } else {
     published_stream_->Id(id);
   }

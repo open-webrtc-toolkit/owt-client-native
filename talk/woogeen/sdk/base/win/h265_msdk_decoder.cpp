@@ -48,7 +48,6 @@ int32_t H265MSDKVideoDecoder::Release() {
 
 H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
-      timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
       inited_(false),
       width_(0),
       height_(0),
@@ -286,7 +285,7 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
         }
     }
 
-    //We actually don't initialize the decoder here... As the decoder needs the first few NALs before it can 
+    //We actually don't initialize the decoder here... As the decoder needs the first few NALs before it can
     //initialize the decoder for H265. For this sake, we will leave remaining task in Decode call.
     m_mfxVideoParams.mfx.CodecId = MFX_CODEC_HEVC;
 

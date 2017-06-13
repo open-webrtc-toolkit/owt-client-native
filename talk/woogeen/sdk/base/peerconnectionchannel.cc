@@ -80,19 +80,19 @@ bool PeerConnectionChannel::ApplyBitrateSettings() {
         // on all encodings. Update the logic when moving per-stream settings
         // from ClientConfiguration to PublishOption
         if (sender_track->kind() ==
-            webrtc::MediaStreamTrackInterface::kVideoKind) {
-          rtp_parameters.encodings[idx].max_bitrate_bps =
-              (configuration_.max_video_bandwidth > 0)
-                  ? (configuration_.max_video_bandwidth * 1024)
-                  : 0;
-          ret |= sender->SetParameters(rtp_parameters);
+            webrtc::MediaStreamTrackInterface::kAudioKind) {
+          if (configuration_.max_audio_bandwidth > 0) {
+            rtp_parameters.encodings[idx].max_bitrate_bps =
+                rtc::Optional<int>(configuration_.max_audio_bandwidth * 1024);
+            ret |= sender->SetParameters(rtp_parameters);
+          }
         } else if (sender_track->kind() ==
-                   webrtc::MediaStreamTrackInterface::kAudioKind) {
-          rtp_parameters.encodings[idx].max_bitrate_bps =
-              (configuration_.max_audio_bandwidth > 0)
-                  ? (configuration_.max_audio_bandwidth * 1024)
-                  : 0;
-          ret |= sender->SetParameters(rtp_parameters);
+                   webrtc::MediaStreamTrackInterface::kVideoKind) {
+          if (configuration_.max_video_bandwidth > 0) {
+            rtp_parameters.encodings[idx].max_bitrate_bps =
+                rtc::Optional<int>(configuration_.max_video_bandwidth * 1024);
+            ret |= sender->SetParameters(rtp_parameters);
+          }
         }
       }
     }
@@ -164,7 +164,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       std::string sdp_string;
       if (!desc->ToString(&sdp_string)) {
         LOG(LS_ERROR) << "Error parsing local description.";
-        ASSERT(false);
+        RTC_DCHECK(false);
       }
       sdp_string = SdpUtils::SetPreferAudioCodec(
           sdp_string, configuration_.media_codec.audio_codec);
@@ -184,7 +184,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       std::string sdp_string;
       if (!desc->ToString(&sdp_string)) {
         LOG(LS_ERROR) << "Error parsing local description.";
-        ASSERT(false);
+        RTC_DCHECK(false);
       }
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
@@ -265,12 +265,14 @@ void PeerConnectionChannel::OnIceCandidate(
 void PeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {}
 
-void PeerConnectionChannel::OnAddStream(MediaStreamInterface* stream) {}
+void PeerConnectionChannel::OnAddStream(
+    rtc::scoped_refptr<MediaStreamInterface> stream) {}
 
-void PeerConnectionChannel::OnRemoveStream(MediaStreamInterface* stream) {}
+void PeerConnectionChannel::OnRemoveStream(
+    rtc::scoped_refptr<MediaStreamInterface> stream) {}
 
 void PeerConnectionChannel::OnDataChannel(
-    webrtc::DataChannelInterface* data_channel) {}
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
 
 void PeerConnectionChannel::OnRenegotiationNeeded() {}
 

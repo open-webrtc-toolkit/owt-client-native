@@ -199,7 +199,6 @@ int32_t MSDKVideoDecoder::Release(){
 
 MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
-      timestampCS_(*webrtc::CriticalSectionWrapper::CreateCriticalSection()),
       inited_(false),
       width_(0),
       height_(0),
@@ -615,7 +614,7 @@ int32_t MSDKVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
     {
-        webrtc::CriticalSectionScoped cs(&timestampCS_);
+        rtc::CritScope cs(&timestampCS_);
         //VCM requires these two timestamps to be poped when sending back a frame.
         ntp_time_ms_.push_back(inputImage.ntp_time_ms_);
         timestamps_.push_back(inputImage._timeStamp);
@@ -775,7 +774,7 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
     int64_t ntp_time_ms = 0;
     int64_t timestamp = 0;
     {
-      webrtc::CriticalSectionScoped cs(&timestampCS_);
+      rtc::CritScope cs(&timestampCS_);
       if (ntp_time_ms_.size() > 0) {
         ntp_time_ms = ntp_time_ms_.front();
         ntp_time_ms_.erase(ntp_time_ms_.begin());

@@ -48,7 +48,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const std::string& id,
       webrtc::VideoTrackSourceInterface* video_source);
   rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
-      cricket::VideoCapturer* capturer,
+      std::unique_ptr<cricket::VideoCapturer> capturer,
       const MediaConstraintsInterface* constraints);
   rtc::NetworkMonitorInterface* NetworkMonitor();
   // Returns current |pc_factory_|.

@@ -11,9 +11,9 @@
 #include <dxva2api.h>
 #include <Windows.h>
 #include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/media/base/videosinkinterface.h"
-#include "webrtc/media/base/videoframe.h"
 
 namespace woogeen {
 namespace base {

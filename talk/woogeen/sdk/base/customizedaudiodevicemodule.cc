@@ -6,7 +6,6 @@
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/timeutils.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
@@ -69,10 +68,7 @@ rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
 // ----------------------------------------------------------------------------
 
 CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
-    : _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
-      _critSectEventCb(*CriticalSectionWrapper::CreateCriticalSection()),
-      _critSectAudioCb(*CriticalSectionWrapper::CreateCriticalSection()),
-      _ptrCbAudioDeviceObserver(NULL),
+    : _ptrCbAudioDeviceObserver(NULL),
       _ptrAudioDevice(NULL),
       _id(0),
       _lastProcessTime(rtc::TimeMillis()),
@@ -163,7 +159,7 @@ void CustomizedAudioDeviceModule::Process() {
 
   // kPlayoutWarning
   if (_ptrAudioDevice->PlayoutWarning()) {
-    CriticalSectionScoped lock(&_critSectEventCb);
+    rtc::CritScope lock(&_critSectEventCb);
     if (_ptrCbAudioDeviceObserver) {
       WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
                    "=> OnWarningIsReported(kPlayoutWarning)");
@@ -175,7 +171,7 @@ void CustomizedAudioDeviceModule::Process() {
 
   // kPlayoutError
   if (_ptrAudioDevice->PlayoutError()) {
-    CriticalSectionScoped lock(&_critSectEventCb);
+    rtc::CritScope lock(&_critSectEventCb);
     if (_ptrCbAudioDeviceObserver) {
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                    "=> OnErrorIsReported(kPlayoutError)");
@@ -187,7 +183,7 @@ void CustomizedAudioDeviceModule::Process() {
 
   // kRecordingWarning
   if (_ptrAudioDevice->RecordingWarning()) {
-    CriticalSectionScoped lock(&_critSectEventCb);
+    rtc::CritScope lock(&_critSectEventCb);
     if (_ptrCbAudioDeviceObserver) {
       WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
                    "=> OnWarningIsReported(kRecordingWarning)");
@@ -199,7 +195,7 @@ void CustomizedAudioDeviceModule::Process() {
 
   // kRecordingError
   if (_ptrAudioDevice->RecordingError()) {
-    CriticalSectionScoped lock(&_critSectEventCb);
+    rtc::CritScope lock(&_critSectEventCb);
     if (_ptrCbAudioDeviceObserver) {
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                    "=> OnErrorIsReported(kRecordingError)");
@@ -1036,7 +1032,7 @@ int32_t CustomizedAudioDeviceModule::RegisterEventObserver(
 
 int32_t CustomizedAudioDeviceModule::RegisterAudioCallback(
     AudioTransport* audioCallback) {
-  CriticalSectionScoped lock(&_critSectAudioCb);
+  rtc::CritScope cs(&_critSectAudioCb);
   _audioDeviceBuffer.RegisterAudioCallback(audioCallback);
 
   return _outputAdm->RegisterAudioCallback(audioCallback);

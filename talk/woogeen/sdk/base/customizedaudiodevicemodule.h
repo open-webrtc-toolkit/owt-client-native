@@ -8,8 +8,8 @@
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 
 #include <memory>
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
@@ -189,9 +189,9 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
 
   void CreateOutputAdm();
 
-  CriticalSectionWrapper& _critSect;
-  CriticalSectionWrapper& _critSectEventCb;
-  CriticalSectionWrapper& _critSectAudioCb;
+  rtc::CriticalSection _critSect;
+  rtc::CriticalSection _critSectEventCb;
+  rtc::CriticalSection _critSectAudioCb;
 
   AudioDeviceObserver* _ptrCbAudioDeviceObserver;
 
