@@ -13,7 +13,6 @@ import subprocess
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'patches')
 TESTING_PATH = os.path.join(HOME_PATH, 'testing')
-BUILD_PATH = os.path.join(HOME_PATH, 'build')
 
 def _replace_gn_files():
   shutil.copyfile(os.path.join(PATCH_PATH, 'libsrtp.gn'), os.path.join(HOME_PATH, 'third_party','libsrtp','BUILD.gn'))
@@ -24,8 +23,6 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'iossim2.patch')], cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'androiddistjar.patch')], cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], cwd=BUILD_PATH)
 
 def main(argv):
   _replace_gn_files()
