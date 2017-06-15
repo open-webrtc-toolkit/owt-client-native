@@ -12,7 +12,7 @@ namespace woogeen {
 namespace base {
 class AVFoundationVideoCapturerFactory {
  public:
-  static cricket::VideoCapturer* Create(
+  static std::unique_ptr<cricket::VideoCapturer> Create(
       const LocalCameraStreamParameters& parameters);
 };
 }
