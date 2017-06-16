@@ -85,6 +85,7 @@ source_set("woogeen_sdk_base") {
   public_deps = [
     "//third_party/libyuv:libyuv",
     "//webrtc/api:libjingle_peerconnection",
+    "//webrtc/base:rtc_json",
   ]
 
   include_dirs = [
