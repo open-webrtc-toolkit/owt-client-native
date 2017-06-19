@@ -33,6 +33,7 @@
 #import <Woogeen/RTCLogging.h>
 #import <Woogeen/RTCMacros.h>
 #import <Woogeen/RTCMediaConstraints.h>
+#import <Woogeen/RTCMTLVideoView.h>
 #import <Woogeen/RTCVideoFrame.h>
 #import <Woogeen/RTCVideoRenderer.h>
 #import <Woogeen/RTCVideoSource.h>

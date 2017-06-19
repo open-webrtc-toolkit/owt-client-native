@@ -36,6 +36,7 @@ SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
 WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h',
+    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMTLVideoView.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMacros.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCLogging.h',
     'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
@@ -99,7 +100,7 @@ def replaceheaderimport(headers_target_folder):
     if filename.endswith('.h'):
       filepath = os.path.join(headers_target_folder, filename)
       for line in fileinput.input(filepath, inplace=1):
-        print re.sub('#import <WebRTC/','#import <Woogeen/', line.rstrip())
+        print re.sub('(#import )(<|\")WebRTC(/.*?\.h)(>|\")','\\1\\2Woogeen\\3\\4', line.rstrip())
       # Add a new line at the end of file
       with open(filepath, 'a') as file:
         file.write('\n')
