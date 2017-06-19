@@ -7,11 +7,12 @@
 
 namespace woogeen {
 namespace base {
-std::unique_ptr<cricket::VideoCapturer> AVFoundationVideoCapturerFactory::Create(
+cricket::VideoCapturer* AVFoundationVideoCapturerFactory::Create(
     const LocalCameraStreamParameters& parameters) {
-  std::unique_ptr<webrtc::AVFoundationVideoCapturer> av_foundation_capturer(
-      new webrtc::AVFoundationVideoCapturer());
-  if ((parameters.CameraId() == "com.apple.avfoundation.avcapturedevice.built-in_video:0" ||
+  webrtc::AVFoundationVideoCapturer* av_foundation_capturer =
+      new webrtc::AVFoundationVideoCapturer();
+  if ((parameters.CameraId() ==
+           "com.apple.avfoundation.avcapturedevice.built-in_video:0" ||
        parameters.CameraId() == "Back Camera") &&
       av_foundation_capturer->CanUseBackCamera()) {
     av_foundation_capturer->SetUseBackCamera(true);
@@ -23,7 +24,7 @@ std::unique_ptr<cricket::VideoCapturer> AVFoundationVideoCapturerFactory::Create
   } else {
     return nullptr;
   }
-  return std::move(av_foundation_capturer);
+  return av_foundation_capturer;
 }
 }
 }
