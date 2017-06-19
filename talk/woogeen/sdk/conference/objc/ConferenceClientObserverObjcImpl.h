@@ -21,6 +21,7 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
   ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer,
                                    RTCConferenceClient* conferenceClient);
   virtual ~ConferenceClientObserverObjcImpl(){};
+  id<RTCConferenceClientObserver> ObjcObserver() const { return observer_; }
 
  protected:
   virtual void OnStreamAdded(

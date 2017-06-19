@@ -82,6 +82,20 @@
 }
 
 - (void)removeObserver:(id<RTCConferenceClientObserver>)observer {
+  auto it = std::find_if(
+      _observers.begin(),
+      _observers.end(),
+      [=](const woogeen::conference::ConferenceClientObserverObjcImpl* observerObjcImpl) -> bool {
+        return observerObjcImpl->ObjcObserver() == observer;
+      });
+  if (it == _observers.end()) {
+    LOG(LS_WARNING) << "Cannot remove a non-existing element.";
+    return;
+  }
+  auto o = *it;
+  _nativeConferenceClient->RemoveObserver(*o);
+  _observers.erase(it);
+  delete o;
 }
 
 - (void)joinWithToken:(NSString*)token
