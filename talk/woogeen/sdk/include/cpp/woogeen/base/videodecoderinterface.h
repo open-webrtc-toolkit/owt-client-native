@@ -50,7 +50,7 @@ struct VideoEncodedFrame {
 
 /**
  @brief Video decoder interface
- @detail Encoded frames will be passed for further customized decoding
+ @details Encoded frames will be passed for further customized decoding
 */
 class VideoDecoderInterface {
  public:

@@ -51,7 +51,7 @@ RTC_EXPORT
 - (void)onStreamRemoved:(RTCRemoteStream*)stream;
 /**
   @brief Triggers when an error happened on a stream.
-  @detail This event only triggered for a stream that is being publishing or
+  @details This event only triggered for a stream that is being publishing or
   subscribing. SDK will not try to recovery the certain stream when this event
   is triggered. If you still need this stream, please re-publish or
   re-subscribe.

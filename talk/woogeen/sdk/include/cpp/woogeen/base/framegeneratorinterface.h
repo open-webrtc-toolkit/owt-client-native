@@ -10,7 +10,7 @@ namespace woogeen {
 namespace base {
 /**
  @brief frame generator interface for audio
- @detail Sample rate and channel numbers cannot be changed once the generator is
+ @details Sample rate and channel numbers cannot be changed once the generator is
  created. Currently, only 16 bit little-endian PCM is supported.
 */
 class AudioFrameGeneratorInterface {

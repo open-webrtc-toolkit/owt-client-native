@@ -35,7 +35,7 @@ RTC_EXPORT
 
 /**
  @brief Sets customized audio input enabled or not.
- @detail When it is enabled, SDK will fetch audio frames from
+ @details When it is enabled, SDK will fetch audio frames from
  |audioFrameGenerator| instead of hardware audio devices, like mic.
  @param enabled Customized audio input enabled or not.
  @param audioFrameGenerator An implementation which feeds audio frames to SDK.

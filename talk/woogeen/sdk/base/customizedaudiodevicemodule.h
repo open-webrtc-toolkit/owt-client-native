@@ -22,7 +22,7 @@ using namespace webrtc;
 /**
  @brief CustomizedADM is able to create customized audio device use customized
  audio input.
- @detail CustomizedADM does not support audio output yet.
+ @details CustomizedADM does not support audio output yet.
  */
 class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
  public:

@@ -36,7 +36,7 @@ namespace base {
 
 /**
   @brief Video encoder interface
-  @detail Internal webrtc encoder will request from this
+  @details Internal webrtc encoder will request from this
    interface when it needs one complete encoded frame.
 */
 class VideoEncoderInterface {
@@ -59,7 +59,7 @@ class VideoEncoderInterface {
       uint32_t fps, uint32_t bitrate_kbps, MediaCodec::VideoCodec video_codec) = 0;
   /**
    @brief Retrieve byte buffer from encoder that holds one complete frame.
-   @detail The buffer is provided by caller and EncodedOneFrame implementation should
+   @details The buffer is provided by caller and EncodedOneFrame implementation should
    copy encoded data to this buffer. After return, the caller owns the buffer and
    VideoEncoderInterface implementation should not assume the buffer valid.
    @param buffer Output buffer that holds the encoded data.

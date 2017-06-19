@@ -36,7 +36,7 @@ namespace p2p {
 /** @cond */
 /**
   @brief Interface for signaling sender.
-  @detail The sender may be a PeerClient/ConferenceClient instance which can
+  @details The sender may be a PeerClient/ConferenceClient instance which can
   send out signaling messages created from peerconnection.
 */
 class P2PSignalingSenderInterface {

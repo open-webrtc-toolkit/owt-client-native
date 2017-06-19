@@ -45,7 +45,7 @@ RTC_EXPORT
 
 /**
   @brief Construct RTCConferenceSubscribeOptions with default values.
-  @detail Default video quality is standard. MCU's setting will be ignored.
+  @details Default video quality is standard. MCU's setting will be ignored.
 */
 -(instancetype)init;
 

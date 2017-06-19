@@ -66,7 +66,7 @@ using namespace woogeen::base;
 
 /**
   @brief Configuration for creating a ConferenceClient
-  @detail This configuration is used while creating ConferenceClient.
+  @details This configuration is used while creating ConferenceClient.
   Changing this configuration does NOT impact ConferenceClient already
   created.
 */
@@ -148,7 +148,7 @@ class ConferenceClientObserver {
       std::shared_ptr<RemoteMixedStream> stream){};
   /**
     @brief Triggers when an error happened on a stream.
-    @detail This event only triggered for a stream that is being published or
+    @details This event only triggered for a stream that is being published or
     subscribed. SDK will not try to recovery the certain stream when this event
     is triggered. If you still need this stream, please re-publish or
     re-subscribe.
@@ -187,7 +187,7 @@ class ConferenceClientObserver {
 struct PublishOptions {
   /**
    @brief Max outgoing audio bandwidth, unit: kbps.
-   @detail Please be noticed different codecs may support different bitrate
+   @details Please be noticed different codecs may support different bitrate
    ranges. If you set a bandwidth limitation which is not supported by selected
    codec, connection will fail. If it is set to 0, associated ConferenceClient's
    max audio bandwidth will be used.
@@ -195,7 +195,7 @@ struct PublishOptions {
   int max_audio_bandwidth;
   /**
    @brief Max outgoing video bandwidth, unit: kbps.
-   @detail Please be noticed different codecs may support different bitrate
+   @details Please be noticed different codecs may support different bitrate
    ranges. If you set a bandwidth limitation which is not supported by selected
    codec, connection will fail. If it is set to 0, associated ConferenceClient's
    max video bandwidth will be used.
@@ -203,7 +203,7 @@ struct PublishOptions {
   int max_video_bandwidth;
   /**
    @brief Construct PublishOptions with default values.
-   @detail Default values for max_audio_bandwidth and max_video_bandwidth are 0.
+   @details Default values for max_audio_bandwidth and max_video_bandwidth are 0.
    */
   explicit PublishOptions() : max_audio_bandwidth(0), max_video_bandwidth(0) {}
 };
@@ -334,7 +334,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Continue to receive specified stream's audio data.
-    @detail MCU will continue to send audio data to client even stream's audio
+    @details MCU will continue to send audio data to client even stream's audio
     track is disabled.
   */
   void PlayAudio(
@@ -343,7 +343,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Stop receiving specified stream's audio data.
-    @detail MCU will stop sending audio data to client. It saves network traffic
+    @details MCU will stop sending audio data to client. It saves network traffic
     if audio track is disabled.
   */
   void PauseAudio(
@@ -352,7 +352,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Continue to receive specified stream's video data.
-    @detail MCU will continue to send video data to client even stream's video
+    @details MCU will continue to send video data to client even stream's video
     track is disabled or there is no video sink associated with specific stream.
   */
   void PlayVideo(
@@ -361,7 +361,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Stop receiving specified stream's video data.
-    @detail MCU will stop sending video data to client. If saves network traffic
+    @details MCU will stop sending video data to client. If saves network traffic
     if video track is disabled.
     to MCU.
   */

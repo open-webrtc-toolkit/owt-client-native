@@ -34,7 +34,7 @@ RTC_EXPORT
 
 /**
   @brief Set a user-defined attribute map.
-  @detail Remote user can get attribute map by calling setAttributes:. P2P mode
+  @details Remote user can get attribute map by calling setAttributes:. P2P mode
   does not support setting attributes.
 */
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes;

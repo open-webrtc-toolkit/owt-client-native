@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  @brief This class represent a local stream with customized video input
- @detail It pulls video frame from video frame generator which is set in
+ @details It pulls video frame from video frame generator which is set in
  RTCLocalCustomizedStreamParameters.
  */
 RTC_EXPORT

@@ -71,7 +71,7 @@ class GlobalConfiguration {
   /**
    @brief This function sets the audio input to be an instance of
    AudioFrameGeneratorInterface.
-   @detail When it is enabled, SDK will not capture audio from mic. This means
+   @details When it is enabled, SDK will not capture audio from mic. This means
    you cannot create LocalStream other than LocalCustomizedStream.
    @param enabled Customized audio input is enabled or not.
    @param audio_frame_generator An implementation which feeds audio frames to

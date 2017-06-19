@@ -34,7 +34,7 @@ namespace base {
 
 /**
  * @brief An instance of this class indicates preference for codecs.
- * @detail It is not guaranteed to use preferred codec, if remote side doesn't
+ * @details It is not guaranteed to use preferred codec, if remote side doesn't
  * support preferred codec, it will use other codec.
  */
 struct MediaCodec {

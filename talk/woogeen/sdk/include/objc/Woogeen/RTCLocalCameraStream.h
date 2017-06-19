@@ -69,7 +69,7 @@ RTC_EXPORT
 /**
   @brief Close the stream. Its underlying media source is no longer providing
   data, and will never provide more data for this stream.
-  @detail Once a stream is closed, it is no longer usable. If you want to
+  @details Once a stream is closed, it is no longer usable. If you want to
   temporary disable audio or video, please use DisableAudio/DisableVideo
   instead.
 */

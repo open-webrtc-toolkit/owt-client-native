@@ -112,7 +112,7 @@ RTC_EXPORT
    onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Continue to transmit specified stream's audio data.
-  @detail If |stream| is a remote stream, MCU will continue to send audio data
+  @details If |stream| is a remote stream, MCU will continue to send audio data
   to client. If |stream| is a local stream, client will cont inue to send audio
   data to MCU. This method is expected to be called after |disableAudio|.
   @param This stream's audio will be played.
@@ -122,7 +122,7 @@ RTC_EXPORT
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Stop transmitting specified stream's audio data.
-  @detail If |stream| is a remote stream, MCU will stop sending audio data to
+  @details If |stream| is a remote stream, MCU will stop sending audio data to
   client. If |stream| is a local stream, client will stop sending audio data to
   MCU.
   @param This stream's audio will be paused.
@@ -132,7 +132,7 @@ RTC_EXPORT
          onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Continue to transmit specified stream's video data.
-  @detail If |stream| is a remote stream, MCU will continue to send video data
+  @details If |stream| is a remote stream, MCU will continue to send video data
   to client. If |stream| is a local stream, client will cont inue to send video
   data to MCU. This method is expected to be called after |disableVideo|.
   @param This stream's video will be played.
@@ -142,7 +142,7 @@ RTC_EXPORT
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Stop transmitting specified stream's video data.
-  @detail If |stream| is a remote stream, MCU will stop sending video data to
+  @details If |stream| is a remote stream, MCU will stop sending video data to
   client. If |stream| is a local stream, client will stop sending video data to
   MCU.
   @param This stream's video will be played.

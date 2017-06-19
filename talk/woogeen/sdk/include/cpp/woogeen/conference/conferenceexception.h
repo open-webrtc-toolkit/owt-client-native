@@ -46,7 +46,7 @@ class ConferenceException : public woogeen::base::Exception {
   /** @cond **/
   /**
     @brief Get the type of certain exception.
-    @detail The type is always unknown because we haven't define error code for conference mode.
+    @details The type is always unknown because we haven't define error code for conference mode.
   **/
   enum Type Type() const;
   /** @endcond **/

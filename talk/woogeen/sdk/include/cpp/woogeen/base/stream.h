@@ -99,7 +99,7 @@ class Stream {
 
   /**
     @brief Returns a user-defined attribute map.
-    @detail These attributes are defined by publisher. P2P mode always return
+    @details These attributes are defined by publisher. P2P mode always return
     empty map because it is not supported yet.
   */
   virtual const std::unordered_map<std::string, std::string> Attributes()
@@ -135,7 +135,7 @@ class Stream {
 
 /**
   @brief This class represents a local stream.
-  @detail A local stream can be published to remote side.
+  @details A local stream can be published to remote side.
 */
 class LocalStream : public Stream {
  public:
@@ -157,7 +157,7 @@ class LocalStream : public Stream {
   using Stream::Attributes;
   /**
     @brief Set a user-defined attribute map.
-    @detail Remote user can get attribute map by calling Attributes(). P2P mode
+    @details Remote user can get attribute map by calling Attributes(). P2P mode
     does not support setting attributes.
   */
   virtual void Attributes(
@@ -171,7 +171,7 @@ class LocalStream : public Stream {
 
 /**
   @brief This class represents a remote stream.
-  @detail A remote is published from a remote client or MCU. Do not construct
+  @details A remote is published from a remote client or MCU. Do not construct
   remote stream outside SDK.
 */
 class RemoteStream : public Stream {
@@ -268,7 +268,7 @@ class LocalCameraStream : public LocalStream {
   /**
     @brief Close the stream. Its underlying media source is no longer providing
     data, and will never provide more data for this stream.
-    @detail Once a stream is closed, it is no longer usable. If you want to
+    @details Once a stream is closed, it is no longer usable. If you want to
     temporary disable audio or video, please use DisableAudio/DisableVideo
     instead.
   */

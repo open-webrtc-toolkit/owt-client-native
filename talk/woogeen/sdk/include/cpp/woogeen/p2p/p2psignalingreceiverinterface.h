@@ -33,7 +33,7 @@ namespace p2p {
 /** @cond */
 /**
   @brief Interface for signaling receiver.
-  @detail The receiver may be a peerconnection instance which can deal with the
+  @details The receiver may be a peerconnection instance which can deal with the
   message received.
 */
 class P2PSignalingReceiverInterface {

@@ -57,14 +57,14 @@ class RemoteMixedStream : public woogeen::base::RemoteStream {
 
   /**
     @brief Get supported video formats.
-    @detail When subscribe this stream, user can specifiy one of these formats.
+    @details When subscribe this stream, user can specifiy one of these formats.
   */
   std::vector<VideoFormat> SupportedVideoFormats();
 
   /**
     @brief Returns an attribute of mixed streams which distinguishes them from
     other mixed streams a conference room provides.
-    @detail A conference room, since Intel CS for WebRTC v3.4 and later, has
+    @details A conference room, since Intel CS for WebRTC v3.4 and later, has
     been extended to support multiple presentations of the mixed audio and video
     for variant purposes. For example, in remote education scenario, the teacher
     and students may subscribe different mixed streams with view of 'teacher'

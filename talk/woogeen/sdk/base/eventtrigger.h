@@ -13,7 +13,7 @@ namespace woogeen {
 namespace base {
 
 /* @brief Functions for event execution
- * @detail This class provide several static functions to execute event on its
+ * @details This class provide several static functions to execute event on its
  * observer asynchronously.
  */
 class EventTrigger final {
