@@ -86,6 +86,7 @@ source_set("woogeen_sdk_base") {
     "//third_party/libyuv:libyuv",
     "//webrtc/api:libjingle_peerconnection",
     "//webrtc/base:rtc_json",
+    "//webrtc/modules/desktop_capture:desktop_capture",
   ]
 
   include_dirs = [
