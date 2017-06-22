@@ -24,11 +24,14 @@ using namespace woogeen::base;
 
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with
 // MCU as well as it's signaling through Socket.IO.
-class ConferencePeerConnectionChannel : public PeerConnectionChannel {
+class ConferencePeerConnectionChannel
+    : public PeerConnectionChannel,
+      public std::enable_shared_from_this<ConferencePeerConnectionChannel> {
  public:
   explicit ConferencePeerConnectionChannel(
       PeerConnectionChannelConfiguration& configuration,
-      std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel);
+      std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel,
+      std::shared_ptr<rtc::TaskQueue> event_queue);
   ~ConferencePeerConnectionChannel();
   // Add a ConferencePeerConnectionChannel observer so it will be notified when
   // this object have some events.
@@ -191,6 +194,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
     sio::message::ptr options,
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  std::function<void()> RunInEventQueue(std::function<void()> func);
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   int session_id_;
@@ -211,7 +215,7 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
 
   // Stored candidates, will be send out after setting remote description.
   // Use sio::message::ptr instead of IceCandidateInterface* to avoid one more
-  // deep copy
+  // deep copy.
   std::vector<sio::message::ptr> ice_candidates_;
   std::mutex candidates_mutex_;
   bool ice_restart_needed_;
@@ -219,6 +223,8 @@ class ConferencePeerConnectionChannel : public PeerConnectionChannel {
   std::vector<std::reference_wrapper<ConferencePeerConnectionChannelObserver>>
       observers_;
   bool connected_;
+  // Queue for callbacks and events.
+  std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
 }
 }

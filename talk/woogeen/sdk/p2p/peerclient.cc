@@ -9,6 +9,7 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/peerclient.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/task_queue.h"
 
 namespace woogeen {
 namespace p2p {
@@ -16,7 +17,9 @@ namespace p2p {
 PeerClient::PeerClient(
     PeerClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
-    : signaling_channel_(signaling_channel), configuration_(configuration) {
+    : event_queue_(new rtc::TaskQueue("PeerClientEventQueue")),
+      signaling_channel_(signaling_channel),
+      configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(*this);
 }
@@ -140,9 +143,10 @@ std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
     PeerConnectionChannelConfiguration config =
         GetPeerConnectionChannelConfiguration();
     std::shared_ptr<P2PPeerConnectionChannel> pcc =
-        std::shared_ptr<P2PPeerConnectionChannel>(
-            new P2PPeerConnectionChannel(config, local_id_, target_id, this));
-    P2PPeerConnectionChannelObserverCppImpl *pcc_observer=new P2PPeerConnectionChannelObserverCppImpl(*this);
+        std::shared_ptr<P2PPeerConnectionChannel>(new P2PPeerConnectionChannel(
+            config, local_id_, target_id, this, event_queue_));
+    P2PPeerConnectionChannelObserverCppImpl* pcc_observer =
+        new P2PPeerConnectionChannelObserverCppImpl(*this);
     pcc->AddObserver(pcc_observer);
     auto pcc_pair =
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
@@ -183,46 +187,49 @@ PeerConnectionChannelConfiguration PeerClient::GetPeerConnectionChannelConfigura
 }
 
 void PeerClient::OnInvited(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, &PeerClientObserver::OnInvited, remote_id);
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &PeerClientObserver::OnInvited, remote_id);
 }
 
 void PeerClient::OnAccepted(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, &PeerClientObserver::OnAccepted,
-                         remote_id);
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &PeerClientObserver::OnAccepted, remote_id);
 }
 
 void PeerClient::OnStarted(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, &PeerClientObserver::OnChatStarted,
-                         remote_id);
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &PeerClientObserver::OnChatStarted, remote_id);
 }
 
 void PeerClient::OnStopped(const std::string& remote_id) {
   pc_channels_.erase(remote_id);
-  EventTrigger::OnEvent1(observers_, &PeerClientObserver::OnChatStopped,
-                         remote_id);
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &PeerClientObserver::OnChatStopped, remote_id);
 }
 
 void PeerClient::OnDenied(const std::string& remote_id) {
   pc_channels_.erase(remote_id);
-  EventTrigger::OnEvent1(observers_, &PeerClientObserver::OnDenied, remote_id);
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &PeerClientObserver::OnDenied, remote_id);
 }
 
 void PeerClient::OnData(const std::string& remote_id,
                         const std::string& message) {
-  EventTrigger::OnEvent2(observers_, &PeerClientObserver::OnDataReceived,
-                         remote_id, message);
+  EventTrigger::OnEvent2(observers_, event_queue_,
+                         &PeerClientObserver::OnDataReceived, remote_id,
+                         message);
 }
 
 void PeerClient::OnStreamAdded(std::shared_ptr<RemoteCameraStream> stream) {
   EventTrigger::OnEvent1(
-      observers_,
+      observers_, event_queue_,
       (void (PeerClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
           &PeerClientObserver::OnStreamAdded),
       stream);
 }
 void PeerClient::OnStreamAdded(std::shared_ptr<RemoteScreenStream> stream) {
   EventTrigger::OnEvent1(
-      observers_,
+      observers_, event_queue_,
       (void (PeerClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
           &PeerClientObserver::OnStreamAdded),
       stream);
@@ -230,7 +237,7 @@ void PeerClient::OnStreamAdded(std::shared_ptr<RemoteScreenStream> stream) {
 
 void PeerClient::OnStreamRemoved(std::shared_ptr<RemoteCameraStream> stream) {
   EventTrigger::OnEvent1(
-      observers_,
+      observers_, event_queue_,
       (void (PeerClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
           &PeerClientObserver::OnStreamRemoved),
       stream);
@@ -238,7 +245,7 @@ void PeerClient::OnStreamRemoved(std::shared_ptr<RemoteCameraStream> stream) {
 
 void PeerClient::OnStreamRemoved(std::shared_ptr<RemoteScreenStream> stream) {
   EventTrigger::OnEvent1(
-      observers_,
+      observers_, event_queue_,
       (void (PeerClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
           &PeerClientObserver::OnStreamRemoved),
       stream);

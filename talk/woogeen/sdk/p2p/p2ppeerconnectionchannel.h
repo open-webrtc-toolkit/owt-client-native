@@ -20,6 +20,7 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/messagehandler.h"
+#include "webrtc/base/task_queue.h"
 
 namespace woogeen {
 namespace p2p {
@@ -61,6 +62,16 @@ class P2PPeerConnectionChannelObserver {
 class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                  public PeerConnectionChannel {
  public:
+  explicit P2PPeerConnectionChannel(
+      PeerConnectionChannelConfiguration configuration,
+      const std::string& local_id,
+      const std::string& remote_id,
+      P2PSignalingSenderInterface* sender,
+      std::shared_ptr<rtc::TaskQueue> event_queue);
+  // If event_queue is not provided, a new event queue will be used. That means,
+  // a new thread will be created for each P2PPeerConnection. Currently, iOS
+  // SDK's RTCP2PPeerConnection is a pure Obj-C file, so it does not maintain
+  // event queue.
   explicit P2PPeerConnectionChannel(
       PeerConnectionChannelConfiguration configuration,
       const std::string& local_id,
@@ -221,7 +232,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                                                 // channel is
                                                                 // ready.
   std::mutex pending_messages_mutex_;
-  Thread* callback_thread_;  // All callbacks will be executed on this thread.
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
@@ -229,6 +239,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool remote_side_supports_remove_stream_;
   bool is_creating_offer_;  // It will be true during creating and setting offer.
   std::mutex is_creating_offer_mutex_;
+  // Queue for callbacks and events.
+  std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
 }
 }

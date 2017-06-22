@@ -38,6 +38,10 @@
 #include "woogeen/base/clientconfiguration.h"
 #include "woogeen/base/globalconfiguration.h"
 
+namespace rtc {
+  class TaskQueue;
+}
+
 namespace woogeen {
 namespace base {
   struct PeerConnectionChannelConfiguration;
@@ -352,6 +356,9 @@ class PeerClient : protected P2PSignalingSenderInterface,
   woogeen::base::PeerConnectionChannelConfiguration
   GetPeerConnectionChannelConfiguration();
 
+  // Queue for callbacks and events. Shared among PeerClient and all of it's
+  // P2PPeerConnectionChannel.
+  std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;

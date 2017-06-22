@@ -7,6 +7,7 @@
 #include <future>
 
 #include "webrtc/base/logging.h"
+#include "webrtc/base/task_queue.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/media/base/videocapturer.h"
 
@@ -75,13 +76,15 @@ const string kIceCandidateSdpNameKey = "candidate";
 
 ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
     PeerConnectionChannelConfiguration& configuration,
-    std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel)
+    std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel,
+    std::shared_ptr<rtc::TaskQueue> event_queue)
     : PeerConnectionChannel(configuration),
       signaling_channel_(signaling_channel),
       session_id_(kSessionIdBase),
       message_seq_(kMessageSeqBase),
       ice_restart_needed_(false),
-      connected_(false) {
+      connected_(false),
+      event_queue_(event_queue) {
   InitializePeerConnection();
   RTC_CHECK(signaling_channel_);
 }
@@ -209,20 +212,36 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   LOG(LS_INFO) << "Ice connection state changed: " << new_state;
   if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
       new_state == PeerConnectionInterface::kIceConnectionCompleted) {
+    std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
+        shared_from_this();
     if (publish_success_callback_) {
-      std::thread t(publish_success_callback_);
-      t.detach();
+      event_queue_->PostTask([weak_this] {
+        auto that = weak_this.lock();
+        if (!that)
+          return;
+        that->publish_success_callback_();
+      });
     } else if (subscribe_success_callback_) {
-      std::thread t(subscribe_success_callback_, subscribed_stream_);
-      t.detach();
+      event_queue_->PostTask([weak_this] {
+        auto that = weak_this.lock();
+        if (!that)
+          return;
+        that->subscribe_success_callback_(that->subscribed_stream_);
+      });
     }
     connected_ = true;
   } else if (new_state == PeerConnectionInterface::kIceConnectionClosed) {
     if (!connected_ && failure_callback_) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "ICE failed."));
-      std::thread t(failure_callback_, std::move(e));
-      t.detach();
+      std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
+          shared_from_this();
+      event_queue_->PostTask([weak_this] {
+        auto that = weak_this.lock();
+        if (!that)
+          return;
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "ICE failed."));
+        that->failure_callback_(std::move(e));
+      });
     } else if (connected_) {
       OnStreamError(std::string("ICE connection state changed to closed."));
     }
@@ -230,9 +249,9 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   } else {
     return;
   }
-  publish_success_callback_ = nullptr;
-  subscribe_success_callback_ = nullptr;
-  failure_callback_ = nullptr;
+  // It's better to clean all callbacks to avoid fire them again. But callbacks
+  // are run in task queue, so we cannot clean it here. Also, PostTaskAndReply
+  // requires a reply queue which is not available at this time.
 }
 
 void ConferencePeerConnectionChannel::OnIceGatheringChange(
@@ -348,9 +367,11 @@ bool ConferencePeerConnectionChannel::CheckNullPointer(
   if (pointer)
     return true;
   if (on_failure != nullptr) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown, "Nullptr is not allowed."));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure]() {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnknown, "Nullptr is not allowed."));
+      on_failure(std::move(e));
+    });
   }
   return false;
 }
@@ -370,9 +391,11 @@ void ConferencePeerConnectionChannel::Publish(
 
   if (publish_success_callback_) {
     if (on_failure) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Publishing this stream."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "Publishing this stream."));
+        on_failure(std::move(e));
+      });
     }
   }
   publish_success_callback_ = on_success;
@@ -429,9 +452,11 @@ void ConferencePeerConnectionChannel::Subscribe(
   }
   if (subscribe_success_callback_) {
     if (on_failure) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Subscribing this stream."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "Subscribing this stream."));
+        on_failure(std::move(e));
+      });
     }
   }
   subscribe_success_callback_ = on_success;
@@ -508,9 +533,11 @@ void ConferencePeerConnectionChannel::Subscribe(
     } else {
       LOG(LS_ERROR) << "Subscribe unsupported resolution.";
       if (on_failure != nullptr) {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Unsupported resolution."));
-        on_failure(std::move(e));
+        event_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Unsupported resolution."));
+          on_failure(std::move(e));
+        });
       }
     }
   } else {
@@ -529,10 +556,12 @@ void ConferencePeerConnectionChannel::Subscribe(
     LOG(LS_ERROR) << "Screen sharing stream does not support resolution settings. "
                      "Please don't change resolution.";
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown,
-          "Cannot specify resolution settings for screen sharing stream."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown,
+            "Cannot specify resolution settings for screen sharing stream."));
+        on_failure(std::move(e));
+      });
       }
   } else {
     Subscribe(std::static_pointer_cast<RemoteStream>(stream),
@@ -551,10 +580,12 @@ void ConferencePeerConnectionChannel::Subscribe(
     LOG(LS_ERROR) << "Camera stream does not support resolution settings. "
                      "Please don't change resolution.";
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown,
-          "Cannot specify resolution settings for camera stream."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown,
+            "Cannot specify resolution settings for camera stream."));
+        on_failure(std::move(e));
+      });
       }
   } else {
     Subscribe(std::static_pointer_cast<RemoteStream>(stream),
@@ -573,24 +604,29 @@ void ConferencePeerConnectionChannel::Unpublish(
   if (published_stream_ == nullptr || stream->Id() != published_stream_->Id()) {
     LOG(LS_ERROR) << "Stream ID doesn't match published stream.";
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Invalid stream to be unpublished."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(
+            new ConferenceException(ConferenceException::kUnknown,
+                                    "Invalid stream to be unpublished."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
   if (publish_success_callback_ != nullptr) {  // Publishing
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown,
-          "Cannot unpublish a stream during publishing."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown,
+            "Cannot unpublish a stream during publishing."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
   connected_ = false;
-  signaling_channel_->SendStreamEvent("unpublish", stream->Id(), on_success,
-                                      on_failure);
+  signaling_channel_->SendStreamEvent("unpublish", stream->Id(),
+                                      RunInEventQueue(on_success), on_failure);
 }
 
 void ConferencePeerConnectionChannel::Unsubscribe(
@@ -605,24 +641,29 @@ void ConferencePeerConnectionChannel::Unsubscribe(
       stream->Id() != subscribed_stream_->Id()) {
     LOG(LS_ERROR) << "Stream ID doesn't match subscribed stream.";
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Invalid stream to be unsubscribed."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(
+            new ConferenceException(ConferenceException::kUnknown,
+                                    "Invalid stream to be unsubscribed."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
   if (subscribe_success_callback_ != nullptr) {  // Subscribing
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown,
-          "Cannot unsubscribe a stream during subscribing."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown,
+            "Cannot unsubscribe a stream during subscribing."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
   connected_ = false;
-  signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(), on_success,
-                                      on_failure);
+  signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(),
+                                      RunInEventQueue(on_success), on_failure);
 }
 
 void ConferencePeerConnectionChannel::SendStreamControlMessage(
@@ -789,6 +830,17 @@ void ConferencePeerConnectionChannel::OnStreamError(
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnStreamError(error_stream, e);
   }
+}
+
+std::function<void()> ConferencePeerConnectionChannel::RunInEventQueue(
+    std::function<void()> func) {
+  std::weak_ptr<ConferencePeerConnectionChannel> weak_this = shared_from_this();
+  return [func, weak_this] {
+    auto that = weak_this.lock();
+    if (!that)
+      return;
+    that->event_queue_->PostTask([func] { func(); });
+  };
 }
 }
 }

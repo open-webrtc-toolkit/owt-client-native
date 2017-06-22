@@ -68,7 +68,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration,
     const std::string& local_id,
     const std::string& remote_id,
-    P2PSignalingSenderInterface* sender)
+    P2PSignalingSenderInterface* sender,
+    std::shared_ptr<rtc::TaskQueue> event_queue)
     : PeerConnectionChannel(configuration),
       signaling_sender_(sender),
       local_id_(local_id),
@@ -80,21 +81,31 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       last_disconnect_(
           std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
-      callback_thread_(new PeerConnectionThread),
       remote_side_supports_plan_b_(false),
       remote_side_supports_remove_stream_(false),
-      is_creating_offer_(false) {
-  callback_thread_->Start();
+      is_creating_offer_(false),
+      event_queue_(event_queue) {
   RTC_CHECK(signaling_sender_);
 }
+
+P2PPeerConnectionChannel::P2PPeerConnectionChannel(
+    PeerConnectionChannelConfiguration configuration,
+    const std::string& local_id,
+    const std::string& remote_id,
+    P2PSignalingSenderInterface* sender)
+    : P2PPeerConnectionChannel(
+          configuration,
+          local_id,
+          remote_id,
+          sender,
+          std::shared_ptr<rtc::TaskQueue>(
+              new rtc::TaskQueue("PeerConnectionChannelEventQueue"))) {}
 
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
   if (set_remote_sdp_task_)
     delete set_remote_sdp_task_;
   if (signaling_sender_)
     delete signaling_sender_;
-  if (callback_thread_)
-    delete callback_thread_;
 }
 
 Json::Value P2PPeerConnectionChannel::UaInfo() {
@@ -121,10 +132,12 @@ void P2PPeerConnectionChannel::Invite(
     if (on_failure) {
       LOG(LS_WARNING) << "Cannot send invitation in this state: "
                       << session_state_;
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidState,
-                           "Cannot send invitation in this state."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidState,
+                             "Cannot send invitation in this state."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -144,10 +157,12 @@ void P2PPeerConnectionChannel::Accept(
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (session_state_ != kSessionStatePending) {
     if (on_failure) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidState,
-                           "Cannot accept invitation in this state."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidState,
+                             "Cannot accept invitation in this state."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -163,10 +178,12 @@ void P2PPeerConnectionChannel::Deny(
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (session_state_ != kSessionStatePending) {
     if (on_failure) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidState,
-                           "Cannot deny invitation in this state."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidState,
+                             "Cannot deny invitation in this state."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -492,8 +509,8 @@ void P2PPeerConnectionChannel::OnAddStream(
         void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteScreenStream>),
         std::shared_ptr<RemoteScreenStream>>(
-        observers_, &P2PPeerConnectionChannelObserver::OnStreamAdded,
-        remote_stream);
+        observers_, event_queue_,
+        &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
   } else {
     LOG(LS_INFO) << "Add camera stream.";
@@ -505,8 +522,8 @@ void P2PPeerConnectionChannel::OnAddStream(
         void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteCameraStream>),
         std::shared_ptr<RemoteCameraStream>>(
-        observers_, &P2PPeerConnectionChannelObserver::OnStreamAdded,
-        remote_stream);
+        observers_, event_queue_,
+        &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
   }
 }
@@ -529,8 +546,8 @@ void P2PPeerConnectionChannel::OnRemoveStream(
         void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteScreenStream>),
         std::shared_ptr<RemoteScreenStream>>(
-        observers_, &P2PPeerConnectionChannelObserver::OnStreamRemoved,
-        remote_stream);
+        observers_, event_queue_,
+        &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   } else {
     std::shared_ptr<RemoteCameraStream> remote_stream =
         std::static_pointer_cast<RemoteCameraStream>(
@@ -541,8 +558,8 @@ void P2PPeerConnectionChannel::OnRemoveStream(
         void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteCameraStream>),
         std::shared_ptr<RemoteCameraStream>>(
-        observers_, &P2PPeerConnectionChannelObserver::OnStreamRemoved,
-        remote_stream);
+        observers_, event_queue_,
+        &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   }
   remote_streams_.erase(stream->label());
   remote_stream_type_.erase(stream->label());
@@ -713,9 +730,11 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
   if (pointer)
     return true;
   if (on_failure != nullptr) {
-    std::unique_ptr<P2PException> e(new P2PException(
-        P2PException::kClientInvalidArgument, "Nullptr is not allowed."));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure] {
+      std::unique_ptr<P2PException> e(new P2PException(
+          P2PException::kClientInvalidArgument, "Nullptr is not allowed."));
+      on_failure(std::move(e));
+    });
   }
   return false;
 }
@@ -751,9 +770,11 @@ void P2PPeerConnectionChannel::Publish(
         "Cannot publish a stream when connection is not established.");
     LOG(LS_WARNING) << error_message;
     if (on_failure) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidState, error_message));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure, error_message] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidState, error_message));
+        on_failure(std::move(e));
+      });
     }
   }
   if (!remote_side_supports_plan_b_ &&
@@ -761,10 +782,12 @@ void P2PPeerConnectionChannel::Publish(
     if (on_failure != nullptr) {
       LOG(LS_WARNING) << "Remote side does not support Plan B, so at most one "
                          "audio/video track can be published.";
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientUnsupportedMethod,
-                           "Cannot publish multiple streams to remote side."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(new P2PException(
+            P2PException::kClientUnsupportedMethod,
+            "Cannot publish multiple streams to remote side."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -772,10 +795,12 @@ void P2PPeerConnectionChannel::Publish(
   if (published_streams_.find(stream->MediaStream()->label()) !=
       published_streams_.end()) {
     if (on_failure) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidArgument,
-                           "The stream is already published."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidArgument,
+                             "The stream is already published."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -788,8 +813,7 @@ void P2PPeerConnectionChannel::Publish(
     pending_publish_streams_.push_back(stream);
   }
   if (on_success) {
-    std::thread t(on_success);
-    t.detach();
+    event_queue_->PostTask([on_success] { on_success(); });
   }
   LOG(LS_INFO) << "Session state: " << session_state_;
   if (session_state_ == SessionState::kSessionStateConnected &&
@@ -808,10 +832,12 @@ void P2PPeerConnectionChannel::Unpublish(
   if (!remote_side_supports_remove_stream_) {
     if (on_failure != nullptr) {
       LOG(LS_WARNING) << "Remote side not support removeStream.";
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientUnsupportedMethod,
-                           "Remote side does not support unpublish."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientUnsupportedMethod,
+                             "Remote side does not support unpublish."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -821,10 +847,12 @@ void P2PPeerConnectionChannel::Unpublish(
     auto it = published_streams_.find(stream->MediaStream()->label());
     if (it == published_streams_.end()) {
       if (on_failure) {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidArgument,
-                             "The stream is not published."));
-        on_failure(std::move(e));
+        event_queue_->PostTask([on_failure] {
+          std::unique_ptr<P2PException> e(
+              new P2PException(P2PException::kClientInvalidArgument,
+                               "The stream is not published."));
+          on_failure(std::move(e));
+        });
       }
       return;
     }
@@ -835,8 +863,7 @@ void P2PPeerConnectionChannel::Unpublish(
     pending_unpublish_streams_.push_back(stream);
   }
   if (on_success) {
-    std::thread t(on_success);
-    t.detach();
+    event_queue_->PostTask([on_success] { on_success(); });
   }
   if (session_state_ == SessionState::kSessionStateConnected &&
       SignalingState() == PeerConnectionInterface::SignalingState::kStable)
@@ -863,16 +890,17 @@ void P2PPeerConnectionChannel::Stop(
       break;
     default:
       if (on_failure != nullptr) {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidState,
-                             "Cannot stop a session haven't started."));
-        on_failure(std::move(e));
+        event_queue_->PostTask([on_failure] {
+          std::unique_ptr<P2PException> e(
+              new P2PException(P2PException::kClientInvalidState,
+                               "Cannot stop a session haven't started."));
+          on_failure(std::move(e));
+        });
       }
       return;
   }
   if (on_success != nullptr) {
-    std::thread t(on_success);
-    t.detach();
+    event_queue_->PostTask([on_success] { on_success(); });
   }
 }
 
@@ -881,21 +909,25 @@ void P2PPeerConnectionChannel::GetConnectionStats(
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   if (on_success == nullptr) {
     if (on_failure != nullptr) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidArgument,
-                           "on_success cannot be nullptr. Please provide "
-                           "on_success to get connection stats data."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(
+            new P2PException(P2PException::kClientInvalidArgument,
+                             "on_success cannot be nullptr. Please provide "
+                             "on_success to get connection stats data."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
   if (session_state_ != kSessionStateConnected) {
     if (on_failure != nullptr) {
-      std::unique_ptr<P2PException> e(
-          new P2PException(P2PException::kClientInvalidState,
-                           "Cannot get connection stats in this state. Please "
-                           "try it after connection is established."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<P2PException> e(new P2PException(
+            P2PException::kClientInvalidState,
+            "Cannot get connection stats in this state. Please "
+            "try it after connection is established."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -1050,7 +1082,7 @@ void P2PPeerConnectionChannel::Send(
     }
   }
   if (on_success) {
-    on_success();  // TODO(jianjunz): run on new thread.
+    event_queue_->PostTask([on_success] { on_success(); });
   }
 }
 

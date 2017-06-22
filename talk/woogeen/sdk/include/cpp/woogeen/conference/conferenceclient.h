@@ -210,7 +210,8 @@ struct PublishOptions {
 
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
-                               ConferencePeerConnectionChannelObserver {
+                               ConferencePeerConnectionChannelObserver,
+                               std::enable_shared_from_this<ConferenceClient> {
  public:
   /**
     @brief Initialize a ConferenceClient instance with specific configuration
@@ -521,10 +522,14 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   bool ParseUser(std::shared_ptr<sio::message> user_info, User** user) const;
   std::unordered_map<std::string, std::string> AttributesFromStreamInfo(
       std::shared_ptr<sio::message> stream_info);
+  std::function<void()> RunInEventQueue(std::function<void()> func);
 
   enum StreamType: int;
 
   ConferenceClientConfiguration configuration_;
+  // Queue for callbacks and events. Shared among ConferenceClient and all of
+  // it's ConferencePeerConnectionChannel.
+  std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::mutex observer_mutex_;
   bool signaling_channel_connected_;
@@ -546,10 +551,9 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   std::unordered_map<std::string, StreamType> added_stream_type_;
   // Key is user's ID
   std::unordered_map<std::string, std::shared_ptr<User>> participants;
+  // Capturing observer in |event_queue_| is not 100% safe although above queue
+  // is excepted to be ended after ConferenceClient is destroyed.
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
-  // Queue for callbacks and events. Shared between ConferenceClient and all of
-  // it's ConferencePeerConnectionChannel.
-  std::shared_ptr<rtc::TaskQueue> task_queue_;
 };
 }
 }

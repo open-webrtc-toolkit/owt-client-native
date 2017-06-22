@@ -2,8 +2,6 @@
  * Intel License
  */
 
-#include <thread>
-#include <future>
 #include "webrtc/base/base64.h"
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/task_queue.h"
@@ -26,12 +24,12 @@ enum ConferenceClient::StreamType : int {
 const std::string play_pause_failure_message =
     "Cannot play/pause a stream that have not been published or subscribed.";
 
-ConferenceClient::ConferenceClient(const ConferenceClientConfiguration& configuration)
+ConferenceClient::ConferenceClient(
+    const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
+      event_queue_(new rtc::TaskQueue("ConferenceClientEventQueue")),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
-      signaling_channel_connected_(false),
-      task_queue_(new rtc::TaskQueue("ConferenceClientCallbacksAndEventsQueue")) {
-}
+      signaling_channel_connected_(false) {}
 
 ConferenceClient::~ConferenceClient() {
   signaling_channel_->RemoveObserver(*this);
@@ -67,10 +65,12 @@ void ConferenceClient::Join(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (signaling_channel_connected_){
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnknown,
-                                  "Already connected to conference server."));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(
+            new ConferenceException(ConferenceException::kUnknown,
+                                    "Already connected to conference server."));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -85,13 +85,15 @@ void ConferenceClient::Join(
     signaling_channel_connected_ = true;
     // Get current user's ID.
     std::string user_id;
-    if(info->get_map()["clientId"]->get_flag() != sio::message::flag_string) {
+    if (info->get_map()["clientId"]->get_flag() != sio::message::flag_string) {
       LOG(LS_ERROR) << "Room info doesn't contain client ID.";
-      if(on_failure){
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Received unknown message from MCU."));
-        // TODO: Use async instead.
-        on_failure(std::move(e));
+      if (on_failure) {
+        event_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(
+              new ConferenceException(ConferenceException::kUnknown,
+                                      "Received unknown message from MCU."));
+          on_failure(std::move(e));
+        });
       }
       return;
     } else {
@@ -112,14 +114,14 @@ void ConferenceClient::Join(
             User* user_raw;
             if (ParseUser(*user_it, &user_raw)) {
               std::shared_ptr<User> user(user_raw);
-              // TODO: use async instead.
-              on_success(user);
+              event_queue_->PostTask([on_success, user]() { on_success(user); });
             } else if (on_failure) {
-              std::unique_ptr<ConferenceException> e(new ConferenceException(
-                  ConferenceException::kUnknown,
-                  "Failed to parse current user's info"));
-              // TODO: Use async instead.
-              on_failure(std::move(e));
+              event_queue_->PostTask([on_failure]() {
+                std::unique_ptr<ConferenceException> e(new ConferenceException(
+                    ConferenceException::kUnknown,
+                    "Failed to parse current user's info"));
+                on_failure(std::move(e));
+              });
             }
             break;
           }
@@ -127,11 +129,13 @@ void ConferenceClient::Join(
         if (user_it == users.end()) {
           LOG(LS_ERROR) << "Cannot find current user's info in user list.";
           if (on_failure) {
-            std::unique_ptr<ConferenceException> e(
-                new ConferenceException(ConferenceException::kUnknown,
-                                        "Received unknown message from MCU."));
-            // TODO: Use async instead.
-            on_failure(std::move(e));
+            event_queue_->PostTask([on_failure]() {
+              std::unique_ptr<ConferenceException> e(new ConferenceException(
+                  ConferenceException::kUnknown,
+                  "Received unknown message from MCU."));
+              // TODO: Use async instead.
+              on_failure(std::move(e));
+            });
           }
         }
       }
@@ -180,7 +184,7 @@ void ConferenceClient::Publish(
       LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
                        "more than once.";
       if (on_failure) {
-        task_queue_->PostTask([on_failure]() {
+        event_queue_->PostTask([on_failure]() {
           std::unique_ptr<ConferenceException> e(new ConferenceException(
               ConferenceException::kUnknown, "Duplicated stream."));
           on_failure(std::move(e));
@@ -199,7 +203,8 @@ void ConferenceClient::Publish(
   if (options.max_video_bandwidth > 0)
     config.max_video_bandwidth = options.max_video_bandwidth;
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
-      new ConferencePeerConnectionChannel(config, signaling_channel_));
+      new ConferencePeerConnectionChannel(config, signaling_channel_,
+                                          event_queue_));
   pcc->AddObserver(*this);
   {
     std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
@@ -234,9 +239,11 @@ void ConferenceClient::Subscribe(
         "Subscribing an invalid stream. Please check whether this stream is "
         "removed.");
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, failure_message));
-      on_failure(std::move(e));
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, failure_message));
+        on_failure(std::move(e));
+      });
     }
     return;
   }
@@ -244,7 +251,7 @@ void ConferenceClient::Subscribe(
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     if (subscribe_pcs_.find(stream->Id()) != subscribe_pcs_.end()) {
       if (on_failure != nullptr) {
-        task_queue_->PostTask([on_failure]() {
+        event_queue_->PostTask([on_failure]() {
           std::string failure_message(
               "Cannot subscribe a stream that is subscribing.");
           std::unique_ptr<ConferenceException> e(new ConferenceException(
@@ -258,7 +265,8 @@ void ConferenceClient::Subscribe(
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
-      new ConferencePeerConnectionChannel(config, signaling_channel_));
+      new ConferencePeerConnectionChannel(config, signaling_channel_,
+                                          event_queue_));
   pcc->AddObserver(*this);
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
@@ -297,19 +305,20 @@ void ConferenceClient::Unpublish(
     if (pcc_it == publish_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
-        task_queue_->PostTask([on_failure]() {
+        event_queue_->PostTask([on_failure]() {
           std::unique_ptr<ConferenceException> e(new ConferenceException(
               ConferenceException::kUnknown, "Invalid stream."));
           on_failure(std::move(e));
         });
       }
     } else {
-      pcc_it->second->Unpublish(stream,
-                                [=]() {
-                                  if (on_success != nullptr)
-                                    on_success();
-                                },
-                                on_failure);
+      pcc_it->second->Unpublish(
+          stream,
+          [=]() {
+            if (on_success != nullptr)
+              event_queue_->PostTask([on_success]() { on_success(); });
+          },
+          on_failure);
       publish_pcs_.erase(pcc_it);
     }
   }
@@ -333,19 +342,20 @@ void ConferenceClient::Unsubscribe(
     if (pcc_it == subscribe_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
-        task_queue_->PostTask([on_failure]() {
+        event_queue_->PostTask([on_failure]() {
           std::unique_ptr<ConferenceException> e(new ConferenceException(
               ConferenceException::kUnknown, "Invalid stream."));
           on_failure(std::move(e));
         });
       }
     } else {
-      pcc_it->second->Unsubscribe(stream,
-                                  [=]() {
-                                    if (on_success != nullptr)
-                                      on_success();
-                                  },
-                                  on_failure);
+      pcc_it->second->Unsubscribe(
+          stream,
+          [=]() {
+            if (on_success != nullptr)
+              event_queue_->PostTask([on_success]() { on_success(); });
+          },
+          on_failure);
       subscribe_pcs_.erase(pcc_it);
     }
   }
@@ -370,8 +380,8 @@ void ConferenceClient::Send(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->SendCustomMessage(message, receiver, on_success,
-                                        on_failure);
+  signaling_channel_->SendCustomMessage(
+      message, receiver, RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::PlayAudio(
@@ -509,7 +519,7 @@ void ConferenceClient::Leave(
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     subscribe_pcs_.clear();
   }
-  signaling_channel_->Disconnect(on_success, on_failure);
+  signaling_channel_->Disconnect(RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::GetRegion(
@@ -542,7 +552,7 @@ void ConferenceClient::SetRegion(
     return;
   }
   signaling_channel_->SetRegion(stream->Id(), mixed_stream->Id(), region_id,
-                                on_success, on_failure);
+                                RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::Mute(
@@ -557,8 +567,8 @@ void ConferenceClient::Mute(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->Mute(stream->Id(), mute_audio, mute_video, on_success,
-                           on_failure);
+  signaling_channel_->Mute(stream->Id(), mute_audio, mute_video,
+                           RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::Unmute(
@@ -574,7 +584,7 @@ void ConferenceClient::Unmute(
     return;
   }
   signaling_channel_->Unmute(stream->Id(), unmute_audio, unmute_video,
-                             on_success, on_failure);
+                             RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::Mix(
@@ -594,14 +604,16 @@ void ConferenceClient::Mix(
       mixed_stream_ids.push_back(mixed_stream->Id());
   }
   if (mixed_stream_ids.empty() && on_failure) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown,
-        "No valid remote mixed stream specified for the mix request."));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure]() {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnknown,
+          "No valid remote mixed stream specified for the mix request."));
+      on_failure(std::move(e));
+    });
     return;
   }
-  signaling_channel_->Mix(stream->Id(), mixed_stream_ids, on_success,
-                          on_failure);
+  signaling_channel_->Mix(stream->Id(), mixed_stream_ids,
+                          RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::Unmix(
@@ -621,14 +633,16 @@ void ConferenceClient::Unmix(
       mixed_stream_ids.push_back(mixed_stream->Id());
   }
   if (mixed_stream_ids.empty() && on_failure) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown,
-        "No valid remote mixed stream specified for the unmix request."));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure]() {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnknown,
+          "No valid remote mixed stream specified for the unmix request."));
+      on_failure(std::move(e));
+    });
     return;
   }
-  signaling_channel_->Unmix(stream->Id(), mixed_stream_ids, on_success,
-                            on_failure);
+  signaling_channel_->Unmix(stream->Id(), mixed_stream_ids,
+                            RunInEventQueue(on_success), on_failure);
 }
 
 void ConferenceClient::GetConnectionStats(
@@ -638,11 +652,13 @@ void ConferenceClient::GetConnectionStats(
   auto pcc = GetConferencePeerConnectionChannel(stream);
   if (pcc == nullptr) {
     if (on_failure) {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnknown,
-                                  "Stream is not published or subscribed."));
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(
+            new ConferenceException(ConferenceException::kUnknown,
+                                    "Stream is not published or subscribed."));
 
-      on_failure(std::move(e));
+        on_failure(std::move(e));
+      });
     }
     LOG(LS_WARNING)
         << "Tried to get connection statistics from unknown stream.";
@@ -749,9 +765,11 @@ bool ConferenceClient::CheckNullPointer(
   if (pointer)
     return true;
   if (on_failure != nullptr) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown, failure_message));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure, failure_message]() {
+      std::unique_ptr<ConferenceException> e(new ConferenceException(
+          ConferenceException::kUnknown, failure_message));
+      on_failure(std::move(e));
+    });
   }
   return false;
 }
@@ -761,9 +779,12 @@ bool ConferenceClient::CheckSignalingChannelOnline(
   if (signaling_channel_connected_)
     return true;
   if (on_failure != nullptr) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown, "Conference server is not connected."));
-    on_failure(std::move(e));
+    event_queue_->PostTask([on_failure]() {
+      std::unique_ptr<ConferenceException> e(
+          new ConferenceException(ConferenceException::kUnknown,
+                                  "Conference server is not connected."));
+      on_failure(std::move(e));
+    });
   }
   return false;
 }
@@ -828,7 +849,9 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeMix;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-        (*its).get().OnStreamAdded(remote_stream);
+        auto& o = (*its).get();
+        event_queue_->PostTask(
+            [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
       }
     } else if (device == "screen") {
       auto remote_stream = std::make_shared<RemoteScreenStream>(id, remote_id);
@@ -839,7 +862,9 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeScreen;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-        (*its).get().OnStreamAdded(remote_stream);
+        auto& o = (*its).get();
+        event_queue_->PostTask(
+            [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
       }
     }
   } else {
@@ -855,7 +880,9 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
     added_streams_[id] = remote_stream;
     added_stream_type_[id] = StreamType::kStreamTypeCamera;
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its).get().OnStreamAdded(remote_stream);
+      auto& o = (*its).get();
+      event_queue_->PostTask(
+          [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
     }
   }
 }
@@ -867,7 +894,8 @@ void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
     participants[user->Id()] = user;
     const std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      (*its).get().OnUserJoined(user);
+      auto& o=(*its).get();
+      event_queue_->PostTask([&o, user] { o.OnUserJoined(user); });
     }
   }
 }
@@ -890,7 +918,8 @@ void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
   participants.erase(user_it);
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnUserLeft(user);
+    auto& o = (*its).get();
+    event_queue_->PostTask([&o, user] { o.OnUserLeft(user); });
   }
 }
 
@@ -1076,7 +1105,9 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
             std::static_pointer_cast<RemoteCameraStream>(stream);
         for (auto observers_it = observers_.begin();
              observers_it != observers_.end(); ++observers_it) {
-          (*observers_it).get().OnStreamRemoved(stream_ptr);
+          auto& o = (*observers_it).get();
+          event_queue_->PostTask(
+              [&o, stream_ptr] { o.OnStreamRemoved(stream_ptr); });
         }
         break;
       }
@@ -1085,7 +1116,9 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
             std::static_pointer_cast<RemoteScreenStream>(stream);
         for (auto observers_it = observers_.begin();
              observers_it != observers_.end(); ++observers_it) {
-          (*observers_it).get().OnStreamRemoved(stream_ptr);
+          auto& o = (*observers_it).get();
+          event_queue_->PostTask(
+              [&o, stream_ptr] { o.OnStreamRemoved(stream_ptr); });
         }
         break;
       }
@@ -1094,7 +1127,9 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
             std::static_pointer_cast<RemoteMixedStream>(stream);
         for (auto observers_it = observers_.begin();
              observers_it != observers_.end(); ++observers_it) {
-          (*observers_it).get().OnStreamRemoved(stream_ptr);
+          auto& o = (*observers_it).get();
+          event_queue_->PostTask(
+              [&o, stream_ptr] { o.OnStreamRemoved(stream_ptr); });
         }
         break;
       }
@@ -1109,9 +1144,14 @@ void ConferenceClient::TriggerOnStreamError(
     std::shared_ptr<const ConferenceException> exception) {
   for (auto observers_it = observers_.begin(); observers_it != observers_.end();
        ++observers_it) {
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        exception->Type(), exception->Message()));
-    (*observers_it).get().OnStreamError(stream, std::move(e));
+    auto& o = (*observers_it).get();
+    auto type = exception->Type();
+    auto message = exception->Message();
+    event_queue_->PostTask([&o, stream, type, message] {
+      std::unique_ptr<ConferenceException> e(
+          new ConferenceException(type, message));
+      o.OnStreamError(stream, std::move(e));
+    });
   }
 }
 
@@ -1172,6 +1212,17 @@ ConferenceClient::AttributesFromStreamInfo(
     attributes[attribute_pair.first] = attribute_pair.second->get_string();
   }
   return attributes;
+}
+
+std::function<void()> ConferenceClient::RunInEventQueue(
+    std::function<void()> func) {
+  std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+  return [func, weak_this] {
+    auto that = weak_this.lock();
+    if (!that)
+      return;
+    that->event_queue_->PostTask([func] { func(); });
+  };
 }
 }
 }
