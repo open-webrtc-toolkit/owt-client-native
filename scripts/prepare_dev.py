@@ -19,9 +19,7 @@ def _replace_gn_files():
   shutil.copyfile(os.path.join(PATCH_PATH, 'usrsctp.gn'), os.path.join(HOME_PATH, 'third_party','usrsctp','BUILD.gn'))
 
 def _patch():
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'iossim1.patch')], cwd=TESTING_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'iossim2.patch')], cwd=TESTING_PATH)) != 0:
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'iossim.patch')], cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
 
 def main(argv):
