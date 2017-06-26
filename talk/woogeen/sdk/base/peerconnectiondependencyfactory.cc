@@ -3,15 +3,16 @@
  */
 
 #include <iostream>
-#include "webrtc/base/thread.h"
+#include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
+#include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
+#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/ssladapter.h"
-#include "webrtc/system_wrappers/include/field_trial_default.h"
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
-#include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
+#include "webrtc/base/thread.h"
+#include "webrtc/media/base/mediachannel.h"
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/system_wrappers/include/field_trial_default.h"
 #if defined(WEBRTC_WIN)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
@@ -219,9 +220,57 @@ PeerConnectionDependencyFactory::CreateLocalVideoTrack(
 
 scoped_refptr<AudioTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
-  return pc_thread_->Invoke<scoped_refptr<AudioTrackInterface>>(RTC_FROM_HERE,
-                       Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
-                            pc_factory_.get(), id, nullptr))
+  bool aec_enabled, agc_enabled, ns_enabled;
+  aec_enabled = GlobalConfiguration::GetAECEnabled();
+  agc_enabled = GlobalConfiguration::GetAGCEnabled();
+  ns_enabled = GlobalConfiguration::GetNSEnabled();
+  if (!aec_enabled || !agc_enabled || !ns_enabled) {
+    cricket::AudioOptions options;
+    options.echo_cancellation = rtc::Optional<bool>(aec_enabled ? true : false);
+    options.auto_gain_control = rtc::Optional<bool>(agc_enabled ? true : false);
+    options.noise_suppression = rtc::Optional<bool>(ns_enabled ? true : false);
+    options.residual_echo_detector =
+        rtc::Optional<bool>(aec_enabled ? true : false);
+    scoped_refptr<webrtc::AudioSourceInterface> audio_source =
+        CreateAudioSource(options);
+    return pc_thread_
+        ->Invoke<scoped_refptr<AudioTrackInterface>>(
+            RTC_FROM_HERE,
+            Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
+                 pc_factory_.get(), id, audio_source.get()))
+        .get();
+  } else {
+    return pc_thread_
+        ->Invoke<scoped_refptr<AudioTrackInterface>>(
+            RTC_FROM_HERE,
+            Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
+                 pc_factory_.get(), id, nullptr))
+        .get();
+  }
+}
+
+scoped_refptr<AudioTrackInterface>
+PeerConnectionDependencyFactory::CreateLocalAudioTrack(
+    const std::string& id,
+    webrtc::AudioSourceInterface* audio_source) {
+  return pc_thread_
+      ->Invoke<scoped_refptr<AudioTrackInterface>>(
+          RTC_FROM_HERE, Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
+                              pc_factory_.get(), id, audio_source))
+      .get();
+}
+
+rtc::scoped_refptr<AudioSourceInterface>
+PeerConnectionDependencyFactory::CreateAudioSource(
+    const cricket::AudioOptions& options) {
+  return pc_thread_
+      ->Invoke<scoped_refptr<webrtc::AudioSourceInterface>>(
+          RTC_FROM_HERE,
+          Bind((rtc::scoped_refptr<AudioSourceInterface>(
+                   PeerConnectionFactoryInterface::*)(
+                   const cricket::AudioOptions&)) &
+                   PeerConnectionFactoryInterface::CreateAudioSource,
+               pc_factory_.get(), options))
       .get();
 }
 

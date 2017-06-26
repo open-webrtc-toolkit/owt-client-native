@@ -17,5 +17,7 @@ std::unique_ptr<AudioFrameGeneratorInterface>
 std::unique_ptr<VideoDecoderInterface>
     GlobalConfiguration::video_decoder_ = nullptr;
 #endif
+AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
+    true, true, true};
 }
 }

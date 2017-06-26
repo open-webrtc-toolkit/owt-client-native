@@ -39,6 +39,29 @@
 namespace woogeen {
 namespace base{
 
+/** @cond */
+/// Audio processing settings.
+struct AudioProcessingSettings {
+  /**
+  @brief Auto echo cancellation enabling/disabling. By default enabled.
+  @details If set to true, will enable auto echo cancellation.
+  */
+  bool AECEnabled;
+
+  /**
+  @brief Auto gain control enabling/disabling. By default enabled.
+  @details If set to true, will enable auto gain control.
+  */
+  bool AGCEnabled;
+
+  /**
+  @brief Noise suppression enabling/disabling. By default enabled.
+  @details If set to true, will enable AGC.
+  */
+  bool NSEnabled;
+};
+/** @endcond */
+
 /**
  @brief configuration of global using.
 
@@ -94,6 +117,33 @@ class GlobalConfiguration {
     video_decoder_ = std::move(external_video_decoder);
   }
 #endif
+  /**
+  @breif This function disables/enables auto echo cancellation.
+  @details When it is enabled, SDK will turn on AEC functionality.
+  @param enabled AEC is enabled or not.
+  */
+  static void SetAECEnabled(bool enabled) {
+    audio_processing_settings_.AECEnabled = enabled;
+  }
+
+  /**
+  @breif This function disables/enables auto gain control.
+  @details When it is enabled, SDK will turn on AGC functionality.
+  @param enabled AGC is enabled or not.
+  */
+  static void SetAGCEnabled(bool enabled) {
+    audio_processing_settings_.AGCEnabled = enabled;
+  }
+
+  /**
+  @breif This function disables/enables noise suppression.
+  @details When it is enabled, SDK will turn on NS functionality.
+  @param enabled NS is enabled or not.
+  */
+  static void SetNSEnabled(bool enabled) {
+    audio_processing_settings_.NSEnabled = enabled;
+  }
+
  private:
   GlobalConfiguration() {}
   virtual ~GlobalConfiguration() {}
@@ -120,6 +170,27 @@ class GlobalConfiguration {
    */
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
+  }
+  /**
+   @brief This function gets whether auto echo cancellation is enabled or not.
+   @return true or false.
+   */
+  static bool GetAECEnabled() {
+    return audio_processing_settings_.AECEnabled ? true : false;
+  }
+  /**
+  @brief This function gets whether auto gain control is enabled or not.
+  @return true or false.
+  */
+  static bool GetAGCEnabled() {
+    return audio_processing_settings_.AGCEnabled ? true : false;
+  }
+  /**
+  @brief This function gets whether noise suppression is enabled or not.
+  @return true or false.
+  */
+  static bool GetNSEnabled() {
+    return audio_processing_settings_.NSEnabled ? true : false;
   }
   /**
    @brief This function returns audio frame generator.
@@ -155,6 +226,7 @@ class GlobalConfiguration {
    */
   static std::unique_ptr<VideoDecoderInterface> video_decoder_;
 #endif
+  static AudioProcessingSettings audio_processing_settings_;
 };
 
 }

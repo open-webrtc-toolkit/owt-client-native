@@ -14,6 +14,7 @@ namespace woogeen {
 namespace base {
 using webrtc::MediaStreamInterface;
 using webrtc::AudioTrackInterface;
+using webrtc::AudioSourceInterface;
 using webrtc::VideoTrackInterface;
 using webrtc::VideoTrackSourceInterface;
 using webrtc::PeerConnectionFactoryInterface;
@@ -44,12 +45,18 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const std::string& label);
   rtc::scoped_refptr<AudioTrackInterface> CreateLocalAudioTrack(
       const std::string& id);
+  // Make it public to allow passing in user-defined AudioSource.
+  rtc::scoped_refptr<AudioTrackInterface> CreateLocalAudioTrack(
+      const std::string& id,
+      webrtc::AudioSourceInterface* audio_source);
   rtc::scoped_refptr<VideoTrackInterface> CreateLocalVideoTrack(
       const std::string& id,
       webrtc::VideoTrackSourceInterface* video_source);
   rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       std::unique_ptr<cricket::VideoCapturer> capturer,
       const MediaConstraintsInterface* constraints);
+  rtc::scoped_refptr<AudioSourceInterface> CreateAudioSource(
+      const cricket::AudioOptions& options);
   rtc::NetworkMonitorInterface* NetworkMonitor();
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
