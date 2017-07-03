@@ -13,6 +13,7 @@
 namespace woogeen {
 namespace base {
 using webrtc::MediaStreamInterface;
+using webrtc::AudioDeviceModule;
 using webrtc::AudioTrackInterface;
 using webrtc::AudioSourceInterface;
 using webrtc::VideoTrackInterface;
@@ -79,6 +80,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const webrtc::MediaConstraintsInterface* constraints,
       webrtc::PeerConnectionObserver* observer);
   void CreateNetworkMonitorOnCurrentThread();
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
 
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>

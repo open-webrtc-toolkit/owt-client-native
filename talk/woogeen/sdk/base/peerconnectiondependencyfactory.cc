@@ -149,8 +149,12 @@ void PeerConnectionDependencyFactory::
   // adm.
   rtc::scoped_refptr<AudioDeviceModule> adm;
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
-    adm = CustomizedAudioDeviceModule::Create(
-        GlobalConfiguration::GetAudioFrameGenerator());
+    // Create ADM on worker thred as RegisterAudioCallback is invoked there.
+    adm = worker_thread->Invoke<rtc::scoped_refptr<AudioDeviceModule>>(
+               RTC_FROM_HERE,
+               Bind(&PeerConnectionDependencyFactory::
+                    CreateCustomizedAudioDeviceModuleOnCurrentThread,
+                    this));
   }
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       worker_thread, signaling_thread, adm,
@@ -295,10 +299,17 @@ rtc::NetworkMonitorInterface* PeerConnectionDependencyFactory::NetworkMonitor(){
 void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
 #if defined(WEBRTC_IOS)
   if (!network_monitor_) {
-    network_monitor_ = new NetworkMonitorIos();
-    network_monitor_->Start();
+     network_monitor_ = new NetworkMonitorIos();
+     network_monitor_->Start();
   }
 #endif
 }
+
+scoped_refptr<webrtc::AudioDeviceModule>
+PeerConnectionDependencyFactory::CreateCustomizedAudioDeviceModuleOnCurrentThread() {
+  return CustomizedAudioDeviceModule::Create(
+     GlobalConfiguration::GetAudioFrameGenerator());
+}
+
 }
 }
