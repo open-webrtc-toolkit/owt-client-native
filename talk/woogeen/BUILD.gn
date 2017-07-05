@@ -2,7 +2,7 @@
 # Intel License
 #
 
-import("//webrtc/webrtc.gni")
+import("//build_overrides/webrtc.gni")
 
 if (is_ios) {
   import("//build/config/ios/rules.gni")
@@ -26,8 +26,8 @@ static_library("woogeen") {
     ":woogeen_sdk_conf",
     ":woogeen_sdk_p2p",
     "//third_party/protobuf:protobuf_lite",
-    "//webrtc",
-    "//webrtc/system_wrappers:system_wrappers_default",
+    "//third_party/webrtc",
+    "//third_party/webrtc/system_wrappers:system_wrappers_default",
   ]
 
   if (is_ios) {
@@ -84,9 +84,9 @@ source_set("woogeen_sdk_base") {
 
   public_deps = [
     "//third_party/libyuv:libyuv",
-    "//webrtc/api:libjingle_peerconnection",
-    "//webrtc/base:rtc_json",
-    "//webrtc/modules/desktop_capture:desktop_capture",
+    "//third_party/webrtc/api:libjingle_peerconnection",
+    "//third_party/webrtc/base:rtc_json",
+    "//third_party/webrtc/modules/desktop_capture:desktop_capture",
   ]
 
   include_dirs = [
@@ -148,7 +148,6 @@ source_set("woogeen_sdk_base") {
     ]
   }
 
-
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
@@ -176,7 +175,6 @@ source_set("woogeen_sdk_p2p") {
     "sdk/p2p/peerclient.cc",
   ]
 
-
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
@@ -203,7 +201,6 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
-
 
   if (is_linux && is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]

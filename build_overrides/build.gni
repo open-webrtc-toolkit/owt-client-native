@@ -1,0 +1,37 @@
+# This file is borrowed from Chromium with modifications.
+
+# Variable that can be used to support multiple build scenarios, like having
+# Chromium specific targets in a client project's GN file etc.
+build_with_chromium = false
+
+# Some non-Chromium builds don't use Chromium's third_party/binutils.
+linux_use_bundled_binutils_override = true
+
+# Building with WooGeen client SDK.
+build_with_woogeen = true
+
+declare_args() {
+  # Android 32-bit non-component, non-clang builds cannot have symbol_level=2
+  # due to 4GiB file size limit, see https://crbug.com/648948.
+  # Set this flag to true to skip the assertion.
+  ignore_elf32_limitations = false
+
+  # Use the system install of Xcode for tools like ibtool, libtool, etc.
+  # This does not affect the compiler. When this variable is false, targets will
+  # instead use a hermetic install of Xcode. [The hermetic install can be
+  # obtained with gclient sync after setting the environment variable
+  # FORCE_MAC_TOOLCHAIN].
+  use_system_xcode = ""
+
+  # Use external OpenSSL instead of BoringSSL.
+  woogeen_use_openssl = false
+
+  # External OpenSSL header path.
+  woogeen_openssl_header_root = ""
+
+  # External OpenSSL lib path.
+  woogeen_openssl_lib_root = ""
+
+  # Enable H.265.
+  rtc_use_h265 = false
+}

@@ -1,0 +1,8 @@
+.landmines
+/base
+/build
+/buildtools
+/out*/
+/testing
+/third_party
+/tools
