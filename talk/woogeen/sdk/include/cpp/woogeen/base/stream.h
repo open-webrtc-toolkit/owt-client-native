@@ -181,13 +181,14 @@ class RemoteStream : public Stream {
  public:
   /// Return the remote user ID, indicates who published this stream.
   std::string From();
+  using Stream::Attributes;
 
  protected:
   /** @cond */
   explicit RemoteStream(const std::string& id, const std::string& from);
   explicit RemoteStream(MediaStreamInterface* media_stream,
                         const std::string& from);
-  using Stream::Attributes;
+
   virtual void Attributes(
       const std::unordered_map<std::string, std::string>& attributes) {
     attributes_ = attributes;
