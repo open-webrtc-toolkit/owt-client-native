@@ -94,6 +94,8 @@ deps = {
     Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + '21b383f81a2214307a5cece839206418a2ba820b',
   'src/third_party/webrtc':
     Var('internal_ccr1_git') + '/webrtc-webrtcstack.git' + '@' + 'e49dbf0b8fbbf62862a5f9c395a83960fcb143d2',
+  'src/third_party/resources':
+    Var('internal_ccr1_git') + '/webrtc-upstream-fork.git' + '@' + '9601d1559979e1f6baa799d55c0aac7782ae47d3',
 }
 
 deps_os = {
@@ -334,7 +336,7 @@ hooks = [
                '--no_auth',
                '--quiet',
                '--bucket', 'chromium-webrtc-resources',
-               'src/resources'],
+               'src/third_party/resources'],
   },
   {
     # Prepare environment for WooGeen development.
