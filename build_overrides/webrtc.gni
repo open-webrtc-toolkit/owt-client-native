@@ -5,6 +5,7 @@
 # This is needed for backwards-compatibility w/ the WebRTC repo for
 # the build_with_chromium flag.
 import("//build_overrides/build.gni")
+import("//build_overrides/ssl/ssl.gni")
 
 # Exclude pulse audio on Chromium since its prerequisites don't require
 # pulse audio.

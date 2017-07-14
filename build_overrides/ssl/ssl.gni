@@ -1,0 +1,19 @@
+# Copyright (c) 2016 Intel Corporation. All rights reserved.
+
+# Contains SSL settings.
+
+declare_args() {
+  # Use external OpenSSL instead of BoringSSL.
+  woogeen_use_openssl = false
+
+  # External OpenSSL header path
+  woogeen_openssl_header_root = ""
+
+  # External OpenSSL lib path
+  woogeen_openssl_lib_root = ""
+}
+
+if (woogeen_use_openssl) {
+  rtc_ssl_root = woogeen_openssl_header_root
+  rtc_build_ssl = !woogeen_use_openssl
+}

@@ -1,5 +1,11 @@
 # This file is borrowed from Chromium with modifications.
 
+# Several dependencies of Chrome require a different min sdk when built
+# as stand-alone projects. If this is ever not the case, these variables
+# can be removed.
+# See https://bugs.chromium.org/p/webrtc/issues/detail?id=5453.
+mac_sdk_min_build_override = "10.10"
+
 # Variable that can be used to support multiple build scenarios, like having
 # Chromium specific targets in a client project's GN file etc.
 build_with_chromium = false
@@ -21,16 +27,7 @@ declare_args() {
   # instead use a hermetic install of Xcode. [The hermetic install can be
   # obtained with gclient sync after setting the environment variable
   # FORCE_MAC_TOOLCHAIN].
-  use_system_xcode = ""
-
-  # Use external OpenSSL instead of BoringSSL.
-  woogeen_use_openssl = false
-
-  # External OpenSSL header path.
-  woogeen_openssl_header_root = ""
-
-  # External OpenSSL lib path.
-  woogeen_openssl_lib_root = ""
+  use_system_xcode = true
 
   # Enable H.265.
   rtc_use_h265 = false

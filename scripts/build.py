@@ -33,22 +33,22 @@ OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 ARCH_PARAM_DICT = {'arm':'device-arm32', 'arm64':'device-arm64',
     'x86':'simulator-x86','x64':'simulator-x64'}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-WEBRTC_HEADER_LIST = ['webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMTLVideoView.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMacros.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCLogging.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoCapturer.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoSource.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameFilterProtocol.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCConfiguration.h',
-    'webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h']
+WEBRTC_HEADER_LIST = ['third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMTLVideoView.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMacros.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCLogging.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoCapturer.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoSource.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameFilterProtocol.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCConfiguration.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h']
 HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/woogeen/sdk/include/objc/Woogeen/*']
 LIB_BLACK_LIST = ['video_capture']
 FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
@@ -68,8 +68,7 @@ TEST_SIMULATOR_DEVICE = 'iPhone 7'
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
       'ios_enable_code_signing=false ios_deployment_target="7.0" use_xcode_clang=true '\
-      'rtc_libvpx_build_vp9=false enable_ios_bitcode=true '\
-      'woogeen_workarounds_for_m54=true'%arch
+      'rtc_libvpx_build_vp9=false enable_ios_bitcode=true'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
   else:

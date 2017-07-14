@@ -6,7 +6,6 @@ group("default") {
   testonly = true
   deps = [
     "//talk/woogeen",
-    "//third_party/webrtc",
   ]
   if (woogeen_include_tests) {
     deps += [ "talk/woogeen:woogeen_tests" ]

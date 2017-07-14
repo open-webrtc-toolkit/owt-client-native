@@ -217,12 +217,12 @@ if (is_ios) {
       ":woogeen_sdk_conf",
       ":woogeen_sdk_p2p",
       "//third_party/jsoncpp",
-      "//webrtc/sdk:rtc_sdk_peerconnection_objc",
-      "//webrtc/system_wrappers:system_wrappers_default",
+      "//third_party/webrtc/sdk:rtc_sdk_peerconnection_objc",
+      "//third_party/webrtc/system_wrappers:system_wrappers_default",
     ]
 
     include_dirs = [
-      "//webrtc/sdk/objc/Framework/Headers/WebRTC",
+      "//third_party/webrtc/sdk/objc/Framework/Headers/WebRTC",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
