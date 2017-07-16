@@ -3,6 +3,7 @@
 #
 
 import("//build_overrides/webrtc.gni")
+import("//testing/test.gni")
 
 if (is_ios) {
   import("//build/config/ios/rules.gni")
@@ -10,6 +11,7 @@ if (is_ios) {
 
 declare_args() {
   include_internal_audio_device = true
+  woogeen_msdk_lib_root = ""
 }
 
 if (is_ios || is_mac) {
@@ -27,7 +29,6 @@ static_library("woogeen") {
     ":woogeen_sdk_p2p",
     "//third_party/protobuf:protobuf_lite",
     "//third_party/webrtc",
-    "//third_party/webrtc/system_wrappers:system_wrappers_default",
   ]
 
   if (is_ios) {
@@ -87,6 +88,8 @@ source_set("woogeen_sdk_base") {
     "//third_party/webrtc/api:libjingle_peerconnection",
     "//third_party/webrtc/base:rtc_json",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
+    "//third_party/webrtc/system_wrappers:metrics_default",
+    "//third_party/webrtc/system_wrappers:system_wrappers_default",
   ]
 
   include_dirs = [
@@ -313,5 +316,65 @@ if (is_ios) {
       "sdk/p2p/objc/public/RTCPeerClientConfiguration.h",
       "sdk/p2p/objc/public/RTCPeerClientObserver.h",
     ]
+  }
+}
+
+if (woogeen_include_tests) {
+  group("woogeen_tests") {
+    testonly = true
+
+    # Only the root target should depend on this.
+    visibility = [ "//:default" ]
+
+    deps = [
+      ":woogeen_unittests",
+    ]
+  }
+
+  test("woogeen_unittests") {
+    testonly = true
+
+    sources = [
+      "sdk/base/mediautils_unittest.cc",
+      "sdk/test/unittest_main.cc",
+    ]
+
+    deps = [
+      ":woogeen_sdk_base",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+
+    libs = []
+
+    if (is_win) {
+      libs += [
+        "amstrmid.lib",
+        "d3d9.lib",
+        "dmoguids.lib",
+        "dxva2.lib",
+        "mf.lib",
+        "mfplat.lib",
+        "mfuuid.lib",
+        "msdmo.lib",
+        "strmiids.lib",
+        "user32.lib",
+        "wmcodecdspuuid.lib",
+        "ws2_32.lib",
+      ]
+
+      if (woogeen_msdk_lib_root != "") {
+        libs += [
+          "libmfx.lib",
+          "sample_common.lib",
+        ]
+        lib_dirs = [ woogeen_msdk_lib_root ]
+      }
+
+      ldflags = [
+        "/ignore:4098",
+        "/ignore:4099",
+      ]
+    }
   }
 }

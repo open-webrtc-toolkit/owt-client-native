@@ -23,3 +23,7 @@ if (is_win) {
 } else {
   rtc_use_h265 = false
 }
+
+if (woogeen_include_tests) {
+  rtc_include_tests = true
+}

@@ -34,4 +34,7 @@ declare_args() {
 
   # Enable H.265.
   rtc_use_h265 = false
+
+  # Includes tests.
+  woogeen_include_tests = false
 }
