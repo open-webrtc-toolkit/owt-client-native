@@ -14,15 +14,15 @@ HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'patches')
 TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
+LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 
-def _replace_gn_files():
-  #shutil.copyfile(os.path.join(PATCH_PATH, 'libsrtp.gn'), os.path.join(HOME_PATH, 'third_party','libsrtp','BUILD.gn'))
-  #shutil.copyfile(os.path.join(PATCH_PATH, 'usrsctp.gn'), os.path.join(HOME_PATH, 'third_party','usrsctp','BUILD.gn'))
-  return 0
-
 def _patch():
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, 'iossim.patch')], cwd=TESTING_PATH)) != 0:
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Use-OpenSSL-for-usrsctp.patch')], cwd=THIRD_PARTY_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], cwd=THIRD_PARTY_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0002-Use-OpenSSL-for-libsrtp.patch')], cwd=LIBSRTP_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], cwd=LIBSRTP_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0003-Start-iOS-simulator-before-running-tests.patch')], cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
 
 def _remove_overrides():
@@ -30,7 +30,6 @@ def _remove_overrides():
   shutil.rmtree(WEBRTC_OVERRIDES_PATH)
 
 def main(argv):
-  _replace_gn_files()
   _patch()
   _remove_overrides()
   return 0

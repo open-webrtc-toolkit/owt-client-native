@@ -1,7 +1,7 @@
-This folder contains modifications for untracked files. Please copy these files to destination path before building.
+This folder contains modifications for untracked files. Please apply these
+patches before building. `gclient runhooks` will do it for you automatically.
 
-libsrtp.gn -> third_party/libsrtp/BUILD.gn
-usrsctp.gn -> third_part/usrsctp/BUILD.gn
-
-And apply iossim1.patch and iossim2.patch to src/testing.
-And apply vp8_1080p_encoding.patch to third_party/libvpx/source/libvpx
+- `git am` 0001-Use-OpenSSL-for-usrsctp.patch to third_party.
+- `git am` 0002-Use-OpenSSL-for-libsrtp.patch to third_party/libsrtp.
+- `git am` 0003-Start-iOS-simulator-before-running-tests.patch to src/testing.
+- Apply vp8_1080p_encoding.patch to third_party/libvpx/source/libvpx.
