@@ -34,4 +34,7 @@ declare_args() {
 
   # Includes tests.
   woogeen_include_tests = false
+
+  # Some non-Chromium builds don't support building java targets.
+  enable_java_templates = true
 }

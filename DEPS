@@ -359,7 +359,7 @@ hooks_os={
       # When adding a new sdk extras package to download, add the package
       # directory and zip file to .gitignore in third_party/android_tools.
       'action': ['python',
-                 'src/third_party/chromium/build/android/play_services/update.py',
+                 'src/build/android/play_services/update.py',
                  'download'
       ],
     },
@@ -367,7 +367,7 @@ hooks_os={
       'name': 'intellij',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-intellij',
                  '-l', 'third_party/intellij'
@@ -377,7 +377,7 @@ hooks_os={
       'name': 'javax_inject',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-javax-inject',
                  '-l', 'third_party/javax_inject'
@@ -387,7 +387,7 @@ hooks_os={
       'name': 'hamcrest',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-hamcrest',
                  '-l', 'third_party/hamcrest'
@@ -397,7 +397,7 @@ hooks_os={
       'name': 'guava',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-guava',
                  '-l', 'third_party/guava'
@@ -407,7 +407,7 @@ hooks_os={
       'name': 'android_support_test_runner',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-android-support-test-runner',
                  '-l', 'third_party/android_support_test_runner'
@@ -417,7 +417,7 @@ hooks_os={
       'name': 'byte_buddy',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-byte-buddy',
                  '-l', 'third_party/byte_buddy'
@@ -427,7 +427,7 @@ hooks_os={
       'name': 'espresso',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-espresso',
                  '-l', 'third_party/espresso'
@@ -437,7 +437,7 @@ hooks_os={
       'name': 'robolectric_libs',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-robolectric',
                  '-l', 'third_party/robolectric'
@@ -447,7 +447,7 @@ hooks_os={
       'name': 'apache_velocity',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-apache-velocity',
                  '-l', 'third_party/apache_velocity'
@@ -457,7 +457,7 @@ hooks_os={
       'name': 'ow2_asm',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-ow2-asm',
                  '-l', 'third_party/ow2_asm'
@@ -467,7 +467,7 @@ hooks_os={
       'name': 'icu4j',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-icu4j',
                  '-l', 'third_party/icu4j'
@@ -477,7 +477,7 @@ hooks_os={
       'name': 'accessibility_test_framework',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-accessibility-test-framework',
                  '-l', 'third_party/accessibility_test_framework'
@@ -487,7 +487,7 @@ hooks_os={
       'name': 'bouncycastle',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-bouncycastle',
                  '-l', 'third_party/bouncycastle'
@@ -497,7 +497,7 @@ hooks_os={
       'name': 'sqlite4java',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-sqlite4java',
                  '-l', 'third_party/sqlite4java'
@@ -507,7 +507,7 @@ hooks_os={
       'name': 'xstream',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-robolectric',
                  '-l', 'third_party/xstream'
@@ -517,7 +517,7 @@ hooks_os={
       'name': 'objenesis',
       'pattern': '.',
       'action': ['python',
-                 'src/third_party/chromium/build/android/update_deps/update_third_party_deps.py',
+                 'src/build/android/update_deps/update_third_party_deps.py',
                  'download',
                  '-b', 'chromium-objenesis',
                  '-l', 'third_party/objenesis'
