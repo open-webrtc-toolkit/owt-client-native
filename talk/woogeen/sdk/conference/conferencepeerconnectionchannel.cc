@@ -834,6 +834,8 @@ void ConferencePeerConnectionChannel::OnStreamError(
 
 std::function<void()> ConferencePeerConnectionChannel::RunInEventQueue(
     std::function<void()> func) {
+  if (!func)
+    return nullptr;
   std::weak_ptr<ConferencePeerConnectionChannel> weak_this = shared_from_this();
   return [func, weak_this] {
     auto that = weak_this.lock();
