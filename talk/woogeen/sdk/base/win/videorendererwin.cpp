@@ -146,7 +146,7 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       if (m_texture_->LockRect(0, &lock_rect, nullptr, 0) != D3D_OK)
         return;
 
-      ConvertFromI420(video_frame, webrtc::VideoType::kABGR, 0,
+      ConvertFromI420(video_frame, webrtc::VideoType::kARGB, 0,
                       static_cast<uint8_t*>(lock_rect.pBits));
       m_texture_->UnlockRect(0);
 
