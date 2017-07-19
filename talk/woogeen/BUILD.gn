@@ -45,8 +45,7 @@ if (is_android) {
 
 if (is_android) {
   dist_jar("libjingle_woogeen_java") {
-    _target_dir_name = get_label_info(":$target_name", "dir")
-    output = "${root_out_dir}/lib.java${_target_dir_name}/${target_name}.jar"
+    output = "${root_out_dir}/lib.java/${target_name}.jar"
     direct_deps_only = true
     use_interface_jars = false
     deps = [
