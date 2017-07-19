@@ -217,16 +217,20 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
     if (publish_success_callback_) {
       event_queue_->PostTask([weak_this] {
         auto that = weak_this.lock();
-        if (!that)
+        std::lock_guard<std::mutex> lock(that->callback_mutex_);
+        if (!that || !that->publish_success_callback_)
           return;
         that->publish_success_callback_();
+        that->ResetCallbacks();
       });
     } else if (subscribe_success_callback_) {
       event_queue_->PostTask([weak_this] {
         auto that = weak_this.lock();
-        if (!that)
+        std::lock_guard<std::mutex> lock(that->callback_mutex_);
+        if (!that || !that->subscribe_success_callback_)
           return;
         that->subscribe_success_callback_(that->subscribed_stream_);
+        that->ResetCallbacks();
       });
     }
     connected_ = true;
@@ -236,11 +240,13 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
           shared_from_this();
       event_queue_->PostTask([weak_this] {
         auto that = weak_this.lock();
-        if (!that)
+        std::lock_guard<std::mutex> lock(that->callback_mutex_);
+        if (!that || !that->failure_callback_)
           return;
         std::unique_ptr<ConferenceException> e(new ConferenceException(
             ConferenceException::kUnknown, "ICE failed."));
         that->failure_callback_(std::move(e));
+        that->ResetCallbacks();
       });
     } else if (connected_) {
       OnStreamError(std::string("ICE connection state changed to closed."));
@@ -843,6 +849,12 @@ std::function<void()> ConferencePeerConnectionChannel::RunInEventQueue(
       return;
     that->event_queue_->PostTask([func] { func(); });
   };
+}
+
+void ConferencePeerConnectionChannel::ResetCallbacks() {
+  publish_success_callback_ = nullptr;
+  subscribe_success_callback_ = nullptr;
+  failure_callback_ = nullptr;
 }
 }
 }

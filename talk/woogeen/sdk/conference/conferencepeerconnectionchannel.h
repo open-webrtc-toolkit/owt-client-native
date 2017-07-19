@@ -195,6 +195,9 @@ class ConferencePeerConnectionChannel
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   std::function<void()> RunInEventQueue(std::function<void()> func);
+  // Set publish_success_callback_, subscribe_success_callback_ and
+  // failure_callback_ to nullptr.
+  void ResetCallbacks();
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   int session_id_;
@@ -212,6 +215,7 @@ class ConferencePeerConnectionChannel
       subscribe_success_callback_;
   std::function<void()> publish_success_callback_;
   std::function<void(std::unique_ptr<ConferenceException>)> failure_callback_;
+  std::mutex callback_mutex_;
 
   // Stored candidates, will be send out after setting remote description.
   // Use sio::message::ptr instead of IceCandidateInterface* to avoid one more
