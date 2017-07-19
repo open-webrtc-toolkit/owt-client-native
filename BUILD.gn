@@ -4,8 +4,10 @@ import("third_party/webrtc/webrtc.gni")
 
 group("default") {
   testonly = true
+
   deps = [
     "//talk/woogeen",
+    "//third_party/webrtc/examples",
   ]
   if (woogeen_include_tests) {
     deps += [ "talk/woogeen:woogeen_tests" ]
