@@ -14,7 +14,6 @@
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/api/video/video_frame.h"
 
-#include "woogeen/base/videoencoderinterface.h"
 #include "talk/woogeen/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/woogeen/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
@@ -137,8 +136,7 @@ int CustomizedVideoEncoderProxy::Encode(
   uint8_t* data_ptr = nullptr;
   uint32_t data_size = 0;
   if(external_encoder_) {
-    data_ptr = external_encoder_->EncodeOneFrame(request_key_frame);
-    data_size = sizeof(data_ptr) / sizeof(uint8_t);
+    data_size = external_encoder_->EncodeOneFrame(request_key_frame, &data_ptr);
   }
   if(data_ptr == nullptr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -149,13 +147,14 @@ int CustomizedVideoEncoderProxy::Encode(
     if(!external_encoder_->EncodeOneFrame(buffer, request_key_frame))
       return WEBRTC_VIDEO_CODEC_ERROR;
   }
-#endif
 
   std::unique_ptr<uint8_t[]> data(new uint8_t[buffer.size()]);
   uint8_t* data_ptr = data.get();
   uint32_t data_size = static_cast<uint32_t>(buffer.size());
   std::copy(buffer.begin(), buffer.end(), data_ptr);
   webrtc::EncodedImage encodedframe(data_ptr, buffer.size(), buffer.size());
+#endif
+
   encodedframe._encodedWidth = input_image.width();
   encodedframe._encodedHeight = input_image.height();
   encodedframe._completeFrame = true;

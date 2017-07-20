@@ -13,6 +13,7 @@ class EncodedVideoEncoderFactory : public cricket::WebRtcVideoEncoderFactory {
   EncodedVideoEncoderFactory();
   virtual ~EncodedVideoEncoderFactory();
 
+  using WebRtcVideoEncoderFactory::CreateVideoEncoder;
   webrtc::VideoEncoder* CreateVideoEncoder(
       const cricket::VideoCodec& codec) override;
   const std::vector<cricket::VideoCodec>& supported_codecs() const override;

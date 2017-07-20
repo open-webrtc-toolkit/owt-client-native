@@ -55,13 +55,6 @@ if (is_android) {
       "//third_party/webrtc/modules/audio_device:audio_device_java",
     ]
   }
-
-  rtc_shared_library("libjingle_woogeen_so") {
-    deps = [
-      "//third_party/webrtc/sdk/android:libjingle_peerconnection_so",
-    ]
-    output_extension = "so"
-  }
 }
 
 

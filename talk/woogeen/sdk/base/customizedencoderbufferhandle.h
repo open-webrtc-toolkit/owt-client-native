@@ -4,7 +4,7 @@
 #ifndef WOOGEEN_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
 #define WOOGEEN_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
 
-#include "woogeen/base/videoencoderinterface.h"
+#include "talk/woogeen/sdk/include/cpp/woogeen/base/videoencoderinterface.h"
 
 namespace woogeen {
 namespace base {

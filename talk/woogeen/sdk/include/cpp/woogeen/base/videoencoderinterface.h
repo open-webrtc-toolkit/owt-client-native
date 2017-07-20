@@ -57,6 +57,9 @@ class VideoEncoderInterface {
    */
   virtual bool InitEncoderContext(Resolution& resolution,
       uint32_t fps, uint32_t bitrate_kbps, MediaCodec::VideoCodec video_codec) = 0;
+#ifdef WEBRTC_ANDROID
+  virtual uint32_t EncodeOneFrame(bool key_frame, uint8_t** data) = 0;
+#else
   /**
    @brief Retrieve byte buffer from encoder that holds one complete frame.
    @details The buffer is provided by caller and EncodedOneFrame implementation should
@@ -68,6 +71,7 @@ class VideoEncoderInterface {
    if the encoder fails to encode one frame.
    */
   virtual bool EncodeOneFrame(std::vector<uint8_t>& buffer, bool key_frame) = 0;
+#endif
   /**
    @brief Release the resources that current encoder holds.
    @return Return true if successfully released the encoder; return false if
