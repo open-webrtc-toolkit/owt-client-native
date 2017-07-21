@@ -51,7 +51,7 @@ class Exception {
   std::string Message() const;
 
  private:
-  const std::string& message_;
+  const std::string message_;
 };
 
 class StreamException : public Exception {
