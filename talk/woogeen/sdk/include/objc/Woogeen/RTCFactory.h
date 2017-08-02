@@ -24,43 +24,22 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// WebRTC (headers copied from WebRTC project)
-#import <Woogeen/RTCAVFoundationVideoSource.h>
-#import <Woogeen/RTCCameraPreviewView.h>
-#import <Woogeen/RTCCameraVideoCapturer.h>
-#import <Woogeen/RTCConfiguration.h>
-#import <Woogeen/RTCEAGLVideoView.h>
-#import <Woogeen/RTCIceServer.h>
-#import <Woogeen/RTCLogging.h>
-#import <Woogeen/RTCMacros.h>
-#import <Woogeen/RTCMediaConstraints.h>
-#import <Woogeen/RTCMTLVideoView.h>
-#import <Woogeen/RTCVideoFrame.h>
-#import <Woogeen/RTCVideoRenderer.h>
-#import <Woogeen/RTCVideoSource.h>
+// This class creates WebRTC objects. It may be renamed to ICSWebRTCFactory when
+// we use ICS as prefix for SDK classes.
 
-// Base SDK
-#import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
-#import <Woogeen/RTCErrors.h>
-#import <Woogeen/RTCFactory.h>
-#import <Woogeen/RTCFrameGeneratorProtocol.h>
-#import <Woogeen/RTCGlobalConfiguration.h>
-#import <Woogeen/RTCLocalCameraStream.h>
-#import <Woogeen/RTCLocalCustomizedStream.h>
-#import <Woogeen/RTCLocalStream.h>
-#import <Woogeen/RTCMediaCodec.h>
-#import <Woogeen/RTCMediaFormat.h>
-#import <Woogeen/RTCRemoteCameraStream.h>
-#import <Woogeen/RTCRemoteMixedStream.h>
-#import <Woogeen/RTCRemoteMixedStreamObserver.h>
-#import <Woogeen/RTCRemoteScreenStream.h>
-#import <Woogeen/RTCRemoteStream.h>
-#import <Woogeen/RTCStream.h>
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
 
-// P2P SDK
-#import <Woogeen/RTCP2PErrors.h>
-#import <Woogeen/RTCPeerClient.h>
+NS_ASSUME_NONNULL_BEGIN
 
-// Conference SDK
-#import <Woogeen/RTCConferenceClient.h>
-#import <Woogeen/RTCConferenceErrors.h>
+RTC_EXPORT
+@interface RTCFactory : NSObject
+/**
+  @brief Initialize a generic RTCVideoSource. The RTCVideoSource should be
+  passed to a RTCVideoCapturer implementation, e.g. RTCCameraVideoCapturer, in
+  order to produce frames.
+*/
++ (RTCVideoSource*)videoSource;
+@end
+
+NS_ASSUME_NONNULL_END

@@ -269,14 +269,16 @@ if (is_ios) {
     ]
 
     sources = [
-      "sdk/base/objc/AVFoundationVideoCapturerFactory.h",
-      "sdk/base/objc/AVFoundationVideoCapturerFactory.mm",
+      "sdk/base/objc/CameraVideoCapturer.h",
+      "sdk/base/objc/CameraVideoCapturer.mm",
       "sdk/base/objc/FrameGeneratorObjcImpl.h",
       "sdk/base/objc/FrameGeneratorObjcImpl.mm",
+      "sdk/base/objc/ObjcVideoCapturerInterface",
       "sdk/base/objc/RTCAVFoundationVideoSource+Woogeen.mm",
       "sdk/base/objc/RTCConnectionStats+Internal.h",
       "sdk/base/objc/RTCConnectionStats.mm",
       "sdk/base/objc/RTCErrors.m",
+      "sdk/base/objc/RTCFactory.mm",
       "sdk/base/objc/RTCGlobalConfiguration.mm",
       "sdk/base/objc/RTCLocalCameraStream.mm",
       "sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h",

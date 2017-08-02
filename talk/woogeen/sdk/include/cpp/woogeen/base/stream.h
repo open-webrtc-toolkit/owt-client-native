@@ -56,6 +56,10 @@ class BasicDesktopCapturer;
 
 class VideoFrameGeneratorInterface;
 
+#if defined(WEBRTC_MAC)
+class ObjcVideoCapturerInterface;
+#endif
+
 using webrtc::MediaStreamInterface;
 
 /// Observer for Stream
@@ -286,6 +290,11 @@ class LocalCameraStream : public LocalStream {
                              webrtc::VideoTrackSourceInterface* video_source,
                              int& error_code);
   /** @endcond */
+
+ private:
+#if defined(WEBRTC_MAC)
+  std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
+#endif
 };
 
 /// This class represents a local stream which uses frame generator to generate

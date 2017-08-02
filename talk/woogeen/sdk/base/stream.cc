@@ -11,7 +11,7 @@
 #include "talk/woogeen/sdk/base/desktopcapturer.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
 #if defined(WEBRTC_IOS)
-#include "talk/woogeen/sdk/base/objc/AVFoundationVideoCapturerFactory.h"
+#include "talk/woogeen/sdk/base/objc/ObjcVideoCapturerInterface.h"
 #endif
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
@@ -268,18 +268,15 @@ LocalCameraStream::LocalCameraStream(
   }
   // Create video track.
   if (parameters.VideoEnabled()) {
+#if !defined(WEBRTC_IOS)
     cricket::WebRtcVideoDeviceCapturerFactory factory;
     std::unique_ptr<cricket::VideoCapturer> capturer(nullptr);
     if (!parameters.CameraId().empty()) {
-#if defined(WEBRTC_IOS)
-      capturer = AVFoundationVideoCapturerFactory::Create(parameters);
-#else
       // TODO(jianjun): When create capturer, we will compare ID first. If
       // failed, fallback to compare name. Comparing name is deprecated, remove
       // it when it is old enough.
       capturer = factory.Create(
           cricket::Device(parameters.CameraId(), parameters.CameraId()));
-#endif
     }
     if (!capturer) {
       LOG(LS_ERROR)
@@ -317,6 +314,10 @@ LocalCameraStream::LocalCameraStream(
 
     scoped_refptr<VideoTrackSourceInterface> source =
         pcd_factory->CreateVideoSource(std::move(capturer), media_constraints_);
+#else
+    capturer_ = ObjcVideoCapturerFactory::Create(parameters);
+    scoped_refptr<VideoTrackSourceInterface> source = capturer_->source();
+#endif
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
