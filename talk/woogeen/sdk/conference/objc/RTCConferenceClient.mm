@@ -23,7 +23,7 @@
 #import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
 
 @implementation RTCConferenceClient {
-  std::unique_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;
+  std::shared_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;
   std::vector<woogeen::conference::ConferenceClientObserverObjcImpl*> _observers;
   NSMutableDictionary<NSString*, RTCLocalStream*>* _publishedStreams;
 }
@@ -52,9 +52,8 @@
       ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
           ? woogeen::base::ClientConfiguration::CandidateNetworkPolicy::kLowCost
           : woogeen::base::ClientConfiguration::CandidateNetworkPolicy::kAll;
-  std::unique_ptr<woogeen::conference::ConferenceClient> nativeConferenceClient(
-      new woogeen::conference::ConferenceClient(*nativeConfig));
-  _nativeConferenceClient = std::move(nativeConferenceClient);
+  _nativeConferenceClient =
+      woogeen::conference::ConferenceClient::Create(*nativeConfig);
   _publishedStreams = [[NSMutableDictionary alloc] init];
   return self;
 }

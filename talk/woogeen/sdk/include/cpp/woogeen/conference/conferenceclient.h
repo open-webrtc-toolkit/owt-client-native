@@ -251,15 +251,17 @@ struct PublishOptions {
 };
 
 /// An asynchronous class for app to communicate with a conference in MCU.
-class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
-                               ConferencePeerConnectionChannelObserver,
-                              public std::enable_shared_from_this<ConferenceClient> {
+class ConferenceClient final
+    : ConferenceSocketSignalingChannelObserver,
+      ConferencePeerConnectionChannelObserver,
+      public std::enable_shared_from_this<ConferenceClient> {
  public:
   /**
-    @brief Initialize a ConferenceClient instance with specific configuration
+    @brief Create a ConferenceClient instance with specific configuration
     @param config Configuration for creating the ConferenceClient.
   */
-  ConferenceClient(const ConferenceClientConfiguration& configuration);
+  static std::shared_ptr<ConferenceClient> Create(
+      const ConferenceClientConfiguration& configuration);
   ~ConferenceClient();
   /// Add an observer for conferenc client.
   void AddObserver(ConferenceClientObserver& observer);
@@ -499,6 +501,7 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 
  protected:
+  ConferenceClient(const ConferenceClientConfiguration& configuration);
   // Implementing ConferenceSocketSignalingChannelObserver.
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,

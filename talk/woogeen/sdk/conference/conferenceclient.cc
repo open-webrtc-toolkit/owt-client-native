@@ -24,6 +24,11 @@ enum ConferenceClient::StreamType : int {
 const std::string play_pause_failure_message =
     "Cannot play/pause a stream that have not been published or subscribed.";
 
+std::shared_ptr<ConferenceClient> ConferenceClient::Create(
+    const ConferenceClientConfiguration& configuration) {
+  return std::shared_ptr<ConferenceClient>(new ConferenceClient(configuration));
+}
+
 ConferenceClient::ConferenceClient(
     const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
