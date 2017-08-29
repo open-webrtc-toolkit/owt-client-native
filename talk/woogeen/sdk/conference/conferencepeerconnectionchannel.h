@@ -117,6 +117,9 @@ class ConferencePeerConnectionChannel
   // This is the reason why a local stream cannot publish twice.
   void SetStreamId(const std::string& id);
 
+  // Set stream's session ID. This ID is returned by MCU per publish/subscribe.
+  void SetSessionId(const std::string& id);
+
   // Socket.IO event
   virtual void OnSignalingMessage(sio::message::ptr message);
 
@@ -180,16 +183,18 @@ class ConferencePeerConnectionChannel
       const std::shared_ptr<Stream> stream,
       const std::string& in_action,
       const std::string& out_action,
+      const std::string& operation,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
       const;
   void DrainIceCandidates();
   void DoIceRestart();
-  // Get published or subscribed stream ID.
+  // Get published or subscribed stream's publicationID or subcriptionID.
   // Currently, a ConferencePeerConnectionChannel manages only one stream, this
   // method is a shortcut to check whether this channel is used to publish or
   // subscribe a stream, and returns the stream's ID.
   std::string GetStreamId() const;
+  std::string GetSessionId() const;
   void SendPublishMessage(
     sio::message::ptr options,
     std::shared_ptr<LocalStream> stream,
@@ -200,7 +205,7 @@ class ConferencePeerConnectionChannel
   void ResetCallbacks();
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
-  int session_id_;
+  std::string session_id_;   //session ID is 1:1 mapping to the subscribed/published stream.
   int message_seq_;
   webrtc::PeerConnectionInterface::SignalingState signaling_state_;
 

@@ -20,13 +20,15 @@
 namespace woogeen {
 namespace conference {
 
+#define SIGNALING_PROTOCOL_VERSION "1.0"
 const std::string kEventNameCustomMessage = "customMessage";
-const std::string kEventNameSignalingMessage = "signaling_message";
-const std::string kEventNameOnSignalingMessage = "signaling_message_erizo";
-const std::string kEventNameOnCustomMessage = "custom_message";
-const std::string kEventNameStreamControl = "control";
-const std::string kEventNameGetRegion = "getRegion";
-const std::string kEventNameSetRegion = "setRegion";
+const std::string kEventNameSignalingMessagePrelude = "signaling";
+const std::string kEventNameSignalingMessage = "soac"; //only for soac message
+const std::string kEventNameOnSignalingMessage = "progress";
+const std::string kEventNameOnCustomMessage = "text";
+const std::string kEventNameStreamControl = "stream-control";
+const std::string kEventNameGetRegion = "get-region";
+const std::string kEventNameSetRegion = "set-region";
 const std::string kEventNameMute = "mute";
 const std::string kEventNameUnmute = "unmute";
 const std::string kEventNameMix = "mix";
@@ -34,11 +36,19 @@ const std::string kEventNameUnmix = "unmix";
 const std::string kEventNameRefreshReconnectionTicket =
     "refreshReconnectionTicket";
 const std::string kEventNameLogout = "logout";
-const std::string kEventNameOnAddStream = "add_stream";
-const std::string kEventNameOnRemoveStream = "remove_stream";
-const std::string kEventNameOnUpdateStream = "update_stream";
+const std::string kEventNameRelogin = "relogin";
+const std::string kEventNameStreamMessage = "stream";
+const std::string kEventNameOnAddStream = "add";
+const std::string kEventNameOnRemoveStream = "remove";
+const std::string kEventNameOnUpdateStream = "update";
+const std::string kEventNameOnParticipant = "participant";
+const std::string kNotificationNameUserJoin = "join";
+const std::string kNotificationNameUserLeave = "leave";
+const std::string kEventNameTextMessage = "text";
+const std::string kEventNameOnStreamUpdate = "stream";
 const std::string kEventNameOnUserJoin = "user_join";
 const std::string kEventNameOnUserLeave = "user_leave";
+const std::string kEventNameOnUserPresence = "participant";
 const std::string kEventNameOnDrop = "drop";
 const std::string kEventNameConnectionFailed = "connection_failed";
 
@@ -54,6 +64,7 @@ const int kReconnectionDelay = 2000;
 ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
     : socket_client_(new sio::client()),
       reconnection_ticket_(""),
+      participant_id_(""),
       reconnection_attempted_(0),
       is_reconnection_(false),
       outgoing_message_id_(1) {}
@@ -180,6 +191,8 @@ void ConferenceSocketSignalingChannel::Connect(
           sio::string_message::create(sys_info.runtime.version);
       ua_message->get_map()["runtime"] = runtime_message;
       login_message->get_map()["userAgent"] = ua_message;
+      std::string protocol_version = SIGNALING_PROTOCOL_VERSION;
+      login_message->get_map()["protocol"] = sio::string_message::create(protocol_version);
       Emit("login", login_message,
            [=](sio::message::list const& msg) {
              connect_failure_callback_ = nullptr;
@@ -207,13 +220,24 @@ void ConferenceSocketSignalingChannel::Connect(
                }
                return;
              }
-             // The second element is room info, please refer to MCU
-             // erizoController's implementation for detailed message format.
+             // in signaling protocol 1.0.0, the response contains following info:
+             // {id: string(participantid),
+             //  user: string(userid),
+             //  role: string(participantrole),
+             //  permission: object(permission),
+             //  room: object(RoomInfo),
+             //  reconnectonTicket: undefined or string(ReconnecionTicket).}
+             // At present client SDK will only save reconnection ticket and participantid
+             // and ignoring other info.
              sio::message::ptr message = msg.at(1);
              auto reconnection_ticket_ptr =
                  message->get_map()["reconnectionTicket"];
              if (reconnection_ticket_ptr) {
                OnReconnectionTicket(reconnection_ticket_ptr->get_string());
+             }
+             auto participant_id_ptr = message->get_map()["id"];
+             if (participant_id_ptr) {
+               participant_id_ = participant_id_ptr->get_string();
              }
              if (on_success != nullptr) {
                on_success(message);
@@ -223,8 +247,13 @@ void ConferenceSocketSignalingChannel::Connect(
       is_reconnection_ = false;
       reconnection_attempted_ = 0;
     } else {
+      sio::message::list reconnection_msg;
+      sio::message::ptr relogin_request_name = sio::string_message::create(kEventNameRelogin);
+      sio::message::ptr relogin_request_data = sio::object_message::create();
+      relogin_request_data->get_map()["id"] = sio::string_message::create(participant_id_);
+      relogin_request_data->get_map()["ticket"] = sio::string_message::create(reconnection_ticket_);
       socket_client_->socket()->emit(
-          "relogin", reconnection_ticket_, [&](sio::message::list const& msg) {
+          kEventNameSignalingMessagePrelude, reconnection_msg, [&](sio::message::list const& msg) {
             if (msg.size() < 2) {
               LOG(LS_WARNING)
                   << "Received unknown message while reconnection ticket.";
@@ -255,13 +284,41 @@ void ConferenceSocketSignalingChannel::Connect(
     }
   });
   socket_client_->socket()->on(
-      kEventNameOnAddStream,
+      kEventNameStreamMessage,
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received on add stream.";
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnStreamAdded(data);
+            LOG(LS_VERBOSE) << "Received stream event.";
+            if (data->get_map()["status"] != nullptr &&
+                data->get_map()["status"]->get_flag() == sio::message::flag_string &&
+                data->get_map()["id"] != nullptr &&
+                data->get_map()["id"]->get_flag() == sio::message::flag_string) {
+              std::string stream_status = data->get_map()["status"]->get_string();
+              std::string stream_id = data->get_map()["id"]->get_string();
+              if (stream_status == "add") {
+                auto stream_info = data->get_map()["data"];
+                if (stream_info != nullptr && stream_info->get_flag() == sio::message::flag_object) {
+                  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+                    (*it)->OnStreamAdded(stream_info);
+                  }
+                }
+              } else if (stream_status == "update") {
+                sio::message::ptr update_message = sio::object_message::create();
+                update_message->get_map()["id"] = sio::string_message::create(stream_id);
+                auto stream_update = data->get_map()["data"];
+                if (stream_update != nullptr) {
+                  update_message->get_map()["event"] = stream_update;
+                }
+                for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+                  (*it)->OnStreamUpdated(update_message);
+                }
+              } else if (stream_status == "remove") {
+                sio::message::ptr remove_message = sio::object_message::create();
+                remove_message->get_map()["id"] = sio::string_message::create(stream_id);
+                for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+                  (*it)->OnStreamRemoved(remove_message);
+                }
+              }
             }
           }));
   socket_client_->socket()->on(
@@ -271,63 +328,43 @@ void ConferenceSocketSignalingChannel::Connect(
               bool is_ack, sio::message::list& ack_resp) {
             LOG(LS_VERBOSE) << "Received custom message.";
             std::string from = data->get_map()["from"]->get_string();
-            std::string message = data->get_map()["data"]->get_string();
+            std::string message = data->get_map()["message"]->get_string();
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnCustomMessage(from, message);
             }
           }));
   socket_client_->socket()->on(
-      kEventNameOnUserJoin,
+      kEventNameOnUserPresence,
       sio::socket::event_listener_aux([&](
           std::string const& name, sio::message::ptr const& data, bool is_ack,
           sio::message::list& ack_resp) {
-        LOG(LS_VERBOSE) << "Received user join message.";
+        LOG(LS_VERBOSE) << "Received user join/leave message.";
         if (data == nullptr || data->get_flag() != sio::message::flag_object ||
-            data->get_map()["user"] == nullptr ||
-            data->get_map()["user"]->get_flag() != sio::message::flag_object) {
+            data->get_map()["action"] == nullptr ||
+            data->get_map()["action"]->get_flag() != sio::message::flag_string) {
           RTC_DCHECK(false);
           return;
         }
-        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-          (*it)->OnUserJoined(data->get_map()["user"]);
+        auto participant_action = data->get_map()["action"]->get_string();
+        if (participant_action == "join") {
+          //Get the pariticipant ID from data;
+          auto participant_info = data->get_map()["data"];
+          if (participant_info != nullptr && participant_info->get_flag() == sio::message::flag_object
+              && participant_info->get_map()["id"] != nullptr
+              && participant_info->get_map()["id"]->get_flag() == sio::message::flag_string) {
+            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+              (*it)->OnUserJoined(participant_info);
+            }
+          }
+        } else if (participant_action == "leave") {
+          auto participant_info = data->get_map()["data"];
+          if (participant_info != nullptr && participant_info->get_flag() == sio::message::flag_string) {
+            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+              (*it)->OnUserLeft(participant_info);
+            }
+          }
         }
       }));
-  socket_client_->socket()->on(
-      kEventNameOnUserLeave,
-      sio::socket::event_listener_aux([&](
-          std::string const& name, sio::message::ptr const& data, bool is_ack,
-          sio::message::list& ack_resp) {
-        LOG(LS_VERBOSE) << "Received user leave message.";
-        if (data == nullptr || data->get_flag() != sio::message::flag_object ||
-            data->get_map()["user"] == nullptr ||
-            data->get_map()["user"]->get_flag() != sio::message::flag_object) {
-          RTC_DCHECK(false);
-          return;
-        }
-        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-          (*it)->OnUserLeft(data->get_map()["user"]);
-        }
-      }));
-  socket_client_->socket()->on(
-      kEventNameOnRemoveStream,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received on remove stream.";
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnStreamRemoved(data);
-            }
-          }));
-  socket_client_->socket()->on(
-      kEventNameOnUpdateStream,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received on update stream.";
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnStreamUpdated(data);
-            }
-          }));
   socket_client_->socket()->on(
       kEventNameOnSignalingMessage,
       sio::socket::event_listener_aux(
@@ -360,6 +397,7 @@ void ConferenceSocketSignalingChannel::Connect(
   socket_client_->connect(scheme.append(host));
 }
 
+// Participant leave signaling remain unchanged. Only update the prelude for emit.
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -374,7 +412,15 @@ void ConferenceSocketSignalingChannel::Disconnect(
   reconnection_attempted_ = kReconnectionAttempts;
   disconnect_complete_ = on_success;
   if (socket_client_->opened()) {
-    // Clear all pending failure callbacks after successful disconnect
+#if 0
+    sio::message::list message_list;
+    sio::message::ptr logout_request_name = sio::string_message::create(kEventNameLogout);
+    sio::message::ptr logout_request_data = sio::object_message::create();
+    logout_request_data->get_map()["id"] = sio::string_message::create(participant_id_);
+    message_list.push(logout_request_name);
+    message_list.push(logout_request_data);
+#endif
+    // Clear all pending failure callbacks after successful disconnect, don't check resp.
     socket_client_->socket()->emit(kEventNameLogout, nullptr,
                                    [=](sio::message::list const& msg) {
                                      DropQueuedMessages();
@@ -386,16 +432,15 @@ void ConferenceSocketSignalingChannel::Disconnect(
 void ConferenceSocketSignalingChannel::SendInitializationMessage(
     sio::message::ptr options,
     std::string publish_stream_label,
+    std::string subscribe_stream_label,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::list message_list;
   message_list.push(options);
-  // The second place used to be SDP.
-  message_list.push(sio::object_message::create());
   std::string event_name;
   if (publish_stream_label != "")
     event_name = "publish";
-  else
+  else if (subscribe_stream_label != "")
     event_name = "subscribe";
   Emit(event_name, message_list,
        [=](sio::message::list const& msg) {
@@ -417,17 +462,23 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
            }
            return;
          }
-         if (message->get_string() == "initializing") {
-           if (event_name == "subscribe") {
-             on_success();
-             return;
-           }
-           if (msg.at(1)->get_flag() != sio::message::flag_string) {
+         if (message->get_string() == "ok") {
+           if (msg.at(1)->get_flag() != sio::message::flag_object) {
              RTC_DCHECK(false);
              return;
            }
-           std::string stream_id = msg.at(1)->get_string();
+           std::string stream_id = msg.at(1)->get_map()["id"]->get_string();
+           if (event_name == "subscribe") {
+             // replace stream's id with session ID.
+               for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+                 (*it)->OnRemoteStreamId(stream_id, subscribe_stream_label);
+               }
+             on_success();
+             return;
+           }
+
            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+             // sessionId is not a 1:1 mapping to stream. push it
              (*it)->OnStreamId(stream_id, publish_stream_label);
            }
            on_success();
@@ -475,7 +526,8 @@ void ConferenceSocketSignalingChannel::SendStreamEvent(
     const std::string& stream_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  sio::message::ptr message = sio::string_message::create(stream_id);
+  sio::message::ptr message = sio::object_message::create();
+  message->get_map()["id"] = sio::string_message::create(stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   Emit(event, message,
@@ -493,18 +545,15 @@ void ConferenceSocketSignalingChannel::SendCustomMessage(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
-  // If receiver is empty string, it means send this message to all participants
-  // of the conference.
   if (receiver == "") {
-    send_message->get_map()["receiver"] = sio::string_message::create("all");
+    send_message->get_map()["to"] = sio::string_message::create("all");
   } else {
-    send_message->get_map()["receiver"] = sio::string_message::create(receiver);
+    send_message->get_map()["to"] = sio::string_message::create(receiver);
   }
-  send_message->get_map()["type"] = sio::string_message::create("data");
-  send_message->get_map()["data"] = sio::string_message::create(message);
+  send_message->get_map()["message"] = sio::string_message::create(message);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameCustomMessage, send_message,
+  Emit(kEventNameTextMessage, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);
@@ -516,17 +565,22 @@ void ConferenceSocketSignalingChannel::SendCustomMessage(
 void ConferenceSocketSignalingChannel::SendStreamControlMessage(
     const std::string& stream_id,
     const std::string& action,
+    const std::string& operation,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  sio::message::ptr send_message = sio::object_message::create();
   sio::message::ptr payload = sio::object_message::create();
-  payload->get_map()["action"] = sio::string_message::create(action);
-  payload->get_map()["streamId"] = sio::string_message::create(stream_id);
-  send_message->get_map()["type"] = sio::string_message::create("control");
-  send_message->get_map()["payload"] = payload;
+  payload->get_map()["id"] = sio::string_message::create(stream_id);
+  payload->get_map()["operation"] = sio::string_message::create(operation);
+  // Currently only pause/play will be processed here.
+  if (operation == "pause" || operation == "play"
+      || operation == "mix" || operation == "unmix") {
+    //TODO(jianlin): Combine mute/unmute API with this.
+    payload->get_map()["data"] = sio::string_message::create(action);
+  }
+
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameCustomMessage, send_message,
+  Emit(kEventNameStreamControl, payload,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);
@@ -542,7 +596,8 @@ void ConferenceSocketSignalingChannel::GetRegion(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
-  send_message->get_map()["mixStreamId"] =
+  send_message->get_map()["operation"] = sio::string_message::create("get-region");
+  send_message->get_map()["data"] =
       sio::string_message::create(mixed_stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
@@ -577,9 +632,11 @@ void ConferenceSocketSignalingChannel::SetRegion(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
   send_message->get_map()["id"] = sio::string_message::create(stream_id);
-  send_message->get_map()["region"] = sio::string_message::create(region_id);
-  send_message->get_map()["mixStreamId"] =
-      sio::string_message::create(mixed_stream_id);
+  send_message->get_map()["operation"] = sio::string_message::create("set-region");
+  sio::message::ptr region_setting = sio::object_message::create();
+  region_setting->get_map()["view"] = sio::string_message::create(mixed_stream_id);
+  region_setting->get_map()["region"] = sio::string_message::create(region_id);
+  send_message->get_map()["data"] = region_setting;
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   Emit(kEventNameSetRegion, send_message,
@@ -832,6 +889,13 @@ void ConferenceSocketSignalingChannel::Emit(
     std::lock_guard<std::mutex> lock(outgoing_message_mutex_);
     message_id = outgoing_message_id_++;
   }
+#if 0
+  std::string sio_name = "signaling";
+  sio::message::ptr request_name = sio::string_message::create(name);
+  sio::message::list new_message(message);
+  new_message.insert(0, request_name);
+#endif
+  // SioMessage sio_message(message_id, sio_name, new_message, ack, on_failure);
   SioMessage sio_message(message_id, name, message, ack, on_failure);
   outgoing_messages_.push(sio_message);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =

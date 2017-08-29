@@ -85,7 +85,7 @@ void ConferenceClient::Join(
     signaling_channel_connected_ = true;
     // Get current user's ID.
     std::string user_id;
-    if (info->get_map()["clientId"]->get_flag() != sio::message::flag_string) {
+    if (info->get_map()["id"]->get_flag() != sio::message::flag_string) {
       LOG(LS_ERROR) << "Room info doesn't contain client ID.";
       if (on_failure) {
         event_queue_->PostTask([on_failure]() {
@@ -97,13 +97,19 @@ void ConferenceClient::Join(
       }
       return;
     } else {
-      user_id = info->get_map()["clientId"]->get_string();
+      user_id = info->get_map()["id"]->get_string();
+    }
+
+    auto room_info = info->get_map()["room"];
+    if (room_info == nullptr || room_info->get_flag() != sio::message::flag_object) {
+        LOG(LS_ERROR) << "Login response does not contian RoomInfo";
+        return;
     }
     // Trigger OnUserJoin for existed users.
-    if (info->get_map()["users"]->get_flag() != sio::message::flag_array) {
+    if (room_info->get_map()["participants"]->get_flag() != sio::message::flag_array) {
       LOG(LS_WARNING) << "Room info doesn't contain valid users.";
     } else {
-      auto users = info->get_map()["users"]->get_vector();
+      auto users = room_info->get_map()["participants"]->get_vector();
       // Get current user's ID and trigger |on_success|. Make sure |on_success|
       // is triggered before any other events because OnUserJoined and
       // OnStreamAdded should be triggered after join a conference.
@@ -144,10 +150,10 @@ void ConferenceClient::Join(
       }
     }
     // Trigger OnStreamAdded for existed remote streams.
-    if (info->get_map()["streams"]->get_flag() != sio::message::flag_array) {
+    if (room_info->get_map()["streams"]->get_flag() != sio::message::flag_array) {
       LOG(LS_WARNING) << "Room info doesn't contain valid streams.";
     } else {
-      auto streams = info->get_map()["streams"]->get_vector();
+      auto streams = room_info->get_map()["streams"]->get_vector();
       for (auto it = streams.begin(); it != streams.end(); ++it) {
         LOG(LS_INFO) << "Find streams in the conference.";
         TriggerOnStreamAdded(*it);
@@ -179,6 +185,8 @@ void ConferenceClient::Publish(
   }
   {
     const std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+    // TODO(jianlin): Remove publish-once restriction when we switch publish API
+    // to return ConferenceLocalPublishSession.
     if (publish_pcs_.find(stream->MediaStream()->label()) !=
         publish_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot publish a local stream to a specific conference "
@@ -338,7 +346,14 @@ void ConferenceClient::Unsubscribe(
   LOG(LS_INFO) << "About to unsubscribe stream " << stream->Id();
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
-    auto pcc_it = subscribe_pcs_.find(stream->Id());
+	std::string id;
+
+	auto label_it = subscribe_id_label_map_.find(stream->Id());
+	if (label_it != subscribe_id_label_map_.end()) {
+		id = label_it->second;
+	}
+
+    auto pcc_it = subscribe_pcs_.find(id);
     if (pcc_it == subscribe_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
@@ -682,14 +697,32 @@ void ConferenceClient::OnCustomMessage(std::string& from,
 void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   // MCU returns inconsistent format for this event. :(
   std::string stream_id = (message->get_map()["peerId"] == nullptr)
-                              ? message->get_map()["streamId"]->get_string()
+                              ? message->get_map()["id"]->get_string()
                               : message->get_map()["peerId"]->get_string();
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   if (pcc == nullptr) {
     LOG(LS_WARNING) << "Received signaling message from unknown sender.";
     return;
   }
-  pcc->OnSignalingMessage(message->get_map()["mess"]);
+  // Check the status before delivering to pcc.
+  auto soac_status = message->get_map()["status"];
+  if (soac_status == nullptr || soac_status->get_flag() != sio::message::flag_string
+      || (soac_status->get_string() != "soac" && soac_status->get_string() != "ready")) {
+    LOG(LS_INFO) << "Ignore signaling status except soac/ready";
+    return;
+  }
+
+  if (soac_status->get_string() == "ready") {
+    pcc->OnSignalingMessage(nullptr);
+    return;
+  }
+  auto soac_data = message->get_map()["data"];
+  if (soac_data == nullptr || soac_data->get_flag() != sio::message::flag_object) {
+    LOG(LS_ERROR) << "Received siganling message without offer, answer or candidate";
+    return;
+  }
+
+  pcc->OnSignalingMessage(message->get_map()["data"]);
 }
 
 void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
@@ -751,6 +784,18 @@ void ConferenceClient::OnStreamId(const std::string& id,
   pcc->SetStreamId(id);
 }
 
+void ConferenceClient::OnRemoteStreamId(const std::string& id,
+    const std::string& subscribe_stream_label) {
+    {
+      std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+      subscribe_id_label_map_[id] = subscribe_stream_label;
+    }
+
+    auto pcc = GetConferencePeerConnectionChannel(id);
+    RTC_CHECK(pcc != nullptr);
+    pcc->SetStreamId(id);
+}
+
 bool ConferenceClient::CheckNullPointer(
     uintptr_t pointer,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -792,73 +837,117 @@ bool ConferenceClient::CheckSignalingChannelOnline(
 
 void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
   std::string id = stream_info->get_map()["id"]->get_string();
-  std::string remote_id = stream_info->get_map()["from"]->get_string();
-  auto audio = stream_info->get_map()["audio"];
-  if (audio == nullptr || (audio->get_flag() != sio::message::flag_boolean &&
-                           audio->get_flag() != sio::message::flag_object)) {
+#if 0
+  auto data = stream_info->get_map()["data"];
+  if (data == nullptr || data->get_flag() != sio::message::flag_object) {
     RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Audio info for stream " << id
+    LOG(LS_ERROR) << "Invalid data from stream " << id
                   << "is invalid, this stream will be ignored.";
+    return;
+  }
+#endif
+  auto media_info = stream_info->get_map()["media"];
+  if (media_info == nullptr || media_info->get_flag() != sio::message::flag_object) {
+    RTC_DCHECK(false);
+    LOG(LS_ERROR) << "Invalid media info from stream " << id
+                  << ", this stream will be ignored.";
     return;
   }
   bool has_audio = false;
-  if (audio->get_flag() == sio::message::flag_boolean) {
-    has_audio = audio->get_bool();
+  auto audio_info = media_info->get_map()["audio"];
+  if (audio_info == nullptr) {
+    LOG(LS_INFO) << "No audio in stream " << id;
   } else {
     has_audio = true;
   }
-  auto video = stream_info->get_map()["video"];
-  if (video == nullptr || (video->get_flag() != sio::message::flag_object &&
-                           video->get_flag() != sio::message::flag_boolean)) {
-    RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Video info for stream " << id
-                  << "is invalid, this stream will be ignored.";
-    return;
-  }
-  if (video->get_flag() == sio::message::flag_object &&
-      video->get_map()["device"] &&
-      video->get_map()["device"]->get_string() != "camera") {
-    std::string device(video->get_map()["device"]->get_string());
-    if (device == "mcu") {
-      std::vector<VideoFormat> video_formats;
-      // Only mixed streams has multiple resolutions
-      if (video->get_map()["resolutions"]) {
-        auto resolutions = video->get_map()["resolutions"]->get_vector();
-        for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
-          Resolution resolution((*it)->get_map()["width"]->get_int(),
-                                (*it)->get_map()["height"]->get_int());
+
+  std::vector<VideoFormat> video_formats;
+  bool has_video = false;
+  bool is_screencast = false;
+  auto video_info = media_info->get_map()["video"];
+  if (video_info == nullptr) {
+    LOG(LS_INFO) << "No video in stream " << id;
+  } else {
+    has_video = true;
+    // Check if underlying video stream source is screen-cast.
+    // Remote stream from file and camera is handle the same way.
+    if (video_info->get_flag() == sio::message::flag_object) {
+      auto video_source = video_info->get_map()["source"];
+
+      if (video_source != nullptr && video_source->get_flag() == sio::message::flag_string
+          && video_source->get_string() == "screen-cast") {
+         is_screencast = true;
+      }
+      // First check the main supported resolution. At present video format for
+      // forward stream only differs in resolution, not codec or bitrate.
+      auto video_params = video_info->get_map()["parameters"];
+      if (video_params != nullptr && video_params->get_flag() == sio::message::flag_object) {
+        auto main_resolution = video_params->get_map()["resolution"];
+        if (main_resolution != nullptr && main_resolution->get_flag() == sio::message::flag_object) {
+          Resolution resolution = Resolution(main_resolution->get_map()["width"]->get_int(),
+                                             main_resolution->get_map()["height"]->get_int());
           const VideoFormat video_format(resolution);
           video_formats.push_back(video_format);
         }
       }
-      std::string viewport("");
-      if (stream_info->get_map().find("view") != stream_info->get_map().end()) {
-        RTC_DCHECK(stream_info->get_map()["view"]->get_flag() ==
-                   sio::message::flag_string);
-        std::string viewport = stream_info->get_map()["view"]->get_string();
-      } else {
-        LOG(LS_WARNING) << "Viewport info is missing. It may happen if you are "
-                           "connected to an old MCU.";
+      // Add optional supported resolutions.
+      auto video_optional_params = video_info->get_map()["optional"];
+      if (video_optional_params != nullptr && video_optional_params->get_flag() == sio::message::flag_object) {
+         auto optional_parameters = video_optional_params->get_map()["parameters"];
+         if (optional_parameters != nullptr && optional_parameters->get_flag() == sio::message::flag_object
+             && optional_parameters->get_map()["resolution"]) {
+           auto resolutions = optional_parameters->get_map()["resolution"]->get_vector();
+             for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
+               Resolution resolution((*it)->get_map()["width"]->get_int(),
+                                (*it)->get_map()["height"]->get_int());
+               const VideoFormat video_format(resolution);
+               video_formats.push_back(video_format);
+             }
+         }
       }
-      auto remote_stream = std::make_shared<RemoteMixedStream>(
-          id, remote_id, viewport, video_formats);
-      LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
+    }
+  }
+
+  // TODO(jianlin): handle the bitrate and format(codec/profile) information
+  auto stream_type = stream_info->get_map()["type"];
+  if (stream_type == nullptr || stream_type->get_flag() != sio::message::flag_string) {
+    RTC_DCHECK(false);
+    LOG(LS_ERROR) << "Invalid stream type from stream " << id
+                   << ", this stream will be ignored";
+    return;
+  }
+  if (stream_info->get_map()["type"]->get_string() == "forward") { // forward stream. PublicationInfo provided.
+    auto pub_info = stream_info->get_map()["info"];
+    if (pub_info == nullptr || pub_info->get_flag() != sio::message::flag_object) {
+      RTC_DCHECK(false);
+      LOG(LS_ERROR) << "Invalid publication info from stream " << id
+                   << ", this stream will be ignored";
+      return;
+    }
+    // remote_id here stands for participantID
+    std::string remote_id = pub_info->get_map()["owner"]->get_string();
+    std::unordered_map<std::string, std::string> attributes =
+         AttributesFromStreamInfo(pub_info);
+    // TODO: use the underlying stream's label as the ID instead of using
+    // the publiciationID.
+    if (!is_screencast) {
+      auto remote_stream = std::make_shared<RemoteCameraStream>(id, remote_id);
       remote_stream->has_audio_ = has_audio;
-      remote_stream->has_video_ = true;
-      remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
+      remote_stream->has_video_ = has_video;
+      remote_stream->Attributes(attributes);
       added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeMix;
+      added_stream_type_[id] = StreamType::kStreamTypeCamera;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
         auto& o = (*its).get();
         event_queue_->PostTask(
             [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
       }
-    } else if (device == "screen") {
+    } else {
       auto remote_stream = std::make_shared<RemoteScreenStream>(id, remote_id);
       LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
-      remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
+      remote_stream->Attributes(attributes);
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeScreen;
       for (auto its = observers_.begin(); its != observers_.end(); ++its) {
@@ -867,24 +956,39 @@ void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
             [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
       }
     }
+  } else if(stream_info->get_map()["type"]->get_string() == "mixed") { // mixed stream. ViewInfo provided.
+    auto view_info = stream_info->get_map()["info"];
+    if (view_info == nullptr || view_info->get_flag() != sio::message::flag_object) {
+      RTC_DCHECK(false);
+      LOG(LS_ERROR) << "Invalid view info from stream " << id
+                   << ", this stream will be ignored";
+      return;
+    }
+    std::string viewport("");
+    if (view_info->get_map()["label"] && view_info->get_map()["label"]->get_flag() ==
+        sio::message::flag_string) {
+      viewport = view_info->get_map()["label"]->get_string();
+    }
+    std::string remote_id("mcu"); // Not used.
+    auto remote_stream = std::make_shared<RemoteMixedStream>(
+          id, remote_id, viewport, video_formats);
+      LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
+      remote_stream->has_audio_ = has_audio;
+      remote_stream->has_video_ = has_video;
+      added_streams_[id] = remote_stream;
+      added_stream_type_[id] = StreamType::kStreamTypeMix;
+      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+        auto& o = (*its).get();
+        event_queue_->PostTask(
+            [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+      }
   } else {
-    bool has_video(true);
-    if (video->get_flag() == sio::message::flag_boolean && !video->get_bool()) {
-      has_video = false;
-    }
-    auto remote_stream = std::make_shared<RemoteCameraStream>(id, remote_id);
-    LOG(LS_INFO) << "OnStreamAdded: camera stream << " << id;
-    remote_stream->has_audio_ = has_audio;
-    remote_stream->has_video_ = has_video;
-    remote_stream->Attributes(AttributesFromStreamInfo(stream_info));
-    added_streams_[id] = remote_stream;
-    added_stream_type_[id] = StreamType::kStreamTypeCamera;
-    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      auto& o = (*its).get();
-      event_queue_->PostTask(
-          [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
-    }
+    RTC_DCHECK(false);
+    LOG(LS_ERROR) << "Invalid stream type from stream " << id
+                   << ", this stream will be ignored";
+    return;
   }
+
 }
 
 void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
@@ -929,8 +1033,8 @@ bool ConferenceClient::ParseUser(sio::message::ptr user_message,
       user_message->get_flag() != sio::message::flag_object ||
       user_message->get_map()["id"] == nullptr ||
       user_message->get_map()["id"]->get_flag() != sio::message::flag_string ||
-      user_message->get_map()["name"] == nullptr ||
-      user_message->get_map()["name"]->get_flag() !=
+      user_message->get_map()["user"] == nullptr ||
+      user_message->get_map()["user"]->get_flag() !=
           sio::message::flag_string ||
       user_message->get_map()["role"] == nullptr ||
       user_message->get_map()["role"]->get_flag() !=
@@ -939,7 +1043,7 @@ bool ConferenceClient::ParseUser(sio::message::ptr user_message,
     return false;
   }
   std::string id = user_message->get_map()["id"]->get_string();
-  std::string user_name = user_message->get_map()["name"]->get_string();
+  std::string user_name = user_message->get_map()["user"]->get_string();
   std::string role = user_message->get_map()["role"]->get_string();
   // TODO(jianjunz): Parse permission info when server side better designed
   // permission structure.
@@ -1024,15 +1128,29 @@ ConferenceClient::GetConferencePeerConnectionChannel(
 std::shared_ptr<ConferencePeerConnectionChannel>
 ConferenceClient::GetConferencePeerConnectionChannel(
     const std::string& stream_id) const {
+  std::string id;
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     // Search subscribe pcs.
+#if 0
     auto pcc_it = subscribe_pcs_.find(stream_id);
     if (pcc_it != subscribe_pcs_.end()) {
       return pcc_it->second;
     }
+#endif
+    auto label_it = subscribe_id_label_map_.find(stream_id);
+    if (label_it != subscribe_id_label_map_.end()) {
+        id = label_it->second;
+    }
+    else {
+        id = stream_id;
+    }
+    auto pcc_it = subscribe_pcs_.find(id);
+    if (pcc_it != subscribe_pcs_.end()) {
+        return pcc_it->second;
+    }
   }
-  std::string id;
+
   {
     std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
     // If stream_id is local stream's ID, find it's label because publish_pcs
@@ -1160,12 +1278,12 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
         stream_info->get_map()["id"] && stream_info->get_map()["event"] &&
         stream_info->get_map()["id"]->get_flag() == sio::message::flag_string &&
         stream_info->get_map()["event"]->get_flag() ==
-            sio::message::flag_string)) {
+            sio::message::flag_object)) {
     RTC_DCHECK(false);
     return;
   }
   std::string id = stream_info->get_map()["id"]->get_string();
-  std::string event = stream_info->get_map()["event"]->get_string();
+  auto event = stream_info->get_map()["event"];
   auto stream_it = added_streams_.find(id);
   auto stream_type = added_stream_type_.find(id);
   if (stream_it == added_streams_.end() ||
@@ -1176,7 +1294,16 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   }
   auto stream = stream_it->second;
   auto type = stream_type->second;
-  if (type != kStreamTypeMix || event != "VideoLayoutChanged") {
+
+  if (event == nullptr || event->get_flag() != sio::message::flag_object
+      || event->get_map()["field"] == nullptr
+      || event->get_map()["field"]->get_flag() != sio::message::flag_string) {
+    LOG(LS_WARNING) << "Invalid stream update event";
+    return;
+  }
+  //TODO(jianlin): Add notification of audio/video active/inactive.
+  std::string event_field = event->get_map()["field"]->get_string();
+  if (type != kStreamTypeMix || event_field != "video.layout") {
     // TODO(jianjunz): Remove it when this event is supported on other streams.
     LOG(LS_WARNING) << "Stream updated event only supported on mixed stream.";
     return;
@@ -1216,6 +1343,8 @@ ConferenceClient::AttributesFromStreamInfo(
 
 std::function<void()> ConferenceClient::RunInEventQueue(
     std::function<void()> func) {
+  if (func == nullptr)
+    return nullptr;;
   std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
   return [func, weak_this] {
     auto that = weak_this.lock();
@@ -1224,5 +1353,6 @@ std::function<void()> ConferenceClient::RunInEventQueue(
     that->event_queue_->PostTask([func] { func(); });
   };
 }
+
 }
 }

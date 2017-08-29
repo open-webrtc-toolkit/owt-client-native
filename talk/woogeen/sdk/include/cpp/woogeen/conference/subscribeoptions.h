@@ -35,11 +35,11 @@ namespace conference {
 /// Options for subscribing a remote stream.
 struct SubscribeOptions {
   enum class VideoQualityLevel : int {
-    kBestQuality = 1,
-    kBetterQuality,
-    kStandard,
-    kBetterSpeed,
-    kBestSpeed
+    kBestQuality = 1,  //1.4x
+    kBetterQuality,    //1.2x
+    kStandard,         //1.0x
+    kBetterSpeed,      //0.8x
+    kBestSpeed         //0.6x
   };
   /**
     @brief Construct SubscribeOptions with default values.

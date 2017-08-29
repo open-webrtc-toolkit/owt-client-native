@@ -64,6 +64,46 @@ namespace conference {
 
 using namespace woogeen::base;
 
+/** @cond */
+/**
+  @brief Publish session identity
+  @details This structure is used to associate one publish session ID with
+  certain local stream label. Multiple publish session ID can map to the same
+  local stream label(ID).
+  */
+class ConferenceLocalPublishSession {
+public:
+  ConferenceLocalPublishSession(std::string session_id, std::string label)
+    :session_id_(session_id),local_stream_id_(label) {}
+
+  std::string SessionId() { return session_id_; }
+
+  std::string LocalStreamId() { return local_stream_id_; }
+private:
+  std::string session_id_;
+  std::string local_stream_id_;
+};
+
+/**
+  @brief Subcribe session identity
+  @details This structure is used to associate one subcribe session ID with
+  certain remote stream's label. Multiple subcribe session ID can map to the
+  same remote stream label(ID).
+  */
+struct ConferenceRemoteSubcribeSession {
+public:
+  ConferenceRemoteSubcribeSession(std::string session_id, std::string label)
+    :session_id_(session_id),remote_stream_id_(label) {}
+
+  std::string SessionId() { return session_id_; }
+
+  std::string RemoteStreamId() { return remote_stream_id_; }
+private:
+  std::string session_id_;
+  std::string remote_stream_id_;
+};
+/** @endcond */
+
 /**
   @brief Configuration for creating a ConferenceClient
   @details This configuration is used while creating ConferenceClient.
@@ -91,6 +131,8 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnStreamError(std::shared_ptr<sio::message> stream) = 0;
   // Notify the ID for a published stream.
   virtual void OnStreamId(const std::string& id, const std::string& label) = 0;
+  // Notify the ID for a subscribed stream.
+  virtual void OnRemoteStreamId(const std::string& id, const std::string& label) = 0;
 };
 
 // ConferencePeerConnectionChannel callback interface.
@@ -211,7 +253,7 @@ struct PublishOptions {
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
                                ConferencePeerConnectionChannelObserver,
-                               std::enable_shared_from_this<ConferenceClient> {
+                              public std::enable_shared_from_this<ConferenceClient> {
  public:
   /**
     @brief Initialize a ConferenceClient instance with specific configuration
@@ -471,7 +513,8 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   virtual void OnServerDisconnected() override;
   virtual void OnStreamId(const std::string& id,
                           const std::string& publish_stream_label) override;
-
+  virtual void OnRemoteStreamId(const std::string& id,
+                                const std::string& subscribe_stream_label) override;
   // Implementing ConferencePeerConnectionChannelObserver.
   virtual void OnStreamError(
       std::shared_ptr<Stream> stream,
@@ -533,19 +576,21 @@ class ConferenceClient final : ConferenceSocketSignalingChannelObserver,
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::mutex observer_mutex_;
   bool signaling_channel_connected_;
-  // Key woogeen::Stream's ID, value is MediaStream's label
+  // Key publish(session) ID from server, value is MediaStream's label
   std::unordered_map<std::string, std::string> publish_id_label_map_;
-  // Key is woogeen::Stream's ID.
+  // Key is publish(session) ID from server.
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       publish_pcs_;
   mutable std::mutex publish_pcs_mutex_;
-  // Key is woogeen::Stream's ID
+  // Key is subcription ID from server.
   std::unordered_map<std::string,
                      std::shared_ptr<ConferencePeerConnectionChannel>>
       subscribe_pcs_;
+  // Key is subscription ID, value is streamID.
+  std::unordered_map<std::string, std::string> subscribe_id_label_map_;
   mutable std::mutex subscribe_pcs_mutex_;
-  // Key is woogeen::Stream's ID
+  // Key is the stream ID(publication ID or mixed stream ID).
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
   std::unordered_map<std::string, StreamType> added_stream_type_;

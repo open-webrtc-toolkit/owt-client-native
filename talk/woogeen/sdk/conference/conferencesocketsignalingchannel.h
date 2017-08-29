@@ -38,6 +38,7 @@ class ConferenceSocketSignalingChannel
   virtual void SendInitializationMessage(
       sio::message::ptr options,
       std::string publish_stream_label,
+      std::string subcribe_stream_label,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void SendSdp(
@@ -57,6 +58,7 @@ class ConferenceSocketSignalingChannel
   virtual void SendStreamControlMessage(
       const std::string& stream_id,
       const std::string& action,
+      const std::string& operation,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void GetRegion(
@@ -143,6 +145,7 @@ class ConferenceSocketSignalingChannel
       connect_failure_callback_;
   std::function<void()> disconnect_complete_;
   std::string reconnection_ticket_;
+  std::string participant_id_;
   int reconnection_attempted_;
   bool is_reconnection_;
   // Messages may be lost if during Socket.IO reconnection. We maintain a

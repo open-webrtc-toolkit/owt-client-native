@@ -47,8 +47,6 @@ enum ConferencePeerConnectionChannel::NegotiationState : int {
 };
 
 // Const value for messages
-const int kSessionIdBase =
-    104;  // Not sure why it should be 104, just according to JavaScript SDK.
 const int kMessageSeqBase = 1;
 const int kTiebreakerUpperBound = 429496723;  // ditto
 
@@ -80,7 +78,7 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
     std::shared_ptr<rtc::TaskQueue> event_queue)
     : PeerConnectionChannel(configuration),
       signaling_channel_(signaling_channel),
-      session_id_(kSessionIdBase),
+      session_id_(""),
       message_seq_(kMessageSeqBase),
       ice_restart_needed_(false),
       connected_(false),
@@ -265,6 +263,9 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(
   LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
 }
 
+// TODO(jianlin): New signaling protocol defines candidate as
+// a string instead of object. Need to double check with server
+// side implementation before we switch to it.
 void ConferencePeerConnectionChannel::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate) {
   LOG(LS_INFO) << "On ice candidate";
@@ -272,7 +273,8 @@ void ConferencePeerConnectionChannel::OnIceCandidate(
   candidate->ToString(&candidate_string);
   candidate_string.insert(0, "a=");
   sio::message::ptr message = sio::object_message::create();
-  message->get_map()["streamId"] = sio::string_message::create(GetStreamId());
+  // TODO(jianlin): switch to GetSessionId() when ready.
+  message->get_map()["id"] = sio::string_message::create(GetStreamId());
   sio::message::ptr sdp_message = sio::object_message::create();
   sdp_message->get_map()["type"] = sio::string_message::create("candidate");
   sio::message::ptr candidate_message = sio::object_message::create();
@@ -283,7 +285,7 @@ void ConferencePeerConnectionChannel::OnIceCandidate(
   candidate_message->get_map()["candidate"] =
       sio::string_message::create(candidate_string);
   sdp_message->get_map()["candidate"] = candidate_message;
-  message->get_map()["msg"] = sdp_message;
+  message->get_map()["signaling"] = sdp_message;
   if (signaling_state_ ==
       webrtc::PeerConnectionInterface::SignalingState::kStable) {
     signaling_channel_->SendSdp(message, nullptr, nullptr);
@@ -323,11 +325,13 @@ void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   desc->ToString(&sdp);
   sio::message::ptr message = sio::object_message::create();
   LOG(LS_INFO) << "Local SDP for stream: " << GetStreamId();
-  message->get_map()["streamId"] = sio::string_message::create(GetStreamId());
+  // TODO(jianlin): This should be updated to GetSessionId() when
+  // we move from stream ID to session ID for pub/sub identification.
+  message->get_map()["id"] = sio::string_message::create(GetStreamId());
   sio::message::ptr sdp_message = sio::object_message::create();
   sdp_message->get_map()["type"] = sio::string_message::create(desc->type());
   sdp_message->get_map()["sdp"] = sio::string_message::create(sdp);
-  message->get_map()["msg"] = sdp_message;
+  message->get_map()["signaling"] = sdp_message;
   signaling_channel_->SendSdp(message, nullptr, nullptr);
 }
 
@@ -413,34 +417,48 @@ void ConferencePeerConnectionChannel::Publish(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, false);
 
   sio::message::ptr options = sio::object_message::create();
-  options->get_map()["state"] = sio::string_message::create("erizo");
+  // type
+  options->get_map()["type"] = sio::string_message::create("webrtc");
+  // attributes
   sio::message::ptr attributes_ptr = sio::object_message::create();
   for (auto const& attr : stream->Attributes()) {
     attributes_ptr->get_map()[attr.first] =
         sio::string_message::create(attr.second);
   }
   options->get_map()[kStreamOptionAttributesKey] = attributes_ptr;
+
+  // media
+  sio::message::ptr media_ptr = sio::object_message::create();
   if (stream->MediaStream()->GetAudioTracks().size() == 0) {
-    options->get_map()["audio"] = sio::bool_message::create(false);
+    media_ptr->get_map()["audio"] = sio::bool_message::create(false);
   } else {
-    options->get_map()["audio"] = sio::bool_message::create(true);
+    sio::message::ptr audio_options = sio::object_message::create();
+    if (stream->GetStreamDeviceType() ==
+        woogeen::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+      audio_options->get_map()["source"] =
+          sio::string_message::create("screen-cast");
+    } else {
+      audio_options->get_map()["source"] =
+          sio::string_message::create("mic");
+    }
+    media_ptr->get_map()["audio"] = audio_options;
   }
   if (stream->MediaStream()->GetVideoTracks().size() == 0) {
-    options->get_map()["video"] = sio::bool_message::create(false);
-    SendPublishMessage(options, stream, on_failure);
+    media_ptr->get_map()["video"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr video_options = sio::object_message::create();
     if (stream->GetStreamDeviceType() ==
         woogeen::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
-      video_options->get_map()["device"] =
-          sio::string_message::create("screen");
+      video_options->get_map()["source"] =
+          sio::string_message::create("screen-cast");
     } else {
-      video_options->get_map()["device"] =
+      video_options->get_map()["source"] =
           sio::string_message::create("camera");
     }
-    options->get_map()["video"] = video_options;
-    SendPublishMessage(options, stream, on_failure);
+    media_ptr->get_map()["video"] = video_options;
   }
+  options->get_map()["media"] = media_ptr;
+  SendPublishMessage(options, stream, on_failure);
 }
 
 void ConferencePeerConnectionChannel::Subscribe(
@@ -453,7 +471,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   RTC_DCHECK(!publish_success_callback_);
   subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
+    LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
   }
   if (subscribe_success_callback_) {
@@ -468,10 +486,23 @@ void ConferencePeerConnectionChannel::Subscribe(
   subscribe_success_callback_ = on_success;
   failure_callback_ = on_failure;
   sio::message::ptr sio_options = sio::object_message::create();
-  sio_options->get_map()["streamId"] =
-      sio::string_message::create(stream->Id());
-  sio::message::ptr video_options = sio::object_message::create();
+  sio_options->get_map()["type"] = sio::string_message::create("webrtc");
+  // For connection type equal to "webrtc", no connection object required.
+  sio::message::ptr media_options = sio::object_message::create();
+  if (stream->has_audio_) {
+    sio::message::ptr audio_options = sio::object_message::create();
+    audio_options->get_map()["from"] = sio::string_message::create(stream->Id());
+    media_options->get_map()["audio"] = audio_options;
+  } else {
+    media_options->get_map()["audio"] = sio::bool_message::create(false);
+  }
+
+  // For webrtc, at present server does not support specifiying framerate/
+  // keyFrameInterval. And for bitrate, we support "WantedBitrateMultiple".
   if (stream->has_video_) {
+    sio::message::ptr video_options = sio::object_message::create();
+    video_options->get_map()["from"] = sio::string_message::create(stream->Id());
+    sio::message::ptr video_spec = sio::object_message::create();
     if (subscribe_options.resolution.width != 0 &&
         subscribe_options.resolution.height != 0) {
       sio::message::ptr resolution_options = sio::object_message::create();
@@ -479,45 +510,48 @@ void ConferencePeerConnectionChannel::Subscribe(
           sio::int_message::create(subscribe_options.resolution.width);
       resolution_options->get_map()["height"] =
           sio::int_message::create(subscribe_options.resolution.height);
-      video_options->get_map()["resolution"] = resolution_options;
+      video_spec->get_map()["resolution"] = resolution_options;
     }
-    std::string quality_level("Standard");
+    std::string quality_level("1.0x");
     switch (subscribe_options.video_quality_level) {
       case SubscribeOptions::VideoQualityLevel::kStandard:
         break;
       case SubscribeOptions::VideoQualityLevel::kBestQuality:
-        quality_level = "BestQuality";
+        quality_level = "1.4x";
         break;
       case SubscribeOptions::VideoQualityLevel::kBetterQuality:
-        quality_level = "BetterQuality";
+        quality_level = "1.2x";
         break;
       case SubscribeOptions::VideoQualityLevel::kBetterSpeed:
-        quality_level = "BetterSpeed";
+        quality_level = "0.8x";
         break;
       case SubscribeOptions::VideoQualityLevel::kBestSpeed:
-        quality_level = "BestSpeed";
+        quality_level = "0.6x";
         break;
       default:
         RTC_NOTREACHED();
         break;
     }
-    sio::message::ptr quality_options =
-        sio::string_message::create(quality_level);
-    video_options->get_map()["quality_level"] = quality_options;
-    sio_options->get_map()["video"] = video_options;
+	if (quality_level != "1.0x") {
+		sio::message::ptr quality_options =
+			sio::string_message::create(quality_level);
+		video_spec->get_map()["bitrate"] = quality_options;
+	}
+    video_options->get_map()["parameters"] = video_spec;
+    media_options->get_map()["video"] = video_options;
   } else {
-    LOG(LS_INFO) << "Subscribe an audio only stream.";
-    sio_options->get_map()["video"] = sio::bool_message::create(false);
+    media_options->get_map()["video"] = sio::bool_message::create(false);
   }
-  sio_options->get_map()["audio"] =
-      sio::bool_message::create(stream->has_audio_);
+  sio_options->get_map()["media"] = media_options;
+
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveAudio,
       stream->has_audio_);
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
       stream->has_video_);
-  signaling_channel_->SendInitializationMessage(sio_options, "", [this]() {
+  // the stream's id will be replaced by session id once subscription succeeds.
+  signaling_channel_->SendInitializationMessage(sio_options, "", stream->Id(), [this]() {
     CreateOffer();
   }, on_failure);  // TODO: on_failure
 }
@@ -669,13 +703,14 @@ void ConferencePeerConnectionChannel::Unsubscribe(
   }
   connected_ = false;
   signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(),
-                                      RunInEventQueue(on_success), on_failure);
+	  RunInEventQueue(on_success), on_failure);
 }
 
 void ConferencePeerConnectionChannel::SendStreamControlMessage(
     const std::shared_ptr<Stream> stream,
     const std::string& in_action,
     const std::string& out_action,
+    const std::string& operation,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
     const {
@@ -686,7 +721,7 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
     action = in_action;
   else
     RTC_DCHECK(false);
-  signaling_channel_->SendStreamControlMessage(stream->Id(), action, on_success,
+  signaling_channel_->SendStreamControlMessage(stream->Id(), action, operation, on_success,
                                                on_failure);
 }
 
@@ -694,7 +729,7 @@ void ConferencePeerConnectionChannel::PlayAudio(
     std::shared_ptr<Stream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  SendStreamControlMessage(stream, "audio-in-on", "audio-out-on", on_success,
+  SendStreamControlMessage(stream, "audio", "audio", "play", on_success,
                            on_failure);
 }
 
@@ -702,7 +737,7 @@ void ConferencePeerConnectionChannel::PauseAudio(
     std::shared_ptr<Stream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  SendStreamControlMessage(stream, "audio-in-off", "audio-out-off", on_success,
+  SendStreamControlMessage(stream, "audio", "audio", "pause", on_success,
                            on_failure);
 }
 
@@ -710,7 +745,7 @@ void ConferencePeerConnectionChannel::PlayVideo(
     std::shared_ptr<Stream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  SendStreamControlMessage(stream, "video-in-on", "video-out-on", on_success,
+  SendStreamControlMessage(stream, "video", "video", "play", on_success,
                            on_failure);
 }
 
@@ -718,7 +753,7 @@ void ConferencePeerConnectionChannel::PauseVideo(
     std::shared_ptr<Stream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  SendStreamControlMessage(stream, "video-in-off", "video-out-off", on_success,
+  SendStreamControlMessage(stream, "video", "video", "pause", on_success,
                            on_failure);
 }
 
@@ -742,22 +777,31 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
   if (message == nullptr || message->get_flag() != sio::message::flag_object) {
-    LOG(LS_ERROR) << "Received unknown message from MCU.";
-    return;
+      if (message == nullptr && published_stream_ != nullptr) {
+        signaling_channel_->SendStreamControlMessage(GetStreamId(), "common", "mix", nullptr, nullptr);
+        return;
+      }
   }
+  // Since trickle ICE from MCU is not supported, we parse the message as
+  // SOAC message, not Canddiate message.
   if (message->get_map().find("type") == message->get_map().end()) {
       LOG(LS_INFO) << "Ignore erizo message without type from MCU";
       return;
+  }
+
+  if(message->get_map()["type"]->get_flag() != sio::message::flag_string
+     || message->get_map()["sdp"] == nullptr
+     || message->get_map()["sdp"]->get_flag() != sio::message::flag_string) {
+    LOG(LS_ERROR) << "Invalid signaling message";
+    return;
   }
   const std::string type = message->get_map()["type"]->get_string();
   LOG(LS_INFO) << "On signaling message: " << type;
   if (type == "answer") {
     const std::string sdp = message->get_map()["sdp"]->get_string();
     SetRemoteDescription(type, sdp);
-  } else if (type == "failed") {
-    LOG(LS_ERROR) << "Publish or subscribe stream failed.";
-  } else if (type == "ready") {
-    LOG(LS_INFO) << "Received ready.";
+  } else {
+    LOG(LS_ERROR) << "Ignoring signaling message from server other than answer.";
   }
 }
 
@@ -771,11 +815,19 @@ void ConferencePeerConnectionChannel::DrainIceCandidates() {
 
 void ConferencePeerConnectionChannel::SetStreamId(const std::string& id) {
   LOG(LS_INFO) << "Setting stream ID " << id;
-  if (published_stream_ == nullptr) {
+  if (published_stream_ == nullptr && subscribed_stream_ == nullptr) {
     RTC_DCHECK(false);
-  } else {
+  } else if (published_stream_ != nullptr) {
     published_stream_->Id(id);
   }
+  else if (subscribed_stream_ != nullptr) {
+    subscribed_stream_->Id(id);
+  }
+}
+
+void ConferencePeerConnectionChannel::SetSessionId(const std::string& id) {
+  LOG(LS_INFO) << "Setting session ID for current channel";
+  session_id_ = id;
 }
 
 std::string ConferencePeerConnectionChannel::GetStreamId() const {
@@ -785,6 +837,10 @@ std::string ConferencePeerConnectionChannel::GetStreamId() const {
     RTC_CHECK(published_stream_ != nullptr);
     return published_stream_->Id();
   }
+}
+
+std::string ConferencePeerConnectionChannel::GetSessionId() const {
+  return session_id_;
 }
 
 int ConferencePeerConnectionChannel::RandomInt(int lower_bound,
@@ -800,7 +856,7 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   signaling_channel_->SendInitializationMessage(
-      options, stream->MediaStream()->label(),
+      options, stream->MediaStream()->label(), "",
       [stream, this]() {
         rtc::ScopedRefMessageData<MediaStreamInterface>* param =
             new rtc::ScopedRefMessageData<MediaStreamInterface>(
