@@ -210,44 +210,10 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   LOG(LS_INFO) << "Ice connection state changed: " << new_state;
   if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
       new_state == PeerConnectionInterface::kIceConnectionCompleted) {
-    std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
-        shared_from_this();
-    if (publish_success_callback_) {
-      event_queue_->PostTask([weak_this] {
-        auto that = weak_this.lock();
-        std::lock_guard<std::mutex> lock(that->callback_mutex_);
-        if (!that || !that->publish_success_callback_)
-          return;
-        that->publish_success_callback_();
-        that->ResetCallbacks();
-      });
-    } else if (subscribe_success_callback_) {
-      event_queue_->PostTask([weak_this] {
-        auto that = weak_this.lock();
-        std::lock_guard<std::mutex> lock(that->callback_mutex_);
-        if (!that || !that->subscribe_success_callback_)
-          return;
-        that->subscribe_success_callback_(that->subscribed_stream_);
-        that->ResetCallbacks();
-      });
-    }
     connected_ = true;
   } else if (new_state == PeerConnectionInterface::kIceConnectionClosed) {
-    if (!connected_ && failure_callback_) {
-      std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
-          shared_from_this();
-      event_queue_->PostTask([weak_this] {
-        auto that = weak_this.lock();
-        std::lock_guard<std::mutex> lock(that->callback_mutex_);
-        if (!that || !that->failure_callback_)
-          return;
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "ICE failed."));
-        that->failure_callback_(std::move(e));
-        that->ResetCallbacks();
-      });
-    } else if (connected_) {
-      OnStreamError(std::string("ICE connection state changed to closed."));
+    if (connected_) {
+      OnStreamError(std::string("Stream connection closed unexpectedly."));
     }
     connected_ = false;
   } else {
@@ -532,11 +498,11 @@ void ConferencePeerConnectionChannel::Subscribe(
         RTC_NOTREACHED();
         break;
     }
-	if (quality_level != "1.0x") {
-		sio::message::ptr quality_options =
-			sio::string_message::create(quality_level);
-		video_spec->get_map()["bitrate"] = quality_options;
-	}
+    if (quality_level != "1.0x") {
+      sio::message::ptr quality_options =
+          sio::string_message::create(quality_level);
+      video_spec->get_map()["bitrate"] = quality_options;
+    }
     video_options->get_map()["parameters"] = video_spec;
     media_options->get_map()["video"] = video_options;
   } else {
@@ -550,7 +516,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
       stream->has_video_);
-  // the stream's id will be replaced by session id once subscription succeeds.
+  // The stream's id will be replaced by session id once subscription succeeds.
   signaling_channel_->SendInitializationMessage(sio_options, "", stream->Id(), [this]() {
     CreateOffer();
   }, on_failure);  // TODO: on_failure
@@ -703,7 +669,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
   }
   connected_ = false;
   signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(),
-	  RunInEventQueue(on_success), on_failure);
+      RunInEventQueue(on_success), on_failure);
 }
 
 void ConferencePeerConnectionChannel::SendStreamControlMessage(
@@ -776,16 +742,63 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
 
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
-  if (message == nullptr || message->get_flag() != sio::message::flag_object) {
-      if (message == nullptr && published_stream_ != nullptr) {
+  if (message == nullptr) {
+    LOG(LS_INFO) << "Ignore empty signaling message";
+    return;
+  }
+
+  if (message->get_flag() == sio::message::flag_string) {
+    if (message->get_string() == "success") {
+      // Ignore mixing failure at present as in the future mixing and publishing will be seperated.
+      if (published_stream_ != nullptr)
         signaling_channel_->SendStreamControlMessage(GetStreamId(), "common", "mix", nullptr, nullptr);
-        return;
+      std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
+            shared_from_this();
+      if (publish_success_callback_) {
+        event_queue_->PostTask([weak_this] {
+              auto that = weak_this.lock();
+              std::lock_guard<std::mutex> lock(that->callback_mutex_);
+              if (!that || !that->publish_success_callback_)
+                return;
+              that->publish_success_callback_();
+              that->ResetCallbacks();
+        });
+      } else if (subscribe_success_callback_) {
+        event_queue_->PostTask([weak_this] {
+          auto that = weak_this.lock();
+          std::lock_guard<std::mutex> lock(that->callback_mutex_);
+          if (!that || !that->subscribe_success_callback_)
+            return;
+           that->subscribe_success_callback_(that->subscribed_stream_);
+           that->ResetCallbacks();
+        });
       }
+      return;
+    } else if (message->get_string() == "failure") {
+      if (!connected_ && failure_callback_) {
+        std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
+            shared_from_this();
+        event_queue_->PostTask([weak_this] {
+          auto that = weak_this.lock();
+          std::lock_guard<std::mutex> lock(that->callback_mutex_);
+          if (!that || !that->failure_callback_)
+            return;
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "MCU internal error during connection establishment."));
+          that->failure_callback_(std::move(e));
+          that->ResetCallbacks();
+        });
+      }
+    }
+    return;
+  } else if (message->get_flag() != sio::message::flag_object) {
+    LOG(LS_WARNING) << "Ignore invalid signaling message from MCU.";
+    return;
   }
   // Since trickle ICE from MCU is not supported, we parse the message as
   // SOAC message, not Canddiate message.
   if (message->get_map().find("type") == message->get_map().end()) {
-      LOG(LS_INFO) << "Ignore erizo message without type from MCU";
+      LOG(LS_INFO) << "Ignore erizo message without type from MCU.";
       return;
   }
 

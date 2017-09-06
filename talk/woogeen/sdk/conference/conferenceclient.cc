@@ -102,7 +102,7 @@ void ConferenceClient::Join(
 
     auto room_info = info->get_map()["room"];
     if (room_info == nullptr || room_info->get_flag() != sio::message::flag_object) {
-        LOG(LS_ERROR) << "Login response does not contian RoomInfo";
+        RTC_DCHECK(false);
         return;
     }
     // Trigger OnUserJoin for existed users.
@@ -346,12 +346,12 @@ void ConferenceClient::Unsubscribe(
   LOG(LS_INFO) << "About to unsubscribe stream " << stream->Id();
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
-	std::string id;
+    std::string id;
 
-	auto label_it = subscribe_id_label_map_.find(stream->Id());
-	if (label_it != subscribe_id_label_map_.end()) {
-		id = label_it->second;
-	}
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+        id = label_it->second;
+    }
 
     auto pcc_it = subscribe_pcs_.find(id);
     if (pcc_it == subscribe_pcs_.end()) {
@@ -707,13 +707,20 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   // Check the status before delivering to pcc.
   auto soac_status = message->get_map()["status"];
   if (soac_status == nullptr || soac_status->get_flag() != sio::message::flag_string
-      || (soac_status->get_string() != "soac" && soac_status->get_string() != "ready")) {
-    LOG(LS_INFO) << "Ignore signaling status except soac/ready";
+      || (soac_status->get_string() != "soac" && soac_status->get_string() != "ready"
+      && soac_status->get_string() != "error")) {
+    LOG(LS_INFO) << "Ignore signaling status except soac/ready/error";
     return;
   }
 
   if (soac_status->get_string() == "ready") {
-    pcc->OnSignalingMessage(nullptr);
+    sio::message::ptr success_msg = sio::string_message::create("success");
+    pcc->OnSignalingMessage(success_msg);
+    return;
+  }
+  else if (soac_status->get_string() == "error") {
+    sio::message::ptr failure_msg = sio::string_message::create("failure");
+    pcc->OnSignalingMessage(failure_msg);
     return;
   }
   auto soac_data = message->get_map()["data"];
@@ -1006,13 +1013,11 @@ void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
 
 void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
   if (user_info == nullptr ||
-      user_info->get_flag() != sio::message::flag_object ||
-      user_info->get_map()["id"] == nullptr ||
-      user_info->get_map()["id"]->get_flag() != sio::message::flag_string) {
+      user_info->get_flag() != sio::message::flag_string) {
     RTC_DCHECK(false);
     return;
   }
-  auto user_id = user_info->get_map()["id"]->get_string();
+  auto user_id = user_info->get_string();
   auto user_it = participants.find(user_id);
   if (user_it == participants.end()) {
     RTC_DCHECK(false);

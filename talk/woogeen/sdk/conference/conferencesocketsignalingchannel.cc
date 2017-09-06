@@ -347,7 +347,7 @@ void ConferenceSocketSignalingChannel::Connect(
         }
         auto participant_action = data->get_map()["action"]->get_string();
         if (participant_action == "join") {
-          //Get the pariticipant ID from data;
+          // Get the pariticipant ID from data;
           auto participant_info = data->get_map()["data"];
           if (participant_info != nullptr && participant_info->get_flag() == sio::message::flag_object
               && participant_info->get_map()["id"] != nullptr
@@ -363,6 +363,8 @@ void ConferenceSocketSignalingChannel::Connect(
               (*it)->OnUserLeft(participant_info);
             }
           }
+        } else {
+          RTC_NOTREACHED();
         }
       }));
   socket_client_->socket()->on(
@@ -397,7 +399,6 @@ void ConferenceSocketSignalingChannel::Connect(
   socket_client_->connect(scheme.append(host));
 }
 
-// Participant leave signaling remain unchanged. Only update the prelude for emit.
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
@@ -412,14 +413,6 @@ void ConferenceSocketSignalingChannel::Disconnect(
   reconnection_attempted_ = kReconnectionAttempts;
   disconnect_complete_ = on_success;
   if (socket_client_->opened()) {
-#if 0
-    sio::message::list message_list;
-    sio::message::ptr logout_request_name = sio::string_message::create(kEventNameLogout);
-    sio::message::ptr logout_request_data = sio::object_message::create();
-    logout_request_data->get_map()["id"] = sio::string_message::create(participant_id_);
-    message_list.push(logout_request_name);
-    message_list.push(logout_request_data);
-#endif
     // Clear all pending failure callbacks after successful disconnect, don't check resp.
     socket_client_->socket()->emit(kEventNameLogout, nullptr,
                                    [=](sio::message::list const& msg) {
