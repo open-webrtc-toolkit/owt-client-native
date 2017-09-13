@@ -1,0 +1,41 @@
+From 3b5bef5d044344ff7c64942ee012f5ebff96b3c8 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Wed, 13 Sep 2017 13:41:06 +0800
+Subject: [PATCH] Xcode 9 support.
+
+---
+ config/compiler/BUILD.gn | 3 ++-
+ config/ios/BUILD.gn      | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 1c50195..a22d9a0 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1116,7 +1116,8 @@ config("default_warnings") {
+       ]
+     } else if (use_xcode_clang &&
+                (xcode_version == "0830" || xcode_version == "0831" ||
+-                xcode_version == "0832")) {
++                xcode_version == "0832" || xcode_version == "0833" ||
++                xcode_version == "0900")) {
+       # This is necessary to allow a progressive transition from using xcode 8 to 8.3. Remove when all bots are migrated to 8.3.
+       cflags += [
+         # TODO(thakis): https://crbug.com/604888
+diff --git a/config/ios/BUILD.gn b/config/ios/BUILD.gn
+index f8091d1..5125db8 100644
+--- a/config/ios/BUILD.gn
++++ b/config/ios/BUILD.gn
+@@ -102,7 +102,8 @@ config("runtime_library") {
+ 
+   # TODO(crbug.com/634373): Remove once Xcode's libc++ has LLVM r256325. Most
+   # likely this means one Xcode 8 is released and required.
+-  if (use_xcode_clang && get_path_info(ios_sdk_version, "name") != "10") {
++  if (use_xcode_clang && get_path_info(ios_sdk_version, "name") != "10" &&
++      get_path_info(ios_sdk_version, "name") != "11") {
+     common_cc_flags = [
+       "-isystem",
+       rebase_path("//third_party/llvm-build/Release+Asserts/include/c++/v1",
+-- 
+2.4.4
+

@@ -16,6 +16,7 @@ TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
+BUILD_PATH = os.path.join(HOME_PATH, 'build')
 
 def _patch():
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Use-OpenSSL-for-usrsctp.patch')], cwd=THIRD_PARTY_PATH)) != 0:
@@ -24,6 +25,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], cwd=LIBSRTP_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0003-Start-iOS-simulator-before-running-tests.patch')], cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], cwd=TESTING_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Xcode-9-support.patch')], cwd=BUILD_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], cwd=BUILD_PATH)
 
 def _remove_overrides():
   # This directory contains override files for Chromium, e.g. logging. However, we still need original logging module.
