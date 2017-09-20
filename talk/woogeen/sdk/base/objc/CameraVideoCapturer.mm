@@ -89,8 +89,15 @@ CameraVideoCapturer::source() {
 }
 
 CameraVideoCapturer::~CameraVideoCapturer() {
+  // Remove it once a capturer can be shared among multiple streams.
+  if ([capturer_ isKindOfClass:[RTCCameraVideoCapturer class]]) {
+    RTCCameraVideoCapturer *cameraCapturer =
+        static_cast<RTCCameraVideoCapturer *>(capturer_);
+    [cameraCapturer stopCapture];
+  }
   capturer_ = nil;
   source_ = nil;
 }
+
 }
 }
