@@ -478,27 +478,27 @@ void ConferencePeerConnectionChannel::Subscribe(
           sio::int_message::create(subscribe_options.resolution.height);
       video_spec->get_map()["resolution"] = resolution_options;
     }
-    std::string quality_level("1.0x");
+    std::string quality_level("x1.0");
     switch (subscribe_options.video_quality_level) {
       case SubscribeOptions::VideoQualityLevel::kStandard:
         break;
       case SubscribeOptions::VideoQualityLevel::kBestQuality:
-        quality_level = "1.4x";
+        quality_level = "x1.4";
         break;
       case SubscribeOptions::VideoQualityLevel::kBetterQuality:
-        quality_level = "1.2x";
+        quality_level = "x1.2";
         break;
       case SubscribeOptions::VideoQualityLevel::kBetterSpeed:
-        quality_level = "0.8x";
+        quality_level = "x0.8";
         break;
       case SubscribeOptions::VideoQualityLevel::kBestSpeed:
-        quality_level = "0.6x";
+        quality_level = "x0.6";
         break;
       default:
         RTC_NOTREACHED();
         break;
     }
-    if (quality_level != "1.0x") {
+    if (quality_level != "x1.0") {
       sio::message::ptr quality_options =
           sio::string_message::create(quality_level);
       video_spec->get_map()["bitrate"] = quality_options;
