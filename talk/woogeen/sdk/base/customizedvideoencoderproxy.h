@@ -39,7 +39,7 @@ class CustomizedVideoEncoderProxy : public webrtc::VideoEncoder {
 
  private:
   // Search for H.264 start codes.
-  int32_t NextNaluPosition(uint8_t* buffer, size_t buffer_size);
+  int32_t NextNaluPosition(uint8_t* buffer, size_t buffer_size, size_t* sc_length);
 
   webrtc::EncodedImageCallback* callback_;
   int32_t bitrate_;  // Bitrate in bits per second.

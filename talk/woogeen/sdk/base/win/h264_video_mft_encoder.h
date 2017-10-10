@@ -61,7 +61,7 @@ private:
     int EncodeOnEncoderThread(const webrtc::VideoFrame& frame, const webrtc::CodecSpecificInfo* codec_specific_info,
         const std::vector<webrtc::FrameType>* frame_types);
     // Search for H.264 start codes.
-    int32_t NextNaluPosition(uint8_t *buffer, size_t buffer_size);
+    int32_t NextNaluPosition(uint8_t *buffer, size_t buffer_size, size_t *sc_length);
     mfxU16 H264VideoMFTEncoder::H264GetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
     mfxU16 H264VideoMFTEncoder::H264GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
 

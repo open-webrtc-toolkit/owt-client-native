@@ -164,6 +164,7 @@ int CustomizedVideoEncoderProxy::Encode(
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
   info.codecType = codec_type_;
+  info.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
   if (codec_type_ == webrtc::kVideoCodecVP8) {
     info.codecSpecific.VP8.pictureId = picture_id_;
     info.codecSpecific.VP8.nonReference = false;
@@ -186,17 +187,20 @@ int CustomizedVideoEncoderProxy::Encode(
   } else if (codec_type_ == webrtc::kVideoCodecH264) {
     // For H.264 search for start codes.
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
+    size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
     int32_t scPosition = 0;
     while (scPositionsLength < MAX_NALUS_PERFRAME) {
+      size_t scLength = 0;
       int32_t naluPosition =
-          NextNaluPosition(data_ptr + scPosition, data_size - scPosition);
+          NextNaluPosition(data_ptr + scPosition, data_size - scPosition, &scLength);
       if (naluPosition < 0) {
         break;
       }
       scPosition += naluPosition;
       scPositions[scPositionsLength++] = scPosition;
-      scPosition += H264_SC_LENGTH;
+      scLengths[scPositionsLength - 1] = scLength;
+      scPosition += scLength;
     }
     if (scPositionsLength == 0) {
       LOG(LS_ERROR) << "Start code is not found for H264 codec!";
@@ -205,7 +209,7 @@ int CustomizedVideoEncoderProxy::Encode(
     scPositions[scPositionsLength] = data_size;
     header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
     for (int i = 0; i < scPositionsLength; i++) {
-      header.fragmentationOffset[i] = scPositions[i] + H264_SC_LENGTH;
+      header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
       header.fragmentationLength[i] =
           scPositions[i + 1] - header.fragmentationOffset[i];
       header.fragmentationPlType[i] = 0;
@@ -252,35 +256,40 @@ int CustomizedVideoEncoderProxy::Release() {
 }
 
 int32_t CustomizedVideoEncoderProxy::NextNaluPosition(uint8_t* buffer,
-                                              size_t buffer_size) {
-  if (buffer_size < H264_SC_LENGTH) {
-    return -1;
-  }
-  uint8_t* head = buffer;
-  // Set end buffer pointer to 4 bytes before actual buffer end so we can
-  // access head[1], head[2] and head[3] in a loop without buffer overrun.
-  uint8_t* end = buffer + buffer_size - H264_SC_LENGTH;
+                                              size_t buffer_size, size_t* sc_length) {
+    if (buffer_size < H264_SC_LENGTH) {
+        return -1;
+    }
+    uint8_t *head = buffer;
+    // Set end buffer pointer to 4 bytes before actual buffer end so we can
+    // access head[1], head[2] and head[3] in a loop without buffer overrun.
+    uint8_t *end = buffer + buffer_size - H264_SC_LENGTH;
 
-  while (head < end) {
-    if (head[0]) {
-      head++;
-      continue;
+    while (head < end) {
+      if (head[0]) {
+        head++;
+        continue;
+      }
+      if (head[1]) { // got 00xx
+        head += 2;
+        continue;
+      }
+      if (head[2]) { // got 0000xx
+        if (head[2] == 0x01) {
+          *sc_length = 3;
+          return (int32_t)(head - buffer);
+        }
+        head += 3;
+        continue;
+      }
+      if (head[3] != 0x01) { // got 000000xx
+        head++; // xx != 1, continue searching.
+        continue;
+      }
+      *sc_length = 4;
+      return (int32_t)(head - buffer);
     }
-    if (head[1]) {  // got 00xx
-      head += 2;
-      continue;
-    }
-    if (head[2]) {  // got 0000xx
-      head += 3;
-      continue;
-    }
-    if (head[3] != 0x01) {  // got 000000xx
-      head++;               // xx != 1, continue searching.
-      continue;
-    }
-    return (int32_t)(head - buffer);
-  }
-  return -1;
+    return -1;
 }
 
 }
