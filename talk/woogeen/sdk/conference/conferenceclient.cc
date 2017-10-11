@@ -376,7 +376,9 @@ void ConferenceClient::Unsubscribe(
               event_queue_->PostTask([on_success]() { on_success(); });
           },
           on_failure);
+      pcc_it->second->SetStreamId(id);
       subscribe_pcs_.erase(pcc_it);
+      subscribe_id_label_map_.erase(label_it);
     }
   }
 }
