@@ -594,7 +594,7 @@ void ConferenceSocketSignalingChannel::GetRegion(
       sio::string_message::create(mixed_stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameGetRegion, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(
@@ -632,7 +632,7 @@ void ConferenceSocketSignalingChannel::SetRegion(
   send_message->get_map()["data"] = region_setting;
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameSetRegion, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);

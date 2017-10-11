@@ -556,8 +556,22 @@ void ConferenceClient::GetRegion(
   if (!CheckSignalingChannelOnline(on_failure)){
     return;
   }
-  signaling_channel_->GetRegion(stream->Id(), mixed_stream->Id(), on_success,
-                                on_failure);
+  // If current stream is already subscribed, we use the label as stream ID;
+  // otherwise use the stream id that's not yet modified.
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+  signaling_channel_->GetRegion(id, mixed_stream->Viewport(), on_success,
+        on_failure);
+  return;
 }
 
 void ConferenceClient::SetRegion(
@@ -573,7 +587,20 @@ void ConferenceClient::SetRegion(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->SetRegion(stream->Id(), mixed_stream->Id(), region_id,
+  // If current stream is already subscribed, we use the label as stream ID;
+  // otherwise use the stream id that's not yet modified.
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+  signaling_channel_->SetRegion(id, mixed_stream->Viewport(), region_id,
                                 RunInEventQueue(on_success), on_failure);
 }
 
