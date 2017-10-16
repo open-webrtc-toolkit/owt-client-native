@@ -164,6 +164,7 @@ class LocalCustomizedStreamParameters final {
   void Fps(int fps) {
     fps_ = fps;
   }
+
   int ResolutionWidth() const { return resolution_width_; }
   int ResolutionHeight() const { return resolution_height_; }
   int Fps() const { return fps_; }
@@ -185,7 +186,7 @@ class LocalCustomizedStreamParameters final {
     @return true or false.
   */
   bool AudioEnabled() const { return audio_enabled_; }
-
+  /** @endcond */
  private:
   bool video_enabled_;
   bool audio_enabled_;
@@ -259,12 +260,13 @@ class LocalDesktopStreamParameters final {
   @param fps The frame rate of the captured screen/window.
   */
   void Fps(int fps);
+
   int Fps() const { return fps_; }
 
   DesktopSourceType SourceType() const { return source_type_; }
 
   DesktopCapturePolicy CapturePolicy() const { return capture_policy_; }
-
+  /** @endcond */
  private:
   bool video_enabled_;
   bool audio_enabled_;
