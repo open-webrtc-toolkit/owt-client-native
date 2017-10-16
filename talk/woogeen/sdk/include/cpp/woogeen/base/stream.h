@@ -270,6 +270,7 @@ class LocalCameraStream : public LocalStream {
   WOOGEEN_DEPRECATED explicit LocalCameraStream(
       const LocalCameraStreamParameters& parameters);
   ~LocalCameraStream();
+  /** @endcond */
   /**
     @brief Close the stream. Its underlying media source is no longer providing
     data, and will never provide more data for this stream.
@@ -278,7 +279,7 @@ class LocalCameraStream : public LocalStream {
     instead.
   */
   void Close();
-
+  /** @cond */
   StreamDeviceType GetStreamDeviceType() final {
     return StreamDeviceType::kStreamDeviceTypeCamera;
   }
