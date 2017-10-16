@@ -750,7 +750,8 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
   if (message->get_flag() == sio::message::flag_string) {
     if (message->get_string() == "success") {
       // Ignore mixing failure at present as in the future mixing and publishing will be seperated.
-      if (published_stream_ != nullptr)
+      if (published_stream_ != nullptr && published_stream_->GetStreamDeviceType() !=
+          woogeen::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen)
         signaling_channel_->SendStreamControlMessage(GetStreamId(), "common", "mix", nullptr, nullptr);
       std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
             shared_from_this();
