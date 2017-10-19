@@ -67,10 +67,11 @@ Customized audio frames provider should implement {@link woogeen.base.AudioFrame
 # 9 Known issues {#section9}
 Here is a list of known issues:
 
-- Conference recording is not supported.
+- Conference recording from Windows SDK is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 - woogeen-debug.lib & woogeen-release.lib is compiled as 32 bit library.
 - Bandwidth setting for publishing H264 stream does not take effect.
+- Unmix/Mix will only unmix from/mix to the first mixed stream even if multiple mixed streams are provided. To unmix from/mix to multiple mixed streams, invoke the same API multiple times with mixed stream list containing one mixed stream each time.
 
 > Note: \* Other names and brands may be claimed as the property of others.</i>
 

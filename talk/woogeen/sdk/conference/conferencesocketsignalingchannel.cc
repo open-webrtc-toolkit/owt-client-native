@@ -658,13 +658,14 @@ void ConferenceSocketSignalingChannel::Mute(
     return;
   }
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["streamId"] = sio::string_message::create(stream_id);
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["operation"] = sio::string_message::create("pause");
   std::string track_type =
       (mute_video && mute_audio) ? "av" : (!mute_video ? "audio" : "video");
-  send_message->get_map()["track"] = sio::string_message::create(track_type);
+  send_message->get_map()["data"] = sio::string_message::create(track_type);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameMute, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);
@@ -690,14 +691,15 @@ void ConferenceSocketSignalingChannel::Unmute(
     return;
   }
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["streamId"] = sio::string_message::create(stream_id);
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["operation"] = sio::string_message::create("play");
   std::string track_type = (unmute_video && unmute_audio)
                                ? "av"
                                : (!unmute_video ? "audio" : "video");
-  send_message->get_map()["track"] = sio::string_message::create(track_type);
+  send_message->get_map()["data"] = sio::string_message::create(track_type);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameUnmute, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);
@@ -712,16 +714,16 @@ void ConferenceSocketSignalingChannel::Mix(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["streamId"] = sio::string_message::create(stream_id);
-  sio::message::ptr mix_streams = sio::array_message::create();
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["operation"] = sio::string_message::create("mix");
   for (auto mixed_stream_id : mixed_stream_ids) {
-    mix_streams->get_vector().push_back(
-        sio::string_message::create(mixed_stream_id));
+    send_message->get_map()["data"] =
+        sio::string_message::create(mixed_stream_id);
+    break;
   }
-  send_message->get_map()["mixStreams"] = mix_streams;
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameMix, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);
@@ -736,16 +738,16 @@ void ConferenceSocketSignalingChannel::Unmix(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["streamId"] = sio::string_message::create(stream_id);
-  sio::message::ptr mix_streams = sio::array_message::create();
+  send_message->get_map()["id"] = sio::string_message::create(stream_id);
+  send_message->get_map()["operation"] = sio::string_message::create("unmix");
   for (auto mixed_stream_id : mixed_stream_ids) {
-    mix_streams->get_vector().push_back(
-        sio::string_message::create(mixed_stream_id));
+    send_message->get_map()["data"] =
+        sio::string_message::create(mixed_stream_id);
+    break;
   }
-  send_message->get_map()["mixStreams"] = mix_streams;
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameUnmix, send_message,
+  Emit(kEventNameStreamControl, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          if (auto that = weak_this.lock()) {
            that->OnEmitAck(msg, on_success, on_failure);

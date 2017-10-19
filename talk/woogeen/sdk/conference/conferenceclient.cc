@@ -616,7 +616,18 @@ void ConferenceClient::Mute(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->Mute(stream->Id(), mute_audio, mute_video,
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+  signaling_channel_->Mute(id, mute_audio, mute_video,
                            RunInEventQueue(on_success), on_failure);
 }
 
@@ -632,7 +643,18 @@ void ConferenceClient::Unmute(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  signaling_channel_->Unmute(stream->Id(), unmute_audio, unmute_video,
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+  signaling_channel_->Unmute(id, unmute_audio, unmute_video,
                              RunInEventQueue(on_success), on_failure);
 }
 
@@ -650,7 +672,7 @@ void ConferenceClient::Mix(
   std::vector<std::string> mixed_stream_ids;
   for (auto mixed_stream : mixed_stream_list) {
     if (mixed_stream.get())
-      mixed_stream_ids.push_back(mixed_stream->Id());
+      mixed_stream_ids.push_back(mixed_stream->Viewport());
   }
   if (mixed_stream_ids.empty() && on_failure) {
     event_queue_->PostTask([on_failure]() {
@@ -661,7 +683,18 @@ void ConferenceClient::Mix(
     });
     return;
   }
-  signaling_channel_->Mix(stream->Id(), mixed_stream_ids,
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+  signaling_channel_->Mix(id, mixed_stream_ids,
                           RunInEventQueue(on_success), on_failure);
 }
 
@@ -678,8 +711,9 @@ void ConferenceClient::Unmix(
   }
   std::vector<std::string> mixed_stream_ids;
   for (auto mixed_stream : mixed_stream_list) {
-    if (mixed_stream.get())
-      mixed_stream_ids.push_back(mixed_stream->Id());
+    if (mixed_stream.get()) {
+      mixed_stream_ids.push_back(mixed_stream->Viewport());
+    }
   }
   if (mixed_stream_ids.empty() && on_failure) {
     event_queue_->PostTask([on_failure]() {
@@ -690,7 +724,19 @@ void ConferenceClient::Unmix(
     });
     return;
   }
-  signaling_channel_->Unmix(stream->Id(), mixed_stream_ids,
+  std::string id;
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscribe pcs.
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    } else {
+      id = stream->Id();
+    }
+  }
+
+  signaling_channel_->Unmix(id, mixed_stream_ids,
                             RunInEventQueue(on_success), on_failure);
 }
 
