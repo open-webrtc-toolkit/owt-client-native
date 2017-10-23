@@ -848,6 +848,7 @@ void ConferenceClient::OnServerDisconnected() {
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     subscribe_pcs_.clear();
+    subscribe_id_label_map_.clear();
   }
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnServerDisconnected();

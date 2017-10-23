@@ -247,13 +247,8 @@ void ConferenceSocketSignalingChannel::Connect(
       is_reconnection_ = false;
       reconnection_attempted_ = 0;
     } else {
-      sio::message::list reconnection_msg;
-      sio::message::ptr relogin_request_name = sio::string_message::create(kEventNameRelogin);
-      sio::message::ptr relogin_request_data = sio::object_message::create();
-      relogin_request_data->get_map()["id"] = sio::string_message::create(participant_id_);
-      relogin_request_data->get_map()["ticket"] = sio::string_message::create(reconnection_ticket_);
       socket_client_->socket()->emit(
-          kEventNameSignalingMessagePrelude, reconnection_msg, [&](sio::message::list const& msg) {
+          kEventNameRelogin, reconnection_ticket_, [&](sio::message::list const& msg) {
             if (msg.size() < 2) {
               LOG(LS_WARNING)
                   << "Received unknown message while reconnection ticket.";
