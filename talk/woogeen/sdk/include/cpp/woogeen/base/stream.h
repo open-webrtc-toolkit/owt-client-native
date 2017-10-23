@@ -98,7 +98,9 @@ class Stream {
   WOOGEEN_DEPRECATED virtual void Attach(VideoRendererARGBInterface& renderer){
     AttachVideoRenderer(renderer);
   }
-  /// Attach the stream to a renderer to receive ARGB frames from decoder.
+  /// Attach the stream to a renderer to receive ARGB frames for local or remote stream.
+  /// Be noted if you turned hardware acceleration on, calling this API on remote stream
+  /// will have no effect.
   virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
 
   /**
