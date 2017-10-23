@@ -384,6 +384,9 @@ void ConferenceSocketSignalingChannel::Connect(
               bool is_ack, sio::message::list& ack_resp) {
             LOG(LS_INFO) << "Received drop message.";
             socket_client_->set_reconnect_attempts(0);
+            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+              (*it)->OnServerDisconnected();
+            }
           }));
   socket_client_->socket()->on(
       kEventNameConnectionFailed,
