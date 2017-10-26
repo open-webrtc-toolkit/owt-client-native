@@ -40,7 +40,7 @@ Socket connections are disconnected when the device is locked. If your app must 
 Intel CS for WebRTC Client SDK for iOS fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 
 # 7 Customize signaling channel {#section7}
-Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel for P2P sessions can be customized by implementing `RTCP2PSignalingChannelProtocol`. We provides a default `SocketSignalingChannel` in sample which works with PeerServer in the release package.
+Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel for P2P sessions can be customized by implementing `RTCP2PSignalingChannelProtocol`. We provide a default `SocketSignalingChannel` in sample which works with PeerServer in the release package.
 
 `PeerClient` implements `RTCP2PSignalingChannelObserver` and will be registered into `RTCP2PSignalingChannelProtocol`'s implementation, so you can invoke its methods to notify `PeerClient` during your signaling channel implementation when a new message is coming or connection is lost.
 
@@ -48,7 +48,7 @@ Signaling channel is an implementation to transmit signaling data for creating a
 Here is a list of known issues:
 
 - Conference recording is not supported.
-- Subscribe streams with audio/video only option is not supported.
+- Subscribing streams with audio/video only option is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
 
 # 9 Video codecs {#section9}
