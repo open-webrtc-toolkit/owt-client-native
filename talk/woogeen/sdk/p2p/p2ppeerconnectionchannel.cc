@@ -1115,8 +1115,6 @@ void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
   if (runtime_name.compare("FireFox") == 0) {
     remote_side_supports_remove_stream_ = false;
     remote_side_supports_plan_b_ = false;
-    configuration_.media_codec.video_codec =
-        woogeen::base::MediaCodec::VideoCodec::VP8;
   } else {
     remote_side_supports_remove_stream_ = true;
     remote_side_supports_plan_b_ = true;
