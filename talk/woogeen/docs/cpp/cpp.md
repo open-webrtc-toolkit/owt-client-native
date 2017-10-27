@@ -54,15 +54,15 @@ Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # 8 Publish streams with customized frames {#section8}
-Customized video frames can be i420 frame from yuv file, or encoded H.264 frames.
-For raw YUV frame input, the customized video frame provider needs to implement its own frame generator extends from
+Customized video frames can be I420 frame from yuv file, or encoded H.264 frames.
+For raw YUV frame input, the customized video frame provider needs to implement its own frame generator extending from
 {@link woogeen.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 For encoded H.264 frame input, application is required to implement the customized encoder that inherits
 {@link woogeen.base.VideoEncoderInterface VideoEncoderInterface}, and is required to pass an AU to SDK according to the frame type requested per
 {@link woogeen.base.VideoEncoderInterface.EncodeOneFrame EncodeOneFrame} call.
 
-Customized audio frames provider should implement {@link woogeen.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16 bit little-endian PCM is supported. Please use {@link woogeen.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
+Customized audio frames provider should implement {@link woogeen.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16-bit little-endian PCM is supported. Please use {@link woogeen.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
 
 # 9 Known issues {#section9}
 Here is a list of known issues:
