@@ -111,7 +111,6 @@ class LocalCustomizedStreamParameters final {
  public:
   /**
     @brief Initialize a LocalCustomizedStreamParameters for YUV input.
-    Be noted the bitrate settings will be ignored for YUV input.
     @param video_enabled Indicates if video is enabled for this stream.
     @param audio_anabled Indicates if audio is enabled for this stream.
   */
