@@ -319,7 +319,7 @@ int32_t H265MSDKVideoDecoder::Decode(
 
 #ifdef WOOGEEN_DEBUG_H265_DEC
     //
-    if (e_count < 30 && input != nullptr) {
+    if (e_count < 300 && input != nullptr) {
       fwrite((void*)inputImage._buffer, inputImage._length, 1, input);
     } else if (e_count == 30 && input != nullptr) {
       fclose(input);

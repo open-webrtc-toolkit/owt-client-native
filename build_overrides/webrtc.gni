@@ -20,7 +20,7 @@ rtc_include_tests = false
 # Enable this to use H.265 encoder/decoder on Windows.
 if (is_win) {
   # TODO: Enable H.265 on Windows.
-  rtc_use_h265 = false
+  rtc_use_h265 = true
 } else {
   rtc_use_h265 = false
 }

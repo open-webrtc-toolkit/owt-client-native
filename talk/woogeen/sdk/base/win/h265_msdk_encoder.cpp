@@ -218,15 +218,13 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
 
     if ((!((m_mfxEncParams.mfx.FrameInfo.CropW & 15) ^ 8) ||
         !((m_mfxEncParams.mfx.FrameInfo.CropH & 15) ^ 8)) &&
-        (m_mfxEncParams.mfx.CodecId == MFX_CODEC_HEVC))
-    {
+        (m_mfxEncParams.mfx.CodecId == MFX_CODEC_HEVC)) {
         m_ExtHEVCParam.PicWidthInLumaSamples = m_mfxEncParams.mfx.FrameInfo.CropW;
         m_ExtHEVCParam.PicHeightInLumaSamples = m_mfxEncParams.mfx.FrameInfo.CropH;
         m_EncExtParams.push_back((mfxExtBuffer*)&m_ExtHEVCParam);
     }
 
-    if (!m_EncExtParams.empty())
-    {
+    if (!m_EncExtParams.empty()) {
         m_mfxEncParams.ExtParam = &m_EncExtParams[0]; // vector is stored linearly in memory
         m_mfxEncParams.NumExtParam = (mfxU16)m_EncExtParams.size();
     }
@@ -423,7 +421,7 @@ int H265VideoMFTEncoder::Encode(
     bool is_keyframe_required = false;
     if (frame_types) {
         for (auto frame_type : *frame_types) {
-            if (frame_type == webrtc::kVideoFrameKey) {
+            if (frame_type == webrtc::kVideoFrameKey || m_nFramesProcessed % 30 == 0) {
                 is_keyframe_required = true;
                 break;
             }
@@ -498,8 +496,7 @@ retry:
     count++;
     if (output != nullptr && count <= 20) {
         fwrite((void*)(encoded_data), encoded_data_size, 1, output);
-    }
-    else if (count == 30) {
+    } else if (count == 30) {
         fclose(output);
         output = nullptr;
     }
@@ -546,7 +543,7 @@ retry:
     scPositions[scPositionsLength] = encoded_data_size;
     header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
     for (int i = 0; i < scPositionsLength; i++) {
-        header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
+        header.fragmentationOffset[i] = scPositions[i] /* + scLengths[i]*/;
         header.fragmentationLength[i] =
             scPositions[i + 1] - header.fragmentationOffset[i];
         header.fragmentationPlType[i] = 0;
@@ -619,10 +616,10 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
 #ifdef WOOGEEN_DEBUG_H265_ENC
-    if (input != nullptr && count < 30){
-        fwrite((void*)(input_image.video_frame_buffer()->DataY(),), w*h, 1, input);
-        fwrite((void*)(input_image.video_frame_buffer()->DataU(),), w*h / 4, 1, input);
-        fwrite((void*)(input_image.video_frame_buffer()->DataV(),), w*h / 4, 1, input);
+    if (input != nullptr && count < 30) {
+        fwrite((void*)(input_image.video_frame_buffer()->DataY()), w*h, 1, input);
+        fwrite((void*)(input_image.video_frame_buffer()->DataU()), w*h / 4, 1, input);
+        fwrite((void*)(input_image.video_frame_buffer()->DataV()), w*h / 4, 1, input);
     }
 #endif
 
@@ -729,6 +726,7 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     memset(&header, 0, sizeof(header));
 
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
+    int32_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
     int32_t scPosition = 0;
     uint8_t start_code_length = 0;
@@ -739,7 +737,8 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         }
         scPosition += naluPosition;
         scPositions[scPositionsLength++] = scPosition;
-        scPosition += H265_SC_LENGTH;
+        scPosition += start_code_length;
+        scLengths[scPositionsLength - 1] = start_code_length;
     }
     if (scPositionsLength == 0) {
         LOG(LS_ERROR) << "Start code is not found for H265 codec!";
@@ -749,7 +748,7 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     scPositions[scPositionsLength] = encoded_data_size;
     header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
     for (int i = 0; i < scPositionsLength; i++) {
-        header.fragmentationOffset[i] = scPositions[i] + H265_SC_LENGTH;
+        header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
         header.fragmentationLength[i] =
             scPositions[i + 1] - header.fragmentationOffset[i];
         header.fragmentationPlType[i] = 0;
@@ -825,5 +824,7 @@ int32_t H265VideoMFTEncoder::NextNaluPosition(
     }
     return -1;
 }
+
+
 
 
