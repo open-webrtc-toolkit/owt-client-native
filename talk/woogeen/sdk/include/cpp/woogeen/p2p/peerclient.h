@@ -140,7 +140,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
   /**
    @brief Init an PeerClient instance with speficied signaling channel.
    @param configuration Configuration for creating the PTCPeerClient.
-   @param signalingChannel Signaling channel used for exchange signaling messages.
+   @param signaling_channel Signaling channel used for exchange signaling messages.
    */
   PeerClient(PeerClientConfiguration& configuration,
              std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);

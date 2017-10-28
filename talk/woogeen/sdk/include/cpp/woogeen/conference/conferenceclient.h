@@ -258,7 +258,7 @@ class ConferenceClient final
  public:
   /**
     @brief Create a ConferenceClient instance with specific configuration
-    @param config Configuration for creating the ConferenceClient.
+    @param configuration Configuration for creating the ConferenceClient.
   */
   static std::shared_ptr<ConferenceClient> Create(
       const ConferenceClientConfiguration& configuration);
