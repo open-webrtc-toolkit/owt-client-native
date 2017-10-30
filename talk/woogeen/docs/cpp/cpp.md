@@ -72,6 +72,7 @@ Here is a list of known issues:
 - woogeen-debug.lib & woogeen-release.lib is compiled as 32 bit library.
 - Bandwidth setting for publishing H264 stream does not take effect.
 - Unmix/Mix will only unmix from/mix to the first mixed stream even if multiple mixed streams are provided. To unmix from/mix to multiple mixed streams, invoke the same API multiple times with mixed stream list containing one mixed stream each time.
+- GetCurrentSourceList/SetCurrentCaptureSource is not supported for sharing application.
 
 > Note: \* Other names and brands may be claimed as the property of others.</i>
 
