@@ -61,6 +61,12 @@ class ConferenceSocketSignalingChannel
       const std::string& operation,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void SendSubscriptionControlMessage(
+      const std::string& stream_id,
+      const std::string& action,
+      const std::string& operation,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void GetRegion(
       const std::string& stream_id,
       const std::string& mixed_stream_id,

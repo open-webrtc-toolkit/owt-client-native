@@ -681,14 +681,18 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
     const {
   std::string action = "";
-  if (stream == published_stream_)
-    action = out_action;
-  else if (stream == subscribed_stream_)
-    action = in_action;
+  if (stream == published_stream_) {
+      action = out_action;
+      signaling_channel_->SendStreamControlMessage(stream->Id(), action, operation, on_success,
+          on_failure);
+  }
+  else if (stream == subscribed_stream_) {
+      action = in_action;
+      signaling_channel_->SendSubscriptionControlMessage(stream->Id(), action, operation, on_success,
+          on_failure);
+  }
   else
     RTC_DCHECK(false);
-  signaling_channel_->SendStreamControlMessage(stream->Id(), action, operation, on_success,
-                                               on_failure);
 }
 
 void ConferencePeerConnectionChannel::PlayAudio(

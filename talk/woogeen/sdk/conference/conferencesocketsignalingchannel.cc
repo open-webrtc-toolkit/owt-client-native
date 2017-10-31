@@ -27,6 +27,7 @@ const std::string kEventNameSignalingMessage = "soac"; //only for soac message
 const std::string kEventNameOnSignalingMessage = "progress";
 const std::string kEventNameOnCustomMessage = "text";
 const std::string kEventNameStreamControl = "stream-control";
+const std::string kEventNameSubscripitonControl = "subscription-control";
 const std::string kEventNameGetRegion = "get-region";
 const std::string kEventNameSetRegion = "set-region";
 const std::string kEventNameMute = "mute";
@@ -578,6 +579,31 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
          }
        },
        on_failure);
+}
+
+void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
+    const std::string& stream_id,
+    const std::string& action,
+    const std::string& operation,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    sio::message::ptr payload = sio::object_message::create();
+    payload->get_map()["id"] = sio::string_message::create(stream_id);
+    payload->get_map()["operation"] = sio::string_message::create(operation);
+    // Currently only pause/play will be processed here.
+    if (operation == "pause" || operation == "play") {
+      payload->get_map()["data"] = sio::string_message::create(action);
+    }
+
+    std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+        shared_from_this();
+    Emit(kEventNameSubscripitonControl, payload,
+        [weak_this, on_success, on_failure](sio::message::list const& msg) {
+        if (auto that = weak_this.lock()) {
+            that->OnEmitAck(msg, on_success, on_failure);
+        }
+    },
+        on_failure);
 }
 
 void ConferenceSocketSignalingChannel::GetRegion(
