@@ -113,7 +113,6 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
 
 void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (media_stream_ == nullptr) {
-    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
@@ -142,7 +141,6 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
-    RTC_DCHECK(false);
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
