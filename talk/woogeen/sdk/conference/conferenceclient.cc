@@ -744,6 +744,9 @@ void ConferenceClient::GetConnectionStats(
     std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    return;
+  }
   auto pcc = GetConferencePeerConnectionChannel(stream->Id());
   if (pcc == nullptr) {
     if (on_failure) {
