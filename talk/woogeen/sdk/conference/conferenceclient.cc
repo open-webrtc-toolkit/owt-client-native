@@ -470,60 +470,129 @@ void ConferenceClient::PlayAudio(
     std::shared_ptr<RemoteStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (!CheckSignalingChannelOnline(on_failure)) {
-    return;
-  }
-  auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
-                        on_failure)) {
-    return;
-  }
-  pc->PlayAudio(stream, on_success, on_failure);
+    if (!CheckSignalingChannelOnline(on_failure)) {
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+        std::string id;
+
+        auto label_it = subscribe_id_label_map_.find(stream->Id());
+        if (label_it != subscribe_id_label_map_.end()) {
+            id = label_it->second;
+        }
+
+        auto pcc_it = subscribe_pcs_.find(id);
+        if (pcc_it == subscribe_pcs_.end()) {
+            LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+            if (on_failure != nullptr) {
+                event_queue_->PostTask([on_failure]() {
+                    std::unique_ptr<ConferenceException> e(new ConferenceException(
+                        ConferenceException::kUnknown, "Invalid stream."));
+                    on_failure(std::move(e));
+                });
+            }
+        }
+        else {
+            pcc_it->second->PlayAudio(stream, on_success, on_failure);
+        }
+    };
 }
 
 void ConferenceClient::PauseAudio(
     std::shared_ptr<RemoteStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
-                        on_failure)) {
-    return;
-  }
-  if (!CheckSignalingChannelOnline(on_failure)) {
-    return;
-  }
-  pc->PauseAudio(stream, on_success, on_failure);
+    if (!CheckSignalingChannelOnline(on_failure)) {
+      return;
+    }
+    {
+      std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+      std::string id;
+
+      auto label_it = subscribe_id_label_map_.find(stream->Id());
+      if (label_it != subscribe_id_label_map_.end()) {
+        id = label_it->second;
+      }
+
+      auto pcc_it = subscribe_pcs_.find(id);
+      if (pcc_it == subscribe_pcs_.end()) {
+        LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+        if (on_failure != nullptr) {
+          event_queue_->PostTask([on_failure]() {
+                    std::unique_ptr<ConferenceException> e(new ConferenceException(
+                        ConferenceException::kUnknown, "Invalid stream."));
+                    on_failure(std::move(e));
+          });
+        }
+      } else {
+        pcc_it->second->PauseAudio(stream, on_success, on_failure);
+      }
+    }
 }
 
 void ConferenceClient::PlayVideo(
     std::shared_ptr<RemoteStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
-                        on_failure)) {
-    return;
-  }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  pc->PlayVideo(stream, on_success, on_failure);
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    std::string id;
+
+    auto label_it = subscribe_id_label_map_.find(stream->Id());
+    if (label_it != subscribe_id_label_map_.end()) {
+      id = label_it->second;
+    }
+
+    auto pcc_it = subscribe_pcs_.find(id);
+    if (pcc_it == subscribe_pcs_.end()) {
+      LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+      if (on_failure != nullptr) {
+          event_queue_->PostTask([on_failure]() {
+                  std::unique_ptr<ConferenceException> e(new ConferenceException(
+                      ConferenceException::kUnknown, "Invalid stream."));
+                  on_failure(std::move(e));
+          });
+       }
+    } else {
+      pcc_it->second->PlayVideo(stream, on_success, on_failure);
+    }
+  }
 }
 
 void ConferenceClient::PauseVideo(
     std::shared_ptr<RemoteStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  auto pc = GetConferencePeerConnectionChannel(stream);
-  if (!CheckNullPointer((uintptr_t)pc.get(), play_pause_failure_message,
-                        on_failure)) {
-    return;
-  }
-  if (!CheckSignalingChannelOnline(on_failure)) {
-    return;
-  }
-  pc->PauseVideo(stream, on_success, on_failure);
+    if (!CheckSignalingChannelOnline(on_failure)) {
+      return;
+    }
+    {
+      std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+      std::string id;
+
+      auto label_it = subscribe_id_label_map_.find(stream->Id());
+      if (label_it != subscribe_id_label_map_.end()) {
+        id = label_it->second;
+      }
+
+      auto pcc_it = subscribe_pcs_.find(id);
+      if (pcc_it == subscribe_pcs_.end()) {
+        LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
+        if (on_failure != nullptr) {
+           event_queue_->PostTask([on_failure]() {
+                        std::unique_ptr<ConferenceException> e(new ConferenceException(
+                            ConferenceException::kUnknown, "Invalid stream."));
+                        on_failure(std::move(e));
+                    });
+         }
+      } else {
+        pcc_it->second->PauseVideo(stream, on_success, on_failure);
+      }
+    }
 }
 
 void ConferenceClient::Leave(
