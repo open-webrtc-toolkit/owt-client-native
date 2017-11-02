@@ -330,9 +330,12 @@ void ConferenceClient::Unpublish(
           [=]() {
             if (on_success != nullptr)
               event_queue_->PostTask([on_success]() { on_success(); });
+            {
+              std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
+              publish_pcs_.erase(pcc_it);
+            }
           },
           on_failure);
-      publish_pcs_.erase(pcc_it);
     }
   }
 }
@@ -374,11 +377,14 @@ void ConferenceClient::Unsubscribe(
           [=]() {
             if (on_success != nullptr)
               event_queue_->PostTask([on_success]() { on_success(); });
+            {
+              std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+              pcc_it->second->SetStreamId(id);
+              subscribe_pcs_.erase(pcc_it);
+              subscribe_id_label_map_.erase(label_it);
+            }
           },
           on_failure);
-      pcc_it->second->SetStreamId(id);
-      subscribe_pcs_.erase(pcc_it);
-      subscribe_id_label_map_.erase(label_it);
     }
   }
 }
