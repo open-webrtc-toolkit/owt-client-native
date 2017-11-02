@@ -93,7 +93,7 @@ deps = {
   'src/third_party/gtest-parallel':
     Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + '21b383f81a2214307a5cece839206418a2ba820b',
   'src/third_party/webrtc':
-    Var('internal_ccr1_git') + '/webrtc-webrtcstack.git' + '@' + 'c0683d7c630e4097694bdcb9b3eecae88f99608c',
+    Var('internal_ccr1_git') + '/webrtc-webrtcstack.git' + '@' + 'fedda8880d2fb3b04b0b6365901ed9963b8eefa7',
   'src/third_party/resources':
     Var('internal_ccr1_git') + '/webrtc-upstream-fork.git' + '@' + '9601d1559979e1f6baa799d55c0aac7782ae47d3',
 }
