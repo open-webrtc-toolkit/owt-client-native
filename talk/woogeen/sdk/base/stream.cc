@@ -314,6 +314,11 @@ LocalCameraStream::LocalCameraStream(
         pcd_factory->CreateVideoSource(std::move(capturer), media_constraints_);
 #else
     capturer_ = ObjcVideoCapturerFactory::Create(parameters);
+    if (!capturer_) {
+      LOG(LS_ERROR) << "Failed to create capturer. Please check parameters.";
+      error_code = StreamException::kLocalNotSupported;
+      return;
+    }
     scoped_refptr<VideoTrackSourceInterface> source = capturer_->source();
 #endif
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
