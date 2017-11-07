@@ -40,6 +40,7 @@
 #include "woogeen/conference/user.h"
 #include "woogeen/conference/conferenceexception.h"
 #include "woogeen/conference/subscribeoptions.h"
+#include "woogeen/conference/externaloutput.h"
 
 namespace sio{
   class message;
@@ -499,6 +500,36 @@ class ConferenceClient final
       std::shared_ptr<Stream> stream,
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /** @cond **/
+  /**
+    @brief Start streaming corresponding stream in the conference to a specific
+    target. (Experimental API, not stable)
+  */
+  void AddExternalOutput(
+      const ExternalOutputOptions& options,
+      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Update content of a specific target. (Experimental API, not stable)
+  */
+  void UpdateExternalOutput(
+      const ExternalOutputOptions& options,
+      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+
+  /**
+    @brief Stop streaming corresponding stream in the conference to a specific
+    target. (Experimental API, not stable)
+    @param url Target URL or recorder ID. You can get it from
+    AddExternalOutput's success callback.
+  */
+  void RemoveExternalOutput(
+      const std::string& url,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  /** @endcond **/
 
  protected:
   ConferenceClient(const ConferenceClientConfiguration& configuration);

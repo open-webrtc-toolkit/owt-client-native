@@ -9,6 +9,7 @@
 #if defined(WEBRTC_IOS)
 #include <CoreFoundation/CFDate.h>
 #endif
+#include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/base/base64.h"
@@ -34,6 +35,11 @@ const std::string kEventNameMute = "mute";
 const std::string kEventNameUnmute = "unmute";
 const std::string kEventNameMix = "mix";
 const std::string kEventNameUnmix = "unmix";
+const std::string kEventNameAddExternalOutput = "addExternalOutput";
+const std::string kEventNameUpdateExternalOutput = "updateExternalOutput";
+const std::string kEventNameRemoveExternalOutput = "removeExternalOutput";
+const std::string kEventNameStartRecorder = "startRecorder";
+const std::string kEventNameStopRecorder = "stopRecorder";
 const std::string kEventNameRefreshReconnectionTicket =
     "refreshReconnectionTicket";
 const std::string kEventNameLogout = "logout";
@@ -780,6 +786,196 @@ void ConferenceSocketSignalingChannel::Unmix(
        on_failure);
 }
 
+void ConferenceSocketSignalingChannel::AddOrUpdateExternalOutput(
+    bool add_or_update, 
+    const ExternalOutputOptions& options,
+    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  std::string event_name = add_or_update ? kEventNameAddExternalOutput
+                                         : kEventNameUpdateExternalOutput;
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["streamId"] =
+      sio::string_message::create(options.stream->Id());
+  send_message->get_map()["url"] = sio::string_message::create(options.url);
+  send_message->get_map()["audio"] =
+      sio::bool_message::create(options.audio_options.enabled);
+  send_message->get_map()["video"] =
+      sio::bool_message::create(options.video_options.enabled);
+  if (options.video_options.enabled && options.video_options.resolution.width &&
+      options.video_options.resolution.width) {
+    sio::message::ptr resolution_message = sio::object_message::create();
+    resolution_message->get_map()["width"] =
+        sio::int_message::create(options.video_options.resolution.width);
+    resolution_message->get_map()["height"] =
+        sio::int_message::create(options.video_options.resolution.height);
+    send_message->get_map()["resolution"] = resolution_message;
+  }
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(event_name, send_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         // This code snip is very similar to OnEmitAck, the difference is
+         // |on_success| has an argument. Consider to combine them together.
+         sio::message::ptr ack = msg.at(0);
+         if (ack->get_flag() != sio::message::flag_string) {
+           LOG(LS_WARNING) << "The first element of emit ack is not a string.";
+           if (on_failure) {
+             std::unique_ptr<ConferenceException> e(new ConferenceException(
+                 ConferenceException::kUnknown,
+                 "Received unknown message from server."));
+             on_failure(std::move(e));
+           }
+           return;
+         }
+         if (ack->get_string() == "success") {
+           if (on_success != nullptr) {
+             std::string return_url("");
+             if (msg.size() <= 1) {
+               RTC_NOTREACHED();
+               return;
+             }
+             auto ack_data = msg.at(1);
+             if (ack_data->get_flag() != sio::message::flag_object) {
+               RTC_NOTREACHED();
+               return;
+             }
+             if (ack_data->get_map()["url"]->get_flag() !=
+                 sio::message::flag_string) {
+               RTC_NOTREACHED();
+               return;
+             }
+             return_url = ack_data->get_map()["url"]->get_string();
+             on_success(std::make_shared<ExternalOutputAck>(
+                 ExternalOutputAck(return_url)));
+           }
+           return;
+         } else {
+           LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+           if (msg.size() > 1) {
+             sio::message::ptr error_ptr = msg.at(1);
+             if (error_ptr->get_flag() == sio::message::flag_string) {
+               LOG(LS_WARNING) << "Detail negative ack message: "
+                               << error_ptr->get_string();
+             }
+           }
+           if (on_failure != nullptr) {
+             std::unique_ptr<ConferenceException> e(new ConferenceException(
+                 ConferenceException::kUnknown,
+                 "Negative acknowledgment from server."));
+             on_failure(std::move(e));
+           }
+         }
+       },
+       on_failure);
+}
+
+void ConferenceSocketSignalingChannel::RemoveExternalOutput(
+    const std::string& url,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["url"] = sio::string_message::create(url);
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(kEventNameRemoveExternalOutput, send_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         if (auto that = weak_this.lock()) {
+           that->OnEmitAck(msg, on_success, on_failure);
+         }
+       },
+       on_failure);
+}
+
+void ConferenceSocketSignalingChannel::AddOrUpdateRecorder(
+    bool add_or_update, 
+    const ExternalOutputOptions& options,
+    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["audioStreamId"] =
+      sio::string_message::create(options.stream->Id());
+  send_message->get_map()["videoStreamId"] =
+      sio::string_message::create(options.stream->Id());
+  send_message->get_map()["audioCodec"] = sio::string_message::create(
+      MediaUtils::AudioCodecToString(options.audio_options.codec));
+  send_message->get_map()["videoCodec"] = sio::string_message::create(
+      MediaUtils::VideoCodecToString(options.video_options.codec));
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(kEventNameStartRecorder, send_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         // This code snip is very similar to OnEmitAck, the difference is
+         // |on_success| has an argument. Consider to combine them together.
+         sio::message::ptr ack = msg.at(0);
+         if (ack->get_flag() != sio::message::flag_string) {
+           LOG(LS_WARNING) << "The first element of emit ack is not a string.";
+           if (on_failure) {
+             std::unique_ptr<ConferenceException> e(new ConferenceException(
+                 ConferenceException::kUnknown,
+                 "Received unknown message from server."));
+             on_failure(std::move(e));
+           }
+           return;
+         }
+         if (ack->get_string() == "success") {
+           if (on_success != nullptr) {
+             std::string return_url("");
+             if (msg.size() <= 1) {
+               RTC_NOTREACHED();
+               return;
+             }
+             auto ack_data = msg.at(1);
+             if (ack_data->get_flag() != sio::message::flag_object) {
+               RTC_NOTREACHED();
+               return;
+             }
+             if (ack_data->get_map()["recorderId"]->get_flag() !=
+                 sio::message::flag_string) {
+               RTC_NOTREACHED();
+               return;
+             }
+             return_url = ack_data->get_map()["recorderId"]->get_string();
+             on_success(std::make_shared<ExternalOutputAck>(
+                 ExternalOutputAck(return_url)));
+           }
+           return;
+         } else {
+           LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+           if (msg.size() > 1) {
+             sio::message::ptr error_ptr = msg.at(1);
+             if (error_ptr->get_flag() == sio::message::flag_string) {
+               LOG(LS_WARNING) << "Detail negative ack message: "
+                               << error_ptr->get_string();
+             }
+           }
+           if (on_failure != nullptr) {
+             std::unique_ptr<ConferenceException> e(new ConferenceException(
+                 ConferenceException::kUnknown,
+                 "Negative acknowledgment from server."));
+             on_failure(std::move(e));
+           }
+         }
+       },
+       on_failure);
+}
+
+void ConferenceSocketSignalingChannel::RemoveRecorder(
+    const std::string& url,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  sio::message::ptr send_message = sio::object_message::create();
+  send_message->get_map()["recorderId"] = sio::string_message::create(url);
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(kEventNameStopRecorder, send_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         if (auto that = weak_this.lock()) {
+           that->OnEmitAck(msg, on_success, on_failure);
+         }
+       },
+       on_failure);
+}
+
 void ConferenceSocketSignalingChannel::OnEmitAck(
     sio::message::list const& msg,
     std::function<void()> on_success,
@@ -790,7 +986,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     if (on_failure) {
       std::unique_ptr<ConferenceException> e(
           new ConferenceException(ConferenceException::kUnknown,
-                                  "Received unkown message from server."));
+                                  "Received unknown message from server."));
       on_failure(std::move(e));
     }
     return;
@@ -812,7 +1008,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(
           new ConferenceException(ConferenceException::kUnknown,
-                                  "Negative acknowledgement from server."));
+                                  "Negative acknowledgment from server."));
       on_failure(std::move(e));
     }
   }
@@ -931,7 +1127,7 @@ void ConferenceSocketSignalingChannel::Emit(
         {
           std::lock_guard<std::mutex> lock(that->outgoing_message_mutex_);
           if (that->outgoing_messages_.empty()) {
-            RTC_NOTREACHED();
+            //RTC_NOTREACHED();
             return;
           }
           /*RTC_DCHECK_EQ(message_id, that->outgoing_messages_.front().id)

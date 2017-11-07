@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include "talk/woogeen/sdk/base/mediautils.h"
+#include "webrtc/base/checks.h"
 
 namespace woogeen {
 namespace base {
@@ -22,6 +23,42 @@ namespace base {
       }
     }
     return "";
+  }
+
+  std::string MediaUtils::AudioCodecToString(
+      const MediaCodec::AudioCodec& audio_codec) {
+    switch (audio_codec) {
+      case MediaCodec::AudioCodec::OPUS:
+        return "opus";
+      case MediaCodec::AudioCodec::ISAC:
+        return "isac";
+      case MediaCodec::AudioCodec::G722:
+        return "g722";
+      case MediaCodec::AudioCodec::PCMU:
+        return "pcmu";
+      case MediaCodec::AudioCodec::PCMA:
+        return "pcma";
+      default:
+        RTC_NOTREACHED();
+        return "";
+    }
+  }
+
+  std::string MediaUtils::VideoCodecToString(
+      const MediaCodec::VideoCodec& video_codec) {
+    switch (video_codec) {
+      case MediaCodec::VideoCodec::VP8:
+        return "vp8";
+      case MediaCodec::VideoCodec::H264:
+        return "h264";
+      case MediaCodec::VideoCodec::VP9:
+        return "vp9";
+      case MediaCodec::VideoCodec::H265:
+        return "h265";
+      default:
+        RTC_NOTREACHED();
+        return "";
+    }
   }
 }
 }

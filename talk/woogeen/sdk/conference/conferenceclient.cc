@@ -814,6 +814,59 @@ void ConferenceClient::Unmix(
                             RunInEventQueue(on_success), on_failure);
 }
 
+void ConferenceClient::AddExternalOutput(
+    const ExternalOutputOptions& options,
+    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)options.stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  if (options.url != "file") {
+    signaling_channel_->AddOrUpdateExternalOutput(true, options, on_success,
+                                                  on_failure);
+  } else {
+    signaling_channel_->AddOrUpdateRecorder(true, options, on_success,
+                                            on_failure);
+  }
+}
+
+void ConferenceClient::UpdateExternalOutput(
+    const ExternalOutputOptions& options,
+    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)options.stream.get(), on_failure)) {
+    return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  if (options.url != "file") {
+    signaling_channel_->AddOrUpdateExternalOutput(false, options, on_success,
+                                                  on_failure);
+  } else {
+    RTC_NOTREACHED() << "Update recorder is not supported.";
+  }
+}
+
+void ConferenceClient::RemoveExternalOutput(
+    const std::string& url,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    return;
+  }
+  std::string rtsp("rtsp://");
+  std::string rtmp("rtmp://");
+  if (url.compare(0, rtsp.size(), rtsp) || url.compare(0, rtmp.size(), rtmp)) {
+    signaling_channel_->RemoveRecorder(url, on_success, on_failure);
+  } else {
+    signaling_channel_->RemoveRecorder(url, on_success, on_failure);
+  }
+}
+
 void ConferenceClient::GetConnectionStats(
     std::shared_ptr<Stream> stream,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,

@@ -12,6 +12,8 @@ namespace base {
 class MediaUtils {
  public:
   static std::string GetResolutionName(const Resolution& resolution);
+  static std::string AudioCodecToString(const MediaCodec::AudioCodec& audio_codec);
+  static std::string VideoCodecToString(const MediaCodec::VideoCodec& video_codec);
 };
 }
 }

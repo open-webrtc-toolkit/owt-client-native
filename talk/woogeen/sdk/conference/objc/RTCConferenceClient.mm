@@ -17,6 +17,7 @@
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceClient+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
+#import "talk/woogeen/sdk/conference/objc/RTCExternalOutput+Internal.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
@@ -400,6 +401,55 @@ PlayPauseFailureCallback(FailureBlock on_failure,
         if (onSuccess) {
           onSuccess([[RTCConnectionStats alloc]
               initWithNativeStats:*native_stats]);
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)
+addExternalOutputWithOptions:(RTCExternalOutputOptions*)options
+                   onSuccess:(nullable void (^)(RTCExternalOutputAck*))onSuccess
+                   onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeConferenceClient->AddExternalOutput(
+      [options nativeOptions],
+      [=](std::shared_ptr<woogeen::conference::ExternalOutputAck> native_ack) {
+        if (onSuccess) {
+          onSuccess(
+              [[RTCExternalOutputAck alloc] initWithNativeAck:*native_ack.get()]);
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)updateExternalOutputWithOptions:(RTCExternalOutputOptions*)options
+                              onSuccess:(nullable void (^)(
+                                            RTCExternalOutputAck*))onSuccess
+                              onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeConferenceClient->UpdateExternalOutput(
+      [options nativeOptions],
+      [=](std::shared_ptr<woogeen::conference::ExternalOutputAck> native_ack) {
+        if (onSuccess) {
+          onSuccess([[RTCExternalOutputAck alloc]
+              initWithNativeAck:*native_ack.get()]);
+        }
+      },
+      [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
+- (void)removeExternalOutputWithOptions:(NSString*)url
+                              onSuccess:(nullable void (^)())onSuccess
+                              onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeConferenceClient->RemoveExternalOutput(
+      [NSString stdStringForString:url],
+      [=]() {
+        if (onSuccess) {
+          onSuccess();
         }
       },
       [=](std::unique_ptr<woogeen::conference::ConferenceException> e) {

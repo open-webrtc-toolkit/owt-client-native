@@ -36,6 +36,7 @@
 #import "Woogeen/RTCConferenceSubscribeOptions.h"
 #import "Woogeen/RTCConferenceUser.h"
 #import "Woogeen/RTCConnectionStats.h"
+#import "Woogeen/RTCExternalOutput.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -181,6 +182,35 @@ RTC_EXPORT
                           onSuccess:
                               (nullable void (^)(RTCConnectionStats*))onSuccess
                           onFailure:(nullable void (^)(NSError*))onFailure;
+
+/**
+  @brief Start streaming corresponding stream in the conference to a specific
+  target. (Experimental API, not stable)
+*/
+- (void)
+addExternalOutputWithOptions:(RTCExternalOutputOptions*)options
+                   onSuccess:(nullable void (^)(RTCExternalOutputAck*))onSuccess
+                   onFailure:(nullable void (^)(NSError*))onFailure;
+
+/**
+  @brief Start streaming corresponding stream in the conference to a specific
+  target. (Experimental API, not stable)
+*/
+- (void)updateExternalOutputWithOptions:(RTCExternalOutputOptions*)options
+                              onSuccess:(nullable void (^)(
+                                            RTCExternalOutputAck*))onSuccess
+                              onFailure:(nullable void (^)(NSError*))onFailure;
+
+/**
+  @brief Start streaming corresponding stream in the conference to a specific
+  target. (Experimental API, not stable)
+  @param url Target URL or recorder ID. You can get it from addExternalOutput's
+  success callback. |url| may be changed to NSURL later.
+*/
+- (void)removeExternalOutputWithOptions:(NSString*)url
+                              onSuccess:(nullable void (^)())onSuccess
+                              onFailure:(nullable void (^)(NSError*))onFailure;
+
 /**
   @brief Leave current conference.
 */

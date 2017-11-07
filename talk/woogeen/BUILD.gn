@@ -237,6 +237,7 @@ source_set("woogeen_sdk_conf") {
     "sdk/conference/remotemixedstream.cc",
     "sdk/include/cpp/woogeen/conference/conferenceclient.h",
     "sdk/include/cpp/woogeen/conference/conferenceexception.h",
+    "sdk/include/cpp/woogeen/conference/externaloutput.h",
     "sdk/include/cpp/woogeen/conference/remotemixedstream.h",
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
@@ -326,6 +327,7 @@ if (is_ios) {
       "sdk/conference/objc/RTCConferenceSubscribeOptions.mm",
       "sdk/conference/objc/RTCConferenceUser+Internal.h",
       "sdk/conference/objc/RTCConferenceUser.mm",
+      "sdk/conference/objc/RTCExternalOutput.mm",
       "sdk/conference/objc/RTCRemoteMixedStream.mm",
       "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h",
       "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.mm",
@@ -335,6 +337,7 @@ if (is_ios) {
       "sdk/conference/objc/public/RTCConferenceErrors.h",
       "sdk/conference/objc/public/RTCConferenceSubscribeOptions.h",
       "sdk/conference/objc/public/RTCConferenceUser.h",
+      "sdk/conference/objc/public/RTCExternalOutput.h",
       "sdk/conference/objc/public/RTCRemoteMixedStream.h",
       "sdk/conference/objc/public/RTCRemoteMixedStreamObserver.h",
       "sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h",

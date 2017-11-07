@@ -100,6 +100,25 @@ class ConferenceSocketSignalingChannel
       std::vector<std::string>& mixed_stream_ids,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void AddOrUpdateExternalOutput(
+      bool add_or_update,  // true for add, false for update.
+      const ExternalOutputOptions& options,
+      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void RemoveExternalOutput(
+      const std::string& url,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  // ExternalOutput and recording are designed to be combined later.
+  virtual void AddOrUpdateRecorder(
+      bool add_or_update,  // true for add, false for update.
+      const ExternalOutputOptions& options,
+      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void RemoveRecorder(
+      const std::string& url,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void Disconnect(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
