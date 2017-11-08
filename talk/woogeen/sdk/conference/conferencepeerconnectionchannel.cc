@@ -239,8 +239,7 @@ void ConferencePeerConnectionChannel::OnIceCandidate(
   candidate->ToString(&candidate_string);
   candidate_string.insert(0, "a=");
   sio::message::ptr message = sio::object_message::create();
-  // TODO(jianlin): switch to GetSessionId() when ready.
-  message->get_map()["id"] = sio::string_message::create(GetStreamId());
+  message->get_map()["id"] = sio::string_message::create(session_id_);
   sio::message::ptr sdp_message = sio::object_message::create();
   sdp_message->get_map()["type"] = sio::string_message::create("candidate");
   sio::message::ptr candidate_message = sio::object_message::create();
@@ -291,9 +290,7 @@ void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   desc->ToString(&sdp);
   sio::message::ptr message = sio::object_message::create();
   LOG(LS_INFO) << "Local SDP for stream: " << GetStreamId();
-  // TODO(jianlin): This should be updated to GetSessionId() when
-  // we move from stream ID to session ID for pub/sub identification.
-  message->get_map()["id"] = sio::string_message::create(GetStreamId());
+  message->get_map()["id"] = sio::string_message::create(session_id_);
   sio::message::ptr sdp_message = sio::object_message::create();
   sdp_message->get_map()["type"] = sio::string_message::create(desc->type());
   sdp_message->get_map()["sdp"] = sio::string_message::create(sdp);
@@ -516,10 +513,9 @@ void ConferencePeerConnectionChannel::Subscribe(
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
       stream->has_video_);
-  // The stream's id will be replaced by session id once subscription succeeds.
-  signaling_channel_->SendInitializationMessage(sio_options, "", stream->Id(), [this]() {
-    CreateOffer();
-  }, on_failure);  // TODO: on_failure
+  signaling_channel_->SendInitializationMessage(
+      sio_options, "", stream->Id(), [this]() { CreateOffer(); },
+      on_failure);  // TODO: on_failure
 }
 
 void ConferencePeerConnectionChannel::Subscribe(
@@ -668,7 +664,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
     return;
   }
   connected_ = false;
-  signaling_channel_->SendStreamEvent("unsubscribe", stream->Id(),
+  signaling_channel_->SendStreamEvent("unsubscribe", session_id_,
       RunInEventQueue(on_success), on_failure);
 }
 
@@ -683,13 +679,13 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
   std::string action = "";
   if (stream == published_stream_) {
       action = out_action;
-      signaling_channel_->SendStreamControlMessage(stream->Id(), action, operation, on_success,
-          on_failure);
+      signaling_channel_->SendStreamControlMessage(
+          session_id_, action, operation, on_success, on_failure);
   }
   else if (stream == subscribed_stream_) {
       action = in_action;
-      signaling_channel_->SendSubscriptionControlMessage(stream->Id(), action, operation, on_success,
-          on_failure);
+      signaling_channel_->SendSubscriptionControlMessage(
+          session_id_, action, operation, on_success, on_failure);
   }
   else
     RTC_DCHECK(false);
@@ -833,14 +829,10 @@ void ConferencePeerConnectionChannel::DrainIceCandidates() {
 
 void ConferencePeerConnectionChannel::SetStreamId(const std::string& id) {
   LOG(LS_INFO) << "Setting stream ID " << id;
-  if (published_stream_ == nullptr && subscribed_stream_ == nullptr) {
-    RTC_DCHECK(false);
-  } else if (published_stream_ != nullptr) {
+  if (published_stream_ != nullptr) {
     published_stream_->Id(id);
   }
-  else if (subscribed_stream_ != nullptr) {
-    subscribed_stream_->Id(id);
-  }
+  SetSessionId(id);
 }
 
 void ConferencePeerConnectionChannel::SetSessionId(const std::string& id) {

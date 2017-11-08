@@ -461,9 +461,9 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
            }
            std::string stream_id = msg.at(1)->get_map()["id"]->get_string();
            if (event_name == "subscribe") {
-             // replace stream's id with session ID.
+             // Notify PeerConnectionChannel.
                for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-                 (*it)->OnRemoteStreamId(stream_id, subscribe_stream_label);
+                 (*it)->OnSubscriptionId(stream_id, subscribe_stream_label);
                }
              on_success();
              return;

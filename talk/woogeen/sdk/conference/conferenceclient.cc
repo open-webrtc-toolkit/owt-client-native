@@ -361,7 +361,7 @@ void ConferenceClient::Unsubscribe(
         id = label_it->second;
     }
 
-    auto pcc_it = subscribe_pcs_.find(id);
+    auto pcc_it = subscribe_pcs_.find(stream->Id());
     if (pcc_it == subscribe_pcs_.end()) {
       LOG(LS_ERROR) << "Cannot find peerconnection channel for stream.";
       if (on_failure != nullptr) {
@@ -379,9 +379,8 @@ void ConferenceClient::Unsubscribe(
               event_queue_->PostTask([on_success]() { on_success(); });
             {
               std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
-              pcc_it->second->SetStreamId(id);
               subscribe_pcs_.erase(pcc_it);
-              subscribe_id_label_map_.erase(label_it);
+              subscribe_id_label_map_.erase(id);
             }
           },
           on_failure);
@@ -950,16 +949,15 @@ void ConferenceClient::OnStreamId(const std::string& id,
   pcc->SetStreamId(id);
 }
 
-void ConferenceClient::OnRemoteStreamId(const std::string& id,
-    const std::string& subscribe_stream_label) {
-    {
-      std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
-      subscribe_id_label_map_[id] = subscribe_stream_label;
-    }
-
-    auto pcc = GetConferencePeerConnectionChannel(id);
-    RTC_CHECK(pcc != nullptr);
-    pcc->SetStreamId(id);
+void ConferenceClient::OnSubscriptionId(const std::string& subscription_id,
+                                        const std::string& stream_id) {
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    subscribe_id_label_map_[subscription_id] = stream_id;
+  }
+  auto pcc = GetConferencePeerConnectionChannel(stream_id);
+  RTC_CHECK(pcc != nullptr);
+  pcc->SetStreamId(subscription_id);
 }
 
 bool ConferenceClient::CheckNullPointer(

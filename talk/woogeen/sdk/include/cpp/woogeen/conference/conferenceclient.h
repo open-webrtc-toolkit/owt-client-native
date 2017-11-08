@@ -129,10 +129,10 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
   virtual void OnSignalingMessage(std::shared_ptr<sio::message> message) = 0;
   virtual void OnStreamError(std::shared_ptr<sio::message> stream) = 0;
-  // Notify the ID for a published stream.
+  // Notify the ID for a published/subscribed stream.
   virtual void OnStreamId(const std::string& id, const std::string& label) = 0;
-  // Notify the ID for a subscribed stream.
-  virtual void OnRemoteStreamId(const std::string& id, const std::string& label) = 0;
+  virtual void OnSubscriptionId(const std::string& subscription_id,
+                                const std::string& stream_id) = 0;
 };
 
 // ConferencePeerConnectionChannel callback interface.
@@ -516,8 +516,8 @@ class ConferenceClient final
   virtual void OnServerDisconnected() override;
   virtual void OnStreamId(const std::string& id,
                           const std::string& publish_stream_label) override;
-  virtual void OnRemoteStreamId(const std::string& id,
-                                const std::string& subscribe_stream_label) override;
+  virtual void OnSubscriptionId(const std::string& subscription_id,
+                                const std::string& stream_id) override;
   // Implementing ConferencePeerConnectionChannelObserver.
   virtual void OnStreamError(
       std::shared_ptr<Stream> stream,
