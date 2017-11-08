@@ -64,7 +64,7 @@ TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video
     'voice_engine_unittests']
 TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
-TEST_SIMULATOR_DEVICE = 'iPhone 7'
+TEST_SIMULATOR_DEVICE = 'iPhone X'
 
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
