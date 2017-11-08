@@ -32,6 +32,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 #include "woogeen/base/clientconfiguration.h"
 #include "woogeen/base/connectionstats.h"
@@ -628,8 +629,23 @@ class ConferenceClient final
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>>
       added_streams_;
   std::unordered_map<std::string, StreamType> added_stream_type_;
-  // Key is user's ID
+  // Key is user's ID.
   std::unordered_map<std::string, std::shared_ptr<User>> participants;
+  // Key is the URL of external output, value is subscription ID.
+  std::unordered_map<std::string, std::string> external_output_subscription;
+  // Key is subscription ID, value is the URL of external output.
+  std::unordered_map<std::string, std::string> subscription_external_output;
+  // Callbacks for start recorder, key is subscription ID.
+  std::unordered_map<std::string,
+                     std::function<void(std::shared_ptr<ExternalOutputAck>)>>
+      recorder_success_callback;
+  std::unordered_map<std::string,
+                     std::function<void(std::unique_ptr<ConferenceException>)>>
+      recorder_failure_callback;
+  // Key is recorder's path, value is subscription ID.
+  std::unordered_map<std::string, std::string> recorder_path_subscription;
+  // Key is subscription ID, value is recorder's path.
+  std::unordered_map<std::string, std::string> subscription_recorder_path;
   // Capturing observer in |event_queue_| is not 100% safe although above queue
   // is excepted to be ended after ConferenceClient is destroyed.
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;

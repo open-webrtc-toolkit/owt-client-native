@@ -27,19 +27,18 @@ const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message
 const std::string kEventNameOnSignalingMessage = "progress";
 const std::string kEventNameOnCustomMessage = "text";
+const std::string kEventNameSubscribe = "subscribe";
+const std::string kEventNameUnsubscribe = "unsubscribe";
 const std::string kEventNameStreamControl = "stream-control";
-const std::string kEventNameSubscripitonControl = "subscription-control";
+const std::string kEventNameSubscriptionControl = "subscription-control";
 const std::string kEventNameGetRegion = "get-region";
 const std::string kEventNameSetRegion = "set-region";
 const std::string kEventNameMute = "mute";
 const std::string kEventNameUnmute = "unmute";
 const std::string kEventNameMix = "mix";
 const std::string kEventNameUnmix = "unmix";
-const std::string kEventNameAddExternalOutput = "addExternalOutput";
-const std::string kEventNameUpdateExternalOutput = "updateExternalOutput";
-const std::string kEventNameRemoveExternalOutput = "removeExternalOutput";
-const std::string kEventNameStartRecorder = "startRecorder";
-const std::string kEventNameStopRecorder = "stopRecorder";
+const std::string kEventNameExternalOutput = "streaming";
+const std::string kEventNameRecording = "recording";
 const std::string kEventNameRefreshReconnectionTicket =
     "refreshReconnectionTicket";
 const std::string kEventNameLogout = "logout";
@@ -439,7 +438,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
   if (publish_stream_label != "")
     event_name = "publish";
   else if (subscribe_stream_label != "")
-    event_name = "subscribe";
+    event_name = kEventNameSubscribe;
   Emit(event_name, message_list,
        [=](sio::message::list const& msg) {
          LOG(LS_INFO) << "Received ack from server.";
@@ -603,7 +602,7 @@ void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
 
     std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
         shared_from_this();
-    Emit(kEventNameSubscripitonControl, payload,
+    Emit(kEventNameSubscriptionControl, payload,
         [weak_this, on_success, on_failure](sio::message::list const& msg) {
         if (auto that = weak_this.lock()) {
             that->OnEmitAck(msg, on_success, on_failure);
@@ -786,33 +785,62 @@ void ConferenceSocketSignalingChannel::Unmix(
        on_failure);
 }
 
-void ConferenceSocketSignalingChannel::AddOrUpdateExternalOutput(
-    bool add_or_update, 
+void ConferenceSocketSignalingChannel::AddExternalOutput(
     const ExternalOutputOptions& options,
-    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void(std::shared_ptr<SignalingSubscriptionAck>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  std::string event_name = add_or_update ? kEventNameAddExternalOutput
-                                         : kEventNameUpdateExternalOutput;
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["streamId"] =
-      sio::string_message::create(options.stream->Id());
-  send_message->get_map()["url"] = sio::string_message::create(options.url);
-  send_message->get_map()["audio"] =
-      sio::bool_message::create(options.audio_options.enabled);
-  send_message->get_map()["video"] =
-      sio::bool_message::create(options.video_options.enabled);
-  if (options.video_options.enabled && options.video_options.resolution.width &&
-      options.video_options.resolution.width) {
-    sio::message::ptr resolution_message = sio::object_message::create();
-    resolution_message->get_map()["width"] =
-        sio::int_message::create(options.video_options.resolution.width);
-    resolution_message->get_map()["height"] =
-        sio::int_message::create(options.video_options.resolution.height);
-    send_message->get_map()["resolution"] = resolution_message;
+  send_message->get_map()["type"] =
+      sio::string_message::create(kEventNameExternalOutput);
+  sio::message::ptr connection_message = sio::object_message::create();
+  connection_message->get_map()["url"] =
+      sio::string_message::create(options.url);
+  send_message->get_map()["connection"] = connection_message;
+  sio::message::ptr media_message = sio::object_message::create();
+  send_message->get_map()["media"] = media_message;
+  if (options.audio_options.enabled) {
+    sio::message::ptr audio_message = sio::object_message::create();
+    media_message->get_map()["audio"] = audio_message;
+    audio_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+    sio::message::ptr audio_format_message = sio::object_message::create();
+    audio_message->get_map()["format"] = audio_format_message;
+    audio_format_message->get_map()["codec"] = sio::string_message::create(
+        MediaUtils::AudioCodecToString(options.audio_options.codec));
+        // TODO: It should be fetched from media info.
+    if (options.audio_options.codec == MediaCodec::AudioCodec::OPUS) {
+      audio_format_message->get_map()["sampleRate"] =
+          sio::int_message::create(48000);
+      audio_format_message->get_map()["channelNum"] =
+          sio::int_message::create(2);
+    } else if (options.audio_options.codec == MediaCodec::AudioCodec::ISAC) {
+      audio_format_message->get_map()["sampleRate"] =
+          sio::int_message::create(8000);
+      audio_format_message->get_map()["channelNum"] =
+          sio::int_message::create(2);
+    }
+  }
+  if (options.video_options.enabled) {
+    sio::message::ptr video_message = sio::object_message::create();
+    media_message->get_map()["video"] = video_message;
+    video_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+    sio::message::ptr video_format_message = sio::object_message::create();
+    video_message->get_map()["format"] = video_format_message;
+    video_format_message->get_map()["codec"] = sio::string_message::create(
+        MediaUtils::VideoCodecToString(options.video_options.codec));
+    if (options.video_options.resolution.width &&
+        options.video_options.resolution.height) {
+      sio::message::ptr video_parameters_message =
+          sio::object_message::create();
+      video_message->get_map()["parameters"] = video_parameters_message;
+      video_parameters_message->get_map()["resolution"] =
+          ResolutionMessage(options.video_options.resolution);
+    }
   }
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(event_name, send_message,
+  Emit("subscribe", send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          // This code snip is very similar to OnEmitAck, the difference is
          // |on_success| has an argument. Consider to combine them together.
@@ -827,9 +855,9 @@ void ConferenceSocketSignalingChannel::AddOrUpdateExternalOutput(
            }
            return;
          }
-         if (ack->get_string() == "success") {
+         if (ack->get_string() == "ok") {
            if (on_success != nullptr) {
-             std::string return_url("");
+             std::string subscription_id("");
              if (msg.size() <= 1) {
                RTC_NOTREACHED();
                return;
@@ -839,14 +867,14 @@ void ConferenceSocketSignalingChannel::AddOrUpdateExternalOutput(
                RTC_NOTREACHED();
                return;
              }
-             if (ack_data->get_map()["url"]->get_flag() !=
+             if (ack_data->get_map()["id"]->get_flag() !=
                  sio::message::flag_string) {
                RTC_NOTREACHED();
                return;
              }
-             return_url = ack_data->get_map()["url"]->get_string();
-             on_success(std::make_shared<ExternalOutputAck>(
-                 ExternalOutputAck(return_url)));
+             subscription_id = ack_data->get_map()["id"]->get_string();
+             on_success(std::make_shared<SignalingSubscriptionAck>(
+                 SignalingSubscriptionAck(subscription_id)));
            }
            return;
          } else {
@@ -869,40 +897,128 @@ void ConferenceSocketSignalingChannel::AddOrUpdateExternalOutput(
        on_failure);
 }
 
-void ConferenceSocketSignalingChannel::RemoveExternalOutput(
-    const std::string& url,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["url"] = sio::string_message::create(url);
-  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
-      shared_from_this();
-  Emit(kEventNameRemoveExternalOutput, send_message,
-       [weak_this, on_success, on_failure](sio::message::list const& msg) {
-         if (auto that = weak_this.lock()) {
-           that->OnEmitAck(msg, on_success, on_failure);
-         }
-       },
-       on_failure);
-}
-
-void ConferenceSocketSignalingChannel::AddOrUpdateRecorder(
-    bool add_or_update, 
+void ConferenceSocketSignalingChannel::UpdateSubscription(
+    const std::string& subscription_id,
     const ExternalOutputOptions& options,
-    std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+    std::function<void()> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  // TODO(jianjunz): This function can re-use AddExternalOutput or
+  // UpdateSubscription. But we don't know how server side REST API will change
+  // at this time. So this function is a ugly copy-paste from AddExternalOutput.
   sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["audioStreamId"] =
-      sio::string_message::create(options.stream->Id());
-  send_message->get_map()["videoStreamId"] =
-      sio::string_message::create(options.stream->Id());
-  send_message->get_map()["audioCodec"] = sio::string_message::create(
-      MediaUtils::AudioCodecToString(options.audio_options.codec));
-  send_message->get_map()["videoCodec"] = sio::string_message::create(
-      MediaUtils::VideoCodecToString(options.video_options.codec));
+  send_message->get_map()["id"] = sio::string_message::create(subscription_id);
+  sio::message::ptr connection_message = sio::object_message::create();
+  connection_message->get_map()["operation"] =
+      sio::string_message::create("update");
+  sio::message::ptr media_message = sio::object_message::create();
+  send_message->get_map()["data"] = media_message;
+  if (options.audio_options.enabled) {
+    sio::message::ptr audio_message = sio::object_message::create();
+    media_message->get_map()["audio"] = audio_message;
+    audio_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+  }
+  if (options.video_options.enabled) {
+    sio::message::ptr video_message = sio::object_message::create();
+    media_message->get_map()["video"] = video_message;
+    video_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+    if (options.video_options.resolution.width &&
+        options.video_options.resolution.height) {
+      sio::message::ptr video_parameters_message =
+          sio::object_message::create();
+      video_message->get_map()["parameters"] = video_parameters_message;
+      video_parameters_message->get_map()["resolution"] =
+          ResolutionMessage(options.video_options.resolution);
+    }
+  }
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
-  Emit(kEventNameStartRecorder, send_message,
+  Emit(kEventNameSubscriptionControl, send_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         if (auto that = weak_this.lock()) {
+           that->OnEmitAck(msg, on_success, on_failure);
+         }
+       },
+       on_failure);
+}
+
+void ConferenceSocketSignalingChannel::Unsubscribe(
+    const std::string& id,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  sio::message::ptr unsubscribe_message = sio::object_message::create();
+  unsubscribe_message->get_map()["id"] = sio::string_message::create(id);
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(kEventNameUnsubscribe, unsubscribe_message,
+       [weak_this, on_success, on_failure](sio::message::list const& msg) {
+         if (auto that = weak_this.lock()) {
+           that->OnEmitAck(msg, on_success, on_failure);
+         }
+       },
+       on_failure);
+}
+
+void ConferenceSocketSignalingChannel::AddRecorder(
+    const ExternalOutputOptions& options,
+    std::function<void(std::shared_ptr<SignalingSubscriptionAck>)> on_success,
+    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+  // TODO(jianjunz): This function can re-use AddExternalOutput or
+  // Subscribe. But we don't know how server side REST API will change
+  // at this time. So this function is a ugly copy-paste from AddExternalOutput.
+  sio::message::ptr send_message = sio::object_message::create();
+  sio::message::ptr connection_message = sio::object_message::create();
+  connection_message->get_map()["container"] =
+      sio::string_message::create("auto");
+  send_message->get_map()["connection"] = connection_message;
+  send_message->get_map()["type"] =
+      sio::string_message::create(kEventNameRecording);
+  sio::message::ptr media_message = sio::object_message::create();
+  send_message->get_map()["media"] = media_message;
+  if (options.audio_options.enabled) {
+    sio::message::ptr audio_message = sio::object_message::create();
+    media_message->get_map()["audio"] = audio_message;
+    audio_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+    sio::message::ptr audio_format_message = sio::object_message::create();
+    audio_message->get_map()["format"] = audio_format_message;
+    audio_format_message->get_map()["codec"] = sio::string_message::create(
+        MediaUtils::AudioCodecToString(options.audio_options.codec));
+    // TODO: It should be fetched from media info.
+    if (options.audio_options.codec == MediaCodec::AudioCodec::OPUS) {
+      audio_format_message->get_map()["sampleRate"] =
+          sio::int_message::create(48000);
+      audio_format_message->get_map()["channelNum"] =
+          sio::int_message::create(2);
+    } else if (options.audio_options.codec == MediaCodec::AudioCodec::ISAC) {
+      audio_format_message->get_map()["sampleRate"] =
+          sio::int_message::create(8000);
+      audio_format_message->get_map()["channelNum"] =
+          sio::int_message::create(2);
+    }
+  }
+  if (options.video_options.enabled) {
+    sio::message::ptr video_message = sio::object_message::create();
+    media_message->get_map()["video"] = video_message;
+    video_message->get_map()["from"] =
+        sio::string_message::create(options.stream->Id());
+    sio::message::ptr video_format_message = sio::object_message::create();
+    video_message->get_map()["format"] = video_format_message;
+    video_format_message->get_map()["codec"] = sio::string_message::create(
+        MediaUtils::VideoCodecToString(options.video_options.codec));
+    if (options.video_options.resolution.width &&
+        options.video_options.resolution.height) {
+      sio::message::ptr video_parameters_message =
+          sio::object_message::create();
+      video_message->get_map()["parameters"] = video_parameters_message;
+      video_parameters_message->get_map()["resolution"] =
+          ResolutionMessage(options.video_options.resolution);
+    }
+  }
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+      shared_from_this();
+  Emit(kEventNameSubscribe, send_message,
        [weak_this, on_success, on_failure](sio::message::list const& msg) {
          // This code snip is very similar to OnEmitAck, the difference is
          // |on_success| has an argument. Consider to combine them together.
@@ -917,9 +1033,9 @@ void ConferenceSocketSignalingChannel::AddOrUpdateRecorder(
            }
            return;
          }
-         if (ack->get_string() == "success") {
+         if (ack->get_string() == "ok") {
            if (on_success != nullptr) {
-             std::string return_url("");
+             std::string subscription_id("");
              if (msg.size() <= 1) {
                RTC_NOTREACHED();
                return;
@@ -929,14 +1045,14 @@ void ConferenceSocketSignalingChannel::AddOrUpdateRecorder(
                RTC_NOTREACHED();
                return;
              }
-             if (ack_data->get_map()["recorderId"]->get_flag() !=
+             if (ack_data->get_map()["id"]->get_flag() !=
                  sio::message::flag_string) {
                RTC_NOTREACHED();
                return;
              }
-             return_url = ack_data->get_map()["recorderId"]->get_string();
-             on_success(std::make_shared<ExternalOutputAck>(
-                 ExternalOutputAck(return_url)));
+             subscription_id = ack_data->get_map()["id"]->get_string();
+             on_success(std::make_shared<SignalingSubscriptionAck>(
+                 SignalingSubscriptionAck(subscription_id)));
            }
            return;
          } else {
@@ -954,23 +1070,6 @@ void ConferenceSocketSignalingChannel::AddOrUpdateRecorder(
                  "Negative acknowledgment from server."));
              on_failure(std::move(e));
            }
-         }
-       },
-       on_failure);
-}
-
-void ConferenceSocketSignalingChannel::RemoveRecorder(
-    const std::string& url,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  sio::message::ptr send_message = sio::object_message::create();
-  send_message->get_map()["recorderId"] = sio::string_message::create(url);
-  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
-      shared_from_this();
-  Emit(kEventNameStopRecorder, send_message,
-       [weak_this, on_success, on_failure](sio::message::list const& msg) {
-         if (auto that = weak_this.lock()) {
-           that->OnEmitAck(msg, on_success, on_failure);
          }
        },
        on_failure);
@@ -1180,6 +1279,17 @@ void ConferenceSocketSignalingChannel::DrainQueuedMessages() {
          sio_message.on_failure);
     temp_queue.pop();
   }
+}
+
+sio::message::ptr ConferenceSocketSignalingChannel::ResolutionMessage(
+    const woogeen::base::Resolution& resolution) {
+  sio::message::ptr resolution_message = sio::object_message::create();
+  // Width and height could be double instead of int.
+  resolution_message->get_map()["width"] =
+      sio::int_message::create(resolution.width);
+  resolution_message->get_map()["height"] =
+      sio::int_message::create(resolution.height);
+  return resolution_message;
 }
 }
 }

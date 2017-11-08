@@ -19,6 +19,15 @@
 namespace woogeen {
 namespace conference {
 
+// TODO: Signaling... should be moved to a signaling message definition file.
+
+/// Ack for starting and updating external output.
+struct SignalingSubscriptionAck {
+  std::string id;
+  explicit SignalingSubscriptionAck(const std::string& id) : id(id) {}
+  explicit SignalingSubscriptionAck() : id("") {}
+};
+
 class ConferenceSocketSignalingChannel
     : public std::enable_shared_from_this<ConferenceSocketSignalingChannel> {
  public:
@@ -100,24 +109,24 @@ class ConferenceSocketSignalingChannel
       std::vector<std::string>& mixed_stream_ids,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  virtual void AddOrUpdateExternalOutput(
-      bool add_or_update,  // true for add, false for update.
+  virtual void AddExternalOutput(
       const ExternalOutputOptions& options,
-      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
+      std::function<void(std::shared_ptr<SignalingSubscriptionAck>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  virtual void RemoveExternalOutput(
-      const std::string& url,
+  // Works for external output and recorder only.
+  virtual void UpdateSubscription(
+      const std::string& subscription_id,
+      const ExternalOutputOptions& options,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+  virtual void Unsubscribe(
+      const std::string& id,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   // ExternalOutput and recording are designed to be combined later.
-  virtual void AddOrUpdateRecorder(
-      bool add_or_update,  // true for add, false for update.
+  virtual void AddRecorder(
       const ExternalOutputOptions& options,
-      std::function<void(std::shared_ptr<ExternalOutputAck>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-  virtual void RemoveRecorder(
-      const std::string& url,
-      std::function<void()> on_success,
+      std::function<void(std::shared_ptr<SignalingSubscriptionAck>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   virtual void Disconnect(
       std::function<void()> on_success,
@@ -163,6 +172,9 @@ class ConferenceSocketSignalingChannel
   void DropQueuedMessages();
   // Re-emit queued message.
   void DrainQueuedMessages();
+  // Convert an resolution object to a sio message.
+  sio::message::ptr ResolutionMessage(
+      const woogeen::base::Resolution& resolution);
 
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;

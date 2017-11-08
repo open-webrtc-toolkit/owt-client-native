@@ -824,12 +824,38 @@ void ConferenceClient::AddExternalOutput(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
+  std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+  const std::string& url = options.url;
   if (options.url != "file") {
-    signaling_channel_->AddOrUpdateExternalOutput(true, options, on_success,
-                                                  on_failure);
+    signaling_channel_->AddExternalOutput(
+        options,
+        [weak_this, url, on_success](std::shared_ptr<SignalingSubscriptionAck> ack) {
+          auto that = weak_this.lock();
+          if (!that)
+            return;
+          const std::string& subscription_id = ack->id;
+          that->external_output_subscription[url] = subscription_id;
+          that->subscription_external_output[subscription_id] = url;
+          // TODO(jianjunz): Run in task queue.
+          std::shared_ptr<ExternalOutputAck> external_output_ack =
+              std::make_shared<ExternalOutputAck>(subscription_id);
+          on_success(external_output_ack);
+        },
+        on_failure);
   } else {
-    signaling_channel_->AddOrUpdateRecorder(true, options, on_success,
-                                            on_failure);
+    signaling_channel_->AddRecorder(
+        options,
+        [weak_this, url, on_success,
+         on_failure](std::shared_ptr<SignalingSubscriptionAck> ack) {
+          auto that = weak_this.lock();
+          if (!that)
+            return;
+          const std::string& subscription_id = ack->id;
+          that->subscription_recorder_path[subscription_id] = url;
+          that->recorder_success_callback[subscription_id] = on_success;
+          that->recorder_failure_callback[subscription_id] = on_failure;
+        },
+        on_failure);
   }
 }
 
@@ -843,11 +869,25 @@ void ConferenceClient::UpdateExternalOutput(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  if (options.url != "file") {
-    signaling_channel_->AddOrUpdateExternalOutput(false, options, on_success,
-                                                  on_failure);
+  auto external_output_subscription_it =
+      external_output_subscription.find(options.url);
+  if (external_output_subscription_it != external_output_subscription.end()) {
+    const std::string& subscription_id =
+        external_output_subscription.find(options.url)->second;
+    signaling_channel_->UpdateSubscription(subscription_id, options, [on_success](){
+
+    },
+                                           on_failure);
   } else {
-    RTC_NOTREACHED() << "Update recorder is not supported.";
+    // TODO: Update recorder is not supported.
+    if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "Invalid URL."));
+        on_failure(std::move(e));
+      });
+    }
+    RTC_NOTREACHED() << "Cannot find URL in external output list.";
   }
 }
 
@@ -860,11 +900,43 @@ void ConferenceClient::RemoveExternalOutput(
   }
   std::string rtsp("rtsp://");
   std::string rtmp("rtmp://");
-  if (url.compare(0, rtsp.size(), rtsp) || url.compare(0, rtmp.size(), rtmp)) {
-    signaling_channel_->RemoveRecorder(url, on_success, on_failure);
+  std::string subscription_id;
+  if (url.compare(0, rtsp.size(), rtsp) == 0 ||
+      url.compare(0, rtmp.size(), rtmp) == 0) {
+    auto external_output_subscription_it =
+        external_output_subscription.find(url);
+    if (external_output_subscription_it != external_output_subscription.end()) {
+      subscription_id = external_output_subscription.find(url)->second;
+      external_output_subscription.erase(subscription_id);
+      auto subscription_external_output_it =
+          subscription_external_output.find(subscription_id);
+      if (subscription_external_output_it !=
+          subscription_external_output.end()) {
+        subscription_external_output.erase(subscription_external_output_it);
+      }
+    } else if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "Invalid URL."));
+        on_failure(std::move(e));
+      });
+      return;
+    }
   } else {
-    signaling_channel_->RemoveRecorder(url, on_success, on_failure);
+    auto recorder_path_subscription_it = recorder_path_subscription.find(url);
+    if (recorder_path_subscription_it != recorder_path_subscription.end()) {
+      subscription_id = recorder_path_subscription.find(url)->second;
+      recorder_path_subscription.erase(recorder_path_subscription_it);
+    } else if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, "Invalid URL."));
+        on_failure(std::move(e));
+      });
+      return;
+    }
   }
+  signaling_channel_->Unsubscribe(subscription_id, on_success, on_failure);
 }
 
 void ConferenceClient::GetConnectionStats(
@@ -909,17 +981,62 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   std::string stream_id = (message->get_map()["peerId"] == nullptr)
                               ? message->get_map()["id"]->get_string()
                               : message->get_map()["peerId"]->get_string();
+  // Check the status before delivering to pcc.
+  auto soac_status = message->get_map()["status"];
+  if (soac_status == nullptr ||
+      soac_status->get_flag() != sio::message::flag_string ||
+      (soac_status->get_string() != "soac" &&
+       soac_status->get_string() != "ready" &&
+       soac_status->get_string() != "error")) {
+    RTC_NOTREACHED();
+    LOG(LS_WARNING) << "Ignore signaling status except soac/ready/error.";
+    return;
+  }
+
+  if (subscription_recorder_path.find(stream_id) !=
+      subscription_recorder_path.end()) {
+    const std::string& path =
+        message->get_map()["data"]->get_map()["file"]->get_string();
+    recorder_path_subscription[path] = stream_id;
+    auto success_it = recorder_success_callback.find(stream_id);
+    auto failure_it = recorder_failure_callback.find(stream_id);
+    if (soac_status->get_string() == "ready") {
+      if (success_it != recorder_success_callback.end()) {
+        std::shared_ptr<ExternalOutputAck> external_output_ack =
+            std::make_shared<ExternalOutputAck>(path);
+        success_it->second(external_output_ack);
+      }
+    } else if (soac_status->get_string() == "error") {
+      if (failure_it != recorder_failure_callback.end()) {
+        const std::string& error_message =
+            message->get_map()["data"]->get_string();
+        std::unique_ptr<ConferenceException> e(new ConferenceException(
+            ConferenceException::kUnknown, error_message));
+        failure_it->second(std::move(e));
+      }
+    } else {
+      RTC_NOTREACHED();
+      LOG(LS_WARNING) << "Received unknown status for external output.";
+      return;
+    }
+    if (success_it != recorder_success_callback.end()) {
+      recorder_success_callback.erase(success_it);
+    }
+    if (failure_it != recorder_failure_callback.end()) {
+      recorder_failure_callback.erase(failure_it);
+    }
+    return;
+  }
+
+  if (subscription_external_output.find(stream_id) !=
+      subscription_external_output.end()) {
+    // TODO(jianjunz): soac for external output is not handled.
+    return;
+  }
+
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   if (pcc == nullptr) {
     LOG(LS_WARNING) << "Received signaling message from unknown sender.";
-    return;
-  }
-  // Check the status before delivering to pcc.
-  auto soac_status = message->get_map()["status"];
-  if (soac_status == nullptr || soac_status->get_flag() != sio::message::flag_string
-      || (soac_status->get_string() != "soac" && soac_status->get_string() != "ready"
-      && soac_status->get_string() != "error")) {
-    LOG(LS_INFO) << "Ignore signaling status except soac/ready/error";
     return;
   }
 
@@ -935,7 +1052,8 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   }
   auto soac_data = message->get_map()["data"];
   if (soac_data == nullptr || soac_data->get_flag() != sio::message::flag_object) {
-    LOG(LS_ERROR) << "Received siganling message without offer, answer or candidate";
+    RTC_NOTREACHED();
+    LOG(LS_WARNING) << "Received signaling message without offer, answer or candidate.";
     return;
   }
 
