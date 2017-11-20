@@ -12,11 +12,11 @@
 #endif
 #include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/media/base/videocapturer.h"
-#include "webrtc/base/stream.h"
-#include "webrtc/base/stringutils.h"
-#include "webrtc/base/bind.h"
-#include "webrtc/base/asyncinvoker.h"
-#include "webrtc/base/criticalsection.h"
+#include "webrtc/rtc_base/stream.h"
+#include "webrtc/rtc_base/stringutils.h"
+#include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/asyncinvoker.h"
+#include "webrtc/rtc_base/criticalsection.h"
 #include "woogeen/base/framegeneratorinterface.h"
 #include "woogeen/base/videoencoderinterface.h"
 

@@ -4,7 +4,7 @@
 
 #include "talk/woogeen/sdk/base/win/h265_msdk_decoder.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 // TODO(jianlin): MSDK header files must be after WebRTC headers
 // to avoid compilation errors. Add neccessary defs to avoid this.
 #include "sysmem_allocator.h"

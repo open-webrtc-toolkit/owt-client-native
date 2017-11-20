@@ -4,7 +4,7 @@
 
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 
-#include "webrtc/base/checks.h"
+#include "webrtc/rtc_base/checks.h"
 
 @implementation RTCConferenceSubscribeOptions {
   CGSize _resolution;

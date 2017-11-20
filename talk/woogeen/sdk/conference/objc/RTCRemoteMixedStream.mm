@@ -6,7 +6,7 @@
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 @implementation RTCRemoteMixedStream {
   NSArray* _supportedVideoFormats;

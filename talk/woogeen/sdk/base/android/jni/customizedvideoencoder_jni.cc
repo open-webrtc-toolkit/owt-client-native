@@ -3,13 +3,13 @@
  */
 #include "talk/woogeen/sdk/base/android/jni/customizedvideoencoder_jni.h"
 #include "webrtc/sdk/android/src/jni/classreferenceholder.h"
-#include "webrtc/base/checks.h"
+#include "webrtc/rtc_base/checks.h"
 
 namespace woogeen {
 
 CustomizedVideoEncoderJni::CustomizedVideoEncoderJni(JNIEnv* jni, jobject j_encoder)
     : j_encoder_class_(webrtc_jni::FindClass(jni,
-                            "com/intel/webrtc/base/VideoEncoderInterface")),
+                            "com/intel/webrtc/rtc_base/VideoEncoderInterface")),
       frame_size_(0){
     j_encoder_ = jni->NewGlobalRef(j_encoder);
     j_encode_one_frame_ = webrtc_jni::GetMethodID(jni,

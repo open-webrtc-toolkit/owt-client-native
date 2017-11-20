@@ -3,7 +3,7 @@
  */
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 
 const wchar_t kVPXDecoderDLLPATH[] = L"C:\\Programe Files\\Intel\\Media SDK\\";
 const wchar_t kVP8DecoderDLLName[] = L"mfx_mft_vp8vd_64.dll";

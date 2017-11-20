@@ -18,6 +18,9 @@ if (is_ios) {
 declare_args() {
   include_internal_audio_device = true
   woogeen_msdk_lib_root = ""
+
+# Disable some features while rebasing to M63. It should be removed once rebasing is finished.
+ics_rebase_m63 = true
 }
 
 if (is_ios || is_mac) {
@@ -75,15 +78,15 @@ static_library("woogeen") {
 
 source_set("woogeen_sdk_base") {
   sources = [
-    "sdk/base/customizedframescapturer.cc",
-    "sdk/base/customizedframescapturer.h",
-    "sdk/base/customizedvideoencoderproxy.cc",
-    "sdk/base/customizedvideoencoderproxy.h",
+    #"sdk/base/customizedframescapturer.cc",
+    #"sdk/base/customizedframescapturer.h",
+    #"sdk/base/customizedvideoencoderproxy.cc",
+    #"sdk/base/customizedvideoencoderproxy.h",
     "sdk/base/desktopcapturer.cc",
     "sdk/base/desktopcapturer.h",
     "sdk/base/deviceutils.cc",
-    "sdk/base/encodedvideoencoderfactory.cc",
-    "sdk/base/encodedvideoencoderfactory.h",
+    #"sdk/base/encodedvideoencoderfactory.cc",
+    #"sdk/base/encodedvideoencoderfactory.h",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",
     "sdk/base/functionalobserver.cc",
@@ -122,7 +125,6 @@ source_set("woogeen_sdk_base") {
   public_deps = [
     "//third_party/libyuv:libyuv",
     "//third_party/webrtc/api:libjingle_peerconnection",
-    "//third_party/webrtc/base:rtc_json",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
     "//third_party/webrtc/system_wrappers:metrics_default",
     "//third_party/webrtc/system_wrappers:system_wrappers_default",
@@ -131,6 +133,7 @@ source_set("woogeen_sdk_base") {
   include_dirs = [
     "sdk/include/cpp",
     "include/msdk",
+    "//third_party",
   ]
 
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
@@ -145,26 +148,26 @@ source_set("woogeen_sdk_base") {
   if (is_win) {
     sources += [
       "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/external_msdk_decoder.cpp",
-      "sdk/base/win/external_msdk_decoder.h",
-      "sdk/base/win/h264_video_mft_encoder.cpp",
-      "sdk/base/win/h264_video_mft_encoder.h",
-      "sdk/base/win/mftmediadecoder.cpp",
-      "sdk/base/win/mftmediadecoder.h",
-      "sdk/base/win/mftvideodecoderfactory.cpp",
-      "sdk/base/win/mftvideodecoderfactory.h",
-      "sdk/base/win/mftvideoencoderfactory.cpp",
-      "sdk/base/win/mftvideoencoderfactory.h",
-      "sdk/base/win/videorendererwin.cpp",
-      "sdk/base/win/videorendererwin.h",
+      #"sdk/base/win/external_msdk_decoder.cpp",
+      #"sdk/base/win/external_msdk_decoder.h",
+      #"sdk/base/win/h264_video_mft_encoder.cpp",
+      #"sdk/base/win/h264_video_mft_encoder.h",
+      #"sdk/base/win/mftmediadecoder.cpp",
+      #"sdk/base/win/mftmediadecoder.h",
+      #"sdk/base/win/mftvideodecoderfactory.cpp",
+      #"sdk/base/win/mftvideodecoderfactory.h",
+      #"sdk/base/win/mftvideoencoderfactory.cpp",
+      #"sdk/base/win/mftvideoencoderfactory.h",
+      #"sdk/base/win/videorendererwin.cpp",
+      #"sdk/base/win/videorendererwin.h",
     ]
 
     if (rtc_use_h265) {
       sources += [
-        "sdk/base/win/h265_msdk_decoder.cpp",
-        "sdk/base/win/h265_msdk_decoder.h",
-        "sdk/base/win/h265_msdk_encoder.cpp",
-        "sdk/base/win/h265_msdk_encoder.h",
+        #"sdk/base/win/h265_msdk_decoder.cpp",
+        #"sdk/base/win/h265_msdk_decoder.h",
+        #"sdk/base/win/h265_msdk_encoder.cpp",
+        #"sdk/base/win/h265_msdk_encoder.h",
       ]
     }
   }
@@ -180,15 +183,23 @@ source_set("woogeen_sdk_base") {
 
   if (include_internal_audio_device) {
     sources += [
-      "sdk/base/customizedaudiocapturer.cc",
-      "sdk/base/customizedaudiocapturer.h",
-      "sdk/base/customizedaudiodevicemodule.cc",
-      "sdk/base/customizedaudiodevicemodule.h",
+      #"sdk/base/customizedaudiocapturer.cc",
+      #"sdk/base/customizedaudiocapturer.h",
+      #"sdk/base/customizedaudiodevicemodule.cc",
+      #"sdk/base/customizedaudiodevicemodule.h",
     ]
   }
 
-  if (is_linux && is_clang) {
+  if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  if (is_win && is_clang) {
+    cflags = ["-Wno-microsoft-extra-qualification", "-Wno-reorder"]
+  }
+
+  if(!ics_rebase_m63){
+    defines+=["ICS_REBASE_M63"]
   }
 }
 
@@ -198,7 +209,7 @@ source_set("woogeen_sdk_p2p") {
     "//third_party/jsoncpp:jsoncpp",
   ]
 
-  include_dirs = [ "sdk/include/cpp" ]
+  include_dirs = [ "sdk/include/cpp", "//third_party" ]
 
   sources = [
     "sdk/include/cpp/woogeen/p2p/p2pexception.h",
@@ -214,7 +225,7 @@ source_set("woogeen_sdk_p2p") {
     "sdk/p2p/peerclient.cc",
   ]
 
-  if (is_linux && is_clang) {
+  if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
@@ -225,7 +236,7 @@ source_set("woogeen_sdk_conf") {
     "//third_party/jsoncpp:jsoncpp",
   ]
 
-  include_dirs = [ "sdk/include/cpp" ]
+  include_dirs = [ "sdk/include/cpp", "//third_party" ]
 
   sources = [
     "sdk/conference/conferenceclient.cc",
@@ -242,7 +253,7 @@ source_set("woogeen_sdk_conf") {
     "sdk/include/cpp/woogeen/conference/user.h",
   ]
 
-  if (is_linux && is_clang) {
+  if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
@@ -254,12 +265,13 @@ if (is_ios) {
       ":woogeen_sdk_conf",
       ":woogeen_sdk_p2p",
       "//third_party/jsoncpp",
-      "//third_party/webrtc/sdk:rtc_sdk_peerconnection_objc",
+      "//third_party/webrtc/sdk:rtc_sdk_objc",
       "//third_party/webrtc/system_wrappers:system_wrappers_default",
     ]
 
     include_dirs = [
-      "//third_party/webrtc/sdk/objc/Framework/Headers/WebRTC",
+      "//third_party",
+      "//third_party/webrtc/sdk/objc/Framework/Headers",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
@@ -275,7 +287,6 @@ if (is_ios) {
       "sdk/base/objc/FrameGeneratorObjcImpl.h",
       "sdk/base/objc/FrameGeneratorObjcImpl.mm",
       "sdk/base/objc/ObjcVideoCapturerInterface",
-      "sdk/base/objc/RTCAVFoundationVideoSource+Woogeen.mm",
       "sdk/base/objc/RTCConnectionStats+Internal.h",
       "sdk/base/objc/RTCConnectionStats.mm",
       "sdk/base/objc/RTCErrors.m",
@@ -284,9 +295,9 @@ if (is_ios) {
       "sdk/base/objc/RTCLocalCameraStream.mm",
       "sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h",
       "sdk/base/objc/RTCLocalCameraStreamParameters.mm",
-      "sdk/base/objc/RTCLocalCustomizedStream.mm",
-      "sdk/base/objc/RTCLocalCustomizedStreamParameters+Internal.h",
-      "sdk/base/objc/RTCLocalCustomizedStreamParameters.mm",
+      #"sdk/base/objc/RTCLocalCustomizedStream.mm",
+      #"sdk/base/objc/RTCLocalCustomizedStreamParameters+Internal.h",
+      #"sdk/base/objc/RTCLocalCustomizedStreamParameters.mm",
       "sdk/base/objc/RTCLocalStream+Internal.h",
       "sdk/base/objc/RTCLocalStream.mm",
       "sdk/base/objc/RTCMediaCodec+Internal.h",
@@ -302,7 +313,6 @@ if (is_ios) {
       "sdk/base/objc/RTCRemoteStream.mm",
       "sdk/base/objc/RTCStream+Internal.h",
       "sdk/base/objc/RTCStream.mm",
-      "sdk/base/objc/public/RTCAVFoundationVideoSource+Woogeen.h",
       "sdk/base/objc/public/RTCConnectionStats.h",
       "sdk/base/objc/public/RTCErrors.h",
       "sdk/base/objc/public/RTCFrameGeneratorProtocol.h",

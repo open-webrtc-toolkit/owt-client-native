@@ -6,8 +6,8 @@
 #define WOOGEEN_BASE_CUSTOMIZEDAUDIOCAPTURER_H_
 
 #include <memory>
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/platform_thread.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/platform_thread.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"

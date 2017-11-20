@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include "talk/woogeen/sdk/base/mediautils.h"
-#include "webrtc/base/checks.h"
+#include "webrtc/rtc_base/checks.h"
 
 namespace woogeen {
 namespace base {

@@ -3,7 +3,7 @@
 //
 
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 /*
 @implementation RTCConferencePermission {

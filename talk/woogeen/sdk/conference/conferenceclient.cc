@@ -2,9 +2,10 @@
  * Intel License
  */
 
-#include "webrtc/base/base64.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/task_queue.h"
+#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/task_queue.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"

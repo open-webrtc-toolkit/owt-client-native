@@ -4,8 +4,8 @@
 
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
-#include "webrtc/base/refcount.h"
-#include "webrtc/base/timeutils.h"
+#include "webrtc/rtc_base/refcount.h"
+#include "webrtc/rtc_base/timeutils.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"

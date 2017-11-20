@@ -5,8 +5,9 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/RTCMediaConstraints.h>
-#import "webrtc/sdk/objc/Framework/Classes/RTCMediaStream+Private.h"
-#import "webrtc/sdk/objc/Framework/Classes/RTCVideoSource+Private.h"
+#import "webrtc/rtc_base/logging.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalCameraStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"

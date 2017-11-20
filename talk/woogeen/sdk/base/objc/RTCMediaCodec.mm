@@ -5,7 +5,7 @@
 #import <Foundation/Foundation.h>
 #import <unordered_map>
 #import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
-#import "webrtc/base/checks.h"
+#import "webrtc/rtc_base/checks.h"
 
 @implementation RTCMediaCodec
 

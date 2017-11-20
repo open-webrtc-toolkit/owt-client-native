@@ -20,8 +20,8 @@
 #import "talk/woogeen/sdk/conference/objc/RTCExternalOutput+Internal.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceclient.h"
 #import "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
-#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
 
 @implementation RTCConferenceClient {
   std::shared_ptr<woogeen::conference::ConferenceClient> _nativeConferenceClient;

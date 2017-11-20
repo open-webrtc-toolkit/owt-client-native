@@ -68,15 +68,17 @@ TEST_SIMULATOR_DEVICE = 'iPhone X'
 
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
-      'ios_enable_code_signing=false ios_deployment_target="7.0" use_xcode_clang=true '\
+      'ios_enable_code_signing=false ios_deployment_target="9.0" use_xcode_clang=true '\
       'rtc_libvpx_build_vp9=false enable_ios_bitcode=true'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
   else:
     gn_args += (' is_debug=true')
+  ''' TODO: External OpenSSL is not supported yet.
   if ssl_root:
     gn_args += (' woogeen_use_openssl=true woogeen_openssl_header_root="%s" '\
         'woogeen_openssl_lib_root="%s"'%(ssl_root+'/include',ssl_root+'/lib'))
+  '''
   gn_args+='\''
   ret = subprocess.call(['gn gen %s %s'%(getoutputpath(arch,scheme), gn_args)],
       cwd=HOME_PATH, shell=True)

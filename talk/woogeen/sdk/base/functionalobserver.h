@@ -10,7 +10,7 @@
 
 #include "webrtc/api/jsep.h"
 #include "webrtc/api/peerconnectioninterface.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/connectionstats.h"
 
 namespace woogeen {

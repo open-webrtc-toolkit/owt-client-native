@@ -13,8 +13,8 @@
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
-#import "webrtc/sdk/objc/Framework/Classes/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
 
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
 

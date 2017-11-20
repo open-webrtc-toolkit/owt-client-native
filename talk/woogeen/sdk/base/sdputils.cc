@@ -11,7 +11,7 @@
 #include <vector>
 #include <unordered_map>
 #include "talk/woogeen/sdk/base/sdputils.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/logging.h"
 
 namespace woogeen {
 namespace base {

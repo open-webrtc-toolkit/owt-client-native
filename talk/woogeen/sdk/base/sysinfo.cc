@@ -4,7 +4,7 @@
 #if defined(WEBRTC_LINUX)
 #include <sys/utsname.h>
 #endif  // WEBRTC_LINUX
-#include "webrtc/base/checks.h"
+#include "webrtc/rtc_base/checks.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
 
 namespace woogeen {

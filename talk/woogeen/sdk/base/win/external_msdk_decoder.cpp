@@ -3,7 +3,7 @@
 */
 #include "talk/woogeen/sdk/base/win/external_msdk_decoder.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "webrtc/video_frame.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 // MSDK header files must be below WebRTC headers to avoid compilation issues.

@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 #include "talk/woogeen/sdk/base/win/h265_msdk_encoder.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/bind.h"
-#include "webrtc/base/thread.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/thread.h"
 #include "libyuv/convert_from.h"
 #include "sysmem_allocator.h"
 #include "sample_defs.h"

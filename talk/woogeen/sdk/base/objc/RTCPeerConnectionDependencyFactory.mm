@@ -2,8 +2,8 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
-#import "RTCMediaStream+Private.h"
-#import "RTCMediaConstraints+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaConstraints+Private.h"
 #import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
 #import "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 

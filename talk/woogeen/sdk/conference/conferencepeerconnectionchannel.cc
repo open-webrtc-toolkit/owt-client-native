@@ -6,8 +6,8 @@
 #include <thread>
 #include <future>
 
-#include "webrtc/base/logging.h"
-#include "webrtc/base/task_queue.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/media/base/videocapturer.h"
 

@@ -3,10 +3,10 @@
  */
 
 #import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 #include <unordered_map>
-#include "webrtc/base/checks.h"
+#include "webrtc/rtc_base/checks.h"
 
 @implementation RTCConnectionStats {
   std::unordered_map<std::string, RTCIceCandidateStats*> _localCandidateMap;

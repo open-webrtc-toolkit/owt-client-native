@@ -3,7 +3,7 @@
  */
 
 #include <vector>
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/logging.h"
 #include "talk/woogeen/sdk/base/peerconnectionchannel.h"
 #include "talk/woogeen/sdk/base/sdputils.h"
 

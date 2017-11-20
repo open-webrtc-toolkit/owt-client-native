@@ -12,7 +12,7 @@
 #include <Windows.h>
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/video/video_frame.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "webrtc/media/base/videosinkinterface.h"
 
 namespace woogeen {

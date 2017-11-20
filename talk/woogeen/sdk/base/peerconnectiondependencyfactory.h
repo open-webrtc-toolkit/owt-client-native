@@ -8,7 +8,7 @@
 #include <mutex>
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/api/mediastreaminterface.h"
-#include "webrtc/base/bind.h"
+#include "webrtc/rtc_base/bind.h"
 
 namespace woogeen {
 namespace base {

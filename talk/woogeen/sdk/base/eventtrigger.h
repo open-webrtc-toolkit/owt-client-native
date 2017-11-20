@@ -5,7 +5,7 @@
 #include <future>
 #include <thread>
 #include <vector>
-#include "webrtc/base/task_queue.h"
+#include "webrtc/rtc_base/task_queue.h"
 
 #ifndef WOOGEEN_BASE_EVENTTRIGGER_H_
 #define WOOGEEN_BASE_EVENTTRIGGER_H_

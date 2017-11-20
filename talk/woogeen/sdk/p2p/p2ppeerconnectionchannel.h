@@ -18,9 +18,9 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2pexception.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingreceiverinterface.h"
-#include "webrtc/base/json.h"
-#include "webrtc/base/messagehandler.h"
-#include "webrtc/base/task_queue.h"
+#include "webrtc/rtc_base/json.h"
+#include "webrtc/rtc_base/messagehandler.h"
+#include "webrtc/rtc_base/task_queue.h"
 
 namespace woogeen {
 namespace p2p {

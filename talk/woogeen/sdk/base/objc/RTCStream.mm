@@ -4,8 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCVideoTrack.h>
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
-#import "webrtc/sdk/objc/Framework/Classes/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
 

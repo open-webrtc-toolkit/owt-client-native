@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 #include "talk/woogeen/sdk/base/encodedvideoencoder.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/buffer.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"

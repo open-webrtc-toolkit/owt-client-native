@@ -8,10 +8,10 @@
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 
 #include <memory>
-#include "webrtc/base/criticalsection.h"
+#include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
 
 namespace woogeen {

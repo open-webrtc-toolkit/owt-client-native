@@ -8,8 +8,8 @@
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/p2p/peerclient.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/task_queue.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/task_queue.h"
 
 namespace woogeen {
 namespace p2p {

@@ -4,8 +4,8 @@
 
 #include "talk/woogeen/sdk/base/objc/CameraVideoCapturer.h"
 #include "talk/woogeen/sdk/include/objc/Woogeen/RTCFactory.h"
-#include "third_party/webrtc/base/logging.h"
-#include "third_party/webrtc/sdk/objc/Framework/Classes/RTCVideoSource+Private.h"
+#include "third_party/webrtc/rtc_base/logging.h"
+#include "third_party/webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #include "third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h"
 
 namespace woogeen {

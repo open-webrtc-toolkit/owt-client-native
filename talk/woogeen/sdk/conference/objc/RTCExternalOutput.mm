@@ -4,7 +4,7 @@
 
 #import "talk/woogeen/sdk/conference/objc/RTCExternalOutput+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/externaloutput.h"
 

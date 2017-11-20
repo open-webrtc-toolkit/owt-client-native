@@ -5,8 +5,8 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 
-#include "webrtc/base/messagehandler.h"
-#include "webrtc/base/sigslot.h"
+#include "webrtc/rtc_base/messagehandler.h"
+#include "webrtc/rtc_base/sigslot.h"
 
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"

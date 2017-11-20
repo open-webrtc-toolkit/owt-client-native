@@ -8,7 +8,7 @@
 #include "talk/woogeen/sdk/base/functionalobserver.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/logging.h"
 
 namespace woogeen {
 namespace p2p {

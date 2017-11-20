@@ -3,8 +3,8 @@
  */
 
 #include "talk/woogeen/sdk/base/customizedaudiocapturer.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 
 namespace woogeen {

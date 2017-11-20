@@ -3,8 +3,8 @@
  */
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
-#include "webrtc/base/arraysize.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/arraysize.h"
+#include "webrtc/rtc_base/logging.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"

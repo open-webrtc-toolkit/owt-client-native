@@ -12,11 +12,11 @@
 #include "talk/woogeen/sdk/base/mediautils.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
-#include "webrtc/base/base64.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/json.h"
-#include "webrtc/base/timeutils.h"
+#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/json.h"
+#include "webrtc/rtc_base/timeutils.h"
 
 namespace woogeen {
 namespace conference {

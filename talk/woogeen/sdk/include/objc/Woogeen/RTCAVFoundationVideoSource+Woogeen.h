@@ -25,7 +25,6 @@
  */
 
 #import <WebRTC/RTCAVFoundationVideoSource.h>
-#import <WebRTC/RTCVideoFrameFilterProtocol.h>
 
 @interface RTCAVFoundationVideoSource (Woogeen)
 

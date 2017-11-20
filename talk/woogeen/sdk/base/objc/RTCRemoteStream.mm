@@ -3,10 +3,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "RTCMediaStream.h"
+#import "WebRTC/RTCMediaStream.h"
 #import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteStream.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 @implementation RTCRemoteStream
 

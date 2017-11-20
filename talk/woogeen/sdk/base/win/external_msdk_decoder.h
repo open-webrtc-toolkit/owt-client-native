@@ -6,11 +6,11 @@
 
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/test/fakeconstraints.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/bind.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/thread.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/thread.h"
 
 // For decoder and encoder factory
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"

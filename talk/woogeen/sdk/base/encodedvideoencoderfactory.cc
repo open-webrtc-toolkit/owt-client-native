@@ -3,7 +3,7 @@
  */
 #include "talk/woogeen/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
-#include "webrtc/base/stringutils.h"
+#include "webrtc/rtc_base/stringutils.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
 #include "webrtc/common_types.h"
 

@@ -2,10 +2,9 @@
  * Intel License
  */
 
-#include "webrtc/base/bytebuffer.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/thread.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/thread.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"

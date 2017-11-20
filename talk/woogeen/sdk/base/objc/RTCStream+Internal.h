@@ -4,7 +4,7 @@
 
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCStream.h"
 
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 
 @interface RTCStream (Internal)

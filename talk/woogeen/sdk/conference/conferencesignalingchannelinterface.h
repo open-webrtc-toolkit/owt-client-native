@@ -9,7 +9,7 @@
 #include <memory>
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceuser.h"
-#include "webrtc/base/json.h"
+#include "webrtc/rtc_base/json.h"
 
 namespace woogeen {
 namespace conference {

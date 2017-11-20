@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/logging.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/logging.h"
 
 namespace woogeen {
 namespace base {

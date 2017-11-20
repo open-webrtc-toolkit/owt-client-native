@@ -13,7 +13,7 @@
 
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include <vector>
-#include "webrtc/base/thread.h"
+#include "webrtc/rtc_base/thread.h"
 
 // This file provides a H264 encoder implementation using the WMF
 // APIs.

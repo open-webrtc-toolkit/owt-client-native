@@ -10,8 +10,8 @@
 #include <memory>
 #include <mutex>
 
-#include "webrtc/base/network.h"
-#include "webrtc/base/thread.h"
+#include "webrtc/rtc_base/network.h"
+#include "webrtc/rtc_base/thread.h"
 
 namespace woogeen {
 namespace base {

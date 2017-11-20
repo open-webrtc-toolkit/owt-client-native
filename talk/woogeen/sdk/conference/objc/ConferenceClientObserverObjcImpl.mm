@@ -5,8 +5,8 @@
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
 
 #import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
 #import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
@@ -17,7 +17,7 @@
 #import "talk/woogeen/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceUser+Internal.h"
 #import "talk/woogeen/sdk/conference/objc/RTCConferenceClient+Internal.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 namespace woogeen {
 namespace conference {

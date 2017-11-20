@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
 #import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalStream.h"
-#import "webrtc/sdk/objc/Framework/Classes/NSString+StdString.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 @implementation RTCLocalStream
 

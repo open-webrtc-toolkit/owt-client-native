@@ -6,7 +6,7 @@
 #define WOOGEEN_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
 
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/localcamerastreamparameters.h"
-#include "third_party/webrtc/base/scoped_ref_ptr.h"
+#include "third_party/webrtc/rtc_base/scoped_ref_ptr.h"
 #include "third_party/webrtc/api/mediastreaminterface.h"
 
 namespace woogeen {
