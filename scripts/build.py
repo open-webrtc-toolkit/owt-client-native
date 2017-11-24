@@ -45,10 +45,12 @@ WEBRTC_HEADER_LIST = ['third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCI
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCConfiguration.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h']
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h',
+    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoViewShading.h']
 HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/ics/sdk/include/objc/Woogeen/*']
 LIB_BLACK_LIST = ['video_capture']
 FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
@@ -73,11 +75,9 @@ def gngen(arch, ssl_root, scheme):
     gn_args += (' is_debug=false')
   else:
     gn_args += (' is_debug=true')
-  ''' TODO: External OpenSSL is not supported yet.
   if ssl_root:
     gn_args += (' woogeen_use_openssl=true woogeen_openssl_header_root="%s" '\
         'woogeen_openssl_lib_root="%s"'%(ssl_root+'/include',ssl_root+'/lib'))
-  '''
   gn_args+='\''
   ret = subprocess.call(['gn gen %s %s'%(getoutputpath(arch,scheme), gn_args)],
       cwd=HOME_PATH, shell=True)

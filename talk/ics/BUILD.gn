@@ -30,6 +30,35 @@ if (is_ios || is_mac) {
   }
 }
 
+if (is_android) {
+  config("libjingle_peerconnection_jni_warnings_config") {
+    # The warnings below are enabled by default. Since GN orders compiler flags
+    # for a target before flags from configs, the only way to disable such
+    # warnings is by having them in a separate config, loaded from the target.
+    if (!is_win) {
+      cflags = [
+        "-Wno-sign-compare",
+        "-Wno-unused-variable",
+      ]
+    }
+  }
+}
+
+
+if (is_android) {
+  dist_jar("libjingle_woogeen_java") {
+    output = "${root_out_dir}/lib.java/${target_name}.jar"
+    direct_deps_only = true
+    use_interface_jars = false
+    deps = [
+      "//third_party/webrtc/sdk/android:libjingle_peerconnection_java",
+      "//third_party/webrtc/sdk/android:libjingle_peerconnection_metrics_default_java",
+      "//third_party/webrtc/base:base_java",
+      "//third_party/webrtc/modules/audio_device:audio_device_java",
+    ]
+  }
+}
+
 static_library("ics") {
   deps = [
     ":ics_sdk_base",
@@ -99,6 +128,7 @@ source_set("ics_sdk_base") {
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
     "//third_party/webrtc/system_wrappers:metrics_default",
     "//third_party/webrtc/system_wrappers:system_wrappers_default",
+    "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
   include_dirs = [
@@ -113,6 +143,11 @@ source_set("ics_sdk_base") {
     sources += [
       "sdk/base/ios/networkmonitorios.cc",
       "sdk/base/ios/networkmonitorios.h",
+    ]
+    deps=[
+    "//third_party/webrtc/sdk:sdk",
+    "//third_party/webrtc/sdk:peerconnectionfactory_objc",
+    "//third_party/webrtc/sdk:framework_objc+link",
     ]
   }
 
@@ -239,7 +274,6 @@ if (is_ios) {
       ":ics_sdk_conf",
       ":ics_sdk_p2p",
       "//third_party/jsoncpp",
-      "//third_party/webrtc/sdk:rtc_sdk_objc",
       "//third_party/webrtc/system_wrappers:system_wrappers_default",
     ]
 
@@ -261,6 +295,8 @@ if (is_ios) {
       "sdk/base/objc/FrameGeneratorObjcImpl.h",
       "sdk/base/objc/FrameGeneratorObjcImpl.mm",
       "sdk/base/objc/ObjcVideoCapturerInterface",
+      "sdk/base/objc/ObjcVideoCodecFactory.h",
+      "sdk/base/objc/ObjcVideoCodecFactory.mm",
       "sdk/base/objc/RTCConnectionStats+Internal.h",
       "sdk/base/objc/RTCConnectionStats.mm",
       "sdk/base/objc/RTCErrors.m",

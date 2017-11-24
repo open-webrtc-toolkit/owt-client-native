@@ -18,6 +18,7 @@
 #include "talk/ics/sdk/base/win/mftvideoencoderfactory.h"
 #elif defined(WEBRTC_IOS)
 #include "talk/ics/sdk/base/ios/networkmonitorios.h"
+#include "talk/ics/sdk/base/objc/ObjcVideoCodecFactory.h"
 #endif
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_WIN)
 #include "talk/ics/sdk/base/customizedvideodecoderfactory.h"
@@ -124,7 +125,12 @@ void PeerConnectionDependencyFactory::
   std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
   std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
 
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+#if defined(WEBRTC_IOS)
+  encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
+  decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
+#endif
+
+#if defined(ICS_REBASE_M63)
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled())
     decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
   else {
@@ -153,8 +159,9 @@ void PeerConnectionDependencyFactory::
                     CreateCustomizedAudioDeviceModuleOnCurrentThread,
                     this));
   }
+
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      worker_thread, signaling_thread, adm,
+      worker_thread, signaling_thread, nullptr,
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
 

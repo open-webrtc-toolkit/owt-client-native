@@ -36,11 +36,11 @@
 #import <Woogeen/RTCMediaConstraints.h>
 #import <Woogeen/RTCMTLVideoView.h>
 #import <Woogeen/RTCVideoFrame.h>
+#import <Woogeen/RTCVideoFrameBuffer.h>
 #import <Woogeen/RTCVideoRenderer.h>
 #import <Woogeen/RTCVideoSource.h>
 
 // Base SDK
-#import <Woogeen/RTCAVFoundationVideoSource+Woogeen.h>
 #import <Woogeen/RTCErrors.h>
 #import <Woogeen/RTCFactory.h>
 #import <Woogeen/RTCFrameGeneratorProtocol.h>

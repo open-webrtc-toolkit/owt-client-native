@@ -42,7 +42,6 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<ics::base::RemoteStream> stream);
 
   id<RTCConferenceClientObserver> observer_;
-  __weak RTCConferenceClient* conference_client_;
   std::unordered_map<std::string, RTCRemoteStream*> remote_streams_;
   std::mutex remote_streams_mutex_;
   std::unordered_map<std::string, RTCLocalStream*> local_streams_;

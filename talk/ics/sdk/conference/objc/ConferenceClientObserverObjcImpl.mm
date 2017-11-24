@@ -25,7 +25,7 @@ namespace conference {
 ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
     id<RTCConferenceClientObserver> observer,
     RTCConferenceClient* conference_client)
-    : observer_(observer), conference_client_(conference_client) {}
+    : observer_(observer) {}
 
 void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
     const std::string& id,
@@ -88,6 +88,11 @@ void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id,
                                                          std::string& message) {
   [observer_ onMessageReceivedFrom:[NSString stringForStdString:sender_id]
                            message:[NSString stringForStdString:message]];
+}
+
+void ConferenceClientObserverObjcImpl::OnParticipantJoined(
+    std::shared_ptr<ics::conference::Participant> user) {
+  // TODO:
 }
 
 void ConferenceClientObserverObjcImpl::OnServerDisconnected(){

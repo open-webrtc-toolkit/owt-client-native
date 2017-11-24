@@ -30,6 +30,6 @@ class ObjcVideoCapturerFactory {
       const LocalCameraStreamParameters& parameters);
 };
 }  // namespace base
-}  // namespace woogeen
+}  // namespace ics
 
 #endif  // WOOGEEN_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
