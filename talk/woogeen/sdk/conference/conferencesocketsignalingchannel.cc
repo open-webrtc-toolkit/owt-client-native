@@ -10,6 +10,7 @@
 #include <CoreFoundation/CFDate.h>
 #endif
 #include "talk/woogeen/sdk/base/mediautils.h"
+#include "talk/woogeen/sdk/base/stringutils.h"
 #include "talk/woogeen/sdk/base/sysinfo.h"
 #include "talk/woogeen/sdk/conference/conferencesocketsignalingchannel.h"
 #include "webrtc/rtc_base/base64.h"
@@ -99,7 +100,7 @@ void ConferenceSocketSignalingChannel::Connect(
     const std::string& token,
     std::function<void(sio::message::ptr room_info)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (!rtc::Base64::IsBase64Encoded(token)) {
+  if (!StringUtils::IsBase64EncodedString(token)) {
     if (on_failure != nullptr) {
       std::unique_ptr<ConferenceException> e(new ConferenceException(
           ConferenceException::kUnknown, "Invalid token."));

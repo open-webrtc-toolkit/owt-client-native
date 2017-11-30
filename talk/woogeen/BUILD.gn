@@ -72,6 +72,8 @@ source_set("woogeen_sdk_base") {
     "sdk/base/peerconnectiondependencyfactory.h",
     "sdk/base/sdputils.cc",
     "sdk/base/sdputils.h",
+    "sdk/base/stringutils.h",
+    "sdk/base/stringutils.cc",
     "sdk/base/stream.cc",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",

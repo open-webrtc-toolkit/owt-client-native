@@ -601,6 +601,8 @@ class ConferenceClient final
   std::unordered_map<std::string, std::string> AttributesFromStreamInfo(
       std::shared_ptr<sio::message> stream_info);
   std::function<void()> RunInEventQueue(std::function<void()> func);
+  // Check if all characters are base 64 allowed or '='.
+  bool IsBase64EncodedString(const std::string str) const;
 
   enum StreamType: int;
 

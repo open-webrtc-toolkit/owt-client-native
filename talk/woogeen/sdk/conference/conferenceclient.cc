@@ -6,6 +6,7 @@
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "talk/woogeen/sdk/base/stringutils.h"
 #include "talk/woogeen/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/conference/conferenceexception.h"
@@ -81,7 +82,7 @@ void ConferenceClient::Join(
     return;
   }
   std::string token_base64(token);
-  if (!rtc::Base64::IsBase64Encoded(token)) {
+  if (!StringUtils::IsBase64EncodedString(token)) {
     LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
                        "please pass it without modification.";
     token_base64 = rtc::Base64::Encode(token);
