@@ -29,14 +29,11 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBSRTP_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0003-Start-iOS-simulator-before-running-tests.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
-
-def _remove_overrides():
-  # This directory contains override files for Chromium, e.g. logging. However, we still need original logging module.
-  shutil.rmtree(WEBRTC_OVERRIDES_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Remove-webrtc_overrides.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
 
 def main(argv):
   _patch()
-  _remove_overrides()
   return 0
 
 if __name__ == '__main__':
