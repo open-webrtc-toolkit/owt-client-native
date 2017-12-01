@@ -23,9 +23,8 @@ if(platform == "nt"):
   useShell = True
 
 def _patch():
-  """
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Use-OpenSSL-for-usrsctp.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)"""
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0002-Use-OpenSSL-for-libsrtp.patch')], shell=useShell, cwd=LIBSRTP_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBSRTP_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0003-Start-iOS-simulator-before-running-tests.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:

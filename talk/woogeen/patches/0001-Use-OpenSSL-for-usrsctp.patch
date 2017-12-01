@@ -1,26 +1,25 @@
-From 54d13afdf50b623719c617c05526179f8794c7e6 Mon Sep 17 00:00:00 2001
+From 306059dcc636fc81aa72f1909852634f6a46be40 Mon Sep 17 00:00:00 2001
 From: Jianjun Zhu <jianjun.zhu@intel.com>
-Date: Mon, 17 Jul 2017 09:06:22 +0800
-Subject: [PATCH] Use OpenSSL for usrsctp.
+Date: Fri, 1 Dec 2017 13:16:24 +0800
+Subject: [PATCH 1/2] Use OpenSSL for usrsctp.
 
 ---
- usrsctp/BUILD.gn | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ usrsctp/BUILD.gn | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/usrsctp/BUILD.gn b/usrsctp/BUILD.gn
-index 7e65a69..1e4733a 100644
+index e505d33..583c8ff 100644
 --- a/usrsctp/BUILD.gn
 +++ b/usrsctp/BUILD.gn
-@@ -2,6 +2,8 @@
- # Use of this source code is governed by a BSD-style license that can be
+@@ -3,6 +3,7 @@
  # found in the LICENSE file.
  
+ import("//build/toolchain/toolchain.gni")
 +import("//build_overrides/ssl/ssl.gni")
-+
+ 
  config("usrsctp_config") {
    include_dirs = [
-     "usrsctplib/usrsctplib",
-@@ -128,7 +130,11 @@ static_library("usrsctp") {
+@@ -130,7 +131,11 @@ static_library("usrsctp") {
      defines += [ "NON_WINDOWS_DEFINE" ]
    }
  
