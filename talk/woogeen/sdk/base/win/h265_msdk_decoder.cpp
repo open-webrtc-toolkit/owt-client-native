@@ -2,6 +2,7 @@
 * Intel License
 */
 
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 #include "talk/woogeen/sdk/base/win/h265_msdk_decoder.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
@@ -444,8 +445,8 @@ int32_t H265MSDKVideoDecoder::Decode(
           d3d_context->height_ = height_;
           d3d_context->surface_ = (IDirect3DSurface9*)dxMemId->first;
 
-          rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
-              new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+          rtc::scoped_refptr<woogeen::base::NativeHandleBuffer> buffer =
+              new rtc::RefCountedObject<woogeen::base::NativeHandleBuffer>(
                   (void*)d3d_context, width_, height_);
           webrtc::VideoFrame decoded_frame(buffer, inputImage._timeStamp, 0,
                                            webrtc::kVideoRotation_0);

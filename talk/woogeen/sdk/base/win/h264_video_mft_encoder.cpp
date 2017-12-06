@@ -334,12 +334,13 @@ int H264VideoMFTEncoder::Encode(
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
-            libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
-                               input_image.video_frame_buffer()->StrideY(),
-                               input_image.video_frame_buffer()->DataU(),
-                               input_image.video_frame_buffer()->StrideU(),
-                               input_image.video_frame_buffer()->DataV(),
-                               input_image.video_frame_buffer()->StrideV(),
+        rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(input_image.video_frame_buffer()->ToI420());
+            libyuv::I420ToNV12(buffer->DataY(),
+                               buffer->StrideY(),
+                               buffer->DataU(),
+                               buffer->StrideU(),
+                               buffer->DataV(),
+                               buffer->StrideV(),
                                pData.Y, pitch, pData.UV, pitch, w, h);
 #ifdef WOOGEEN_DEBUG_H264_ENC
         if (count == 300){
@@ -532,13 +533,14 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     }
 #endif
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
-        libyuv::I420ToNV12(input_image.video_frame_buffer()->DataY(),
-                                   input_image.video_frame_buffer()->StrideY(),
-                                   input_image.video_frame_buffer()->DataU(),
-                                   input_image.video_frame_buffer()->StrideU(),
-                                   input_image.video_frame_buffer()->DataV(),
-                                   input_image.video_frame_buffer()->StrideV(),
-                                   pData.Y, pitch, pData.UV, pitch, w, h);
+        rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(input_image.video_frame_buffer()->ToI420());
+        libyuv::I420ToNV12(buffer->DataY(),
+            buffer->StrideY(),
+            buffer->DataU(),
+            buffer->StrideU(),
+            buffer->DataV(),
+            buffer->StrideV(),
+            pData.Y, pitch, pData.UV, pitch, w, h);
 #ifdef WOOGEEN_DEBUG_H264_ENC
         if (count == 300){
             fclose(input);

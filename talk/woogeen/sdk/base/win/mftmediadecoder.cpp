@@ -1,6 +1,8 @@
 /*
  * Intel License
  */
+
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "talk/woogeen/sdk/base/win/mftmediadecoder.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
@@ -847,8 +849,8 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
       d3d_context->height_ = height_;
       d3d_context->surface_ = surface;
 
-      rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
-          new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+      rtc::scoped_refptr<woogeen::base::NativeHandleBuffer> buffer =
+          new rtc::RefCountedObject<woogeen::base::NativeHandleBuffer>(
               (void*)d3d_context, width_, height_);
       webrtc::VideoFrame decoded_frame(buffer, 0, 0, webrtc::kVideoRotation_0);
       decoded_frame.set_ntp_time_ms(ntp_time_ms);

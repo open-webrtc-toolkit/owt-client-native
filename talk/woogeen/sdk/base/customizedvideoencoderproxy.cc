@@ -16,6 +16,7 @@
 
 #include "talk/woogeen/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/woogeen/sdk/base/customizedencoderbufferhandle.h"
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
 
 // H.264 start code length.
@@ -56,9 +57,11 @@ int CustomizedVideoEncoderProxy::Encode(
     const webrtc::CodecSpecificInfo* codec_specific_info,
     const std::vector<webrtc::FrameType>* frame_types) {
   // Get the videoencoderinterface instance from the input video frame.
+
+
   CustomizedEncoderBufferHandle* encoder_buffer_handle =
       reinterpret_cast<CustomizedEncoderBufferHandle*>(
-          input_image.video_frame_buffer()->native_handle());
+          static_cast<woogeen::base::NativeHandleBuffer*>(input_image.video_frame_buffer().get())->native_handle());
 
   if(external_encoder_ == nullptr && encoder_buffer_handle != nullptr &&
       encoder_buffer_handle->encoder != nullptr) {

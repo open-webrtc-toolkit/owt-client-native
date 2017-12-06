@@ -3,10 +3,8 @@
  */
 
 #include <iostream>
-#if defined(ICS_REBASE_M63)
 #include "talk/woogeen/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/woogeen/sdk/base/encodedvideoencoderfactory.h"
-#endif
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssladapter.h"
@@ -16,10 +14,8 @@
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/system_wrappers/include/field_trial_default.h"
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
 #include "talk/woogeen/sdk/base/win/mftvideodecoderfactory.h"
 #include "talk/woogeen/sdk/base/win/mftvideoencoderfactory.h"
-#endif
 #elif defined(WEBRTC_IOS)
 #include "talk/woogeen/sdk/base/ios/networkmonitorios.h"
 #endif
@@ -128,7 +124,7 @@ void PeerConnectionDependencyFactory::
   std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
   std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
 
-#if defined(ICS_REBASE_M63)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled())
     decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
   else {
@@ -139,7 +135,7 @@ void PeerConnectionDependencyFactory::
     }
 #endif
   }
-
+#endif
   // Encoded video frame enabled
   if (encoded_frame_)
   {
@@ -161,7 +157,6 @@ void PeerConnectionDependencyFactory::
       worker_thread, signaling_thread, adm,
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
-#endif
 
   LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
@@ -307,13 +302,11 @@ void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
 #endif
 }
 
-#if defined(ICS_REBASE_M63)
 scoped_refptr<webrtc::AudioDeviceModule>
 PeerConnectionDependencyFactory::CreateCustomizedAudioDeviceModuleOnCurrentThread() {
   return CustomizedAudioDeviceModule::Create(
      GlobalConfiguration::GetAudioFrameGenerator());
 }
-#endif
 
 }
 }

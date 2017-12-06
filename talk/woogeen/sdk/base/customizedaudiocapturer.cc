@@ -190,15 +190,6 @@ bool CustomizedAudioCapturer::AGC() const {
   return false;
 }
 
-int32_t CustomizedAudioCapturer::SetWaveOutVolume(uint16_t volumeLeft,
-                                                  uint16_t volumeRight) {
-  return -1;
-}
-
-int32_t CustomizedAudioCapturer::WaveOutVolume(uint16_t& volumeLeft,
-                                               uint16_t& volumeRight) const {
-  return -1;
-}
 
 int32_t CustomizedAudioCapturer::InitSpeaker() {
   return -1;
@@ -236,10 +227,6 @@ int32_t CustomizedAudioCapturer::MinSpeakerVolume(uint32_t& minVolume) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::SpeakerVolumeStepSize(
-    uint16_t& stepSize) const {
-  return -1;
-}
 
 int32_t CustomizedAudioCapturer::MicrophoneVolumeIsAvailable(bool& available) {
   return -1;
@@ -260,11 +247,6 @@ int32_t CustomizedAudioCapturer::MaxMicrophoneVolume(
 
 int32_t CustomizedAudioCapturer::MinMicrophoneVolume(
     uint32_t& minVolume) const {
-  return -1;
-}
-
-int32_t CustomizedAudioCapturer::MicrophoneVolumeStepSize(
-    uint16_t& stepSize) const {
   return -1;
 }
 
@@ -292,17 +274,6 @@ int32_t CustomizedAudioCapturer::MicrophoneMute(bool& enabled) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::MicrophoneBoostIsAvailable(bool& available) {
-  return -1;
-}
-
-int32_t CustomizedAudioCapturer::SetMicrophoneBoost(bool enable) {
-  return -1;
-}
-
-int32_t CustomizedAudioCapturer::MicrophoneBoost(bool& enabled) const {
-  return -1;
-}
 
 int32_t CustomizedAudioCapturer::StereoPlayoutIsAvailable(bool& available) {
   return -1;
@@ -327,17 +298,6 @@ int32_t CustomizedAudioCapturer::StereoRecording(bool& enabled) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::SetPlayoutBuffer(
-    const AudioDeviceModule::BufferType type,
-    uint16_t sizeMS) {
-  return -1;
-}
-
-int32_t CustomizedAudioCapturer::PlayoutBuffer(
-    AudioDeviceModule::BufferType& type,
-    uint16_t& sizeMS) const {
-  return -1;
-}
 
 int32_t CustomizedAudioCapturer::PlayoutDelay(uint16_t& delayMS) const {
   return -1;
@@ -346,34 +306,6 @@ int32_t CustomizedAudioCapturer::PlayoutDelay(uint16_t& delayMS) const {
 int32_t CustomizedAudioCapturer::RecordingDelay(uint16_t& delayMS) const {
   return -1;
 }
-
-int32_t CustomizedAudioCapturer::CPULoad(uint16_t& load) const {
-  return -1;
-}
-
-bool CustomizedAudioCapturer::PlayoutWarning() const {
-  return false;
-}
-
-bool CustomizedAudioCapturer::PlayoutError() const {
-  return false;
-}
-
-bool CustomizedAudioCapturer::RecordingWarning() const {
-  return false;
-}
-
-bool CustomizedAudioCapturer::RecordingError() const {
-  return false;
-}
-
-void CustomizedAudioCapturer::ClearPlayoutWarning() {}
-
-void CustomizedAudioCapturer::ClearPlayoutError() {}
-
-void CustomizedAudioCapturer::ClearRecordingWarning() {}
-
-void CustomizedAudioCapturer::ClearRecordingError() {}
 
 void CustomizedAudioCapturer::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {

@@ -2,11 +2,13 @@
  * Intel License
  */
 
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 #include "talk/woogeen/sdk/base/win/videorendererwin.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/typedefs.h"
+#include "rtc_base/logging.h"
 
 namespace woogeen {
 namespace base {
@@ -56,11 +58,12 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
     const webrtc::VideoFrame& video_frame) {
   // Do we need to Lock the renderframe call? since we have the device lock here
   // it seems no neccessary.
-  if (video_frame.video_frame_buffer()->native_handle() !=
-      nullptr) {  // We're handling DXVA buffer
+  if (video_frame.video_frame_buffer()->type() ==
+      webrtc::VideoFrameBuffer::Type::kNative) {  // We're handling DXVA buffer
     NativeD3DSurfaceHandle* nativeHandle =
         reinterpret_cast<NativeD3DSurfaceHandle*>(
-            video_frame.video_frame_buffer()->native_handle());
+            reinterpret_cast<woogeen::base::NativeHandleBuffer*>(video_frame.video_frame_buffer().get())->native_handle());
+
     IDirect3DDeviceManager9* dev_manager = nativeHandle->dev_manager_;
     IDirect3DSurface9* surface = nativeHandle->surface_;
 

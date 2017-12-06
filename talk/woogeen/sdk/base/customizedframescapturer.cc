@@ -10,6 +10,7 @@
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
 #include "talk/woogeen/sdk/base/customizedencoderbufferhandle.h"
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 
 namespace woogeen {
 namespace base {
@@ -216,8 +217,8 @@ void CustomizedFramesCapturer::ReadFrame() {
     encoder_context->height = height_;
     encoder_context->fps = fps_;
     encoder_context->bitrate_kbps = bitrate_kbps_;
-    rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
-        new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+    rtc::scoped_refptr<woogeen::base::NativeHandleBuffer> buffer =
+        new rtc::RefCountedObject<woogeen::base::NativeHandleBuffer>(
            (void*)encoder_context, width_, height_);
     webrtc::VideoFrame pending_frame(buffer, 0, rtc::TimeMillis(),
                                     webrtc::kVideoRotation_0);

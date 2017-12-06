@@ -1,10 +1,10 @@
 /*
 * Intel License
 */
+#include "talk/woogeen/sdk/base/nativehandlebuffer.h"
 #include "talk/woogeen/sdk/base/win/external_msdk_decoder.h"
 #include "talk/woogeen/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
-#include "webrtc/video_frame.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 // MSDK header files must be below WebRTC headers to avoid compilation issues.
 #include "sysmem_allocator.h"
@@ -469,8 +469,8 @@ int32_t ExternalMSDKVideoDecoder::Decode(
           d3d_context->height_ = height_;
           d3d_context->surface_ = (IDirect3DSurface9*)dxMemId->first;
 
-          rtc::scoped_refptr<webrtc::NativeHandleBuffer> buffer =
-              new rtc::RefCountedObject<webrtc::NativeHandleBuffer>(
+          rtc::scoped_refptr<woogeen::base::NativeHandleBuffer> buffer =
+              new rtc::RefCountedObject<woogeen::base::NativeHandleBuffer>(
                   (void*)d3d_context, width_, height_);
           webrtc::VideoFrame decoded_frame(buffer, inputImage._timeStamp, 0,
                                            webrtc::kVideoRotation_0);

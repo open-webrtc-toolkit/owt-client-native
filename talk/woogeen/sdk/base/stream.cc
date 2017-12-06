@@ -7,8 +7,8 @@
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#if defined(ICS_REBASE_M63)
 #include "talk/woogeen/sdk/base/customizedframescapturer.h"
+#if defined(ICS_REBASE_M63)
 #include "talk/woogeen/sdk/base/desktopcapturer.h"
 #endif
 #include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
@@ -18,9 +18,7 @@
 #include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/woogeen/sdk/base/webrtcvideorendererimpl.h"
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
 #include "talk/woogeen/sdk/base/win/videorendererwin.h"
-#endif
 #endif
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/deviceutils.h"
 #include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
@@ -143,7 +141,6 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
 }
 
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
     LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
@@ -172,7 +169,6 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
-#endif
 
 void Stream::DetachVideoRenderer() {
 #if defined(WEBRTC_WIN)
@@ -195,13 +191,11 @@ void Stream::DetachVideoRenderer() {
     renderer_impl_ = nullptr;
   }
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
   if (d3d9_renderer_impl_ != nullptr) {
     video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
     delete d3d9_renderer_impl_;
     d3d9_renderer_impl_ = nullptr;
   }
-#endif
 #endif
 }
 
@@ -538,6 +532,7 @@ LocalScreenStream::LocalScreenStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
+#endif
 
 LocalCustomizedStream::~LocalCustomizedStream() {
   LOG(LS_INFO) << "Destory LocalCameraStream.";
@@ -660,7 +655,6 @@ void LocalCustomizedStream::AttachVideoRenderer(
 }
 
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
 void LocalCustomizedStream::AttachVideoRenderer(
     VideoRenderWindow& render_window) {
   if (encoded_) {
@@ -695,7 +689,6 @@ void LocalCustomizedStream::AttachVideoRenderer(
   LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
-#endif
 
 void LocalCustomizedStream::DetachVideoRenderer() {
   if (encoded_) {
@@ -729,7 +722,7 @@ void LocalCustomizedStream::DetachVideoRenderer() {
   }
 #endif
 }
-#endif
+
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)

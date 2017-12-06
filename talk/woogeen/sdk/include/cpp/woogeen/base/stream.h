@@ -114,11 +114,9 @@ class Stream {
   }
 
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
   virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
-#endif
 #endif
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
@@ -302,7 +300,6 @@ class LocalCameraStream : public LocalStream {
 #endif
 };
 
-#if defined(ICS_REBASE_M63)
 /// This class represents a local stream which uses frame generator to generate
 //  I420 frames or depends on a video encoder to generate encoded frames.
 class LocalCustomizedStream : public LocalStream {
@@ -345,11 +342,9 @@ class LocalCustomizedStream : public LocalStream {
    /// Attach the stream to a renderer to receive ARGB frames from decoder.
    void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
 #if defined(WEBRTC_WIN)
-#if defined(ICS_REBASE_M63)
    /// Attach the stream to a renderer to receive frames from decoder.
    /// Both I420 frame and native surface is supported.
    void AttachVideoRenderer(VideoRenderWindow& render_window);
-#endif
 #endif
    /// Detach the stream from its renderer.
    void DetachVideoRenderer();
@@ -357,6 +352,7 @@ class LocalCustomizedStream : public LocalStream {
    bool encoded_ = false;
 };
 
+#if defined(ICS_REBASE_M63)
 /// This class represents a local stream which uses local screen/app to generate
 /// frames.
 class LocalScreenStream : public LocalStream {
