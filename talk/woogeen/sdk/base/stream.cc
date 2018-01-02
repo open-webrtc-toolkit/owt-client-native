@@ -726,7 +726,7 @@ void LocalCustomizedStream::DetachVideoRenderer() {
 
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
-    : remote_user_id_(from) {
+    : remote_user_id_(from), renderer_native_impl_(nullptr) {
   RTC_CHECK(media_stream);
   Id(media_stream->label());
   media_stream_ = media_stream;
@@ -734,7 +734,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
 }
 
 RemoteStream::RemoteStream(const std::string& id, const std::string& from)
-    : Stream(id), remote_user_id_(from) {}
+    : Stream(id), remote_user_id_(from), renderer_native_impl_(nullptr) {}
 
 std::string RemoteStream::From() {
   return remote_user_id_;
