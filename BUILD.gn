@@ -6,10 +6,10 @@ group("default") {
   testonly = true
 
   deps = [
-    "//talk/woogeen",
+    "//talk/ics",
     "//third_party/webrtc/examples",
   ]
   if (woogeen_include_tests) {
-    deps += [ "talk/woogeen:woogeen_tests" ]
+    deps += [ "talk/ics:woogeen_tests" ]
   }
 }
