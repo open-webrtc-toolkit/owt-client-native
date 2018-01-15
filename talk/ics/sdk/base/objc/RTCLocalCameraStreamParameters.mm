@@ -3,19 +3,19 @@
  */
 
 #include <memory>
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/localcamerastreamparameters.h"
+#include "talk/ics/sdk/include/cpp/ics/base/localcamerastreamparameters.h"
 
-#import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
 
 @implementation RTCLocalCameraStreamParameters {
-  std::shared_ptr<woogeen::base::LocalCameraStreamParameters> _nativeParameters;
+  std::shared_ptr<ics::base::LocalCameraStreamParameters> _nativeParameters;
 }
 
 - (instancetype)initWithVideoEnabled:(BOOL)videoEnabled
                         audioEnabled:(BOOL)audioEnabled {
   self = [super init];
-  std::shared_ptr<woogeen::base::LocalCameraStreamParameters> parameters(
-      new woogeen::base::LocalCameraStreamParameters(videoEnabled, audioEnabled));
+  std::shared_ptr<ics::base::LocalCameraStreamParameters> parameters(
+      new ics::base::LocalCameraStreamParameters(videoEnabled, audioEnabled));
   _nativeParameters = parameters;
   return self;
 }
@@ -33,12 +33,12 @@
 
 @implementation RTCLocalCameraStreamParameters (Internal)
 
-- (std::shared_ptr<woogeen::base::LocalCameraStreamParameters>)nativeParameters {
+- (std::shared_ptr<ics::base::LocalCameraStreamParameters>)nativeParameters {
   return _nativeParameters;
 }
 
 - (void)setNativeParameters:
-    (std::shared_ptr<woogeen::base::LocalCameraStreamParameters>)nativeParameters {
+    (std::shared_ptr<ics::base::LocalCameraStreamParameters>)nativeParameters {
   _nativeParameters = nativeParameters;
 }
 

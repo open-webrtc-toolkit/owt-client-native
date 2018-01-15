@@ -19,9 +19,9 @@ CustomizedVideoEncoderJni::CustomizedVideoEncoderJni(JNIEnv* jni, jobject j_enco
 
 }
 
-bool CustomizedVideoEncoderJni::InitEncoderContext(woogeen::base::Resolution& resolution,
+bool CustomizedVideoEncoderJni::InitEncoderContext(ics::base::Resolution& resolution,
                                                    uint32_t fps, uint32_t bitrate_kbps,
-                                                   woogeen::base::MediaCodec::VideoCodec video_codec) {
+                                                   ics::base::MediaCodec::VideoCodec video_codec) {
     return true;
 
 }
@@ -43,7 +43,7 @@ bool CustomizedVideoEncoderJni::Release() {
     return true;
 }
 
-woogeen::base::VideoEncoderInterface* CustomizedVideoEncoderJni::Copy() {
+ics::base::VideoEncoderInterface* CustomizedVideoEncoderJni::Copy() {
     JNIEnv* jni = webrtc_jni::AttachCurrentThreadIfNeeded();
     return new CustomizedVideoEncoderJni(jni, j_encoder_);
 }

@@ -3,23 +3,23 @@
  */
 
 #import "Foundation/Foundation.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PErrors.h"
-#import "talk/woogeen/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
-#import "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
-#import "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
-#import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCMediaCodec+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCErrors.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCP2PErrors.h"
+#import "talk/ics/sdk/p2p/objc/RTCP2PPeerConnectionChannel.h"
+#import "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
+#import "talk/ics/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
+#import "talk/ics/sdk/base/objc/RTCConnectionStats+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCLocalStream+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCMediaCodec+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCStream+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
 
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 
 @implementation RTCP2PPeerConnectionChannel {
-  woogeen::p2p::P2PPeerConnectionChannel* _nativeChannel;
+  ics::p2p::P2PPeerConnectionChannel* _nativeChannel;
   NSString* _remoteId;
 }
 
@@ -29,8 +29,8 @@
                       signalingSender:
                           (id<RTCP2PSignalingSenderProtocol>)signalingSender {
   self = [super init];
-  woogeen::p2p::P2PSignalingSenderInterface* sender =
-      new woogeen::p2p::RTCP2PSignalingSenderObjcImpl(signalingSender);
+  ics::p2p::P2PSignalingSenderInterface* sender =
+      new ics::p2p::RTCP2PSignalingSenderObjcImpl(signalingSender);
   _remoteId = remoteId;
   const std::string nativeRemoteId = [remoteId UTF8String];
   const std::string nativeLocalId = [localId UTF8String];
@@ -38,21 +38,22 @@
   for (RTCIceServer* server in config.ICEServers) {
     nativeIceServers.push_back(server.nativeServer);
   }
-  woogeen::p2p::PeerConnectionChannelConfiguration nativeConfig;
+  ics::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;
   nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
   nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
+  /*
   nativeConfig.media_codec.audio_codec =
       [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];
   nativeConfig.media_codec.video_codec =
-      [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];
+      [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];*/
   nativeConfig.candidate_network_policy =
       ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
           ? webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyLowCost
           : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyAll;
-  _nativeChannel = new woogeen::p2p::P2PPeerConnectionChannel(
+  _nativeChannel = new ics::p2p::P2PPeerConnectionChannel(
       nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;
 }
@@ -64,7 +65,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -85,7 +86,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -106,7 +107,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -124,12 +125,12 @@
       onFailure:(void (^)(NSError*))onFailure {
   NSLog(@"RTCP2PPeerConnectionChannel publish stream.");
   _nativeChannel->Publish(
-      std::static_pointer_cast<woogeen::base::LocalStream>([stream nativeStream]),
+      std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
       [=]() {
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -148,12 +149,12 @@
         onFailure:(void (^)(NSError*))onFailure {
   NSLog(@"RTCP2PPeerConnectionChannel unpublish stream.");
   _nativeChannel->Unpublish(
-      std::static_pointer_cast<woogeen::base::LocalStream>([stream nativeStream]),
+      std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
       [=]() {
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -176,7 +177,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -197,7 +198,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -214,13 +215,13 @@
 - (void)getConnectionStatsWithOnSuccess:(void (^)(RTCConnectionStats*))onSuccess
                               onFailure:(void (^)(NSError*))onFailure {
   _nativeChannel->GetConnectionStats(
-      [=](std::shared_ptr<woogeen::base::ConnectionStats> native_stats) {
+      [=](std::shared_ptr<ics::base::ConnectionStats> native_stats) {
         if (onSuccess) {
           onSuccess([[RTCConnectionStats alloc]
               initWithNativeStats:*native_stats.get()]);
         }
       },
-      [=](std::unique_ptr<woogeen::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::p2p::P2PException> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -239,8 +240,8 @@
 }
 
 - (void)addObserver:(id<RTCP2PPeerConnectionChannelObserver>)observer {
-  woogeen::p2p::P2PPeerConnectionChannelObserver* nativeObserver =
-      new woogeen::p2p::P2PPeerConnectionChannelObserverObjcImpl(observer);
+  ics::p2p::P2PPeerConnectionChannelObserver* nativeObserver =
+      new ics::p2p::P2PPeerConnectionChannelObserverObjcImpl(observer);
   _nativeChannel->AddObserver(nativeObserver);
 }
 

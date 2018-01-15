@@ -4,13 +4,13 @@
 
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaConstraints+Private.h"
-#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
-#import "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
+#import "talk/ics/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
+#import "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 
 @interface RTCPeerConnectionDependencyFactory ()
 
 @property(nonatomic, assign)
-    rtc::scoped_refptr<woogeen::base::PeerConnectionDependencyFactory>
+    rtc::scoped_refptr<ics::base::PeerConnectionDependencyFactory>
         nativePeerConnectionDependencyFactory;
 
 @end
@@ -24,7 +24,7 @@ static RTCPeerConnectionDependencyFactory* sharedFactory;
 
 - (id)init {
   _nativePeerConnectionDependencyFactory =
-      woogeen::base::PeerConnectionDependencyFactory::Get();
+      ics::base::PeerConnectionDependencyFactory::Get();
   NSLog(@"Init RTCPCDependencyFactory");
   return self;
 }

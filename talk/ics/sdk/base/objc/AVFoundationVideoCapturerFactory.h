@@ -5,10 +5,10 @@
 #ifndef WOOGEEN_BASE_AVFOUNDATIONVIDEOCAPTURERFACTORY_H_
 #define WOOGEEN_BASE_AVFOUNDATIONVIDEOCAPTURERFACTORY_H_
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/localcamerastreamparameters.h"
+#include "talk/ics/sdk/include/cpp/ics/base/localcamerastreamparameters.h"
 #include "webrtc/media/base/videocapturer.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 class AVFoundationVideoCapturerFactory {
  public:

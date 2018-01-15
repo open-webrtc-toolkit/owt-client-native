@@ -2,19 +2,19 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceUser.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceUser.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/conference/user.h"
+#include "talk/ics/sdk/include/cpp/ics/conference/user.h"
 
 /*
 // This class represent a user's permission
 @interface RTCConferencePermission (Internal)
 
 -(instancetype)initWithNativePermission:(std::shared_ptr<const
-woogeen::conference::Permission>)permission;
+ics::conference::Permission>)permission;
 -(void)setNativePermission:(std::shared_ptr<const
-woogeen::conference::Permission>)permission;
--(std::shared_ptr<const woogeen::conference::Permission>)nativePermission;
+ics::conference::Permission>)permission;
+-(std::shared_ptr<const ics::conference::Permission>)nativePermission;
 
 @end
 */
@@ -23,8 +23,8 @@ woogeen::conference::Permission>)permission;
 @interface RTCConferenceUser (Internal)
 
 - (instancetype)initWithNativeUser:
-    (std::shared_ptr<const woogeen::conference::User>)user;
-- (void)setNativeUser:(std::shared_ptr<const woogeen::conference::User>)user;
-- (std::shared_ptr<const woogeen::conference::User>)nativeUser;
+    (std::shared_ptr<const ics::conference::User>)user;
+- (void)setNativeUser:(std::shared_ptr<const ics::conference::User>)user;
+- (std::shared_ptr<const ics::conference::User>)nativeUser;
 
 @end

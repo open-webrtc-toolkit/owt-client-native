@@ -27,6 +27,7 @@
 #ifndef ICS_BASE_COMMON_TYPES_H_
 #define ICS_BASE_COMMON_TYPES_H_
 
+#include <string>
 #include <vector>
 #include <unordered_map>
 

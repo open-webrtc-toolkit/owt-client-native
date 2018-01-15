@@ -27,7 +27,7 @@
 #ifndef WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_
 #define WOOGEEN_BASE_SIGNALINGRECEIVERINTERFACE_H_
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 /** @cond */

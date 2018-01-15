@@ -3,7 +3,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
 
 @implementation RTCRemoteScreenStream
 

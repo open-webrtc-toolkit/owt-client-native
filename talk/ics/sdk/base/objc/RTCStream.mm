@@ -6,11 +6,11 @@
 #import <WebRTC/RTCVideoTrack.h>
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCStream.h"
-#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCStream.h"
+#import "talk/ics/sdk/base/objc/RTCStream+Internal.h"
 
 @implementation RTCStream {
-  std::shared_ptr<woogeen::base::Stream> _nativeStream;
+  std::shared_ptr<ics::base::Stream> _nativeStream;
   RTCMediaStream* _mediaStream;
 }
 
@@ -73,17 +73,17 @@
 
 @implementation RTCStream (Internal)
 
-- (instancetype)initWithNativeStream:(std::shared_ptr<woogeen::base::Stream>)stream {
+- (instancetype)initWithNativeStream:(std::shared_ptr<ics::base::Stream>)stream {
   self = [super init];
   [self setNativeStream:stream];
   return self;
 }
 
-- (void)setNativeStream:(std::shared_ptr<woogeen::base::Stream>)stream {
+- (void)setNativeStream:(std::shared_ptr<ics::base::Stream>)stream {
   _nativeStream = stream;
 }
 
-- (std::shared_ptr<woogeen::base::Stream>)nativeStream {
+- (std::shared_ptr<ics::base::Stream>)nativeStream {
   return _nativeStream;
 }
 

@@ -4,13 +4,13 @@
 
 #include <vector>
 #include <thread>
-#include "talk/woogeen/sdk/base/eventtrigger.h"
-#include "talk/woogeen/sdk/base/functionalobserver.h"
-#include "talk/woogeen/sdk/base/sysinfo.h"
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/ics/sdk/base/eventtrigger.h"
+#include "talk/ics/sdk/base/functionalobserver.h"
+#include "talk/ics/sdk/base/sysinfo.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/rtc_base/logging.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 using std::string;
@@ -506,7 +506,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteScreenStream>),
         std::shared_ptr<RemoteScreenStream>>(
         observers_, event_queue_,
@@ -519,7 +519,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteCameraStream>),
         std::shared_ptr<RemoteCameraStream>>(
         observers_, event_queue_,
@@ -543,7 +543,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteScreenStream>),
         std::shared_ptr<RemoteScreenStream>>(
         observers_, event_queue_,
@@ -555,7 +555,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (woogeen::p2p::P2PPeerConnectionChannelObserver::*)(
+        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteCameraStream>),
         std::shared_ptr<RemoteCameraStream>>(
         observers_, event_queue_,
@@ -954,7 +954,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       Json::Value stream_info;
       stream_info[kStreamIdKey] = media_stream->label();
       if (stream->GetStreamDeviceType() ==
-          woogeen::base::LocalStream::StreamDeviceType::
+          ics::base::LocalStream::StreamDeviceType::
               kStreamDeviceTypeScreen) {
         stream_info[kStreamTypeKey] = "screen";
       } else {

@@ -2,13 +2,13 @@
  * Intel License
  */
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCP2PSignalingSenderProtocol.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCP2PSignalingSenderProtocol.h"
 
 #include <string>
 #include <functional>
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2psignalingsenderinterface.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 // It wraps an id<RTCSignalingSenderInterface> and call methods on that

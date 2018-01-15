@@ -2,8 +2,8 @@
  * Copyright (c) 2017 Intel Corporation. All rights reserved.
  */
 
-#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionFactory+Woogeen.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCFactory.h"
+#import "talk/ics/sdk/base/objc/RTCPeerConnectionFactory+Woogeen.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCFactory.h"
 
 @implementation RTCFactory
 

@@ -2,9 +2,9 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
+#include "talk/ics/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
 
-namespace woogeen {
+namespace ics {
 namespace conference {
 RemoteMixedStreamObserverObjcImpl::RemoteMixedStreamObserverObjcImpl(
     id<RTCRemoteMixedStreamObserver> observer) {

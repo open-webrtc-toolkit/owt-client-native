@@ -25,7 +25,7 @@ OUT_PATH = os.path.join(HOME_PATH, 'out')
 # The lib contains all target architectures
 OUT_FAT_LIB_NAME = 'libwoogeen-fat.a'
 # The lib contains all target architectures and external libs(OpenSSL).
-OUT_LIB_NAME = 'libwoogeen.a'
+OUT_LIB_NAME = 'libics.a'
 OUT_FRAMEWORK_NAME = "Woogeen.framework"
 OUT_FRAMEWORK_ROOT = os.path.join(OUT_PATH, OUT_FRAMEWORK_NAME)
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
@@ -46,17 +46,16 @@ WEBRTC_HEADER_LIST = ['third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCI
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameFilterProtocol.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCConfiguration.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
     'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h']
-HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/woogeen/sdk/include/objc/Woogeen/*']
+HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/ics/sdk/include/objc/Woogeen/*']
 LIB_BLACK_LIST = ['video_capture']
-FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
+FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
-FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'sdk',
+FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
-SDK_TARGETS = ['woogeen']
+SDK_TARGETS = ['ics']
 APP_TARGETS = ['AppRTCMobile']
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
@@ -140,13 +139,13 @@ def dist(arch_list, scheme, ssl_root):
     os.makedirs(OUT_PATH)
   argu = ['libtool', '-o', out_lib_path]
   for target_arch in arch_list:
-    argu.append('%s/obj/talk/woogeen/libwoogeen.a'%getoutputpath(target_arch, scheme))
+    argu.append('%s/obj/talk/ics/libics.a'%getoutputpath(target_arch, scheme))
   # Add external libs.
   if ssl_root:
     argu.extend(getexternalliblist(ssl_root))
   subprocess.call(argu, cwd=HOME_PATH)
   if scheme == 'release':
-    subprocess.call(['strip', '-S', '-x', '%s/out/libwoogeen.a'%HOME_PATH],
+    subprocess.call(['strip', '-S', '-x', '%s/out/libics.a'%HOME_PATH],
         cwd=HOME_PATH)
   buildframework()
   return True

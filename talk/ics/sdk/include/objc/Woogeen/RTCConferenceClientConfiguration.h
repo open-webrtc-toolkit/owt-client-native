@@ -29,7 +29,6 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCConfiguration.h>
-#import "Woogeen/RTCMediaCodec.h"
 
 /// Configuration for creating a RTCConferenceClient
 /**
@@ -40,8 +39,6 @@ RTC_EXPORT
 @interface RTCConferenceClientConfiguration : NSObject
 
 @property(nonatomic, strong, readwrite) NSArray* ICEServers;
-/// Media codec preference
-@property(nonatomic, strong, readwrite) RTCMediaCodec* mediaCodec;
 /**
  @brief Max outgoing audio bandwidth, unit: kbps.
  @details Please be noticed different codecs may support different bitrate

@@ -2,30 +2,30 @@
 //  Copyright (c) 2017 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCExternalOutput.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCExternalOutput.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/conference/externaloutput.h"
+#include "talk/ics/sdk/include/cpp/ics/conference/externaloutput.h"
 
 @interface RTCExternalAudioOutputOptions (Internal)
 
-- (woogeen::conference::ExternalAudioOutputOptions)nativeOptions;
+- (ics::conference::ExternalAudioOutputOptions)nativeOptions;
 
 @end
 
 @interface RTCExternalVideoOutputOptions (Internal)
 
-- (woogeen::conference::ExternalVideoOutputOptions)nativeOptions;
+- (ics::conference::ExternalVideoOutputOptions)nativeOptions;
 
 @end
 
 @interface RTCExternalOutputOptions (Internal)
 
-- (woogeen::conference::ExternalOutputOptions)nativeOptions;
+- (ics::conference::ExternalOutputOptions)nativeOptions;
 
 @end
 
 @interface RTCExternalOutputAck (Interface)
 
--(instancetype)initWithNativeAck:(const woogeen::conference::ExternalOutputAck&)nativeAck;
+-(instancetype)initWithNativeAck:(const ics::conference::ExternalOutputAck&)nativeAck;
 
 @end

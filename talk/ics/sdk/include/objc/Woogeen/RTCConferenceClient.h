@@ -64,13 +64,6 @@ RTC_EXPORT
       onSuccess:(nullable void (^)())onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 /**
-  @brief Un-publish the stream from the current room.
-  @param stream The stream to be unpublished.
-*/
-- (void)unpublish:(RTCLocalStream*)stream
-        onSuccess:(nullable void (^)())onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
-/**
   @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
   @param onSuccess Success callback with a stream that contains media stream.
@@ -89,13 +82,6 @@ RTC_EXPORT
         onSuccess:(nullable void (^)(RTCRemoteStream*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
-  @brief Un-subscribe the stream from the current room.
-  @param stream The stream to be unsubscribed.
-*/
-- (void)unsubscribe:(RTCRemoteStream*)stream
-          onSuccess:(nullable void (^)())onSuccess
-          onFailure:(nullable void (^)(NSError*))onFailure;
-/**
   @brief Send message to all participants in the conference.
   @param message The message to be sent.
 */
@@ -111,69 +97,6 @@ RTC_EXPORT
           to:(NSString*)receiver
    onSuccess:(nullable void (^)())onSuccess
    onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Continue to transmit specified stream's audio data.
-  @details If |stream| is a remote stream, MCU will continue to send audio data
-  to client. If |stream| is a local stream, client will cont inue to send audio
-  data to MCU. This method is expected to be called after |disableAudio|.
-  @param This stream's audio will be played.
-*/
-- (void)playAudio:(RTCStream*)stream
-        onSuccess:(nullable void (^)())onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Stop transmitting specified stream's audio data.
-  @details If |stream| is a remote stream, MCU will stop sending audio data to
-  client. If |stream| is a local stream, client will stop sending audio data to
-  MCU.
-  @param This stream's audio will be paused.
-*/
-- (void)pauseAudio:(RTCStream*)stream
-         onSuccess:(nullable void (^)())onSuccess
-         onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Continue to transmit specified stream's video data.
-  @details If |stream| is a remote stream, MCU will continue to send video data
-  to client. If |stream| is a local stream, client will cont inue to send video
-  data to MCU. This method is expected to be called after |disableVideo|.
-  @param This stream's video will be played.
-*/
-- (void)playVideo:(RTCStream*)stream
-        onSuccess:(nullable void (^)())onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Stop transmitting specified stream's video data.
-  @details If |stream| is a remote stream, MCU will stop sending video data to
-  client. If |stream| is a local stream, client will stop sending video data to
-  MCU.
-  @param This stream's video will be played.
-*/
-- (void)pauseVideo:(RTCStream*)stream
-         onSuccess:(nullable void (^)())onSuccess
-         onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Get a remote stream's region
-  @param stream Whose region to get.
-  @param mixedStream Mixed stream on which the region to get.
-  @param onSuccess Success callback with region ID.
-*/
-- (void)getRegionOfStream:(RTCRemoteStream*)stream
-            inMixedStream:(RTCRemoteMixedStream*)mixedStream
-                onSuccess:(void (^)(NSString*))onSuccess
-                onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Set a remote stream's region
-  @param stream Whose region to get.
-  @param mixedStream Mixed stream on which the region to get.
-  @param regionId Region ID to be set.
-  @param onSuccess Success callback with region ID.
-*/
-- (void)setRegionOfStream:(RTCRemoteStream*)stream
-               toRegionId:(NSString*)regionId
-            inMixedStream:(RTCRemoteMixedStream*)mixedStream
-                onSuccess:(nullable void (^)())onSuccess
-                onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Get a stream's connection statistics
@@ -182,34 +105,6 @@ RTC_EXPORT
                           onSuccess:
                               (nullable void (^)(RTCConnectionStats*))onSuccess
                           onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Start streaming corresponding stream in the conference to a specific
-  target. (Experimental API, not stable)
-*/
-- (void)
-addExternalOutputWithOptions:(RTCExternalOutputOptions*)options
-                   onSuccess:(nullable void (^)(RTCExternalOutputAck*))onSuccess
-                   onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Start streaming corresponding stream in the conference to a specific
-  target. (Experimental API, not stable)
-*/
-- (void)updateExternalOutputWithOptions:(RTCExternalOutputOptions*)options
-                              onSuccess:(nullable void (^)(
-                                            RTCExternalOutputAck*))onSuccess
-                              onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Start streaming corresponding stream in the conference to a specific
-  target. (Experimental API, not stable)
-  @param url Target URL or recorder ID. You can get it from addExternalOutput's
-  success callback. |url| may be changed to NSURL later.
-*/
-- (void)removeExternalOutputWithOptions:(NSString*)url
-                              onSuccess:(nullable void (^)())onSuccess
-                              onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Leave current conference.

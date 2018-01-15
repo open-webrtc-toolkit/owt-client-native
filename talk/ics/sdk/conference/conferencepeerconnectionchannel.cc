@@ -48,7 +48,6 @@ enum ConferencePeerConnectionChannel::NegotiationState : int {
 
 // Const value for messages
 const int kMessageSeqBase = 1;
-const int kTiebreakerUpperBound = 429496723;  // ditto
 
 // Stream option member key
 const string kStreamOptionStreamIdKey = "streamId";

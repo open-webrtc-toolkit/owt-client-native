@@ -6,8 +6,8 @@
 #include <unordered_map>
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalStream.h"
+#import "talk/ics/sdk/base/objc/RTCLocalStream+Internal.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCLocalStream.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 @implementation RTCLocalStream
@@ -27,9 +27,9 @@
 
 @implementation RTCLocalStream (Internal)
 
-- (std::shared_ptr<woogeen::base::LocalStream>)nativeLocalStream {
-  std::shared_ptr<woogeen::base::Stream> stream = [super nativeStream];
-  return std::static_pointer_cast<woogeen::base::LocalStream>(stream);
+- (std::shared_ptr<ics::base::LocalStream>)nativeLocalStream {
+  std::shared_ptr<ics::base::Stream> stream = [super nativeStream];
+  return std::static_pointer_cast<ics::base::LocalStream>(stream);
 }
 
 - (NSString*)streamId {

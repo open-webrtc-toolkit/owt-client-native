@@ -11,7 +11,7 @@ import sys
 import subprocess
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'woogeen', 'patches')
+PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'patches')
 TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')

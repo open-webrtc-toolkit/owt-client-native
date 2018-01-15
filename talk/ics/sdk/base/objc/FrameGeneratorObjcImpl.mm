@@ -3,9 +3,9 @@
 //
 
 #import <vector>
-#import "talk/woogeen/sdk/base/objc/FrameGeneratorObjcImpl.h"
+#import "talk/ics/sdk/base/objc/FrameGeneratorObjcImpl.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 
 int AudioFrameGeneratorObjcImpl::GetSampleRate() {
@@ -36,7 +36,7 @@ int VideoFrameGeneratorObjcImpl::GetFps() {
 
 VideoFrameGeneratorInterface::VideoFrameCodec
 VideoFrameGeneratorObjcImpl::GetType() {
-  return woogeen::base::VideoFrameGeneratorInterface::VideoFrameCodec::I420;
+  return ics::base::VideoFrameGeneratorInterface::VideoFrameCodec::I420;
 }
 
 uint32_t VideoFrameGeneratorObjcImpl::GetNextFrameSize(){

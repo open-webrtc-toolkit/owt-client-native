@@ -2,11 +2,11 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/base/mediautils.h"
+#include "talk/ics/sdk/base/mediautils.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/gmock/include/gmock/gmock.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 
 TEST(MediaUtilsTest, CorrectResolutionNameHd720p){

@@ -31,9 +31,9 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "woogeen/p2p/p2pexception.h"
+#include "ics/p2p/p2pexception.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 /**
  @brief Signaling channel will notify observer when event triggers.

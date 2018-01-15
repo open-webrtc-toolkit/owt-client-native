@@ -2,11 +2,11 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceSubscribeOptions.h"
-#import "talk/woogeen/sdk/include/cpp/woogeen/conference/subscribeoptions.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceSubscribeOptions.h"
+#import "talk/ics/sdk/include/cpp/ics/conference/subscribeoptions.h"
 
 @interface RTCConferenceSubscribeOptions (Internal)
 
--(woogeen::conference::SubscribeOptions)nativeSubscribeOptions;
+-(ics::conference::SubscribeOptions)nativeSubscribeOptions;
 
 @end

@@ -2,9 +2,9 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCMediaFormat.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCMediaFormat.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
+#include "talk/ics/sdk/include/cpp/ics/base/common_types.h"
 
 #ifndef WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_INTERNAL_H_
 #define WOOGEEN_CONFERENCE_OBJC_RTCREMOTEMIXEDSTREAM_INTERNAL_H_
@@ -12,7 +12,7 @@
 @interface RTCVideoFormat (Internal)
 
 - (instancetype)initWithNativeVideoFormat:
-    (const woogeen::base::VideoFormat&)videoFormat;
+    (const ics::base::VideoFormat&)videoFormat;
 
 @end
 

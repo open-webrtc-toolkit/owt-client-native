@@ -2,7 +2,7 @@
  * Intel License
  */
 
-#import "talk/woogeen/sdk/base/objc/RTCConnectionStats+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCConnectionStats+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 #include <unordered_map>
@@ -14,7 +14,7 @@
 }
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::ConnectionStats&)stats {
+    (const ics::base::ConnectionStats&)stats {
   if (self = [super init]) {
     _timeStamp = [NSDate date];
     _videoBandwidthStats = [[RTCVideoBandwidthStats alloc]
@@ -97,7 +97,7 @@
 @implementation RTCAudioSenderStats
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::AudioSenderReport&)stats {
+    (const ics::base::AudioSenderReport&)stats {
   if (self = [super initWithSsrc:""
                        codecName:stats.codec_name
                  trackIdentifier:""]) {
@@ -114,7 +114,7 @@
 @implementation RTCAudioReceiverStats
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::AudioReceiverReport&)stats {
+    (const ics::base::AudioReceiverReport&)stats {
   if (self = [super initWithSsrc:""
                        codecName:stats.codec_name
                  trackIdentifier:""]) {
@@ -131,7 +131,7 @@
 @implementation RTCVideoSenderStats
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoSenderReport&)stats {
+    (const ics::base::VideoSenderReport&)stats {
   if (self = [super initWithSsrc:""
                        codecName:stats.codec_name
                  trackIdentifier:""]) {
@@ -155,7 +155,7 @@
 @implementation RTCVideoReceiverStats
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoReceiverReport&)stats {
+    (const ics::base::VideoReceiverReport&)stats {
   if (self = [super initWithSsrc:""
                        codecName:stats.codec_name
                  trackIdentifier:""]) {
@@ -179,7 +179,7 @@
 @implementation RTCVideoBandwidthStats
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoBandwidthStats&)stats {
+    (const ics::base::VideoBandwidthStats&)stats {
   if (self = [super init]) {
     _availableSendBandwidth = (NSUInteger)stats.available_send_bandwidth;
     _availableReceiveBandwidth = (NSUInteger)stats.available_receive_bandwidth;
@@ -196,15 +196,15 @@
 
 @implementation RTCIceCandidateStats
 
-- (RTCIceCandidateType)getCandidateType:(woogeen::base::IceCandidateType)type {
+- (RTCIceCandidateType)getCandidateType:(ics::base::IceCandidateType)type {
   switch (type) {
-    case woogeen::base::IceCandidateType::kHost:
+    case ics::base::IceCandidateType::kHost:
       return RTCIceCandidateTypeHost;
-    case woogeen::base::IceCandidateType::kSrflx:
+    case ics::base::IceCandidateType::kSrflx:
       return RTCIceCandidateTypeSrflx;
-    case woogeen::base::IceCandidateType::kPrflx:
+    case ics::base::IceCandidateType::kPrflx:
       return RTCIceCandidateTypePrflx;
-    case woogeen::base::IceCandidateType::kRelay:
+    case ics::base::IceCandidateType::kRelay:
       return RTCIceCandidateTypeRelay;
     default:
       RTC_DCHECK(false);
@@ -213,11 +213,11 @@
 }
 
 - (RTCTransportProtocolType)getProtocolType:
-    (woogeen::base::TransportProtocolType)type {
+    (ics::base::TransportProtocolType)type {
   switch (type) {
-    case woogeen::base::TransportProtocolType::kTcp:
+    case ics::base::TransportProtocolType::kTcp:
       return RTCTransportProtocolTypeTcp;
-    case woogeen::base::TransportProtocolType::kUdp:
+    case ics::base::TransportProtocolType::kUdp:
       return RTCTransportProtocolTypeUdp;
     default:
       RTC_DCHECK(false);
@@ -226,7 +226,7 @@
 }
 
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::IceCandidateReport&)stats {
+    (const ics::base::IceCandidateReport&)stats {
   if (self = [super init]) {
     _statsId = [NSString stringForStdString:stats.id];
     _ip = [NSString stringForStdString:stats.ip];
@@ -242,7 +242,7 @@
 
 @implementation RTCIceCandidatePairStats
 - (instancetype)initWithNativeStats:
-                    (const woogeen::base::IceCandidatePairReport&)stats
+                    (const ics::base::IceCandidatePairReport&)stats
                   localIceCandidate:(RTCIceCandidateStats*)localIceCandidate
                  remoteIceCandidate:(RTCIceCandidateStats*)remoteIceCandidate {
   if (self = [super init]) {

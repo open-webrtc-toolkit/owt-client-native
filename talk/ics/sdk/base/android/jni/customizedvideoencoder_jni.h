@@ -7,19 +7,19 @@
 #include <memory>
 #include <vector>
 #include "webrtc/sdk/android/src/jni/jni_helpers.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/mediaformat.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/videoencoderinterface.h"
+#include "talk/woogeen/sdk/include/cpp/ics/base/mediaformat.h"
+#include "talk/woogeen/sdk/include/cpp/ics/base/videoencoderinterface.h"
 
 namespace woogeen {
 
-class CustomizedVideoEncoderJni : public woogeen::base::VideoEncoderInterface {
+class CustomizedVideoEncoderJni : public ics::base::VideoEncoderInterface {
  public:
     CustomizedVideoEncoderJni(JNIEnv* jni, jobject j_encoder);
     virtual ~CustomizedVideoEncoderJni() {}
 
-    bool InitEncoderContext(woogeen::base::Resolution& resolution,
+    bool InitEncoderContext(ics::base::Resolution& resolution,
                             uint32_t fps, uint32_t bitrate_kbps,
-                            woogeen::base::MediaCodec::VideoCodec video_codec) override;
+                            ics::base::MediaCodec::VideoCodec video_codec) override;
     uint32_t EncodeOneFrame(bool key_frame, uint8_t** data);
     bool Release();
     VideoEncoderInterface* Copy();

@@ -2,7 +2,7 @@
 //  Copyright (c) 2017 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConferenceClient.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceClient.h"
 
 @interface RTCConferenceClient (Internal)
 

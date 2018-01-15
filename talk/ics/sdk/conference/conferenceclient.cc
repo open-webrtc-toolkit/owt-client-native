@@ -239,7 +239,6 @@ void ConferenceClient::Join(
       // Get current user's ID and trigger |on_success|. Make sure |on_success|
       // is triggered before any other events because OnUserJoined and
       // OnStreamAdded should be triggered after join a conference.
-      auto user_it=users.begin();
       for (auto user_it = users.begin(); user_it != users.end(); user_it++) {
         Participant* user_raw;
         if (ParseUser(*user_it, &user_raw)) {

@@ -3,14 +3,14 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/base/objc/RTCRemoteStream+Internal.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
+#import "talk/ics/sdk/base/objc/RTCRemoteStream+Internal.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
 #import "WebRTC/RTCLogging.h"
 
-#include "talk/woogeen/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
+#include "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 P2PPeerConnectionChannelObserverObjcImpl::
     P2PPeerConnectionChannelObserverObjcImpl(
@@ -52,7 +52,7 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
+    std::shared_ptr<ics::base::RemoteCameraStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
@@ -61,7 +61,7 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
+    std::shared_ptr<ics::base::RemoteScreenStream> stream) {
   RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
       [RTCRemoteScreenStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
@@ -70,19 +70,19 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::base::RemoteCameraStream> stream) {
+    std::shared_ptr<ics::base::RemoteCameraStream> stream) {
   TriggerStreamRemoved(
-      std::static_pointer_cast<woogeen::base::RemoteStream>(stream));
+      std::static_pointer_cast<ics::base::RemoteStream>(stream));
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<woogeen::base::RemoteScreenStream> stream) {
+    std::shared_ptr<ics::base::RemoteScreenStream> stream) {
   TriggerStreamRemoved(
-      std::static_pointer_cast<woogeen::base::RemoteStream>(stream));
+      std::static_pointer_cast<ics::base::RemoteStream>(stream));
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(
-    std::shared_ptr<woogeen::base::RemoteStream> stream) {
+    std::shared_ptr<ics::base::RemoteStream> stream) {
   if (remote_streams_.find(stream->Id()) == remote_streams_.end()) {
     RTCLogError(@"Invalid stream to be removed.");
     RTC_DCHECK(false);

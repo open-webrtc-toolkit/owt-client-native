@@ -2,13 +2,13 @@
  * Intel License
  */
 
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCConnectionStats.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCConnectionStats.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/connectionstats.h"
+#include "talk/ics/sdk/include/cpp/ics/base/connectionstats.h"
 
 @interface RTCConnectionStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::ConnectionStats&)stats;
+    (const ics::base::ConnectionStats&)stats;
 @end
 
 @interface RTCMediaChannelStats (Internal)
@@ -19,37 +19,37 @@
 
 @interface RTCAudioSenderStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::AudioSenderReport&)stats;
+    (const ics::base::AudioSenderReport&)stats;
 @end
 
 @interface RTCAudioReceiverStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::AudioReceiverReport&)stats;
+    (const ics::base::AudioReceiverReport&)stats;
 @end
 
 @interface RTCVideoSenderStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoSenderReport&)stats;
+    (const ics::base::VideoSenderReport&)stats;
 @end
 
 @interface RTCVideoReceiverStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoReceiverReport&)stats;
+    (const ics::base::VideoReceiverReport&)stats;
 @end
 
 @interface RTCVideoBandwidthStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::VideoBandwidthStats&)stats;
+    (const ics::base::VideoBandwidthStats&)stats;
 @end
 
 @interface RTCIceCandidateStats (Internal)
 - (instancetype)initWithNativeStats:
-    (const woogeen::base::IceCandidateReport&)stats;
+    (const ics::base::IceCandidateReport&)stats;
 @end
 
 @interface RTCIceCandidatePairStats (Internal)
 - (instancetype)initWithNativeStats:
-                    (const woogeen::base::IceCandidatePairReport&)stats
+                    (const ics::base::IceCandidatePairReport&)stats
                   localIceCandidate:(RTCIceCandidateStats*)localIceCandidate
                  remoteIceCandidate:(RTCIceCandidateStats*)remoteIceCandidate;
 @end

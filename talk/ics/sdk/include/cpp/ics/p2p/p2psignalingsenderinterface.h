@@ -30,7 +30,7 @@
 #include <string>
 #include <functional>
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 /** @cond */

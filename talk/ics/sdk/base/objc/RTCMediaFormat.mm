@@ -2,16 +2,16 @@
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/base/objc/RTCMediaFormat+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCMediaFormat+Internal.h"
 
 @implementation RTCVideoFormat {
-  woogeen::base::VideoFormat* _videoFormat;
+  ics::base::VideoFormat* _videoFormat;
 }
 
 - (instancetype)init {
   self = [super init];
-  woogeen::base::Resolution resolution(0, 0);
-  _videoFormat = new woogeen::base::VideoFormat(resolution);
+  ics::base::Resolution resolution(0, 0);
+  _videoFormat = new ics::base::VideoFormat(resolution);
   return self;
 }
 
@@ -29,11 +29,11 @@
 @implementation RTCVideoFormat (Internal)
 
 - (instancetype)initWithNativeVideoFormat:
-    (const woogeen::base::VideoFormat&)videoFormat {
+    (const ics::base::VideoFormat&)videoFormat {
   self = [super init];
-  woogeen::base::Resolution resolution(videoFormat.resolution.width,
+  ics::base::Resolution resolution(videoFormat.resolution.width,
                                  videoFormat.resolution.height);
-  _videoFormat = new woogeen::base::VideoFormat(resolution);
+  _videoFormat = new ics::base::VideoFormat(resolution);
   return self;
 }
 

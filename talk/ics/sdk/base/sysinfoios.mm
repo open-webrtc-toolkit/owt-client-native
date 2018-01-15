@@ -2,12 +2,12 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/base/sysinfo.h"
+#include "talk/ics/sdk/base/sysinfo.h"
 
 #import <UIKit/UIKit.h>
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 #if defined(WEBRTC_IOS)
 std::string SysInfo::OsName() {

@@ -3,7 +3,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCPeerClientConfiguration.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCPeerClientConfiguration.h"
 
 @implementation RTCPeerClientConfiguration
 

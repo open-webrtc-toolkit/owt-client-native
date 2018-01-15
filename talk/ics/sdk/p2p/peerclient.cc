@@ -3,15 +3,15 @@
  */
 
 #include <future>
-#include "talk/woogeen/sdk/base/eventtrigger.h"
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/peerclient.h"
+#include "talk/ics/sdk/base/eventtrigger.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
+#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/peerclient.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/task_queue.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 PeerClient::PeerClient(
@@ -98,7 +98,7 @@ void PeerClient::Stop(
 
 void PeerClient::GetConnectionStats(
     const std::string& target_id,
-    std::function<void(std::shared_ptr<woogeen::base::ConnectionStats>)>
+    std::function<void(std::shared_ptr<ics::base::ConnectionStats>)>
         on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   auto pcc = GetPeerConnectionChannel(target_id);
@@ -173,7 +173,8 @@ PeerConnectionChannelConfiguration PeerClient::GetPeerConnectionChannelConfigura
     ice_servers.push_back(ice_server);
   }
   config.servers = ice_servers;
-  config.media_codec = configuration_.media_codec;
+  // TODO: configuration structure changed.
+  // config.media_codec = configuration_.media_codec;
   config.max_audio_bandwidth = configuration_.max_audio_bandwidth;
   config.max_video_bandwidth = configuration_.max_video_bandwidth;
   config.candidate_network_policy =

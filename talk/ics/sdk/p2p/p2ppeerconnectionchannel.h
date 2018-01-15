@@ -11,21 +11,21 @@
 #include <unordered_set>
 #include <chrono>
 
-#include "talk/woogeen/sdk/base/mediaconstraintsimpl.h"
-#include "talk/woogeen/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/woogeen/sdk/base/peerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2pexception.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingsenderinterface.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/p2psignalingreceiverinterface.h"
+#include "talk/ics/sdk/base/mediaconstraintsimpl.h"
+#include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/ics/sdk/base/peerconnectionchannel.h"
+#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2pexception.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2psignalingsenderinterface.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/rtc_base/json.h"
 #include "webrtc/rtc_base/messagehandler.h"
 #include "webrtc/rtc_base/task_queue.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
-using namespace woogeen::base;
+using namespace ics::base;
 
 // P2PPeerConnectionChannel callback interface.
 // Usually, PeerClient should implement these methods and notify application.

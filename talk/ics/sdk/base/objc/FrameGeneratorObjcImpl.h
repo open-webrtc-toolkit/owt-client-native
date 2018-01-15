@@ -5,10 +5,10 @@
 #ifndef WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
 #define WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/framegeneratorinterface.h"
-#include "talk/woogeen/sdk/include/objc/Woogeen/RTCFrameGeneratorProtocol.h"
+#include "talk/ics/sdk/include/cpp/ics/base/framegeneratorinterface.h"
+#include "talk/ics/sdk/include/objc/Woogeen/RTCFrameGeneratorProtocol.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
  public:

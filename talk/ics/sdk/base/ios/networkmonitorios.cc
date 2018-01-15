@@ -6,9 +6,9 @@
 
 #include "webrtc/rtc_base/task_queue.h"
 
-#include "talk/woogeen/sdk/base/ios/networkmonitorios.h"
+#include "talk/ics/sdk/base/ios/networkmonitorios.h"
 
-namespace woogeen {
+namespace ics {
 namespace base {
 
 NetworkMonitorIos::NetworkMonitorIos() : reachability_(nullptr) {

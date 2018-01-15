@@ -5,10 +5,10 @@
 #ifndef WOOGEEN_CONFERENCE_OBJC_REMOTEMIXEDSTREAMOBSERVEROBJCIMPL_H_
 #define WOOGEEN_CONFERENCE_OBJC_REMOTEMIXEDSTREAMOBSERVEROBJCIMPL_H_
 
-#import "talk/woogeen/sdk/include/cpp/woogeen/conference/remotemixedstream.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCRemoteMixedStreamObserver.h"
+#import "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteMixedStreamObserver.h"
 
-namespace woogeen {
+namespace ics {
 namespace conference {
 class RemoteMixedStreamObserverObjcImpl : public RemoteMixedStreamObserver {
  public:

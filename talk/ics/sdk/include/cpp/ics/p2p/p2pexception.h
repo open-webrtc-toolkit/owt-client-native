@@ -27,13 +27,13 @@
 #ifndef WOOGEEN_P2P_P2PEXCEPTION_H_
 #define WOOGEEN_P2P_P2PEXCEPTION_H_
 
-#include "woogeen/base/exception.h"
+#include "ics/base/exception.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 /// This class reprensents a P2P exception.
-class P2PException : public woogeen::base::Exception {
+class P2PException : public ics::base::Exception {
  public:
   enum ExceptionType : int {
     kUnknown = 2001,  // TODO(jianjun): sync with other SDKs.

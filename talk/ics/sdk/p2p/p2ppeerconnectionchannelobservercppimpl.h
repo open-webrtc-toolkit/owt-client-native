@@ -5,13 +5,13 @@
 #ifndef WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "talk/woogeen/sdk/include/cpp/woogeen/p2p/peerclient.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/peerclient.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
-using namespace woogeen::base;
+using namespace ics::base;
 
 // This class connect a PeerClient and a P2PPeerConnectionChannel, so the
 // P2PPeerConnectionChannel can notify PeerClient when event raises.

@@ -8,14 +8,14 @@
 #import "webrtc/rtc_base/logging.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCErrors.h"
-#import "talk/woogeen/sdk/include/objc/Woogeen/RTCLocalCameraStream.h"
-#import "talk/woogeen/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCLocalStream+Internal.h"
-#import "talk/woogeen/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCErrors.h"
+#import "talk/ics/sdk/include/objc/Woogeen/RTCLocalCameraStream.h"
+#import "talk/ics/sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCStream+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCLocalStream+Internal.h"
+#import "talk/ics/sdk/base/objc/RTCPeerConnectionDependencyFactory.h"
 
-#include "talk/woogeen/sdk/include/cpp/woogeen/base/stream.h"
+#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
 
 @implementation RTCLocalCameraStream
 
@@ -54,11 +54,11 @@
 - (instancetype)initWithParameters:(RTCLocalCameraStreamParameters*)parameters
                              error:(NSError* _Nullable*)out_error {
   self = [super init];
-  woogeen::base::LocalCameraStreamParameters local_parameters =
+  ics::base::LocalCameraStreamParameters local_parameters =
       *[parameters nativeParameters].get();
   int error_code = 0;
-  std::shared_ptr<woogeen::base::LocalCameraStream> local_stream =
-      woogeen::base::LocalCameraStream::Create(local_parameters, error_code);
+  std::shared_ptr<ics::base::LocalCameraStream> local_stream =
+      ics::base::LocalCameraStream::Create(local_parameters, error_code);
   if (error_code != 0) {
     LOG(LS_ERROR) << "Failed to create RTCLocalCameraStream, error code: "
                   << error_code;
@@ -99,8 +99,8 @@
                                error:(NSError* _Nullable*)outError{
   self = [super init];
   int error_code = 0;
-  std::shared_ptr<woogeen::base::LocalCameraStream> local_stream =
-      woogeen::base::LocalCameraStream::Create(
+  std::shared_ptr<ics::base::LocalCameraStream> local_stream =
+      ics::base::LocalCameraStream::Create(
           isAudioEnabled, [videoSource nativeVideoSource], error_code);
   if (error_code != 0) {
     LOG(LS_ERROR) << "Failed to create RTCLocalCameraStream, error code: "
@@ -114,8 +114,8 @@
 }
 
 - (void)close {
-  std::shared_ptr<woogeen::base::LocalCameraStream> nativeStream =
-      std::static_pointer_cast<woogeen::base::LocalCameraStream>(
+  std::shared_ptr<ics::base::LocalCameraStream> nativeStream =
+      std::static_pointer_cast<ics::base::LocalCameraStream>(
           [super nativeStream]);
   if (nativeStream == nullptr)
     return;

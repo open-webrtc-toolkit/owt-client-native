@@ -4,9 +4,9 @@
 
 #import <Foundation/Foundation.h>
 
-#include "talk/woogeen/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
+#include "talk/ics/sdk/p2p/objc/RTCP2PSignalingSenderObjcImpl.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 RTCP2PSignalingSenderObjcImpl::RTCP2PSignalingSenderObjcImpl(

@@ -2,9 +2,9 @@
  * Intel License
  */
 
-#include "talk/woogeen/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
+#include "talk/ics/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 
-namespace woogeen {
+namespace ics {
 namespace p2p {
 
 void P2PPeerConnectionChannelObserverCppImpl::OnInvited(

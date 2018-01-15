@@ -2,7 +2,7 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
-#import "talk/woogeen/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
+#import "talk/ics/sdk/conference/objc/RTCConferenceSubscribeOptions+Internal.h"
 
 #include "webrtc/rtc_base/checks.h"
 
@@ -30,9 +30,9 @@
 
 @implementation RTCConferenceSubscribeOptions (Internal)
 
-- (woogeen::conference::SubscribeOptions)nativeSubscribeOptions {
-  using namespace woogeen::conference;
-  woogeen::conference::SubscribeOptions options;
+- (ics::conference::SubscribeOptions)nativeSubscribeOptions {
+  using namespace ics::conference;
+  ics::conference::SubscribeOptions options;
   options.resolution.width = _resolution.width;
   options.resolution.height = _resolution.height;
   switch([self videoQualityLevel]) {

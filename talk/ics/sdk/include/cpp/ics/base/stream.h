@@ -72,7 +72,7 @@ class StreamObserver {
  public:
   /// Triggered when a stream is ended, or the stream is no longer available in
   /// conference mode.
-  virtual void OnStreamEnded(const std::string& stream_id) = 0;
+  virtual void OnStreamEnded(const std::string& stream_id) {};
 };
 
 class WebrtcVideoRendererARGBImpl;
