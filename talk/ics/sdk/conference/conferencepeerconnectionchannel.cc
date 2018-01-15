@@ -46,9 +46,6 @@ enum ConferencePeerConnectionChannel::NegotiationState : int {
                               // negotiation request.
 };
 
-// Const value for messages
-const int kMessageSeqBase = 1;
-
 // Stream option member key
 const string kStreamOptionStreamIdKey = "streamId";
 const string kStreamOptionStateKey = "state";
@@ -78,7 +75,6 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
     : PeerConnectionChannel(configuration),
       signaling_channel_(signaling_channel),
       session_id_(""),
-      message_seq_(kMessageSeqBase),
       ice_restart_needed_(false),
       connected_(false),
       event_queue_(event_queue) {

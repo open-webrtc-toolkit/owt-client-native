@@ -18,8 +18,8 @@ declare_args() {
   include_internal_audio_device = true
   woogeen_msdk_lib_root = ""
 
-# Disable some features while rebasing to M63. It should be removed once rebasing is finished.
-ics_rebase_m63 = true
+  # Disable some features while rebasing to M63. It should be removed once rebasing is finished.
+  ics_rebase_m63 = true
 }
 
 if (is_ios || is_mac) {
@@ -44,37 +44,46 @@ if (is_android) {
   }
 }
 
-
 if (is_android) {
   dist_jar("libjingle_woogeen_java") {
     output = "${root_out_dir}/lib.java/${target_name}.jar"
     direct_deps_only = true
     use_interface_jars = false
     deps = [
-      "//third_party/webrtc/sdk/android:libjingle_peerconnection_java",
-      "//third_party/webrtc/sdk/android:libjingle_peerconnection_metrics_default_java",
       "//third_party/webrtc/base:base_java",
       "//third_party/webrtc/modules/audio_device:audio_device_java",
+      "//third_party/webrtc/sdk/android:libjingle_peerconnection_java",
+      "//third_party/webrtc/sdk/android:libjingle_peerconnection_metrics_default_java",
     ]
   }
 }
 
-static_library("ics") {
+static_library("ics_deps") {
   deps = [
-    ":ics_sdk_base",
-    ":ics_sdk_conf",
-    #":ics_sdk_p2p",
-    "//third_party/protobuf:protobuf_lite",
-    "//third_party/webrtc",
+    "//third_party/jsoncpp",
+    "//third_party/webrtc/rtc_base:rtc_json",
   ]
-
-  if (is_ios) {
-    deps += [ ":woogeen_sdk_objc" ]
-  }
   complete_static_lib = true
 }
 
-source_set("ics_sdk_base") {
+if (!is_ios) {
+  static_library("ics") {
+    deps = [
+      ":ics_sdk_base",
+      ":ics_sdk_conf",
+      #":ics_sdk_p2p",
+      "//third_party/protobuf:protobuf_lite",
+      "//third_party/webrtc",
+    ]
+
+    if (is_ios) {
+      deps += [ ":ics_sdk_objc" ]
+    }
+    complete_static_lib = true
+  }
+}
+
+static_library("ics_sdk_base") {
   sources = [
     "sdk/base/customizedframescapturer.cc",
     "sdk/base/customizedframescapturer.h",
@@ -101,9 +110,9 @@ source_set("ics_sdk_base") {
     "sdk/base/peerconnectiondependencyfactory.h",
     "sdk/base/sdputils.cc",
     "sdk/base/sdputils.h",
-    "sdk/base/stringutils.h",
-    "sdk/base/stringutils.cc",
     "sdk/base/stream.cc",
+    "sdk/base/stringutils.cc",
+    "sdk/base/stringutils.h",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",
     "sdk/base/webrtcvideorendererimpl.cc",
@@ -124,11 +133,12 @@ source_set("ics_sdk_base") {
 
   public_deps = [
     "//third_party/libyuv:libyuv",
-    "//third_party/webrtc/api:libjingle_peerconnection",
+
+    #"//third_party/webrtc/api:libjingle_peerconnection",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
+    "//third_party/webrtc/rtc_base:rtc_json",
     "//third_party/webrtc/system_wrappers:metrics_default",
     "//third_party/webrtc/system_wrappers:system_wrappers_default",
-    "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
   include_dirs = [
@@ -144,10 +154,8 @@ source_set("ics_sdk_base") {
       "sdk/base/ios/networkmonitorios.cc",
       "sdk/base/ios/networkmonitorios.h",
     ]
-    deps=[
-    "//third_party/webrtc/sdk:sdk",
-    "//third_party/webrtc/sdk:peerconnectionfactory_objc",
-    "//third_party/webrtc/sdk:framework_objc+link",
+    deps = [
+      "//third_party/webrtc/sdk:framework_objc+link",
     ]
   }
 
@@ -201,21 +209,27 @@ source_set("ics_sdk_base") {
   }
 
   if (is_win && is_clang) {
-    cflags = ["-Wno-microsoft-extra-qualification", "-Wno-reorder"]
+    cflags = [
+      "-Wno-microsoft-extra-qualification",
+      "-Wno-reorder",
+    ]
   }
 
-  if(!ics_rebase_m63){
-    defines+=["ICS_REBASE_M63"]
+  if (!ics_rebase_m63) {
+    defines += [ "ICS_REBASE_M63" ]
   }
 }
 
-source_set("ics_sdk_p2p") {
+static_library("ics_sdk_p2p") {
   deps = [
     ":ics_sdk_base",
     "//third_party/jsoncpp:jsoncpp",
   ]
 
-  include_dirs = [ "sdk/include/cpp", "//third_party" ]
+  include_dirs = [
+    "sdk/include/cpp",
+    "//third_party",
+  ]
 
   sources = [
     "sdk/include/cpp/ics/p2p/p2pexception.h",
@@ -236,14 +250,17 @@ source_set("ics_sdk_p2p") {
   }
 }
 
-source_set("ics_sdk_conf") {
+static_library("ics_sdk_conf") {
   deps = [
     ":ics_sdk_base",
     "//third_party/jsoncpp:jsoncpp",
     "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
-  include_dirs = [ "sdk/include/cpp", "//third_party" ]
+  include_dirs = [
+    "sdk/include/cpp",
+    "//third_party",
+  ]
 
   sources = [
     "sdk/conference/conferencepublication.cc",
@@ -268,7 +285,7 @@ source_set("ics_sdk_conf") {
 }
 
 if (is_ios) {
-  source_set("woogeen_sdk_objc") {
+  static_library("ics_sdk_objc") {
     deps = [
       ":ics_sdk_base",
       ":ics_sdk_conf",
@@ -305,6 +322,7 @@ if (is_ios) {
       "sdk/base/objc/RTCLocalCameraStream.mm",
       "sdk/base/objc/RTCLocalCameraStreamParameters+Internal.h",
       "sdk/base/objc/RTCLocalCameraStreamParameters.mm",
+
       #"sdk/base/objc/RTCLocalCustomizedStream.mm",
       #"sdk/base/objc/RTCLocalCustomizedStreamParameters+Internal.h",
       #"sdk/base/objc/RTCLocalCustomizedStreamParameters.mm",

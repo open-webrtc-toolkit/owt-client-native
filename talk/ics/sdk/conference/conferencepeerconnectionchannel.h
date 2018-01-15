@@ -199,7 +199,6 @@ class ConferencePeerConnectionChannel
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::string session_id_;   //session ID is 1:1 mapping to the subscribed/published stream.
-  int message_seq_;
   webrtc::PeerConnectionInterface::SignalingState signaling_state_;
 
   // If this pc is used for publishing, |local_stream_| will be the stream to be

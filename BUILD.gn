@@ -5,14 +5,16 @@ import("third_party/webrtc/webrtc.gni")
 group("default") {
   testonly = true
 
-  deps = [
-    "//talk/ics",
-  ]
-
   if (!is_linux) {
-    deps += [ "//third_party/webrtc/examples" ]
+    deps = [
+      "//third_party/webrtc/examples",
+    ]
   }
-
+  if (is_ios) {
+    deps += [ "//talk/ics:ics_sdk_objc" ]
+  } else {
+    deps += [ "//talk/ics" ]
+  }
   if (woogeen_include_tests) {
     deps += [ "talk/ics:woogeen_tests" ]
   }

@@ -26,7 +26,7 @@ OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_FAT_LIB_NAME = 'libwoogeen-fat.a'
 # The lib contains all target architectures and external libs(OpenSSL).
 OUT_LIB_NAME = 'libics.a'
-OUT_FRAMEWORK_NAME = "Woogeen.framework"
+OUT_FRAMEWORK_NAME = "ICS.framework"
 OUT_FRAMEWORK_ROOT = os.path.join(OUT_PATH, OUT_FRAMEWORK_NAME)
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 # Parameters for each architectures, key is arch name, value is output path
@@ -57,7 +57,7 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
-SDK_TARGETS = ['ics']
+SDK_TARGETS = ['ics_sdk_base', 'ics_sdk_p2p', 'ics_sdk_conf', 'ics_sdk_objc']
 APP_TARGETS = ['AppRTCMobile']
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
@@ -91,7 +91,7 @@ def getoutputpath(arch, scheme):
 def ninjabuild(arch, scheme, targets):
   out_path=getoutputpath(arch, scheme)
   for target_name in targets:
-    if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
+    if subprocess.call(['ninja','-C', out_path, target_name], cwd=HOME_PATH)!=0:
       return False
   return True
 
@@ -129,7 +129,7 @@ def buildframework():
   copyheaders(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))
   shutil.copy(FRAMEWORK_INFO_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Info.plist'))
   shutil.copy(FRAMEWORK_MODULE_MAP_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Modules', 'module.modulemap'))
-  shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'Woogeen'))
+  shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'ICS'))
 
 def dist(arch_list, scheme, ssl_root):
   out_lib_path = os.path.join(OUT_PATH, OUT_LIB_NAME)
@@ -139,7 +139,8 @@ def dist(arch_list, scheme, ssl_root):
     os.makedirs(OUT_PATH)
   argu = ['libtool', '-o', out_lib_path]
   for target_arch in arch_list:
-    argu.append('%s/obj/talk/ics/libics.a'%getoutputpath(target_arch, scheme))
+    for sdk_target in SDK_TARGETS:
+      argu.append('%s/obj/talk/ics/lib%s.a'%(getoutputpath(target_arch, scheme), sdk_target))
   # Add external libs.
   if ssl_root:
     argu.extend(getexternalliblist(ssl_root))
