@@ -1,0 +1,82 @@
+/*
+ * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef ICS_CONFERENCE_OBJC_ICSCONFERENCECLIENTOBSERVER_H_
+#define ICS_CONFERENCE_OBJC_ICSCONFERENCECLIENTOBSERVER_H_
+
+#import "ICS/ICSLocalStream.h"
+#import "ICS/ICSRemoteStream.h"
+#import "ICS/ICSConferenceUser.h"
+
+/// Observer for ICSConferenceClient.
+RTC_EXPORT
+@protocol ICSConferenceClientObserver<NSObject>
+
+/**
+  @brief Triggers when client is disconnected from conference server.
+*/
+- (void)onServerDisconnected;
+/**
+  @brief Triggers when a stream is added.
+  @param stream The stream which is added.
+*/
+- (void)onStreamAdded:(ICSRemoteStream*)stream;
+/**
+  @brief Triggers when a stream is removed.
+  @param stream The stream which is removed.
+*/
+- (void)onStreamRemoved:(ICSRemoteStream*)stream;
+/**
+  @brief Triggers when an error happened on a stream.
+  @details This event only triggered for a stream that is being publishing or
+  subscribing. SDK will not try to recovery the certain stream when this event
+  is triggered. If you still need this stream, please re-publish or
+  re-subscribe.
+  @param stream The stream which is corrupted. It might be a ICSLocalStream or
+  ICSRemoteStream.
+  @param error The error happened. Currently, errors are reported by MCU.
+*/
+- (void)onStreamError:(NSError*)error forStream:(ICSStream*)stream;
+/**
+  @brief Triggers when a message is received.
+  @param senderId Sender's ID.
+  @param message Message received.
+*/
+- (void)onMessageReceivedFrom:(NSString*)senderId message:(NSString*)message;
+/**
+  @brief Triggers when a user joined conference.
+  @param user The user joined.
+*/
+- (void)onUserJoined:(ICSConferenceUser*)user;
+/**
+  @brief Triggers when a user left conference.
+  @param user The user left.
+*/
+- (void)onUserLeft:(ICSConferenceUser*)user;
+
+@end
+
+#endif  // ICS_CONFERENCE_OBJC_ICSCONFERENCECLIENTOBSERVER_H_

@@ -270,7 +270,7 @@ class LocalCameraStream : public LocalStream {
       int& error_code);
   /** @cond */
   /**
-    Create a RTCLocalCameraStream with specific video source.
+    Create a ICSLocalCameraStream with specific video source.
     @param is_audio_enabled Indicates whether audio is enabled.
     @param video_source LocalCameraStream created will have a video track use
     |video_source| as its source. Changing |video_source| will impact the video

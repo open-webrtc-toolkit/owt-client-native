@@ -2,26 +2,26 @@
  * Intel License
  */
 
-#ifndef WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
-#define WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
+#ifndef ICS_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
+#define ICS_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 
 #include <unordered_map>
 #include <mutex>
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
-#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceClient.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceClientObserver.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteStream.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSConferenceClient.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSConferenceClientObserver.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteStream.h"
 
 namespace ics {
 namespace conference {
 
 class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
  public:
-  ConferenceClientObserverObjcImpl(id<RTCConferenceClientObserver> observer,
-                                   RTCConferenceClient* conferenceClient);
+  ConferenceClientObserverObjcImpl(id<ICSConferenceClientObserver> observer,
+                                   ICSConferenceClient* conferenceClient);
   virtual ~ConferenceClientObserverObjcImpl(){};
-  id<RTCConferenceClientObserver> ObjcObserver() const { return observer_; }
+  id<ICSConferenceClientObserver> ObjcObserver() const { return observer_; }
 
  protected:
   virtual void OnStreamAdded(
@@ -37,17 +37,17 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
   virtual void OnServerDisconnected() override;
 
  private:
-  void AddRemoteStreamToMap(const std::string& id, RTCRemoteStream* stream);
+  void AddRemoteStreamToMap(const std::string& id, ICSRemoteStream* stream);
   void TriggerOnStreamRemoved(
       std::shared_ptr<ics::base::RemoteStream> stream);
 
-  id<RTCConferenceClientObserver> observer_;
-  std::unordered_map<std::string, RTCRemoteStream*> remote_streams_;
+  id<ICSConferenceClientObserver> observer_;
+  std::unordered_map<std::string, ICSRemoteStream*> remote_streams_;
   std::mutex remote_streams_mutex_;
-  std::unordered_map<std::string, RTCLocalStream*> local_streams_;
+  std::unordered_map<std::string, ICSLocalStream*> local_streams_;
   std::mutex local_streams_mutex_;
 };
 }
 }
 
-#endif  // WOOGEEN_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
+#endif  // ICS_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_

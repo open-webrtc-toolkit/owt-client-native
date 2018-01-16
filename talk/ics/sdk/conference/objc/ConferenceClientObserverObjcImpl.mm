@@ -8,52 +8,52 @@
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 
-#import "talk/ics/sdk/base/objc/RTCMediaFormat+Internal.h"
-#import "talk/ics/sdk/base/objc/RTCStream+Internal.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCConferenceErrors.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCErrors.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
-#import "talk/ics/sdk/conference/objc/RTCRemoteMixedStream+Internal.h"
-#import "talk/ics/sdk/conference/objc/RTCConferenceUser+Internal.h"
-#import "talk/ics/sdk/conference/objc/RTCConferenceClient+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSMediaFormat+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
+#import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
+#import "talk/ics/sdk/conference/objc/ICSConferenceUser+Internal.h"
+#import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 namespace ics {
 namespace conference {
 
 ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
-    id<RTCConferenceClientObserver> observer,
-    RTCConferenceClient* conference_client)
+    id<ICSConferenceClientObserver> observer,
+    ICSConferenceClient* conference_client)
     : observer_(observer) {}
 
 void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
     const std::string& id,
-    RTCRemoteStream* stream) {
+    ICSRemoteStream* stream) {
   std::lock_guard<std::mutex> lock(remote_streams_mutex_);
   remote_streams_[id] = stream;
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteCameraStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
+  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
+      [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
   [observer_ onStreamAdded:remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteScreenStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteScreenStream alloc] initWithNativeStream:stream];
+  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
+      [ICSRemoteScreenStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
   [observer_ onStreamAdded:remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteMixedStream> stream) {
-  RTCRemoteMixedStream* remote_stream =
-      [[RTCRemoteMixedStream alloc] initWithNativeStream:stream];
+  ICSRemoteMixedStream* remote_stream =
+      [[ICSRemoteMixedStream alloc] initWithNativeStream:stream];
   // Video formats
   /*
   NSMutableArray* supportedVideoFormats = [[NSMutableArray alloc] init];
@@ -65,12 +65,12 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
   }
   [remote_stream setSupportedVideoFormats:supportedVideoFormats];*/
   AddRemoteStreamToMap(stream->Id(), remote_stream);
-  [observer_ onStreamAdded:(RTCRemoteStream*)remote_stream];
+  [observer_ onStreamAdded:(ICSRemoteStream*)remote_stream];
 }
 
 void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
     std::shared_ptr<ics::base::RemoteStream> stream) {
-  RTCRemoteStream* remote_stream(nullptr);
+  ICSRemoteStream* remote_stream(nullptr);
   {
     std::lock_guard<std::mutex> lock(remote_streams_mutex_);
     auto remote_stream_it = remote_streams_.find(stream->Id());

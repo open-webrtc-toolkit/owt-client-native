@@ -23,7 +23,7 @@ import sdk_info
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 # The lib contains all target architectures
-OUT_FAT_LIB_NAME = 'libwoogeen-fat.a'
+OUT_FAT_LIB_NAME = 'libics-fat.a'
 # The lib contains all target architectures and external libs(OpenSSL).
 OUT_LIB_NAME = 'libics.a'
 OUT_FRAMEWORK_NAME = "ICS.framework"
@@ -33,26 +33,7 @@ OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 ARCH_PARAM_DICT = {'arm':'device-arm32', 'arm64':'device-arm64',
     'x86':'simulator-x86','x64':'simulator-x64'}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-WEBRTC_HEADER_LIST = ['third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoRenderer.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMTLVideoView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMacros.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCLogging.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAVFoundationVideoSource.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoCapturer.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoSource.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaConstraints.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCMediaSource.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCConfiguration.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h',
-    'third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoViewShading.h']
-HEADER_LIST = WEBRTC_HEADER_LIST + ['talk/ics/sdk/include/objc/Woogeen/*']
-LIB_BLACK_LIST = ['video_capture']
+HEADER_LIST = ['talk/ics/sdk/include/objc/ICS/*']
 FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
@@ -95,22 +76,10 @@ def ninjabuild(arch, scheme, targets):
       return False
   return True
 
-def replaceheaderimport(headers_target_folder):
-  '''Replace import <WebRTC/*.h> with <Woogeen/*.h>'''
-  for filename in os.listdir(headers_target_folder):
-    if filename.endswith('.h'):
-      filepath = os.path.join(headers_target_folder, filename)
-      for line in fileinput.input(filepath, inplace=1):
-        print re.sub('(#import )(<|\")WebRTC(/.*?\.h)(>|\")','\\1\\2Woogeen\\3\\4', line.rstrip())
-      # Add a new line at the end of file
-      with open(filepath, 'a') as file:
-        file.write('\n')
-
 def copyheaders(headers_target_folder):
   for header in HEADER_LIST:
     subprocess.call(['cp %s %s/'%(header, headers_target_folder)], cwd=HOME_PATH,
     shell=True)
-  replaceheaderimport(headers_target_folder)
 
 def getexternalliblist(ssl_root):
   libs = []
@@ -119,7 +88,7 @@ def getexternalliblist(ssl_root):
   return libs
 
 def buildframework():
-  '''Create Woogeen.framework in out/'''
+  '''Create ICS.framework in out/'''
   if os.path.exists(OUT_FRAMEWORK_ROOT):
     shutil.rmtree(OUT_FRAMEWORK_ROOT)
   os.makedirs(OUT_FRAMEWORK_ROOT)

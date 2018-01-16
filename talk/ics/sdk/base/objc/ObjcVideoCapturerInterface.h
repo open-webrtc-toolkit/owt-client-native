@@ -2,8 +2,8 @@
  * Intel License
  */
 
-#ifndef WOOGEEN_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
-#define WOOGEEN_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
+#ifndef ICS_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
+#define ICS_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
 
 #include "talk/ics/sdk/include/cpp/ics/base/localcamerastreamparameters.h"
 #include "third_party/webrtc/rtc_base/scoped_ref_ptr.h"
@@ -32,4 +32,4 @@ class ObjcVideoCapturerFactory {
 }  // namespace base
 }  // namespace ics
 
-#endif  // WOOGEEN_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
+#endif  // ICS_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_

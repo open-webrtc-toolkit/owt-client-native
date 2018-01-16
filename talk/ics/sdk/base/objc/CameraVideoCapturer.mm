@@ -3,7 +3,7 @@
  */
 
 #include "talk/ics/sdk/base/objc/CameraVideoCapturer.h"
-#include "talk/ics/sdk/include/objc/Woogeen/RTCFactory.h"
+#include "talk/ics/sdk/include/objc/ICS/ICSFactory.h"
 #include "third_party/webrtc/rtc_base/logging.h"
 #include "third_party/webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #include "third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h"
@@ -13,7 +13,7 @@ namespace base {
 
 std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     const LocalCameraStreamParameters& parameters) {
-  RTCVideoSource* source = [RTCFactory videoSource];
+  RTCVideoSource* source = [ICSFactory videoSource];
   RTCCameraVideoCapturer* capturer =
       [[RTCCameraVideoCapturer alloc] initWithDelegate:source];
   AVCaptureDevicePosition position = AVCaptureDevicePositionFront;

@@ -5,20 +5,20 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
-#include "talk/ics/sdk/include/objc/Woogeen/RTCP2PPeerConnectionChannelObserver.h"
+#include "talk/ics/sdk/include/objc/ICS/ICSP2PPeerConnectionChannelObserver.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteStream.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteStream.h"
 
 namespace ics {
 namespace p2p {
-// It wraps an id<RTCP2PPeerConnectionChannelObserver> and call methods on that
+// It wraps an id<ICSP2PPeerConnectionChannelObserver> and call methods on that
 // interface.
 class P2PPeerConnectionChannelObserverObjcImpl
     : public P2PPeerConnectionChannelObserver {
  public:
   P2PPeerConnectionChannelObserverObjcImpl(
-      id<RTCP2PPeerConnectionChannelObserver> observer);
+      id<ICSP2PPeerConnectionChannelObserver> observer);
 
  protected:
   void OnInvited(const std::string& remote_id) override;
@@ -40,9 +40,9 @@ class P2PPeerConnectionChannelObserverObjcImpl
  private:
   void TriggerStreamRemoved(std::shared_ptr <
                             ics::base::RemoteStream> stream);
-  id<RTCP2PPeerConnectionChannelObserver> _observer;
+  id<ICSP2PPeerConnectionChannelObserver> _observer;
   // Key is stream ID
-  std::unordered_map<std::string, RTCRemoteStream*> remote_streams_;
+  std::unordered_map<std::string, ICSRemoteStream*> remote_streams_;
 };
 }
 }

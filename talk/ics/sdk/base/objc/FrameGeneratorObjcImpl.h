@@ -2,11 +2,11 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
-#ifndef WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
-#define WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
+#ifndef ICS_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
+#define ICS_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
 
 #include "talk/ics/sdk/include/cpp/ics/base/framegeneratorinterface.h"
-#include "talk/ics/sdk/include/objc/Woogeen/RTCFrameGeneratorProtocol.h"
+#include "talk/ics/sdk/include/objc/ICS/ICSFrameGeneratorProtocol.h"
 
 namespace ics {
 namespace base {
@@ -48,4 +48,4 @@ class VideoFrameGeneratorObjcImpl : public VideoFrameGeneratorInterface {
 }
 }
 
-#endif  // WOOGEEN_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_
+#endif  // ICS_BASE_OBJC_VIDEOFRAMEGENERATOROBJCIMPL_H_

@@ -7,7 +7,7 @@
 namespace ics {
 namespace conference {
 RemoteMixedStreamObserverObjcImpl::RemoteMixedStreamObserverObjcImpl(
-    id<RTCRemoteMixedStreamObserver> observer) {
+    id<ICSRemoteMixedStreamObserver> observer) {
   observer_ = observer;
 }
 

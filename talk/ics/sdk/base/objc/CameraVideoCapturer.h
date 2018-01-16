@@ -2,8 +2,8 @@
  * Intel License
  */
 
-#ifndef WOOGEEN_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_
-#define WOOGEEN_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_
+#ifndef ICS_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_
+#define ICS_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_
 
 #include <memory>
 #include "talk/ics/sdk/base/objc/ObjcVideoCapturerInterface.h"
@@ -30,4 +30,4 @@ class CameraVideoCapturer : public ObjcVideoCapturerInterface {
 }  // namespace base
 }  // namespace woogeen
 
-#endif  // WOOGEEN_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_
+#endif  // ICS_BASE_OBJC_CAMERAVIDEOCAPTUREFACTORY_H_

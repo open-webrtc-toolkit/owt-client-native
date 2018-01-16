@@ -187,7 +187,7 @@ class ConferencePeerConnectionChannelObserver {
 };
 /** @endcond */
 
-/// Observer for RTCConferenceClient.
+/// Observer for ICSConferenceClient.
 class ConferenceClientObserver {
  public:
   /**

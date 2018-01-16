@@ -3,9 +3,9 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "talk/ics/sdk/base/objc/RTCRemoteStream+Internal.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteCameraStream.h"
-#import "talk/ics/sdk/include/objc/Woogeen/RTCRemoteScreenStream.h"
+#import "talk/ics/sdk/base/objc/ICSRemoteStream+Internal.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
 #import "WebRTC/RTCLogging.h"
 
 #include "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
@@ -14,7 +14,7 @@ namespace ics {
 namespace p2p {
 P2PPeerConnectionChannelObserverObjcImpl::
     P2PPeerConnectionChannelObserverObjcImpl(
-        id<RTCP2PPeerConnectionChannelObserver> observer) {
+        id<ICSP2PPeerConnectionChannelObserver> observer) {
   _observer = observer;
 }
 
@@ -53,8 +53,8 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<ics::base::RemoteCameraStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteCameraStream alloc] initWithNativeStream:stream];
+  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
+      [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
   [_observer onStreamAdded:remote_stream];
   NSLog(@"On camera stream added.");
@@ -62,8 +62,8 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<ics::base::RemoteScreenStream> stream) {
-  RTCRemoteStream* remote_stream = (RTCRemoteStream*)[
-      [RTCRemoteScreenStream alloc] initWithNativeStream:stream];
+  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
+      [ICSRemoteScreenStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
   [_observer onStreamAdded:remote_stream];
   NSLog(@"On screen stream added.");
@@ -88,7 +88,7 @@ void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(
     RTC_DCHECK(false);
     return;
   }
-  RTCRemoteStream* remote_stream = remote_streams_[stream->Id()];
+  ICSRemoteStream* remote_stream = remote_streams_[stream->Id()];
   [_observer onStreamRemoved:remote_stream];
   remote_streams_.erase(stream->Id());
   NSLog(@"On stream removed.");
