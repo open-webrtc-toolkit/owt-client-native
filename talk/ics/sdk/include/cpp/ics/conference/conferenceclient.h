@@ -80,7 +80,7 @@ class ParticipantObserver {
     /**
       @brief Participant leave event callback.
     */
-    virtual void OnParticipantLeft(const std::string& id, const std::string& user_id) = 0;
+    virtual void OnLeft() {};
 };
 
 class Participant {

@@ -45,7 +45,7 @@ void Participant::RemoveObserver(ParticipantObserver& observer) {
 void Participant::TriggerOnParticipantLeft() {
   // Not acquring locks for observer
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnParticipantLeft(id_, user_id_);
+    (*its).get().OnLeft();
   }
 }
 

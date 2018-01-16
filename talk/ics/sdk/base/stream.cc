@@ -228,7 +228,7 @@ void Stream::RemoveObserver(StreamObserver& observer) {
 void Stream::TriggerOnStreamEnded() {
   ended_ = true;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnStreamEnded(id_);
+    (*its).get().OnEnded();
   }
 }
 
