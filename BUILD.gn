@@ -7,8 +7,12 @@ group("default") {
 
   deps = [
     "//talk/ics",
-    "//third_party/webrtc/examples",
   ]
+
+  if (!is_linux) {
+    deps += [ "//third_party/webrtc/examples" ]
+  }
+
   if (woogeen_include_tests) {
     deps += [ "talk/ics:woogeen_tests" ]
   }
