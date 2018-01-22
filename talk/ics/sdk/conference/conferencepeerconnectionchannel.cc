@@ -611,6 +611,7 @@ void ConferencePeerConnectionChannel::Unpublish(
   connected_ = false;
   signaling_channel_->SendStreamEvent("unpublish", session_id,
                                       RunInEventQueue(on_success), on_failure);
+  this->ClosePeerConnection();
 }
 
 void ConferencePeerConnectionChannel::Unsubscribe(
@@ -643,6 +644,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
   connected_ = false;
   signaling_channel_->SendStreamEvent("unsubscribe", session_id,
       RunInEventQueue(on_success), on_failure);
+  this->ClosePeerConnection();
 }
 
 void ConferencePeerConnectionChannel::SendStreamControlMessage(
@@ -908,6 +910,12 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
   publish_success_callback_ = nullptr;
   subscribe_success_callback_ = nullptr;
   failure_callback_ = nullptr;
+}
+
+void ConferencePeerConnectionChannel::ClosePeerConnection() {
+  LOG(LS_INFO) << "Close peer connection.";
+  RTC_CHECK(pc_thread_);
+  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
 }
 
 }

@@ -445,9 +445,9 @@ void ConferenceClient::UnPublish(
             {
               std::lock_guard<std::mutex> lock(publish_pcs_mutex_);
               auto it = publish_pcs_.begin();
-              while (it!= publish_pcs_.end()) {
+              while (it != publish_pcs_.end()) {
                 if ((*it)->GetSessionId() == session_id) {
-                  //publish_pcs_.erase(it);
+                  publish_pcs_.erase(it);
                   break;
                 }
                 ++it;
@@ -455,7 +455,6 @@ void ConferenceClient::UnPublish(
             }
           },
           on_failure);
-
 }
 
 void ConferenceClient::UnSubscribe(
