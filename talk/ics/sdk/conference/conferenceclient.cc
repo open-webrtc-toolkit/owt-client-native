@@ -8,6 +8,7 @@
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "talk/ics/sdk/base/mediautils.h"
 #include "talk/ics/sdk/base/stringutils.h"
 #include "talk/ics/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
@@ -532,8 +533,9 @@ void ConferenceClient::Mute(
     return;
   }
   auto pcc = GetConferencePeerConnectionChannel(session_id);
-  if (pcc == nullptr || (track_kind != kTrackAudio &&
-    track_kind != kTrackVideo && track_kind != kTrackAudioVideo)) {
+  if (pcc == nullptr || (track_kind != TrackKind::kAudio &&
+                         track_kind != TrackKind::kVideo &&
+                         track_kind != TrackKind::kAudioAndVideo)) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<ConferenceException> e(
@@ -545,13 +547,13 @@ void ConferenceClient::Mute(
     return;
   }
   switch (track_kind) {
-    case kTrackAudio:
+    case TrackKind::kAudio:
       pcc->PauseAudio(on_success, on_failure);
       break;
-    case kTrackVideo:
+    case TrackKind::kVideo:
       pcc->PauseVideo(on_success, on_failure);
       break;
-    case kTrackAudioVideo:
+    case TrackKind::kAudioAndVideo:
       pcc->PauseAudioVideo(on_success, on_failure);
       break;
     default:
@@ -568,8 +570,9 @@ void ConferenceClient::UnMute(
     return;
   }
   auto pcc = GetConferencePeerConnectionChannel(session_id);
-  if (pcc == nullptr || (track_kind != kTrackAudio &&
-    track_kind != kTrackVideo && track_kind != kTrackAudioVideo)) {
+  if (pcc == nullptr || (track_kind != TrackKind::kAudio &&
+                         track_kind != TrackKind::kVideo &&
+                         track_kind != TrackKind::kAudioAndVideo)) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<ConferenceException> e(
@@ -581,13 +584,13 @@ void ConferenceClient::UnMute(
     return;
   }
   switch (track_kind) {
-    case kTrackAudio:
+    case TrackKind::kAudio:
       pcc->PlayAudio(on_success, on_failure);
       break;
-    case kTrackVideo:
+    case TrackKind::kVideo:
       pcc->PlayVideo(on_success, on_failure);
       break;
-    case kTrackAudioVideo:
+    case TrackKind::kAudioAndVideo:
       pcc->PlayAudioVideo(on_success, on_failure);
       break;
     default:
@@ -870,8 +873,9 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
       sample_rate = sample_rate_obj->get_int();
     if (channel_num_obj != nullptr)
       channel_num = audio_format_obj->get_int();
-    AudioCodecParameters audio_codec_param(codec, channel_num, sample_rate);
-    publication_settings.audio_settings.codec = audio_codec_param;
+    AudioCodecParameters audio_codec_param(
+        MediaUtils::GetAudioCodecFromString(codec), channel_num, sample_rate);
+    publication_settings.audio.codec = audio_codec_param;
 
     // Optional audio capabilities
     auto audio_format_obj_optional = audio_info->get_map()["optional"];
@@ -884,7 +888,6 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
       } else {
         auto formats = audio_format_optional->get_vector();
         for (auto it = formats.begin(); it != formats.end(); ++it) {
-          std::string optional_codec;
           unsigned long optional_sample_rate=0, optional_channel_num=0;
           auto optional_sample_rate_obj = (*it)->get_map()["sampleRate"];
           auto optional_codec_obj = (*it)->get_map()["codec"];
@@ -895,12 +898,17 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
             return;
           }
           codec = optional_codec_obj->get_string();
+          if (codec == "nellymoser") {
+            codec = "asao";
+          }
           if (optional_sample_rate_obj != nullptr)
             optional_sample_rate = optional_sample_rate_obj->get_int();
           if (optional_channel_num_obj != nullptr)
             optional_channel_num = optional_channel_num_obj->get_int();
-          subscription_capabilities.audio_capabilities.codecs.push_back(AudioCodecParameters(
-              optional_codec, optional_channel_num, optional_sample_rate));
+          subscription_capabilities.audio.codecs.push_back(
+              AudioCodecParameters(
+                  MediaUtils::GetAudioCodecFromString(codec),
+                  optional_channel_num, optional_sample_rate));
         }
       }
     }
@@ -929,7 +937,8 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
         profile_name = profile_name_obj->get_string();
       }
       VideoPublicationSettings video_publication_settings;
-      VideoCodecParameters video_codec_parameters(codec_name, profile_name);
+      VideoCodecParameters video_codec_parameters(
+          MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
       video_publication_settings.codec = video_codec_parameters;
       auto video_params_obj = video_info->get_map()["parameters"];
       if (video_params_obj != nullptr && video_params_obj->get_flag() == sio::message::flag_object) {
@@ -956,7 +965,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
           video_publication_settings.keyframe_interval = keyframe_interval_num;
         }
       }
-      publication_settings.video_settings = video_publication_settings;
+      publication_settings.video = video_publication_settings;
 
       // Parse the video subscription capabilities.
       VideoSubscriptionCapabilities video_subscription_capabilities;
@@ -972,7 +981,10 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
             if (optional_profile_name_obj != nullptr && optional_profile_name_obj->get_flag() == sio::message::flag_string) {
               optional_profile_name = optional_profile_name_obj->get_string();
             }
-            video_subscription_capabilities.codecs.push_back(VideoCodecParameters(optional_codec_name, optional_profile_name));
+            video_subscription_capabilities.codecs.push_back(
+                VideoCodecParameters(
+                    MediaUtils::GetVideoCodecFromString(optional_codec_name),
+                    optional_profile_name));
           }
         }
         auto optional_video_params_obj = optional_video_obj->get_map()["parameters"];
@@ -1011,7 +1023,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
             }
           }
         }
-        subscription_capabilities.video_capabilities = video_subscription_capabilities;
+        subscription_capabilities.video = video_subscription_capabilities;
       }
     }
   }

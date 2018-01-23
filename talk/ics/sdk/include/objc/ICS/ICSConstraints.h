@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,31 +24,27 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_BASE_DEVICEUTILS_H_
-#define ICS_BASE_DEVICEUTILS_H_
+#import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
+#import <ICS/IcsMediaCodec.h>
 
-#include <vector>
-#include <string>
+NS_ASSUME_NONNULL_BEGIN
 
-#include "ics/base/commontypes.h"
+@interface ICSAudioPublicationSettings
 
-namespace ics {
-namespace base {
+@property(nonatomic, strong, readonly) ICSAudioCodecParameters* codec;
 
-class DeviceUtils {
- public:
-  /// Get video capturer IDs.
-  static std::vector<std::string> VideoCapturerIds();
-  /**
-   Get supported resolutions for a specific video capturer.
-   @param id The ID of specific video capturer.
-   @return Supported resolution for the specific video capturer. If the name is
-   invalid, it returns an empty vector.
-   */
-  static std::vector<Resolution> VideoCapturerSupportedResolutions(
-      const std::string& id);
-};
-}
-}
+@end
 
-#endif  // ICS_BASE_DEVICEUTILS_H_
+@interface ICSVideoPublicationSettings
+
+@end
+
+@interface ICSPublicationSettings
+
+@property(nonatomic, strong, readonly) ICSAudioPublicationSettings* audio;
+@property(nonatomic, strong, readonly) ICSVideoPublicationSettings* video;
+
+@end
+
+NS_ASSUME_NONNULL_END

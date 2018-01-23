@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,41 +24,31 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_BASE_OBJC_RTCMEDIACODEC_H_
-#define ICS_BASE_OBJC_RTCMEDIACODEC_H_
-
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <WebRTC/RTCMacros.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSInteger, VideoCodec) {
-  VideoCodecVP8 = 1,
-  VideoCodecH264 = 2,
-};
+RTC_EXPORT
+@interface ICSConferenceSubscription : NSObject
 
-typedef NS_ENUM(NSInteger, AudioCodec) {
-  AudioCodecOpus = 1,
-  AudioCodecIsac = 2,
-  AudioCodecG722 = 3,
-  AudioCodecPcmu = 4,
-  AudioCodecPcma = 5,
-};
+-(void)stop;
 
-/*
-  @brief An instance of this class indicates preference for codecs.
-  @details It is not guaranteed to use preferred codec, if remote side doesn't
-  support preferred codec, it will use other codec.
+@end
+
+RTC_EXPORT
+/// Options for subscribing a remote stream.
+@interface ICSConferenceSubscriptionOptions : NSObject
+
+/**
+  @brief Construct ICSConferenceSubscriptionOptions with default values.
+  @details Default video quality is standard. MCU's setting will be ignored.
 */
-@interface ICSMediaCodec : NSObject
+-(instancetype)init;
 
-/// Preference for audio codec. Default is Opus.
-@property(nonatomic, readwrite) NSInteger audioCodec;
-/// Preference for video codec. Default is H.264.
-@property(nonatomic, readwrite) NSInteger videoCodec;
+@property(nonatomic, readwrite) CGSize resolution;
 
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif  // ICS_BASE_OBJC_RTCMEDIACODEC_H_

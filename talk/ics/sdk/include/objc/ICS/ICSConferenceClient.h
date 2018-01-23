@@ -33,9 +33,10 @@
 #import "ICS/ICSRemoteStream.h"
 #import "ICS/ICSConferenceClientObserver.h"
 #import "ICS/ICSConferenceClientConfiguration.h"
-#import "ICS/ICSConferenceSubscribeOptions.h"
+#import "ICS/ICSConferenceSubscription.h"
 #import "ICS/ICSConferenceUser.h"
 #import "ICS/ICSConnectionStats.h"
+#import "ICS/ICSConferencePublication.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -53,14 +54,14 @@ RTC_EXPORT
   @param token Includes the room info which is encrypted.
 */
 - (void)joinWithToken:(NSString*)token
-            onSuccess:(nullable void (^)(ICSConferenceUser*))onSuccess
+            onSuccess:(nullable void (^)())onSuccess
             onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Publish the stream to the current room.
   @param stream The stream to be published.
 */
 - (void)publish:(ICSLocalStream*)stream
-      onSuccess:(nullable void (^)())onSuccess
+      onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Subscribe a stream from the current room.
@@ -68,7 +69,7 @@ RTC_EXPORT
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(ICSRemoteStream*)stream
-        onSuccess:(nullable void (^)(ICSRemoteStream*))onSuccess
+        onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Subscribe a stream from the current room.
@@ -77,8 +78,8 @@ RTC_EXPORT
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(ICSRemoteStream*)stream
-        withOptions:(ICSConferenceSubscribeOptions*)options
-        onSuccess:(nullable void (^)(ICSRemoteStream*))onSuccess
+        withOptions:(ICSConferenceSubscriptionOptions*)options
+        onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Send message to all participants in the conference.

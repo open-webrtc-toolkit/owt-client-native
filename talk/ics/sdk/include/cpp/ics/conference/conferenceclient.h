@@ -34,7 +34,7 @@
 #include <vector>
 #include <set>
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/clientconfiguration.h"
 #include "ics/base/connectionstats.h"
 #include "ics/base/options.h"

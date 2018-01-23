@@ -16,21 +16,17 @@
 namespace ics {
 namespace base {
 
-static const std::unordered_map<AudioCodec,
-                                const std::string,
-                                std::hash<int>> audio_codec_names = {
-    {AudioCodec::kOPUS, "OPUS"},
-    {AudioCodec::kISAC, "ISAC"},
-    {AudioCodec::kG722, "G722"},
-    {AudioCodec::kPCMU, "PCMU"},
-    {AudioCodec::kPCMA, "PCMA"}};
-static const std::unordered_map<VideoCodec,
-                                const std::string,
-                                std::hash<int>> video_codec_names = {
-    {VideoCodec::kVP8, "VP8"},
-    {VideoCodec::kH264, "H264"},
-    {VideoCodec::kVP9, "VP9"},
-    {VideoCodec::kH265, "H265"}};
+static const std::unordered_map<AudioCodec, const std::string>
+    audio_codec_names = {{AudioCodec::kOpus, "OPUS"},
+                         {AudioCodec::kIsac, "ISAC"},
+                         {AudioCodec::kG722, "G722"},
+                         {AudioCodec::kPcmu, "PCMU"},
+                         {AudioCodec::kPcma, "PCMA"}};
+static const std::unordered_map<VideoCodec, const std::string>
+    video_codec_names = {{VideoCodec::kVp8, "VP8"},
+                         {VideoCodec::kH264, "H264"},
+                         {VideoCodec::kVp9, "VP9"},
+                         {VideoCodec::kH265, "H265"}};
 
 std::string SdpUtils::SetPreferAudioCodec(const std::string& original_sdp,
                                           AudioCodec codec) {

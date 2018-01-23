@@ -16,8 +16,6 @@ PeerConnectionChannel::PeerConnectionChannel(
       configuration_(configuration),
       factory_(nullptr),
       peer_connection_(nullptr) {
-  LOG(LS_INFO) << "PeerConnectionChannel video codec: "
-               << configuration_.video_codec;
 }
 
 PeerConnectionChannel::~PeerConnectionChannel() {

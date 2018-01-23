@@ -27,7 +27,7 @@
 #ifndef ICS_BASE_SUBSCRIPTION_H_
 #define ICS_BASE_SUBSCRIPTION_H_
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/mediaconstraints.h"
 
 namespace ics {

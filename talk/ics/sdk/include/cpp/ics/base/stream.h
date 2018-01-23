@@ -31,7 +31,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/exception.h"
 #include "ics/base/localcamerastreamparameters.h"
 #include "ics/base/macros.h"
@@ -198,8 +198,8 @@ class RemoteStream : public Stream {
   /// Return the remote user ID, indicates who published this stream.
   std::string Origin();
   using Stream::Attributes;
-  SubscriptionCapabilities SubscriptionCapabilities() { return subscription_capabilities_; }
-  PublicationSettings PublicationSettings() { return publication_settings_; }
+  SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
+  PublicationSettings Settings() { return publication_settings_; }
 
   void Stop() {};
 

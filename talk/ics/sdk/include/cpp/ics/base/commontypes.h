@@ -24,8 +24,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_BASE_COMMON_TYPES_H_
-#define ICS_BASE_COMMON_TYPES_H_
+#ifndef ICS_BASE_COMMONTYPES_H_
+#define ICS_BASE_COMMONTYPES_H_
 
 #include <string>
 #include <vector>
@@ -35,34 +35,34 @@ namespace ics {
 namespace base {
 
 /// Audio codec
-enum AudioCodec {
-  kPCMU,   ///< g711 u-law
-  kPCMA,   ///< g711 a-law
-  kOPUS,   ///< opus
+enum class AudioCodec : int {
+  kPcmu = 1,   ///< g711 u-law
+  kPcma,   ///< g711 a-law
+  kOpus,   ///< opus
   kG722,   ///< g722
-  kISAC,   ///< iSAC
-  kILBC,   ///< iLBC
-  kAAC,    ///< AAC or HE-AAC
-  kAC3,    ///< AC3
-  kASAO,   ///< Nellymoser
-  kAudioCodecUnknown
+  kIsac,   ///< iSAC
+  kIlbc,   ///< iLBC
+  kAac,    ///< AAC or HE-AAC
+  kAc3,    ///< AC3
+  kAsao,   ///< Nellymoser
+  kUnknown
 };
 
 /// Video codec
-enum VideoCodec {
-  kVP8,
-  kVP9,
+enum class VideoCodec : int {
+  kVp8 = 1,
+  kVp9,
   kH264,
   kH265,
-  kVideoCodecUnknown
+  kUnknown
 };
 
 /// Track kind
-enum TrackKind {
-  kTrackAudio,
-  kTrackVideo,
-  kTrackAudioVideo,
-  kTrackUnknown
+enum class TrackKind : int{
+  kAudio = 1,
+  kVideo,
+  kAudioAndVideo,
+  kUnknown
 };
 
 /// This class represents a resolution value.
@@ -93,16 +93,19 @@ struct VideoFormat {
 /// Audio codec parameters for an audio track.
 struct AudioCodecParameters {
   // Construct an instance of AudioCodecParameters
-  AudioCodecParameters() : codec_name_(""), channel_count_(0), clock_rate_(0) {}
+  AudioCodecParameters()
+      : name(AudioCodec::kUnknown), channel_count(0), clock_rate(0) {}
 
-  AudioCodecParameters(const std::string& codec_name, unsigned long channel_count, unsigned long clock_rate)
-    : codec_name_(codec_name),
-      channel_count_(channel_count),
-      clock_rate_(clock_rate) {}
+  AudioCodecParameters(const AudioCodec& codec_name,
+                       unsigned long channel_count,
+                       unsigned long clock_rate)
+      : name(codec_name),
+        channel_count(channel_count),
+        clock_rate(clock_rate) {}
 
-  std::string codec_name_;
-  unsigned long channel_count_;
-  unsigned long clock_rate_;
+  AudioCodec name;
+  unsigned long channel_count;
+  unsigned long clock_rate;
 };
 
 /// Audio encoding parameters.
@@ -124,12 +127,13 @@ struct AudioEncodingParameters {
 /// Video codec parameters for a video track.
 struct VideoCodecParameters {
   // Construct an instance of VideoCodecParameters
-  explicit VideoCodecParameters() : codec_name_(""), profile_("") {}
+  explicit VideoCodecParameters() : name(VideoCodec::kUnknown), profile("") {}
 
-  VideoCodecParameters (const std::string& codec, const std::string& profile) : codec_name_(codec), profile_(profile) {}
+  VideoCodecParameters(const VideoCodec& codec, const std::string& profile)
+      : name(codec), profile(profile) {}
 
-  std::string codec_name_;
-  std::string profile_;
+  VideoCodec name;
+  std::string profile;
 };
 
 /// Video encoding parameters.
@@ -153,21 +157,21 @@ struct VideoEncodingParameters {
 /// Audio source info.
 ///
 /// This enumeration defines possible audio sources
-enum AudioSourceInfo {
-  kAudioMIC,               ///< Microphone
-  kAudioScreenCast,        ///< Screen-cast
-  kAudioFile,              ///< From file
-  kAudioSourceUnknown
+enum class AudioSourceInfo : int {
+  kMIC = 1,     ///< Microphone
+  kScreenCast,  ///< Screen-cast
+  kFile,        ///< From file
+  kUnknown
 };
 
 /// Video source info.
 ///
 /// This enumeration defines possible video sources.
-enum VideoSourceInfo {
-  kVideoCamera,           ///< Camera
-  kVideoScreenCast,       ///< Screen-cast
-  kVideoFile,             ///< From file
-  kVideoSourceUnknown
+enum class VideoSourceInfo : int {
+  kCamera = 1,  ///< Camera
+  kScreenCast,  ///< Screen-cast
+  kFile,        ///< From file
+  kUnknown
 };
 
 /// Stream source.
@@ -179,4 +183,4 @@ struct StreamSourceInfo {
 }  // namespace base
 }  // namespace ics
 
-#endif  // ICS_BASE_COMMON_TYPES_H_
+#endif  // ICS_BASE_COMMONTYPES_H_

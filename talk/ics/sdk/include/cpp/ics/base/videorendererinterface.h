@@ -28,7 +28,7 @@
 #define ICS_BASE_VIDEORENDERERINTERFACE_H_
 
 #include <memory>
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #if defined(WEBRTC_WIN)
 #include <Windows.h>
 #endif

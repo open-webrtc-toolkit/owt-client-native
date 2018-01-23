@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-#include "talk/ics/sdk/include/cpp/ics/base/common_types.h"
+#include "talk/ics/sdk/include/cpp/ics/base/commontypes.h"
 
 namespace ics {
 namespace base {

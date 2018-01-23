@@ -30,10 +30,11 @@
 #include <vector>
 #include <mutex>
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/mediaconstraints.h"
 #include "ics/base/subscription.h"
-#include "ics/conference/conferenceclient.h"
+#include "ics/base/connectionstats.h"
+#include "ics/conference/conferenceexception.h"
 
 namespace rtc {
   class TaskQueue;
@@ -41,6 +42,8 @@ namespace rtc {
 
 namespace ics {
 namespace conference {
+
+class ConferenceClient;
 
 using namespace ics::base;
 

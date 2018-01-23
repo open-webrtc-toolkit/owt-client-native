@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,34 +24,16 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_CONFERENCE_OBJC_ICSCONFERENCESUBSCRIBEOPTIONS_H_
-#define ICS_CONFERENCE_OBJC_ICSCONFERENCESUBSCRIBEOPTIONS_H_
-
 #import <Foundation/Foundation.h>
-#import <CoreGraphics/CoreGraphics.h>
 #import <WebRTC/RTCMacros.h>
 
-typedef NS_ENUM(NSInteger, ICSConferenceVideoQualityLevel) {
-  ICSConferenceVideoQualityLevelBestQuality,
-  ICSConferenceVideoQualityLevelBetterQuality,
-  ICSConferenceVideoQualityLevelStandard,
-  ICSConferenceVideoQualityLevelBetterSpeed,
-  ICSConferenceVideoQualityLevelBestSpeed
-};
+NS_ASSUME_NONNULL_BEGIN
 
 RTC_EXPORT
-/// Options for subscribing a remote stream.
-@interface ICSConferenceSubscribeOptions : NSObject
+@interface ICSConferencePublication : NSObject
 
-/**
-  @brief Construct ICSConferenceSubscribeOptions with default values.
-  @details Default video quality is standard. MCU's setting will be ignored.
-*/
--(instancetype)init;
-
-@property(nonatomic, readwrite) CGSize resolution;
-@property(nonatomic, readwrite) ICSConferenceVideoQualityLevel videoQualityLevel;
+-(void)stop;
 
 @end
 
-#endif  // ICS_CONFERENCE_OBJC_ICSCONFERENCESUBSCRIBEOPTIONS_H_
+NS_ASSUME_NONNULL_END

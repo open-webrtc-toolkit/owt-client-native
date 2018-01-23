@@ -3,7 +3,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "talk/ics/sdk/base/objc/ICSRemoteStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
 #import "WebRTC/RTCLogging.h"

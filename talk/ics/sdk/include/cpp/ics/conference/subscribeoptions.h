@@ -27,7 +27,7 @@
 #ifndef ICS_CONFERENCE_SUBSCRIBEOPTIONS_H_
 #define ICS_CONFERENCE_SUBSCRIBEOPTIONS_H_
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 
 namespace ics {
 namespace conference {

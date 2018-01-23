@@ -5,7 +5,7 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteStream.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
 
-@interface ICSRemoteStream (Internal)
+@interface ICSRemoteStream ()
 
 - (std::shared_ptr<ics::base::RemoteStream>)nativeRemoteStream;
 

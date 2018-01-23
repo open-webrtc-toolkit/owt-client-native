@@ -28,7 +28,7 @@
 #define ICS_CONFERENCE_REMOTEMIXEDSTREAM_H_
 
 #include "ics/base/stream.h"
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 
 namespace ics {
 namespace conference {

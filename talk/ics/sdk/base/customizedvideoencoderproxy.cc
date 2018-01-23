@@ -17,7 +17,7 @@
 #include "talk/ics/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/ics/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/ics/sdk/base/nativehandlebuffer.h"
-#include "talk/ics/sdk/include/cpp/ics/base/common_types.h"
+#include "talk/ics/sdk/include/cpp/ics/base/commontypes.h"
 
 // H.264 start code length.
 #define H264_SC_LENGTH 4
@@ -86,7 +86,7 @@ int CustomizedVideoEncoderProxy::Encode(
     if (codec_type_ == webrtc::kVideoCodecH264)
         media_codec = VideoCodec::kH264;
     else if (codec_type_ == webrtc::kVideoCodecVP8)
-        media_codec = VideoCodec::kVP8;
+        media_codec = VideoCodec::kVp8;
 #if 0
 #ifndef DISABLE_H265
     else if (codec_type_ == webrtc::kVideoCodecH265)

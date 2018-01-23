@@ -24,12 +24,44 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_BASE_OBJC_RTCMEDIAFORMAT_H_
-#define ICS_BASE_OBJC_RTCMEDIAFORMAT_H_
-
-#import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSInteger, ICSAudioCodec) {
+  ICSAudioCodecPcmu = 1,
+  ICSAudioCodecPcma = 2,
+  ICSAudioCodecOpus = 3,
+  ICSAudioCodecG722 = 4,
+  ICSAudioCodecIsac = 5,
+  ICSAudioCodecIlbc = 6,
+  ICSAudioCodecAac = 7,
+  ICSAudioCodecAc3 = 8,
+  ICSAudioCodecAsao = 9,
+  ICSAudioCodecUnknown = 10,
+};
+
+typedef NS_ENUM(NSInteger, ICSVideoCodec) {
+  ICSVideoCodecVP8 = 1,
+  ICSVideoCodecVP9 = 2,
+  ICSVideoCodecH264 = 3,
+  ICSVideoCodecH265 = 4,
+  ICSVideoCodecUnknown = 5,
+};
+
+typedef NS_ENUM(NSInteger, ICSAudioSourceInfo) {
+  ICSAudioSourceInfoMic = 1,
+  ICSAudioSourceInfoScreenCast = 2,
+  ICSAudioSourceInfoFile = 3,
+};
+
+typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
+  ICSVideoSourceInfoCamera = 1,
+  ICSVideoSourceInfoScreenCast = 2,
+  ICSVideoSourceInfoFile = 3,
+};
 
 // This class describes a media stream's format
 RTC_EXPORT
@@ -39,4 +71,64 @@ RTC_EXPORT
 
 @end
 
-#endif
+@interface ICSAudioCodecParameters : NSObject
+
+@property(nonatomic, assign) ICSAudioCodec name;
+@property(nonatomic, assign) NSUInteger channelCount;
+@property(nonatomic, assign) NSUInteger clockRate;
+
+@end
+
+@interface ICSVideoCodecParameters : NSObject
+
+@property(nonatomic, assign) ICSVideoCodec name;
+@property(nonatomic, strong) NSString* profile;
+
+@end
+
+@interface ICSAudioPublicationSettings : NSObject
+
+@property(nonatomic, strong) ICSAudioCodecParameters* codec;
+
+@end
+
+@interface ICSVideoPublicationSettings : NSObject
+
+@property(nonatomic, strong) ICSVideoCodecParameters* codec;
+@property(nonatomic, assign) CGSize resolution;
+@property(nonatomic, assign) CGFloat frameRate;
+@property(nonatomic, assign) NSUInteger bitrate;
+@property(nonatomic, assign) NSUInteger keyframeInterval;
+
+@end
+
+@interface ICSPublicationSettings : NSObject
+
+@property(nonatomic, strong) ICSAudioPublicationSettings* audio;
+@property(nonatomic, strong) ICSVideoPublicationSettings* video;
+
+@end
+
+@interface ICSAudioSubscriptionCapabilities:NSObject
+
+@property(nonatomic, strong) NSArray<ICSAudioCodecParameters*>* codecs;
+
+@end
+
+@interface ICSVideoSubscriptionCapabilities:NSObject
+
+@property(nonatomic, strong) NSArray<ICSVideoCodecParameters*>* codecs;
+@property(nonatomic, strong) NSArray<NSValue*>* resolutions;
+@property(nonatomic, strong) NSArray<NSNumber*>* frameRates;
+//@property(nonatomic, strong) NSArray<NSNumber*>* bitrateMultipliers;
+
+@end
+
+@interface ICSSubscriptionCapabilities:NSObject
+
+@property(nonatomic, strong) ICSAudioSubscriptionCapabilities* audio;
+@property(nonatomic, strong) ICSVideoSubscriptionCapabilities* video;
+
+@end
+
+NS_ASSUME_NONNULL_END

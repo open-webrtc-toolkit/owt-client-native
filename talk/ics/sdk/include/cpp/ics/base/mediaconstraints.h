@@ -27,7 +27,7 @@
 #ifndef ICS_BASE_MEDIA_CONSTRAINTS_H_
 #define ICS_BASE_MEDIA_CONSTRAINTS_H_
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 
 namespace ics {
 namespace base {

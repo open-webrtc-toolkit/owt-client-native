@@ -11,7 +11,7 @@
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/ics/sdk/base/mediaconstraintsimpl.h"
 #include "talk/ics/sdk/base/functionalobserver.h"
-#include "talk/ics/sdk/include/cpp/ics/base/common_types.h"
+#include "talk/ics/sdk/include/cpp/ics/base/commontypes.h"
 
 namespace rtc {
 class NetworkMonitorInterface;

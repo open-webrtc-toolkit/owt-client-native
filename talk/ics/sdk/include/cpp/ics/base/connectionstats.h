@@ -31,7 +31,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/network.h"
 
 namespace ics {

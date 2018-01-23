@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 #include "ics/base/mediaconstraints.h"
 
 namespace ics {
@@ -51,8 +51,8 @@ struct VideoSubscriptionCapabilities {
 };
 
 struct SubscriptionCapabilities {
-  AudioSubscriptionCapabilities  audio_capabilities;
-  VideoSubscriptionCapabilities  video_capabilities;
+  AudioSubscriptionCapabilities  audio;
+  VideoSubscriptionCapabilities  video;
 };
 
 struct AudioPublicationSettings {
@@ -68,13 +68,13 @@ struct VideoPublicationSettings {
 };
 
 struct PublicationSettings {
-  AudioPublicationSettings  audio_settings;
-  VideoPublicationSettings  video_settings;
+  AudioPublicationSettings  audio;
+  VideoPublicationSettings  video;
 };
 
 struct PublishOptions {
-  std::vector<AudioEncodingParameters>  audio_options;
-  std::vector<VideoEncodingParameters>  video_options;
+  std::vector<AudioEncodingParameters>  audio;
+  std::vector<VideoEncodingParameters>  video;
 };
 
 

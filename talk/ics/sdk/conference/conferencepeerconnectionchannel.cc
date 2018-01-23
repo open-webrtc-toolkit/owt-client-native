@@ -516,8 +516,7 @@ void ConferencePeerConnectionChannel::Subscribe(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (subscribe_options.resolution.width != 0 ||
       subscribe_options.resolution.height != 0) {
-    auto video_subscription_cap =
-      (stream->SubscriptionCapabilities()).video_capabilities.resolutions;
+    auto video_subscription_cap = stream->Capabilities().video.resolutions;
     if (std::find_if(video_subscription_cap.begin(), video_subscription_cap.end(),
                      [&](const Resolution& format) {
                        return format == subscribe_options.resolution;

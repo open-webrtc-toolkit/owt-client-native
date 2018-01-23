@@ -29,7 +29,7 @@
 #define ICS_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 
 #include <string>
-#include "ics/base/common_types.h"
+#include "ics/base/commontypes.h"
 
 namespace ics {
 namespace base{
