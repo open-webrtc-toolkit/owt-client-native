@@ -9,7 +9,7 @@ import datetime
 import commands
 
 # Maven related variables
-IP = '10.239.61.107:60000'
+IP = 'webrtc-checkin.sh.intel.com:60000'
 URL = 'http://' + IP + '/nexus/service/local/artifact/maven/content'
 REPOSITORY = 'thirdparty'
 USERNAME = 'admin'
@@ -25,9 +25,9 @@ month = str(date.month)
 day = str(date.day)
 hour = str(date.hour)
 DEFAULT_VERSION = year[2:4] + '.' +\
-                  (month if len(month) < 2 else ('0' + month)) + '.' +\
-                  (day if len(day) < 2 else ('0' + day)) +\
-                  (hour if len(hour) < 2 else ('0' + hour))
+                  (month if len(month) == 2 else ('0' + month)) + '.' +\
+                  (day if len(day) == 2 else ('0' + day)) +\
+                  (hour if len(hour) == 2 else ('0' + hour))
 
 def checkExists(path):
     if not os.path.exists(path):
