@@ -16,6 +16,7 @@
 
 #ifdef ICS_DEBUG_H264_ENC
 #include <fstream>
+#include <stdio.h>
 #endif
 // H.264 start code length.
 #define H264_SC_LENGTH 4
@@ -30,7 +31,7 @@ MFTEncoderThread::~MFTEncoderThread(){
     Stop();
 }
 
-H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), width_(0),
+H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), max_bitrate_(0), width_(0),
   height_(0), framerate_(0), encoder_thread_(new MFTEncoderThread()), inited_(false), m_memType_(SYSTEM_MEMORY){
     m_pmfxAllocatorParams = nullptr;
     m_pMFXAllocator = nullptr;
@@ -41,8 +42,6 @@ H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), wi
     RTC_CHECK(encoder_thread_->Start()) << "Failed to start encoder thread for MSDK encoder";
 #ifdef ICS_DEBUG_H264_ENC
     output = fopen("out.h264", "wb");
-    input = fopen("in.yuv", "wb");
-    raw_in = fopen("source.yuv", "r");
 #endif
 }
 
@@ -69,8 +68,8 @@ int H264VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
 
     width_ = codec_settings->width;
     height_ = codec_settings->height;
-    // We can only set average bitrate on the HW encoder.
-    bitrate_ = codec_settings->startBitrate * 1000;
+    bitrate_ = codec_settings->targetBitrate * 1000;
+    max_bitrate_ = codec_settings->maxBitrate * 1000;
     codecType_ = codec_settings->codecType;
     //MSDK does not require all operations dispatched to the same thread. We however always use dedicated thread
     return encoder_thread_->Invoke<int>(RTC_FROM_HERE,
@@ -165,11 +164,14 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     m_mfxEncParams.mfx.CodecProfile = MFX_PROFILE_AVC_BASELINE;
     //m_mfxEncParams.mfx.CodecLevel = MFX_LEVEL_AVC_3;
     m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
-    m_mfxEncParams.mfx.TargetKbps = codec_settings->width*codec_settings->height/1000;  //in-kbps
-    m_mfxEncParams.mfx.RateControlMethod = MFX_RATECONTROL_CBR;
+    // TODO: MSDK encoder has constraint on target bitrate. Need to fallback to default
+    // if TargetKbps falls below lower threshhold(500 for 720p for example).
+    m_mfxEncParams.mfx.TargetKbps = max_bitrate_ / 1000;
+    m_mfxEncParams.mfx.MaxKbps = max_bitrate_ / 1000;
+    m_mfxEncParams.mfx.RateControlMethod = MFX_RATECONTROL_VBR;
     m_mfxEncParams.mfx.NumSlice = 0;
     H264ConvertFrameRate(
-        codec_settings->maxFramerate > 30 ? 30 : codec_settings->maxBitrate,
+        codec_settings->maxFramerate > 30 ? 30 : codec_settings->maxFramerate,
         &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN,
         &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
     m_mfxEncParams.mfx.EncodedOrder = 0;
@@ -196,16 +198,25 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     MSDK_ZERO_MEMORY(extendedCodingOptions);
     extendedCodingOptions.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
     extendedCodingOptions.Header.BufferSz = sizeof(extendedCodingOptions);
-    extendedCodingOptions.MaxDecFrameBuffering = m_mfxEncParams.mfx.NumRefFrame;
+    //extendedCodingOptions.MaxDecFrameBuffering = m_mfxEncParams.mfx.NumRefFrame;
     extendedCodingOptions.AUDelimiter = MFX_CODINGOPTION_OFF;
-    extendedCodingOptions.RecoveryPointSEI = MFX_CODINGOPTION_OFF;
+    //extendedCodingOptions.RecoveryPointSEI = MFX_CODINGOPTION_OFF;
     extendedCodingOptions.PicTimingSEI = MFX_CODINGOPTION_OFF;
     extendedCodingOptions.VuiNalHrdParameters = MFX_CODINGOPTION_OFF;
-    extendedCodingOptions.VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
-    mfxExtBuffer* extendedBuffers[1];
+    //extendedCodingOptions.VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
+
+    mfxExtCodingOption2 extendedCodingOptions2;
+    MSDK_ZERO_MEMORY(extendedCodingOptions2);
+    extendedCodingOptions2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
+    extendedCodingOptions2.Header.BufferSz = sizeof(extendedCodingOptions2);
+    extendedCodingOptions2.RepeatPPS = MFX_CODINGOPTION_OFF;
+
+    mfxExtBuffer* extendedBuffers[2];
     extendedBuffers[0] = (mfxExtBuffer*)&extendedCodingOptions;
+    extendedBuffers[1] = (mfxExtBuffer*)&extendedCodingOptions2;
+
     m_mfxEncParams.ExtParam = extendedBuffers;
-    m_mfxEncParams.NumExtParam = 1;
+    m_mfxEncParams.NumExtParam = 2;
 
     //allocate frame for encoder
     mfxFrameAllocRequest EncRequest;
@@ -320,17 +331,6 @@ int H264VideoMFTEncoder::Encode(
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
 
-#ifdef ICS_DEBUG_H264_ENC
-    if (input != nullptr && count < 300){
-
-
-        fwrite((void*)(input_image.buffer(webrtc::kYPlane)), input_image.allocated_size(webrtc::kYPlane), 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kUPlane)), input_image.allocated_size(webrtc::kUPlane), 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kVPlane)), input_image.allocated_size(webrtc::kVPlane), 1, input);
-
-    }
-#endif
-
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
@@ -342,12 +342,6 @@ int H264VideoMFTEncoder::Encode(
                                buffer->DataV(),
                                buffer->StrideV(),
                                pData.Y, pitch, pData.UV, pitch, w, h);
-#ifdef ICS_DEBUG_H264_ENC
-        if (count == 300){
-            fclose(input);
-            input = nullptr;
-        }
-#endif
     }
     else if (MFX_FOURCC_YV12 == pInfo.FourCC) {
         //Do not support it.
@@ -525,13 +519,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
 
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
-#ifdef ICS_DEBUG_H264_ENC
-    if (input != nullptr && count < 300){
-        fwrite((void*)(input_image.buffer(webrtc::kYPlane)), w*h, 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kUPlane)), w*h / 4, 1, input);
-        fwrite((void*)(input_image.buffer(webrtc::kVPlane)), w*h / 4, 1, input);
-    }
-#endif
+
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(input_image.video_frame_buffer()->ToI420());
         libyuv::I420ToNV12(buffer->DataY(),
@@ -541,13 +529,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
             buffer->DataV(),
             buffer->StrideV(),
             pData.Y, pitch, pData.UV, pitch, w, h);
-#ifdef ICS_DEBUG_H264_ENC
-        if (count == 300){
-            fclose(input);
-            input = nullptr;
-        }
-#endif
-    }else if (MFX_FOURCC_YV12 == pInfo.FourCC) {
+    } else if (MFX_FOURCC_YV12 == pInfo.FourCC) {
         //Do not support it.
         return WEBRTC_VIDEO_CODEC_ERROR;
     }

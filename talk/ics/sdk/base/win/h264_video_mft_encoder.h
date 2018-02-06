@@ -67,6 +67,7 @@ private:
 
     webrtc::EncodedImageCallback* callback_;
     int32_t bitrate_;  // Bitrate in bits per second.
+    int32_t max_bitrate_;
     int32_t width_;
     int32_t height_;
     int32_t framerate_;
@@ -83,10 +84,8 @@ private:
     MemType m_memType_;
     std::unique_ptr<MFTEncoderThread> encoder_thread_;
     bool inited_;
-#ifdef WOOGEEN_DEBUG_H264_ENC
+#ifdef ICS_DEBUG_H264_ENC
     FILE *output;
-    FILE *input;
-    FILE *raw_in;
 #endif
 };  // H264VideoMFTEncoder
 #endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_VIDEO_MFT_ENCODER_H_
