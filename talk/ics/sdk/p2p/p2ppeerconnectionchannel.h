@@ -128,7 +128,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
   void OnMessageNegotiationNeeded();
-  void OnMessageStreamType(Json::Value& type_info);
+  void OnMessageTrackSources(Json::Value& track_sources);
 
   // PeerConnectionObserver
   virtual void OnSignalingChange(
@@ -204,9 +204,9 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Indicates if negotiation needed event is triggered or received negotiation
   // request from remote side, but haven't send out offer.
   bool negotiation_needed_;
-  // Key is remote media stream's label, value is type ("audio", "video",
-  // "screen").
-  std::unordered_map<std::string, std::string> remote_stream_type_;
+  // Key is remote media stream's track id, value is type ("mic", "camera",
+  // "screen-cast").
+  std::unordered_map<std::string, std::string> remote_track_source_info_;
   // Key is remote media stream's label, value is RemoteStream instance.
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>> remote_streams_;
   std::vector<std::shared_ptr<LocalStream>>

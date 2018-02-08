@@ -71,7 +71,7 @@ if (!is_ios) {
     deps = [
       ":ics_sdk_base",
       ":ics_sdk_conf",
-      #":ics_sdk_p2p",
+      ":ics_sdk_p2p",
       "//third_party/protobuf:protobuf_lite",
       "//third_party/webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection",
@@ -227,17 +227,19 @@ static_library("ics_sdk_p2p") {
   ]
 
   sources = [
+    "sdk/include/cpp/ics/p2p/p2ppublication.h",
     "sdk/include/cpp/ics/p2p/p2pexception.h",
     "sdk/include/cpp/ics/p2p/p2psignalingchannelinterface.h",
     "sdk/include/cpp/ics/p2p/p2psignalingreceiverinterface.h",
     "sdk/include/cpp/ics/p2p/p2psignalingsenderinterface.h",
-    "sdk/include/cpp/ics/p2p/peerclient.h",
+    "sdk/include/cpp/ics/p2p/p2pclient.h",
+    "sdk/p2p/p2ppublication.cc",
     "sdk/p2p/p2pexception.cc",
     "sdk/p2p/p2ppeerconnectionchannel.cc",
     "sdk/p2p/p2ppeerconnectionchannel.h",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.cc",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
-    "sdk/p2p/peerclient.cc",
+    "sdk/p2p/p2pclient.cc",
   ]
 
   if (is_clang) {

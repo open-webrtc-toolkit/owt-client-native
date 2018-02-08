@@ -72,7 +72,7 @@ def getoutputpath(arch, scheme):
 def ninjabuild(arch, scheme, targets):
   out_path=getoutputpath(arch, scheme)
   for target_name in targets:
-    if subprocess.call(['ninja','-C', out_path, target_name], cwd=HOME_PATH)!=0:
+    if subprocess.call(['ninja', '-C', out_path, target_name], cwd=HOME_PATH)!=0:
       return False
   return True
 

@@ -50,7 +50,7 @@ class ConferenceException;
 
 using namespace ics::base;
 
-class ConferencePublication{
+class ConferencePublication {
   public:
     ConferencePublication(std::shared_ptr<ConferenceClient> client, std::string id);
 
@@ -80,10 +80,9 @@ class ConferencePublication{
      bool ended_;
      mutable std::mutex observer_mutex_;
      std::vector<std::reference_wrapper<PublicationObserver>> observers_;
-     std::weak_ptr<ConferenceClient>  conference_client_;   // Weak ref to associated conference client
+     std::weak_ptr<ConferenceClient> conference_client_;   // Weak ref to associated conference client
      std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
-
 
 } // namespace conference
 } // namespace ics

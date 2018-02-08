@@ -2,29 +2,35 @@
  * Intel License
  */
 
+#include <algorithm>
 #include <future>
+
+#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/task_queue.h"
 #include "talk/ics/sdk/base/eventtrigger.h"
+#include "talk/ics/sdk/base/stringutils.h"
+#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2pclient.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
-#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
-#include "talk/ics/sdk/include/cpp/ics/p2p/peerclient.h"
-#include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/task_queue.h"
 
 namespace ics {
 namespace p2p {
 
-PeerClient::PeerClient(
-    PeerClientConfiguration& configuration,
+P2PClient::P2PClient(
+	P2PClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
-    : event_queue_(new rtc::TaskQueue("PeerClientEventQueue")),
+    : event_queue_(new rtc::TaskQueue("P2PClientEventQueue")),
       signaling_channel_(signaling_channel),
       configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(*this);
 }
 
-void PeerClient::Connect(
+void P2PClient::Connect(
     const std::string& token,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
@@ -32,22 +38,42 @@ void PeerClient::Connect(
   signaling_channel_->Connect(token, on_success, on_failure);
 }
 
-void PeerClient::Disconnect(
+void P2PClient::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 
-void PeerClient::Invite(
-    const std::string& target_id,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-  auto pcc = GetPeerConnectionChannel(target_id);
-  pcc->Invite(on_success, on_failure);
+void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
+  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) !=
+      allowed_remote_ids_.end()) {
+    LOG(LS_INFO) << "Adding duplicated remote id.";
+    return;
+  }
+
+  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+  allowed_remote_ids_.push_back(target_id);
 }
 
-void PeerClient::Send(
+void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
+                                      std::function<void()> on_success,
+                                      std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
+      allowed_remote_ids_.end()) {
+    LOG(LS_INFO) << "Trying to delete non-existed remote id.";
+    return;
+  }
+
+  Stop(target_id, on_success, on_failure);
+
+  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+  allowed_remote_ids_.erase(
+      std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
+      allowed_remote_ids_.end());
+}
+
+void P2PClient::Send(
     const std::string& target_id,
     const std::string& message,
     std::function<void()> on_success,
@@ -56,39 +82,35 @@ void PeerClient::Send(
   pcc->Send(message, on_success, on_failure);
 }
 
-void PeerClient::Accept(const std::string& target_id,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-    auto pcc = GetPeerConnectionChannel(target_id);
-    pcc->Accept(on_success, on_failure);
-}
-
-void PeerClient::Deny(const std::string& target_id,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-    auto pcc = GetPeerConnectionChannel(target_id);
-    pcc->Deny(on_success, on_failure);
-}
-
-void PeerClient::Publish(
+void P2PClient::Publish(
     const std::string& target_id,
     std::shared_ptr<LocalStream> stream,
-    std::function<void()> on_success,
+    std::function<void(std::shared_ptr<P2PPublication>)> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+  // First check whether target_id is in the allowed_remote_ids_ list
+  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
+      allowed_remote_ids_.end()) {
+    LOG(LS_WARNING) << "Publishing cannot be done since the remote user is not allowed.";
+    return;
+  }
+
+  // Second invite the remote user to the chat
   auto pcc = GetPeerConnectionChannel(target_id);
-  pcc->Publish(stream, on_success, on_failure);
+  pcc->Invite(nullptr, nullptr);
+
+  // Then do the real publication
+  std::weak_ptr<P2PClient> weak_this = shared_from_this();
+  pcc->Publish(stream, [on_success, weak_this, target_id] () {
+    auto that = weak_this.lock();
+    if (!that)
+      return;
+
+    std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id));
+    on_success(publication);
+  }, on_failure);
 }
 
-void PeerClient::Unpublish(
-    const std::string& target_id,
-    std::shared_ptr<LocalStream> stream,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
-  auto pcc = GetPeerConnectionChannel(target_id);
-  pcc->Unpublish(stream, on_success, on_failure);
-}
-
-void PeerClient::Stop(
+void P2PClient::Stop(
     const std::string& target_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<P2PException>)> on_failure) {
@@ -96,7 +118,7 @@ void PeerClient::Stop(
   pcc->Stop(on_success, on_failure);
 }
 
-void PeerClient::GetConnectionStats(
+void P2PClient::GetConnectionStats(
     const std::string& target_id,
     std::function<void(std::shared_ptr<ics::base::ConnectionStats>)>
         on_success,
@@ -105,18 +127,18 @@ void PeerClient::GetConnectionStats(
   pcc->GetConnectionStats(on_success, on_failure);
 }
 
-void PeerClient::OnMessage(const std::string& message,
+void P2PClient::OnMessage(const std::string& message,
                            const std::string& sender) {
   auto pcc = GetPeerConnectionChannel(sender);
   pcc->OnIncomingSignalingMessage(message);
 }
 
-void PeerClient::OnDisconnected() {
+void P2PClient::OnDisconnected() {
   // TODO: Implement disconnected handler.
   LOG(LS_INFO) << "Disconnected from signaling server.";
 }
 
-void PeerClient::SendSignalingMessage(const std::string& message,
+void P2PClient::SendSignalingMessage(const std::string& message,
                                       const std::string& remote_id,
                                       std::function<void()> on_success,
                                       std::function<void(int)> on_failure) {
@@ -124,19 +146,19 @@ void PeerClient::SendSignalingMessage(const std::string& message,
                                   nullptr);  // TODO:fix on_failure.
 }
 
-void PeerClient::AddObserver(PeerClientObserver& observer) {
+void P2PClient::AddObserver(P2PClientObserver& observer) {
   observers_.push_back(observer);
 }
 
-void PeerClient::RemoveObserver(PeerClientObserver& observer) {
+void P2PClient::RemoveObserver(P2PClientObserver& observer) {
   observers_.erase(std::find_if(
       observers_.begin(), observers_.end(),
-      [&](std::reference_wrapper<PeerClientObserver> o) -> bool {
+      [&](std::reference_wrapper<P2PClientObserver> o) -> bool {
         return &observer == &(o.get());
       }));
 }
 
-std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
+std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   auto pcc_it = pc_channels_.find(target_id);
   if (pcc_it == pc_channels_.end()) {  // Create new channel if it doesn't exist
@@ -162,7 +184,7 @@ std::shared_ptr<P2PPeerConnectionChannel> PeerClient::GetPeerConnectionChannel(
   }
 }
 
-PeerConnectionChannelConfiguration PeerClient::GetPeerConnectionChannelConfiguration() {
+PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfiguration() {
   PeerConnectionChannelConfiguration config;
   std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
   for(auto it = configuration_.ice_servers.begin(); it!=configuration_.ice_servers.end();++it){
@@ -187,68 +209,79 @@ PeerConnectionChannelConfiguration PeerClient::GetPeerConnectionChannelConfigura
   return config;
 }
 
-void PeerClient::OnInvited(const std::string& remote_id) {
+void P2PClient::OnInvited(const std::string& remote_id) {
   EventTrigger::OnEvent1(observers_, event_queue_,
-                         &PeerClientObserver::OnInvited, remote_id);
+                         &P2PClientObserver::OnInvited, remote_id);
+
+  // First check whether remote_id is in the allowed_remote_ids_ list
+	if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
+		  allowed_remote_ids_.end()) {
+		LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
+  } else {
+		// Then accept the chat if allowed
+		auto pcc = GetPeerConnectionChannel(remote_id);
+	  pcc->Accept(nullptr, nullptr);
+	}
 }
 
-void PeerClient::OnAccepted(const std::string& remote_id) {
+void P2PClient::OnAccepted(const std::string& remote_id) {
   EventTrigger::OnEvent1(observers_, event_queue_,
-                         &PeerClientObserver::OnAccepted, remote_id);
+                         &P2PClientObserver::OnAccepted, remote_id);
 }
 
-void PeerClient::OnStarted(const std::string& remote_id) {
+void P2PClient::OnStarted(const std::string& remote_id) {
   EventTrigger::OnEvent1(observers_, event_queue_,
-                         &PeerClientObserver::OnChatStarted, remote_id);
+                         &P2PClientObserver::OnChatStarted, remote_id);
 }
 
-void PeerClient::OnStopped(const std::string& remote_id) {
+void P2PClient::OnStopped(const std::string& remote_id) {
   pc_channels_.erase(remote_id);
   EventTrigger::OnEvent1(observers_, event_queue_,
-                         &PeerClientObserver::OnChatStopped, remote_id);
+                         &P2PClientObserver::OnChatStopped, remote_id);
 }
 
-void PeerClient::OnDenied(const std::string& remote_id) {
+void P2PClient::OnDenied(const std::string& remote_id) {
   pc_channels_.erase(remote_id);
   EventTrigger::OnEvent1(observers_, event_queue_,
-                         &PeerClientObserver::OnDenied, remote_id);
+                         &P2PClientObserver::OnDenied, remote_id);
 }
 
-void PeerClient::OnData(const std::string& remote_id,
+void P2PClient::OnData(const std::string& remote_id,
                         const std::string& message) {
   EventTrigger::OnEvent2(observers_, event_queue_,
-                         &PeerClientObserver::OnDataReceived, remote_id,
+                         &P2PClientObserver::OnDataReceived, remote_id,
                          message);
 }
 
-void PeerClient::OnStreamAdded(std::shared_ptr<RemoteCameraStream> stream) {
+void P2PClient::OnStreamAdded(std::shared_ptr<RemoteCameraStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
-      (void (PeerClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
-          &PeerClientObserver::OnStreamAdded),
-      stream);
-}
-void PeerClient::OnStreamAdded(std::shared_ptr<RemoteScreenStream> stream) {
-  EventTrigger::OnEvent1(
-      observers_, event_queue_,
-      (void (PeerClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
-          &PeerClientObserver::OnStreamAdded),
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
+          &P2PClientObserver::OnStreamAdded),
       stream);
 }
 
-void PeerClient::OnStreamRemoved(std::shared_ptr<RemoteCameraStream> stream) {
+void P2PClient::OnStreamAdded(std::shared_ptr<RemoteScreenStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
-      (void (PeerClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
-          &PeerClientObserver::OnStreamRemoved),
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
+          &P2PClientObserver::OnStreamAdded),
       stream);
 }
 
-void PeerClient::OnStreamRemoved(std::shared_ptr<RemoteScreenStream> stream) {
+void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteCameraStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
-      (void (PeerClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
-          &PeerClientObserver::OnStreamRemoved),
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
+          &P2PClientObserver::OnStreamRemoved),
+      stream);
+}
+
+void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteScreenStream> stream) {
+  EventTrigger::OnEvent1(
+      observers_, event_queue_,
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
+          &P2PClientObserver::OnStreamRemoved),
       stream);
 }
 }

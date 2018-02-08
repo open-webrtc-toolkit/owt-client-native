@@ -6,22 +6,22 @@
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
-#include "talk/ics/sdk/include/cpp/ics/p2p/peerclient.h"
+#include "talk/ics/sdk/include/cpp/ics/p2p/p2pclient.h"
 
 namespace ics {
 namespace p2p {
 
 using namespace ics::base;
 
-// This class connect a PeerClient and a P2PPeerConnectionChannel, so the
-// P2PPeerConnectionChannel can notify PeerClient when event raises.
-// Note: an alternative way is make PeerClient derived from
+// This class connect a P2PClient and a P2PPeerConnectionChannel, so the
+// P2PPeerConnectionChannel can notify P2PClient when event raises.
+// Note: an alternative way is make P2PClient derived from
 // P2PPeerConnectionChannelObserver, but it will expose
 // P2PPeerConnectionChannelObserver's defination to app.
 class P2PPeerConnectionChannelObserverCppImpl
     : public P2PPeerConnectionChannelObserver {
  public:
-  explicit P2PPeerConnectionChannelObserverCppImpl(PeerClient& peer_client)
+  explicit P2PPeerConnectionChannelObserverCppImpl(P2PClient& peer_client)
       : peer_client_(peer_client) {}
 
   // Triggered when received an invitation.
@@ -49,7 +49,7 @@ class P2PPeerConnectionChannelObserverCppImpl
       std::shared_ptr<RemoteScreenStream> stream);
 
  private:
-  PeerClient& peer_client_;
+  P2PClient& peer_client_;
 };
 }
 }

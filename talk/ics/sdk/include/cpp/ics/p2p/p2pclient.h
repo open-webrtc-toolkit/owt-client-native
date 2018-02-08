@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,15 +24,20 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WOOGEEN_P2P_P2PPEERCLIENT_H_
-#define WOOGEEN_P2P_P2PPEERCLIENT_H_
+#ifndef ICS_P2P_P2PCLIENT_H_
+#define ICS_P2P_P2PCLIENT_H_
 
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
-#include <iostream>
 #include <vector>
+#include <set>
+
+#include "ics/base/commontypes.h"
 #include "ics/base/connectionstats.h"
 #include "ics/base/stream.h"
+#include "ics/p2p/p2ppublication.h"
 #include "ics/p2p/p2psignalingchannelinterface.h"
 #include "ics/p2p/p2psignalingsenderinterface.h"
 #include "ics/base/clientconfiguration.h"
@@ -50,18 +55,21 @@ namespace base {
 namespace p2p{
 
 /**
- @brief Configuration for PeerClient
+ @brief Configuration for P2PClient
 
- This configuration is used while creating PeerClient. Changing this
- configuration does NOT impact PeerClient already created.
+ This configuration is used while creating P2PClient. Changing this
+ configuration does NOT impact P2PClient already created.
 */
-struct PeerClientConfiguration : ics::base::ClientConfiguration {};
+struct P2PClientConfiguration : ics::base::ClientConfiguration {
+  std::vector<AudioEncodingParameters> audio_encodings;
+  std::vector<VideoEncodingParameters> video_encodings;
+};
 
 class P2PPeerConnectionChannelObserverCppImpl;
 class P2PPeerConnectionChannel;
 
-/// Observer for PeerClient
-class PeerClientObserver {
+/// Observer for P2PClient
+class P2PClientObserver {
  public:
   /**
    @brief This function will be invoked when client is disconnected from
@@ -133,90 +141,75 @@ class PeerClientObserver {
 };
 
 /// An async client for P2P WebRTC sessions
-class PeerClient : protected P2PSignalingSenderInterface,
-                   protected P2PSignalingChannelInterfaceObserver {
+class P2PClient : protected P2PSignalingSenderInterface,
+                  protected P2PSignalingChannelInterfaceObserver,
+                  public std::enable_shared_from_this<P2PClient> {
 
  public:
   /**
-   @brief Init an PeerClient instance with speficied signaling channel.
-   @param configuration Configuration for creating the PTCPeerClient.
+   @brief Init a P2PClient instance with speficied signaling channel.
+   @param configuration Configuration for creating the P2PClient.
    @param signaling_channel Signaling channel used for exchange signaling messages.
    */
-  PeerClient(PeerClientConfiguration& configuration,
-             std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
+  P2PClient(P2PClientConfiguration& configuration,
+            std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
+
+  /*! Add an observer for peer client.
+   @param observer Add this object to observer list.
+          Do not delete this object until it is removed from observer list.
+   */
+  void AddObserver(P2PClientObserver& observer);
+
+  /*! Remove an observer from peer client.
+   @param observer Remove this object from observer list.
+   */
+  void RemoveObserver(P2PClientObserver& observer);
+
   /**
-  @brief Connect to the signaling server.
-  @param token A token used for connection and authentication
-  @param on_success Sucess callback will be invoked with current user's ID if
-         connect to server successfully.
-  @param on_failure Failure callback will be invoked if one of these cases
-                    happened:
-                    1. PeerClient is connecting or connected to a server.
-                    2. Invalid token.
-  */
+   @brief Connect to the signaling server.
+   @param token A token used for connection and authentication
+   @param on_success Sucess callback will be invoked with current user's ID if
+          connect to server successfully.
+   @param on_failure Failure callback will be invoked if one of these cases
+                     happened:
+                     1. P2PClient is connecting or connected to a server.
+                     2. Invalid token.
+   */
   void Connect(const std::string& token,
                std::function<void()> on_success,
                std::function<void(std::unique_ptr<P2PException>)> on_failure);
+
   /**
   @brief Disconnect from the signaling server.
-
          It will stop all active WebRTC sessions.
   @param on_success Sucess callback will be invoked if disconnect from server
-                   successfully.
+                    successfully.
   @param on_failure Failure callback will be invoked if one of these cases
-                   happened:
-                   1. PeerClient haven't connected to a signaling server.
-  */
-  void Disconnect(
-      std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                    happened:
+                    1. P2PClient hasn't connected to a signaling server.
+   */
+  void Disconnect(std::function<void()> on_success,
+                  std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   /**
-  @brief Invite a remote user to start a WebRTC session.
+  @brief Add a remote user to the allowed list to start a WebRTC session.
   @param target_id Remote user's ID.
-  @param on_success Success callback will be invoked if send a invitation
+   */
+  void AddAllowedRemoteId(const std::string& target_id);
+
+  /**
+  @brief Remove a remote user from the allowed list to stop a WebRTC session.
+  @param target_id Remote user's ID.
+  @param on_success Success callback will be invoked if removing a remote user
   successfully.
   @param on_failure Failure callback will be invoked if one of the following
-  cases
-  happened.
-                1. PeerClient is disconnected from the server.
-                2. Target ID is null or target user is offline.
-  */
-  void Invite(const std::string& target_id,
-              std::function<void()> on_success,
-              std::function<void(std::unique_ptr<P2PException>)> on_failure);
-
-  /**
-   @brief Accept a remote user's request to start a WebRTC session.
-   @param target_id Remote user's ID.
-   @param on_success Success callback will be invoked if send an acceptance
-   successfully.
-   @param on_failure Failure callback will be invoked if one of the following
-   cases
-   happened.
-                  1. PeerClient is disconnected from the server.
-                  2. Target ID is null or target user is offline.
-                  3. Haven't received an invitation from target user.
+  cases happened.
+      1. P2PClient is disconnected from the server.
+      2. Target ID is null or target user is offline.
    */
-  void Accept(const std::string& target_id,
-              std::function<void()> on_success,
-              std::function<void(std::unique_ptr<P2PException>)> on_failure);
-
-  /**
-   @brief Deny a remote user's request to start a WebRTC session.
-   @param target_id Remote user's ID.
-   @param on_success Success callback will be invoked if send deny event
-   successfully.
-   @param on_failure Failure callback will be invoked if one of the following
-   cases
-   happened.
-                  1. PeerClient is disconnected from the server.
-                  2. Target ID is null or target user is offline.
-                  3. Haven't received an invitation from target user.
-   */
-  void Deny(const std::string& target_id,
-            std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+  void RemoveAllowedRemoteId(const std::string& target_id,
+                             std::function<void()> on_success,
+                             std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   /**
    @brief Stop a WebRTC session.
@@ -226,7 +219,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
    @param on_failure Failure callback will be invoked if one of the following
    cases
    happened.
-                  1. PeerClient is disconnected from the server.
+                  1. P2PClient is disconnected from the server.
                   2. Target ID is null or target user is offline.
                   3. There is no WebRTC session with target user.
    */
@@ -242,32 +235,14 @@ class PeerClient : protected P2PSignalingSenderInterface,
    published.
    @param on_failure Failure callback will be invoked if one of these cases
    happened:
-                    1. PeerClient is disconnected from server.
+                    1. P2PClient is disconnected from server.
                     2. Target ID is null or user is offline.
                     3. Haven't connected to remote client.
    */
   void Publish(const std::string& target_id,
                std::shared_ptr<ics::base::LocalStream> stream,
-               std::function<void()> on_success,
+               std::function<void(std::shared_ptr<P2PPublication>)> on_success,
                std::function<void(std::unique_ptr<P2PException>)> on_failure);
-
-  /**
-   @brief Unpublish the stream to the remote client.
-   @param stream The stream which will be removed.
-   @param target_id Target user's ID.
-   @param on_success Success callback will be invoked it the stream is
-   unpublished.
-   @param on_failure Failure callback will be invoked if one of these cases
-   happened:
-                   1. PeerClient is disconnected from server.
-                   2. Target ID is null or user is offline.
-                   3. Haven't connected to remote client.
-                   4. The stream haven't been published.
-   */
-  void Unpublish(const std::string& target_id,
-                 std::shared_ptr<ics::base::LocalStream> stream,
-                 std::function<void()> on_success,
-                 std::function<void(std::unique_ptr<P2PException>)> on_failure);
 
   /**
    @brief Send a message to remote client
@@ -277,7 +252,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
    successfully.
    @param on_failure Failure callback will be invoked if one of the following
    cases happened.
-   1. PeerClient is disconnected from the server.
+   1. P2PClient is disconnected from the server.
    2. Target ID is null or target user is offline.
    3. There is no WebRTC session with target user.
    */
@@ -293,26 +268,14 @@ class PeerClient : protected P2PSignalingSenderInterface,
    information successes.
    @param on_failure Failure callback will be invoked if one of the following
    cases happened.
-   1. PeerClient is disconnected from the server.
+   1. P2PClient is disconnected from the server.
    2. Target ID is invalid.
    3. There is no WebRTC session with target user.
-  */
+   */
   void GetConnectionStats(
       const std::string& target_id,
       std::function<void(std::shared_ptr<ics::base::ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<P2PException>)> on_failure);
-
-  /*! Add an observer for peer client.
-    @param observer Add this object to observer list.
-                    Do not delete this object until it is removed from observer
-                    list.
-  */
-  void AddObserver(PeerClientObserver& observer);
-
-  /*! Remove an observer from peer client.
-    @param observer Remove this object from observer list.
-  */
-  void RemoveObserver(PeerClientObserver& observer);
 
  protected:
   // Implement
@@ -356,7 +319,7 @@ class PeerClient : protected P2PSignalingSenderInterface,
   ics::base::PeerConnectionChannelConfiguration
   GetPeerConnectionChannelConfiguration();
 
-  // Queue for callbacks and events. Shared among PeerClient and all of it's
+  // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
@@ -366,14 +329,18 @@ class PeerClient : protected P2PSignalingSenderInterface,
   std::unordered_map<std::string, P2PPeerConnectionChannelObserverCppImpl*>
       pcc_observers_;
   std::string local_id_;
-  std::vector<std::reference_wrapper<PeerClientObserver>> observers_;
-  // It receives events from P2PPeerConnectionChannel and notify PeerClient.
+  std::vector<std::reference_wrapper<P2PClientObserver>> observers_;
+  // It receives events from P2PPeerConnectionChannel and notify P2PClient.
   P2PPeerConnectionChannelObserverCppImpl* pcc_observer_impl_;
-  PeerClientConfiguration configuration_;
+  P2PClientConfiguration configuration_;
+
+  mutable std::mutex remote_ids_mutex_;
+  std::vector<std::string> allowed_remote_ids_;
 
   friend class P2PPeerConnectionChannelObserverCppImpl;
 };
+
 }
 }
 
-#endif  // WOOGEEN_P2P_P2PPEERCLIENT_H_
+#endif  // ICS_P2P_P2PCLIENT_H_

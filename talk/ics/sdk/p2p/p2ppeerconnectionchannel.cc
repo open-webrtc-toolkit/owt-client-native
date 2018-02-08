@@ -38,11 +38,12 @@ const string kChatDeny = "chat-denied";
 const string kChatStop = "chat-closed";
 const string kChatSignal = "chat-signal";
 const string kChatNegotiationNeeded = "chat-negotiation-needed";
-const string kStreamType = "stream-type";
+const string kChatTrackSources = "chat-track-sources";
+const string kChatTracksAdded = "chat-tracks-added";
+const string kChatTracksRemoved = "chat-tracks-removed";
 
-// Stream type member key
-const string kStreamIdKey = "streamId";
-const string kStreamTypeKey = "type";
+const string kTrackIdKey = "id";
+const string kTrackSourceKey = "source";
 
 // Session description member key
 const string kSessionDescriptionTypeKey = "type";
@@ -147,7 +148,9 @@ void P2PPeerConnectionChannel::Invite(
   Json::Value json;
   json[kMessageTypeKey] = kChatInvitation;
   Json::Value ua = UaInfo();
-  json[kUaKey] = ua;
+  Json::Value ua_data;
+  ua_data[kUaKey] = ua;
+  json[kMessageDataKey] = ua_data;
   SendSignalingMessage(json, on_success, on_failure);
   ChangeSessionState(kSessionStateOffered);
 }
@@ -208,14 +211,18 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     return;
   }
   if (message_type == kChatInvitation) {
+    Json::Value ua_data;
     Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kUaKey, &ua);
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua_data);
+    rtc::GetValueFromJsonObject(ua_data, kUaKey, &ua);
     OnMessageInvitation(ua);
   } else if (message_type == kChatStop) {
     OnMessageStop();
   } else if (message_type == kChatAccept) {
+    Json::Value ua_data;
     Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kUaKey, &ua);
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua_data);
+    rtc::GetValueFromJsonObject(ua_data, kUaKey, &ua);
     OnMessageAcceptance(ua);
   } else if (message_type == kChatDeny) {
     OnMessageDeny();
@@ -225,10 +232,10 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     OnMessageSignal(signal);
   } else if (message_type == kChatNegotiationNeeded) {
     OnMessageNegotiationNeeded();
-  } else if (message_type == kStreamType) {
-    Json::Value type_info;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &type_info);
-    OnMessageStreamType(type_info);
+  } else if (message_type == kChatTrackSources) {
+    Json::Value track_sources;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &track_sources);
+    OnMessageTrackSources(track_sources);
   } else {
     LOG(LS_WARNING) << "Received unknown message type : " << message_type;
     return;
@@ -462,14 +469,18 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   }
 }
 
-void P2PPeerConnectionChannel::OnMessageStreamType(Json::Value& stream_info) {
+void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources) {
   string id;
-  string type;
-  rtc::GetStringFromJsonObject(stream_info, kStreamIdKey, &id);
-  rtc::GetStringFromJsonObject(stream_info, kStreamTypeKey, &type);
-  std::pair<std::string, std::string> stream_type_element;
-  stream_type_element = std::make_pair(id, type);
-  remote_stream_type_.insert(stream_type_element);
+  string source;
+  for (Json::Value::ArrayIndex idx = 0; idx != track_sources.size(); idx++) {
+    rtc::GetStringFromJsonObject(track_sources[idx], kTrackIdKey, &id);
+    rtc::GetStringFromJsonObject(track_sources[idx], kTrackSourceKey, &source);
+
+    // Track source information collect
+    std::pair<std::string, std::string> track_source_info;
+    track_source_info = std::make_pair(id, source);
+    remote_track_source_info_.insert(track_source_info);
+  }
 }
 
 void P2PPeerConnectionChannel::OnSignalingChange(
@@ -495,24 +506,43 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   LOG(LS_INFO) << "P2PPeerConnectionChannel::OnAddStream";
-  if (remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
-    LOG(LS_WARNING) << "Missing stream type info for newly added stream.";
+  bool no_audio_source = true;
+  for (const auto& track : stream->GetAudioTracks()) {
+    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
+      no_audio_source = false;
+      break;
+    }
+  }
+
+  bool no_video_source = true;
+  std::string video_track_source;
+  for (const auto& track : stream->GetVideoTracks()) {
+    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
+      no_video_source = false;
+      video_track_source = remote_track_source_info_[track->id()];
+      break;
+    }
+  }
+
+  if (no_audio_source && no_audio_source) {
+    LOG(LS_WARNING) << "No track source information specified for newly added stream.";
     RTC_DCHECK(false);
   }
-  if (remote_stream_type_[stream->label()] == "screen") {
+
+  if (video_track_source == "screen-cast") {
+    LOG(LS_INFO) << "Add screen stream";
     std::shared_ptr<RemoteScreenStream> remote_stream(
         new RemoteScreenStream(stream, remote_id_));
-    LOG(LS_INFO) << "Add screen stream";
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteScreenStream>),
         std::shared_ptr<RemoteScreenStream>>(
-        observers_, event_queue_,
-        &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
+            observers_, event_queue_,
+            &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
-  } else {
+  } else if (video_track_source == "camera") {
     LOG(LS_INFO) << "Add camera stream.";
     std::shared_ptr<RemoteCameraStream> remote_stream(
         new RemoteCameraStream(stream, remote_id_));
@@ -522,21 +552,31 @@ void P2PPeerConnectionChannel::OnAddStream(
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
             std::shared_ptr<RemoteCameraStream>),
         std::shared_ptr<RemoteCameraStream>>(
-        observers_, event_queue_,
-        &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
+            observers_, event_queue_,
+            &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
+  } else {
+    LOG(LS_ERROR) << "Newly added stream is not recognized";
   }
 }
 
 void P2PPeerConnectionChannel::OnRemoveStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
-  if (remote_streams_.find(stream->label()) == remote_streams_.end() ||
-      remote_stream_type_.find(stream->label()) == remote_stream_type_.end()) {
+  if (remote_streams_.find(stream->label()) == remote_streams_.end()) {
     LOG(LS_WARNING) << "Remove an invalid stream.";
     RTC_DCHECK(false);
     return;
   }
-  if (remote_stream_type_[stream->label()] == "screen") {
+
+  std::string video_track_source;
+  for (const auto& track : stream->GetVideoTracks()) {
+    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
+      video_track_source = remote_track_source_info_[track->id()];
+      break;
+    }
+  }
+
+  if (video_track_source == "screen-cast") {
     std::shared_ptr<RemoteScreenStream> remote_stream =
         std::static_pointer_cast<RemoteScreenStream>(
             remote_streams_[stream->label()]);
@@ -548,7 +588,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
         std::shared_ptr<RemoteScreenStream>>(
         observers_, event_queue_,
         &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
-  } else {
+  } else if(video_track_source == "camera") {
     std::shared_ptr<RemoteCameraStream> remote_stream =
         std::static_pointer_cast<RemoteCameraStream>(
             remote_streams_[stream->label()]);
@@ -562,7 +602,11 @@ void P2PPeerConnectionChannel::OnRemoveStream(
         &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   }
   remote_streams_.erase(stream->label());
-  remote_stream_type_.erase(stream->label());
+  for (const auto& track : stream->GetAudioTracks())
+    remote_track_source_info_.erase(track->id());
+
+  for (const auto& track : stream->GetVideoTracks())
+    remote_track_source_info_.erase(track->id());
 }
 
 void P2PPeerConnectionChannel::OnDataChannel(
@@ -812,9 +856,7 @@ void P2PPeerConnectionChannel::Publish(
     std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
     pending_publish_streams_.push_back(stream);
   }
-  if (on_success) {
-    event_queue_->PostTask([on_success] { on_success(); });
-  }
+
   LOG(LS_INFO) << "Session state: " << session_state_;
   if (session_state_ == SessionState::kSessionStateConnected &&
       SignalingState() == PeerConnectionInterface::SignalingState::kStable)
@@ -831,7 +873,7 @@ void P2PPeerConnectionChannel::Unpublish(
   }
   if (!remote_side_supports_remove_stream_) {
     if (on_failure != nullptr) {
-      LOG(LS_WARNING) << "Remote side not support removeStream.";
+      LOG(LS_WARNING) << "Remote side does not support removeStream.";
       event_queue_->PostTask([on_failure] {
         std::unique_ptr<P2PException> e(
             new P2PException(P2PException::kClientUnsupportedMethod,
@@ -942,25 +984,39 @@ void P2PPeerConnectionChannel::GetConnectionStats(
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Draining pending stream";
+  // First to publish the pending_publish_streams_ list
   {
     std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
     for (auto it = pending_publish_streams_.begin();
          it != pending_publish_streams_.end(); ++it) {
       std::shared_ptr<LocalStream> stream = *it;
+      std::string audio_track_source = "mic";
+      std::string video_track_source = "camera";
+      if (stream->GetStreamDeviceType() ==
+          ics::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+        audio_track_source = "screen-cast";
+        video_track_source = "screen-cast";
+      }
+
       scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();
       Json::Value json;
-      json[kMessageTypeKey] = kStreamType;
-      Json::Value stream_info;
-      stream_info[kStreamIdKey] = media_stream->label();
-      if (stream->GetStreamDeviceType() ==
-          ics::base::LocalStream::StreamDeviceType::
-              kStreamDeviceTypeScreen) {
-        stream_info[kStreamTypeKey] = "screen";
-      } else {
-        stream_info[kStreamTypeKey] = "video";
+      json[kMessageTypeKey] = kChatTrackSources;
+      Json::Value track_info;
+      Json::Value track_sources;
+      for (const auto& track : media_stream->GetAudioTracks()) {
+        track_info[kTrackIdKey] = track->id();
+        track_info[kTrackSourceKey] = "mic";
+        track_sources.append(track_info);
       }
-      json[kMessageDataKey] = stream_info;
+
+      for (const auto& track : media_stream->GetVideoTracks()) {
+        track_info[kTrackIdKey] = track->id();
+        track_info[kTrackSourceKey] = "camera";
+        track_sources.append(track_info);
+      }
+
+      json[kMessageDataKey] = track_sources;
       SendSignalingMessage(json, nullptr, nullptr);
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
@@ -969,12 +1025,11 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
     }
     pending_publish_streams_.clear();
   }
+  // Then to unpublish the pending_unpublish_streams_ list
   {
     std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
-    LOG(LS_INFO) << "Get unpublish stream lock.";
     for (auto it = pending_unpublish_streams_.begin();
          it != pending_unpublish_streams_.end(); ++it) {
-      LOG(LS_INFO) << "Remove a stream from peer connection.";
       std::shared_ptr<LocalStream> stream = *it;
       scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();
@@ -993,7 +1048,9 @@ void P2PPeerConnectionChannel::SendAcceptance(
   Json::Value json;
   json[kMessageTypeKey] = kChatAccept;
   Json::Value ua = UaInfo();
-  json[kUaKey] = ua;
+  Json::Value ua_data;
+  ua_data[kUaKey] = ua;
+  json[kMessageDataKey] = ua_data;
   SendSignalingMessage(json, on_success, on_failure);
 }
 

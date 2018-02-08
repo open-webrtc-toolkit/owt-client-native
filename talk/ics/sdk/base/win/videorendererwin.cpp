@@ -85,6 +85,7 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
     CComPtr<IDirect3DSurface9> back_buffer;
     hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
     if (FAILED(hr)) {
+      LOG(LS_ERROR) << "Failed to get back buffer";
       return;
     }
 
@@ -92,9 +93,11 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       hr = pDevice->StretchRect(surface, nullptr, back_buffer, nullptr,
                                 D3DTEXF_NONE);
       if (FAILED(hr)) {
+        LOG(LS_ERROR) << "Failed to stretch the rectangle";
         return;
       }
     }
+
     pDevice->Present(nullptr, nullptr, wnd_, nullptr);
 
     dev_manager->UnlockDevice(hDevice, FALSE);
