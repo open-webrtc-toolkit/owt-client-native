@@ -7,12 +7,12 @@
 namespace ics {
 namespace conference {
 RemoteMixedStreamObserverObjcImpl::RemoteMixedStreamObserverObjcImpl(
-    id<ICSRemoteMixedStreamObserver> observer) {
-  observer_ = observer;
-}
+    ICSRemoteMixedStream* stream,
+    id<ICSRemoteMixedStreamDelegate> delegate)
+    : stream_(stream), delegate_(delegate) {}
 
-void RemoteMixedStreamObserverObjcImpl::OnVideoLayoutChanged(){
-  [observer_ onVideoLayoutChanged];
+void RemoteMixedStreamObserverObjcImpl::OnVideoLayoutChanged() {
+  [delegate_ remoteMixedStreamDidChangeVideoLayout:stream_];
 }
 }
 }

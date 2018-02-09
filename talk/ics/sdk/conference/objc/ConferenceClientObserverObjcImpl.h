@@ -10,7 +10,6 @@
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceClient.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSConferenceClientObserver.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteStream.h"
 
 namespace ics {
@@ -18,10 +17,10 @@ namespace conference {
 
 class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
  public:
-  ConferenceClientObserverObjcImpl(id<ICSConferenceClientObserver> observer,
-                                   ICSConferenceClient* conferenceClient);
+  ConferenceClientObserverObjcImpl(ICSConferenceClient* conferenceClient,
+                                   id<ICSConferenceClientDelegate> delegate);
   virtual ~ConferenceClientObserverObjcImpl(){};
-  id<ICSConferenceClientObserver> ObjcObserver() const { return observer_; }
+  id<ICSConferenceClientDelegate> ObjcObserver() const { return delegate_; }
 
  protected:
   virtual void OnStreamAdded(
@@ -41,7 +40,8 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
   void TriggerOnStreamRemoved(
       std::shared_ptr<ics::base::RemoteStream> stream);
 
-  id<ICSConferenceClientObserver> observer_;
+  ICSConferenceClient* client_;
+  id<ICSConferenceClientDelegate> delegate_;
   std::unordered_map<std::string, ICSRemoteStream*> remote_streams_;
   std::mutex remote_streams_mutex_;
   std::unordered_map<std::string, ICSLocalStream*> local_streams_;

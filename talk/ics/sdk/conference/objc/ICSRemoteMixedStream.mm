@@ -20,14 +20,6 @@
   return _supportedVideoFormats;
 }
 
-- (void)addObserver:(id<ICSRemoteMixedStreamObserver>)observer {
-  auto ob =
-      new ics::conference::RemoteMixedStreamObserverObjcImpl(observer);
-  _observers.push_back(ob);
-  std::shared_ptr<ics::conference::RemoteMixedStream> stream_ptr =
-      std::static_pointer_cast<ics::conference::RemoteMixedStream>([self nativeStream]);
-  stream_ptr->AddObserver(*ob);
-}
 
 - (NSString*)viewport {
   std::shared_ptr<ics::conference::RemoteMixedStream> stream_ptr =

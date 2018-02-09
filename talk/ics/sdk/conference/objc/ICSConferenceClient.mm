@@ -2,8 +2,10 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
+#include <string>
+#include <functional>
+
 #import <Foundation/Foundation.h>
-#import <string>
 #import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
@@ -16,7 +18,7 @@
 #import "talk/ics/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceSubscription+Private.h"
-#import "talk/ics/sdk/conference/objc/ICSConferenceUser+Internal.h"
+#import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferencePublication+Private.h"
 #import "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 #import "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
@@ -25,7 +27,10 @@
 
 @implementation ICSConferenceClient {
   std::shared_ptr<ics::conference::ConferenceClient> _nativeConferenceClient;
-  std::vector<ics::conference::ConferenceClientObserverObjcImpl*> _observers;
+  std::unique_ptr<
+      ics::conference::ConferenceClientObserverObjcImpl,
+      std::function<void(ics::conference::ConferenceClientObserverObjcImpl*)>>
+      _observer;
   NSMutableDictionary<NSString*, ICSLocalStream*>* _publishedStreams;
 }
 
@@ -60,13 +65,6 @@
   return self;
 }
 
-- (void)addObserver:(id<ICSConferenceClientObserver>)observer {
-  auto ob =
-      new ics::conference::ConferenceClientObserverObjcImpl(observer, self);
-  _observers.push_back(ob);
-  _nativeConferenceClient->AddObserver(*ob);
-}
-
 - (void)triggerOnFailure:(void (^)(NSError*))onFailure
            withException:
                (std::unique_ptr<ics::conference::ConferenceException>)e {
@@ -80,23 +78,6 @@
                              [NSString stringForStdString:e->Message()],
                              NSLocalizedDescriptionKey, nil]];
   onFailure(err);
-}
-
-- (void)removeObserver:(id<ICSConferenceClientObserver>)observer {
-  auto it = std::find_if(
-      _observers.begin(),
-      _observers.end(),
-      [=](const ics::conference::ConferenceClientObserverObjcImpl* observerObjcImpl) -> bool {
-        return observerObjcImpl->ObjcObserver() == observer;
-      });
-  if (it == _observers.end()) {
-    LOG(LS_WARNING) << "Cannot remove a non-existing element.";
-    return;
-  }
-  auto o = *it;
-  _nativeConferenceClient->RemoveObserver(*o);
-  _observers.erase(it);
-  delete o;
 }
 
 - (void)joinWithToken:(NSString*)token
@@ -256,9 +237,16 @@ PlayPauseFailureCallback(FailureBlock on_failure,
       });*/
 }
 
-- (void)dealloc {
-  while(!_observers.empty())
-    delete _observers.back(), _observers.pop_back();
+- (void)setDelegate:(id<ICSConferenceClientDelegate>)delegate {
+  _observer = std::unique_ptr<
+      ics::conference::ConferenceClientObserverObjcImpl,
+      std::function<void(ics::conference::ConferenceClientObserverObjcImpl*)>>(
+      new ics::conference::ConferenceClientObserverObjcImpl(self, delegate),
+      [&self](ics::conference::ConferenceClientObserverObjcImpl* observer) {
+        self->_nativeConferenceClient->RemoveObserver(*observer);
+      });
+  _nativeConferenceClient->AddObserver(*_observer.get());
+  _delegate = delegate;
 }
 
 @end

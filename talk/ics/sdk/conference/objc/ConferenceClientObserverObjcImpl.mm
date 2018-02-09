@@ -15,7 +15,7 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
 #import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
-#import "talk/ics/sdk/conference/objc/ICSConferenceUser+Internal.h"
+#import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
@@ -23,9 +23,9 @@ namespace ics {
 namespace conference {
 
 ConferenceClientObserverObjcImpl::ConferenceClientObserverObjcImpl(
-    id<ICSConferenceClientObserver> observer,
-    ICSConferenceClient* conference_client)
-    : observer_(observer) {}
+    ICSConferenceClient* conference_client,
+    id<ICSConferenceClientDelegate> delegate)
+    : client_(conference_client), delegate_(delegate) {}
 
 void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
     const std::string& id,
@@ -39,7 +39,10 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
       [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
-  [observer_ onStreamAdded:remote_stream];
+  if ([delegate_
+          respondsToSelector:@selector(conferenceClient:didAddStream:)]) {
+    [delegate_ conferenceClient:client_ didAddStream:remote_stream];
+  }
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
@@ -47,7 +50,10 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
       [ICSRemoteScreenStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
-  [observer_ onStreamAdded:remote_stream];
+  if ([delegate_
+          respondsToSelector:@selector(conferenceClient:didAddStream:)]) {
+    [delegate_ conferenceClient:client_ didAddStream:remote_stream];
+  }
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
@@ -65,11 +71,17 @@ void ConferenceClientObserverObjcImpl::OnStreamAdded(
   }
   [remote_stream setSupportedVideoFormats:supportedVideoFormats];*/
   AddRemoteStreamToMap(stream->Id(), remote_stream);
-  [observer_ onStreamAdded:(ICSRemoteStream*)remote_stream];
+  if ([delegate_
+          respondsToSelector:@selector(conferenceClient:didAddStream:)]) {
+    [delegate_ conferenceClient:client_
+                   didAddStream:(ICSRemoteStream*)remote_stream];
+  }
 }
 
 void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
     std::shared_ptr<ics::base::RemoteStream> stream) {
+  // TODO: Fire ended event on RemoteStream.
+  /*
   ICSRemoteStream* remote_stream(nullptr);
   {
     std::lock_guard<std::mutex> lock(remote_streams_mutex_);
@@ -81,13 +93,17 @@ void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
     remote_stream = remote_stream_it->second;
     remote_streams_.erase(remote_stream_it);
   }
-  [observer_ onStreamRemoved:remote_stream];
+  [observer_ onStreamRemoved:remote_stream];*/
 }
 
 void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id,
                                                          std::string& message) {
-  [observer_ onMessageReceivedFrom:[NSString stringForStdString:sender_id]
-                           message:[NSString stringForStdString:message]];
+  if ([delegate_ respondsToSelector:@selector
+                 (conferenceClient:didReceiveMessage:from:)]) {
+    [delegate_ conferenceClient:client_
+              didReceiveMessage:[NSString stringForStdString:message]
+                           from:[NSString stringForStdString:sender_id]];
+  }
 }
 
 void ConferenceClientObserverObjcImpl::OnParticipantJoined(
@@ -95,8 +111,11 @@ void ConferenceClientObserverObjcImpl::OnParticipantJoined(
   // TODO:
 }
 
-void ConferenceClientObserverObjcImpl::OnServerDisconnected(){
-  [observer_ onServerDisconnected];
+void ConferenceClientObserverObjcImpl::OnServerDisconnected() {
+  if ([delegate_
+          respondsToSelector:@selector(conferenceClientDidDisconnect:)]) {
+    [delegate_ conferenceClientDidDisconnect:client_];
+  }
 }
 }
 }

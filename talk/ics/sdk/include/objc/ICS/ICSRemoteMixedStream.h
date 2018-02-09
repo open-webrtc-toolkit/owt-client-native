@@ -24,23 +24,17 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_CONFERENCE_OBJC_ICSRemoteMixedStream_H_
-#define ICS_CONFERENCE_OBJC_ICSRemoteMixedStream_H_
-
 #import "ICS/ICSRemoteStream.h"
-#import "ICS/ICSRemoteMixedStreamObserver.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@protocol ICSRemoteMixedStreamDelegate;
 
 /// This class represent a mixed remote stream.
 RTC_EXPORT
 @interface ICSRemoteMixedStream : ICSRemoteStream
 
--(NSArray*)supportedVideoFormats;
-/**
-  @brief Add an observer for ICSRemoteMixedStream.
-*/
-- (void)addObserver:(id<ICSRemoteMixedStreamObserver>)observer;
+- (NSArray*)supportedVideoFormats;
 
 /**
   @brief A property of mixed streams which distinguishes them from other mixed
@@ -55,8 +49,18 @@ RTC_EXPORT
 */
 @property(readonly, strong) NSString* viewport;
 
+@property(nonatomic, weak) id<ICSRemoteMixedStreamDelegate> delegate;
+
 @end
 
-#endif // ICS_CONFERENCE_OBJC_ICSRemoteMixedStream_H_
+RTC_EXPORT
+@protocol ICSRemoteMixedStreamDelegate<NSObject>
+
+/**
+  @brief Triggers when video layout is changed.
+*/
+- (void)remoteMixedStreamDidChangeVideoLayout:(ICSRemoteMixedStream*)stream;
+
+@end
 
 NS_ASSUME_NONNULL_END

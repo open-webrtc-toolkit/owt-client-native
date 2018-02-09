@@ -28,17 +28,18 @@
 #define ICS_CONFERENCE_OBJC_ICSCONFERENCECLIENT_H_
 
 #import <WebRTC/RTCMacros.h>
+#import "ICS/ICSConferenceClientConfiguration.h"
+#import "ICS/ICSConferencePublication.h"
+#import "ICS/ICSConferenceSubscription.h"
+#import "ICS/ICSConferenceParticipant.h"
+#import "ICS/ICSConnectionStats.h"
 #import "ICS/ICSLocalStream.h"
 #import "ICS/ICSRemoteMixedStream.h"
 #import "ICS/ICSRemoteStream.h"
-#import "ICS/ICSConferenceClientObserver.h"
-#import "ICS/ICSConferenceClientConfiguration.h"
-#import "ICS/ICSConferenceSubscription.h"
-#import "ICS/ICSConferenceUser.h"
-#import "ICS/ICSConnectionStats.h"
-#import "ICS/ICSConferencePublication.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@protocol ICSConferenceClientDelegate;
 
 /// An asynchronous class for app to communicate with a conference in MCU
 RTC_EXPORT
@@ -78,7 +79,7 @@ RTC_EXPORT
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(ICSRemoteStream*)stream
-        withOptions:(ICSConferenceSubscriptionOptions*)options
+      withOptions:(ICSConferenceSubscriptionOptions*)options
         onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**
@@ -86,41 +87,57 @@ RTC_EXPORT
   @param message The message to be sent.
 */
 - (void)send:(NSString*)message
-   onSuccess:(nullable void (^)())onSuccess
-   onFailure:(nullable void (^)(NSError*))onFailure;
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Send message to specific participant in the conference.
   @param message The message to be sent.
   @param to The user who receives this message.
 */
 - (void)send:(NSString*)message
-          to:(NSString*)receiver
-   onSuccess:(nullable void (^)())onSuccess
-   onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Get a stream's connection statistics
-*/
-- (void)getConnectionStatsForStream:(ICSStream*)stream
-                          onSuccess:
-                              (nullable void (^)(ICSConnectionStats*))onSuccess
-                          onFailure:(nullable void (^)(NSError*))onFailure;
+           to:(NSString*)receiver
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Leave current conference.
 */
 - (void)leaveWithOnSuccess:(nullable void (^)())onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
+
+@property(nonatomic, weak) id<ICSConferenceClientDelegate> delegate;
+
+@end
+
+/// Delegate for ICSConferenceClient.
+RTC_EXPORT
+@protocol ICSConferenceClientDelegate<NSObject>
+
+@optional
 /**
-  @brief Add an observer for ConferenceClient.
+  @brief Triggers when client is disconnected from conference server.
 */
-- (void)addObserver:(id<ICSConferenceClientObserver>)observer;
-/// @cond
+- (void)conferenceClientDidDisconnect:(ICSConferenceClient*)client;
 /**
-  @brief Remove an observer from the ConferenceClient.
+  @brief Triggers when a stream is added.
+  @param stream The stream which is added.
 */
-- (void)removeObserver:(id<ICSConferenceClientObserver>)observer;
-/// @endcond
+- (void)conferenceClient:(ICSConferenceClient*)client
+            didAddStream:(ICSRemoteStream*)stream;
+/**
+  @brief Triggers when a message is received.
+  @param senderId Sender's ID.
+  @param message Message received.
+*/
+- (void)conferenceClient:(ICSConferenceClient*)client
+       didReceiveMessage:(NSString*)message
+                    from:(NSString*)senderId;
+/**
+  @brief Triggers when a user joined conference.
+  @param user The user joined.
+*/
+- (void)conferenceClient:(ICSConferenceClient*)client
+       didAddParticipant:(ICSConferenceParticipant*)user;
 
 @end
 

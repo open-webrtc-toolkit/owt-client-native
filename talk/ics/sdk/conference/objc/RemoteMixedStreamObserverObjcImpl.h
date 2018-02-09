@@ -6,21 +6,23 @@
 #define ICS_CONFERENCE_OBJC_REMOTEMIXEDSTREAMOBSERVEROBJCIMPL_H_
 
 #import "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSRemoteMixedStreamObserver.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteMixedStream.h"
 
 namespace ics {
 namespace conference {
 class RemoteMixedStreamObserverObjcImpl : public RemoteMixedStreamObserver {
  public:
-  RemoteMixedStreamObserverObjcImpl(id<ICSRemoteMixedStreamObserver> observer);
+  RemoteMixedStreamObserverObjcImpl(ICSRemoteMixedStream* stream,
+                                    id<ICSRemoteMixedStreamDelegate> delegate);
 
  protected:
   virtual void OnVideoLayoutChanged() override;
 
  private:
-  id<ICSRemoteMixedStreamObserver> observer_;
+  ICSRemoteMixedStream* stream_;
+  id<ICSRemoteMixedStreamDelegate> delegate_;
 };
-}
-}
+}  // namespace conference
+}  // namespace ics
 
 #endif  // ICS_CONFERENCE_OBJC_REMOTEMIXEDSTREAMOBSERVEROBJCIMPL_H_

@@ -24,25 +24,22 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ICS_CONFERENCE_OBJC_ICSREMOTEMIXEDSTREAMOBSERVER_H_
-#define ICS_CONFERENCE_OBJC_ICSREMOTEMIXEDSTREAMOBSERVER_H_
+#ifndef ICS_CONFERENCE_OBJC_ICSCONFERENCEPARTICIPANT_H_
+#define ICS_CONFERENCE_OBJC_ICSCONFERENCEPARTICIPANT_H_
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
-/// Observer for ICSRemoteMixedStream.
+/// This class represents an attendee in a conference.
 RTC_EXPORT
-@protocol ICSRemoteMixedStreamObserver<NSObject>
+@interface ICSConferenceParticipant : NSObject
 
-/**
-  @brief Triggers when video layout is changed.
-*/
-- (void)onVideoLayoutChanged;
+- (instancetype)init NS_UNAVAILABLE;
+
+@property(readonly, strong) NSString* participantId;
+@property(readonly, strong) NSString* role;
+@property(readonly, strong) NSString* userId;
 
 @end
 
-NS_ASSUME_NONNULL_END
-
-#endif  // ICS_CONFERENCE_OBJC_ICSREMOTEMIXEDSTREAMOBSERVER_H_
+#endif  // ICS_CONFERENCE_OBJC_ICSCONFERENCEPARTICIPANT_H_
