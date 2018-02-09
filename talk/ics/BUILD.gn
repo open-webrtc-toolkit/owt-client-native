@@ -44,20 +44,6 @@ if (is_android) {
   }
 }
 
-if (is_android) {
-  dist_jar("libjingle_woogeen_java") {
-    output = "${root_out_dir}/lib.java/${target_name}.jar"
-    direct_deps_only = true
-    use_interface_jars = false
-    deps = [
-      "//third_party/webrtc/base:base_java",
-      "//third_party/webrtc/modules/audio_device:audio_device_java",
-      "//third_party/webrtc/sdk/android:libjingle_peerconnection_java",
-      "//third_party/webrtc/sdk/android:libjingle_peerconnection_metrics_default_java",
-    ]
-  }
-}
-
 static_library("ics_deps") {
   deps = [
     "//third_party/jsoncpp",

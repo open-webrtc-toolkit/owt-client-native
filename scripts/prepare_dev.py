@@ -17,6 +17,7 @@ THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
+BASE_PATH = os.path.join(HOME_PATH, 'base')
 platform = os.name
 useShell = False
 if(platform == "nt"):
@@ -33,6 +34,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Turn-off-user-defined-warnings.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-ICS-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
 
 def main(argv):
   _patch()
