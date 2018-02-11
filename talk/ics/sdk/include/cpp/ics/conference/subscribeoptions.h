@@ -32,25 +32,6 @@
 namespace ics {
 namespace conference {
 
-/// Options for subscribing a remote stream.
-struct SubscribeOptions {
-  enum class VideoQualityLevel : int {
-    kBestQuality = 1,  //1.4x
-    kBetterQuality,    //1.2x
-    kStandard,         //1.0x
-    kBetterSpeed,      //0.8x
-    kBestSpeed         //0.6x
-  };
-  /**
-    @brief Construct SubscribeOptions with default values.
-    @details Default video quality is standard. MCU's setting will be ignored.
-  */
-  explicit SubscribeOptions()
-      : video_quality_level(VideoQualityLevel::kStandard) {}
-  ics::base::Resolution resolution;
-  VideoQualityLevel video_quality_level;
-};
-
 /// Audio subscription contraints.
 struct AudioSubscriptionConstraints {
   std::vector<AudioCodecParameters> codecs;

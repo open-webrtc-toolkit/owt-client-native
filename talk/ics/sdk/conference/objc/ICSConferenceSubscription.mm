@@ -43,11 +43,11 @@
   _resolution = resolution;
 }
 
-- (ics::conference::SubscribeOptions)nativeSubscribeOptions {
+- (ics::conference::SubscriptionOptions)nativeSubscriptionOptions {
   using namespace ics::conference;
-  ics::conference::SubscribeOptions options;
-  options.resolution.width = _resolution.width;
-  options.resolution.height = _resolution.height;
+  ics::conference::SubscriptionOptions options;
+  options.video.resolution.width = _resolution.width;
+  options.video.resolution.height = _resolution.height;
   return options;
 }
 

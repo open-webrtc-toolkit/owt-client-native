@@ -43,7 +43,6 @@
     iceServers.push_back(iceServer);
   }
   nativeConfig->ice_servers = iceServers;
-  nativeConfig->video_codec = ics::base::VideoCodec::kH264;
   /*
   nativeConfig->max_audio_bandwidth = [config maxAudioBandwidth];
   nativeConfig->max_video_bandwidth = [config maxVideoBandwidth];
@@ -169,7 +168,7 @@
   std::shared_ptr<ics::base::RemoteStream> nativeStream(
       std::static_pointer_cast<ics::base::RemoteStream>(nativeStreamRefPtr));
   _nativeConferenceClient->Subscribe(
-      nativeStream, [options nativeSubscribeOptions],
+      nativeStream, [options nativeSubscriptionOptions],
       [=](std::shared_ptr<ics::conference::ConferenceSubscription>
               subscription) {
         ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]

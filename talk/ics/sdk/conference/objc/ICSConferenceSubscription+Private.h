@@ -16,6 +16,6 @@
 
 @interface ICSConferenceSubscriptionOptions ()
 
-- (ics::conference::SubscribeOptions)nativeSubscribeOptions;
+- (ics::conference::SubscriptionOptions)nativeSubscriptionOptions;
 
 @end
