@@ -32,6 +32,7 @@
 #import "ICS/ICSConferencePublication.h"
 #import "ICS/ICSConferenceSubscription.h"
 #import "ICS/ICSConferenceParticipant.h"
+#import "ICS/ICSConferenceInfo.h"
 #import "ICS/ICSConnectionStats.h"
 #import "ICS/ICSLocalStream.h"
 #import "ICS/ICSRemoteMixedStream.h"
