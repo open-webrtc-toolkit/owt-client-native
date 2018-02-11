@@ -411,9 +411,54 @@ void ConferencePeerConnectionChannel::Publish(
   SendPublishMessage(options, stream, on_failure);
 }
 
+static bool SubOptionAllowed(const SubscriptionOptions& subscribe_options,
+    const SubscriptionCapabilities& subscription_caps) {
+    // TODO: Audio sub constraints are currently not checked as spec only specifies codec, though
+    // signaling allows specifying sampleRate and channel num.
+    bool result = true;
+    if (subscribe_options.video.resolution.width != 0 &&
+      subscribe_options.video.resolution.height != 0) {
+      result = false;
+      if (std::find_if(subscription_caps.video.resolutions.begin(), subscription_caps.video.resolutions.end(),
+          [&](const Resolution& format) {
+          return format == subscribe_options.video.resolution;
+      }) != subscription_caps.video.resolutions.end()) {
+        result = true;
+      }
+    }
+    if (subscribe_options.video.frameRate != 0) {
+      result = false;
+      if (std::find_if(subscription_caps.video.frame_rates.begin(), subscription_caps.video.frame_rates.end(),
+          [&](const double& format) {
+          return format == subscribe_options.video.frameRate;
+      }) != subscription_caps.video.frame_rates.end()) {
+        result = true;
+      }
+    }
+    if (subscribe_options.video.keyFrameInterval != 0) {
+      result = false;
+      if (std::find_if(subscription_caps.video.keyframe_intervals.begin(), subscription_caps.video.keyframe_intervals.end(),
+          [&](const unsigned long& format) {
+          return format == subscribe_options.video.keyFrameInterval;
+      }) != subscription_caps.video.keyframe_intervals.end()) {
+        result = true;
+      }
+    }
+    if (subscribe_options.video.bitrateMultiplier != 0) {
+      result = false;
+      if (std::find_if(subscription_caps.video.bitrate_multipliers.begin(), subscription_caps.video.bitrate_multipliers.end(),
+          [&](const double& format) {
+          return format == subscribe_options.video.bitrateMultiplier;
+      }) != subscription_caps.video.bitrate_multipliers.end()) {
+        result = true;
+      }
+    }
+    return result;
+}
+
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
-    const SubscribeOptions& subscribe_options,
+    const SubscriptionOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
@@ -446,45 +491,38 @@ void ConferencePeerConnectionChannel::Subscribe(
     media_options->get_map()["audio"] = sio::bool_message::create(false);
   }
 
-  // For webrtc, at present server does not support specifiying framerate/
-  // keyFrameInterval. And for bitrate, we support "WantedBitrateMultiple".
   if (stream->has_video_) {
     sio::message::ptr video_options = sio::object_message::create();
     video_options->get_map()["from"] = sio::string_message::create(stream->Id());
     sio::message::ptr video_spec = sio::object_message::create();
-    if (subscribe_options.resolution.width != 0 &&
-        subscribe_options.resolution.height != 0) {
-      sio::message::ptr resolution_options = sio::object_message::create();
+    sio::message::ptr resolution_options = sio::object_message::create();
+    if (subscribe_options.video.resolution.width != 0 &&
+        subscribe_options.video.resolution.height != 0) {
       resolution_options->get_map()["width"] =
-          sio::int_message::create(subscribe_options.resolution.width);
+          sio::int_message::create(subscribe_options.video.resolution.width);
       resolution_options->get_map()["height"] =
-          sio::int_message::create(subscribe_options.resolution.height);
+          sio::int_message::create(subscribe_options.video.resolution.height);
       video_spec->get_map()["resolution"] = resolution_options;
     }
+    // If bitrateMultiplier is not specified, do not include it in video spec.
     std::string quality_level("x1.0");
-    switch (subscribe_options.video_quality_level) {
-      case SubscribeOptions::VideoQualityLevel::kStandard:
-        break;
-      case SubscribeOptions::VideoQualityLevel::kBestQuality:
-        quality_level = "x1.4";
-        break;
-      case SubscribeOptions::VideoQualityLevel::kBetterQuality:
-        quality_level = "x1.2";
-        break;
-      case SubscribeOptions::VideoQualityLevel::kBetterSpeed:
-        quality_level = "x0.8";
-        break;
-      case SubscribeOptions::VideoQualityLevel::kBestSpeed:
-        quality_level = "x0.6";
-        break;
-      default:
-        RTC_NOTREACHED();
-        break;
+    if (subscribe_options.video.bitrateMultiplier != 0) {
+        quality_level = "x" + std::to_string(subscribe_options.video.bitrateMultiplier);
     }
     if (quality_level != "x1.0") {
       sio::message::ptr quality_options =
           sio::string_message::create(quality_level);
       video_spec->get_map()["bitrate"] = quality_options;
+    }
+
+    if (subscribe_options.video.keyFrameInterval != 0) {
+      video_spec->get_map()["keyFrameInterval"] =
+          sio::int_message::create(subscribe_options.video.keyFrameInterval);
+    }
+
+    if (subscribe_options.video.frameRate != 0) {
+      video_spec->get_map()["framerate"] =
+          sio::int_message::create(subscribe_options.video.frameRate);
     }
     video_options->get_map()["parameters"] = video_spec;
     media_options->get_map()["video"] = video_options;
@@ -511,78 +549,61 @@ void ConferencePeerConnectionChannel::Subscribe(
 
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteMixedStream> stream,
-    const SubscribeOptions& subscribe_options,
+    const SubscriptionOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (subscribe_options.resolution.width != 0 ||
-      subscribe_options.resolution.height != 0) {
-    auto video_subscription_cap = stream->Capabilities().video.resolutions;
-    if (std::find_if(video_subscription_cap.begin(), video_subscription_cap.end(),
-                     [&](const Resolution& format) {
-                       return format == subscribe_options.resolution;
-                     }) != video_subscription_cap.end()) {
-      Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-                subscribe_options, on_success, on_failure);
-    } else {
-      LOG(LS_ERROR) << "Subscribe unsupported resolution.";
-      if (on_failure != nullptr) {
-        event_queue_->PostTask([on_failure]() {
-          std::unique_ptr<ConferenceException> e(new ConferenceException(
-              ConferenceException::kUnknown, "Unsupported resolution."));
-          on_failure(std::move(e));
-        });
-      }
-    }
+  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+       subscribe_options, on_success, on_failure);
   } else {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream), subscribe_options,
-              on_success, on_failure);
+    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
+    if (on_failure != nullptr) {
+       event_queue_->PostTask([on_failure]() {
+           std::unique_ptr<ConferenceException> e(new ConferenceException(
+                    ConferenceException::kUnknown, "Unsupported subscribe option."));
+                on_failure(std::move(e));
+       });
+    }
   }
 }
 
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteScreenStream> stream,
-    const SubscribeOptions& subscribe_options,
+    const SubscriptionOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (subscribe_options.resolution.width != 0 ||
-      subscribe_options.resolution.height != 0) {
-    LOG(LS_ERROR) << "Screen sharing stream does not support resolution settings. "
-                     "Please don't change resolution.";
+  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+        subscribe_options, on_success, on_failure);
+  } else {
+    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown,
-            "Cannot specify resolution settings for screen sharing stream."));
+            ConferenceException::kUnknown, "Unsupported subscribe option."));
         on_failure(std::move(e));
       });
-      }
-  } else {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-                  subscribe_options, on_success, on_failure);
+    }
   }
 }
 
-
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteCameraStream> stream,
-    const SubscribeOptions& subscribe_options,
+    const SubscriptionOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (subscribe_options.resolution.width != 0 ||
-      subscribe_options.resolution.height != 0) {
-    LOG(LS_ERROR) << "Camera stream does not support resolution settings. "
-                     "Please don't change resolution.";
+  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
+        subscribe_options, on_success, on_failure);
+  } else {
+    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown,
-            "Cannot specify resolution settings for camera stream."));
-        on_failure(std::move(e));
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Unsupported subscribe option."));
+          on_failure(std::move(e));
       });
-      }
-  } else {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-                  subscribe_options, on_success, on_failure);
+    }
   }
 }
 

@@ -5,6 +5,8 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 
+#include <vector>
+
 #include "webrtc/rtc_base/messagehandler.h"
 #include "webrtc/rtc_base/sigslot.h"
 
@@ -53,8 +55,8 @@ struct PeerConnectionChannelConfiguration
  public:
   explicit PeerConnectionChannelConfiguration();
 
-  AudioCodec audio_codec;
-  VideoCodec video_codec;
+  std::vector<AudioCodec> audio_codecs;
+  std::vector<VideoCodec> video_codecs;
   /// Max outgoing video bandwidth, unit: kbps.
   int max_video_bandwidth;
   /// Max outgoing audio bandwidth, unit: kbps.

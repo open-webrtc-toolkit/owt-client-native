@@ -165,9 +165,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         RTC_DCHECK(false);
       }
       sdp_string = SdpUtils::SetPreferAudioCodec(
-          sdp_string, configuration_.audio_codec);
+          sdp_string, configuration_.audio_codecs);
       sdp_string = SdpUtils::SetPreferVideoCodec(
-          sdp_string, configuration_.video_codec);
+          sdp_string, configuration_.video_codecs);
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);

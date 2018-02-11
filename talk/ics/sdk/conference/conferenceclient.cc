@@ -333,13 +333,13 @@ void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  SubscribeOptions options;
+  SubscriptionOptions options;
   Subscribe(stream, options, on_success, on_failure);
 }
 
 void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
-    const SubscribeOptions& options,
+    const SubscriptionOptions& options,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure )) {
@@ -364,8 +364,15 @@ void ConferenceClient::Subscribe(
     return;
   }
 
+  // Reorder SDP according to perference list.
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
+  for (auto codec : options.video.codecs) {
+    config.video_codecs.push_back(codec.name);
+  }
+  for (auto codec : options.audio.codecs) {
+    config.audio_codecs.push_back(codec.name);
+  }
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_,
                                           event_queue_));
@@ -1011,7 +1018,8 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
             auto bitrates = bitrate_obj->get_vector();
             for (auto it = bitrates.begin(); it != bitrates.end(); ++it) {
               std::string bitrate_mul =(*it)->get_string();
-              video_subscription_capabilities.bitrate_multipliers.push_back(bitrate_mul);
+              // The bitrate multiplier is in the form of "x1.0" and we need to strip the "x" here.
+              video_subscription_capabilities.bitrate_multipliers.push_back(std::stod(bitrate_mul.substr(1)));
             }
           }
           auto keyframe_interval_obj = optional_video_params_obj->get_map()["keyFrameInterval"];
@@ -1169,8 +1177,6 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
     ice_servers.push_back(ice_server);
   }
   config.servers = ice_servers;
-  config.audio_codec = configuration_.audio_codec;
-  config.video_codec = configuration_.video_codec;
   config.max_audio_bandwidth = configuration_.max_audio_bandwidth;
   config.max_video_bandwidth = configuration_.max_video_bandwidth;
   config.candidate_network_policy =

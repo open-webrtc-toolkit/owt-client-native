@@ -54,22 +54,22 @@ class ConferencePeerConnectionChannel
   // Subscribe a stream from the conference.
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
-      const SubscribeOptions& options,
+      const SubscriptionOptions& options,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   void Subscribe(
       std::shared_ptr<RemoteMixedStream> stream,
-      const SubscribeOptions& options,
+      const SubscriptionOptions& options,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   void Subscribe(
       std::shared_ptr<RemoteScreenStream> stream,
-      const SubscribeOptions& options,
+      const SubscriptionOptions& options,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   void Subscribe(
       std::shared_ptr<RemoteCameraStream> stream,
-      const SubscribeOptions& options,
+      const SubscriptionOptions& options,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   // Unsubscribe a remote stream from the conference.

@@ -46,7 +46,7 @@ struct VideoSubscriptionCapabilities {
   std::vector<VideoCodecParameters>    codecs;
   std::vector<Resolution>              resolutions;
   std::vector<double>                  frame_rates;
-  std::vector<std::string>             bitrate_multipliers;
+  std::vector<double>             bitrate_multipliers;
   std::vector<unsigned long>           keyframe_intervals;
 };
 

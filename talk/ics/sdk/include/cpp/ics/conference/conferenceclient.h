@@ -296,7 +296,7 @@ class ConferenceClient final
   */
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
-      const SubscribeOptions& options,
+      const SubscriptionOptions& options,
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
 

@@ -29,25 +29,36 @@ static const std::unordered_map<VideoCodec, const std::string>
                          {VideoCodec::kH265, "H265"}};
 
 std::string SdpUtils::SetPreferAudioCodec(const std::string& original_sdp,
-                                          AudioCodec codec) {
-  auto codec_it = audio_codec_names.find(codec);
-  if (codec_it == audio_codec_names.end()) {
-    LOG(LS_WARNING) << "Preferred audio codec is not available.";
-    return original_sdp;
+                                          std::vector<AudioCodec>& codec) {
+  std::string cur_sdp(original_sdp);
+  std::vector<AudioCodec> rcodecs(codec.rbegin(), codec.rend());
+  for (auto codec_current : rcodecs) {
+    auto codec_it = audio_codec_names.find(codec_current);
+    if (codec_it == audio_codec_names.end()) {
+      LOG(LS_WARNING) << "Preferred audio codec is not available.";
+      continue;
+    }
+    cur_sdp = SdpUtils::SetPreferCodec(cur_sdp, codec_it->second, true);
   }
-  return SdpUtils::SetPreferCodec(original_sdp, codec_it->second, true);
+  return cur_sdp;
 }
 
 std::string SdpUtils::SetPreferVideoCodec(const std::string& original_sdp,
-                                          VideoCodec codec) {
-  auto codec_it = video_codec_names.find(codec);
-  if (codec_it == video_codec_names.end()) {
-    LOG(LS_WARNING) << "Preferred video codec is not available.";
-    return original_sdp;
+                                          std::vector<VideoCodec>& codec) {
+  std::string cur_sdp(original_sdp);
+  std::vector<VideoCodec> rcodecs(codec.rbegin(), codec.rend());
+  for (auto codec_current : rcodecs) {
+    auto codec_it = video_codec_names.find(codec_current);
+    if (codec_it == video_codec_names.end()) {
+      LOG(LS_WARNING) << "Preferred video codec is not available.";
+      continue;
+    }
+    cur_sdp = SdpUtils::SetPreferCodec(cur_sdp, codec_it->second, false);
   }
-  return SdpUtils::SetPreferCodec(original_sdp, codec_it->second, false);
+  return cur_sdp;
 }
 
+// TODO(jianlin): remove a-lines for codecs not supported.
 std::string SdpUtils::SetPreferCodec(const std::string& sdp,
                                      const std::string& codec_name,
                                      bool is_audio) {

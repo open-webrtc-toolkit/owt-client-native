@@ -50,6 +50,37 @@ struct SubscribeOptions {
   ics::base::Resolution resolution;
   VideoQualityLevel video_quality_level;
 };
+
+/// Audio subscription contraints.
+struct AudioSubscriptionConstraints {
+  std::vector<AudioCodecParameters> codecs;
+};
+
+/// Video subscription constraints.
+struct VideoSubscriptionConstraints {
+  /**
+   @brief Construct VideoSubscriptionConstraints with default values.
+   @defatils By default the publication settings of stream is used.
+  */
+    explicit VideoSubscriptionConstraints()
+        : resolution(0, 0)
+        , frameRate(0)
+        , bitrateMultiplier(0)
+        , keyFrameInterval(0) {}
+
+  std::vector<VideoCodecParameters> codecs;
+  Resolution resolution;
+  double frameRate;
+  double bitrateMultiplier;
+  unsigned long keyFrameInterval;
+};
+
+/// Subscription options
+struct SubscriptionOptions {
+  AudioSubscriptionConstraints audio;
+  VideoSubscriptionConstraints video;
+};
+
 }
 }
 

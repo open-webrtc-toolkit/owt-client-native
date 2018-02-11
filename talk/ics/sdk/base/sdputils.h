@@ -15,9 +15,9 @@ namespace base {
 class SdpUtils {
  public:
   static std::string SetPreferAudioCodec(const std::string& sdp,
-                                         AudioCodec codec);
+                                         std::vector<AudioCodec>& codec);
   static std::string SetPreferVideoCodec(const std::string& sdp,
-                                         VideoCodec codec);
+                                         std::vector<VideoCodec>& codec);
 
  private:
   /**
