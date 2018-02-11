@@ -367,8 +367,6 @@ void ConferencePeerConnectionChannel::Publish(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, false);
 
   sio::message::ptr options = sio::object_message::create();
-  // type
-  options->get_map()["type"] = sio::string_message::create("webrtc");
   // attributes
   sio::message::ptr attributes_ptr = sio::object_message::create();
   for (auto const& attr : stream->Attributes()) {
@@ -480,8 +478,6 @@ void ConferencePeerConnectionChannel::Subscribe(
   subscribe_success_callback_ = on_success;
   failure_callback_ = on_failure;
   sio::message::ptr sio_options = sio::object_message::create();
-  sio_options->get_map()["type"] = sio::string_message::create("webrtc");
-  // For connection type equal to "webrtc", no connection object required.
   sio::message::ptr media_options = sio::object_message::create();
   if (stream->has_audio_) {
     sio::message::ptr audio_options = sio::object_message::create();
