@@ -3,7 +3,7 @@
 //
 
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteStream.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 
 @interface ICSRemoteStream ()
 

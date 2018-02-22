@@ -26,7 +26,6 @@
 
 // Base SDK
 #import <ICS/ICSErrors.h>
-#import <ICS/ICSFactory.h>
 #import <ICS/ICSFrameGeneratorProtocol.h>
 #import <ICS/ICSGlobalConfiguration.h>
 #import <ICS/ICSLocalCameraStream.h>

@@ -11,9 +11,9 @@
 #import "talk/ics/sdk/p2p/objc/ICSP2PSignalingSenderObjcImpl.h"
 #import "talk/ics/sdk/p2p/objc/ICSP2PPublication+Private.h"
 #import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
 #import <WebRTC/RTCLogging.h>
@@ -71,7 +71,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -92,7 +92,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -113,7 +113,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -145,7 +145,7 @@
           if (onFailure == nil)
             return;
           NSError* err = [[NSError alloc]
-              initWithDomain:RTCErrorDomain
+              initWithDomain:ICSErrorDomain
                         code:ICSP2PErrorUnknown
                     userInfo:[[NSDictionary alloc]
                                  initWithObjectsAndKeys:
@@ -171,7 +171,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -194,7 +194,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -215,7 +215,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
@@ -238,7 +238,7 @@
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
+            initWithDomain:ICSErrorDomain
                       code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:

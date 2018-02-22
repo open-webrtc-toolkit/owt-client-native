@@ -27,8 +27,8 @@
 #ifndef ICS_CONFERENCE_OBJC_ICSCONFERENCEERRORS_H_
 #define ICS_CONFERENCE_OBJC_ICSCONFERENCEERRORS_H_
 
-typedef NS_ENUM(NSInteger, WoogeenConferenceErrors) {
-  WoogeenConferenceErrorUnknown = 3000
+typedef NS_ENUM(NSInteger, ICSConferenceErrors) {
+  ICSConferenceErrorUnknown = 3000
 };
 
 #endif

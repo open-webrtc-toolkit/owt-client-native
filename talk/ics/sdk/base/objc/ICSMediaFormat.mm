@@ -282,3 +282,15 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 }
 
 @end
+
+@implementation ICSStreamSourceInfo
+
+@end
+
+@implementation ICSVideoTrackConstraints
+
+@end
+
+@implementation ICSStreamConstraints
+
+@end

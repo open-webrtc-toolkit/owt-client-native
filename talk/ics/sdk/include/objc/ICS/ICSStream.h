@@ -30,14 +30,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class ICSStreamSourceInfo;
+@class RTCMediaStream;
+
 /// Base class of all streams in the SDK
 RTC_EXPORT
 @interface ICSStream : NSObject
 
-/// @cond
-// Init a ICSStream instance.
-- (id)init;
-/// @endcond
+// Writable because mediaStream is subscribed after ICSRemoteStream is created in conference mode.
+@property(nonatomic, strong, readwrite) RTCMediaStream* mediaStream;
+@property(nonatomic, strong, readonly) ICSStreamSourceInfo* source;
+
+- (instancetype)init /*NS_UNAVAILABLE*/;
 
 /// Attach the stream to a renderer. The render doesn't retain this stream.
 - (void)attach:(NSObject<RTCVideoRenderer>*)renderer;
@@ -59,7 +63,7 @@ RTC_EXPORT
   @details These attributes are defined by publisher. P2P mode always return
   empty dictionary because it is not supported yet.
 */
-- (NSDictionary<NSString*,NSString*>*)attributes;
+- (NSDictionary<NSString*, NSString*>*)attributes;
 
 @end
 

@@ -9,7 +9,9 @@
 /// This class represent an attendee in a conference.
 @interface ICSConferenceParticipant ()
 
-@property(nonatomic, readonly) std::shared_ptr<const ics::conference::Participant> nativeParticipant;
+@property(nonatomic, readonly)
+    std::shared_ptr<const ics::conference::Participant>
+        nativeParticipant;
 
 - (instancetype)initWithNativeParticipant:
     (std::shared_ptr<const ics::conference::Participant>)participant;

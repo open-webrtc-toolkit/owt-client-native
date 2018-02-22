@@ -7,8 +7,8 @@
 
 #import <Foundation/Foundation.h>
 #import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
+#import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
@@ -73,8 +73,8 @@
   if (onFailure == nil)
     return;
   NSError* err = [[NSError alloc]
-      initWithDomain:RTCErrorDomain
-                code:WoogeenConferenceErrorUnknown
+      initWithDomain:ICSErrorDomain
+                code:ICSConferenceErrorUnknown
             userInfo:[[NSDictionary alloc]
                          initWithObjectsAndKeys:
                              [NSString stringForStdString:e->Message()],
@@ -88,8 +88,8 @@
   if (token == nil) {
     if (onFailure != nil) {
       NSError* err = [[NSError alloc]
-          initWithDomain:RTCErrorDomain
-                    code:WoogeenConferenceErrorUnknown
+          initWithDomain:ICSErrorDomain
+                    code:ICSConferenceErrorUnknown
                 userInfo:[[NSDictionary alloc]
                              initWithObjectsAndKeys:@"Token cannot be nil.",
                                                     NSLocalizedDescriptionKey,

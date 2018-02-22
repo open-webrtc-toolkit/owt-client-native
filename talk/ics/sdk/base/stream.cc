@@ -44,6 +44,9 @@ Stream::Stream(const std::string& id)
 #else
 Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
 
+Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
+    : media_stream_(media_stream), source_(source) {}
+
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
@@ -238,6 +241,10 @@ void Stream::TriggerOnStreamEnded() {
 
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
 
+LocalStream::LocalStream(MediaStreamInterface* media_stream,
+                         StreamSourceInfo source)
+    : Stream(media_stream, source) {}
+
 LocalStream::~LocalStream() {
   delete media_constraints_;
 }
@@ -366,7 +373,7 @@ LocalCameraStream::LocalCameraStream(
     stream->AddTrack(video_track);
   }
   source_.video = VideoSourceInfo::kCamera;
-  source_.audio = AudioSourceInfo::kMIC;
+  source_.audio = AudioSourceInfo::kMic;
   media_stream_ = stream;
   media_stream_->AddRef();
 }

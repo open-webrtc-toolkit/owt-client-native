@@ -158,7 +158,7 @@ struct VideoEncodingParameters {
 ///
 /// This enumeration defines possible audio sources
 enum class AudioSourceInfo : int {
-  kMIC = 1,     ///< Microphone
+  kMic = 1,     ///< Microphone
   kScreenCast,  ///< Screen-cast
   kFile,        ///< From file
   kMixed,       ///< From MCU mix engine

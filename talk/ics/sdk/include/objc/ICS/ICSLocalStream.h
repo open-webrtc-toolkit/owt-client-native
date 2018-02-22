@@ -25,12 +25,32 @@
  */
 
 #import "ICS/ICSStream.h"
+#import "WebRTC/WebRTC.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class ICSStreamConstraints;
 
 /// This class represent a local stream.
 RTC_EXPORT
 @interface ICSLocalStream : ICSStream
+
+/**
+  Create an ICSLocalStream from given RTCMediaStream.
+  @param source Information about stream's source.
+*/
+- (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
+                         sourceInfo:(ICSStreamSourceInfo*)source;
+
+/**
+  Create an ICSLocalStream from mic and camera with given constraints.
+  @param constraints Constraints for creating the stream. The stream will not be
+  impacted if changing constraints after it is created.
+  @return On success, an ICSLocalStream object. If nil, the outError parameter
+  contains an NSError instance describing the problem.
+*/
+- (instancetype)initWithConstratins:(ICSStreamConstraints*)constraints
+                              error:(NSError**)outError;
 
 /**
   @brief Set a user-defined attribute map.

@@ -132,7 +132,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   if (_peerClientState != kConnected) {
     if (failure) {
       NSError* err = [[NSError alloc]
-          initWithDomain:RTCErrorDomain
+          initWithDomain:ICSErrorDomain
                     code:ICSP2PErrorClientInvalidState
                 userInfo:[[NSDictionary alloc]
                              initWithObjectsAndKeys:@"PeerClient hasn't "

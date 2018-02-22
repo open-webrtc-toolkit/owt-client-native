@@ -22,7 +22,7 @@ namespace ics {
 namespace conference {
 
 static const std::unordered_map<std::string, AudioSourceInfo>
-    audio_source_names = { { "mic" ,AudioSourceInfo::kMIC },
+    audio_source_names = { { "mic" ,AudioSourceInfo::kMic },
     { "screen-cast" ,AudioSourceInfo::kScreenCast },
     { "raw-file" ,AudioSourceInfo::kFile },
     { "encoded-file", AudioSourceInfo::kFile},

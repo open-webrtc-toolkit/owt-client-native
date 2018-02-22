@@ -24,6 +24,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <AVFoundation/AVFoundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
@@ -55,12 +56,14 @@ typedef NS_ENUM(NSInteger, ICSAudioSourceInfo) {
   ICSAudioSourceInfoMic = 1,
   ICSAudioSourceInfoScreenCast = 2,
   ICSAudioSourceInfoFile = 3,
+  ICSAudioSourceInfoMixed = 4,
 };
 
 typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
   ICSVideoSourceInfoCamera = 1,
   ICSVideoSourceInfoScreenCast = 2,
   ICSVideoSourceInfoFile = 3,
+  ICSVideoSourceInfoMixed = 4,
 };
 
 // This class describes a media stream's format
@@ -71,6 +74,7 @@ RTC_EXPORT
 
 @end
 
+RTC_EXPORT
 @interface ICSAudioCodecParameters : NSObject
 
 @property(nonatomic, assign) ICSAudioCodec name;
@@ -79,6 +83,7 @@ RTC_EXPORT
 
 @end
 
+RTC_EXPORT
 @interface ICSVideoCodecParameters : NSObject
 
 @property(nonatomic, assign) ICSVideoCodec name;
@@ -86,12 +91,14 @@ RTC_EXPORT
 
 @end
 
+RTC_EXPORT
 @interface ICSAudioPublicationSettings : NSObject
 
 @property(nonatomic, strong) ICSAudioCodecParameters* codec;
 
 @end
 
+RTC_EXPORT
 @interface ICSVideoPublicationSettings : NSObject
 
 @property(nonatomic, strong) ICSVideoCodecParameters* codec;
@@ -102,6 +109,7 @@ RTC_EXPORT
 
 @end
 
+RTC_EXPORT
 @interface ICSPublicationSettings : NSObject
 
 @property(nonatomic, strong) ICSAudioPublicationSettings* audio;
@@ -109,13 +117,15 @@ RTC_EXPORT
 
 @end
 
-@interface ICSAudioSubscriptionCapabilities:NSObject
+RTC_EXPORT
+@interface ICSAudioSubscriptionCapabilities : NSObject
 
 @property(nonatomic, strong) NSArray<ICSAudioCodecParameters*>* codecs;
 
 @end
 
-@interface ICSVideoSubscriptionCapabilities:NSObject
+RTC_EXPORT
+@interface ICSVideoSubscriptionCapabilities : NSObject
 
 @property(nonatomic, strong) NSArray<ICSVideoCodecParameters*>* codecs;
 @property(nonatomic, strong) NSArray<NSValue*>* resolutions;
@@ -124,10 +134,44 @@ RTC_EXPORT
 
 @end
 
-@interface ICSSubscriptionCapabilities:NSObject
+RTC_EXPORT
+@interface ICSSubscriptionCapabilities : NSObject
 
 @property(nonatomic, strong) ICSAudioSubscriptionCapabilities* audio;
 @property(nonatomic, strong) ICSVideoSubscriptionCapabilities* video;
+
+@end
+
+RTC_EXPORT
+@interface ICSStreamSourceInfo : NSObject
+
+@property(nonatomic, assign) ICSAudioSourceInfo audio;
+@property(nonatomic, assign) ICSVideoSourceInfo video;
+
+@end
+
+RTC_EXPORT
+/// Constraints for creating a video MediaStreamTrack.
+@interface ICSVideoTrackConstraints : NSObject
+
+@property(nonatomic, assign) double frameRate;
+@property(nonatomic, assign) CGSize resolution;
+@property(nonatomic, assign) AVCaptureDevicePosition devicePosition;
+
+@end
+
+/// Constraints for creating a MediaStream from screen mic and camera.
+RTC_EXPORT
+@interface ICSStreamConstraints : NSObject
+
+/**
+  @brief Indicate whether audio track is enabled.
+  @details If audio is true, MediaStream created with this constraints object
+  will capture audio from mic. Otherwise, audio will be disabled.
+ */
+@property(nonatomic, assign) BOOL audio;
+/// Constraints for video track.
+@property(nonatomic, strong) ICSVideoTrackConstraints* video;
 
 @end
 

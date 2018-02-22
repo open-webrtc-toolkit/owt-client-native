@@ -3,7 +3,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
 #import "talk/ics/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"

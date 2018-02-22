@@ -9,7 +9,7 @@
 #include "webrtc/rtc_base/logging.h"
 
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"

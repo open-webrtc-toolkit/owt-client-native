@@ -84,6 +84,7 @@ class WebrtcVideoRendererD3D9Impl;
 /// Base class of all streams with media stream
 class Stream {
  public:
+  Stream(MediaStreamInterface* media_stream, StreamSourceInfo source);
   /** @cond */
   MediaStreamInterface* MediaStream() const;
   /** @endcond */
@@ -162,6 +163,7 @@ class Stream {
 class LocalStream : public Stream {
  public:
   LocalStream();
+  LocalStream(MediaStreamInterface* media_stream, StreamSourceInfo source);
   virtual ~LocalStream();
   /** @cond */
 

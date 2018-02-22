@@ -4,4 +4,4 @@
 
 #import <Foundation/Foundation.h>
 
-NSString* const RTCErrorDomain = @"com.intel.webrtc";
+NSString* const ICSErrorDomain = @"com.intel.webrtc";

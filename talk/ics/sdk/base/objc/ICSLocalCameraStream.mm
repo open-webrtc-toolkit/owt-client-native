@@ -11,8 +11,8 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalCameraStream.h"
 #import "talk/ics/sdk/base/objc/ICSLocalCameraStreamParameters+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
+#import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSPeerConnectionDependencyFactory.h"
 
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
@@ -23,22 +23,22 @@
   if (outError != nullptr) {
     NSString* error_message;
     switch (errorCode) {
-      case WoogeenStreamErrorLocalDeviceNotFound:
+      case ICSStreamErrorLocalDeviceNotFound:
         error_message = @"Cannot open specific video capturer. Please make "
                          "sure camera ID is correct and it is not in use.";
         break;
-      case WoogeenStreamErrorLocalInvalidOption:
+      case ICSStreamErrorLocalInvalidOption:
         error_message =
             @"Cannot create a LocalCameraStream without audio and video.";
         break;
-      case WoogeenStreamErrorLocalNotSupported:
+      case ICSStreamErrorLocalNotSupported:
         error_message = @"Resolution settings are not supported.";
         break;
       default:
         error_message = @"Unknown error.";
     }
     *outError = [[NSError alloc]
-        initWithDomain:RTCErrorDomain
+        initWithDomain:ICSErrorDomain
                   code:errorCode
               userInfo:[[NSDictionary alloc]
                            initWithObjectsAndKeys:error_message,
@@ -65,22 +65,22 @@
     if (out_error != nullptr) {
       NSString* error_message;
       switch (error_code) {
-        case WoogeenStreamErrorLocalDeviceNotFound:
+        case ICSStreamErrorLocalDeviceNotFound:
           error_message = @"Cannot open specific video capturer. Please make "
                            "sure camera ID is correct and it is not in use.";
           break;
-        case WoogeenStreamErrorLocalInvalidOption:
+        case ICSStreamErrorLocalInvalidOption:
           error_message =
               @"Cannot create a LocalCameraStream without audio and video.";
           break;
-        case WoogeenStreamErrorLocalNotSupported:
+        case ICSStreamErrorLocalNotSupported:
           error_message = @"Resolution settings are not supported.";
           break;
         default:
           error_message = @"Unknown error.";
       }
       *out_error = [[NSError alloc]
-          initWithDomain:RTCErrorDomain
+          initWithDomain:ICSErrorDomain
                     code:error_code
                 userInfo:[[NSDictionary alloc]
                              initWithObjectsAndKeys:error_message,

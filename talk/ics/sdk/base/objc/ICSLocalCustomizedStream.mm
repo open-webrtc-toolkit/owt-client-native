@@ -6,7 +6,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalCustomizedStream.h"
 #import "talk/ics/sdk/base/objc/ICSLocalCustomizedStreamParameters+Internal.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
+#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
 #import "talk/ics/sdk/base/objc/FrameGeneratorObjcImpl.h"
 

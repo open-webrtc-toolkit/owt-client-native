@@ -26,11 +26,11 @@
 
 #import <Foundation/Foundation.h>
 
-extern NSString* const RTCErrorDomain;
+extern NSString* const ICSErrorDomain;
 
-typedef NS_ENUM(NSInteger, WoogeenStreamErrors) {
-  WoogeenStreamErrorUnknown = 1100,
-  WoogeenStreamErrorLocalDeviceNotFound = 1102,
-  WoogeenStreamErrorLocalInvalidOption = 1104,
-  WoogeenStreamErrorLocalNotSupported = 1105
+typedef NS_ENUM(NSInteger, ICSStreamErrors) {
+  ICSStreamErrorUnknown = 1100,
+  ICSStreamErrorLocalDeviceNotFound = 1102,
+  ICSStreamErrorLocalInvalidOption = 1104,
+  ICSStreamErrorLocalNotSupported = 1105
 };
