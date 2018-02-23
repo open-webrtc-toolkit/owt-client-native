@@ -75,20 +75,21 @@ bool PeerConnectionChannel::ApplyBitrateSettings() {
       webrtc::RtpParameters rtp_parameters = sender->GetParameters();
       for (size_t idx = 0; idx < rtp_parameters.encodings.size(); idx++) {
         // TODO(jianlin): It may not be appropriate to set the same settings
-        // on all encodings. Update the logic when moving per-stream settings
-        // from ClientConfiguration to PublishOption
+        // on all encodings. Update the logic when upstream implement the
+        // the per codec settings, and many other encoding specific setttings
+        // should move here instead of modifying SDP.
         if (sender_track->kind() ==
             webrtc::MediaStreamTrackInterface::kAudioKind) {
-          if (configuration_.max_audio_bandwidth > 0) {
+          if (configuration_.audio.size() > 0 && configuration_.audio[0].maxBitrateBps > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.max_audio_bandwidth * 1024);
+                rtc::Optional<int>(configuration_.audio[0].maxBitrateBps * 1024);
             ret |= sender->SetParameters(rtp_parameters);
           }
         } else if (sender_track->kind() ==
                    webrtc::MediaStreamTrackInterface::kVideoKind) {
-          if (configuration_.max_video_bandwidth > 0) {
+          if (configuration_.video.size() > 0 && configuration_.video[0].maxBitrateBps > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.max_video_bandwidth * 1024);
+                rtc::Optional<int>(configuration_.video[0].maxBitrateBps * 1024);
             ret |= sender->SetParameters(rtp_parameters);
           }
         }
@@ -164,10 +165,20 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
-      sdp_string = SdpUtils::SetPreferAudioCodec(
-          sdp_string, configuration_.audio_codecs);
-      sdp_string = SdpUtils::SetPreferVideoCodec(
-          sdp_string, configuration_.video_codecs);
+
+      std::vector<AudioCodec> audio_codecs;
+      for (auto& audio_enc_param : configuration_.audio) {
+        audio_codecs.push_back(audio_enc_param.codec_params.name);
+      }
+      sdp_string = SdpUtils::SetPreferAudioCodecs(
+          sdp_string, audio_codecs);
+      std::vector<VideoCodec> video_codecs;
+      for (auto& video_enc_param : configuration_.video) {
+        video_codecs.push_back(video_enc_param.codec_params.name);
+      }
+      sdp_string = SdpUtils::SetPreferVideoCodecs(
+          sdp_string, video_codecs);
+
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);

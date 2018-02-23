@@ -65,20 +65,6 @@ struct ClientConfiguration {
   /// List of ICE servers
   std::vector<IceServer> ice_servers;
   /**
-   @brief Max outgoing audio bandwidth, unit: kbps.
-   @details Please be noticed different codecs may support different bitrate
-   ranges. If you set a bandwidth limitation which is not supported by selected
-   codec, connection will fail.
-   */
-  int max_audio_bandwidth;
-  /**
-   @brief Max outgoing video bandwidth, unit: kbps.
-   @details Please be noticed different codecs may support different bitrate
-   ranges. If you set a bandwidth limitation which is not supported by selected
-   codec, connection will fail.
-   */
-  int max_video_bandwidth;
-  /**
    @brief Candidate collection policy.
    @details If you do not want cellular network when WiFi is available, please
    use CandidateNetworkPolicy::kLowCost. Using low cost policy may not have good

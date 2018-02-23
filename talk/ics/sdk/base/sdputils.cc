@@ -28,141 +28,227 @@ static const std::unordered_map<VideoCodec, const std::string>
                          {VideoCodec::kVp9, "VP9"},
                          {VideoCodec::kH265, "H265"}};
 
-std::string SdpUtils::SetPreferAudioCodec(const std::string& original_sdp,
+std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
                                           std::vector<AudioCodec>& codec) {
   std::string cur_sdp(original_sdp);
+  if (codec.size() == 0)
+    return cur_sdp;
   std::vector<AudioCodec> rcodecs(codec.rbegin(), codec.rend());
+  std::vector<std::string> codec_names;
   for (auto codec_current : rcodecs) {
     auto codec_it = audio_codec_names.find(codec_current);
     if (codec_it == audio_codec_names.end()) {
       LOG(LS_WARNING) << "Preferred audio codec is not available.";
       continue;
     }
-    cur_sdp = SdpUtils::SetPreferCodec(cur_sdp, codec_it->second, true);
+    codec_names.push_back(codec_it->second);
   }
+  cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, true);
   return cur_sdp;
 }
 
-std::string SdpUtils::SetPreferVideoCodec(const std::string& original_sdp,
+std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
                                           std::vector<VideoCodec>& codec) {
   std::string cur_sdp(original_sdp);
+  if (codec.size() == 0)
+    return cur_sdp;
   std::vector<VideoCodec> rcodecs(codec.rbegin(), codec.rend());
+  std::vector<std::string> codec_names;
   for (auto codec_current : rcodecs) {
     auto codec_it = video_codec_names.find(codec_current);
     if (codec_it == video_codec_names.end()) {
       LOG(LS_WARNING) << "Preferred video codec is not available.";
       continue;
     }
-    cur_sdp = SdpUtils::SetPreferCodec(cur_sdp, codec_it->second, false);
+    codec_names.push_back(codec_it->second);
   }
+  cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, false);
   return cur_sdp;
 }
 
-// TODO(jianlin): remove a-lines for codecs not supported.
-std::string SdpUtils::SetPreferCodec(const std::string& sdp,
-                                     const std::string& codec_name,
-                                     bool is_audio) {
-#if defined(WEBRTC_LINUX)
-#define MAX_RTP_MATCHES 10
-  regex_t regex_m_line;
-  regex_t regex_rtp_map;
-  std::string media_type;
-  int status;
-  media_type = is_audio ? "audio" : "video";
-  std::string m_line_reg = "m=" + media_type +".*\r\n";
-  std::string rtp_line_reg = "a=rtpmap:([[:digit:]]+) " + codec_name + ".*\r\n";
-  int matches = MAX_RTP_MATCHES; //For safety, allow at most 10 matches. Actually we only need 1.
-  regmatch_t m[MAX_RTP_MATCHES];
-  regmatch_t r[MAX_RTP_MATCHES];
-  status = regcomp(&regex_m_line,m_line_reg.c_str(),
-                   REG_EXTENDED|REG_NEWLINE|REG_ICASE);
-  if (status != 0) {
-    LOG(LS_INFO) <<"Failed to comiple mline regex";
-    regfree(&regex_m_line);
-    return sdp;
-  }
-  status = regcomp(&regex_rtp_map, rtp_line_reg.c_str(),
-                  REG_EXTENDED|REG_NEWLINE|REG_ICASE);
-  if (status != 0) {
-    LOG(LS_INFO) <<"Failed to comiple rtpmap regex";
-    regfree(&regex_m_line);
-    regfree(&regex_rtp_map);
-    return sdp;
-  }
-  status = regexec(&regex_rtp_map, sdp.c_str(), matches, r, 0);
-  if (status != 0){
-    LOG(LS_INFO) <<"Failed to find match for rtpmap";
-    regfree(&regex_m_line);
-    regfree(&regex_rtp_map);
-    return sdp;
-  }
-
-  std::string codec_value(sdp.substr(r[1].rm_so, r[1].rm_eo-r[1].rm_so));
-  LOG(LS_INFO) << "RTP map found for " << codec_name << ": "
-            << codec_value;
-
-  status = regexec(&regex_m_line, sdp.c_str(), matches, m, 0);
-  if (status !=0) {
-    LOG(LS_INFO) << "Failed to find match for mline";
-    regfree(&regex_rtp_map);
-    regfree(&regex_m_line);
-    return sdp;
-  }
-  std::string m_line(sdp.substr(m[0].rm_so, m[0].rm_eo-m[0].rm_so));
-  std::vector<std::string> m_line_vector;
-  std::stringstream original_m_line_stream(m_line);
-  std::string item;
-  while (std::getline(original_m_line_stream, item, ' ')) {
-    m_line_vector.push_back(item);
-  }
-  if (m_line_vector.size() < 3) {
-    LOG(LS_INFO) << "Wrong SDP format description: " << m_line;
-    regfree(&regex_rtp_map);
-    regfree(&regex_m_line);
-    return sdp;
-  }
-  std::stringstream m_line_stream;
-  for (int i=0; i<3; i++) {
-    m_line_stream << m_line_vector[i] << " ";
-  }
-  m_line_stream << codec_value;
-  for (int i = 3, m_line_vector_size = m_line_vector.size();
-       i < m_line_vector_size; i++) {
-    if (m_line_vector[i] != codec_value) {
-      m_line_stream << " " << m_line_vector[i];
-    }
-  }
-
-  std::stringstream new_sdp;
-  new_sdp << sdp.substr(0, m[0].rm_so) << m_line_stream.str()
-          << sdp.substr(m[0].rm_eo, std::string::npos);
-  regfree(&regex_rtp_map);
-  regfree(&regex_m_line);
-  return new_sdp.str();
-
-#else
-  std::string media_type;
-  media_type = is_audio ? "audio" : "video";
-  std::regex reg_m_line("m=" + media_type + ".*(?=[\r]?[\n]?)");
+std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
+    std::string& codec_name,
+    bool is_audio) {
+  std::vector<std::string> codec_values;
+  std::string sdp_current(sdp);
   std::regex reg_rtp_map(
       "a=rtpmap:(\\d+) " + codec_name + "\\/\\d+(?=[\r]?[\n]?)",
       std::regex_constants::icase);
+
   std::smatch rtp_map_match;
-  auto search_result = std::regex_search(sdp, rtp_map_match, reg_rtp_map);
-  if (!search_result || rtp_map_match.size() == 0) {
-    LOG(LS_WARNING) << "RTP map for " << codec_name
-                    << " is not found. SDP: " << sdp;
-    return sdp;
+  while (std::regex_search(sdp_current, rtp_map_match, reg_rtp_map)) {
+    codec_values.push_back(rtp_map_match[1]);
+    sdp_current = rtp_map_match.suffix();
   }
-  LOG(LS_INFO) << "RTP map found for " << codec_name << ": "
-               << rtp_map_match[0];
-  std::string codec_value(rtp_map_match[1]);
+  return codec_values;
+}
+
+// Remove non-prefer codecs out of the list. Keeping red and ulpfec,
+// assuming the binding to original codec is out-of-bound.
+// Keeping corresponding rtx payloads. Reorder m-line according to
+// the reverse order of input codec names.
+// TODO: unify to std::regex impl for Linux builds.
+std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
+    std::vector<std::string>& codec_names,
+    bool is_audio) {
+#if defined(WEBRTC_LINUX)
+#define MAX_RTP_MATCHES 10
+    regex_t regex_m_line;
+    regex_t regex_rtp_map;
+    std::string media_type;
+    int status;
+    media_type = is_audio ? "audio" : "video";
+    std::string m_line_reg = "m=" + media_type + ".*\r\n";
+    std::string rtp_line_reg = "a=rtpmap:([[:digit:]]+) " + codec_name + ".*\r\n";
+    int matches = MAX_RTP_MATCHES; //For safety, allow at most 10 matches. Actually we only need 1.
+    regmatch_t m[MAX_RTP_MATCHES];
+    regmatch_t r[MAX_RTP_MATCHES];
+    status = regcomp(&regex_m_line, m_line_reg.c_str(),
+        REG_EXTENDED | REG_NEWLINE | REG_ICASE);
+    if (status != 0) {
+      LOG(LS_INFO) << "Failed to comiple mline regex";
+      regfree(&regex_m_line);
+      return sdp;
+    }
+    status = regcomp(&regex_rtp_map, rtp_line_reg.c_str(),
+        REG_EXTENDED | REG_NEWLINE | REG_ICASE);
+    if (status != 0) {
+      LOG(LS_INFO) << "Failed to comiple rtpmap regex";
+      regfree(&regex_m_line);
+      regfree(&regex_rtp_map);
+      return sdp;
+    }
+    status = regexec(&regex_rtp_map, sdp.c_str(), matches, r, 0);
+    if (status != 0) {
+      LOG(LS_INFO) << "Failed to find match for rtpmap";
+      regfree(&regex_m_line);
+      regfree(&regex_rtp_map);
+      return sdp;
+    }
+
+    std::string codec_value(sdp.substr(r[1].rm_so, r[1].rm_eo - r[1].rm_so));
+    LOG(LS_INFO) << "RTP map found for " << codec_name << ": "
+        << codec_value;
+
+    status = regexec(&regex_m_line, sdp.c_str(), matches, m, 0);
+    if (status != 0) {
+      LOG(LS_INFO) << "Failed to find match for mline";
+      regfree(&regex_rtp_map);
+      regfree(&regex_m_line);
+      return sdp;
+    }
+    std::string m_line(sdp.substr(m[0].rm_so, m[0].rm_eo - m[0].rm_so));
+    std::vector<std::string> m_line_vector;
+    std::stringstream original_m_line_stream(m_line);
+    std::string item;
+    while (std::getline(original_m_line_stream, item, ' ')) {
+        m_line_vector.push_back(item);
+    }
+    if (m_line_vector.size() < 3) {
+      LOG(LS_INFO) << "Wrong SDP format description: " << m_line;
+      regfree(&regex_rtp_map);
+      regfree(&regex_m_line);
+      return sdp;
+    }
+    std::stringstream m_line_stream;
+    for (int i = 0; i < 3; i++) {
+        m_line_stream << m_line_vector[i] << " ";
+    }
+    m_line_stream << codec_value;
+    for (int i = 3, m_line_vector_size = m_line_vector.size();
+      i < m_line_vector_size; i++) {
+      if (m_line_vector[i] != codec_value) {
+          m_line_stream << " " << m_line_vector[i];
+      }
+    }
+
+    std::stringstream new_sdp;
+    new_sdp << sdp.substr(0, m[0].rm_so) << m_line_stream.str()
+        << sdp.substr(m[0].rm_eo, std::string::npos);
+    regfree(&regex_rtp_map);
+    regfree(&regex_m_line);
+    return new_sdp.str();
+
+#else
+  // Search all rtx maps in the sdp.
+  std::regex reg_fmtp_apt(
+      "a=fmtp:(\\d+) apt=(\\d+)(?=[\r]?[\n]?)",
+      std::regex_constants::icase);
+  std::smatch rtx_map_match;
+  // Key is the rtx payload type, value is the original payload type.
+  std::unordered_map<std::string, std::string> rtx_maps;
+  std::string current_sdp = sdp;
+  while (std::regex_search(current_sdp, rtx_map_match, reg_fmtp_apt)) {
+    rtx_maps.insert({ rtx_map_match.str(1), rtx_map_match.str(2) });
+    current_sdp = rtx_map_match.suffix();
+  }
+  std::vector<std::string> kept_codec_values;
+  if (!is_audio) {
+    // Get red and ulpfec payload type if any.
+    bool has_red = false, has_ulpfec = false;
+    std::regex reg_red_map(
+        "a=rtpmap:(\\d+) red\\/\\d+(?=[\r]?[\n]?)",
+        std::regex_constants::icase);
+    std::smatch red_map_match;
+    std::string red_codec_value;
+    auto search_result = std::regex_search(sdp, red_map_match, reg_red_map);
+    if (search_result && red_map_match.size() != 0) {
+      red_codec_value = red_map_match[1];
+      has_red = true;
+    }
+
+    std::regex reg_ulpfec_map(
+        "a=rtpmap:(\\d+) ulpfec\\/\\d+(?=[\r]?[\n]?)",
+        std::regex_constants::icase);
+    std::smatch ulpfec_map_match;
+    std::string ulpfec_codec_value;
+    search_result = std::regex_search(sdp, ulpfec_map_match, reg_ulpfec_map);
+    if (search_result && ulpfec_map_match.size() != 0) {
+      ulpfec_codec_value = ulpfec_map_match[1];
+      has_ulpfec = true;
+    }
+
+    if (has_red) {
+      kept_codec_values.push_back(red_codec_value);
+      for (auto& rtx_value : rtx_maps) {
+        if (rtx_value.second == red_codec_value) {
+            kept_codec_values.push_back(rtx_value.first);
+        }
+      }
+    }
+    if (has_ulpfec) {
+      kept_codec_values.push_back(ulpfec_codec_value);
+      for (auto& rtx_value : rtx_maps) {
+        if (rtx_value.second == ulpfec_codec_value) {
+            kept_codec_values.push_back(rtx_value.first);
+        }
+      }
+    }
+  }
+  for (auto& codec_name : codec_names) {
+    std::vector<std::string> codec_values = GetCodecValues(sdp, codec_name, is_audio);
+    for (auto& value : codec_values) {
+      // Input codec names are in reverse order, so the highest priortiy will be
+      // placed at the beginning.
+      kept_codec_values.insert(kept_codec_values.begin(), value);
+      for (auto& rtx_value : rtx_maps) {
+        if (rtx_value.second == value) {
+          kept_codec_values.push_back(rtx_value.first);
+        }
+      }
+    }
+  }
+
+  std::string media_type;
+  media_type = is_audio ? "audio" : "video";
+  std::regex reg_m_line("m=" + media_type + ".*(?=[\r]?[\n]?)");
   std::smatch m_line_match;
-  search_result = std::regex_search(sdp, m_line_match, reg_m_line);
+  auto search_result = std::regex_search(sdp, m_line_match, reg_m_line);
   if (!search_result || m_line_match.size() == 0) {
     LOG(LS_WARNING) << "M-line is not found. SDP: " << sdp;
     return sdp;
   }
+
   std::string m_line(m_line_match[0]);
   // Split m_line into vector and put preferred codec in the first place.
   std::vector<std::string> m_line_vector;
@@ -177,17 +263,44 @@ std::string SdpUtils::SetPreferCodec(const std::string& sdp,
   }
   std::stringstream m_line_stream;
   for (int i = 0; i < 3; i++) {
-    m_line_stream << m_line_vector[i] << " ";
+    if (i < 2)
+      m_line_stream << m_line_vector[i] << " ";
+    else
+      m_line_stream << m_line_vector[i];
   }
-  m_line_stream << codec_value;
-  for (size_t i = 3, m_line_vector_size = m_line_vector.size();
-       i < m_line_vector_size; i++) {
-    if (m_line_vector[i] != codec_value) {
-      m_line_stream << " " << m_line_vector[i];
-    }
+  for (auto& codec_value : kept_codec_values) {
+    m_line_stream << " " << codec_value;
   }
   LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
-  return std::regex_replace(sdp, reg_m_line, m_line_stream.str());
+  std::string before_strip = std::regex_replace(sdp, reg_m_line, m_line_stream.str());
+  std::string after_strip = before_strip;
+
+  // Remove all a=fmtp:xx, a=rtpmap:xx and a=rtcp-fb:xx where xx is not in m-line,
+  // this includes the a=fmtp:xx apt:yy lines for rtx.
+  for (size_t i = 3, m_line_vector_size = m_line_vector.size(); i < m_line_vector_size; i++) {
+    if (std::find(kept_codec_values.begin(), kept_codec_values.end(),
+      m_line_vector[i]) == kept_codec_values.end()) {
+      std::string codec_value = m_line_vector[i];
+      std::regex reg_rtp_xx_map(
+          "a=rtpmap:" + codec_value + " .*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_rtp_xx_map, "");
+
+      before_strip = after_strip;
+      std::regex reg_fmtp_xx_map(
+          "a=fmtp:" + codec_value + ".*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_fmtp_xx_map, "");
+
+      before_strip = after_strip;
+      std::regex reg_rtcp_map(
+          "a=rtcp-fb:" + codec_value + " .*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_rtcp_map, "");
+      before_strip = after_strip;
+    }
+  }
+  return after_strip;
 #endif
 }
 }

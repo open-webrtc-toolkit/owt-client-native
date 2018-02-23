@@ -55,12 +55,9 @@ struct PeerConnectionChannelConfiguration
  public:
   explicit PeerConnectionChannelConfiguration();
 
-  std::vector<AudioCodec> audio_codecs;
-  std::vector<VideoCodec> video_codecs;
-  /// Max outgoing video bandwidth, unit: kbps.
-  int max_video_bandwidth;
-  /// Max outgoing audio bandwidth, unit: kbps.
-  int max_audio_bandwidth;
+  std::vector<VideoEncodingParameters> video;
+  std::vector<AudioEncodingParameters> audio;
+
   /// Indicate whether this PeerConnection is used for sending encoded frame.
   bool encoded_video_frame_;
 };

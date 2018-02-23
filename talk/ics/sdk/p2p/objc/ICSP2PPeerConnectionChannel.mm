@@ -40,8 +40,8 @@
   }
   ics::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;
-  nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
-  nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
+  //nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
+  //nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
   /*
   nativeConfig.media_codec.audio_codec =
       [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];

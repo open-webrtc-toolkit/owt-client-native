@@ -14,21 +14,23 @@ namespace base {
 /// This class provides utilities for SDP parsing and modification
 class SdpUtils {
  public:
-  static std::string SetPreferAudioCodec(const std::string& sdp,
+  static std::string SetPreferAudioCodecs(const std::string& sdp,
                                          std::vector<AudioCodec>& codec);
-  static std::string SetPreferVideoCodec(const std::string& sdp,
+  static std::string SetPreferVideoCodecs(const std::string& sdp,
                                          std::vector<VideoCodec>& codec);
-
  private:
   /**
    @brief Replace SDP for preferred codec.
    @param sdp Original SDP.
-   @param codec_name Codec name in SDP.
+   @param codec_names Codec names in SDP.
    @param is_audio True if prefer audio codec, false if prefer video codec.
    */
-  static std::string SetPreferCodec(const std::string& sdp,
-                                    const std::string& codec_name,
-                                    bool is_audio);
+  static std::string SetPreferCodecs(const std::string& sdp,
+                                     std::vector<std::string>& codec_name,
+                                     bool is_audio);
+  static std::vector<std::string> GetCodecValues(const std::string& sdp,
+                                                 std::string& codec_name,
+                                                 bool is_audio);
 };
 }
 }

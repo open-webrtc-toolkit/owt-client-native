@@ -299,15 +299,16 @@ void ConferenceClient::Publish(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
+
+  // Reorder SDP according to perference list.
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
-// TODO(jianlin): mapping PublishOptions to pc config.
-#if 0
-  if (options.max_audio_bandwidth > 0)
-    config.max_audio_bandwidth = options.max_audio_bandwidth;
-  if (options.max_video_bandwidth > 0)
-    config.max_video_bandwidth = options.max_video_bandwidth;
-#endif
+  for (auto codec : options.video) {
+    config.video.push_back(VideoEncodingParameters(codec));
+  }
+  for (auto codec : options.audio) {
+    config.audio.push_back(AudioEncodingParameters(codec));
+  }
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_,
                                           event_queue_));
@@ -368,10 +369,10 @@ void ConferenceClient::Subscribe(
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();
   for (auto codec : options.video.codecs) {
-    config.video_codecs.push_back(codec.name);
+    config.video.push_back(VideoEncodingParameters(codec, 0, false));
   }
   for (auto codec : options.audio.codecs) {
-    config.audio_codecs.push_back(codec.name);
+    config.audio.push_back(AudioEncodingParameters(codec, 0));
   }
   std::shared_ptr<ConferencePeerConnectionChannel> pcc(
       new ConferencePeerConnectionChannel(config, signaling_channel_,
@@ -1177,8 +1178,6 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
     ice_servers.push_back(ice_server);
   }
   config.servers = ice_servers;
-  config.max_audio_bandwidth = configuration_.max_audio_bandwidth;
-  config.max_video_bandwidth = configuration_.max_video_bandwidth;
   config.candidate_network_policy =
       (configuration_.candidate_network_policy ==
        ClientConfiguration::CandidateNetworkPolicy::kLowCost)

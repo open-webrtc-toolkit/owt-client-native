@@ -72,6 +72,10 @@ struct PublicationSettings {
   VideoPublicationSettings  video;
 };
 
+/**
+ @brief Publish options describing encoding settings.
+ @details Set encoding constraint on video or video using this option.
+*/
 struct PublishOptions {
   std::vector<AudioEncodingParameters>  audio;
   std::vector<VideoEncodingParameters>  video;
