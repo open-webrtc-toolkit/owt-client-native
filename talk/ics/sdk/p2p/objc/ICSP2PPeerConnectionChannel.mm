@@ -9,12 +9,14 @@
 #import "talk/ics/sdk/p2p/objc/ICSP2PPeerConnectionChannel.h"
 #import "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/ics/sdk/p2p/objc/ICSP2PSignalingSenderObjcImpl.h"
+#import "talk/ics/sdk/p2p/objc/ICSP2PPublication+Private.h"
 #import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
+#import <WebRTC/RTCLogging.h>
 
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 
@@ -23,14 +25,14 @@
   NSString* _remoteId;
 }
 
-- (instancetype)initWithConfiguration:(ICSPeerClientConfiguration*)config
+- (instancetype)initWithConfiguration:(ICSP2PClientConfiguration*)config
                               localId:(NSString*)localId
                              remoteId:(NSString*)remoteId
                       signalingSender:
-                          (id<RTCP2PSignalingSenderProtocol>)signalingSender {
+                          (id<ICSP2PSignalingSenderProtocol>)signalingSender {
   self = [super init];
   ics::p2p::P2PSignalingSenderInterface* sender =
-      new ics::p2p::RTCP2PSignalingSenderObjcImpl(signalingSender);
+      new ics::p2p::ICSP2PSignalingSenderObjcImpl(signalingSender);
   _remoteId = remoteId;
   const std::string nativeRemoteId = [remoteId UTF8String];
   const std::string nativeLocalId = [localId UTF8String];
@@ -70,7 +72,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -91,7 +93,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -112,30 +114,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
-                  userInfo:[[NSDictionary alloc]
-                               initWithObjectsAndKeys:
-                                   [NSString stringForStdString:e->Message()],
-                                   NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
-      });
-}
-- (void)publish:(ICSLocalStream*)stream
-      onSuccess:(void (^)())onSuccess
-      onFailure:(void (^)(NSError*))onFailure {
-  NSLog(@"ICSP2PPeerConnectionChannel publish stream.");
-  _nativeChannel->Publish(
-      std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -144,10 +123,44 @@
       });
 }
 
+- (void)publish:(ICSLocalStream*)stream
+      onSuccess:(void (^)(ICSP2PPublication*))onSuccess
+      onFailure:(void (^)(NSError*))onFailure {
+  // Creating PeerConnection(invite-accept) should be handled in native level.
+  // Since it is not implemented, we temporary send an invitation here.
+  [self inviteWithOnSuccess:^() {
+    RTCLogInfo(@"ICSP2PPeerConnectionChannel publish stream.");
+    _nativeChannel->Publish(
+        std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
+        [=]() {
+          if (onSuccess != nil) {
+            ICSP2PPublication* publication =
+                [[ICSP2PPublication alloc] initWithStop:^() {
+                  [self unpublish:stream onSuccess:nil onFailure:nil];
+                }];
+            onSuccess(publication);
+          }
+        },
+        [=](std::unique_ptr<ics::p2p::P2PException> e) {
+          if (onFailure == nil)
+            return;
+          NSError* err = [[NSError alloc]
+              initWithDomain:RTCErrorDomain
+                        code:ICSP2PErrorUnknown
+                    userInfo:[[NSDictionary alloc]
+                                 initWithObjectsAndKeys:
+                                     [NSString stringForStdString:e->Message()],
+                                     NSLocalizedDescriptionKey, nil]];
+          onFailure(err);
+        });
+  }
+                  onFailure:onFailure];
+}
+
 - (void)unpublish:(ICSLocalStream*)stream
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {
-  NSLog(@"ICSP2PPeerConnectionChannel unpublish stream.");
+  RTCLogInfo(@"ICSP2PPeerConnectionChannel unpublish stream.");
   _nativeChannel->Unpublish(
       std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
       [=]() {
@@ -159,7 +172,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -182,7 +195,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -203,7 +216,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],
@@ -226,7 +239,7 @@
           return;
         NSError* err = [[NSError alloc]
             initWithDomain:RTCErrorDomain
-                      code:WoogeenP2PErrorUnknown
+                      code:ICSP2PErrorUnknown
                   userInfo:[[NSDictionary alloc]
                                initWithObjectsAndKeys:
                                    [NSString stringForStdString:e->Message()],

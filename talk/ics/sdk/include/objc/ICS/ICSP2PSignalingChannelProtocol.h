@@ -7,43 +7,18 @@
 
 #import "ICS/ICSErrors.h"
 
-/**
- @brief Signaling channel will notify observer when event triggers.
- */
-@protocol RTCP2PSignalingChannelObserver<NSObject>
-
-/**
- @brief This function will be triggered when new message arrives.
- @param message Message received from signaling server.
- @param senderId Sender's ID.
- */
-- (void)onMessage:(NSString*)message from:(NSString*)senderId;
-/**
- @brief This function will be triggered when disconnected from signaling server.
- */
-- (void)onDisconnected;
-
-@end
+@protocol ICSP2PSignalingChannelDelegate;
 
 /**
  @brief Protocol for signaling channel.
 
- Developers may utilize their own signaling server by implmenting this protocol.
+ Developers may utilize their own signaling server by implementing this protocol.
  */
 RTC_EXPORT
-@protocol RTCP2PSignalingChannelProtocol<NSObject>
+@protocol ICSP2PSignalingChannelProtocol<NSObject>
 
-/**
- @brief Add an observer for RTCP2PSignalingChannel
- @param observer An observer instance.
- */
-- (void)addObserver:(id<RTCP2PSignalingChannelObserver>)observer;
-
-/**
- @brief Remove an observer for RTCP2PSignalingChannel
- @param observer An observer instance.
- */
-- (void)removeObserver:(id<RTCP2PSignalingChannelObserver>)observer;
+@optional
+@property(nonatomic, weak) id<ICSP2PSignalingChannelDelegate> delegate;
 
 /**
  @brief Connect to the signaling server
@@ -68,6 +43,27 @@ RTC_EXPORT
  */
 - (void)disconnectWithOnSuccess:(void (^)())onSuccess
                       onFailure:(void (^)(NSError*))onFailure;
+
+@end
+
+/**
+ @brief Signaling channel will notify observer when event triggers.
+ */
+@protocol ICSP2PSignalingChannelDelegate<NSObject>
+
+/**
+ @brief This function will be triggered when new message arrives.
+ @param message Message received from signaling server.
+ @param senderId Sender's ID.
+ */
+- (void)channel:(id<ICSP2PSignalingChannelProtocol>)channel
+    didReceiveMessage:(NSString*)message
+                 from:(NSString*)senderId;
+
+/**
+ @brief This function will be triggered when disconnected from signaling server.
+ */
+- (void)channelDidDisconnect:(id<ICSP2PSignalingChannelProtocol>)channel;
 
 @end
 

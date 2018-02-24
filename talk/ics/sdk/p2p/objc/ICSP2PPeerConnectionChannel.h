@@ -9,16 +9,18 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PSignalingSenderProtocol.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PSignalingReceiverProtocol.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PPeerConnectionChannelObserver.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSPeerClientConfiguration.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSP2PClientConfiguration.h"
+
+@class ICSP2PPublication;
 
 @interface ICSP2PPeerConnectionChannel
-    : NSObject<RTCP2PSignalingReceiverProtocol>
+    : NSObject<ICSP2PSignalingReceiverProtocol>
 
-- (instancetype)initWithConfiguration:(ICSPeerClientConfiguration*)config
+- (instancetype)initWithConfiguration:(ICSP2PClientConfiguration*)config
                               localId:(NSString*)localId
                              remoteId:(NSString*)remoteId
                       signalingSender:
-                          (id<RTCP2PSignalingSenderProtocol>)signalingSender;
+                          (id<ICSP2PSignalingSenderProtocol>)signalingSender;
 - (void)inviteWithOnSuccess:(void (^)())onSuccess
                   onFailure:(void (^)(NSError*))onFailure;
 - (void)denyWithOnSuccess:(void (^)())onSuccess
@@ -26,7 +28,7 @@
 - (void)acceptWithOnSuccess:(void (^)())onSuccess
                   onFailure:(void (^)(NSError*))onFailure;
 - (void)publish:(ICSLocalStream*)stream
-      onSuccess:(void (^)())onSuccess
+      onSuccess:(void (^)(ICSP2PPublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure;
 - (void)unpublish:(ICSLocalStream*)stream
         onSuccess:(void (^)())onSuccess

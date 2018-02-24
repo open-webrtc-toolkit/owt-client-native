@@ -17,7 +17,8 @@
 }
 
 - (NSString*)conferenceId {
-  return [NSString stringForStdString:_nativeInfo->id];
+  // TODO: Implement it after conference info is implemented in C++.
+  return nil;
 }
 
 - (NSArray<ICSConferenceParticipant*>*)participants {

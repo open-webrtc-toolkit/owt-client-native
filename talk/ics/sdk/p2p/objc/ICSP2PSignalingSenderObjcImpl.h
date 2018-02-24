@@ -13,16 +13,16 @@ namespace p2p {
 
 // It wraps an id<RTCSignalingSenderInterface> and call methods on that
 // interface.
-class RTCP2PSignalingSenderObjcImpl : public P2PSignalingSenderInterface {
+class ICSP2PSignalingSenderObjcImpl : public P2PSignalingSenderInterface {
  public:
-  RTCP2PSignalingSenderObjcImpl(id<RTCP2PSignalingSenderProtocol> sender);
+  ICSP2PSignalingSenderObjcImpl(id<ICSP2PSignalingSenderProtocol> sender);
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,
                                     std::function<void()> success,
                                     std::function<void(int)> failure);
 
  private:
-  id<RTCP2PSignalingSenderProtocol> _sender;
+  id<ICSP2PSignalingSenderProtocol> _sender;
 };
 }
 }

@@ -29,7 +29,7 @@
 
 // RTCSignalingSenderInterface is an ObjectiveC wrapper for
 // SignalingSenderInterface.
-@protocol RTCP2PSignalingSenderProtocol<NSObject>
+@protocol ICSP2PSignalingSenderProtocol<NSObject>
 
 - (void)sendSignalingMessage:(NSString*)message
                           to:(NSString*)targetId

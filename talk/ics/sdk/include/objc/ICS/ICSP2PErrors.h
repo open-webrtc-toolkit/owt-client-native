@@ -24,13 +24,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef p2p_WoogeenP2PErrors_h
-#define p2p_WoogeenP2PErrors_h
-
-typedef NS_ENUM(NSInteger, WoogeenP2PErrors) {
-  WoogeenP2PErrorUnknown = 2000,
-  WoogeenP2PErrorClientIllegalArgument = 2402,
-  WoogeenP2PErrorClientInvalidState = 2403
+typedef NS_ENUM(NSInteger, ICSP2PErrors) {
+  ICSP2PErrorUnknown = 2000,
+  ICSP2PErrorClientIllegalArgument = 2402,
+  ICSP2PErrorClientInvalidState = 2403
 };
-
-#endif

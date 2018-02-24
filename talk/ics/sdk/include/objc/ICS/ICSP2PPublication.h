@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,15 +25,17 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <WebRTC/RTCMacros.h>
 
-/// @cond
+NS_ASSUME_NONNULL_BEGIN
 
-// RTCSignalingReceiverInterface is an ObjectiveC wrapper for
-// SignalingReceiverInterface.
-@protocol ICSP2PSignalingReceiverProtocol<NSObject>
+RTC_EXPORT
+@interface ICSP2PPublication : NSObject
 
-- (void)onIncomingSignalingMessage:(NSString*)message;
+-(instancetype)init NS_UNAVAILABLE;
+
+-(void)stop;
 
 @end
 
-/// @endcond
+NS_ASSUME_NONNULL_END

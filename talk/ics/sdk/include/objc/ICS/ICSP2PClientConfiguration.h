@@ -24,9 +24,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef p2p_RTCP2PClientConfiguration_h
-#define p2p_RTCP2PClientConfiguration_h
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCConfiguration.h>
 
@@ -37,7 +34,7 @@
  configuration does NOT impact RTCPeerClient already created.
  */
 RTC_EXPORT
-@interface ICSPeerClientConfiguration : NSObject
+@interface ICSP2PClientConfiguration : NSObject
 
 @property(nonatomic, strong, readwrite) NSArray* ICEServers;
 /**
@@ -66,4 +63,3 @@ RTC_EXPORT
 
 @end
 
-#endif

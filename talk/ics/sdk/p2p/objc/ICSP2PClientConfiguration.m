@@ -3,9 +3,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "talk/ics/sdk/include/objc/ICS/ICSPeerClientConfiguration.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSP2PClientConfiguration.h"
 
-@implementation ICSPeerClientConfiguration
+@implementation ICSP2PClientConfiguration
 
 - (instancetype)init {
   self = [super init];

@@ -41,7 +41,8 @@
 
 // P2P SDK
 #import <ICS/ICSP2PErrors.h>
-#import <ICS/ICSPeerClient.h>
+#import <ICS/ICSP2PClient.h>
+#import <ICS/ICSP2PPublication.h>
 
 // Conference SDK
 #import <ICS/ICSConferenceClient.h>

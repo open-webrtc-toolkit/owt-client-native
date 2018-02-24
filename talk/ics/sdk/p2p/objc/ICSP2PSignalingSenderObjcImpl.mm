@@ -9,12 +9,12 @@
 namespace ics {
 namespace p2p {
 
-RTCP2PSignalingSenderObjcImpl::RTCP2PSignalingSenderObjcImpl(
-    id<RTCP2PSignalingSenderProtocol> sender) {
+ICSP2PSignalingSenderObjcImpl::ICSP2PSignalingSenderObjcImpl(
+    id<ICSP2PSignalingSenderProtocol> sender) {
   _sender = sender;
 }
 
-void RTCP2PSignalingSenderObjcImpl::SendSignalingMessage(
+void ICSP2PSignalingSenderObjcImpl::SendSignalingMessage(
     const std::string& message,
     const std::string& remote_id,
     std::function<void()> success,
