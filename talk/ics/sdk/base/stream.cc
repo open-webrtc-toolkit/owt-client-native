@@ -323,7 +323,7 @@ LocalStream::LocalStream(
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
     LOG(LS_ERROR)
         << "Cannot create a LocalCameraStream without audio and video.";
-    error_code = StreamException::kLocalInvalidOption;
+    error_code = static_cast<int>(ExceptionType::kLocalInvalidOption);
     return;
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
@@ -354,7 +354,7 @@ LocalStream::LocalStream(
       LOG(LS_ERROR)
           << "Cannot open video capturer " << parameters.CameraId()
           << ". Please make sure camera ID is correct and it is not in use.";
-      error_code = StreamException::kLocalDeviceNotFound;
+      error_code = static_cast<int>(ExceptionType::kLocalDeviceNotFound);
       return;
     }
     // Check supported resolution
@@ -368,7 +368,7 @@ LocalStream::LocalStream(
                     << parameters.ResolutionHeight()
                     << " is not supported by video capturer "
                     << parameters.CameraId();
-      error_code = StreamException::kLocalNotSupported;
+      error_code = static_cast<int>(ExceptionType::kLocalNotSupported);
       return;
     }
     media_constraints_->SetMandatory(
@@ -390,7 +390,7 @@ LocalStream::LocalStream(
     capturer_ = ObjcVideoCapturerFactory::Create(parameters);
     if (!capturer_) {
       LOG(LS_ERROR) << "Failed to create capturer. Please check parameters.";
-      error_code = StreamException::kLocalNotSupported;
+      error_code = static_cast<int>(ExceptionType::kLocalNotSupported);
       return;
     }
     scoped_refptr<VideoTrackSourceInterface> source = capturer_->source();

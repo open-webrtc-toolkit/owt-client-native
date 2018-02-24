@@ -7,25 +7,18 @@
 namespace ics {
 namespace base {
 
-Exception::Exception() : Exception("Unknown exception.") {}
+Exception::Exception()
+    : Exception(ExceptionType::kUnknown, "Unknown exception.") {}
 
-Exception::Exception(const std::string& message) : message_(message) {}
+Exception::Exception(const ExceptionType& type, const std::string& message)
+    : type_(type), message_(message) {}
+
+ExceptionType Exception::Type() const {
+  return type_;
+}
 
 std::string Exception::Message() const {
   return message_;
-}
-
-StreamException::StreamException() : StreamException(kUnknown) {}
-
-StreamException::StreamException(const enum ExceptionType& type)
-    : StreamException(type, "Unkown stream exception.") {}
-
-StreamException::StreamException(const enum ExceptionType& type,
-                                 const std::string& message)
-    : Exception(message), type_(type) {}
-
-StreamException::ExceptionType StreamException::Type() const {
-  return type_;
 }
 
 }

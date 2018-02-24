@@ -28,23 +28,48 @@
 #define ICS_BASE_PUBLICATION_H_
 
 #include "ics/base/commontypes.h"
+#include "ics/base/exception.h"
+#include "ics/base/connectionstats.h"
 
 namespace ics {
 namespace base {
 
 /// Observer that receives event from publication.
 class PublicationObserver {
-  public:
-    /// Triggered when publication is ended.
-    virtual void OnEnded() = 0;
-    /// Triggered when audio is muted.
-    virtual void OnAudioMuted() = 0;
-    /// Triggered when video is muted.
-    virtual void OnVideoMuted() = 0;
-    /// Triggered when audio is unmuted.
-    virtual void OnAudioUnMuted() = 0;
-    /// Triggered when video is unmuted.
-    virtual void OnVideoUnMuted() = 0;
+ public:
+  /// Triggered when publication is ended.
+  virtual void OnEnded() = 0;
+  /// Triggered when audio is muted.
+  virtual void OnAudioMuted() = 0;
+  /// Triggered when video is muted.
+  virtual void OnVideoMuted() = 0;
+  /// Triggered when audio is unmuted.
+  virtual void OnAudioUnMuted() = 0;
+  /// Triggered when video is unmuted.
+  virtual void OnVideoUnMuted() = 0;
+};
+
+class Publication {
+ public:
+  /// Pause current publication's audio or/and video basing on |track_kind| provided.
+  virtual void Mute(TrackKind track_kind,
+                    std::function<void()> on_success,
+                    std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Pause current publication's audio or/and video basing on |track_kind| provided.
+  virtual void UnMute(TrackKind track_kind,
+                      std::function<void()> on_success,
+                      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Get conneciton stats of current publication
+  virtual void GetStats(
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Stop current publication.
+  virtual void Stop(std::function<void()> on_success,
+                    std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Register an observer onto this publication.
+  virtual void AddObserver(PublicationObserver& observer) = 0;
+  /// Unregister an observer from this publication.
+  virtual void RemoveObserver(PublicationObserver& observer) = 0;
 };
 
 } // namespace base

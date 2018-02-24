@@ -15,7 +15,7 @@
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/ics/sdk/base/peerconnectionchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
-#include "talk/ics/sdk/include/cpp/ics/p2p/p2pexception.h"
+#include "talk/ics/sdk/include/cpp/ics/base/exception.h"
 #include "talk/ics/sdk/include/cpp/ics/p2p/p2psignalingsenderinterface.h"
 #include "talk/ics/sdk/include/cpp/ics/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/rtc_base/json.h"
@@ -84,33 +84,33 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnIncomingSignalingMessage(const std::string& message) override;
   // Invite a remote client to start a WebRTC session.
   void Invite(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<P2PException>)> on_failure);
+              std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Accept a remote client's invitation.
   void Accept(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<P2PException>)> on_failure);
+              std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Deny a remote client's invitation.
   void Deny(std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Publish a local stream to remote user.
   void Publish(std::shared_ptr<LocalStream> stream,
                std::function<void()> on_success,
-               std::function<void(std::unique_ptr<P2PException>)> on_failure);
+               std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Unpublish a local stream to remote user.
   void Unpublish(std::shared_ptr<LocalStream> stream,
                  std::function<void()> on_success,
-                 std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                 std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Send message to remote user.
   void Send(const std::string& message,
             std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Stop current WebRTC session.
   void Stop(std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   // Get statistics data for the specific connection.
   void GetConnectionStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
  protected:
   void CreateOffer();
@@ -162,23 +162,23 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void SendSignalingMessage(
       const Json::Value& data,
       std::function<void()> success,
-      std::function<void(std::unique_ptr<P2PException>)> failure);
+      std::function<void(std::unique_ptr<Exception>)> failure);
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void SendAcceptance(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   void SendStop(std::function<void()> on_success,
-                std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                std::function<void(std::unique_ptr<Exception>)> on_failure);
   void SendDeny(std::function<void()> on_success,
-                std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                std::function<void(std::unique_ptr<Exception>)> on_failure);
   void ClosePeerConnection();  // Stop session and clean up.
   // Returns true if |pointer| is not nullptr. Otherwise, return false and
   // execute |on_failure|.
   bool CheckNullPointer(
       uintptr_t pointer,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   webrtc::DataBuffer CreateDataBuffer(const std::string& data);
   void CreateDataChannel(const std::string& label);
   // Send all messages in pending message list.

@@ -129,10 +129,11 @@ class P2PClientObserver {
 };
 
 /// An async client for P2P WebRTC sessions
-class P2PClient : protected P2PSignalingSenderInterface,
-                  protected P2PSignalingChannelInterfaceObserver,
-                  public std::enable_shared_from_this<P2PClient> {
-
+class P2PClient final
+    : protected P2PSignalingSenderInterface,
+      protected P2PSignalingChannelInterfaceObserver,
+      public std::enable_shared_from_this<P2PClient> {
+  friend class P2PPublication;
  public:
   /**
    @brief Init a P2PClient instance with speficied signaling channel.
@@ -165,7 +166,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
    */
   void Connect(const std::string& token,
                std::function<void()> on_success,
-               std::function<void(std::unique_ptr<P2PException>)> on_failure);
+               std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
   @brief Disconnect from the signaling server.
@@ -177,7 +178,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
                     1. P2PClient hasn't connected to a signaling server.
    */
   void Disconnect(std::function<void()> on_success,
-                  std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                  std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
   @brief Add a remote user to the allowed list to start a WebRTC session.
@@ -197,7 +198,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
    */
   void RemoveAllowedRemoteId(const std::string& target_id,
                              std::function<void()> on_success,
-                             std::function<void(std::unique_ptr<P2PException>)> on_failure);
+                             std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
    @brief Stop a WebRTC session.
@@ -213,7 +214,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
    */
   void Stop(const std::string& target_id,
             std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
    @brief Publish a stream to the remote client.
@@ -230,7 +231,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
   void Publish(const std::string& target_id,
                std::shared_ptr<ics::base::LocalStream> stream,
                std::function<void(std::shared_ptr<P2PPublication>)> on_success,
-               std::function<void(std::unique_ptr<P2PException>)> on_failure);
+               std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
    @brief Send a message to remote client
@@ -247,7 +248,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
   void Send(const std::string& target_id,
             const std::string& message,
             std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
    @brief Get the connection statistics with target client.
@@ -263,7 +264,7 @@ class P2PClient : protected P2PSignalingSenderInterface,
   void GetConnectionStats(
       const std::string& target_id,
       std::function<void(std::shared_ptr<ics::base::ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
  protected:
   // Implement

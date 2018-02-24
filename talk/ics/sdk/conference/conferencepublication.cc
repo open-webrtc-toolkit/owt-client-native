@@ -6,7 +6,7 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/ics/sdk/base/stringutils.h"
-#include "talk/ics/sdk/include/cpp/ics/conference/conferenceexception.h"
+#include "talk/ics/sdk/include/cpp/ics/base/exception.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
 #include "talk/ics/sdk/include/cpp/ics/conference/conferencepublication.h"
@@ -26,15 +26,15 @@ ConferencePublication::ConferencePublication(std::shared_ptr<ConferenceClient> c
 void ConferencePublication::Mute(
     TrackKind track_kind,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
    auto that = conference_client_.lock();
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Session ended.");
      if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
-         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, failure_message));
+         std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, failure_message));
          on_failure(std::move(e));
        });
      }
@@ -46,15 +46,15 @@ void ConferencePublication::Mute(
 void ConferencePublication::UnMute(
     TrackKind track_kind,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
    auto that = conference_client_.lock();
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Session ended.");
      if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
-         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, failure_message));
+         std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, failure_message));
          on_failure(std::move(e));
        });
      }
@@ -66,15 +66,15 @@ void ConferencePublication::UnMute(
 
 void ConferencePublication::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
    auto that = conference_client_.lock();
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Session ended.");
      if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
-         std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, failure_message));
+         std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, failure_message));
          on_failure(std::move(e));
        });
      }
@@ -85,15 +85,15 @@ void ConferencePublication::GetStats(
 
 void ConferencePublication::Stop(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto that = conference_client_.lock();
   if (that == nullptr || ended_) {
     std::string failure_message(
       "Session ended.");
     if (on_failure != nullptr && event_queue_.get()) {
       event_queue_->PostTask([on_failure, failure_message]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-           ConferenceException::kUnknown, failure_message));
+        std::unique_ptr<Exception> e(new Exception(
+           ExceptionType::kConferenceUnknown, failure_message));
         on_failure(std::move(e));
       });
     }

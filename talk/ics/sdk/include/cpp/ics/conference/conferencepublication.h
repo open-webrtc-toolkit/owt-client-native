@@ -46,11 +46,10 @@ struct ConnectionStats;
 namespace conference {
 
 class ConferenceClient;
-class ConferenceException;
 
 using namespace ics::base;
 
-class ConferencePublication {
+class ConferencePublication : public Publication {
   public:
     ConferencePublication(std::shared_ptr<ConferenceClient> client, std::string id);
 
@@ -59,22 +58,22 @@ class ConferencePublication {
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
               std::function<void()> on_success,
-              std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+              std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void UnMute(TrackKind track_kind,
                 std::function<void()> on_success,
-                std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+                std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Get conneciton stats of current publication
     void GetStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-    /// Add observer on the publication to get events.
-    void AddObserver(PublicationObserver& observer);
-    /// Remove observer on the publication.
-    void RemoveObserver(PublicationObserver& observer);
+              std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+    /// Register an observer onto this conference publication.
+    void AddObserver(PublicationObserver& observer) override;
+    /// Unregister an observer from this conference publication.
+    void RemoveObserver(PublicationObserver& observer) override;
   private:
      std::string id_;
      bool ended_;

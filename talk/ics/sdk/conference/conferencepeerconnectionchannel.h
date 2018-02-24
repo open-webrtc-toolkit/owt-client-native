@@ -14,9 +14,7 @@
 #include "talk/ics/sdk/base/peerconnectionchannel.h"
 #include "talk/ics/sdk/conference/conferencesocketsignalingchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
-#include "talk/ics/sdk/include/cpp/ics/conference/conferenceexception.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/subscribeoptions.h"
-
 #include "talk/ics/sdk/include/cpp/ics/conference/conferencepublication.h"
 
 namespace ics {
@@ -45,59 +43,59 @@ class ConferencePeerConnectionChannel
   void Publish(
       std::shared_ptr<LocalStream> stream,
       std::function<void(std::string)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Unpublish a local stream to the conference.
   void Unpublish(
       const std::string& session_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Subscribe a stream from the conference.
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       const SubscriptionOptions& options,
       std::function<void(std::string)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Unsubscribe a remote stream from the conference.
   void Unsubscribe(
       const std::string& session_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Continue to transmit specified stream's audio data.
   // If |stream| is a remote stream, MCU will continue to send audio data to
   // client. If |stream| is a local stream, client will continue to send audio
   // data to MCU. This method is expected to be called after |DisableAudio|.
   void PlayAudio(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Stop transmitting specified stream's audio data.
   // If |stream| is a remote stream, MCU will stop sending audio data to client.
   // If |stream| is a local stream, client will stop sending audio data to MCU.
   void PauseAudio(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Continue to transmit specified stream's video data.
   // If |stream| is a remote stream, MCU will continue to send video data to
   // client. If |stream| is a local stream, client will continue to send video
   // data to MCU. This method is expected to be called after |DisableVideo|.
   void PlayVideo(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Stop transmitting specified stream's video data.
   // If |stream| is a remote stream, MCU will stop sending video data to client.
   // If |stream| is a local stream, client will stop sending video data to MCU.
   void PauseVideo(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   void PlayAudioVideo(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   void PauseAudioVideo(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Stop current WebRTC session.
   void Stop(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   // Initialize an ICE restarat.
   void IceRestart();
@@ -115,7 +113,7 @@ class ConferencePeerConnectionChannel
   // Get statistics data for the specific stream.
   void GetConnectionStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Called when MCU reports stream/connection is failed or ICE failed.
   void OnStreamError(const std::string& error_message);
 
@@ -162,21 +160,21 @@ class ConferencePeerConnectionChannel
   // execute |on_failure|.
   bool CheckNullPointer(
       uintptr_t pointer,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   void SetRemoteDescription(const std::string& type, const std::string& sdp);
   void SendStreamControlMessage(
       const std::string& in_action,
       const std::string& out_action,
       const std::string& operation,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
+      std::function<void(std::unique_ptr<Exception>)> on_failure)
       const;
   void DrainIceCandidates();
   void DoIceRestart();
   void SendPublishMessage(
     sio::message::ptr options,
     std::shared_ptr<LocalStream> stream,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+    std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::function<void()> RunInEventQueue(std::function<void()> func);
   // Set publish_success_callback_, subscribe_success_callback_ and
   // failure_callback_ to nullptr.
@@ -195,7 +193,7 @@ class ConferencePeerConnectionChannel
   // Callbacks for publish or subscribe.
   std::function<void(std::string)> publish_success_callback_;
   std::function<void(std::string)> subscribe_success_callback_;
-  std::function<void(std::unique_ptr<ConferenceException>)> failure_callback_;
+  std::function<void(std::unique_ptr<Exception>)> failure_callback_;
   std::mutex callback_mutex_;
 
   // Stored candidates, will be send out after setting remote description.

@@ -330,13 +330,14 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
 
 bool ConferencePeerConnectionChannel::CheckNullPointer(
     uintptr_t pointer,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (pointer)
     return true;
   if (on_failure != nullptr) {
     event_queue_->PostTask([on_failure]() {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Nullptr is not allowed."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceUnknown,
+          "Nullptr is not allowed."));
       on_failure(std::move(e));
     });
   }
@@ -349,7 +350,7 @@ bool ConferencePeerConnectionChannel::CheckNullPointer(
 void ConferencePeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
   published_stream_ = stream;
   if ((!CheckNullPointer((uintptr_t)stream.get(), on_failure)) ||
@@ -458,15 +459,16 @@ void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     const SubscriptionOptions& subscribe_options,
     std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                << stream->has_audio_ << ", has video? " << stream->has_video_;
   if (!SubOptionAllowed(subscribe_options, stream->Capabilities())) {
     LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-          std::unique_ptr<ConferenceException> e(new ConferenceException(
-              ConferenceException::kUnknown, "Unsupported subscribe option."));
+          std::unique_ptr<Exception> e(new Exception(
+              ExceptionType::kConferenceUnknown,
+              "Unsupported subscribe option."));
           on_failure(std::move(e));
       });
     }
@@ -480,8 +482,9 @@ void ConferencePeerConnectionChannel::Subscribe(
   if (subscribe_success_callback_) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Subscribing this stream."));
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown,
+            "Subscribing this stream."));
         on_failure(std::move(e));
       });
     }
@@ -557,14 +560,14 @@ void ConferencePeerConnectionChannel::Subscribe(
 void ConferencePeerConnectionChannel::Unpublish(
     const std::string& session_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_id != GetSessionId()) {
     LOG(LS_ERROR) << "Publication ID mismatch.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid stream to be unpublished."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid stream to be unpublished."));
         on_failure(std::move(e));
       });
     }
@@ -580,14 +583,14 @@ void ConferencePeerConnectionChannel::Unpublish(
 void ConferencePeerConnectionChannel::Unsubscribe(
     const std::string& session_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_id != GetSessionId()) {
     LOG(LS_ERROR) << "Subscription ID mismatch.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid stream to be unsubscribed."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid stream to be unsubscribed."));
         on_failure(std::move(e));
       });
     }
@@ -596,8 +599,8 @@ void ConferencePeerConnectionChannel::Unsubscribe(
   if (subscribe_success_callback_ != nullptr) {  // Subscribing
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown,
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown,
             "Cannot unsubscribe a stream during subscribing."));
         on_failure(std::move(e));
       });
@@ -615,7 +618,7 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
     const std::string& out_action,
     const std::string& operation,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure)
+    std::function<void(std::unique_ptr<Exception>)> on_failure)
     const {
   std::string action = "";
   if (published_stream_) {
@@ -634,61 +637,61 @@ void ConferencePeerConnectionChannel::SendStreamControlMessage(
 
 void ConferencePeerConnectionChannel::PlayAudioVideo(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("av", "av", "play", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::PauseAudioVideo(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("av", "av", "pause", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::PlayAudio(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("audio", "audio", "play", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::PauseAudio(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("audio", "audio", "pause", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::PlayVideo(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("video", "video", "play", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::PauseVideo(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SendStreamControlMessage("video", "video", "pause", on_success,
                            on_failure);
 }
 
 void ConferencePeerConnectionChannel::Stop(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Stop session.";
 }
 
 void ConferencePeerConnectionChannel::GetConnectionStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!published_stream_ && !subscribed_stream_) {
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "No stream associated with the session"));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "No stream associated with the session"));
         on_failure(std::move(e));
       });
     }
@@ -752,8 +755,9 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
           std::lock_guard<std::mutex> lock(that->callback_mutex_);
           if (!that || !that->failure_callback_)
             return;
-          std::unique_ptr<ConferenceException> e(new ConferenceException(
-              ConferenceException::kUnknown, "MCU internal error during connection establishment."));
+          std::unique_ptr<Exception> e(new Exception(
+              ExceptionType::kConferenceUnknown,
+              "MCU internal error during connection establishment."));
           that->failure_callback_(std::move(e));
           that->ResetCallbacks();
         });
@@ -815,7 +819,7 @@ std::string ConferencePeerConnectionChannel::GetSessionId() const {
 void ConferencePeerConnectionChannel::SendPublishMessage(
     sio::message::ptr options,
     std::shared_ptr<LocalStream> stream,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->label(), "",
       [stream, this](std::string session_id) {
@@ -836,8 +840,8 @@ void ConferencePeerConnectionChannel::OnNetworksChanged(){
 
 void ConferencePeerConnectionChannel::OnStreamError(
     const std::string& error_message) {
-  std::shared_ptr<const ConferenceException> e(
-      new ConferenceException(ConferenceException::kUnknown, error_message));
+  std::shared_ptr<const Exception> e(
+      new Exception(ExceptionType::kConferenceUnknown, error_message));
   std::shared_ptr<Stream> error_stream;
   if (published_stream_) {
     Unpublish(GetSessionId(), nullptr, nullptr);

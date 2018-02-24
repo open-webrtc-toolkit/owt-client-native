@@ -13,7 +13,6 @@
 #include "talk/ics/sdk/base/stringutils.h"
 #include "talk/ics/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
-#include "talk/ics/sdk/include/cpp/ics/conference/conferenceexception.h"
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
@@ -189,13 +188,13 @@ void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
 void ConferenceClient::Join(
     const std::string& token,
     std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (signaling_channel_connected_){
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Already connected to conference server."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Already connected to conference server."));
         on_failure(std::move(e));
       });
     }
@@ -218,9 +217,9 @@ void ConferenceClient::Join(
       LOG(LS_ERROR) << "Room info doesn't contain participant's ID/uerID/role.";
       if (on_failure) {
         event_queue_->PostTask([on_failure]() {
-          std::unique_ptr<ConferenceException> e(
-              new ConferenceException(ConferenceException::kUnknown,
-                                      "Received invalid user info from MCU."));
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kConferenceUnknown,
+                            "Received invalid user info from MCU."));
           on_failure(std::move(e));
         });
       }
@@ -257,8 +256,8 @@ void ConferenceClient::Join(
           current_conference_info_->participants_.push_back(user);
         } else if (on_failure) {
           event_queue_->PostTask([on_failure]() {
-            std::unique_ptr<ConferenceException> e(new ConferenceException(
-                ConferenceException::kUnknown,
+            std::unique_ptr<Exception> e(new Exception(
+                ExceptionType::kConferenceUnknown,
                 "Failed to parse current user's info"));
             on_failure(std::move(e));
           });
@@ -292,7 +291,7 @@ void ConferenceClient::Join(
 void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   PublishOptions options;
   Publish(stream, options, on_success, on_failure);
 }
@@ -301,7 +300,7 @@ void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
     const PublishOptions& options,
     std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
@@ -348,7 +347,7 @@ void ConferenceClient::Publish(
 void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   SubscriptionOptions options;
   Subscribe(stream, options, on_success, on_failure);
 }
@@ -357,7 +356,7 @@ void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     const SubscriptionOptions& options,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure )) {
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
@@ -372,8 +371,8 @@ void ConferenceClient::Subscribe(
         "removed.");
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure, failure_message]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, failure_message));
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, failure_message));
         on_failure(std::move(e));
       });
     }
@@ -413,7 +412,7 @@ void ConferenceClient::Subscribe(
 void ConferenceClient::UnPublish(
     const std::string& session_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -422,9 +421,10 @@ void ConferenceClient::UnPublish(
   if (pcc == nullptr) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid publication id."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid publication id.")
+        );
 
         on_failure(std::move(e));
       });
@@ -455,7 +455,7 @@ void ConferenceClient::UnPublish(
 void ConferenceClient::UnSubscribe(
     const std::string& session_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -463,9 +463,10 @@ void ConferenceClient::UnSubscribe(
   if (pcc == nullptr) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid subsciption id."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid subsciption id.")
+        );
 
         on_failure(std::move(e));
       });
@@ -498,7 +499,7 @@ void ConferenceClient::UnSubscribe(
 void ConferenceClient::Send(
     const std::string& message,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -510,7 +511,7 @@ void ConferenceClient::Send(
     const std::string& message,
     const std::string& receiver,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -522,7 +523,7 @@ void ConferenceClient::Mute(
     const std::string& session_id,
     TrackKind track_kind,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -532,9 +533,10 @@ void ConferenceClient::Mute(
                          track_kind != TrackKind::kAudioAndVideo)) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid session id or track kind."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid session id or track kind.")
+        );
         on_failure(std::move(e));
       });
     }
@@ -559,7 +561,7 @@ void ConferenceClient::UnMute(
     const std::string& session_id,
     TrackKind track_kind,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -569,9 +571,10 @@ void ConferenceClient::UnMute(
                          track_kind != TrackKind::kAudioAndVideo)) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Invalid session id or track kind."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Invalid session id or track kind.")
+        );
         on_failure(std::move(e));
       });
     }
@@ -593,7 +596,7 @@ void ConferenceClient::UnMute(
 }
 void ConferenceClient::Leave(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
@@ -612,14 +615,15 @@ void ConferenceClient::Leave(
 void ConferenceClient::GetConnectionStats(
     const std::string& session_id,
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetConferencePeerConnectionChannel(session_id);
   if (pcc == nullptr) {
     if (on_failure) {
       event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(
-            new ConferenceException(ConferenceException::kUnknown,
-                                    "Stream is not published or subscribed."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Stream is not published or subscribed.")
+        );
 
         on_failure(std::move(e));
       });
@@ -734,7 +738,7 @@ void ConferenceClient::OnServerDisconnected() {
 
 void ConferenceClient::OnStreamError(
     std::shared_ptr<Stream> stream,
-    std::shared_ptr<const ConferenceException> exception) {
+    std::shared_ptr<const Exception> exception) {
   TriggerOnStreamError(stream, exception);
 }
 
@@ -762,7 +766,7 @@ void ConferenceClient::OnSubscriptionId(const std::string& subscription_id,
 
 bool ConferenceClient::CheckNullPointer(
     uintptr_t pointer,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   std::string failure_message="Null pointer is not allowed.";
   return CheckNullPointer(pointer, failure_message, on_failure);
 }
@@ -770,13 +774,13 @@ bool ConferenceClient::CheckNullPointer(
 bool ConferenceClient::CheckNullPointer(
     uintptr_t pointer,
     const std::string& failure_message,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (pointer)
     return true;
   if (on_failure != nullptr) {
     event_queue_->PostTask([on_failure, failure_message]() {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, failure_message));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceUnknown, failure_message));
       on_failure(std::move(e));
     });
   }
@@ -784,14 +788,15 @@ bool ConferenceClient::CheckNullPointer(
 }
 
 bool ConferenceClient::CheckSignalingChannelOnline(
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure){
+      std::function<void(std::unique_ptr<Exception>)> on_failure){
   if (signaling_channel_connected_)
     return true;
   if (on_failure != nullptr) {
     event_queue_->PostTask([on_failure]() {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnknown,
-                                  "Conference server is not connected."));
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kConferenceUnknown,
+                        "Conference server is not connected.")
+      );
       on_failure(std::move(e));
     });
   }
@@ -1230,7 +1235,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
 
 void ConferenceClient::TriggerOnStreamError(
     std::shared_ptr<Stream> stream,
-    std::shared_ptr<const ConferenceException> exception) {
+    std::shared_ptr<const Exception> exception) {
 // TODO: in 4.0 API this event is not supported.
 #if 0
   for (auto observers_it = observers_.begin(); observers_it != observers_.end();
@@ -1239,8 +1244,8 @@ void ConferenceClient::TriggerOnStreamError(
     auto type = exception->Type();
     auto message = exception->Message();
     event_queue_->PostTask([&o, stream, type, message] {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(type, message));
+      std::unique_ptr<Exception> e(
+          new Exception(type, message));
       o.OnStreamError(stream, std::move(e));
     });
   }

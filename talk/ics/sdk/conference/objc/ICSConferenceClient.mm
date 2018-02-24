@@ -69,7 +69,7 @@
 
 - (void)triggerOnFailure:(void (^)(NSError*))onFailure
            withException:
-               (std::unique_ptr<ics::conference::ConferenceException>)e {
+               (std::unique_ptr<ics::base::Exception>)e {
   if (onFailure == nil)
     return;
   NSError* err = [[NSError alloc]
@@ -106,7 +106,7 @@
           onSuccess([[ICSConferenceInfo alloc]
               initWithNativeInfo:info]);
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -125,7 +125,7 @@
           onSuccess([[ICSConferencePublication alloc]
               initWithNativePublication:publication]);
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -159,7 +159,7 @@
             initWithNativeSubscription:subscription];
         onSuccess(sub);
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -173,7 +173,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -188,7 +188,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -202,10 +202,10 @@ std::function<void()> PlayPauseSuccessCallback(SuccessBlock on_success) {
 }
 
 typedef void (^FailureBlock)(NSError*);
-std::function<void(std::unique_ptr<ics::conference::ConferenceException>)>
+std::function<void(std::unique_ptr<ics::base::Exception>)>
 PlayPauseFailureCallback(FailureBlock on_failure,
                          __weak ICSConferenceClient* client) {
-  return [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+  return [=](std::unique_ptr<ics::base::Exception> e) {
     [client triggerOnFailure:on_failure withException:(std::move(e))];
   };
 }
@@ -217,7 +217,7 @@ PlayPauseFailureCallback(FailureBlock on_failure,
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
@@ -235,7 +235,7 @@ PlayPauseFailureCallback(FailureBlock on_failure,
               initWithNativeStats:*native_stats]);
         }
       },
-      [=](std::unique_ptr<ics::conference::ConferenceException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });*/
 }

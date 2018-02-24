@@ -34,7 +34,7 @@
 #include "ics/base/mediaconstraints.h"
 #include "ics/base/subscription.h"
 #include "ics/base/connectionstats.h"
-#include "ics/conference/conferenceexception.h"
+#include "ics/base/exception.h"
 
 namespace rtc {
   class TaskQueue;
@@ -56,19 +56,19 @@ class ConferenceSubscription{
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
               std::function<void()> on_success,
-              std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+              std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void UnMute(TrackKind track_kind,
                 std::function<void()> on_success,
-                std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+                std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Get conneciton stats of current publication
     void GetStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+              std::function<void(std::unique_ptr<Exception>)> on_failure);
 
     void AddObserver(SubscriptionObserver& observer);
 

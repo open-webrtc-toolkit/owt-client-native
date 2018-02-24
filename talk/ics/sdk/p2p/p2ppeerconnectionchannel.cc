@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <thread>
+
 #include "talk/ics/sdk/base/eventtrigger.h"
 #include "talk/ics/sdk/base/functionalobserver.h"
 #include "talk/ics/sdk/base/sysinfo.h"
@@ -127,16 +128,16 @@ Json::Value P2PPeerConnectionChannel::UaInfo() {
 
 void P2PPeerConnectionChannel::Invite(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_state_ != kSessionStateReady &&
       session_state_ != kSessionStateOffered) {
     if (on_failure) {
       LOG(LS_WARNING) << "Cannot send invitation in this state: "
                       << session_state_;
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidState,
-                             "Cannot send invitation in this state."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState,
+                          "Cannot send invitation in this state."));
         on_failure(std::move(e));
       });
     }
@@ -157,13 +158,13 @@ void P2PPeerConnectionChannel::Invite(
 
 void P2PPeerConnectionChannel::Accept(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_state_ != kSessionStatePending) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidState,
-                             "Cannot accept invitation in this state."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState,
+                          "Cannot accept invitation in this state."));
         on_failure(std::move(e));
       });
     }
@@ -178,13 +179,13 @@ void P2PPeerConnectionChannel::Accept(
 
 void P2PPeerConnectionChannel::Deny(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_state_ != kSessionStatePending) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidState,
-                             "Cannot deny invitation in this state."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState,
+                          "Cannot deny invitation in this state."));
         on_failure(std::move(e));
       });
     }
@@ -308,16 +309,16 @@ void P2PPeerConnectionChannel::CreateAnswer() {
 void P2PPeerConnectionChannel::SendSignalingMessage(
     const Json::Value& data,
     std::function<void()> success,
-    std::function<void(std::unique_ptr<P2PException>)> failure) {
+    std::function<void(std::unique_ptr<Exception>)> failure) {
   RTC_CHECK(signaling_sender_);
   std::string jsonString = rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(
       jsonString, remote_id_, success, [=](int) {
         if (failure == nullptr)
           return;
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidArgument,
-                             "Send signaling message failed."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "Send signaling message failed."));
         failure(std::move(e));
       });
 }
@@ -768,13 +769,13 @@ void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
 
 bool P2PPeerConnectionChannel::CheckNullPointer(
     uintptr_t pointer,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (pointer)
     return true;
   if (on_failure != nullptr) {
     event_queue_->PostTask([on_failure] {
-      std::unique_ptr<P2PException> e(new P2PException(
-          P2PException::kClientInvalidArgument, "Nullptr is not allowed."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kP2PClientInvalidArgument, "Nullptr is not allowed."));
       on_failure(std::move(e));
     });
   }
@@ -801,7 +802,7 @@ void P2PPeerConnectionChannel::CleanLastPeerConnection() {
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Publish a local stream.";
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
@@ -813,8 +814,8 @@ void P2PPeerConnectionChannel::Publish(
     LOG(LS_WARNING) << error_message;
     if (on_failure) {
       event_queue_->PostTask([on_failure, error_message] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidState, error_message));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState, error_message));
         on_failure(std::move(e));
       });
     }
@@ -825,8 +826,8 @@ void P2PPeerConnectionChannel::Publish(
       LOG(LS_WARNING) << "Remote side does not support Plan B, so at most one "
                          "audio/video track can be published.";
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(new P2PException(
-            P2PException::kClientUnsupportedMethod,
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kP2PClientUnsupportedMethod,
             "Cannot publish multiple streams to remote side."));
         on_failure(std::move(e));
       });
@@ -838,9 +839,9 @@ void P2PPeerConnectionChannel::Publish(
       published_streams_.end()) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidArgument,
-                             "The stream is already published."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "The stream is already published."));
         on_failure(std::move(e));
       });
     }
@@ -864,7 +865,7 @@ void P2PPeerConnectionChannel::Publish(
 void P2PPeerConnectionChannel::Unpublish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_WARNING) << "Local stream cannot be nullptr.";
     return;
@@ -873,9 +874,9 @@ void P2PPeerConnectionChannel::Unpublish(
     if (on_failure != nullptr) {
       LOG(LS_WARNING) << "Remote side does not support removeStream.";
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientUnsupportedMethod,
-                             "Remote side does not support unpublish."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientUnsupportedMethod,
+                          "Remote side does not support unpublish."));
         on_failure(std::move(e));
       });
     }
@@ -888,9 +889,9 @@ void P2PPeerConnectionChannel::Unpublish(
     if (it == published_streams_.end()) {
       if (on_failure) {
         event_queue_->PostTask([on_failure] {
-          std::unique_ptr<P2PException> e(
-              new P2PException(P2PException::kClientInvalidArgument,
-                               "The stream is not published."));
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kP2PClientInvalidArgument,
+                            "The stream is not published."));
           on_failure(std::move(e));
         });
       }
@@ -912,7 +913,7 @@ void P2PPeerConnectionChannel::Unpublish(
 
 void P2PPeerConnectionChannel::Stop(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Stop session.";
   switch (session_state_) {
     case kSessionStateConnecting:
@@ -931,9 +932,9 @@ void P2PPeerConnectionChannel::Stop(
     default:
       if (on_failure != nullptr) {
         event_queue_->PostTask([on_failure] {
-          std::unique_ptr<P2PException> e(
-              new P2PException(P2PException::kClientInvalidState,
-                               "Cannot stop a session haven't started."));
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kP2PClientInvalidState,
+                            "Cannot stop a session haven't started."));
           on_failure(std::move(e));
         });
       }
@@ -946,14 +947,14 @@ void P2PPeerConnectionChannel::Stop(
 
 void P2PPeerConnectionChannel::GetConnectionStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (on_success == nullptr) {
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(
-            new P2PException(P2PException::kClientInvalidArgument,
-                             "on_success cannot be nullptr. Please provide "
-                             "on_success to get connection stats data."));
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "on_success cannot be nullptr. Please provide "
+                          "on_success to get connection stats data."));
         on_failure(std::move(e));
       });
     }
@@ -962,8 +963,8 @@ void P2PPeerConnectionChannel::GetConnectionStats(
   if (session_state_ != kSessionStateConnected) {
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure] {
-        std::unique_ptr<P2PException> e(new P2PException(
-            P2PException::kClientInvalidState,
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kP2PClientInvalidState,
             "Cannot get connection stats in this state. Please "
             "try it after connection is established."));
         on_failure(std::move(e));
@@ -1045,7 +1046,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
 
 void P2PPeerConnectionChannel::SendAcceptance(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   Json::Value json;
   json[kMessageTypeKey] = kChatAccept;
   Json::Value ua = UaInfo();
@@ -1057,7 +1058,7 @@ void P2PPeerConnectionChannel::SendAcceptance(
 
 void P2PPeerConnectionChannel::SendStop(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Send stop.";
   Json::Value json;
   json[kMessageTypeKey] = kChatStop;
@@ -1066,7 +1067,7 @@ void P2PPeerConnectionChannel::SendStop(
 
 void P2PPeerConnectionChannel::SendDeny(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   Json::Value json;
   json[kMessageTypeKey] = kChatDeny;
   SendSignalingMessage(json, on_success, on_failure);
@@ -1122,7 +1123,7 @@ void P2PPeerConnectionChannel::CreateDataChannel(const std::string& label) {
 void P2PPeerConnectionChannel::Send(
     const std::string& message,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (data_channel_ != nullptr &&
       data_channel_->state() ==
           webrtc::DataChannelInterface::DataState::kOpen) {

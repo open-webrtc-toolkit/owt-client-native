@@ -67,7 +67,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -88,7 +88,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -109,7 +109,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -141,7 +141,7 @@
             onSuccess(publication);
           }
         },
-        [=](std::unique_ptr<ics::p2p::P2PException> e) {
+        [=](std::unique_ptr<ics::base::Exception> e) {
           if (onFailure == nil)
             return;
           NSError* err = [[NSError alloc]
@@ -167,7 +167,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -190,7 +190,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -211,7 +211,7 @@
         if (onSuccess != nil)
           onSuccess();
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]
@@ -234,7 +234,7 @@
               initWithNativeStats:*native_stats.get()]);
         }
       },
-      [=](std::unique_ptr<ics::p2p::P2PException> e) {
+      [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
           return;
         NSError* err = [[NSError alloc]

@@ -101,11 +101,11 @@ void ConferenceSocketSignalingChannel::RemoveObserver(
 void ConferenceSocketSignalingChannel::Connect(
     const std::string& token,
     std::function<void(sio::message::ptr room_info)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!StringUtils::IsBase64EncodedString(token)) {
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Invalid token."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceInvalidToken, "Invalid token."));
       on_failure(std::move(e));
     }
     return;
@@ -114,8 +114,8 @@ void ConferenceSocketSignalingChannel::Connect(
   if (!rtc::Base64::Decode(token, rtc::Base64::DO_STRICT, &token_decoded,
                            nullptr)) {
     if (on_failure) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Invalid token."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceInvalidToken, "Invalid token."));
       // TODO: Use async instead.
       on_failure(std::move(e));
     }
@@ -128,8 +128,8 @@ void ConferenceSocketSignalingChannel::Connect(
   if (!reader.parse(token_decoded, json_token)) {
     LOG(LS_ERROR) << "Parsing token failed.";
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Invalid token."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceInvalidToken, "Invalid token."));
       on_failure(std::move(e));
     }
     return;
@@ -208,8 +208,8 @@ void ConferenceSocketSignalingChannel::Connect(
              if (msg.size() < 2) {
                LOG(LS_ERROR) << "Received unknown message while sending token.";
                if (on_failure != nullptr) {
-                 std::unique_ptr<ConferenceException> e(new ConferenceException(
-                     ConferenceException::kUnknown,
+                 std::unique_ptr<Exception> e(new Exception(
+                     ExceptionType::kConferenceInvalidParam,
                      "Received unknown message from server."));
                  on_failure(std::move(e));
                }
@@ -222,8 +222,8 @@ void ConferenceSocketSignalingChannel::Connect(
                LOG(LS_ERROR) << "Server returns " << state
                              << " while joining a conference.";
                if (on_failure != nullptr) {
-                 std::unique_ptr<ConferenceException> e(new ConferenceException(
-                     ConferenceException::kUnknown,
+                 std::unique_ptr<Exception> e(new Exception(
+                     ExceptionType::kConferenceInvalidParam,
                      "Received error message from server."));
                  on_failure(std::move(e));
                }
@@ -408,11 +408,11 @@ void ConferenceSocketSignalingChannel::Connect(
 
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!socket_client_->opened() && reconnection_attempted_ == 0 && on_failure) {
     // Socket.IO is not connected and not reconnecting.
-    std::unique_ptr<ConferenceException> e(new ConferenceException(
-        ConferenceException::kUnknown, "Socket.IO is not connected."));
+    std::unique_ptr<Exception> e(new Exception(
+        ExceptionType::kConferenceInvalidSession, "Socket.IO is not connected."));
     on_failure(std::move(e));
     // TODO: A corner case is execute Disconnect before first reconnection
     // attempt. So we don't return, still try to close socket.
@@ -434,7 +434,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
     std::string publish_stream_label,
     std::string subscribe_stream_label,
     std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::list message_list;
   message_list.push(options);
   std::string event_name;
@@ -455,8 +455,8 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
            LOG(LS_WARNING)
                << "The first element of publish ack is not a string.";
            if (on_failure) {
-             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                 ConferenceException::kUnknown,
+             std::unique_ptr<Exception> e(new Exception(
+                 ExceptionType::kConferenceInvalidParam,
                  "Received unkown message from server."));
              on_failure(std::move(e));
            }
@@ -477,14 +477,14 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
          } else if (message->get_string() == "error" && msg.at(1) != nullptr &&
                     msg.at(1)->get_flag() == sio::message::flag_string) {
            if (on_failure) {
-             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                 ConferenceException::kUnknown, msg.at(1)->get_string()));
+             std::unique_ptr<Exception> e(new Exception(
+                 ExceptionType::kConferenceNotSupported, msg.at(1)->get_string()));
              on_failure(std::move(e));
            }
          } else {
            if (on_failure) {
-             std::unique_ptr<ConferenceException> e(new ConferenceException(
-                 ConferenceException::kUnknown,
+             std::unique_ptr<Exception> e(new Exception(
+                 ExceptionType::kConferenceInvalidParam,
                  "Ack for initializing message is not expected."));
              on_failure(std::move(e));
            }
@@ -497,7 +497,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
 void ConferenceSocketSignalingChannel::SendSdp(
     sio::message::ptr message,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   sio::message::list message_list(message);
@@ -516,7 +516,7 @@ void ConferenceSocketSignalingChannel::SendStreamEvent(
     const std::string& event,
     const std::string& stream_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr message = sio::object_message::create();
   message->get_map()["id"] = sio::string_message::create(stream_id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
@@ -534,7 +534,7 @@ void ConferenceSocketSignalingChannel::SendCustomMessage(
     const std::string& message,
     const std::string& receiver,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr send_message = sio::object_message::create();
   if (receiver == "") {
     send_message->get_map()["to"] = sio::string_message::create("all");
@@ -558,7 +558,7 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
     const std::string& action,
     const std::string& operation,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr payload = sio::object_message::create();
   payload->get_map()["id"] = sio::string_message::create(stream_id);
   payload->get_map()["operation"] = sio::string_message::create(operation);
@@ -585,7 +585,7 @@ void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
     const std::string& action,
     const std::string& operation,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
     sio::message::ptr payload = sio::object_message::create();
     payload->get_map()["id"] = sio::string_message::create(stream_id);
     payload->get_map()["operation"] = sio::string_message::create(operation);
@@ -608,7 +608,7 @@ void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
 void ConferenceSocketSignalingChannel::Unsubscribe(
     const std::string& id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr unsubscribe_message = sio::object_message::create();
   unsubscribe_message->get_map()["id"] = sio::string_message::create(id);
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
@@ -625,14 +625,14 @@ void ConferenceSocketSignalingChannel::Unsubscribe(
 void ConferenceSocketSignalingChannel::OnEmitAck(
     sio::message::list const& msg,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr ack = msg.at(0);
   if (ack->get_flag() != sio::message::flag_string) {
     LOG(LS_WARNING) << "The first element of emit ack is not a string.";
     if (on_failure) {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnknown,
-                                  "Received unknown message from server."));
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kConferenceInvalidParam,
+                        "Received unknown message from server."));
       on_failure(std::move(e));
     }
     return;
@@ -652,9 +652,9 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
       }
     }
     if (on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(
-          new ConferenceException(ConferenceException::kUnknown,
-                                  "Negative acknowledgment from server."));
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kConferenceInvalidParam,
+                        "Negative acknowledgment from server."));
       on_failure(std::move(e));
     }
   }
@@ -743,7 +743,7 @@ void ConferenceSocketSignalingChannel::Emit(
     const std::string& name,
     const sio::message::list& message,
     const std::function<void(sio::message::list const&)> ack,
-    const std::function<void(std::unique_ptr<ConferenceException>)>
+    const std::function<void(std::unique_ptr<Exception>)>
         on_failure) {
   int message_id(0);
   {
@@ -802,8 +802,9 @@ void ConferenceSocketSignalingChannel::DropQueuedMessages() {
   std::lock_guard<std::mutex> lock(outgoing_message_mutex_);
   while (!outgoing_messages_.empty()) {
     if (outgoing_messages_.front().on_failure != nullptr) {
-      std::unique_ptr<ConferenceException> e(new ConferenceException(
-          ConferenceException::kUnknown, "Failed to delivery message."));
+      std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceInvalidSession,
+          "Failed to delivery message."));
       outgoing_messages_.front().on_failure(std::move(e));
     }
     outgoing_messages_.pop();

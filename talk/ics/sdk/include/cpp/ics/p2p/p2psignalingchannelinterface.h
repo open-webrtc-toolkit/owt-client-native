@@ -32,10 +32,13 @@
 #include <memory>
 #include <string>
 
-#include "ics/p2p/p2pexception.h"
+#include "ics/base/exception.h"
 
 namespace ics {
 namespace p2p {
+
+using namespace ics::base;
+
 /**
  @brief Signaling channel will notify observer when event triggers.
  */
@@ -79,13 +82,13 @@ class P2PSignalingChannelInterface {
   virtual void Connect(
       const std::string& token,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /**
    @brief Disconnect from signaling server.
    */
   virtual void Disconnect(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /**
    @brief Send a message to a target client
    @param message Message needs to be send to signaling server
@@ -95,7 +98,7 @@ class P2PSignalingChannelInterface {
       const std::string& message,
       const std::string& target_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<P2PException>)> on_failure) = 0;
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
 };
 }
 }

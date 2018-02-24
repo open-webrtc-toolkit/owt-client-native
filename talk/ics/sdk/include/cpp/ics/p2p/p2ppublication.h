@@ -33,8 +33,6 @@
 #include "ics/base/commontypes.h"
 #include "ics/base/mediaconstraints.h"
 #include "ics/base/publication.h"
-#include "ics/p2p/p2pclient.h"
-#include "ics/p2p/p2pexception.h"
 
 namespace rtc {
 class TaskQueue;
@@ -47,26 +45,34 @@ using namespace ics::base;
 
 class P2PClient;
 
-class P2PPublication {
+class P2PPublication : public Publication {
  public:
   P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id);
   virtual ~P2PPublication() {}
 
-  /// Pause current publication's audio or/and video basing on |track_kind| provided.
-  void Mute(TrackKind track_kind,
-            std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
-  /// Pause current publication's audio or/and video basing on |track_kind| provided.
-  void UnMute(TrackKind track_kind,
-              std::function<void()> on_success,
-              std::function<void(std::unique_ptr<P2PException>)> on_failure);
   /// Get connection stats of current publication
   void GetStats(
-    std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure);
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) override;
   /// Stop current publication.
   void Stop(std::function<void()> on_success,
-            std::function<void(std::unique_ptr<P2PException>)> on_failure);
+            std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+
+  /// Pause current publication's audio or/and video basing on |track_kind| provided.
+  /// Not supported in P2P yet.
+  void Mute(TrackKind track_kind,
+            std::function<void()> on_success,
+            std::function<void(std::unique_ptr<Exception>)> on_failure) override {}
+  /// Pause current publication's audio or/and video basing on |track_kind| provided.
+  /// Not supported in P2P yet.
+  void UnMute(TrackKind track_kind,
+              std::function<void()> on_success,
+              std::function<void(std::unique_ptr<Exception>)> on_failure) override {}
+  /// Register an observer onto this p2p publication.
+  void AddObserver(PublicationObserver& observer) override {}
+  /// Unregister an observer from this p2p publication.
+  void RemoveObserver(PublicationObserver& observer) override {}
+
  private:
   std::string target_id_;
   std::weak_ptr<P2PClient> p2p_client_;   // Weak ref to associated p2p client

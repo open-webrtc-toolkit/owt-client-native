@@ -39,7 +39,7 @@
 #include "ics/base/connectionstats.h"
 #include "ics/base/options.h"
 #include "ics/base/stream.h"
-#include "ics/conference/conferenceexception.h"
+#include "ics/base/exception.h"
 #include "ics/conference/conferencepublication.h"
 #include "ics/conference/conferencesubscription.h"
 #include "ics/conference/subscribeoptions.h"
@@ -192,7 +192,7 @@ class ConferencePeerConnectionChannelObserver {
   // or detected by client. Currently, only errors from MCU are handled.
   virtual void OnStreamError(
       std::shared_ptr<Stream> stream,
-      std::shared_ptr<const ConferenceException> exception) = 0;
+      std::shared_ptr<const Exception> exception) = 0;
 };
 /** @endcond */
 
@@ -257,13 +257,13 @@ class ConferenceClient final
   void Join(
       const std::string& token,
       std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Leave current conference.
   */
   void Leave(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Publish the stream to the current room.
     @param stream The stream to be published.
@@ -271,7 +271,7 @@ class ConferenceClient final
   void Publish(
       std::shared_ptr<LocalStream> stream,
       std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Publish the stream to the current room.
     @param stream The stream to be published.
@@ -281,7 +281,7 @@ class ConferenceClient final
       std::shared_ptr<LocalStream> stream,
       const PublishOptions& options,
       std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Subscribe a stream from the current room.
     @param stream The remote stream to be subscribed.
@@ -290,7 +290,7 @@ class ConferenceClient final
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Subscribe a stream from the current room.
     @param stream The remote stream to be subscribed.
@@ -301,7 +301,7 @@ class ConferenceClient final
       std::shared_ptr<RemoteStream> stream,
       const SubscriptionOptions& options,
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
     @brief Send messsage to all participants in the conference.
@@ -310,7 +310,7 @@ class ConferenceClient final
   void Send(
       const std::string& message,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Send messsage to all participants in the conference.
     @param message The message to be sent.
@@ -320,7 +320,7 @@ class ConferenceClient final
       const std::string& message,
       const std::string& receiver,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
  protected:
   ConferenceClient(const ConferenceClientConfiguration& configuration);
   // Implementing ConferenceSocketSignalingChannelObserver.
@@ -342,7 +342,7 @@ class ConferenceClient final
   // Implementing ConferencePeerConnectionChannelObserver.
   virtual void OnStreamError(
       std::shared_ptr<Stream> stream,
-      std::shared_ptr<const ConferenceException> exception) override;
+      std::shared_ptr<const Exception> exception) override;
 
   // Provide access for Publication and Subscription instances.
   /**
@@ -352,7 +352,7 @@ class ConferenceClient final
   void UnPublish(
       const std::string& session_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Un-subscribe the stream from the current room.
     @param stream The stream to be unsubscribed.
@@ -360,14 +360,14 @@ class ConferenceClient final
   void UnSubscribe(
       const std::string& session_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Get a stream's connection statistics
   */
   void GetConnectionStats(
       const std::string& session_id,
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief Mute a session's track specified by |track_kind|.
   */
@@ -375,7 +375,7 @@ class ConferenceClient final
       const std::string& session_id,
       TrackKind track_kind,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
     @brief UnMute a session's track specified by |track_kind|.
   */
@@ -383,21 +383,21 @@ class ConferenceClient final
       const std::string& session_id,
       TrackKind track_kind,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
  private:
   /// Return true if |pointer| is not a null pointer, else return false and
   /// trigger |on_failure| with |failure_message|.
   bool CheckNullPointer(
       uintptr_t pointer,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   bool CheckNullPointer(
       uintptr_t pointer,
       const std::string& failure_message,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   /// Return true if signaling channel is connected, else return false and
   /// trigger |on_failure|
   bool CheckSignalingChannelOnline(
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration()
       const;
   // Get the |ConferencePeerConnectionChannel| instance associated with specific
@@ -411,7 +411,7 @@ class ConferenceClient final
   void TriggerOnStreamRemoved(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamError(std::shared_ptr<Stream> stream,
-                            std::shared_ptr<const ConferenceException> exception);
+                            std::shared_ptr<const Exception> exception);
   // Return true if |user_info| is correct, and |*participant| points to the participant
   // object
   bool ParseUser(std::shared_ptr<sio::message> user_info, Participant** participant) const;

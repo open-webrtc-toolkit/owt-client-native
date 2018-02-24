@@ -33,14 +33,14 @@ P2PClient::P2PClient(
 void P2PClient::Connect(
     const std::string& token,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->Connect(token, on_success, on_failure);
 }
 
 void P2PClient::Disconnect(
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->Disconnect(on_success, on_failure);
 }
@@ -58,7 +58,7 @@ void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
 
 void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
                                       std::function<void()> on_success,
-                                      std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+                                      std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
       allowed_remote_ids_.end()) {
     LOG(LS_INFO) << "Trying to delete non-existed remote id.";
@@ -77,7 +77,7 @@ void P2PClient::Send(
     const std::string& target_id,
     const std::string& message,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Send(message, on_success, on_failure);
 }
@@ -86,7 +86,7 @@ void P2PClient::Publish(
     const std::string& target_id,
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::shared_ptr<P2PPublication>)> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   // First check whether target_id is in the allowed_remote_ids_ list
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
       allowed_remote_ids_.end()) {
@@ -113,7 +113,7 @@ void P2PClient::Publish(
 void P2PClient::Stop(
     const std::string& target_id,
     std::function<void()> on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
 }
@@ -122,7 +122,7 @@ void P2PClient::GetConnectionStats(
     const std::string& target_id,
     std::function<void(std::shared_ptr<ics::base::ConnectionStats>)>
         on_success,
-    std::function<void(std::unique_ptr<P2PException>)> on_failure) {
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->GetConnectionStats(on_success, on_failure);
 }

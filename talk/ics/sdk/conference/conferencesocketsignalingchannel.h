@@ -14,7 +14,6 @@
 #include "talk/ics/include/sio_message.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/user.h"
-#include "talk/ics/sdk/include/cpp/ics/conference/conferenceexception.h"
 
 namespace ics {
 namespace conference {
@@ -40,7 +39,7 @@ class ConferenceSocketSignalingChannel
   virtual void Connect(
       const std::string& token,
       std::function<void(sio::message::ptr room_info)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Send publish or subscribe message to MCU.
   // If it publishes a stream, label should be MediaStream's label.
   // If it subscribe a stream, label should be nullptr.
@@ -49,46 +48,46 @@ class ConferenceSocketSignalingChannel
       std::string publish_stream_label,
       std::string subcribe_stream_label,
       std::function<void(std::string)> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendSdp(
       sio::message::ptr message,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendStreamEvent(
       const std::string& event,
       const std::string& stream_id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendCustomMessage(
       const std::string& message,
       const std::string& receiver,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendStreamControlMessage(
       const std::string& stream_id,
       const std::string& action,
       const std::string& operation,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendSubscriptionControlMessage(
       const std::string& stream_id,
       const std::string& action,
       const std::string& operation,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void Unsubscribe(
       const std::string& id,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void Disconnect(
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
  protected:
   virtual void OnEmitAck(
       sio::message::list const& msg,
       std::function<void()> on_success,
-      std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
 
  private:
   class SioMessage final {
@@ -98,7 +97,7 @@ class ConferenceSocketSignalingChannel
         const std::string& name,
         const sio::message::list& message,
         const std::function<void(sio::message::list const&)> ack,
-        const std::function<void(std::unique_ptr<ConferenceException>)>
+        const std::function<void(std::unique_ptr<Exception>)>
             on_failure)
         : id(id),
           name(name),
@@ -109,7 +108,7 @@ class ConferenceSocketSignalingChannel
     const std::string name;
     const sio::message::list message;
     const std::function<void(sio::message::list const&)> ack;
-    const std::function<void(std::unique_ptr<ConferenceException>)> on_failure;
+    const std::function<void(std::unique_ptr<Exception>)> on_failure;
   };
   /// Fires upon a new ticket is received.
   void OnReconnectionTicket(const std::string& ticket);
@@ -118,7 +117,7 @@ class ConferenceSocketSignalingChannel
   void Emit(const std::string& name,
             const sio::message::list& message,
             const std::function<void(sio::message::list const&)> ack,
-            const std::function<void(std::unique_ptr<ConferenceException>)>
+            const std::function<void(std::unique_ptr<Exception>)>
                 on_failure);
   // Clean message queue and triggered failure callback for all queued messages.
   void DropQueuedMessages();
@@ -130,7 +129,7 @@ class ConferenceSocketSignalingChannel
 
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
-  std::function<void(std::unique_ptr<ConferenceException>)>
+  std::function<void(std::unique_ptr<Exception>)>
       connect_failure_callback_;
   std::function<void()> disconnect_complete_;
   std::string reconnection_ticket_;
