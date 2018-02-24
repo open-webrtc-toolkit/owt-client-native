@@ -381,8 +381,8 @@ void ConferencePeerConnectionChannel::Publish(
     media_ptr->get_map()["audio"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr audio_options = sio::object_message::create();
-    if (stream->GetStreamDeviceType() ==
-        ics::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+    if (stream->SourceInfo().audio ==
+        ics::base::AudioSourceInfo::kScreenCast) {
       audio_options->get_map()["source"] =
           sio::string_message::create("screen-cast");
     } else {
@@ -395,8 +395,8 @@ void ConferencePeerConnectionChannel::Publish(
     media_ptr->get_map()["video"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr video_options = sio::object_message::create();
-    if (stream->GetStreamDeviceType() ==
-        ics::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+    if (stream->SourceInfo().video ==
+        ics::base::VideoSourceInfo::kScreenCast) {
       video_options->get_map()["source"] =
           sio::string_message::create("screen-cast");
     } else {

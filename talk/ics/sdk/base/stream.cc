@@ -33,14 +33,16 @@ Stream::Stream()
       renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
       ended_(false),
-      id_("") {}
+      id_(""),
+      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown) {}
 
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
       ended_(false),
-      id_(id) {}
+      id_(id),
+      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown) {}
 #else
 Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
 
@@ -199,6 +201,10 @@ void Stream::DetachVideoRenderer() {
     d3d9_renderer_impl_ = nullptr;
   }
 #endif
+}
+
+StreamSourceInfo Stream::SourceInfo() const {
+  return source_;
 }
 
 void Stream::AddObserver(StreamObserver& observer) {
@@ -361,93 +367,8 @@ LocalCameraStream::LocalCameraStream(
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
-  media_stream_ = stream;
-  media_stream_->AddRef();
-}
-
-LocalCameraStream::LocalCameraStream(
-    const LocalCameraStreamParameters& parameters) {
-  if (!parameters.VideoEnabled() && !parameters.AudioEnabled()) {
-    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
-  }
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
-      PeerConnectionDependencyFactory::Get();
-  std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
-  scoped_refptr<MediaStreamInterface> stream =
-      pcd_factory->CreateLocalMediaStream(media_stream_id);
-
-  // Create video track
-  if (parameters.VideoEnabled()) {
-    cricket::WebRtcVideoDeviceCapturerFactory factory;
-    std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
-    if (!parameters.CameraId().empty()) {
-      std::string camera_name;  // Empty camera name. We use ID for comparison.
-      capturer =
-          factory.Create(cricket::Device(camera_name, parameters.CameraId()));
-    }
-
-    if (!capturer) {
-      LOG(LS_WARNING) << "Cannot open the specified camera. Use the default one.";
-      std::vector<std::string> device_names;
-      {
-        std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-            webrtc::VideoCaptureFactory::CreateDeviceInfo());
-        if (!info) {
-          LOG(LS_ERROR) << "CreateDeviceInfo failed";
-        } else {
-          int num_devices = info->NumberOfDevices();
-          for (int i = 0; i < num_devices; ++i) {
-            const uint32_t kSize = 256;
-            char name[kSize] = {0};
-            char id[kSize] = {0};
-            if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
-              device_names.push_back(name);
-            }
-          }
-        }
-      }
-
-      for (const auto& name : device_names) {
-        capturer = factory.Create(cricket::Device(name, 0));
-        if (capturer)
-          break;
-      }
-    }
-
-    if (!capturer) {
-      LOG(LS_ERROR) << "WebRtcVideoDeviceCapturerFactory.Create failed";
-    } else {
-      media_constraints_->SetMandatory(
-          webrtc::MediaConstraintsInterface::kMaxWidth,
-          std::to_string(parameters.ResolutionWidth()));
-      media_constraints_->SetMandatory(
-          webrtc::MediaConstraintsInterface::kMaxHeight,
-          std::to_string(parameters.ResolutionHeight()));
-      media_constraints_->SetMandatory(
-          webrtc::MediaConstraintsInterface::kMinWidth,
-          std::to_string(parameters.ResolutionWidth()));
-      media_constraints_->SetMandatory(
-          webrtc::MediaConstraintsInterface::kMinHeight,
-          std::to_string(parameters.ResolutionHeight()));
-
-      scoped_refptr<VideoTrackSourceInterface> source =
-          pcd_factory->CreateVideoSource(std::move(capturer),
-                                         media_constraints_);
-      std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
-      scoped_refptr<VideoTrackInterface> video_track =
-          pcd_factory->CreateLocalVideoTrack(video_track_id, source);
-      stream->AddTrack(video_track);
-    }
-  }
-
-  // Create audio track
-  if (parameters.AudioEnabled()) {
-    std::string audio_track_id(rtc::CreateRandomUuid());
-    scoped_refptr<AudioTrackInterface> audio_track =
-        pcd_factory->CreateLocalAudioTrack("AudioTrack-" + audio_track_id);
-    stream->AddTrack(audio_track);
-  }
-
+  source_.video = VideoSourceInfo::kCamera;
+  source_.audio = AudioSourceInfo::kMIC;
   media_stream_ = stream;
   media_stream_->AddRef();
 }

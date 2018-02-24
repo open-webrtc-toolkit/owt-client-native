@@ -114,7 +114,13 @@ class Stream {
       const {
     return attributes_;
   }
-
+  /**
+    @brief Returns the audio/video source info of the stream
+    @details The source info of video/audio indicates the device source type of
+    video/audio track source. For conference mode, if the video/audio track is
+    from mixed stream, it will be set as kMixed.
+  */
+  virtual StreamSourceInfo SourceInfo() const;
 #if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
@@ -139,6 +145,7 @@ class Stream {
 #if defined(WEBRTC_WIN)
   WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
 #endif
+  StreamSourceInfo source_;
  private:
   void SetAudioTracksEnabled(bool enabled);
   void SetVideoTracksEnabled(bool enabled);
@@ -154,21 +161,9 @@ class Stream {
 */
 class LocalStream : public Stream {
  public:
-  enum class StreamDeviceType : int {
-    // TODO(jianlin): For now we treat customized raw/encoded input as
-    // camera device. Better has clear device type negotation with MCU
-    // for this.
-    kStreamDeviceTypeCamera = 101,
-    kStreamDeviceTypeScreen,
-    kStreamDeviceTypeFile,
-    kStreamDeviceTypeUnknown = 200
-  };
   LocalStream();
   virtual ~LocalStream();
   /** @cond */
-  virtual StreamDeviceType GetStreamDeviceType() {
-    return StreamDeviceType::kStreamDeviceTypeUnknown;
-  }
 
   using Stream::Attributes;
   /**
@@ -196,6 +191,7 @@ class RemoteStream : public Stream {
   friend class ics::conference::ConferenceInfo;
  public:
   /// Return the remote user ID, indicates who published this stream.
+  /// If it's mixed stream, origin will be "mcu".
   std::string Origin();
   using Stream::Attributes;
   SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
@@ -285,13 +281,6 @@ class LocalCameraStream : public LocalStream {
       /* Consider to change this parameter to be a reference */
       webrtc::VideoTrackSourceInterface* video_source,
       int& error_code);
-  /**
-    Initialize a LocalCameraStream with parameters.
-    @param parameters Parameters for creating the stream. The stream will not be
-    impacted if chaning parameters after it is created.
-  */
-  ICS_DEPRECATED explicit LocalCameraStream(
-      const LocalCameraStreamParameters& parameters);
   ~LocalCameraStream();
   /** @endcond */
   /**
@@ -302,10 +291,6 @@ class LocalCameraStream : public LocalStream {
     instead.
   */
   void Close();
-  /** @cond */
-  StreamDeviceType GetStreamDeviceType() final {
-    return StreamDeviceType::kStreamDeviceTypeCamera;
-  }
 
  protected:
   explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
@@ -353,12 +338,6 @@ class LocalCustomizedStream : public LocalStream {
        std::shared_ptr<LocalCustomizedStreamParameters> parameters,
        VideoEncoderInterface* encoder);
    ~LocalCustomizedStream();
-   /** @cond */
-   // Temporarily use camera type for customized stream.
-   StreamDeviceType GetStreamDeviceType() final {
-     return StreamDeviceType::kStreamDeviceTypeCamera;
-   }
-   /** @endcond */
 
    /// Attach the stream to a renderer to receive ARGB frames from decoder.
    void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
@@ -405,11 +384,6 @@ class LocalScreenStream : public LocalStream {
     screen.
   */
   bool SetCurrentCaptureSource(int source_id);
-  /** @cond */
-  StreamDeviceType GetStreamDeviceType() final {
-    return StreamDeviceType::kStreamDeviceTypeScreen;
-  }
-  /** @endcond */
 };
 #endif
 

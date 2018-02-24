@@ -10,7 +10,7 @@ namespace conference {
 ConferenceException::ConferenceException() : ConferenceException(kUnknown) {}
 
 ConferenceException::ConferenceException(const enum Type& type)
-    : ConferenceException(type, "Unkown P2P exception.") {}
+    : ConferenceException(type, "Unknown conference exception.") {}
 
 ConferenceException::ConferenceException(const enum Type& type,
                                          const std::string& message)

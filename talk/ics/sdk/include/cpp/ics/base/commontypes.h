@@ -161,6 +161,7 @@ enum class AudioSourceInfo : int {
   kMIC = 1,     ///< Microphone
   kScreenCast,  ///< Screen-cast
   kFile,        ///< From file
+  kMixed,       ///< From MCU mix engine
   kUnknown
 };
 
@@ -171,13 +172,23 @@ enum class VideoSourceInfo : int {
   kCamera = 1,  ///< Camera
   kScreenCast,  ///< Screen-cast
   kFile,        ///< From file
+  kMixed,       ///< From MCU mix engine
   kUnknown
 };
 
 /// Stream source.
 struct StreamSourceInfo {
-  AudioSourceInfo audio_source;
-  VideoSourceInfo video_source;
+  explicit StreamSourceInfo()
+    : audio(AudioSourceInfo::kUnknown),
+      video(VideoSourceInfo::kUnknown) {}
+
+  StreamSourceInfo(AudioSourceInfo audio_source, VideoSourceInfo video_source)
+    : audio(audio_source),
+      video(video_source) {}
+  /// The audio source info of the stream
+  AudioSourceInfo audio;
+  /// The video source info of the stream
+  VideoSourceInfo video;
 };
 
 }  // namespace base

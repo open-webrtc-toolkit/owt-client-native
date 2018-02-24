@@ -5,8 +5,10 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceInfo.h"
 
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
+NS_ASSUME_NONNULL_BEGIN
 
-@interface ICSConferenceParticipant ()
+RTC_EXPORT
+@interface ICSConferenceInfo ()
 
 @property(nonatomic, readonly) std::shared_ptr<const ics::conference::ConferenceInfo> nativeInfo;
 
@@ -14,3 +16,5 @@
     (std::shared_ptr<const ics::conference::ConferenceInfo>)info;
 
 @end
+
+NS_ASSUME_NONNULL_END

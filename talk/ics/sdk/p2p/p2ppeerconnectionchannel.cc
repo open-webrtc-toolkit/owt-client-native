@@ -992,9 +992,12 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       std::shared_ptr<LocalStream> stream = *it;
       std::string audio_track_source = "mic";
       std::string video_track_source = "camera";
-      if (stream->GetStreamDeviceType() ==
-          ics::base::LocalStream::StreamDeviceType::kStreamDeviceTypeScreen) {
+      if (stream->SourceInfo().audio ==
+          ics::base::AudioSourceInfo::kScreenCast) {
         audio_track_source = "screen-cast";
+      }
+      if (stream->SourceInfo().video ==
+          ics::base::VideoSourceInfo::kScreenCast) {
         video_track_source = "screen-cast";
       }
 

@@ -129,7 +129,10 @@ class ConferenceInfo {
     ConferenceInfo() {}
 
     virtual ~ConferenceInfo() {}
-
+    /// Current remote streams in the conference.
+    std::vector<std::shared_ptr<RemoteStream>> RemoteStreams() { return remote_streams_; }
+    /// Current participant list in the conference.
+    std::vector<std::shared_ptr<Participant>> Participants() { return participants_;  }
   protected:
     // Add participant.
     void AddParticipant(std::shared_ptr<Participant> participant);
@@ -253,7 +256,7 @@ class ConferenceClient final
   */
   void Join(
       const std::string& token,
-      std::function<void()> on_success,
+      std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
       std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
   /**
     @brief Leave current conference.
@@ -402,9 +405,9 @@ class ConferenceClient final
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(const std::string& session_id) const;
 
-  void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info);
+  void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info, bool joining = false);
   void TriggerOnUserLeft(std::shared_ptr<sio::message> user_info);
-  void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info);
+  void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info, bool joining = false);
   void TriggerOnStreamRemoved(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamError(std::shared_ptr<Stream> stream,
@@ -412,7 +415,7 @@ class ConferenceClient final
   // Return true if |user_info| is correct, and |*participant| points to the participant
   // object
   bool ParseUser(std::shared_ptr<sio::message> user_info, Participant** participant) const;
-  void ParseStreamInfo(std::shared_ptr<sio::message> stream_info);
+  void ParseStreamInfo(std::shared_ptr<sio::message> stream_info, bool joining = false);
   std::unordered_map<std::string, std::string> AttributesFromStreamInfo(
       std::shared_ptr<sio::message> stream_info);
   std::function<void()> RunInEventQueue(std::function<void()> func);

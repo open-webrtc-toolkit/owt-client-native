@@ -3,6 +3,7 @@
  */
 
 #include <algorithm>
+#include <string>
 
 #include "webrtc/rtc_base/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
@@ -19,6 +20,20 @@
 
 namespace ics {
 namespace conference {
+
+static const std::unordered_map<std::string, AudioSourceInfo>
+    audio_source_names = { { "mic" ,AudioSourceInfo::kMIC },
+    { "screen-cast" ,AudioSourceInfo::kScreenCast },
+    { "raw-file" ,AudioSourceInfo::kFile },
+    { "encoded-file", AudioSourceInfo::kFile},
+    { "mcu" ,AudioSourceInfo::kMixed } };
+
+static const std::unordered_map<std::string, VideoSourceInfo>
+    video_source_names = { { "camera" ,VideoSourceInfo::kCamera },
+    { "screen-cast" ,VideoSourceInfo::kScreenCast },
+    { "raw-file" ,VideoSourceInfo::kFile },
+    { "encoded-file" ,VideoSourceInfo::kFile },
+    { "mcu", VideoSourceInfo::kMixed } };
 
 void Participant::AddObserver(ParticipantObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
@@ -173,7 +188,7 @@ void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
 
 void ConferenceClient::Join(
     const std::string& token,
-    std::function<void()> on_success,
+    std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   if (signaling_channel_connected_){
     if (on_failure != nullptr) {
@@ -226,12 +241,6 @@ void ConferenceClient::Join(
         RTC_DCHECK(false);
         return;
     }
-    // Invoke the success callback before trigger any participant join or stream added message.
-    if (on_success) {
-      event_queue_->PostTask([on_success] () {
-        on_success();
-      });
-    }
     // Trigger OnUserJoin for existed users, and also fill in the ConferenceInfo.
     if (room_info->get_map()["participants"]->get_flag() != sio::message::flag_array) {
       LOG(LS_WARNING) << "Room info doesn't contain valid users.";
@@ -257,7 +266,7 @@ void ConferenceClient::Join(
         break;
       }
       for (auto it = users.begin(); it != users.end(); ++it) {
-        TriggerOnUserJoined(*it);
+        TriggerOnUserJoined(*it, true);
       }
     }
 
@@ -268,8 +277,14 @@ void ConferenceClient::Join(
       auto streams = room_info->get_map()["streams"]->get_vector();
       for (auto it = streams.begin(); it != streams.end(); ++it) {
         LOG(LS_INFO) << "Find streams in the conference.";
-        TriggerOnStreamAdded(*it);
+        TriggerOnStreamAdded(*it, true);
       }
+    }
+    // Invoke the success callback before trigger any participant join or stream added message.
+    if (on_success) {
+      event_queue_->PostTask([on_success, this]() {
+          on_success(current_conference_info_);
+      });
     }
   }, on_failure);
 }
@@ -812,12 +827,13 @@ bool ConferenceClient::CheckSignalingChannelOnline(
 }
 
 
-void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
+void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joining) {
   std::string id = stream_info->get_map()["id"]->get_string();
   std::string view("");
   // owner_id here stands for participantID
   std::string owner_id("");
   std::string video_source("");
+  std::string audio_source("");
   bool has_audio = false, has_video = false;
   std::unordered_map<std::string, std::string> attributes;
 
@@ -858,7 +874,11 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
   if (audio_info == nullptr || audio_info->get_flag() != sio::message::flag_object) {
     LOG(LS_INFO) << "No audio in stream " << id;
   } else {
-    // Parse the audio information. Audio source info is ignored at present.
+    // Parse the VideoInfo structure.
+    auto audio_source_obj = audio_info->get_map()["source"];
+    if (audio_source_obj != nullptr && audio_source_obj->get_flag() == sio::message::flag_string) {
+      audio_source = audio_source_obj->get_string();
+    }
     auto audio_format_obj = audio_info->get_map()["format"];
     if (audio_format_obj == nullptr || audio_format_obj->get_flag() != sio::message::flag_object) {
       LOG(LS_ERROR) << "Invalid audio format info in media info";
@@ -1036,14 +1056,27 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
       }
     }
   }
+
   // Now that all information needed for PublicationSettings and SubscriptionCapabilities have been
   // gathered, we construct remote streams.
   if (type == "forward") {
+    AudioSourceInfo audio_source_info(AudioSourceInfo::kUnknown);
+    VideoSourceInfo video_source_info(VideoSourceInfo::kUnknown);
+    auto audio_source_it = audio_source_names.find(audio_source);
+    if (audio_source_it != audio_source_names.end()) {
+        audio_source_info = audio_source_it->second;
+    }
+    auto video_source_it = video_source_names.find(video_source);
+    if (video_source_it != video_source_names.end()) {
+        video_source_info = video_source_it->second;
+    }
     if (video_source != "screen-cast") {
       auto remote_stream = std::make_shared<RemoteCameraStream>(id, owner_id, subscription_capabilities, publication_settings);
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
       remote_stream->Attributes(attributes);
+      remote_stream->source_.audio = audio_source_info;
+      remote_stream->source_.video = video_source_info;
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeCamera;
       current_conference_info_->AddStream(remote_stream);
@@ -1058,6 +1091,8 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
       remote_stream->Attributes(attributes);
+      remote_stream->source_.audio = audio_source_info;
+      remote_stream->source_.video = video_source_info;
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeScreen;
       current_conference_info_->AddStream(remote_stream);
@@ -1075,30 +1110,36 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info) {
       LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
+      remote_stream->source_.audio = AudioSourceInfo::kMixed;
+      remote_stream->source_.video = VideoSourceInfo::kMixed;
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeMix;
       current_conference_info_->AddStream(remote_stream);
-      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-        auto& o = (*its).get();
-        event_queue_->PostTask(
-            [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+      if (!joining) {
+        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+          auto& o = (*its).get();
+          event_queue_->PostTask(
+              [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+        }
       }
   }
 }
 
-void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info) {
-  ParseStreamInfo(stream_info);
+void ConferenceClient::TriggerOnStreamAdded(sio::message::ptr stream_info, bool joining) {
+  ParseStreamInfo(stream_info, joining);
 }
 
-void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info) {
+void ConferenceClient::TriggerOnUserJoined(sio::message::ptr user_info, bool joining) {
   Participant* user_raw;
   if(ParseUser(user_info, &user_raw)){
     std::shared_ptr<Participant> user(user_raw);
     current_conference_info_->AddParticipant(user);
-    const std::lock_guard<std::mutex> lock(observer_mutex_);
-    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-      auto& o=(*its).get();
-      event_queue_->PostTask([&o, user] { o.OnParticipantJoined(user); });
+    if (!joining) {
+      const std::lock_guard<std::mutex> lock(observer_mutex_);
+      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+        auto& o = (*its).get();
+        event_queue_->PostTask([&o, user] { o.OnParticipantJoined(user); });
+      }
     }
   }
 }

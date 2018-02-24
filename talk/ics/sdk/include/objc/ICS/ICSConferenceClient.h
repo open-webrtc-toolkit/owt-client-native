@@ -54,9 +54,10 @@ RTC_EXPORT
 /**
   @brief Connect to the specified room to join a conference.
   @param token Includes the room info which is encrypted.
+  @param onSuccess Success callback with the conference info.
 */
 - (void)joinWithToken:(NSString*)token
-            onSuccess:(nullable void (^)())onSuccess
+            onSuccess:(nullable void (^)(ICSConferenceInfo*))onSuccess
             onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Publish the stream to the current room.

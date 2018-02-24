@@ -14,9 +14,11 @@
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceClient.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSConferenceInfo.h"
 #import "talk/ics/sdk/conference/conferencesocketsignalingchannel.h"
 #import "talk/ics/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
+#import "talk/ics/sdk/conference/objc/ICSConferenceInfo+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceSubscription+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferencePublication+Private.h"
@@ -81,7 +83,7 @@
 }
 
 - (void)joinWithToken:(NSString*)token
-            onSuccess:(void (^)())onSuccess
+            onSuccess:(void (^)(ICSConferenceInfo*))onSuccess
             onFailure:(void (^)(NSError*))onFailure {
   if (token == nil) {
     if (onFailure != nil) {
@@ -99,9 +101,10 @@
   const std::string nativeToken = [token UTF8String];
   _nativeConferenceClient->Join(
       nativeToken,
-      [=]() {
+      [=](std::shared_ptr<ics::conference::ConferenceInfo> info) {
         if (onSuccess != nil)
-          onSuccess();
+          onSuccess([[ICSConferenceInfo alloc]
+              initWithNativeInfo:info]);
       },
       [=](std::unique_ptr<ics::conference::ConferenceException> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
