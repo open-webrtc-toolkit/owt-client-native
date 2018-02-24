@@ -524,7 +524,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     }
   }
 
-  if (no_audio_source && no_audio_source) {
+  if (no_audio_source && no_video_source) {
     LOG(LS_WARNING) << "No track source information specified for newly added stream.";
     RTC_DCHECK(false);
   }
