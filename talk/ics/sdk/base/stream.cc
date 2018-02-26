@@ -8,9 +8,7 @@
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "talk/ics/sdk/base/customizedframescapturer.h"
-#if defined(ICS_REBASE_M63)
 #include "talk/ics/sdk/base/desktopcapturer.h"
-#endif
 #include "talk/ics/sdk/base/mediaconstraintsimpl.h"
 #if defined(WEBRTC_IOS)
 #include "talk/ics/sdk/base/objc/ObjcVideoCapturerInterface.h"
@@ -410,29 +408,6 @@ void LocalCameraStream::Close() {
     media_stream_->RemoveTrack(video_track);
 }
 
-#if defined(ICS_REBASE_M63)
-bool LocalScreenStream::SetCurrentCaptureSource(int source_id) {
-  return false;
-  /*
-  if (capturer_ == nullptr) {
-    LOG(LS_ERROR) << "Cannot set capture source without capturer.";
-    return false;
-  }
-  return capturer_->SetCaptureWindow(source_id);*/
-}
-
-bool LocalScreenStream::GetCurrentSourceList(
-    std::unordered_map<int, std::string>* source_list) {
-  return false;
-  /*
-  if (capturer_ == nullptr) {
-    LOG(LS_ERROR) << "Enumeration of source not allowed without capturer.";
-    return false;
-  }
-
-  return capturer_->GetCurrentWindowList(source_list);*/
-}
-
 LocalScreenStream::~LocalScreenStream() {
   LOG(LS_INFO) << "Destory LocalScreenStream.";
   if (media_stream_ != nullptr) {
@@ -448,7 +423,8 @@ LocalScreenStream::~LocalScreenStream() {
 }
 
 LocalScreenStream::LocalScreenStream(
-    std::shared_ptr<LocalDesktopStreamParameters> parameters) {
+    std::shared_ptr<LocalDesktopStreamParameters> parameters,
+    std::unique_ptr<LocalScreenStreamObserver> observer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
   }
@@ -466,7 +442,7 @@ LocalScreenStream::LocalScreenStream(
         LocalDesktopStreamParameters::DesktopSourceType::kFullScreen) {
       capturer = std::unique_ptr<BasicScreenCapturer>(new BasicScreenCapturer(options));
     } else {
-      capturer = std::unique_ptr<BasicWindowCapturer>(new BasicWindowCapturer(options));
+      capturer = std::unique_ptr<BasicWindowCapturer>(new BasicWindowCapturer(options, std::move(observer)));
     }
     capturer->Init();
     scoped_refptr<VideoTrackSourceInterface> source =
@@ -486,7 +462,6 @@ LocalScreenStream::LocalScreenStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-#endif
 
 LocalCustomizedStream::~LocalCustomizedStream() {
   LOG(LS_INFO) << "Destory LocalCameraStream.";

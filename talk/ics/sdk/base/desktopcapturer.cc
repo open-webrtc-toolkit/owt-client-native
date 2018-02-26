@@ -92,14 +92,14 @@ BasicScreenCapturer::~BasicScreenCapturer() {
 
 void BasicScreenCapturer::Init() {
   // Only I420 frame is supported. RGBA frame is not supported here.
-  VideoFormat format(width_, height_, VideoFormat::kMinimumInterval,
+  cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
                      cricket::FOURCC_I420);
-  std::vector<VideoFormat> supported;
+  std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
 }
 
-CaptureState BasicScreenCapturer::Start(const VideoFormat& capture_format) {
+CaptureState BasicScreenCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
     LOG(LS_ERROR) << "Basic Screen Capturerer is already running";
     return CS_FAILED;

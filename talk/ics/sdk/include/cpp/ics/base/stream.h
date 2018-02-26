@@ -352,40 +352,33 @@ class LocalCustomizedStream : public LocalStream {
    bool encoded_ = false;
 };
 
-#if defined(ICS_REBASE_M63)
+class LocalScreenStreamObserver {
+ public:
+  /**
+    @brief Event callback for local screen stream to request for a source from application.
+    @details After local stream is started, this callback will be invoked to request for
+    a source from application.
+    @param window_list list of windows/screen's (id, title) pair.
+    @param dest_window application will set this id to be used by it.
+  */
+  virtual void OnCaptureSourceNeeded(const std::unordered_map<int, std::string>& window_list, int& dest_window) {}
+};
+
 /// This class represents a local stream which uses local screen/app to generate
 /// frames.
 class LocalScreenStream : public LocalStream {
  public:
   /**
-    Initialize a LocalScreenStream with parameters.
+    @brief Initialize a LocalScreenStream with parameters.
     @param parameters Parameters for creating the stream. The stream will
     not be impacted if changing parameters after it is created.
+    @param observer Source callback required for application to specify capture window/screen source.
   */
   explicit LocalScreenStream(
-      std::shared_ptr<LocalDesktopStreamParameters> parameters);
+      std::shared_ptr<LocalDesktopStreamParameters> parameters,
+      std::unique_ptr<LocalScreenStreamObserver> observer);
   virtual ~LocalScreenStream();
-  /**
-    Get a list of (id, title) pair that enumerates apps/screen available for
-    sharing.
-    @param source_list the caller provided map which will be filled with
-    available sources to capture from.
-    @return Return true if successfully get the list; Return false if fail
-    to get the list, or stream device type is screen.
-  */
-  bool GetCurrentSourceList(std::unordered_map<int, std::string>* source_list);
-  /**
-    Set the window to be captured from if current source type is application.
-    @param source_id The id retrieved from previous GetCurentSourceList()
-    call. Note the window id might be invalid when calling
-    SetCurrentCaptureSource().
-    @return Returns true if set the capture window target successfully.Returns
-    false on failing to set the capture window target, or stream device type is
-    screen.
-  */
-  bool SetCurrentCaptureSource(int source_id);
 };
-#endif
 
 } // namespace base
 } // namespace ics

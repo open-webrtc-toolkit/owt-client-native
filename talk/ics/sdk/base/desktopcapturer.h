@@ -21,11 +21,12 @@
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "talk/ics/sdk/include/cpp/ics/base/stream.h"
 
 namespace ics {
 namespace base {
-using namespace cricket;
 
+using namespace cricket;
 // Base class for screen/window capturer.
 class BasicDesktopCapturer : public VideoCapturer,
                              public webrtc::DesktopCapturer::Callback {
@@ -98,7 +99,6 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
   std::unique_ptr<webrtc::DesktopCapturer> screen_capturer_;
   webrtc::DesktopCaptureOptions screen_capture_options_;
   rtc::CriticalSection lock_;
-
   RTC_DISALLOW_COPY_AND_ASSIGN(BasicScreenCapturer);
 };
 
@@ -108,7 +108,7 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
 // the capture.
 class BasicWindowCapturer : public BasicDesktopCapturer {
  public:
-  BasicWindowCapturer(webrtc::DesktopCaptureOptions options);
+  BasicWindowCapturer(webrtc::DesktopCaptureOptions options, std::unique_ptr<LocalScreenStreamObserver> observer);
   virtual ~BasicWindowCapturer();
 
   void Init();
@@ -156,7 +156,7 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   bool source_specified_;
 
   rtc::CriticalSection lock_;
-
+  std::unique_ptr<LocalScreenStreamObserver> observer_;
   RTC_DISALLOW_COPY_AND_ASSIGN(BasicWindowCapturer);
 };
 

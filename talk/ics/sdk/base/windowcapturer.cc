@@ -98,7 +98,7 @@ class BasicWindowCapturer::BasicWindowCaptureThread
 // at any time.
 /////////////////////////////////////////////////////////////////////
 
-BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options)
+BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options, std::unique_ptr<LocalScreenStreamObserver> observer)
     : window_capture_thread_(nullptr),
       width_(0),
       height_(0),
@@ -106,7 +106,8 @@ BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options)
       frame_buffer_(nullptr),
       async_invoker_(nullptr),
       window_capture_options_(options),
-      source_specified_(false) {
+      source_specified_(false),
+      observer_(std::move(observer)) {
   window_capturer_ =
       webrtc::DesktopCapturer::CreateWindowCapturer(window_capture_options_);
 }
@@ -117,14 +118,14 @@ BasicWindowCapturer::~BasicWindowCapturer() {
 
 void BasicWindowCapturer::Init() {
   // Only I420 frame is supported. RGBA frame is not supported here.
-  VideoFormat format(width_, height_, VideoFormat::kMinimumInterval,
+  cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
                      cricket::FOURCC_I420);
-  std::vector<VideoFormat> supported;
+  std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
 }
 
-CaptureState BasicWindowCapturer::Start(const VideoFormat& capture_format) {
+CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
     LOG(LS_ERROR) << "Basic Window Capturerer is already running";
     return CS_FAILED;
@@ -149,6 +150,14 @@ CaptureState BasicWindowCapturer::Start(const VideoFormat& capture_format) {
     worker_thread_ = nullptr;
     LOG(LS_ERROR) << "Window capture thread failed to start";
     return CS_FAILED;
+  }
+  if (observer_) {
+    std::unordered_map<int, std::string> window_map;
+    int window_id;
+    if (GetCurrentWindowList(&window_map)) {
+      observer_->OnCaptureSourceNeeded(window_map, window_id);
+      SetCaptureWindow(window_id);
+    }
   }
 }
 
