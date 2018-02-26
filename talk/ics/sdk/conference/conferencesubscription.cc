@@ -18,8 +18,11 @@ namespace conference {
 ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient> client, std::string id)
       : id_(id),
         ended_(false),
-        conference_client_(client),
-        event_queue_(new rtc::TaskQueue("ConferenceSubscriptionEventQueue")) {}
+        conference_client_(client) {
+  auto that = conference_client_.lock();
+  if (that != nullptr)
+    event_queue_ = that->event_queue_;
+}
 
 void ConferenceSubscription::Mute(
     TrackKind track_kind,
@@ -29,7 +32,7 @@ void ConferenceSubscription::Mute(
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Invalid ");
-     if (on_failure != nullptr) {
+     if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
          std::unique_ptr<ConferenceException> e(new ConferenceException(
             ConferenceException::kInvalidParam, failure_message));
@@ -49,7 +52,7 @@ void ConferenceSubscription::UnMute(
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Session ended.");
-     if (on_failure != nullptr) {
+     if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
          std::unique_ptr<ConferenceException> e(new ConferenceException(
             ConferenceException::kInvalidParam, failure_message));
@@ -69,7 +72,7 @@ void ConferenceSubscription::GetStats(
    if (that == nullptr || ended_) {
      std::string failure_message(
         "Session ended.");
-     if (on_failure != nullptr) {
+     if (on_failure != nullptr && event_queue_.get()) {
        event_queue_->PostTask([on_failure, failure_message]() {
          std::unique_ptr<ConferenceException> e(new ConferenceException(
             ConferenceException::kInvalidParam, failure_message));
@@ -88,7 +91,7 @@ void ConferenceSubscription::Stop(
   if (that == nullptr || ended_) {
     std::string failure_message(
       "Session ended.");
-    if (on_failure != nullptr) {
+    if (on_failure != nullptr && event_queue_.get()) {
       event_queue_->PostTask([on_failure, failure_message]() {
         std::unique_ptr<ConferenceException> e(new ConferenceException(
            ConferenceException::kInvalidParam, failure_message));

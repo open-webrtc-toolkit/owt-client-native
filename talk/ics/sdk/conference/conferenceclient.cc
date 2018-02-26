@@ -1080,10 +1080,12 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeCamera;
       current_conference_info_->AddStream(remote_stream);
-      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-        auto& o = (*its).get();
-        event_queue_->PostTask(
+      if (!joining) {
+        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+          auto& o = (*its).get();
+          event_queue_->PostTask(
             [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+        }
       }
     } else {
       auto remote_stream = std::make_shared<RemoteScreenStream>(id, owner_id, subscription_capabilities, publication_settings);
@@ -1096,10 +1098,12 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeScreen;
       current_conference_info_->AddStream(remote_stream);
-      for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-        auto& o = (*its).get();
-        event_queue_->PostTask(
+      if (!joining) {
+        for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+          auto& o = (*its).get();
+          event_queue_->PostTask(
             [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+        }
       }
     }
   } else if (type == "mixed") {
