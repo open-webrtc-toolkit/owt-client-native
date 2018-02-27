@@ -32,6 +32,7 @@
 namespace ics {
 namespace base {
 
+/// Observer that receives event from publication.
 class PublicationObserver {
   public:
     /// Triggered when publication is ended.

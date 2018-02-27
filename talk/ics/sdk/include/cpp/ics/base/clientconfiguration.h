@@ -36,25 +36,6 @@
 namespace ics {
 namespace base{
 
-struct ClientAudioConfiguration {
-
-  ClientAudioConfiguration()
-      : max_bitrate(0) {};
-
-  unsigned long max_bitrate;
-  std::vector<AudioCodec> codecs;
-};
-
-struct ClientVideoConfiguration {
-  ClientVideoConfiguration()
-      : max_bitrate(0) {};
-
-  unsigned long max_bitrate;
-  std::vector<VideoCodec> codecs;
-};
-
-
-
 /// Client configurations
 struct ClientConfiguration {
   enum class CandidateNetworkPolicy : int { kAll = 1, kLowCost };

@@ -22,8 +22,8 @@
   std::unique_ptr<ics::base::VideoFrameGeneratorInterface> frame_generator(
       new ics::base::VideoFrameGeneratorObjcImpl(
           [parameters videoFrameGenerator]));
-  std::shared_ptr<ics::base::LocalCustomizedStream> local_stream =
-      std::make_shared<ics::base::LocalCustomizedStream>(
+  std::shared_ptr<ics::base::LocalStream> local_stream =
+      ics::base::LocalStream::Create(
           std::make_shared<ics::base::LocalCustomizedStreamParameters>(
               local_parameters),
           std::move(frame_generator));

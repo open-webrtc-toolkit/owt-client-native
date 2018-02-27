@@ -27,14 +27,13 @@
 #ifndef ICS_CONFERENCE_REMOTEMIXEDSTREAM_H_
 #define ICS_CONFERENCE_REMOTEMIXEDSTREAM_H_
 
-#include "ics/base/stream.h"
 #include "ics/base/commontypes.h"
+#include "ics/base/stream.h"
 
 namespace ics {
 namespace conference {
 
-using ics::base::VideoFormat;
-
+/// Observer class for remote mixed stream.
 class RemoteMixedStreamObserver : public ics::base::StreamObserver {
  public:
   virtual void OnVideoLayoutChanged(){};

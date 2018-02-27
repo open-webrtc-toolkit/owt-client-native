@@ -86,8 +86,6 @@ static_library("ics_sdk_base") {
     "sdk/base/customizedframescapturer.h",
     "sdk/base/customizedvideoencoderproxy.cc",
     "sdk/base/customizedvideoencoderproxy.h",
-    "sdk/base/desktopcapturer.cc",
-    "sdk/base/desktopcapturer.h",
     "sdk/base/deviceutils.cc",
     "sdk/base/encodedvideoencoderfactory.cc",
     "sdk/base/encodedvideoencoderfactory.h",
@@ -114,8 +112,6 @@ static_library("ics_sdk_base") {
     "sdk/base/sysinfo.h",
     "sdk/base/webrtcvideorendererimpl.cc",
     "sdk/base/webrtcvideorendererimpl.h",
-    "sdk/base/windowcapturer.cc",
-    "sdk/base/windowcapturer.h",
     "sdk/include/cpp/ics/base/clientconfiguration.h",
     "sdk/include/cpp/ics/base/connectionstats.h",
     "sdk/include/cpp/ics/base/deviceutils.h",
@@ -156,6 +152,10 @@ static_library("ics_sdk_base") {
 
   if (is_win) {
     sources += [
+      "sdk/base/desktopcapturer.cc",
+      "sdk/base/desktopcapturer.h",
+      "sdk/base/windowcapturer.cc",
+      "sdk/base/windowcapturer.h",
       "sdk/base/win/d3dnativeframe.h",
       "sdk/base/win/external_msdk_decoder.cpp",
       "sdk/base/win/external_msdk_decoder.h",

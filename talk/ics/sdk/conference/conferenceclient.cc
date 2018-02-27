@@ -398,45 +398,16 @@ void ConferenceClient::Subscribe(
     subscribe_pcs_.push_back(pcc);
   }
   std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
-  if (added_stream_type_[stream->Id()] == kStreamTypeMix) {
-    pcc->Subscribe(std::static_pointer_cast<RemoteMixedStream>(stream), options,
-                   [on_success, weak_this] (std::string session_id) {
-                        auto that = weak_this.lock();
-                        if (!that)
-                          return;
-
-                        // map current pcc
-                        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id));
-                        on_success(cp);
-                      },
-                   on_failure);
-  } else if (added_stream_type_[stream->Id()] == kStreamTypeScreen) {
-    pcc->Subscribe(std::static_pointer_cast<RemoteScreenStream>(stream),
-                   options,
-                   [on_success, weak_this] (std::string session_id) {
-                        auto that = weak_this.lock();
-                        if (!that)
-                          return;
-
-                        // map current pcc
-                        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id));
-                        on_success(cp);
-                   },
-                   on_failure);
-  } else if (added_stream_type_[stream->Id()] == kStreamTypeCamera) {
-    pcc->Subscribe(std::static_pointer_cast<RemoteCameraStream>(stream),
-                   options,
-                   [on_success, weak_this] (std::string session_id) {
-                        auto that = weak_this.lock();
-                        if (!that)
-                          return;
-
-                        // map current pcc
-                        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id));
-                        on_success(cp);
-                   },
-                   on_failure);
-  }
+  pcc->Subscribe(stream, options,
+      [on_success, weak_this](std::string session_id) {
+        auto that = weak_this.lock();
+        if (!that)
+            return;
+        // map current pcc
+        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id));
+        on_success(cp);
+      },
+      on_failure);
 }
 
 void ConferenceClient::UnPublish(
@@ -1071,7 +1042,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
         video_source_info = video_source_it->second;
     }
     if (video_source != "screen-cast") {
-      auto remote_stream = std::make_shared<RemoteCameraStream>(id, owner_id, subscription_capabilities, publication_settings);
+      auto remote_stream = std::make_shared<RemoteStream>(id, owner_id, subscription_capabilities, publication_settings);
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
       remote_stream->Attributes(attributes);
@@ -1088,7 +1059,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
         }
       }
     } else {
-      auto remote_stream = std::make_shared<RemoteScreenStream>(id, owner_id, subscription_capabilities, publication_settings);
+      auto remote_stream = std::make_shared<RemoteStream>(id, owner_id, subscription_capabilities, publication_settings);
       LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;

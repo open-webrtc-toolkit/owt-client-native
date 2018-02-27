@@ -57,8 +57,8 @@
   ics::base::LocalCameraStreamParameters local_parameters =
       *[parameters nativeParameters].get();
   int error_code = 0;
-  std::shared_ptr<ics::base::LocalCameraStream> local_stream =
-      ics::base::LocalCameraStream::Create(local_parameters, error_code);
+  std::shared_ptr<ics::base::LocalStream> local_stream =
+      ics::base::LocalStream::Create(local_parameters, error_code);
   if (error_code != 0) {
     LOG(LS_ERROR) << "Failed to create ICSLocalCameraStream, error code: "
                   << error_code;
@@ -99,8 +99,8 @@
                                error:(NSError* _Nullable*)outError{
   self = [super init];
   int error_code = 0;
-  std::shared_ptr<ics::base::LocalCameraStream> local_stream =
-      ics::base::LocalCameraStream::Create(
+  std::shared_ptr<ics::base::LocalStream> local_stream =
+      ics::base::LocalStream::Create(
           isAudioEnabled, [videoSource nativeVideoSource], error_code);
   if (error_code != 0) {
     LOG(LS_ERROR) << "Failed to create ICSLocalCameraStream, error code: "
@@ -114,8 +114,8 @@
 }
 
 - (void)close {
-  std::shared_ptr<ics::base::LocalCameraStream> nativeStream =
-      std::static_pointer_cast<ics::base::LocalCameraStream>(
+  std::shared_ptr<ics::base::LocalStream> nativeStream =
+      std::static_pointer_cast<ics::base::LocalStream>(
           [super nativeStream]);
   if (nativeStream == nullptr)
     return;

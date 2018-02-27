@@ -156,16 +156,29 @@ class Stream {
   std::vector<std::reference_wrapper<StreamObserver>> observers_;
 };
 
+class LocalScreenStreamObserver {
+public:
+    /**
+    @brief Event callback for local screen stream to request for a source from application.
+    @details After local stream is started, this callback will be invoked to request for
+    a source from application.
+    @param window_list list of windows/screen's (id, title) pair.
+    @param dest_window application will set this id to be used by it.
+    */
+    virtual void OnCaptureSourceNeeded(const std::unordered_map<int, std::string>& window_list, int& dest_window) {}
+};
 /**
   @brief This class represents a local stream.
   @details A local stream can be published to remote side.
 */
 class LocalStream : public Stream {
  public:
+#if !defined(WEBRTC_WIN)
   LocalStream();
   LocalStream(MediaStreamInterface* media_stream, StreamSourceInfo source);
+#endif
+
   virtual ~LocalStream();
-  /** @cond */
 
   using Stream::Attributes;
   /**
@@ -177,9 +190,99 @@ class LocalStream : public Stream {
       const std::unordered_map<std::string, std::string>& attributes) {
     attributes_ = attributes;
   }
-  /** @endcond */
+  /**
+   @brief Close a local stream
+   @details This will remote all tracks on the stream, and detach any
+   sink previously attached.
+  */
+  void Close();
+
+  /**
+   @brief Create a local camera stream.
+   @detail This creates a local camera stream with specified device
+   settings.
+   @param parameters Local camera stream settings for stream creation.
+   @param error_code Error code will be set if creation fails.
+   @return Pointer to created LocalStream.
+  */
+  static std::shared_ptr<LocalStream> Create(
+      const LocalCameraStreamParameters& parameters,
+      int& error_code);
+  /**
+   @brief Create a local camera stream with video track source.
+   @detail This creates a local camera stream with specified video track source.
+   @param is_audio_enabled If audio is enabled in the stream.
+   @param video_source Pointer to VideoTrackSourceInterface used for stream
+   creation.
+   @param error_code Error code will be set if creation fails.
+   @return Pointer to created LocalStream.
+  */
+  static std::shared_ptr<LocalStream> Create(
+      const bool is_audio_enabled,
+      webrtc::VideoTrackSourceInterface* video_source,
+      int& error_code);
+  /**
+    @brief Initialize a LocalCustomizedStream with parameters and frame generator.
+    @details The input of the video stream MUST be YUV frame if initializing with frame
+    generator.
+    @param parameters Parameters for creating the stream. The stream will not
+    be impacted if changing parameters after it is created.
+    @param framer Pointer to an instance implemented VideoFrameGeneratorInterface.
+    This instance will be destroyed by SDK when stream is closed.
+    @return Pointer to created LocalStream.
+  */
+  static std::shared_ptr<LocalStream> Create(
+      std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+      std::unique_ptr<VideoFrameGeneratorInterface> framer);
+  /**
+    @briefInitialize a local customized stream with parameters and encoder interface.
+    @details The input of the video stream MUST be encoded frame if initializing with
+    video encoder interface.
+    @param parameters Parameters for creating the stream. The stream will not
+    be impacted if changing parameters after it is created.
+    @param encoder Pointer to an instance implementing VideoEncoderInterface.
+    @return Pointer to created LocalStream.
+  */
+  static std::shared_ptr<LocalStream> Create(
+      std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+      VideoEncoderInterface* encoder);
+#if defined(WEBRTC_WIN)
+  /**
+    @brief Initialize a local screen stream with parameters.
+    @param parameters Parameters for creating the stream. The stream will
+    not be impacted if changing parameters after it is created.
+    @param observer Source callback required for application to specify capture
+    window/screen source.
+    @return Pointer to created LocalStream.
+  */
+  static std::shared_ptr<LocalStream> Create(
+      std::shared_ptr<LocalDesktopStreamParameters> parameters,
+      std::unique_ptr<LocalScreenStreamObserver> observer);
+#endif
  protected:
-  MediaConstraintsImpl* media_constraints_;
+     explicit LocalStream(const LocalCameraStreamParameters& parameters,
+         int& error_code);
+     explicit LocalStream(const bool is_audio_enabled,
+         webrtc::VideoTrackSourceInterface* video_source,
+         int& error_code);
+     explicit LocalStream(
+         std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+         std::unique_ptr<VideoFrameGeneratorInterface> framer);
+     explicit LocalStream(
+         std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+         VideoEncoderInterface* encoder);
+#if defined(WEBRTC_WIN)
+     explicit LocalStream(
+         std::shared_ptr<LocalDesktopStreamParameters> parameters,
+         std::unique_ptr<LocalScreenStreamObserver> observer
+     );
+#endif
+    MediaConstraintsImpl* media_constraints_;
+private:
+    bool encoded_ = false;
+#if defined(WEBRTC_MAC)
+    std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
+#endif
 };
 
 /**
@@ -192,16 +295,6 @@ class RemoteStream : public Stream {
   friend class ics::conference::ConferenceClient;
   friend class ics::conference::ConferenceInfo;
  public:
-  /// Return the remote user ID, indicates who published this stream.
-  /// If it's mixed stream, origin will be "mcu".
-  std::string Origin();
-  using Stream::Attributes;
-  SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
-  PublicationSettings Settings() { return publication_settings_; }
-
-  void Stop() {};
-
- protected:
   /** @cond */
   explicit RemoteStream(const std::string& id,
                         const std::string& from,
@@ -210,12 +303,24 @@ class RemoteStream : public Stream {
   explicit RemoteStream(MediaStreamInterface* media_stream,
                         const std::string& from);
 
-  virtual void Attributes(
-      const std::unordered_map<std::string, std::string>& attributes) {
-    attributes_ = attributes;
+  virtual void Attributes(const std::unordered_map<std::string, std::string>& attributes) {
+                          attributes_ = attributes;
   }
   /** @endcond */
 
+  /// Return the remote user ID, indicates who published this stream.
+  /// If it's mixed stream, origin will be "mcu".
+  std::string Origin();
+  using Stream::Attributes;
+
+  /// Get the subscription capabilities on the stream.
+  SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
+  /// Get the publication settings of the stream.
+  PublicationSettings Settings() { return publication_settings_; }
+  /// Stop the remote stream.
+  void Stop() {};
+
+ protected:
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);
 
@@ -225,161 +330,6 @@ class RemoteStream : public Stream {
   bool has_video_ = true;
   ics::base::SubscriptionCapabilities subscription_capabilities_;
   ics::base::PublicationSettings publication_settings_;
-};
-
-/// This class represents a remote stream captured from a camera and/or mic.00000000000000000000000
-class RemoteCameraStream : public RemoteStream {
- public:
-  /** @cond */
-  explicit RemoteCameraStream(std::string& id, std::string& from,
-                              const ics::base::SubscriptionCapabilities& subscription_capabilities,
-                              const ics::base::PublicationSettings& publication_settings);
-  explicit RemoteCameraStream(MediaStreamInterface* media_stream,
-                              std::string& from);
-  /** @endcond */
-};
-
-/// This class represents a remote stream captured from screen sharing.
-class RemoteScreenStream : public RemoteStream {
- public:
-  /** @cond */
-  explicit RemoteScreenStream(std::string& id, std::string& from,
-                              const ics::base::SubscriptionCapabilities& subscription_capabilities,
-                              const ics::base::PublicationSettings& publication_settings);
-  explicit RemoteScreenStream(MediaStreamInterface* media_stream,
-                              std::string& from);
-  /** @endcond */
-};
-
-/// This class represents a local stream captured from camera, mic.
-class LocalCameraStream : public LocalStream {
- public:
-  /**
-    Create a LocalCameraStream with parameters.
-    @param parameters Parameters for creating the stream. The stream will not be
-    impacted if chaning parameters after it is created.
-    @param error_code If creation successes, it will be 0, otherwise, it will be
-    the error code occurred.
-    @return Returns a shared pointer for created stream. Returns nullptr if
-    failed.
-  */
-  static std::shared_ptr<LocalCameraStream> Create(
-      const LocalCameraStreamParameters& parameters,
-      int& error_code);
-  /** @cond */
-  /**
-    Create a ICSLocalCameraStream with specific video source.
-    @param is_audio_enabled Indicates whether audio is enabled.
-    @param video_source LocalCameraStream created will have a video track use
-    |video_source| as its source. Changing |video_source| will impact the video
-    track in current stream.
-    @param error_code If creation successes, it will be 0, otherwise, it will be
-    the error code occurred.
-    @return Returns a shared pointer for created stream. Returns nullptr if
-    failed.
-  */
-  static std::shared_ptr<LocalCameraStream> Create(
-      const bool is_audio_enabled,
-      /* Consider to change this parameter to be a reference */
-      webrtc::VideoTrackSourceInterface* video_source,
-      int& error_code);
-  ~LocalCameraStream();
-  /** @endcond */
-  /**
-    @brief Close the stream. Its underlying media source is no longer providing
-    data, and will never provide more data for this stream.
-    @details Once a stream is closed, it is no longer usable. If you want to
-    temporary disable audio or video, please use DisableAudio/DisableVideo
-    instead.
-  */
-  void Close();
-
- protected:
-  explicit LocalCameraStream(const LocalCameraStreamParameters& parameters,
-                             int& error_code);
-  explicit LocalCameraStream(const bool is_audio_enabled,
-                             webrtc::VideoTrackSourceInterface* video_source,
-                             int& error_code);
-  /** @endcond */
-
- private:
-#if defined(WEBRTC_MAC)
-  std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
-#endif
-};
-
-/// This class represents a local stream which uses frame generator to generate
-//  I420 frames or depends on a video encoder to generate encoded frames.
-class LocalCustomizedStream : public LocalStream {
-  public:
-   /**
-     Initialize a LocalCustomizedStream with parameters and frame generator.
-
-     The input of the video stream MUST be YUV frame if initializing with frame
-     generator.
-
-     @param parameters Parameters for creating the stream. The stream will not
-     be impacted if changing parameters after it is created.
-     @param framer Pointer to an instance implemented VideoFrameGeneratorInterface.
-     This instance will be destroyed by SDK when stream is closed.
-   */
-   explicit LocalCustomizedStream(
-       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-       std::unique_ptr<VideoFrameGeneratorInterface> framer);
-   /**
-     Initialize a LocalCustomizedStream with parameters and encoder interface.
-
-     The input of the video stream MUST be encoded frame if initializing with
-     video encoder interface.
-
-     @param parameters Parameters for creating the stream. The stream will not
-     be impacted if changing parameters after it is created.
-     @param encoder Pointer to an instance implementing VideoEncoderInterface.
-   */
-   explicit LocalCustomizedStream(
-       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-       VideoEncoderInterface* encoder);
-   ~LocalCustomizedStream();
-
-   /// Attach the stream to a renderer to receive ARGB frames from decoder.
-   void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
-#if defined(WEBRTC_WIN)
-   /// Attach the stream to a renderer to receive frames from decoder.
-   /// Both I420 frame and native surface is supported.
-   void AttachVideoRenderer(VideoRenderWindow& render_window);
-#endif
-   /// Detach the stream from its renderer.
-   void DetachVideoRenderer();
-  private:
-   bool encoded_ = false;
-};
-
-class LocalScreenStreamObserver {
- public:
-  /**
-    @brief Event callback for local screen stream to request for a source from application.
-    @details After local stream is started, this callback will be invoked to request for
-    a source from application.
-    @param window_list list of windows/screen's (id, title) pair.
-    @param dest_window application will set this id to be used by it.
-  */
-  virtual void OnCaptureSourceNeeded(const std::unordered_map<int, std::string>& window_list, int& dest_window) {}
-};
-
-/// This class represents a local stream which uses local screen/app to generate
-/// frames.
-class LocalScreenStream : public LocalStream {
- public:
-  /**
-    @brief Initialize a LocalScreenStream with parameters.
-    @param parameters Parameters for creating the stream. The stream will
-    not be impacted if changing parameters after it is created.
-    @param observer Source callback required for application to specify capture window/screen source.
-  */
-  explicit LocalScreenStream(
-      std::shared_ptr<LocalDesktopStreamParameters> parameters,
-      std::unique_ptr<LocalScreenStreamObserver> observer);
-  virtual ~LocalScreenStream();
 };
 
 } // namespace base

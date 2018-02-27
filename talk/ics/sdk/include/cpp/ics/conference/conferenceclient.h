@@ -83,6 +83,7 @@ class ParticipantObserver {
     virtual void OnLeft() {};
 };
 
+/// Participant represents one conference client in a conference room.
 class Participant {
   friend class ConferenceInfo;
   public:
@@ -203,15 +204,9 @@ class ConferenceClientObserver {
     @param stream The stream which is added.
   */
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteCameraStream> stream){};
+      std::shared_ptr<RemoteStream> stream){};
   /**
-    @brief Triggers when a stream is added.
-    @param stream The stream which is added.
-  */
-  virtual void OnStreamAdded(
-      std::shared_ptr<RemoteScreenStream> stream){};
-  /**
-    @brief Triggers when a stream is added.
+    @brief Triggers when a mixed stream is added.
     @param stream The stream which is added.
   */
   virtual void OnStreamAdded(

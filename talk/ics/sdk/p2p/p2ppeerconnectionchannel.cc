@@ -531,27 +531,27 @@ void P2PPeerConnectionChannel::OnAddStream(
 
   if (video_track_source == "screen-cast") {
     LOG(LS_INFO) << "Add screen stream";
-    std::shared_ptr<RemoteScreenStream> remote_stream(
-        new RemoteScreenStream(stream, remote_id_));
+    std::shared_ptr<RemoteStream> remote_stream(
+        new RemoteStream(stream, remote_id_));
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteScreenStream>),
-        std::shared_ptr<RemoteScreenStream>>(
+            std::shared_ptr<RemoteStream>),
+        std::shared_ptr<RemoteStream>>(
             observers_, event_queue_,
             &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
   } else if (video_track_source == "camera") {
     LOG(LS_INFO) << "Add camera stream.";
-    std::shared_ptr<RemoteCameraStream> remote_stream(
-        new RemoteCameraStream(stream, remote_id_));
+    std::shared_ptr<RemoteStream> remote_stream(
+        new RemoteStream(stream, remote_id_));
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteCameraStream>),
-        std::shared_ptr<RemoteCameraStream>>(
+            std::shared_ptr<RemoteStream>),
+        std::shared_ptr<RemoteStream>>(
             observers_, event_queue_,
             &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
     remote_streams_[stream->label()] = remote_stream;
@@ -577,27 +577,25 @@ void P2PPeerConnectionChannel::OnRemoveStream(
   }
 
   if (video_track_source == "screen-cast") {
-    std::shared_ptr<RemoteScreenStream> remote_stream =
-        std::static_pointer_cast<RemoteScreenStream>(
-            remote_streams_[stream->label()]);
+    std::shared_ptr<RemoteStream> remote_stream =
+            remote_streams_[stream->label()];
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteScreenStream>),
-        std::shared_ptr<RemoteScreenStream>>(
+            std::shared_ptr<RemoteStream>),
+        std::shared_ptr<RemoteStream>>(
         observers_, event_queue_,
         &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   } else if(video_track_source == "camera") {
-    std::shared_ptr<RemoteCameraStream> remote_stream =
-        std::static_pointer_cast<RemoteCameraStream>(
-            remote_streams_[stream->label()]);
+    std::shared_ptr<RemoteStream> remote_stream =
+            remote_streams_[stream->label()];
     EventTrigger::OnEvent1<
         P2PPeerConnectionChannelObserver*,
         std::allocator<P2PPeerConnectionChannelObserver*>,
         void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteCameraStream>),
-        std::shared_ptr<RemoteCameraStream>>(
+            std::shared_ptr<RemoteStream>),
+        std::shared_ptr<RemoteStream>>(
         observers_, event_queue_,
         &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   }

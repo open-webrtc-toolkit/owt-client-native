@@ -21,7 +21,7 @@ namespace ics {
 namespace p2p {
 
 P2PClient::P2PClient(
-	P2PClientConfiguration& configuration,
+    P2PClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
     : event_queue_(new rtc::TaskQueue("P2PClientEventQueue")),
       signaling_channel_(signaling_channel),
@@ -212,14 +212,14 @@ void P2PClient::OnInvited(const std::string& remote_id) {
                          &P2PClientObserver::OnInvited, remote_id);
 
   // First check whether remote_id is in the allowed_remote_ids_ list
-	if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
-		  allowed_remote_ids_.end()) {
-		LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
+  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
+        allowed_remote_ids_.end()) {
+      LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
   } else {
-		// Then accept the chat if allowed
-		auto pcc = GetPeerConnectionChannel(remote_id);
-	  pcc->Accept(nullptr, nullptr);
-	}
+    // Then accept the chat if allowed
+    auto pcc = GetPeerConnectionChannel(remote_id);
+    pcc->Accept(nullptr, nullptr);
+  }
 }
 
 void P2PClient::OnAccepted(const std::string& remote_id) {
@@ -251,34 +251,18 @@ void P2PClient::OnData(const std::string& remote_id,
                          message);
 }
 
-void P2PClient::OnStreamAdded(std::shared_ptr<RemoteCameraStream> stream) {
+void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
-      (void (P2PClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteStream>))(
           &P2PClientObserver::OnStreamAdded),
       stream);
 }
 
-void P2PClient::OnStreamAdded(std::shared_ptr<RemoteScreenStream> stream) {
+void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
-      (void (P2PClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
-          &P2PClientObserver::OnStreamAdded),
-      stream);
-}
-
-void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteCameraStream> stream) {
-  EventTrigger::OnEvent1(
-      observers_, event_queue_,
-      (void (P2PClientObserver::*)(std::shared_ptr<RemoteCameraStream>))(
-          &P2PClientObserver::OnStreamRemoved),
-      stream);
-}
-
-void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteScreenStream> stream) {
-  EventTrigger::OnEvent1(
-      observers_, event_queue_,
-      (void (P2PClientObserver::*)(std::shared_ptr<RemoteScreenStream>))(
+      (void (P2PClientObserver::*)(std::shared_ptr<RemoteStream>))(
           &P2PClientObserver::OnStreamRemoved),
       stream);
 }

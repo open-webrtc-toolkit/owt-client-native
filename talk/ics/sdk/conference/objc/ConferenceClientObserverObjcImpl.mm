@@ -35,20 +35,9 @@ void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
 }
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<RemoteCameraStream> stream) {
+    std::shared_ptr<RemoteStream> stream) {
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
       [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
-  AddRemoteStreamToMap(stream->Id(), remote_stream);
-  if ([delegate_
-          respondsToSelector:@selector(conferenceClient:didAddStream:)]) {
-    [delegate_ conferenceClient:client_ didAddStream:remote_stream];
-  }
-}
-
-void ConferenceClientObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<RemoteScreenStream> stream) {
-  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
-      [ICSRemoteScreenStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
   if ([delegate_
           respondsToSelector:@selector(conferenceClient:didAddStream:)]) {

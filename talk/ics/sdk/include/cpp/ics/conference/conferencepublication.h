@@ -71,9 +71,9 @@ class ConferencePublication {
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
               std::function<void(std::unique_ptr<ConferenceException>)> on_failure);
-
+    /// Add observer on the publication to get events.
     void AddObserver(PublicationObserver& observer);
-
+    /// Remove observer on the publication.
     void RemoveObserver(PublicationObserver& observer);
   private:
      std::string id_;

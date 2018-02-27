@@ -39,20 +39,12 @@ void P2PPeerConnectionChannelObserverCppImpl::OnData(
 }
 
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
-    std::shared_ptr<RemoteCameraStream> stream) {
-  peer_client_.OnStreamAdded(stream);
-}
-void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
-    std::shared_ptr<RemoteScreenStream> stream) {
+    std::shared_ptr<RemoteStream> stream) {
   peer_client_.OnStreamAdded(stream);
 }
 
 void P2PPeerConnectionChannelObserverCppImpl::OnStreamRemoved(
-    std::shared_ptr<RemoteCameraStream> stream) {
-  peer_client_.OnStreamRemoved(stream);
-}
-void P2PPeerConnectionChannelObserverCppImpl::OnStreamRemoved(
-    std::shared_ptr<RemoteScreenStream> stream) {
+    std::shared_ptr<RemoteStream> stream) {
   peer_client_.OnStreamRemoved(stream);
 }
 }

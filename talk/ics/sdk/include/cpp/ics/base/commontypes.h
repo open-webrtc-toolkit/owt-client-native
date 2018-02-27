@@ -81,21 +81,21 @@ struct Resolution {
 };
 
 /**
- * @brief An instance of this class represent a video format.
- */
+ @brief An instance of this class represent a video format.
+*/
 struct VideoFormat {
   /** @cond */
-  explicit VideoFormat(const Resolution& r): resolution(r){}
+  explicit VideoFormat(const Resolution& r) : resolution(r) {}
   /** @endcond */
   Resolution resolution;
 };
 
 /// Audio codec parameters for an audio track.
 struct AudioCodecParameters {
-  // Construct an instance of AudioCodecParameters
+  /// Construct an instance of AudioCodecParameters with default param.
   AudioCodecParameters()
       : name(AudioCodec::kUnknown), channel_count(0), clock_rate(0) {}
-
+  /// Construct an instance of AudioCodecParameters with codec name/channel count and clock rate.
   AudioCodecParameters(const AudioCodec& codec_name,
                        unsigned long channel_count,
                        unsigned long clock_rate)
@@ -126,9 +126,9 @@ struct AudioEncodingParameters {
 
 /// Video codec parameters for a video track.
 struct VideoCodecParameters {
-  // Construct an instance of VideoCodecParameters
+  /// Construct an instance of VideoCodecParameters with default parameters.
   explicit VideoCodecParameters() : name(VideoCodec::kUnknown), profile("") {}
-
+  /// Construct an instance of VideoCodecParameter with codec name and profile.
   VideoCodecParameters(const VideoCodec& codec, const std::string& profile)
       : name(codec), profile(profile) {}
 
@@ -136,10 +136,10 @@ struct VideoCodecParameters {
   std::string profile;
 };
 
-/// Video encoding parameters.
+/// Video encoding parameters. Used to specify the video encoding settings when publishing the video.
 struct VideoEncodingParameters {
    explicit VideoEncodingParameters() : codec_params(), maxBitrateBps(0), hardware_accelerated(false) {}
-
+   /// Construct an instance of VideoEncodingParameters
    VideoEncodingParameters (VideoCodecParameters codec_param, unsigned long bitrate_bps, bool hw)
      : codec_params(codec_param),
        maxBitrateBps(bitrate_bps),

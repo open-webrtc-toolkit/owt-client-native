@@ -461,6 +461,17 @@ void ConferencePeerConnectionChannel::Subscribe(
     std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                << stream->has_audio_ << ", has video? " << stream->has_video_;
+  if (!SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure]() {
+          std::unique_ptr<ConferenceException> e(new ConferenceException(
+              ConferenceException::kUnknown, "Unsupported subscribe option."));
+          on_failure(std::move(e));
+      });
+    }
+  }
+
   subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
@@ -541,66 +552,6 @@ void ConferencePeerConnectionChannel::Subscribe(
         CreateOffer();
       },
       on_failure);  // TODO: on_failure
-}
-
-void ConferencePeerConnectionChannel::Subscribe(
-    std::shared_ptr<RemoteMixedStream> stream,
-    const SubscriptionOptions& subscribe_options,
-    std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-       subscribe_options, on_success, on_failure);
-  } else {
-    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
-    if (on_failure != nullptr) {
-       event_queue_->PostTask([on_failure]() {
-           std::unique_ptr<ConferenceException> e(new ConferenceException(
-                    ConferenceException::kUnknown, "Unsupported subscribe option."));
-                on_failure(std::move(e));
-       });
-    }
-  }
-}
-
-void ConferencePeerConnectionChannel::Subscribe(
-    std::shared_ptr<RemoteScreenStream> stream,
-    const SubscriptionOptions& subscribe_options,
-    std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-        subscribe_options, on_success, on_failure);
-  } else {
-    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
-    if (on_failure != nullptr) {
-      event_queue_->PostTask([on_failure]() {
-        std::unique_ptr<ConferenceException> e(new ConferenceException(
-            ConferenceException::kUnknown, "Unsupported subscribe option."));
-        on_failure(std::move(e));
-      });
-    }
-  }
-}
-
-void ConferencePeerConnectionChannel::Subscribe(
-    std::shared_ptr<RemoteCameraStream> stream,
-    const SubscriptionOptions& subscribe_options,
-    std::function<void(std::string)> on_success,
-    std::function<void(std::unique_ptr<ConferenceException>)> on_failure) {
-  if (SubOptionAllowed(subscribe_options, stream->Capabilities())) {
-    Subscribe(std::static_pointer_cast<RemoteStream>(stream),
-        subscribe_options, on_success, on_failure);
-  } else {
-    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
-    if (on_failure != nullptr) {
-      event_queue_->PostTask([on_failure]() {
-          std::unique_ptr<ConferenceException> e(new ConferenceException(
-              ConferenceException::kUnknown, "Unsupported subscribe option."));
-          on_failure(std::move(e));
-      });
-    }
-  }
 }
 
 void ConferencePeerConnectionChannel::Unpublish(

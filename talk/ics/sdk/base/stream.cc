@@ -8,7 +8,9 @@
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "talk/ics/sdk/base/customizedframescapturer.h"
+#if defined(WEBRTC_WIN)
 #include "talk/ics/sdk/base/desktopcapturer.h"
+#endif
 #include "talk/ics/sdk/base/mediaconstraintsimpl.h"
 #if defined(WEBRTC_IOS)
 #include "talk/ics/sdk/base/objc/ObjcVideoCapturerInterface.h"
@@ -238,60 +240,86 @@ void Stream::TriggerOnStreamEnded() {
     (*its).get().OnEnded();
   }
 }
-
+#if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
 
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
     : Stream(media_stream, source) {}
+#endif
 
 LocalStream::~LocalStream() {
-  delete media_constraints_;
+    LOG(LS_INFO) << "Destroy LocalCameraStream.";
+    if (media_stream_ != nullptr) {
+        // Remove all tracks before dispose stream.
+        auto audio_tracks = media_stream_->GetAudioTracks();
+        for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
+            media_stream_->RemoveTrack(*it);
+        }
+        auto video_tracks = media_stream_->GetVideoTracks();
+        for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it) {
+            media_stream_->RemoveTrack(*it);
+        }
+    }
+    if (media_constraints_)
+      delete media_constraints_;
 }
 
-LocalCameraStream::~LocalCameraStream() {
-  LOG(LS_INFO) << "Destroy LocalCameraStream.";
-  if (media_stream_ != nullptr) {
-    // Remove all tracks before dispose stream.
-    auto audio_tracks = media_stream_->GetAudioTracks();
-    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it) {
-      media_stream_->RemoveTrack(*it);
-    }
-    auto video_tracks = media_stream_->GetVideoTracks();
-    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it) {
-      media_stream_->RemoveTrack(*it);
-    }
-  }
-}
 
-std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(
+std::shared_ptr<LocalStream> LocalStream::Create(
     const LocalCameraStreamParameters& parameters,
     int& error_code) {
   error_code = 0;
-  std::shared_ptr<LocalCameraStream> stream(
-      new LocalCameraStream(parameters, error_code));
+  std::shared_ptr<LocalStream> stream(
+      new LocalStream(parameters, error_code));
   if (error_code != 0)
     return nullptr;
   else
     return stream;
 }
 
-std::shared_ptr<LocalCameraStream> LocalCameraStream::Create(
+std::shared_ptr<LocalStream> LocalStream::Create(
     const bool is_audio_enabled,
     webrtc::VideoTrackSourceInterface* video_source,
     int& error_code) {
   error_code = 0;
-  std::shared_ptr<LocalCameraStream> stream(
-      new LocalCameraStream(is_audio_enabled, video_source, error_code));
+  std::shared_ptr<LocalStream> stream(
+      new LocalStream(is_audio_enabled, video_source, error_code));
   if (error_code != 0)
     return nullptr;
   else
     return stream;
 }
 
-LocalCameraStream::LocalCameraStream(
+#if defined(WEBRTC_WIN)
+std::shared_ptr<LocalStream> LocalStream::Create(
+    std::shared_ptr<LocalDesktopStreamParameters> parameters,
+    std::unique_ptr<LocalScreenStreamObserver> observer) {
+    std::shared_ptr<LocalStream> stream(
+        new LocalStream(parameters, std::move(observer)));
+    return stream;
+}
+#endif
+
+std::shared_ptr<LocalStream> LocalStream::Create(
+    std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+    std::unique_ptr<VideoFrameGeneratorInterface> framer) {
+    std::shared_ptr<LocalStream> stream(
+        new LocalStream(parameters, std::move(framer)));
+    return stream;
+}
+
+std::shared_ptr<LocalStream> LocalStream::Create(
+    std::shared_ptr<LocalCustomizedStreamParameters> parameters,
+    VideoEncoderInterface* encoder) {
+    std::shared_ptr<LocalStream> stream(
+        new LocalStream(parameters, encoder));
+    return stream;
+}
+
+LocalStream::LocalStream(
     const LocalCameraStreamParameters& parameters,
-    int& error_code) {
+    int& error_code) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
     LOG(LS_ERROR)
         << "Cannot create a LocalCameraStream without audio and video.";
@@ -378,10 +406,10 @@ LocalCameraStream::LocalCameraStream(
   media_stream_->AddRef();
 }
 
-LocalCameraStream::LocalCameraStream(
+LocalStream::LocalStream(
       const bool is_audio_enabled,
       webrtc::VideoTrackSourceInterface* video_source,
-      int& error_code){
+      int& error_code) : media_constraints_(new MediaConstraintsImpl) {
   RTC_CHECK(video_source);
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -403,7 +431,7 @@ LocalCameraStream::LocalCameraStream(
   media_stream_->AddRef();
 }
 
-void LocalCameraStream::Close() {
+void LocalStream::Close() {
   RTC_CHECK(media_stream_);
 
   DetachVideoRenderer();
@@ -415,23 +443,10 @@ void LocalCameraStream::Close() {
     media_stream_->RemoveTrack(video_track);
 }
 
-LocalScreenStream::~LocalScreenStream() {
-  LOG(LS_INFO) << "Destory LocalScreenStream.";
-  if (media_stream_ != nullptr) {
-    // Remove all tracks before dispose stream.
-    auto audio_tracks = media_stream_->GetAudioTracks();
-    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it)
-      media_stream_->RemoveTrack(*it);
-
-    auto video_tracks = media_stream_->GetVideoTracks();
-    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
-      media_stream_->RemoveTrack(*it);
-  }
-}
-
-LocalScreenStream::LocalScreenStream(
+#if defined(WEBRTC_WIN)
+LocalStream::LocalStream(
     std::shared_ptr<LocalDesktopStreamParameters> parameters,
-    std::unique_ptr<LocalScreenStreamObserver> observer) {
+    std::unique_ptr<LocalScreenStreamObserver> observer) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
   }
@@ -469,26 +484,13 @@ LocalScreenStream::LocalScreenStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
+#endif
 
-LocalCustomizedStream::~LocalCustomizedStream() {
-  LOG(LS_INFO) << "Destory LocalCameraStream.";
-  if (media_stream_ != nullptr) {
-    // Remove all tracks before dispose stream.
-    auto audio_tracks = media_stream_->GetAudioTracks();
-    for (auto it = audio_tracks.begin(); it != audio_tracks.end(); ++it)
-      media_stream_->RemoveTrack(*it);
-
-    auto video_tracks = media_stream_->GetVideoTracks();
-    for (auto it = video_tracks.begin(); it != video_tracks.end(); ++it)
-      media_stream_->RemoveTrack(*it);
-  }
-}
-
-LocalCustomizedStream::LocalCustomizedStream(
+LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
-    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
+    LOG(LS_WARNING) << "Create Local Camera Stream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -518,11 +520,11 @@ LocalCustomizedStream::LocalCustomizedStream(
   media_stream_->AddRef();
 }
 
-LocalCustomizedStream::LocalCustomizedStream(
+LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
+    VideoEncoderInterface* encoder) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
-    LOG(LS_WARNING) << "Create LocalCameraStream without video and audio.";
+    LOG(LS_WARNING) << "Create LocalStream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -557,109 +559,6 @@ LocalCustomizedStream::LocalCustomizedStream(
   media_stream_->AddRef();
 }
 
-void LocalCustomizedStream::AttachVideoRenderer(
-    VideoRendererARGBInterface& renderer) {
-  if (encoded_) {
-    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
-    return;
-  }
-  if (media_stream_ == nullptr) {
-    RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
-    return;
-  }
-
-  auto video_tracks = media_stream_->GetVideoTracks();
-  if (video_tracks.size() == 0) {
-    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
-    return;
-  } else if (video_tracks.size() > 1) {
-    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
-                       "will be attachecd to renderer.";
-  }
-
-  WebrtcVideoRendererARGBImpl* old_renderer =
-      renderer_impl_ ? renderer_impl_ : nullptr;
-
-  renderer_impl_ = new WebrtcVideoRendererARGBImpl(renderer);
-  video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
-
-  if (old_renderer)
-    delete old_renderer;
-
-  LOG(LS_INFO) << "Attached the stream to a renderer.";
-}
-
-#if defined(WEBRTC_WIN)
-void LocalCustomizedStream::AttachVideoRenderer(
-    VideoRenderWindow& render_window) {
-  if (encoded_) {
-    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
-    return;
-  }
-  if (media_stream_ == nullptr) {
-    RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
-    return;
-  }
-
-  auto video_tracks = media_stream_->GetVideoTracks();
-  if (video_tracks.size() == 0) {
-    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
-    return;
-  } else if (video_tracks.size() > 1) {
-    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
-                       "will be attachecd to renderer.";
-  }
-
-  WebrtcVideoRendererD3D9Impl* old_renderer =
-      d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
-
-  d3d9_renderer_impl_ =
-      new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
-  video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
-
-  if (old_renderer)
-    delete old_renderer;
-
-  LOG(LS_INFO) << "Attached the stream to a renderer.";
-}
-#endif
-
-void LocalCustomizedStream::DetachVideoRenderer() {
-  if (encoded_) {
-    LOG(LS_ERROR) << "Not attaching renderer to encoded stream.";
-    return;
-  }
-#if defined(WEBRTC_WIN)
-  if (media_stream_ == nullptr ||
-      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
-    return;
-#else
-  if (media_stream_ == nullptr || renderer_impl_ == nullptr)
-    return;
-#endif
-
-  auto video_tracks = media_stream_->GetVideoTracks();
-  if (video_tracks.size() == 0)
-    return;
-
-  // Detach from the first stream.
-  if (renderer_impl_ != nullptr) {
-    video_tracks[0]->RemoveSink(renderer_impl_);
-    delete renderer_impl_;
-    renderer_impl_ = nullptr;
-  }
-#if defined(WEBRTC_WIN)
-  if (d3d9_renderer_impl_ != nullptr) {
-    video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
-    delete d3d9_renderer_impl_;
-    d3d9_renderer_impl_ = nullptr;
-  }
-#endif
-}
-
-
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {
@@ -689,23 +588,5 @@ void RemoteStream::MediaStream(
 MediaStreamInterface* RemoteStream::MediaStream() {
   return media_stream_;
 }
-
-RemoteCameraStream::RemoteCameraStream(std::string& id, std::string& from,
-                              const ics::base::SubscriptionCapabilities& subscription_capabilities,
-                              const ics::base::PublicationSettings& publication_settings)
-    : RemoteStream(id, from, subscription_capabilities, publication_settings) {}
-
-RemoteCameraStream::RemoteCameraStream(MediaStreamInterface* media_stream,
-                                       std::string& from)
-    : RemoteStream(media_stream, from) {}
-
-RemoteScreenStream::RemoteScreenStream(std::string& id, std::string& from,
-                              const ics::base::SubscriptionCapabilities& subscription_capabilities,
-                              const ics::base::PublicationSettings& publication_settings)
-    : RemoteStream(id, from, subscription_capabilities, publication_settings) {}
-
-RemoteScreenStream::RemoteScreenStream(MediaStreamInterface* media_stream,
-                                       std::string& from)
-    : RemoteStream(media_stream, from) {}
 }
 }

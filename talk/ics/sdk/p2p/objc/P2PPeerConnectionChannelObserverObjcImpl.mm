@@ -52,33 +52,17 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<ics::base::RemoteCameraStream> stream) {
+    std::shared_ptr<ics::base::RemoteStream> stream) {
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
       [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
   [_observer onStreamAdded:remote_stream];
-  NSLog(@"On camera stream added.");
-}
-
-void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
-    std::shared_ptr<ics::base::RemoteScreenStream> stream) {
-  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
-      [ICSRemoteScreenStream alloc] initWithNativeStream:stream];
-  remote_streams_[stream->Id()]=remote_stream;
-  [_observer onStreamAdded:remote_stream];
-  NSLog(@"On screen stream added.");
+  NSLog(@"On stream added.");
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<ics::base::RemoteCameraStream> stream) {
-  TriggerStreamRemoved(
-      std::static_pointer_cast<ics::base::RemoteStream>(stream));
-}
-
-void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
-    std::shared_ptr<ics::base::RemoteScreenStream> stream) {
-  TriggerStreamRemoved(
-      std::static_pointer_cast<ics::base::RemoteStream>(stream));
+    std::shared_ptr<ics::base::RemoteStream> stream) {
+  TriggerStreamRemoved(stream);
 }
 
 void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(

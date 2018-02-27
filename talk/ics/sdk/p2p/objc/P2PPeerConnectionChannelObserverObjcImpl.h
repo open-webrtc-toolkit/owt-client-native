@@ -29,13 +29,9 @@ class P2PPeerConnectionChannelObserverObjcImpl
   void OnData(const std::string& remote_id,
               const std::string& message) override;
   void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream) override;
-  void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream) override;
+      std::shared_ptr<ics::base::RemoteStream> stream) override;
   void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream) override;
-  void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream) override;
+      std::shared_ptr<ics::base::RemoteStream> stream) override;
 
  private:
   void TriggerStreamRemoved(std::shared_ptr <

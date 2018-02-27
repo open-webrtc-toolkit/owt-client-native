@@ -119,25 +119,13 @@ class P2PClientObserver {
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream){};
-  /**
-   @brief This function will be invoked when a remote stream is available.
-   @param stream The remote stream added.
-   */
-  virtual void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream){};
+      std::shared_ptr<ics::base::RemoteStream> stream){};
   /**
    @brief This function will be invoked when a remote stream is removed.
    @param stream The remote stream removed.
    */
   virtual void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream){};
-  /**
-   @brief This function will be invoked when a remote stream is removed.
-   @param stream The remote stream removed.
-   */
-  virtual void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream){};
+      std::shared_ptr<ics::base::RemoteStream> stream){};
 };
 
 /// An async client for P2P WebRTC sessions
@@ -304,14 +292,10 @@ class P2PClient : protected P2PSignalingSenderInterface,
                       const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream);
-  virtual void OnStreamAdded(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream);
+      std::shared_ptr<ics::base::RemoteStream> stream);
   // Triggered when a remote stream is removed.
   virtual void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteCameraStream> stream);
-  virtual void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteScreenStream> stream);
+      std::shared_ptr<ics::base::RemoteStream> stream);
 
  private:
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(

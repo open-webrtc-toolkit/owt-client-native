@@ -33,6 +33,7 @@
 namespace ics {
 namespace base {
 
+/// Observer that receives events from subscription.
 class SubscriptionObserver {
   public:
     // Triggered when subscription is ended.
