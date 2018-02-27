@@ -4,14 +4,14 @@
 
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceParticipant.h"
 
-#include "talk/ics/sdk/include/cpp/ics/conference/user.h"
+#include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
 /// This class represent an attendee in a conference.
 @interface ICSConferenceParticipant ()
 
-@property(nonatomic, readonly) std::shared_ptr<const ics::conference::User> nativeParticipant;
+@property(nonatomic, readonly) std::shared_ptr<const ics::conference::Participant> nativeParticipant;
 
 - (instancetype)initWithNativeParticipant:
-    (std::shared_ptr<const ics::conference::User>)participant;
+    (std::shared_ptr<const ics::conference::Participant>)participant;
 
 @end

@@ -130,10 +130,15 @@ class ConferenceInfo {
 
     virtual ~ConferenceInfo() {}
     /// Current remote streams in the conference.
-    std::vector<std::shared_ptr<RemoteStream>> RemoteStreams() { return remote_streams_; }
+    std::vector<std::shared_ptr<RemoteStream>> RemoteStreams() const {
+      return remote_streams_;
+    }
     /// Current participant list in the conference.
-    std::vector<std::shared_ptr<Participant>> Participants() { return participants_;  }
-  protected:
+    std::vector<std::shared_ptr<Participant>> Participants() const {
+      return participants_;
+    }
+
+   protected:
     // Add participant.
     void AddParticipant(std::shared_ptr<Participant> participant);
     // Remove participant.

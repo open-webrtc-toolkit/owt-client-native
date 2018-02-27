@@ -381,7 +381,7 @@ void ConferencePeerConnectionChannel::Publish(
     media_ptr->get_map()["audio"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr audio_options = sio::object_message::create();
-    if (stream->SourceInfo().audio ==
+    if (stream->Source().audio ==
         ics::base::AudioSourceInfo::kScreenCast) {
       audio_options->get_map()["source"] =
           sio::string_message::create("screen-cast");
@@ -395,7 +395,7 @@ void ConferencePeerConnectionChannel::Publish(
     media_ptr->get_map()["video"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr video_options = sio::object_message::create();
-    if (stream->SourceInfo().video ==
+    if (stream->Source().video ==
         ics::base::VideoSourceInfo::kScreenCast) {
       video_options->get_map()["source"] =
           sio::string_message::create("screen-cast");

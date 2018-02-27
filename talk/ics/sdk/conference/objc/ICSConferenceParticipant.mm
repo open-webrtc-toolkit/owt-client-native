@@ -8,7 +8,7 @@
 @implementation ICSConferenceParticipant
 
 - (instancetype)initWithNativeParticipant:
-    (std::shared_ptr<const ics::conference::User>)participant {
+    (std::shared_ptr<const ics::conference::Participant>)participant {
   self = [super init];
   _nativeParticipant = participant;
   return self;

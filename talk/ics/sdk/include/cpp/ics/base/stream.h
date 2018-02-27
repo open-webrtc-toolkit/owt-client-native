@@ -120,7 +120,7 @@ class Stream {
     video/audio track source. For conference mode, if the video/audio track is
     from mixed stream, it will be set as kMixed.
   */
-  virtual StreamSourceInfo SourceInfo() const;
+  virtual StreamSourceInfo Source() const;
 #if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.

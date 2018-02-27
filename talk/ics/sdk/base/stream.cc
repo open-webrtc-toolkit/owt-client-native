@@ -201,7 +201,7 @@ void Stream::DetachVideoRenderer() {
 #endif
 }
 
-StreamSourceInfo Stream::SourceInfo() const {
+StreamSourceInfo Stream::Source() const {
   return source_;
 }
 
