@@ -12,7 +12,9 @@ RemoteMixedStreamObserverObjcImpl::RemoteMixedStreamObserverObjcImpl(
     : stream_(stream), delegate_(delegate) {}
 
 void RemoteMixedStreamObserverObjcImpl::OnVideoLayoutChanged() {
-  [delegate_ remoteMixedStreamDidChangeVideoLayout:stream_];
+  if ([delegate_ respondsToSelector:@selector(streamDidChangeVideoLayout:)]) {
+    [delegate_ streamDidChangeVideoLayout:stream_];
+  }
 }
 }
 }

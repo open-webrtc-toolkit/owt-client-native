@@ -28,7 +28,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ICSRemoteMixedStreamDelegate;
+@class ICSRemoteMixedStream;
+
+RTC_EXPORT
+@protocol ICSRemoteMixedStreamDelegate<ICSRemoteStreamDelegate>
+
+/**
+  @brief Triggers when video layout is changed.
+*/
+- (void)streamDidChangeVideoLayout:(ICSRemoteMixedStream*)stream;
+
+@end
 
 /// This class represent a mixed remote stream.
 RTC_EXPORT
@@ -50,16 +60,6 @@ RTC_EXPORT
 @property(readonly, strong) NSString* viewport;
 
 @property(nonatomic, weak) id<ICSRemoteMixedStreamDelegate> delegate;
-
-@end
-
-RTC_EXPORT
-@protocol ICSRemoteMixedStreamDelegate<NSObject>
-
-/**
-  @brief Triggers when video layout is changed.
-*/
-- (void)remoteMixedStreamDidChangeVideoLayout:(ICSRemoteMixedStream*)stream;
 
 @end
 

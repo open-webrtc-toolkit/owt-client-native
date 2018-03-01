@@ -13,6 +13,8 @@
   std::vector<ics::conference::RemoteMixedStreamObserverObjcImpl*> _observers;
 }
 
+@synthesize delegate;
+
 - (NSArray*)supportedVideoFormats {
   if (_supportedVideoFormats == nil) {
     _supportedVideoFormats = [[NSArray alloc] init];

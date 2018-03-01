@@ -687,6 +687,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
 }
 
 void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
+  LOG(LS_INFO) << "Stream removed.";
   TriggerOnStreamRemoved(stream);
 }
 

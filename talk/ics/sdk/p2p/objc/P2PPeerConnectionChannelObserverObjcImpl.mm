@@ -4,8 +4,6 @@
 
 #import <Foundation/Foundation.h>
 #import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
 #import "WebRTC/RTCLogging.h"
 
 #include "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
@@ -54,7 +52,7 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<ics::base::RemoteStream> stream) {
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
-      [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
+      [ICSRemoteStream alloc] initWithNativeStream:stream];
   remote_streams_[stream->Id()]=remote_stream;
   [_observer onStreamAdded:remote_stream];
   NSLog(@"On stream added.");

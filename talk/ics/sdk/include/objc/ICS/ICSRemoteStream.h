@@ -29,6 +29,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol ICSRemoteStreamDelegate;
+
 /// This class represents a remote stream.
 RTC_EXPORT
 @interface ICSRemoteStream : ICSStream
@@ -46,7 +48,20 @@ RTC_EXPORT
 
 @property(nonatomic, strong, readonly) ICSPublicationSettings* settings;
 
+/// Original settings for publishing this stream.
 @property(nonatomic, strong, readonly) ICSSubscriptionCapabilities* capabilities;
+
+/// Capabilities remote endpoint provides for subscription.
+@property(nonatomic, weak, readwrite) id<ICSRemoteStreamDelegate> delegate;
+
+@end
+
+RTC_EXPORT
+@protocol ICSRemoteStreamDelegate<NSObject>
+
+/// Triggered when a stream is ended, or the stream is no longer available in
+/// conference.
+-(void)streamDidEnd:(ICSRemoteStream*)stream;
 
 @end
 

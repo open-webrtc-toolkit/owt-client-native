@@ -12,8 +12,6 @@
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSRemoteScreenStream.h"
-#import "talk/ics/sdk/include/objc/ICS/ICSRemoteCameraStream.h"
 #import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
@@ -37,7 +35,7 @@ void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteStream> stream) {
   ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
-      [ICSRemoteCameraStream alloc] initWithNativeStream:stream];
+      [ICSRemoteStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
   if ([delegate_
           respondsToSelector:@selector(conferenceClient:didAddStream:)]) {
