@@ -96,6 +96,8 @@ static_library("ics_sdk_base") {
     "sdk/base/globalconfiguration.cc",
     "sdk/base/localcamerastreamparameters.cc",
     "sdk/base/logging.cc",
+    "sdk/base/logsinks.cc",
+    "sdk/base/logsinks.h",
     "sdk/base/mediaconstraintsimpl.h",
     "sdk/base/mediautils.cc",
     "sdk/base/mediautils.h",

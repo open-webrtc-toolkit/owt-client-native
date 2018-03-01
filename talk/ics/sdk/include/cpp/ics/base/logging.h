@@ -45,6 +45,8 @@ enum class LoggingSeverity : int {
   kNone
 };
 
+/// Logger configuration class. Choose either LogToConsole or LogToFileRotate in
+/// your application for logging to console or file.
 class Logging final {
  public:
   /// Set logging severity. All logging messages with higher severity will be
@@ -52,7 +54,10 @@ class Logging final {
   static void Severity(LoggingSeverity severity);
   /// Get current logging severity.
   static LoggingSeverity Severity();
-
+  /// Set logging to console
+  static void LogToConsole(LoggingSeverity severity);
+  /// Set logging to files under provided dir rotately.
+  static void LogToFileRotate(LoggingSeverity severity, std::string& dir, size_t max_log_size);
  private:
   static LoggingSeverity min_severity_;
 };
