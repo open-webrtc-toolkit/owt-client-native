@@ -28,8 +28,6 @@
 #import <ICS/ICSErrors.h>
 #import <ICS/ICSFrameGeneratorProtocol.h>
 #import <ICS/ICSGlobalConfiguration.h>
-#import <ICS/ICSLocalCameraStream.h>
-#import <ICS/ICSLocalCustomizedStream.h>
 #import <ICS/ICSLocalStream.h>
 #import <ICS/ICSMediaFormat.h>
 #import <ICS/ICSRemoteCameraStream.h>
