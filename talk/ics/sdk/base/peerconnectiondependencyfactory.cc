@@ -64,15 +64,6 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
 
 PeerConnectionDependencyFactory::~PeerConnectionDependencyFactory() {}
 
-#if defined(ICS_REBASE_M63)
-scoped_refptr<PeerConnectionDependencyFactory>
-PeerConnectionDependencyFactory::Create() {
-  rtc::RefCountedObject<PeerConnectionDependencyFactory>* pcdf = new
-rtc::RefCountedObject<PeerConnectionDependencyFactory>();
-  return pcdf;
-}
-#endif
-
 rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
@@ -130,21 +121,24 @@ void PeerConnectionDependencyFactory::
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
 #endif
 
-#if defined(ICS_REBASE_M63)
-  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled())
-    decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
-  else {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  #if defined(WEBRTC_WIN)
     if (render_hardware_acceleration_enabled_) {
-      encoder_factory.reset(new MSDKVideoEncoderFactory());
-      decoder_factory.reset(new MSDKVideoDecoderFactory());
+      if (!encoded_frame_) {
+        encoder_factory.reset(new MSDKVideoEncoderFactory());
+      }
+      if (!GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+        decoder_factory.reset(new MSDKVideoDecoderFactory());
+      }
     }
 #endif
-  }
+    if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+      decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
+    }
 #endif
+
   // Encoded video frame enabled
-  if (encoded_frame_)
-  {
+  if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   }
   // Raw audio frame

@@ -112,7 +112,7 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     mfxStatus sts;
     mfxVersion minVer;
     //    mfxVersion Version;
-    LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << "framerate:" <<
+    LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << ",framerate:" <<
         codec_settings->maxFramerate << "targetBitRate:" << codec_settings->targetBitrate;
     minVer.Major = 1;
     minVer.Minor = 0;

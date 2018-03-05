@@ -21,6 +21,16 @@ EncodedVideoEncoderFactory::EncodedVideoEncoderFactory() {
 #endif
     const webrtc::H264::Level level = webrtc::H264::kLevel3_1;
 
+     cricket::VideoCodec high(cricket::kH264CodecName);
+     const webrtc::H264::ProfileLevelId high_profile(
+          webrtc::H264::kProfileHigh, level);
+     high.SetParam(
+          cricket::kH264FmtpProfileLevelId,
+          *webrtc::H264::ProfileLevelIdToString(high_profile));
+     high.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
+     high.SetParam(cricket::kH264FmtpPacketizationMode, "1");
+     supported_codecs_.push_back(high);
+
     cricket::VideoCodec constrained_high(cricket::kH264CodecName);
     const webrtc::H264::ProfileLevelId constrained_high_profile(
         webrtc::H264::kProfileConstrainedHigh, level);
