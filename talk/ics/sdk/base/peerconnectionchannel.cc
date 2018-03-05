@@ -80,16 +80,16 @@ bool PeerConnectionChannel::ApplyBitrateSettings() {
         // should move here instead of modifying SDP.
         if (sender_track->kind() ==
             webrtc::MediaStreamTrackInterface::kAudioKind) {
-          if (configuration_.audio.size() > 0 && configuration_.audio[0].maxBitrateBps > 0) {
+          if (configuration_.audio.size() > 0 && configuration_.audio[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.audio[0].maxBitrateBps * 1024);
+                rtc::Optional<int>(configuration_.audio[0].max_bitrate * 1024);
             ret |= sender->SetParameters(rtp_parameters);
           }
         } else if (sender_track->kind() ==
                    webrtc::MediaStreamTrackInterface::kVideoKind) {
-          if (configuration_.video.size() > 0 && configuration_.video[0].maxBitrateBps > 0) {
+          if (configuration_.video.size() > 0 && configuration_.video[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.video[0].maxBitrateBps * 1024);
+                rtc::Optional<int>(configuration_.video[0].max_bitrate * 1024);
             ret |= sender->SetParameters(rtp_parameters);
           }
         }
@@ -168,13 +168,13 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
 
       std::vector<AudioCodec> audio_codecs;
       for (auto& audio_enc_param : configuration_.audio) {
-        audio_codecs.push_back(audio_enc_param.codec_params.name);
+        audio_codecs.push_back(audio_enc_param.codec.name);
       }
       sdp_string = SdpUtils::SetPreferAudioCodecs(
           sdp_string, audio_codecs);
       std::vector<VideoCodec> video_codecs;
       for (auto& video_enc_param : configuration_.video) {
-        video_codecs.push_back(video_enc_param.codec_params.name);
+        video_codecs.push_back(video_enc_param.codec.name);
       }
       sdp_string = SdpUtils::SetPreferVideoCodecs(
           sdp_string, video_codecs);

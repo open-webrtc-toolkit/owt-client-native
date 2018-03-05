@@ -14,8 +14,22 @@
 
 @end
 
-@interface ICSConferenceSubscriptionOptions ()
+@interface ICSConferenceAudioSubscriptionConstraints ()
 
-- (ics::conference::SubscriptionOptions)nativeSubscriptionOptions;
+- (std::shared_ptr<ics::conference::AudioSubscriptionConstraints>)
+    nativeAudioSubscriptionConstraints;
+
+@end
+
+@interface ICSConferenceVideoSubscriptionConstraints ()
+
+- (std::shared_ptr<ics::conference::VideoSubscriptionConstraints>)
+    nativeVideoSubscriptionConstraints;
+
+@end
+
+@interface ICSConferenceSubscribeOptions ()
+
+- (std::shared_ptr<ics::conference::SubscribeOptions>)nativeSubscribeOptions;
 
 @end

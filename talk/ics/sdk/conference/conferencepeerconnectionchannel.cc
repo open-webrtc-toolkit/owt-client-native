@@ -410,7 +410,7 @@ void ConferencePeerConnectionChannel::Publish(
   SendPublishMessage(options, stream, on_failure);
 }
 
-static bool SubOptionAllowed(const SubscriptionOptions& subscribe_options,
+static bool SubOptionAllowed(const SubscribeOptions& subscribe_options,
     const SubscriptionCapabilities& subscription_caps) {
     // TODO: Audio sub constraints are currently not checked as spec only specifies codec, though
     // signaling allows specifying sampleRate and channel num.
@@ -457,7 +457,7 @@ static bool SubOptionAllowed(const SubscriptionOptions& subscribe_options,
 
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
-    const SubscriptionOptions& subscribe_options,
+    const SubscribeOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "

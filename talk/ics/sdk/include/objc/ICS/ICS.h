@@ -30,6 +30,7 @@
 #import <ICS/ICSGlobalConfiguration.h>
 #import <ICS/ICSLocalStream.h>
 #import <ICS/ICSMediaFormat.h>
+#import <ICS/ICSPublishOptions.h>
 #import <ICS/ICSRemoteMixedStream.h>
 #import <ICS/ICSRemoteStream.h>
 #import <ICS/ICSStream.h>

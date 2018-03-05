@@ -80,16 +80,6 @@ struct Resolution {
   unsigned long height;
 };
 
-/**
- @brief An instance of this class represent a video format.
-*/
-struct VideoFormat {
-  /** @cond */
-  explicit VideoFormat(const Resolution& r) : resolution(r) {}
-  /** @endcond */
-  Resolution resolution;
-};
-
 /// Audio codec parameters for an audio track.
 struct AudioCodecParameters {
   /// Construct an instance of AudioCodecParameters with default param.
@@ -110,18 +100,18 @@ struct AudioCodecParameters {
 
 /// Audio encoding parameters.
 struct AudioEncodingParameters {
-   explicit AudioEncodingParameters() : codec_params(), maxBitrateBps(0) {}
+  explicit AudioEncodingParameters() : codec(), max_bitrate(0) {}
 
-   AudioEncodingParameters (AudioCodecParameters codec_param, unsigned long bitrate_bps)
-     : codec_params(codec_param),
-       maxBitrateBps(bitrate_bps) {}
+  AudioEncodingParameters(const AudioCodecParameters& codec_param,
+                          unsigned long bitrate_bps)
+      : codec(codec_param), max_bitrate(bitrate_bps) {}
 
-   AudioEncodingParameters (const AudioEncodingParameters& aep) = default;
+  AudioEncodingParameters(const AudioEncodingParameters& aep) = default;
 
-   AudioEncodingParameters& operator=(const AudioEncodingParameters&) = default;
+  AudioEncodingParameters& operator=(const AudioEncodingParameters&) = default;
 
-   AudioCodecParameters codec_params;
-   unsigned long maxBitrateBps;
+  AudioCodecParameters codec;
+  unsigned long max_bitrate;
 };
 
 /// Video codec parameters for a video track.
@@ -136,22 +126,26 @@ struct VideoCodecParameters {
   std::string profile;
 };
 
-/// Video encoding parameters. Used to specify the video encoding settings when publishing the video.
+/// Video encoding parameters. Used to specify the video encoding settings when
+/// publishing the video.
 struct VideoEncodingParameters {
-   explicit VideoEncodingParameters() : codec_params(), maxBitrateBps(0), hardware_accelerated(false) {}
-   /// Construct an instance of VideoEncodingParameters
-   VideoEncodingParameters (VideoCodecParameters codec_param, unsigned long bitrate_bps, bool hw)
-     : codec_params(codec_param),
-       maxBitrateBps(bitrate_bps),
-       hardware_accelerated(hw) {}
+  explicit VideoEncodingParameters()
+      : codec(), max_bitrate(0), hardware_accelerated(false) {}
+  /// Construct an instance of VideoEncodingParameters
+  VideoEncodingParameters(const VideoCodecParameters& codec_param,
+                          unsigned long bitrate_bps,
+                          bool hw)
+      : codec(codec_param),
+        max_bitrate(bitrate_bps),
+        hardware_accelerated(hw) {}
 
-   VideoEncodingParameters (const VideoEncodingParameters& aep) = default;
+  VideoEncodingParameters(const VideoEncodingParameters& aep) = default;
 
-   VideoEncodingParameters& operator=(const VideoEncodingParameters&) = default;
+  VideoEncodingParameters& operator=(const VideoEncodingParameters&) = default;
 
-   VideoCodecParameters codec_params;
-   unsigned long maxBitrateBps;
-   bool hardware_accelerated;
+  VideoCodecParameters codec;
+  unsigned long max_bitrate;
+  bool hardware_accelerated;
 };
 
 /// Audio source info.

@@ -7,30 +7,26 @@
 #include "ics/base/commontypes.h"
 #include "ics/base/options.h"
 
+// TODO: Change all native object to shared pointer so it can be changed in both
+// C++ code and Objective-C code.
+
 @interface ICSAudioCodecParameters ()
 
-@property(nonatomic, readonly)
-    ics::base::AudioCodecParameters nativeAudioCodecParameters;
+@property(nonatomic, readonly) std::shared_ptr<ics::base::AudioCodecParameters>
+    nativeAudioCodecParameters;
 
 - (instancetype)initWithNativeAudioCodecParameters:
-    (const ics::base::AudioCodecParameters &)nativeAudioCodecParameters;
+    (const ics::base::AudioCodecParameters&)nativeAudioCodecParameters;
 
 @end
 
 @interface ICSVideoCodecParameters ()
 
-@property(nonatomic, readonly) ics::base::VideoCodecParameters nativeVideoCodecParameters;
+@property(nonatomic, readonly) std::shared_ptr<ics::base::VideoCodecParameters>
+    nativeVideoCodecParameters;
 
 - (instancetype)initWithNativeVideoCodecParameters:
     (const ics::base::VideoCodecParameters &) nativeVideoCodecParameters;
-
-@end
-
-
-@interface ICSVideoFormat ()
-
-- (instancetype)initWithNativeVideoFormat:
-    (const ics::base::VideoFormat&)videoFormat;
 
 @end
 
@@ -86,5 +82,34 @@
 
 - (instancetype)initWithNativeSubscriptionCapabilities:
     (const ics::base::SubscriptionCapabilities &)nativeCapabilities;
+
+@end
+
+@interface ICSStreamSourceInfo ()
+
+@property(nonatomic, readonly)
+    ics::base::StreamSourceInfo nativeStreamSourceInfo;
+
+@end
+
+@interface ICSVideoTrackConstraints ()
+
+@end
+
+@interface ICSStreamConstraints ()
+
+@end
+
+@interface ICSAudioEncodingParameters ()
+
+@property(nonatomic, readonly)
+    ics::base::AudioEncodingParameters nativeAudioEncodingParameters;
+
+@end
+
+@interface ICSVideoEncodingParameters ()
+
+@property(nonatomic, readonly)
+    ics::base::VideoEncodingParameters nativeVideoEncodingParameters;
 
 @end

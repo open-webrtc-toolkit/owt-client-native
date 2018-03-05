@@ -325,6 +325,7 @@ if (is_ios) {
       "sdk/base/objc/ICSRemoteStream.mm",
       "sdk/base/objc/ICSStream+Internal.h",
       "sdk/base/objc/ICSStream.mm",
+      "sdk/base/objc/ICSPublishOptions.mm",
       "sdk/base/objc/public/ICSConnectionStats.h",
       "sdk/base/objc/public/ICSErrors.h",
       "sdk/base/objc/public/ICSFrameGeneratorProtocol.h",

@@ -25,53 +25,17 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <CoreGraphics/CoreGraphics.h>
 #import <WebRTC/RTCMacros.h>
 #import <ICS/ICSMediaFormat.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class RTCLegacyStatsReport;
-
 RTC_EXPORT
-@interface ICSConferenceSubscription : NSObject
+@interface ICSPublishOptions : NSObject
 
-- (instancetype)init NS_UNAVAILABLE;
-- (void)stop;
-- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
+@property(nonatomic, strong) NSArray<ICSAudioEncodingParameters*>* audio;
 
-@end
-
-
-RTC_EXPORT
-/// Options for subscribing a remote stream.
-@interface ICSConferenceAudioSubscriptionConstraints : NSObject
-
-@property(nonatomic, strong) NSArray<ICSAudioCodecParameters*>* codecs;
-
-@end
-
-RTC_EXPORT
-/// Options for subscribing a remote stream.
-@interface ICSConferenceVideoSubscriptionConstraints : NSObject
-
-@property(nonatomic, assign) CGSize resolution;
-@property(nonatomic, assign) float frameRate;
-@property(nonatomic, assign) float bitrateMultiplier;
-@property(nonatomic, assign) NSUInteger keyFrameInterval;
-@property(nonatomic, strong) NSArray<ICSVideoCodecParameters*>* codecs;
-
-@end
-
-RTC_EXPORT
-@interface ICSConferenceSubscribeOptions : NSObject
-
-- (instancetype)initWithAudio:(ICSConferenceAudioSubscriptionConstraints*)audio
-                        video:(ICSConferenceVideoSubscriptionConstraints*)video;
-
-@property(nonatomic, strong) ICSConferenceAudioSubscriptionConstraints* audio;
-@property(nonatomic, strong) ICSConferenceVideoSubscriptionConstraints* video;
+@property(nonatomic, strong) NSArray<ICSVideoEncodingParameters*>* video;
 
 @end
 

@@ -4,50 +4,16 @@
 
 #import <UIKit/UIKit.h>
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
-#import "webrtc/rtc_base/checks.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 #include "talk/ics/sdk/include/cpp/ics/base/options.h"
+#include "webrtc/rtc_base/checks.h"
 
-@implementation ICSVideoFormat {
-  ics::base::VideoFormat* _videoFormat;
+@implementation ICSAudioCodecParameters {
+  std::shared_ptr<ics::base::AudioCodecParameters> _nativeAudioCodecParameters;
 }
 
-- (instancetype)init {
-  self = [super init];
-  ics::base::Resolution resolution(0, 0);
-  _videoFormat = new ics::base::VideoFormat(resolution);
-  return self;
-}
-
-- (void)dealloc {
-  delete _videoFormat;
-}
-
-- (CGSize)resolution {
-  return CGSizeMake(_videoFormat->resolution.width,
-                    _videoFormat->resolution.height);
-}
-
-- (instancetype)initWithNativeVideoFormat:
-    (const ics::base::VideoFormat&)videoFormat {
-  self = [super init];
-  ics::base::Resolution resolution(videoFormat.resolution.width,
-                                   videoFormat.resolution.height);
-  _videoFormat = new ics::base::VideoFormat(resolution);
-  return self;
-}
-
-- (NSString*)description {
-  return [NSString stringWithFormat:@"Resolution: %f x %f",
-                                    [self resolution].width,
-                                    [self resolution].height];
-}
-
-@end
-
-@implementation ICSAudioCodecParameters
-
-@dynamic name, channelCount, clockRate;
+@dynamic nativeAudioCodecParameters;
 
 static std::unordered_map<ICSAudioCodec, const ics::base::AudioCodec>
     audioCodecMap = {{ICSAudioCodecOpus, ics::base::AudioCodec::kOpus},
@@ -64,37 +30,38 @@ static std::unordered_map<ICSAudioCodec, const ics::base::AudioCodec>
 - (instancetype)initWithNativeAudioCodecParameters:
     (const ics::base::AudioCodecParameters&)nativeAudioCodecParameters {
   if (self = [super init]) {
-    _nativeAudioCodecParameters = nativeAudioCodecParameters;
+    auto it =
+        std::find_if(audioCodecMap.begin(), audioCodecMap.end(),
+                     [&nativeAudioCodecParameters](auto&& codec) {
+                       return codec.second == nativeAudioCodecParameters.name;
+                     });
+    if (it != audioCodecMap.end()) {
+      _name = it->first;
+    } else {
+      RTC_NOTREACHED();
+      _name = ICSAudioCodecUnknown;
+    }
+    _channelCount = nativeAudioCodecParameters.channel_count;
+    _clockRate = nativeAudioCodecParameters.clock_rate;
   }
   return self;
 }
 
-- (ICSAudioCodec)name {
-  auto it = std::find_if(
-      audioCodecMap.begin(), audioCodecMap.end(), [self](auto&& codec) {
-        return codec.second == self.nativeAudioCodecParameters.name;
-      });
-  if (it != audioCodecMap.end()) {
-    return it->first;
-  } else {
-    RTC_NOTREACHED();
-    return ICSAudioCodecUnknown;
-  }
-}
-
-- (NSUInteger)channelCount {
-  return _nativeAudioCodecParameters.channel_count;
-}
-
-- (NSUInteger)clockRate {
-  return _nativeAudioCodecParameters.clock_rate;
+- (std::shared_ptr<ics::base::AudioCodecParameters>)nativeAudioCodecParameters {
+  ics::base::AudioCodec codec_name = audioCodecMap[self.name];
+  auto nativeParameters = std::shared_ptr<ics::base::AudioCodecParameters>(
+      new ics::base::AudioCodecParameters(codec_name, self.channelCount,
+                                          self.clockRate));
+  return nativeParameters;
 }
 
 @end
 
-@implementation ICSVideoCodecParameters
+@implementation ICSVideoCodecParameters{
+  std::shared_ptr<ics::base::VideoCodecParameters> _nativeVideoCodecParameters;
+}
 
-@dynamic name, profile;
+@dynamic name, profile, nativeVideoCodecParameters;
 
 static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
     videoCodecMap = {{ICSVideoCodecVP8, ics::base::VideoCodec::kVp8},
@@ -105,7 +72,9 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 - (instancetype)initWithNativeVideoCodecParameters:
     (const ics::base::VideoCodecParameters&)nativeVideoCodecParameters {
   if (self = [super init]) {
-    _nativeVideoCodecParameters = nativeVideoCodecParameters;
+    _nativeVideoCodecParameters =
+        std::shared_ptr<ics::base::VideoCodecParameters>(
+            new ics::base::VideoCodecParameters(nativeVideoCodecParameters));
   }
   return self;
 }
@@ -113,7 +82,7 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 - (ICSVideoCodec)name {
   auto it = std::find_if(
       videoCodecMap.begin(), videoCodecMap.end(), [self](auto&& codec) {
-        return codec.second == self.nativeVideoCodecParameters.name;
+        return codec.second == _nativeVideoCodecParameters->name;
       });
   if (it != videoCodecMap.end()) {
     return it->first;
@@ -121,6 +90,18 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
     RTC_NOTREACHED();
     return ICSVideoCodecUnknown;
   }
+}
+
+- (std::shared_ptr<ics::base::VideoCodecParameters>)nativeVideoCodecParameters {
+  if (_nativeVideoCodecParameters) {
+    return _nativeVideoCodecParameters;
+  }
+  ics::base::VideoCodec codec_name = videoCodecMap[self.name];
+  _nativeVideoCodecParameters =
+      std::shared_ptr<ics::base::VideoCodecParameters>(
+          new ics::base::VideoCodecParameters(
+              codec_name, [NSString stdStringForString:self.profile]));
+  return _nativeVideoCodecParameters;
 }
 
 @end
@@ -285,6 +266,44 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 
 @implementation ICSStreamSourceInfo
 
+@dynamic nativeStreamSourceInfo;
+
+- (ics::base::StreamSourceInfo)nativeStreamSourceInfo {
+  ics::base::AudioSourceInfo audio_source_info =
+      ics::base::AudioSourceInfo::kUnknown;
+  switch (_audio) {
+    case ICSAudioSourceInfoMic:
+      audio_source_info = ics::base::AudioSourceInfo::kMic;
+      break;
+    case ICSAudioSourceInfoScreenCast:
+      audio_source_info = ics::base::AudioSourceInfo::kScreenCast;
+      break;
+    case ICSAudioSourceInfoFile:
+      audio_source_info = ics::base::AudioSourceInfo::kFile;
+      break;
+    case ICSAudioSourceInfoMixed:
+      audio_source_info = ics::base::AudioSourceInfo::kMixed;
+      break;
+  }
+  ics::base::VideoSourceInfo video_source_info =
+      ics::base::VideoSourceInfo::kUnknown;
+  switch (_video) {
+    case ICSVideoSourceInfoCamera:
+      video_source_info = ics::base::VideoSourceInfo::kCamera;
+      break;
+    case ICSVideoSourceInfoScreenCast:
+      video_source_info = ics::base::VideoSourceInfo::kScreenCast;
+      break;
+    case ICSVideoSourceInfoFile:
+      video_source_info = ics::base::VideoSourceInfo::kFile;
+      break;
+    case ICSVideoSourceInfoMixed:
+      video_source_info = ics::base::VideoSourceInfo::kMixed;
+      break;
+  }
+  return ics::base::StreamSourceInfo(audio_source_info, video_source_info);
+}
+
 @end
 
 @implementation ICSVideoTrackConstraints
@@ -292,5 +311,20 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 @end
 
 @implementation ICSStreamConstraints
+
+@end
+
+@implementation ICSAudioEncodingParameters
+
+@dynamic nativeAudioEncodingParameters;
+
+- (ics::base::AudioEncodingParameters)nativeAudioEncodingParameters {
+  return ics::base::AudioEncodingParameters(
+      *[self.codec nativeAudioCodecParameters].get(), self.maxBitrate);
+}
+
+@end
+
+@implementation ICSVideoEncodingParameters
 
 @end

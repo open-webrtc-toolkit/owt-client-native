@@ -66,14 +66,6 @@ typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
   ICSVideoSourceInfoMixed = 4,
 };
 
-// This class describes a media stream's format
-RTC_EXPORT
-@interface ICSVideoFormat : NSObject
-
-- (CGSize)resolution;
-
-@end
-
 RTC_EXPORT
 @interface ICSAudioCodecParameters : NSObject
 
@@ -172,6 +164,26 @@ RTC_EXPORT
 @property(nonatomic, assign) BOOL audio;
 /// Constraints for video track.
 @property(nonatomic, strong) ICSVideoTrackConstraints* video;
+
+@end
+
+RTC_EXPORT
+/// Encoding parameters for sending an audio track.
+@interface ICSAudioEncodingParameters : NSObject
+
+@property(nonatomic, strong) ICSAudioCodecParameters* codec;
+/// Max bitrate expressed in bps.
+@property(nonatomic, assign) NSUInteger maxBitrate;
+
+@end
+
+RTC_EXPORT
+/// Encoding parameters for sending a video track.
+@interface ICSVideoEncodingParameters : NSObject
+
+@property(nonatomic, strong) ICSVideoCodecParameters* codec;
+/// Max bitrate expressed in bps.
+@property(nonatomic, assign) NSUInteger maxBitrate;
 
 @end
 

@@ -2,6 +2,7 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
+#import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceSubscription+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
@@ -56,30 +57,70 @@
 
 @end
 
-@implementation ICSConferenceSubscriptionOptions {
-  CGSize _resolution;
+@implementation ICSConferenceAudioSubscriptionConstraints
+
+- (std::shared_ptr<ics::conference::AudioSubscriptionConstraints>)
+    nativeAudioSubscriptionConstraints {
+  std::shared_ptr<ics::conference::AudioSubscriptionConstraints> constrains =
+      std::shared_ptr<ics::conference::AudioSubscriptionConstraints>(
+          new ics::conference::AudioSubscriptionConstraints());
+  constrains->codecs =
+      std::vector<ics::base::AudioCodecParameters>([_codecs count]);
+  for (ICSAudioCodecParameters* codec in _codecs) {
+    ics::base::AudioCodecParameters parameters(
+        *[codec nativeAudioCodecParameters].get());
+    constrains->codecs.push_back(parameters);
+  }
+  return constrains;
 }
 
-- (instancetype)init {
+@end
+
+@implementation ICSConferenceVideoSubscriptionConstraints
+
+- (std::shared_ptr<ics::conference::VideoSubscriptionConstraints>)
+    nativeVideoSubscriptionConstraints {
+  std::shared_ptr<ics::conference::VideoSubscriptionConstraints> constrains =
+      std::shared_ptr<ics::conference::VideoSubscriptionConstraints>(
+          new ics::conference::VideoSubscriptionConstraints());
+  constrains->codecs =
+      std::vector<ics::base::VideoCodecParameters>([_codecs count]);
+  for (ICSVideoCodecParameters* codec in _codecs) {
+    ics::base::VideoCodecParameters parameters(
+        *[codec nativeVideoCodecParameters].get());
+    constrains->codecs.push_back(parameters);
+  }
+  constrains->resolution =
+      ics::base::Resolution(_resolution.width, _resolution.height);
+  constrains->frameRate = _frameRate;
+  constrains->bitrateMultiplier = _bitrateMultiplier;
+  constrains->keyFrameInterval = _keyFrameInterval;
+  return constrains;
+}
+
+@end
+
+@implementation ICSConferenceSubscribeOptions 
+
+- (instancetype)initWithAudio:(ICSConferenceAudioSubscriptionConstraints*)audio
+                        video:
+                            (ICSConferenceVideoSubscriptionConstraints*)video {
   if ((self = [super init])) {
-    self.resolution = CGSizeMake(0, 0);
+    _audio = audio;
+    _video = video;
   }
   return self;
 }
 
-- (CGSize)resolution {
-  return _resolution;
-}
-
-- (void)setResolution:(CGSize)resolution {
-  _resolution = resolution;
-}
-
-- (ics::conference::SubscriptionOptions)nativeSubscriptionOptions {
-  using namespace ics::conference;
-  ics::conference::SubscriptionOptions options;
-  options.video.resolution.width = _resolution.width;
-  options.video.resolution.height = _resolution.height;
+- (std::shared_ptr<ics::conference::SubscribeOptions>)nativeSubscribeOptions {
+  std::shared_ptr<ics::conference::SubscribeOptions> options(
+      new ics::conference::SubscribeOptions);
+  ics::conference::AudioSubscriptionConstraints audio(
+      *[_audio nativeAudioSubscriptionConstraints].get());
+  ics::conference::VideoSubscriptionConstraints video(
+      *[_video nativeVideoSubscriptionConstraints].get());
+  options->audio = audio;
+  options->video = video;
   return options;
 }
 

@@ -350,13 +350,13 @@ void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  SubscriptionOptions options;
+  SubscribeOptions options;
   Subscribe(stream, options, on_success, on_failure);
 }
 
 void ConferenceClient::Subscribe(
     std::shared_ptr<RemoteStream> stream,
-    const SubscriptionOptions& options,
+    const SubscribeOptions& options,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure )) {

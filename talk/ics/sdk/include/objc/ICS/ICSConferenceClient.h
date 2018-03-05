@@ -37,6 +37,7 @@
 #import "ICS/ICSLocalStream.h"
 #import "ICS/ICSRemoteMixedStream.h"
 #import "ICS/ICSRemoteStream.h"
+#import "ICS/ICSPublishOptions.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,6 +67,16 @@ RTC_EXPORT
 - (void)publish:(ICSLocalStream*)stream
       onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
+
+/**
+  @brief Publish the stream to the current room.
+  @param stream The stream to be published.
+*/
+- (void)publish:(ICSLocalStream*)stream
+    withOptions:(ICSPublishOptions*)options
+      onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
+      onFailure:(nullable void (^)(NSError*))onFailure;
+
 /**
   @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
@@ -81,7 +92,7 @@ RTC_EXPORT
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(ICSRemoteStream*)stream
-      withOptions:(ICSConferenceSubscriptionOptions*)options
+      withOptions:(ICSConferenceSubscribeOptions*)options
         onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**

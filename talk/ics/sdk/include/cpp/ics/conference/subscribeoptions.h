@@ -56,8 +56,8 @@ struct VideoSubscriptionConstraints {
   unsigned long keyFrameInterval;
 };
 
-/// Subscription options
-struct SubscriptionOptions {
+/// Subscribe options
+struct SubscribeOptions {
   AudioSubscriptionConstraints audio;
   VideoSubscriptionConstraints video;
 };

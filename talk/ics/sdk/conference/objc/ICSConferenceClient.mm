@@ -9,6 +9,7 @@
 #import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
+#import "talk/ics/sdk/base/objc/ICSPublishOptions+Private.h"
 #import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
@@ -130,11 +131,31 @@
       });
 }
 
+- (void)publish:(ICSLocalStream*)stream
+    withOptions:(ICSPublishOptions*)options
+      onSuccess:(void (^)(ICSConferencePublication*))onSuccess
+      onFailure:(void (^)(NSError*))onFailure {
+  auto nativeStreamRefPtr = [stream nativeStream];
+  std::shared_ptr<ics::base::LocalStream> nativeStream(
+      std::static_pointer_cast<ics::base::LocalStream>(nativeStreamRefPtr));
+  _nativeConferenceClient->Publish(
+      nativeStream, *[options nativePublishOptions].get(),
+      [=](std::shared_ptr<ics::conference::ConferencePublication> publication) {
+        [_publishedStreams setObject:stream forKey:[stream streamId]];
+        if (onSuccess != nil)
+          onSuccess([[ICSConferencePublication alloc]
+              initWithNativePublication:publication]);
+      },
+      [=](std::unique_ptr<ics::base::Exception> e) {
+        [self triggerOnFailure:onFailure withException:(std::move(e))];
+      });
+}
+
 - (void)subscribe:(ICSRemoteStream*)stream
         onSuccess:(void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
-  ICSConferenceSubscriptionOptions* options =
-      [[ICSConferenceSubscriptionOptions alloc] init];
+  ICSConferenceSubscribeOptions* options =
+      [[ICSConferenceSubscribeOptions alloc] init];
   [self subscribe:stream
       withOptions:options
         onSuccess:onSuccess
@@ -142,17 +163,17 @@
 }
 
 - (void)subscribe:(ICSRemoteStream*)stream
-      withOptions:(ICSConferenceSubscriptionOptions*)options
+      withOptions:(ICSConferenceSubscribeOptions*)options
         onSuccess:(void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
   if (options == nil) {
-    options = [[ICSConferenceSubscriptionOptions alloc] init];
+    options = [[ICSConferenceSubscribeOptions alloc] init];
   }
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<ics::base::RemoteStream> nativeStream(
       std::static_pointer_cast<ics::base::RemoteStream>(nativeStreamRefPtr));
   _nativeConferenceClient->Subscribe(
-      nativeStream, [options nativeSubscriptionOptions],
+      nativeStream, *[options nativeSubscribeOptions].get(),
       [=](std::shared_ptr<ics::conference::ConferenceSubscription>
               subscription) {
         ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]
