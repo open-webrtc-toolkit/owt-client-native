@@ -202,8 +202,8 @@ int CustomizedVideoEncoderProxy::Encode(
       }
       scPosition += naluPosition;
       scPositions[scPositionsLength++] = scPosition;
-      scLengths[scPositionsLength - 1] = scLength;
-      scPosition += scLength;
+      scLengths[scPositionsLength - 1] = static_cast<int32_t>(scLength);
+      scPosition += static_cast<int32_t>(scLength);
     }
     if (scPositionsLength == 0) {
       LOG(LS_ERROR) << "Start code is not found for H264 codec!";
