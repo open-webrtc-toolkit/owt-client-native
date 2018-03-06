@@ -378,7 +378,28 @@ void ConferenceClient::Subscribe(
     }
     return;
   }
-
+  // Avoid subscribing the same stream twice.
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscirbe pcs
+    auto it = std::find_if(
+         subscribe_pcs_.begin(), subscribe_pcs_.end(),
+         [&](std::shared_ptr<ConferencePeerConnectionChannel> o)
+         -> bool { return o->GetSubStreamId() == stream->Id(); });
+    if (it != subscribe_pcs_.end()) {
+      std::string failure_message(
+           "The same remote stream has already been subscribed. Subcribe after it is "
+           "unsubscribed");
+      if (on_failure != nullptr) {
+        event_queue_->PostTask([on_failure, failure_message]() {
+             std::unique_ptr<Exception> e(new Exception(
+                  ExceptionType::kConferenceUnknown, failure_message));
+             on_failure(std::move(e));
+        });
+      }
+      return;
+    }
+  }
   // Reorder SDP according to perference list.
   PeerConnectionChannelConfiguration config =
       GetPeerConnectionChannelConfiguration();

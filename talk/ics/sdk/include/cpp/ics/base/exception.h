@@ -84,7 +84,7 @@ class Exception {
   std::string Message() const;
 
  private:
-  const enum ExceptionType type_;
+  const ExceptionType type_;
   const std::string message_;
 };
 

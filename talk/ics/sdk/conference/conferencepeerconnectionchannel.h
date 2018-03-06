@@ -100,9 +100,8 @@ class ConferencePeerConnectionChannel
   // Initialize an ICE restarat.
   void IceRestart();
 
-  // Set published stream's ID. This ID is assgined by MCU.
-  // This is the reason why a local stream cannot publish twice.
-  void SetStreamId(const std::string& id);
+  // Get the associated stream id if it is a subscription channel.
+  std::string GetSubStreamId();
 
   // Set stream's session ID. This ID is returned by MCU per publish/subscribe.
   void SetSessionId(const std::string& id);

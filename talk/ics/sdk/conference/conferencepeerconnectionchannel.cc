@@ -799,12 +799,12 @@ void ConferencePeerConnectionChannel::DrainIceCandidates() {
   ice_candidates_.clear();
 }
 
-void ConferencePeerConnectionChannel::SetStreamId(const std::string& id) {
-  LOG(LS_INFO) << "Setting stream ID " << id;
-  if (published_stream_ != nullptr) {
-    //published_stream_->Id(id);
+std::string ConferencePeerConnectionChannel::GetSubStreamId() {
+  if (subscribed_stream_) {
+    return subscribed_stream_->Id();
+  } else {
+    return "";
   }
-  SetSessionId(id);
 }
 
 void ConferencePeerConnectionChannel::SetSessionId(const std::string& id) {

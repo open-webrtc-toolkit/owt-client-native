@@ -488,7 +488,8 @@ LocalStream::LocalStream(
 
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    std::unique_ptr<VideoFrameGeneratorInterface> framer) {
+    std::unique_ptr<VideoFrameGeneratorInterface> framer)
+    : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     LOG(LS_WARNING) << "Create Local Camera Stream without video and audio.";
   }
