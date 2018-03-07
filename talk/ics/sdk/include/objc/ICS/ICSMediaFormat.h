@@ -57,6 +57,7 @@ typedef NS_ENUM(NSInteger, ICSAudioSourceInfo) {
   ICSAudioSourceInfoScreenCast = 2,
   ICSAudioSourceInfoFile = 3,
   ICSAudioSourceInfoMixed = 4,
+  ICSAudioSourceInfoUnknown = 5,
 };
 
 typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
@@ -64,6 +65,7 @@ typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
   ICSVideoSourceInfoScreenCast = 2,
   ICSVideoSourceInfoFile = 3,
   ICSVideoSourceInfoMixed = 4,
+  ICSVideoSourceInfoUnknown = 5,
 };
 
 RTC_EXPORT

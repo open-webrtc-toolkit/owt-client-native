@@ -90,6 +90,9 @@
 @property(nonatomic, readonly)
     ics::base::StreamSourceInfo nativeStreamSourceInfo;
 
+- (instancetype)initWithNativeStreamSourceInfo:
+    (std::shared_ptr<ics::base::StreamSourceInfo>)nativeSource;
+
 @end
 
 @interface ICSVideoTrackConstraints ()

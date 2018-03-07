@@ -23,8 +23,8 @@
 @implementation ICSLocalStream
 
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
-                         sourceInfo:(ICSStreamSourceInfo*)source {
-  self = [super initWithMediaStream:mediaStream sourceInfo:source];
+                             source:(ICSStreamSourceInfo*)source {
+  self = [super initWithMediaStream:mediaStream source:source];
   return self;
 }
 
@@ -107,7 +107,7 @@
   ICSStreamSourceInfo* sourceInfo = [[ICSStreamSourceInfo alloc] init];
   sourceInfo.audio = ICSAudioSourceInfoMic;
   sourceInfo.video = ICSVideoSourceInfoCamera;
-  self = [super initWithMediaStream:stream sourceInfo:sourceInfo];
+  self = [super initWithMediaStream:stream source:sourceInfo];
   std::shared_ptr<ics::base::LocalStream> nativeStream =
       std::make_shared<ics::base::LocalStream>(
           stream.nativeMediaStream,

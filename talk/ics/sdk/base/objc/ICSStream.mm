@@ -8,6 +8,7 @@
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSStream.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"
+#import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 
 @implementation ICSStream {
   std::shared_ptr<ics::base::Stream> _nativeStream;
@@ -69,14 +70,21 @@
   return attrs;
 }
 
-- (instancetype)initWithNativeStream:(std::shared_ptr<ics::base::Stream>)stream {
+- (instancetype)initWithNativeStream:
+    (std::shared_ptr<ics::base::Stream>)stream {
   self = [super init];
   [self setNativeStream:stream];
+  ics::base::StreamSourceInfo* nativeSource =
+      new ics::base::StreamSourceInfo(stream->Source());
+  std::shared_ptr<ics::base::StreamSourceInfo> sharedNativeSource =
+      std::shared_ptr<ics::base::StreamSourceInfo>(nativeSource);
+  _source = [[ICSStreamSourceInfo alloc]
+      initWithNativeStreamSourceInfo:sharedNativeSource];
   return self;
 }
 
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
-                         sourceInfo:(ICSStreamSourceInfo*)source {
+                             source:(ICSStreamSourceInfo*)source {
   if (self = [super init]) {
     _mediaStream = mediaStream;
     _source = source;

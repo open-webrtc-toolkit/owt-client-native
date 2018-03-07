@@ -40,7 +40,7 @@ RTC_EXPORT
   @param source Information about stream's source.
 */
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
-                         sourceInfo:(ICSStreamSourceInfo*)source;
+                             source:(ICSStreamSourceInfo*)source;
 
 /**
   Create an ICSLocalStream from mic and camera with given constraints.

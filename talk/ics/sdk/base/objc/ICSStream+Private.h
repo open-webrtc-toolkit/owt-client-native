@@ -13,7 +13,7 @@
 
 - (instancetype)initWithNativeStream:(std::shared_ptr<ics::base::Stream>)stream;
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
-                         sourceInfo:(ICSStreamSourceInfo*)source;
+                             source:(ICSStreamSourceInfo*)source;
 - (void)setNativeStream:(std::shared_ptr<ics::base::Stream>)stream;
 - (std::shared_ptr<ics::base::Stream>)nativeStream;
 

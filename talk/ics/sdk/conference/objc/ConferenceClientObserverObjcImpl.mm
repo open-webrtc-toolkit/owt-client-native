@@ -9,7 +9,7 @@
 #include "webrtc/rtc_base/logging.h"
 
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
-#import "talk/ics/sdk/base/objc/ICSStream+Private.h"
+#import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
 #import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
@@ -34,8 +34,8 @@ void ConferenceClientObserverObjcImpl::AddRemoteStreamToMap(
 
 void ConferenceClientObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<RemoteStream> stream) {
-  ICSRemoteStream* remote_stream = (ICSRemoteStream*)[
-      [ICSRemoteStream alloc] initWithNativeStream:stream];
+  ICSRemoteStream* remote_stream =
+      [[ICSRemoteStream alloc] initWithNativeStream:stream];
   AddRemoteStreamToMap(stream->Id(), remote_stream);
   if ([delegate_
           respondsToSelector:@selector(conferenceClient:didAddStream:)]) {

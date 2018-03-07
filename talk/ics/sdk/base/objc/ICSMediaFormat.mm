@@ -268,39 +268,54 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 
 @dynamic nativeStreamSourceInfo;
 
+static std::unordered_map<ICSAudioSourceInfo,const ics::base::AudioSourceInfo>
+    audioSourceInfoMap = {
+        {ICSAudioSourceInfoMic, ics::base::AudioSourceInfo::kMic},
+        {ICSAudioSourceInfoScreenCast, ics::base::AudioSourceInfo::kScreenCast},
+        {ICSAudioSourceInfoFile, ics::base::AudioSourceInfo::kFile},
+        {ICSAudioSourceInfoMixed, ics::base::AudioSourceInfo::kMixed},
+        {ICSAudioSourceInfoUnknown, ics::base::AudioSourceInfo::kUnknown}};
+
+static std::unordered_map<ICSVideoSourceInfo,const ics::base::VideoSourceInfo>
+    videoSourceInfoMap = {
+        {ICSVideoSourceInfoCamera, ics::base::VideoSourceInfo::kCamera},
+        {ICSVideoSourceInfoScreenCast, ics::base::VideoSourceInfo::kScreenCast},
+        {ICSVideoSourceInfoFile, ics::base::VideoSourceInfo::kFile},
+        {ICSVideoSourceInfoMixed, ics::base::VideoSourceInfo::kMixed},
+        {ICSVideoSourceInfoUnknown, ics::base::VideoSourceInfo::kUnknown}};
+
+- (instancetype)initWithNativeStreamSourceInfo:
+    (std::shared_ptr<ics::base::StreamSourceInfo>)nativeSource {
+  if (self = [super init]) {
+    auto it_audio =
+        std::find_if(audioSourceInfoMap.begin(), audioSourceInfoMap.end(),
+                     [&nativeSource](auto&& source) {
+                       return source.second == nativeSource->audio;
+                     });
+    if (it_audio != audioSourceInfoMap.end()) {
+      _audio = it_audio->first;
+    } else {
+      RTC_NOTREACHED();
+      _audio = ICSAudioSourceInfoUnknown;
+    }
+    auto it_video =
+        std::find_if(videoSourceInfoMap.begin(), videoSourceInfoMap.end(),
+                     [&nativeSource](auto&& source) {
+                       return source.second == nativeSource->video;
+                     });
+    if (it_video != videoSourceInfoMap.end()) {
+      _video = it_video->first;
+    } else {
+      RTC_NOTREACHED();
+      _video = ICSVideoSourceInfoUnknown;
+    }
+  }
+  return self;
+}
+
 - (ics::base::StreamSourceInfo)nativeStreamSourceInfo {
-  ics::base::AudioSourceInfo audio_source_info =
-      ics::base::AudioSourceInfo::kUnknown;
-  switch (_audio) {
-    case ICSAudioSourceInfoMic:
-      audio_source_info = ics::base::AudioSourceInfo::kMic;
-      break;
-    case ICSAudioSourceInfoScreenCast:
-      audio_source_info = ics::base::AudioSourceInfo::kScreenCast;
-      break;
-    case ICSAudioSourceInfoFile:
-      audio_source_info = ics::base::AudioSourceInfo::kFile;
-      break;
-    case ICSAudioSourceInfoMixed:
-      audio_source_info = ics::base::AudioSourceInfo::kMixed;
-      break;
-  }
-  ics::base::VideoSourceInfo video_source_info =
-      ics::base::VideoSourceInfo::kUnknown;
-  switch (_video) {
-    case ICSVideoSourceInfoCamera:
-      video_source_info = ics::base::VideoSourceInfo::kCamera;
-      break;
-    case ICSVideoSourceInfoScreenCast:
-      video_source_info = ics::base::VideoSourceInfo::kScreenCast;
-      break;
-    case ICSVideoSourceInfoFile:
-      video_source_info = ics::base::VideoSourceInfo::kFile;
-      break;
-    case ICSVideoSourceInfoMixed:
-      video_source_info = ics::base::VideoSourceInfo::kMixed;
-      break;
-  }
+  ics::base::AudioSourceInfo audio_source_info = audioSourceInfoMap[_audio];
+  ics::base::VideoSourceInfo video_source_info = videoSourceInfoMap[_video];
   return ics::base::StreamSourceInfo(audio_source_info, video_source_info);
 }
 

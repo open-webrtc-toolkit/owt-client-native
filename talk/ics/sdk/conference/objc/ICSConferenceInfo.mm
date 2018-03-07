@@ -42,12 +42,14 @@
   NSMutableArray<ICSRemoteStream*>* streams =
       [NSMutableArray arrayWithCapacity:nativeStreams.size()];
   for (const auto& nativeStream : nativeStreams) {
-    // Only report mixed streams since all kinds of forward streams will be
-    // combined to ICSRemoteStream later.
     if (nativeStream->Source().audio == ics::base::AudioSourceInfo::kMixed &&
         nativeStream->Source().video == ics::base::VideoSourceInfo::kMixed) {
       ICSRemoteMixedStream* stream =
           [[ICSRemoteMixedStream alloc] initWithNativeStream:nativeStream];
+      [streams addObject:stream];
+    } else {
+      ICSRemoteStream* stream =
+          [[ICSRemoteStream alloc] initWithNativeStream:nativeStream];
       [streams addObject:stream];
     }
   }
