@@ -77,9 +77,11 @@ class P2PSignalingChannelInterface {
       P2PSignalingChannelInterfaceObserver& observer) = 0;
   /**
    @brief Connect to the signaling server
+   @param host The URL of signaling server to connect
    @param token A token used for connecting signaling server
    */
   virtual void Connect(
+      const std::string& host,
       const std::string& token,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;

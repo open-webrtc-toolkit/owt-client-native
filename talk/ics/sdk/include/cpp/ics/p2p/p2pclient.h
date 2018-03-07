@@ -156,6 +156,7 @@ class P2PClient final
 
   /**
    @brief Connect to the signaling server.
+   @param host The URL of signaling server to connect
    @param token A token used for connection and authentication
    @param on_success Sucess callback will be invoked with current user's ID if
           connect to server successfully.
@@ -164,7 +165,8 @@ class P2PClient final
                      1. P2PClient is connecting or connected to a server.
                      2. Invalid token.
    */
-  void Connect(const std::string& token,
+  void Connect(const std::string& host,
+               const std::string& token,
                std::function<void()> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
 

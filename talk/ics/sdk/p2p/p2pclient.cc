@@ -31,11 +31,12 @@ P2PClient::P2PClient(
 }
 
 void P2PClient::Connect(
+    const std::string& host,
     const std::string& token,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_channel_);
-  signaling_channel_->Connect(token, on_success, on_failure);
+  signaling_channel_->Connect(host, token, on_success, on_failure);
 }
 
 void P2PClient::Disconnect(
