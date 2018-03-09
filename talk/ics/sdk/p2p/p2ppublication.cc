@@ -12,8 +12,9 @@
 namespace ics {
 namespace p2p {
 
-P2PPublication::P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id)
+P2PPublication::P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream)
     : target_id_(target_id),
+      local_stream_(stream),
       p2p_client_(client),
       ended_(false) {
   auto that = p2p_client_.lock();
@@ -57,7 +58,7 @@ void P2PPublication::Stop(
       });
     }
   } else {
-     that->Stop(target_id_, on_success, on_failure);
+     that->Unpublish(target_id_, local_stream_, on_success, on_failure);
      ended_ = true;
   }
 }

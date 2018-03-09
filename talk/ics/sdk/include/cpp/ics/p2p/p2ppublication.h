@@ -47,7 +47,7 @@ class P2PClient;
 
 class P2PPublication : public Publication {
  public:
-  P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id);
+  P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream);
   virtual ~P2PPublication() {}
 
   /// Get connection stats of current publication
@@ -57,7 +57,6 @@ class P2PPublication : public Publication {
   /// Stop current publication.
   void Stop(std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure) override;
-
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
   /// Not supported in P2P yet.
   void Mute(TrackKind track_kind,
@@ -75,6 +74,7 @@ class P2PPublication : public Publication {
 
  private:
   std::string target_id_;
+  std::shared_ptr<LocalStream> local_stream_;
   std::weak_ptr<P2PClient> p2p_client_;   // Weak ref to associated p2p client
   std::shared_ptr<rtc::TaskQueue> event_queue_;
 

@@ -101,14 +101,23 @@ void P2PClient::Publish(
 
   // Then do the real publication
   std::weak_ptr<P2PClient> weak_this = shared_from_this();
-  pcc->Publish(stream, [on_success, weak_this, target_id] () {
+  pcc->Publish(stream, [on_success, weak_this, target_id, stream] () {
     auto that = weak_this.lock();
     if (!that)
       return;
 
-    std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id));
+    std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id, stream));
     on_success(publication);
   }, on_failure);
+}
+
+void P2PClient::Unpublish(
+    const std::string& target_id,
+    std::shared_ptr<LocalStream> stream,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->Unpublish(stream, on_success, on_failure);
 }
 
 void P2PClient::Stop(

@@ -857,6 +857,11 @@ void P2PPeerConnectionChannel::Publish(
   }
 
   LOG(LS_INFO) << "Session state: " << session_state_;
+
+  if (on_success) {
+    event_queue_->PostTask([on_success] { on_success(); });
+  }
+
   if (session_state_ == SessionState::kSessionStateConnected &&
       SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();

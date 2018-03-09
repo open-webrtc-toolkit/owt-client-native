@@ -134,6 +134,7 @@ class P2PClient final
       protected P2PSignalingChannelInterfaceObserver,
       public std::enable_shared_from_this<P2PClient> {
   friend class P2PPublication;
+  friend class P2PPeerConnectionChannelObserverCppImpl;
  public:
   /**
    @brief Init a P2PClient instance with speficied signaling channel.
@@ -269,7 +270,7 @@ class P2PClient final
       std::function<void(std::unique_ptr<Exception>)> on_failure);
 
  protected:
-  // Implement
+  // Implement P2PSignalingSenderInterface
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,
                                     std::function<void()> on_success,
@@ -301,10 +302,13 @@ class P2PClient final
       std::shared_ptr<ics::base::RemoteStream> stream);
 
  private:
+  void Unpublish(const std::string& target_id,
+                 std::shared_ptr<LocalStream> stream,
+                 std::function<void()> on_success,
+                 std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
       const std::string& target_id);
-  ics::base::PeerConnectionChannelConfiguration
-  GetPeerConnectionChannelConfiguration();
+  ics::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
 
   // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
@@ -323,8 +327,6 @@ class P2PClient final
 
   mutable std::mutex remote_ids_mutex_;
   std::vector<std::string> allowed_remote_ids_;
-
-  friend class P2PPeerConnectionChannelObserverCppImpl;
 };
 
 }
