@@ -40,6 +40,10 @@ namespace rtc {
   class TaskQueue;
 }
 
+namespace webrtc{
+  class StatsReport;
+}
+
 namespace ics {
 namespace conference {
 
@@ -63,8 +67,12 @@ class ConferenceSubscription{
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Get conneciton stats of current publication
     void GetStats(
-      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<Exception>)> on_failure);
+        std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure);
+    void GetNativeStats(
+        std::function<void(
+            const std::vector<const webrtc::StatsReport*>& reports)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure);
 
     /// Stop current publication.
     void Stop(std::function<void()> on_success,

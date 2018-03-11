@@ -712,6 +712,20 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
   }
 }
 
+void ConferencePeerConnectionChannel::GetStats(
+    std::function<void(const webrtc::StatsReports& reports)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!on_success) {
+    return;
+  }
+  scoped_refptr<FunctionalNativeStatsObserver> observer =
+      FunctionalNativeStatsObserver::Create(on_success);
+  GetNativeStatsMessage* stats_message = new GetNativeStatsMessage(
+      observer.get(), nullptr,
+      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
+}
+
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
   if (message == nullptr) {

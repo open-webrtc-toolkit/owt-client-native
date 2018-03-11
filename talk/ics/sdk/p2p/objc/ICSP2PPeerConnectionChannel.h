@@ -38,8 +38,9 @@
         onFailure:(void (^)(NSError*))onFailure;
 - (void)stopWithOnSuccess:(void (^)())onSuccess
                 onFailure:(void (^)(NSError*))onFailure;
-- (void)getConnectionStatsWithOnSuccess:(void (^)(ICSConnectionStats*))onSuccess
-                              onFailure:(void (^)(NSError*))onFailure;
+- (void)statsForStream:(ICSStream*)stream
+             onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+             onFailure:(void (^)(NSError*))onFailure;
 - (void)addObserver:(id<ICSP2PPeerConnectionChannelObserver>)observer;
 - (void)removeObserver:(id<ICSP2PPeerConnectionChannelObserver>)observer;
 - (NSString*)getRemoteUserId;

@@ -986,6 +986,42 @@ void P2PPeerConnectionChannel::GetConnectionStats(
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
 }
 
+void P2PPeerConnectionChannel::GetStats(
+    std::function<void(const webrtc::StatsReports& reports)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (on_success == nullptr) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "on_success cannot be nullptr. Please provide "
+                          "on_success to get connection stats data."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  if (session_state_ != kSessionStateConnected) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState,
+                          "Cannot get connection stats in this state. Please "
+                          "try it after connection is established."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  LOG(LS_INFO) << "Get native stats";
+  rtc::scoped_refptr<FunctionalNativeStatsObserver> observer =
+      FunctionalNativeStatsObserver::Create(std::move(on_success));
+  GetNativeStatsMessage* stats_message = new GetNativeStatsMessage(
+      observer, nullptr,
+      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
+}
+
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Draining pending stream";
   // First to publish the pending_publish_streams_ list

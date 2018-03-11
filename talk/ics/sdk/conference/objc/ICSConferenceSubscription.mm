@@ -3,6 +3,10 @@
 //
 
 #import "talk/ics/sdk/conference/objc/ICSConferenceSubscription+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
+#import <ICS/ICSErrors.h>
+#import <ICS/ICSConferenceErrors.h>
 
 #include "webrtc/rtc_base/checks.h"
 
@@ -20,6 +24,34 @@
 
 - (void)stop {
   _nativeSubscription->Stop(nullptr, nullptr);
+}
+
+- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure {
+  RTC_CHECK(onSuccess);
+  _nativeSubscription->GetNativeStats(
+      [onSuccess](const std::vector<const webrtc::StatsReport*>& reports) {
+        NSMutableArray* stats =
+            [NSMutableArray arrayWithCapacity:reports.size()];
+        for (const auto* report : reports) {
+          RTCLegacyStatsReport* statsReport =
+              [[RTCLegacyStatsReport alloc] initWithNativeReport:*report];
+          [stats addObject:statsReport];
+        }
+        onSuccess(stats);
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
 @end

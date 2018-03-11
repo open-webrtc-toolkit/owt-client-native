@@ -8,15 +8,24 @@
 
 @implementation ICSP2PPublication
 
-- (instancetype)initWithStop:(void (^)())stopMethod {
+- (instancetype)initWithStop:(void (^)())stopMethod
+                       stats:
+                           (void (^)(void (^)(NSArray<RTCLegacyStatsReport*>*),
+                                     void (^)(NSError*)))statsMethod {
   if (self = [super init]) {
     _stopMethod = stopMethod;
+    _statsMethod = statsMethod;
   }
   return self;
 }
 
--(void)stop{
+- (void)stop {
   _stopMethod();
+}
+
+- (void)stats:(void (^)(NSArray<RTCLegacyStatsReport*>* stats))onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure {
+  _statsMethod(onSuccess, onFailure);
 }
 
 @end

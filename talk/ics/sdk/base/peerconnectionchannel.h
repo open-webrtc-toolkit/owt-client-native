@@ -50,6 +50,17 @@ struct GetStatsMessage : public rtc::MessageData {
   webrtc::PeerConnectionInterface::StatsOutputLevel level;
 };
 
+struct GetNativeStatsMessage : public rtc::MessageData {
+  explicit GetNativeStatsMessage(
+      FunctionalNativeStatsObserver* observer,
+      webrtc::MediaStreamInterface* stream,
+      webrtc::PeerConnectionInterface::StatsOutputLevel level)
+      : observer(observer), stream(stream), level(level) {}
+  rtc::scoped_refptr<FunctionalNativeStatsObserver> observer;
+  webrtc::MediaStreamInterface* stream;
+  webrtc::PeerConnectionInterface::StatsOutputLevel level;
+};
+
 struct PeerConnectionChannelConfiguration
     : public webrtc::PeerConnectionInterface::RTCConfiguration {
  public:

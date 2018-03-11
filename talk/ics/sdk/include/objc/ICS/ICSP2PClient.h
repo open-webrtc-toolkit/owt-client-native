@@ -120,20 +120,6 @@ RTC_EXPORT
       onSuccess:(nullable void (^)(ICSP2PPublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 
-/**
- @brief Get the connection stats between a remote client
- @param targetId Target user's ID.
- @param onSuccess Success callback will be invoked it the stream is unpublished.
- @param onFailure Failure callback will be invoked if one of these cases
- happened:
-                 1. ICSP2PClient is disconnected from server.
-                 2. Target ID is nil or user is offline.
-                 3. Haven't connected to remote client.
- */
-- (void)getConnectionStats:(NSString*)targetId
-                 onSuccess:(nullable void (^)(ICSConnectionStats*))onSuccess
-                 onFailure:(nullable void (^)(NSError*))onFailure;
-
 @property(nonatomic, weak) id<ICSP2PClientDelegate> delegate;
 @property(nonatomic, strong) NSMutableArray<NSString*>* allowedRemoteIds;
 

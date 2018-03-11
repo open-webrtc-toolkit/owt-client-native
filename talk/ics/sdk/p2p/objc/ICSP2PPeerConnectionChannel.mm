@@ -16,6 +16,7 @@
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import <WebRTC/RTCLogging.h>
 
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
@@ -134,9 +135,15 @@
         std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
         [=]() {
           if (onSuccess != nil) {
-            ICSP2PPublication* publication =
-                [[ICSP2PPublication alloc] initWithStop:^() {
+            ICSP2PPublication* publication = [[ICSP2PPublication alloc]
+                initWithStop:^() {
                   [self unpublish:stream onSuccess:nil onFailure:nil];
+                }
+                stats:^(void (^statsSuccess)(NSArray<RTCLegacyStatsReport*>*),
+                        void (^statsFailure)(NSError*)) {
+                  [self statsForStream:stream
+                             onSuccess:statsSuccess
+                             onFailure:statsFailure];
                 }];
             onSuccess(publication);
           }
@@ -225,13 +232,20 @@
       });
 }
 
-- (void)getConnectionStatsWithOnSuccess:(void (^)(ICSConnectionStats*))onSuccess
-                              onFailure:(void (^)(NSError*))onFailure {
-  _nativeChannel->GetConnectionStats(
-      [=](std::shared_ptr<ics::base::ConnectionStats> native_stats) {
+- (void)statsForStream:(ICSStream*)stream
+             onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+             onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->GetStats(
+      [=](const webrtc::StatsReports& reports) {
         if (onSuccess) {
-          onSuccess([[ICSConnectionStats alloc]
-              initWithNativeStats:*native_stats.get()]);
+          NSMutableArray* stats =
+              [NSMutableArray arrayWithCapacity:reports.size()];
+          for (const auto* report : reports) {
+            RTCLegacyStatsReport* statsReport =
+                [[RTCLegacyStatsReport alloc] initWithNativeReport:*report];
+            [stats addObject:statsReport];
+          }
+          onSuccess(stats);
         }
       },
       [=](std::unique_ptr<ics::base::Exception> e) {

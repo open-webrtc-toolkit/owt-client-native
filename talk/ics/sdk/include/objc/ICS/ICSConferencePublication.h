@@ -26,13 +26,17 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+#import <WebRTC/RTCLegacyStatsReport.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 RTC_EXPORT
 @interface ICSConferencePublication : NSObject
 
--(void)stop;
+- (instancetype)init NS_UNAVAILABLE;
+- (void)stop;
+- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+       onFailure:(nullable void (^)(NSError*))onFailure;
 
 @end
 

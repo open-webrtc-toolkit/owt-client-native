@@ -2,7 +2,13 @@
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
 
+#include "webrtc/rtc_base/checks.h"
+
 #import "talk/ics/sdk/conference/objc/ICSConferencePublication+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
+#import <ICS/ICSErrors.h>
+#import <ICS/ICSConferenceErrors.h>
 
 @implementation ICSConferencePublication {
   std::shared_ptr<ics::conference::ConferencePublication> _nativePublication;
@@ -17,6 +23,34 @@
 
 - (void)stop {
   _nativePublication->Stop(nullptr, nullptr);
+}
+
+- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+       onFailure:(nullable void (^)(NSError*))onFailure {
+  RTC_CHECK(onSuccess);
+  _nativePublication->GetNativeStats(
+      [onSuccess](const std::vector<const webrtc::StatsReport*>& reports) {
+        NSMutableArray* stats =
+            [NSMutableArray arrayWithCapacity:reports.size()];
+        for (const auto* report : reports) {
+          RTCLegacyStatsReport* statsReport =
+              [[RTCLegacyStatsReport alloc] initWithNativeReport:*report];
+          [stats addObject:statsReport];
+        }
+        onSuccess(stats);
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
 }
 
 @end

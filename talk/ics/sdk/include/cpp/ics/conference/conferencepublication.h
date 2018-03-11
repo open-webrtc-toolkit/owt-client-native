@@ -38,6 +38,10 @@ namespace rtc {
   class TaskQueue;
 }
 
+namespace webrtc{
+  class StatsReport;
+}
+
 namespace ics {
 namespace base {
 struct ConnectionStats;
@@ -65,8 +69,12 @@ class ConferencePublication : public Publication {
                 std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Get conneciton stats of current publication
     void GetStats(
-      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
-      std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+        std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+    void GetNativeStats(
+        std::function<void(
+            const std::vector<const webrtc::StatsReport*>& reports)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure) override;

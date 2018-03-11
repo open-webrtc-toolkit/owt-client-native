@@ -106,6 +106,22 @@ class FunctionalStatsObserver : public webrtc::StatsObserver {
   std::unordered_map<std::string, std::shared_ptr<IceCandidateReport>> local_candidate_map_;
   std::unordered_map<std::string, std::shared_ptr<IceCandidateReport>> remote_candidate_map_;
 };
+
+class FunctionalNativeStatsObserver : public webrtc::StatsObserver {
+ public:
+  static rtc::scoped_refptr<FunctionalNativeStatsObserver> Create(
+      std::function<void(const webrtc::StatsReports& reports)> on_complete);
+
+  virtual void OnComplete(const webrtc::StatsReports& reports) override;
+
+ protected:
+  FunctionalNativeStatsObserver(
+      std::function<void(const webrtc::StatsReports& reports)> on_complete)
+      : on_complete_(on_complete){};
+
+ private:
+  std::function<void(const webrtc::StatsReports& reports)> on_complete_;
+};
 }
 }
 

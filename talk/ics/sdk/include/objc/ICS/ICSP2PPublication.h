@@ -32,9 +32,12 @@ NS_ASSUME_NONNULL_BEGIN
 RTC_EXPORT
 @interface ICSP2PPublication : NSObject
 
--(instancetype)init NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
--(void)stop;
+- (void)stop;
+
+- (void)stats:(void (^)(NSArray<RTCLegacyStatsReport*>* stats))onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure;
 
 @end
 

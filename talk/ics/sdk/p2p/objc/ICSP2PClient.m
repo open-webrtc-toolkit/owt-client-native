@@ -179,14 +179,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [channel unpublish:stream onSuccess:onSuccess onFailure:onFailure];
 }
 
-- (void)getConnectionStats:(NSString*)targetId
-                 onSuccess:(void (^)(ICSConnectionStats*))onSuccess
-                 onFailure:(void (^)(NSError*))onFailure {
-  ICSP2PPeerConnectionChannel* channel =
-      [self getPeerConnectionChannel:targetId];
-  [channel getConnectionStatsWithOnSuccess:onSuccess onFailure:onFailure];
-}
-
 - (ICSP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId {
   ICSP2PPeerConnectionChannel* channel =
       [_peerConnectionChannels objectForKey:targetId];

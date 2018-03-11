@@ -333,5 +333,18 @@ FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
     return REPORT_TYPE_UKNOWN;
 }
 
+rtc::scoped_refptr<FunctionalNativeStatsObserver>
+FunctionalNativeStatsObserver::Create(
+    std::function<void(const webrtc::StatsReports& reports)> on_complete) {
+  return new rtc::RefCountedObject<FunctionalNativeStatsObserver>(on_complete);
+}
+
+void FunctionalNativeStatsObserver::OnComplete(
+    const webrtc::StatsReports& reports) {
+  if (!on_complete_) {
+    return;
+  }
+  on_complete_(reports);
+}
 }
 }

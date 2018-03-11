@@ -30,10 +30,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class RTCLegacyStatsReport;
+
 RTC_EXPORT
 @interface ICSConferenceSubscription : NSObject
 
--(void)stop;
+- (instancetype)init NS_UNAVAILABLE;
+- (void)stop;
+- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+        onFailure:(nullable void (^)(NSError*))onFailure;
 
 @end
 

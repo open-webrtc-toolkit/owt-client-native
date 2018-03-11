@@ -113,6 +113,9 @@ class ConferencePeerConnectionChannel
   void GetConnectionStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
+  void GetStats(
+      std::function<void(const webrtc::StatsReports& reports)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Called when MCU reports stream/connection is failed or ICE failed.
   void OnStreamError(const std::string& error_message);
 
