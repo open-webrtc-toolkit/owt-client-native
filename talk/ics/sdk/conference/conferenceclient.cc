@@ -608,7 +608,7 @@ void ConferenceClient::Mute(
   }
 }
 
-void ConferenceClient::UnMute(
+void ConferenceClient::Unmute(
     const std::string& session_id,
     TrackKind track_kind,
     std::function<void()> on_success,

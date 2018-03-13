@@ -243,24 +243,6 @@ PlayPauseFailureCallback(FailureBlock on_failure,
       });
 }
 
-- (void)getConnectionStatsForStream:(ICSStream*)stream
-                          onSuccess:(void (^)(ICSConnectionStats*))onSuccess
-                          onFailure:(void (^)(NSError*))onFailure {
-  /*
-  auto nativeStreamRefPtr = [stream nativeStream];
-  _nativeConferenceClient->GetConnectionStats(
-      nativeStreamRefPtr,
-      [=](std::shared_ptr<ics::base::ConnectionStats> native_stats) {
-        if (onSuccess) {
-          onSuccess([[ICSConnectionStats alloc]
-              initWithNativeStats:*native_stats]);
-        }
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });*/
-}
-
 - (void)setDelegate:(id<ICSConferenceClientDelegate>)delegate {
   _observer = std::unique_ptr<
       ics::conference::ConferenceClientObserverObjcImpl,

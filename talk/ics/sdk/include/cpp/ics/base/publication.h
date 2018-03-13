@@ -39,14 +39,10 @@ class PublicationObserver {
  public:
   /// Triggered when publication is ended.
   virtual void OnEnded() = 0;
-  /// Triggered when audio is muted.
-  virtual void OnAudioMuted() = 0;
-  /// Triggered when video is muted.
-  virtual void OnVideoMuted() = 0;
-  /// Triggered when audio is unmuted.
-  virtual void OnAudioUnMuted() = 0;
-  /// Triggered when video is unmuted.
-  virtual void OnVideoUnMuted() = 0;
+  /// Triggered when audio and/or video is muted.
+  virtual void OnMute(TrackKind track_kind) = 0;
+  /// Triggered when audio and/or video is unmuted.
+  virtual void OnUnmute(TrackKind track_kind) = 0;
 };
 
 class Publication {
@@ -56,7 +52,7 @@ class Publication {
                     std::function<void()> on_success,
                     std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
-  virtual void UnMute(TrackKind track_kind,
+  virtual void Unmute(TrackKind track_kind,
                       std::function<void()> on_success,
                       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Get conneciton stats of current publication

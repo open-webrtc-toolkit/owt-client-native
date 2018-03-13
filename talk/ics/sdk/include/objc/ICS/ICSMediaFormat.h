@@ -68,6 +68,12 @@ typedef NS_ENUM(NSInteger, ICSVideoSourceInfo) {
   ICSVideoSourceInfoUnknown = 5,
 };
 
+typedef NS_OPTIONS(NSInteger, ICSTrackKind) {
+  ICSTrackKindUnknown = 0,
+  ICSTrackKindAudio = 1 << 0,
+  ICSTrackKindVideo = 1 << 1,
+};
+
 RTC_EXPORT
 @interface ICSAudioCodecParameters : NSObject
 

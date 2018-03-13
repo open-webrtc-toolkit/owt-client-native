@@ -64,7 +64,7 @@ class P2PPublication : public Publication {
             std::function<void(std::unique_ptr<Exception>)> on_failure) override {}
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
   /// Not supported in P2P yet.
-  void UnMute(TrackKind track_kind,
+  void Unmute(TrackKind track_kind,
               std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure) override {}
   /// Register an observer onto this p2p publication.

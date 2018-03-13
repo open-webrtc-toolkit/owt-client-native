@@ -2,6 +2,9 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
+#include "talk/ics/sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.h"
+#include "webrtc/rtc_base/checks.h"
+
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceSubscription+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
@@ -9,10 +12,13 @@
 #import <ICS/ICSErrors.h>
 #import <ICS/ICSConferenceErrors.h>
 
-#include "webrtc/rtc_base/checks.h"
-
 @implementation ICSConferenceSubscription {
   std::shared_ptr<ics::conference::ConferenceSubscription> _nativeSubscription;
+  std::unique_ptr<
+      ics::conference::ConferenceSubscriptionObserverObjcImpl,
+      std::function<void(
+          ics::conference::ConferenceSubscriptionObserverObjcImpl*)>>
+      _observer;
 }
 
 - (instancetype)initWithNativeSubscription:
@@ -53,6 +59,18 @@
                                    NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
+}
+
+-(void)setDelegate:(id<ICSConferenceSubscriptionDelegate>)delegate{
+  _observer = std::unique_ptr<
+      ics::conference::ConferenceSubscriptionObserverObjcImpl,
+      std::function<void(ics::conference::ConferenceSubscriptionObserverObjcImpl*)>>(
+      new ics::conference::ConferenceSubscriptionObserverObjcImpl(self, delegate),
+      [&self](ics::conference::ConferenceSubscriptionObserverObjcImpl* observer) {
+        self->_nativeSubscription->RemoveObserver(*observer);
+      });
+  _nativeSubscription->AddObserver(*_observer.get());
+  _delegate = delegate;
 }
 
 @end

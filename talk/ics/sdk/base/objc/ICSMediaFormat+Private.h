@@ -7,6 +7,8 @@
 #include "ics/base/commontypes.h"
 #include "ics/base/options.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 // TODO: Change all native object to shared pointer so it can be changed in both
 // C++ code and Objective-C code.
 
@@ -116,3 +118,12 @@
     ics::base::VideoEncodingParameters nativeVideoEncodingParameters;
 
 @end
+
+@interface ICSTrackKindConverter : NSObject
+
++ (ics::base::TrackKind)cppTrackKindForObjcTrackKind:(ICSTrackKind)kind;
++ (ICSTrackKind)objcTrackKindForCppTrackKind:(ics::base::TrackKind)kind;
+
+@end
+
+NS_ASSUME_NONNULL_END

@@ -66,7 +66,7 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
               std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
-    void UnMute(TrackKind track_kind,
+    void Unmute(TrackKind track_kind,
                 std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     /// Get conneciton stats of current publication

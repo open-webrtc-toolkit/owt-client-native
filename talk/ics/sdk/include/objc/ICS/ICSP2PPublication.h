@@ -29,6 +29,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class ICSP2PPublication;
+
+RTC_EXPORT
+@protocol ICSP2PPublicationDelegate<NSObject>
+
+@optional
+
+- (void)publicationDidEnd:(ICSP2PPublication*)publication;
+
+@end
+
 RTC_EXPORT
 @interface ICSP2PPublication : NSObject
 
@@ -38,6 +49,8 @@ RTC_EXPORT
 
 - (void)stats:(void (^)(NSArray<RTCLegacyStatsReport*>* stats))onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
+
+@property(nonatomic, weak) id<ICSP2PPublicationDelegate> delegate;
 
 @end
 

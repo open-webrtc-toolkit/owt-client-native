@@ -388,9 +388,9 @@ class ConferenceClient final
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
-    @brief UnMute a session's track specified by |track_kind|.
+    @brief Unmute a session's track specified by |track_kind|.
   */
-  void UnMute(
+  void Unmute(
       const std::string& session_id,
       TrackKind track_kind,
       std::function<void()> on_success,

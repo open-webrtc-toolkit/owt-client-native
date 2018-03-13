@@ -2,6 +2,7 @@
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
 
+#include "talk/ics/sdk/conference/objc/ConferencePublicationObserverObjcImpl.h"
 #include "webrtc/rtc_base/checks.h"
 
 #import "talk/ics/sdk/conference/objc/ICSConferencePublication+Private.h"
@@ -12,6 +13,10 @@
 
 @implementation ICSConferencePublication {
   std::shared_ptr<ics::conference::ConferencePublication> _nativePublication;
+  std::unique_ptr<
+      ics::conference::ConferencePublicationObserverObjcImpl,
+      std::function<void(ics::conference::ConferencePublicationObserverObjcImpl*)>>
+      _observer;
 }
 
 - (instancetype)initWithNativePublication:
@@ -51,6 +56,18 @@
                                    NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
+}
+
+-(void)setDelegate:(id<ICSConferencePublicationDelegate>)delegate{
+  _observer = std::unique_ptr<
+      ics::conference::ConferencePublicationObserverObjcImpl,
+      std::function<void(ics::conference::ConferencePublicationObserverObjcImpl*)>>(
+      new ics::conference::ConferencePublicationObserverObjcImpl(self, delegate),
+      [&self](ics::conference::ConferencePublicationObserverObjcImpl* observer) {
+        self->_nativePublication->RemoveObserver(*observer);
+      });
+  _nativePublication->AddObserver(*_observer.get());
+  _delegate = delegate;
 }
 
 @end

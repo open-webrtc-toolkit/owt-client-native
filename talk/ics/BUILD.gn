@@ -344,6 +344,8 @@ if (is_ios) {
       "sdk/base/sysinfoios.mm",
       "sdk/conference/objc/ConferenceClientObserverObjcImpl.h",
       "sdk/conference/objc/ConferenceClientObserverObjcImpl.mm",
+      "sdk/conference/objc/ConferencePublicationObserverObjcImpl.mm",
+      "sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.mm",
       "sdk/conference/objc/ICSConferenceClient.mm",
       "sdk/conference/objc/ICSConferenceInfo.mm",
       "sdk/conference/objc/ICSConferenceClientConfiguration.mm",

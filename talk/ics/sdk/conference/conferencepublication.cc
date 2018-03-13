@@ -53,7 +53,7 @@ void ConferencePublication::Mute(
    }
 }
 
-void ConferencePublication::UnMute(
+void ConferencePublication::Unmute(
     TrackKind track_kind,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -69,7 +69,7 @@ void ConferencePublication::UnMute(
        });
      }
    } else {
-      that->UnMute(id_, track_kind, on_success, on_failure);
+      that->Unmute(id_, track_kind, on_success, on_failure);
    }
 }
 
@@ -140,16 +140,9 @@ void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
     return;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     if (muted) {
-      if (track_kind == TrackKind::kAudio)
-        (*its).get().OnAudioMuted();
-      else if (track_kind == TrackKind::kVideo)
-        (*its).get().OnVideoMuted();
-    }
-    else {
-      if (track_kind == TrackKind::kAudio)
-        (*its).get().OnAudioUnMuted();
-      else if (track_kind == TrackKind::kVideo)
-        (*its).get().OnVideoUnMuted();
+      (*its).get().OnMute(track_kind);
+    } else {
+      (*its).get().OnUnmute(track_kind);
     }
   }
 }

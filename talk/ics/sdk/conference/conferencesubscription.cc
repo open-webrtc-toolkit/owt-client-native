@@ -35,37 +35,35 @@ void ConferenceSubscription::Mute(
     TrackKind track_kind,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-   auto that = conference_client_.lock();
-   if (that == nullptr || ended_) {
-     std::string failure_message(
-        "Invalid ");
-     if (on_failure != nullptr && event_queue_.get()) {
-       event_queue_->PostTask([on_failure, failure_message]() {
-         std::unique_ptr<Exception> e(new Exception(
+  auto that = conference_client_.lock();
+  if (that == nullptr || ended_) {
+    std::string failure_message("Invalid ");
+    if (on_failure != nullptr && event_queue_.get()) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(new Exception(
             ExceptionType::kConferenceInvalidParam, failure_message));
-         on_failure(std::move(e));
-       });
-     }
-   } else {
-     std::weak_ptr<ConferenceSubscription> weak_this = shared_from_this();
-     that->Mute(id_, track_kind,
-       [on_success, weak_this, track_kind]() {
-         auto that_cs = weak_this.lock();
-         if (!that_cs || that_cs->Stopped())
-           return;
-         for (auto its = that_cs->observers_.begin(); its != that_cs->observers_.end(); ++its) {
-             if (track_kind == TrackKind::kAudio)
-               (*its).get().OnAudioMuted();
-             else if (track_kind == TrackKind::kVideo)
-               (*its).get().OnVideoMuted();
-         }
-         if (on_success != nullptr)
-           on_success();
-       }, on_failure);
-   }
+        on_failure(std::move(e));
+      });
+    }
+  } else {
+    std::weak_ptr<ConferenceSubscription> weak_this = shared_from_this();
+    that->Mute(id_, track_kind,
+               [on_success, weak_this, track_kind]() {
+                 auto that_cs = weak_this.lock();
+                 if (!that_cs || that_cs->Stopped())
+                   return;
+                 for (auto its = that_cs->observers_.begin();
+                      its != that_cs->observers_.end(); ++its) {
+                   (*its).get().OnMute(track_kind);
+                 }
+                 if (on_success != nullptr)
+                   on_success();
+               },
+               on_failure);
+  }
 }
 
-void ConferenceSubscription::UnMute(
+void ConferenceSubscription::Unmute(
     TrackKind track_kind,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -82,16 +80,14 @@ void ConferenceSubscription::UnMute(
      }
    } else {
      std::weak_ptr<ConferenceSubscription> weak_this = shared_from_this();
-     that->UnMute(id_, track_kind,
+     that->Unmute(id_, track_kind,
        [on_success, weak_this, track_kind]() {
        auto that_cs = weak_this.lock();
        if (!that_cs || that_cs->Stopped())
          return;
-       for (auto its = that_cs->observers_.begin(); its != that_cs->observers_.end(); ++its) {
-         if (track_kind == TrackKind::kAudio)
-           (*its).get().OnAudioUnMuted();
-         else if (track_kind == TrackKind::kVideo)
-           (*its).get().OnVideoUnMuted();
+       for (auto its = that_cs->observers_.begin();
+            its != that_cs->observers_.end(); ++its) {
+         (*its).get().OnMute(track_kind);
        }
        if (on_success != nullptr)
          on_success();
@@ -165,16 +161,10 @@ void ConferenceSubscription::OnStreamMuteOrUnmute(const std::string& stream_id,
     return;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     if (muted) {
-      if (track_kind == TrackKind::kAudio)
-        (*its).get().OnAudioMuted();
-      else if (track_kind == TrackKind::kVideo)
-        (*its).get().OnVideoMuted();
+      (*its).get().OnMute(track_kind);
     }
     else {
-      if (track_kind == TrackKind::kAudio)
-        (*its).get().OnAudioUnMuted();
-      else if (track_kind == TrackKind::kVideo)
-        (*its).get().OnVideoUnMuted();
+      (*its).get().OnUnmute(track_kind);
     }
   }
 }

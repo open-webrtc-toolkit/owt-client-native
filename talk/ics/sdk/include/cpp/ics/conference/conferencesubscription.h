@@ -65,7 +65,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
               std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
-    void UnMute(TrackKind track_kind,
+    void Unmute(TrackKind track_kind,
                 std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Get conneciton stats of current publication

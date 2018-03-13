@@ -870,6 +870,7 @@ void ConferencePeerConnectionChannel::OnStreamError(
     return;
   }
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    LOG(LS_INFO) << "On stream error.";
     (*its).get().OnStreamError(error_stream, e);
   }
 }

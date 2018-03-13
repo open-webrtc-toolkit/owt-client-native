@@ -27,8 +27,24 @@
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 #import <WebRTC/RTCLegacyStatsReport.h>
+#import <ICS/ICSMediaFormat.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class ICSConferencePublication;
+
+RTC_EXPORT
+@protocol ICSConferencePublicationDelegate <NSObject>
+
+@optional
+
+- (void)publicationDidEnd:(ICSConferencePublication*)publication;
+- (void)publicationDidMute:(ICSConferencePublication*)publication
+                  trackKind:(ICSTrackKind)kind;
+- (void)publicationDidUnmute:(ICSConferencePublication*)publication
+                    trackKind:(ICSTrackKind)kind;
+
+@end
 
 RTC_EXPORT
 @interface ICSConferencePublication : NSObject
@@ -37,6 +53,8 @@ RTC_EXPORT
 - (void)stop;
 - (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
        onFailure:(nullable void (^)(NSError*))onFailure;
+
+@property(nonatomic, weak) id<ICSConferencePublicationDelegate> delegate;
 
 @end
 

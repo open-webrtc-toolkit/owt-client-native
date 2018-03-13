@@ -32,6 +32,20 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class RTCLegacyStatsReport;
+@class ICSConferenceSubscription;
+
+RTC_EXPORT
+@protocol ICSConferenceSubscriptionDelegate <NSObject>
+
+@optional
+
+- (void)subscriptionDidEnd:(ICSConferenceSubscription*)subscription;
+- (void)subscriptionDidMute:(ICSConferenceSubscription*)subscription
+                  trackKind:(ICSTrackKind)kind;
+- (void)subscriptionDidUnmute:(ICSConferenceSubscription*)subscription
+                    trackKind:(ICSTrackKind)kind;
+
+@end
 
 RTC_EXPORT
 @interface ICSConferenceSubscription : NSObject
@@ -40,6 +54,8 @@ RTC_EXPORT
 - (void)stop;
 - (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
+
+@property(nonatomic, weak) id<ICSConferenceSubscriptionDelegate> delegate;
 
 @end
 
