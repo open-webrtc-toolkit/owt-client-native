@@ -14,13 +14,23 @@
 namespace ics {
 namespace conference {
 
-ConferencePublication::ConferencePublication(std::shared_ptr<ConferenceClient> client, std::string id)
-      : id_(id),
+ConferencePublication::ConferencePublication(std::shared_ptr<ConferenceClient> client, const std::string& pub_id,
+                                             const std::string& stream_id)
+      : id_(pub_id),
+        stream_id_(stream_id),
         ended_(false),
         conference_client_(client) {
   auto that = conference_client_.lock();
   if (that != nullptr)
     event_queue_ = that->event_queue_;
+}
+
+ConferencePublication::~ConferencePublication() {
+  // All the streamupdate observers must be removed on conference client
+  // before publication is destructed.
+  auto that = conference_client_.lock();
+  if (that != nullptr)
+    that->RemoveStreamUpdateObserver(*this);
 }
 
 void ConferencePublication::Mute(
@@ -123,6 +133,27 @@ void ConferencePublication::Stop(
   }
 }
 
+void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
+                                                 TrackKind track_kind,
+                                                 bool muted) {
+  if (ended_ || stream_id != id_)
+    return;
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    if (muted) {
+      if (track_kind == TrackKind::kAudio)
+        (*its).get().OnAudioMuted();
+      else if (track_kind == TrackKind::kVideo)
+        (*its).get().OnVideoMuted();
+    }
+    else {
+      if (track_kind == TrackKind::kAudio)
+        (*its).get().OnAudioUnMuted();
+      else if (track_kind == TrackKind::kVideo)
+        (*its).get().OnVideoUnMuted();
+    }
+  }
+}
+
 void ConferencePublication::AddObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<PublicationObserver>>::iterator it =
@@ -136,15 +167,23 @@ void ConferencePublication::AddObserver(PublicationObserver& observer) {
       return;
   }
   observers_.push_back(observer);
+  // Only when observer is added will we register stream update observer on conference client.
+  auto that = conference_client_.lock();
+  if (that != nullptr && !ended_) {
+    that->AddStreamUpdateObserver(*this);
+  }
 }
 
 void ConferencePublication::RemoveObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
-  observers_.erase(std::find_if(
-      observers_.begin(), observers_.end(),
-      [&](std::reference_wrapper<PublicationObserver> o) -> bool {
-        return &observer == &(o.get());
-      }));
+  auto it = std::find_if(
+    observers_.begin(), observers_.end(),
+    [&](std::reference_wrapper<PublicationObserver> o) -> bool {
+    return &observer == &(o.get());
+  });
+  // We will keep the stream update observer attached upon empty publication observer list.
+  if (it != observers_.end())
+    observers_.erase(it);
 }
 
 }

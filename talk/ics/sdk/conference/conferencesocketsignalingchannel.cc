@@ -310,7 +310,7 @@ void ConferenceSocketSignalingChannel::Connect(
                 sio::message::ptr update_message = sio::object_message::create();
                 update_message->get_map()["id"] = sio::string_message::create(stream_id);
                 auto stream_update = data->get_map()["data"];
-                if (stream_update != nullptr) {
+                if (stream_update != nullptr && stream_update->get_flag() == sio::message::flag_object) {
                   update_message->get_map()["event"] = stream_update;
                 }
                 for (auto it = observers_.begin(); it != observers_.end(); ++it) {

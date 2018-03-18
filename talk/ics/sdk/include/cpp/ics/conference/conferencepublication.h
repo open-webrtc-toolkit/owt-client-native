@@ -33,6 +33,7 @@
 #include "ics/base/commontypes.h"
 #include "ics/base/mediaconstraints.h"
 #include "ics/base/publication.h"
+#include "ics/conference/streamupdateobserver.h"
 
 namespace rtc {
   class TaskQueue;
@@ -53,11 +54,12 @@ class ConferenceClient;
 
 using namespace ics::base;
 
-class ConferencePublication : public Publication {
+class ConferencePublication : public Publication, public ConferenceStreamUpdateObserver {
   public:
-    ConferencePublication(std::shared_ptr<ConferenceClient> client, std::string id);
+    ConferencePublication(std::shared_ptr<ConferenceClient> client, const std::string& pub_id,
+                          const std::string& stream_id);
 
-    virtual ~ConferencePublication() {}
+    virtual ~ConferencePublication();
 
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
@@ -78,12 +80,16 @@ class ConferencePublication : public Publication {
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+    /// Check if the publication is stopped or not
+    bool Stopped() { return ended_; }
     /// Register an observer onto this conference publication.
     void AddObserver(PublicationObserver& observer) override;
     /// Unregister an observer from this conference publication.
     void RemoveObserver(PublicationObserver& observer) override;
   private:
+    void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
      std::string id_;
+     std::string stream_id_;
      bool ended_;
      mutable std::mutex observer_mutex_;
      std::vector<std::reference_wrapper<PublicationObserver>> observers_;

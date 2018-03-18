@@ -14,13 +14,21 @@
 namespace ics {
 namespace conference {
 
-ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient> client, std::string id)
-      : id_(id),
+ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,
+                                               const std::string& stream_id)
+      : id_(sub_id),
+        stream_id_(stream_id),
         ended_(false),
         conference_client_(client) {
   auto that = conference_client_.lock();
   if (that != nullptr)
     event_queue_ = that->event_queue_;
+}
+
+ConferenceSubscription::~ConferenceSubscription() {
+  auto that = conference_client_.lock();
+  if (that != nullptr)
+    that->RemoveStreamUpdateObserver(*this);
 }
 
 void ConferenceSubscription::Mute(
@@ -39,7 +47,21 @@ void ConferenceSubscription::Mute(
        });
      }
    } else {
-      that->Mute(id_, track_kind, on_success, on_failure);
+     std::weak_ptr<ConferenceSubscription> weak_this = shared_from_this();
+     that->Mute(id_, track_kind,
+       [on_success, weak_this, track_kind]() {
+         auto that_cs = weak_this.lock();
+         if (!that_cs || that_cs->Stopped())
+           return;
+         for (auto its = that_cs->observers_.begin(); its != that_cs->observers_.end(); ++its) {
+             if (track_kind == TrackKind::kAudio)
+               (*its).get().OnAudioMuted();
+             else if (track_kind == TrackKind::kVideo)
+               (*its).get().OnVideoMuted();
+         }
+         if (on_success != nullptr)
+           on_success();
+       }, on_failure);
    }
 }
 
@@ -59,7 +81,21 @@ void ConferenceSubscription::UnMute(
        });
      }
    } else {
-      that->UnMute(id_, track_kind, on_success, on_failure);
+     std::weak_ptr<ConferenceSubscription> weak_this = shared_from_this();
+     that->UnMute(id_, track_kind,
+       [on_success, weak_this, track_kind]() {
+       auto that_cs = weak_this.lock();
+       if (!that_cs || that_cs->Stopped())
+         return;
+       for (auto its = that_cs->observers_.begin(); its != that_cs->observers_.end(); ++its) {
+         if (track_kind == TrackKind::kAudio)
+           (*its).get().OnAudioUnMuted();
+         else if (track_kind == TrackKind::kVideo)
+           (*its).get().OnVideoUnMuted();
+       }
+       if (on_success != nullptr)
+         on_success();
+     }, on_failure);
    }
 }
 
@@ -123,6 +159,26 @@ void ConferenceSubscription::Stop(
   }
 }
 
+void ConferenceSubscription::OnStreamMuteOrUnmute(const std::string& stream_id,
+                                                  TrackKind track_kind,bool muted) {
+  if (ended_ || stream_id != stream_id_)
+    return;
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    if (muted) {
+      if (track_kind == TrackKind::kAudio)
+        (*its).get().OnAudioMuted();
+      else if (track_kind == TrackKind::kVideo)
+        (*its).get().OnVideoMuted();
+    }
+    else {
+      if (track_kind == TrackKind::kAudio)
+        (*its).get().OnAudioUnMuted();
+      else if (track_kind == TrackKind::kVideo)
+        (*its).get().OnVideoUnMuted();
+    }
+  }
+}
+
 void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<SubscriptionObserver>>::iterator it =
@@ -136,15 +192,22 @@ void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
       return;
   }
   observers_.push_back(observer);
+  // Only when observer is added will we register stream update observer on conference client.
+  auto that = conference_client_.lock();
+  if (that != nullptr && !ended_) {
+    that->AddStreamUpdateObserver(*this);
+  }
 }
 
 void ConferenceSubscription::RemoveObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
-  observers_.erase(std::find_if(
-      observers_.begin(), observers_.end(),
-      [&](std::reference_wrapper<SubscriptionObserver> o) -> bool {
-        return &observer == &(o.get());
-      }));
+  auto it = std::find_if(
+    observers_.begin(), observers_.end(),
+    [&](std::reference_wrapper<SubscriptionObserver> o) -> bool {
+    return &observer == &(o.get());
+  });
+  if (it != observers_.end())
+    observers_.erase(it);
 }
 }
 }

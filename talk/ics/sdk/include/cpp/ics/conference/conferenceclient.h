@@ -42,6 +42,7 @@
 #include "ics/base/exception.h"
 #include "ics/conference/conferencepublication.h"
 #include "ics/conference/conferencesubscription.h"
+#include "ics/conference/streamupdateobserver.h"
 #include "ics/conference/subscribeoptions.h"
 
 namespace sio{
@@ -232,6 +233,7 @@ class ConferenceClientObserver {
   */
   virtual void OnServerDisconnected(){};
 };
+
 
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final
@@ -431,6 +433,10 @@ class ConferenceClient final
   // Check if all characters are base 64 allowed or '='.
   bool IsBase64EncodedString(const std::string str) const;
 
+  /// Add an observer for conferenc client.
+  void AddStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
+  /// Remove an object from conference client.
+  void RemoveStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
   enum StreamType: int;
 
   ConferenceClientConfiguration configuration_;
@@ -462,6 +468,8 @@ class ConferenceClient final
   // Capturing observer in |event_queue_| is not 100% safe although above queue
   // is excepted to be ended after ConferenceClient is destroyed.
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
+  mutable std::mutex stream_update_observer_mutex_;
+  std::vector <std::reference_wrapper<ConferenceStreamUpdateObserver>> stream_update_observers_;
 };
 }
 }

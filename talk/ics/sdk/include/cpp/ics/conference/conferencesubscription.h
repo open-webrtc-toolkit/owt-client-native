@@ -35,6 +35,7 @@
 #include "ics/base/subscription.h"
 #include "ics/base/connectionstats.h"
 #include "ics/base/exception.h"
+#include "ics/conference/streamupdateobserver.h"
 
 namespace rtc {
   class TaskQueue;
@@ -51,11 +52,13 @@ class ConferenceClient;
 
 using namespace ics::base;
 
-class ConferenceSubscription{
+class ConferenceSubscription : public ConferenceStreamUpdateObserver,
+                               public std::enable_shared_from_this<ConferenceSubscription> {
   public:
-    ConferenceSubscription(std::shared_ptr<ConferenceClient> client, std::string id);
+    ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,
+                           const std::string& stream_id);
 
-    virtual ~ConferenceSubscription() {}
+    virtual ~ConferenceSubscription();
 
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
@@ -78,16 +81,21 @@ class ConferenceSubscription{
     void Stop(std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure);
 
+    /// If the Subscription is stopped or not.
+    bool Stopped() { return ended_; }
+
     void AddObserver(SubscriptionObserver& observer);
 
     void RemoveObserver(SubscriptionObserver& observer);
   private:
-     std::string id_;
-     bool ended_;
-     mutable std::mutex observer_mutex_;
-     std::vector<std::reference_wrapper<SubscriptionObserver>> observers_;
-     std::weak_ptr<ConferenceClient>  conference_client_;   // Weak ref to associated conference client
-     std::shared_ptr<rtc::TaskQueue> event_queue_;
+    void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
+    std::string id_;
+    std::string stream_id_;
+    bool ended_;
+    mutable std::mutex observer_mutex_;
+    std::vector<std::reference_wrapper<SubscriptionObserver>> observers_;
+    std::weak_ptr<ConferenceClient>  conference_client_;   // Weak ref to associated conference client
+    std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
 
 

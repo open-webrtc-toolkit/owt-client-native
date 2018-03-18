@@ -187,6 +187,32 @@ void ConferenceClient::RemoveObserver(ConferenceClientObserver& observer) {
       }));
 }
 
+void ConferenceClient::AddStreamUpdateObserver(ConferenceStreamUpdateObserver& observer) {
+  const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+  std::vector<std::reference_wrapper<ConferenceStreamUpdateObserver>>::iterator it =
+    std::find_if(
+      stream_update_observers_.begin(), stream_update_observers_.end(),
+        [&](std::reference_wrapper<ConferenceStreamUpdateObserver> o) -> bool {
+    return &observer == &(o.get());
+  });
+  if (it != stream_update_observers_.end()) {
+    LOG(LS_INFO) << "Adding duplicate observer.";
+    return;
+  }
+  stream_update_observers_.push_back(observer);
+}
+
+void ConferenceClient::RemoveStreamUpdateObserver(ConferenceStreamUpdateObserver& observer) {
+  const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+  auto it = std::find_if(
+    stream_update_observers_.begin(), stream_update_observers_.end(),
+    [&](std::reference_wrapper<ConferenceStreamUpdateObserver> o) -> bool {
+    return &observer == &(o.get());
+  });
+  if (it != stream_update_observers_.end())
+    stream_update_observers_.erase(it);
+}
+
 void ConferenceClient::Join(
     const std::string& token,
     std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
@@ -335,13 +361,14 @@ void ConferenceClient::Publish(
   }
 
   std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
-  pcc->Publish(stream, [on_success, weak_this] (std::string session_id) {
+  std::string stream_id = stream->Id();
+  pcc->Publish(stream, [on_success, weak_this, stream_id] (std::string session_id) {
     auto that = weak_this.lock();
     if (!that)
       return;
 
     // map current pcc
-    std::shared_ptr<ConferencePublication> cp(new ConferencePublication(that, session_id));
+    std::shared_ptr<ConferencePublication> cp(new ConferencePublication(that, session_id, stream_id));
     on_success(cp);
   }, on_failure);
 }
@@ -420,13 +447,14 @@ void ConferenceClient::Subscribe(
     subscribe_pcs_.push_back(pcc);
   }
   std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+  std::string stream_id = stream->Id();
   pcc->Subscribe(stream, options,
-      [on_success, weak_this](std::string session_id) {
+      [on_success, weak_this, stream_id](std::string session_id) {
         auto that = weak_this.lock();
         if (!that)
             return;
         // map current pcc
-        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id));
+        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id, stream_id));
         on_success(cp);
       },
       on_failure);
@@ -1328,13 +1356,27 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   }
   //TODO(jianlin): Add notification of audio/video active/inactive.
   std::string event_field = event->get_map()["field"]->get_string();
-  if (type != kStreamTypeMix || event_field != "video.layout") {
-    // TODO(jianjunz): Remove it when this event is supported on other streams.
-    LOG(LS_WARNING) << "Stream updated event only supported on mixed stream.";
+  if (type == kStreamTypeMix && event_field == "video.layout") {
+    std::shared_ptr<RemoteMixedStream> stream_ptr = std::static_pointer_cast<RemoteMixedStream>(stream);
+    stream_ptr->OnVideoLayoutChanged();
     return;
+  } else if (event_field == "audio.status" || event_field == "video.status") {
+    auto value = event->get_map()["value"];
+    if (value == nullptr || value->get_flag() != sio::message::flag_string) {
+      LOG(LS_WARNING) << "Invalid stream update data value";
+      return;
+    }
+    std::string status_value = value->get_string();
+    if (status_value != "active" && status_value != "inactive") {
+      LOG(LS_WARNING) << "Invalid stream update status";
+      return;
+    }
+    TrackKind track_kind = (event_field == "audio.status")? TrackKind::kAudio : TrackKind::kVideo;
+    bool muted = (status_value == "inactive") ? true : false;
+    for (auto its = stream_update_observers_.begin(); its != stream_update_observers_.end(); ++its) {
+      (*its).get().OnStreamMuteOrUnmute(id, track_kind, muted);
+    }
   }
-  std::shared_ptr<RemoteMixedStream> stream_ptr=std::static_pointer_cast<RemoteMixedStream>(stream);
-  stream_ptr->OnVideoLayoutChanged();
 }
 
 std::unordered_map<std::string, std::string>
