@@ -133,12 +133,16 @@
 - (std::shared_ptr<ics::conference::SubscribeOptions>)nativeSubscribeOptions {
   std::shared_ptr<ics::conference::SubscribeOptions> options(
       new ics::conference::SubscribeOptions);
-  ics::conference::AudioSubscriptionConstraints audio(
-      *[_audio nativeAudioSubscriptionConstraints].get());
-  ics::conference::VideoSubscriptionConstraints video(
-      *[_video nativeVideoSubscriptionConstraints].get());
-  options->audio = audio;
-  options->video = video;
+  if (_audio) {
+    ics::conference::AudioSubscriptionConstraints audio(
+        *[_audio nativeAudioSubscriptionConstraints].get());
+    options->audio = audio;
+  }
+  if (_video) {
+    ics::conference::VideoSubscriptionConstraints video(
+        *[_video nativeVideoSubscriptionConstraints].get());
+    options->video = video;
+  }
   return options;
 }
 

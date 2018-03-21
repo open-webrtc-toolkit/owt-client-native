@@ -75,15 +75,6 @@ RTC_EXPORT
     withOptions:(ICSPublishOptions*)options
       onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
-  @brief Subscribe a stream from the current room.
-  @param stream The remote stream to be subscribed.
-  @param onSuccess Success callback with a stream that contains media stream.
-*/
-- (void)subscribe:(ICSRemoteStream*)stream
-        onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
 /**
   @brief Subscribe a stream from the current room.
   @param stream The remote stream to be subscribed.
@@ -91,7 +82,7 @@ RTC_EXPORT
   @param onSuccess Success callback with a stream that contains media stream.
 */
 - (void)subscribe:(ICSRemoteStream*)stream
-      withOptions:(ICSConferenceSubscribeOptions*)options
+      withOptions:(nullable ICSConferenceSubscribeOptions*)options
         onSuccess:(nullable void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 /**

@@ -166,19 +166,34 @@
       withOptions:(ICSConferenceSubscribeOptions*)options
         onSuccess:(void (^)(ICSConferenceSubscription*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
-  if (options == nil) {
-    options = [[ICSConferenceSubscribeOptions alloc] init];
-  }
+  RTC_CHECK(stream);
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<ics::base::RemoteStream> nativeStream(
       std::static_pointer_cast<ics::base::RemoteStream>(nativeStreamRefPtr));
+  if (options == nil) {
+    _nativeConferenceClient->Subscribe(
+        nativeStream,
+        [=](std::shared_ptr<ics::conference::ConferenceSubscription>
+                subscription) {
+          ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]
+              initWithNativeSubscription:subscription];
+          if (onSuccess != nil) {
+            onSuccess(sub);
+          }
+        },
+        [=](std::unique_ptr<ics::base::Exception> e) {
+          [self triggerOnFailure:onFailure withException:(std::move(e))];
+        });
+  }
   _nativeConferenceClient->Subscribe(
       nativeStream, *[options nativeSubscribeOptions].get(),
       [=](std::shared_ptr<ics::conference::ConferenceSubscription>
               subscription) {
         ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]
             initWithNativeSubscription:subscription];
-        onSuccess(sub);
+        if (onSuccess != nil) {
+          onSuccess(sub);
+        }
       },
       [=](std::unique_ptr<ics::base::Exception> e) {
         [self triggerOnFailure:onFailure withException:(std::move(e))];
