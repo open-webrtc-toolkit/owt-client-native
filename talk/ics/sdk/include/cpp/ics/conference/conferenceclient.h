@@ -368,6 +368,15 @@ class ConferenceClient final
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
+   @brief Update a subscription.
+  */
+  void UpdateSubscription(
+      const std::string& session_id,
+      const std::string& stream_id,
+      const VideoSubscribeUpdateOption& option,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+  /**
     @brief Get a stream's connection statistics
   */
   void GetConnectionStats(

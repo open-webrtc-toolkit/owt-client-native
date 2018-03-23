@@ -115,6 +115,27 @@ void ConferenceSubscription::GetStats(
    }
 }
 
+void ConferenceSubscription::ApplyOptions(
+  const VideoSubscribeUpdateOption& option,
+  std::function<void()> on_success,
+  std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  auto that = conference_client_.lock();
+  if (that == nullptr || ended_) {
+    std::string failure_message(
+      "Session ended.");
+    if (on_failure != nullptr && event_queue_.get()) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceInvalidParam, failure_message));
+        on_failure(std::move(e));
+      });
+    }
+  } else {
+    that->UpdateSubscription(id_, stream_id_, option, on_success, on_failure);
+  }
+}
+
+
 void ConferenceSubscription::GetNativeStats(
     std::function<void(const std::vector<const webrtc::StatsReport*>& reports)>
         on_success,

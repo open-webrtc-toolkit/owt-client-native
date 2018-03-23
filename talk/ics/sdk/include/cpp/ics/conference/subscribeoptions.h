@@ -34,7 +34,7 @@ namespace conference {
 
 /// Audio subscription contraints.
 struct AudioSubscriptionConstraints {
-  std::vector<AudioCodecParameters> codecs;
+  std::vector<ics::base::AudioCodecParameters> codecs;
 };
 
 /// Video subscription constraints.
@@ -49,8 +49,8 @@ struct VideoSubscriptionConstraints {
         , bitrateMultiplier(0)
         , keyFrameInterval(0) {}
 
-  std::vector<VideoCodecParameters> codecs;
-  Resolution resolution;
+  std::vector<ics::base::VideoCodecParameters> codecs;
+  ics::base::Resolution resolution;
   double frameRate;
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
@@ -60,6 +60,23 @@ struct VideoSubscriptionConstraints {
 struct SubscribeOptions {
   AudioSubscriptionConstraints audio;
   VideoSubscriptionConstraints video;
+};
+
+/// Video subscribe update option used by subscription's ApplyOptions API.
+struct VideoSubscribeUpdateOption {
+  /**
+   @brief Construct VideoSubscribeUpdateOption with default value.
+   */
+  explicit VideoSubscribeUpdateOption()
+      : resolution(0, 0)
+      , frameRate(0)
+      , bitrateMultiplier(0)
+      , keyFrameInterval(0) {}
+
+  ics::base::Resolution resolution;
+  double frameRate;
+  double bitrateMultiplier;
+  unsigned long keyFrameInterval;
 };
 
 }

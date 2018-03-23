@@ -429,6 +429,20 @@ void ConferenceSocketSignalingChannel::Disconnect(
   }
 }
 
+void ConferenceSocketSignalingChannel::SendSubscriptionUpdateMessage(
+  sio::message::ptr options,
+  std::function<void()> on_success,
+  std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
+    shared_from_this();
+  Emit(kEventNameSubscriptionControl, options,
+    [weak_this, on_success, on_failure](sio::message::list const& msg) {
+    if (auto that = weak_this.lock()) {
+      that->OnEmitAck(msg, on_success, on_failure);
+    }
+  }, on_failure);
+}
+
 void ConferenceSocketSignalingChannel::SendInitializationMessage(
     sio::message::ptr options,
     std::string publish_stream_label,

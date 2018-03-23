@@ -36,6 +36,7 @@
 #include "ics/base/connectionstats.h"
 #include "ics/base/exception.h"
 #include "ics/conference/streamupdateobserver.h"
+#include "ics/conference/subscribeoptions.h"
 
 namespace rtc {
   class TaskQueue;
@@ -76,16 +77,21 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
         std::function<void(
             const std::vector<const webrtc::StatsReport*>& reports)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
-
     /// Stop current publication.
     void Stop(std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure);
-
     /// If the Subscription is stopped or not.
     bool Stopped() { return ended_; }
-
+    /// Get the subscription ID
+    std::string Id() const { return id_; }
+    /// Update the subscription with new encoding settings.
+    void ApplyOptions(
+        const VideoSubscribeUpdateOption& option,
+        std::function<void()> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure);
+    /// Add observer on the subscription
     void AddObserver(SubscriptionObserver& observer);
-
+    /// Remove observer on the subscription.
     void RemoveObserver(SubscriptionObserver& observer);
   private:
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);

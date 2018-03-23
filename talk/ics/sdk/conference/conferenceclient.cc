@@ -570,6 +570,60 @@ void ConferenceClient::Send(
       message, receiver, RunInEventQueue(on_success), on_failure);
 }
 
+void ConferenceClient::UpdateSubscription(
+  const std::string& session_id,
+  const std::string& stream_id,
+  const VideoSubscribeUpdateOption& option,
+  std::function<void()> on_success,
+  std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kConferenceUnknown,
+            "Signaling channel stopped. Unable to send subscription update to server")
+        );
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+
+  sio::message::ptr update_message = sio::object_message::create();
+  update_message->get_map()["id"] = sio::string_message::create(session_id);
+  update_message->get_map()["operation"] = sio::string_message::create("update");
+
+  sio::message::ptr update_option = sio::object_message::create();
+  sio::message::ptr video_params = sio::object_message::create();
+  if (option.frameRate != 0) {
+    video_params->get_map()["framerate"] = sio::int_message::create(option.frameRate);
+  }
+  if (option.resolution.width != 0 && option.resolution.height != 0) {
+    sio::message::ptr resolution_param = sio::object_message::create();
+    resolution_param->get_map()["width"] =
+      sio::int_message::create(option.resolution.width);
+    resolution_param->get_map()["height"] =
+      sio::int_message::create(option.resolution.height);
+    video_params->get_map()["resolution"] = resolution_param;
+  }
+  if (option.keyFrameInterval != 0) {
+    video_params->get_map()["keyFrameInterval"] =
+      sio::int_message::create(option.keyFrameInterval);
+  }
+  if (option.bitrateMultiplier != 0) {
+    std::string multiplier = "x" + std::to_string(option.bitrateMultiplier);
+    video_params->get_map()["bitrate"] =
+      sio::string_message::create(multiplier);
+  }
+  sio::message::ptr video_update = sio::object_message::create();
+  video_update->get_map()["parameters"] = video_params;
+  video_update->get_map()["from"] = sio::string_message::create(stream_id);
+  update_option->get_map()["video"] = video_update;
+  update_message->get_map()["data"] = update_option;
+  signaling_channel_->SendSubscriptionUpdateMessage(update_message, on_success, on_failure);
+}
+
+
 void ConferenceClient::Mute(
     const std::string& session_id,
     TrackKind track_kind,

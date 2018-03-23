@@ -75,6 +75,10 @@ class ConferenceSocketSignalingChannel
       const std::string& operation,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
+  virtual void SendSubscriptionUpdateMessage(
+      sio::message::ptr options,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void Unsubscribe(
       const std::string& id,
       std::function<void()> on_success,
