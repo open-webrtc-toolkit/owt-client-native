@@ -49,6 +49,8 @@ enum class ExceptionType : int {
   kP2PClientUnsupportedMethod = 2401,
   kP2PClientInvalidArgument = 2402,
   kP2PClientInvalidState = 2403,
+  kP2PClientRemoteNotAllowed = 2404,
+  kP2PClientRemoteNotExisted = 2405,
 
   // kConference* for conference exceptions
   kConferenceUnknown = 3001,

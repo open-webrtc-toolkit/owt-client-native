@@ -7,16 +7,6 @@
 namespace ics {
 namespace p2p {
 
-void P2PPeerConnectionChannelObserverCppImpl::OnInvited(
-    const std::string& remote_id) {
-  peer_client_.OnInvited(remote_id);
-}
-
-void P2PPeerConnectionChannelObserverCppImpl::OnAccepted(
-    const std::string& remote_id) {
-  peer_client_.OnAccepted(remote_id);
-}
-
 void P2PPeerConnectionChannelObserverCppImpl::OnStarted(
     const std::string& remote_id) {
   peer_client_.OnStarted(remote_id);

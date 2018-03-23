@@ -21,8 +21,6 @@ class P2PPeerConnectionChannelObserverObjcImpl
       id<ICSP2PPeerConnectionChannelObserver> observer);
 
  protected:
-  void OnInvited(const std::string& remote_id) override;
-  void OnAccepted(const std::string& remote_id) override;
   void OnDenied(const std::string& remote_id) override;
   void OnStarted(const std::string& remote_id) override;
   void OnStopped(const std::string& remote_id) override;

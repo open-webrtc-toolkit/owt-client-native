@@ -17,11 +17,10 @@ namespace p2p {
 using std::string;
 
 enum P2PPeerConnectionChannel::SessionState : int {
-  kSessionStateReady =
-      1,  // Indicate the channel is ready. This is the initial state.
-  kSessionStateOffered,     // Indicates local client has sent an invitation and
-                            // waiting for an acceptance.
-  kSessionStatePending,     // Indicates local client received an invitation and
+  kSessionStateReady = 1,   // Indicate the channel is ready. This is the initial state.
+  kSessionStateOffered,     // Indicates local client has sent a user agent and
+                            // waiting for an remote SDP.
+  kSessionStatePending,     // Indicates local client received an user agent and
                             // waiting for user's response.
   kSessionStateMatched,     // Indicates both sides agreed to start a WebRTC
                             // session. One of them will send an offer soon.
@@ -33,8 +32,6 @@ enum P2PPeerConnectionChannel::SessionState : int {
 // Signaling message type
 const string kMessageTypeKey = "type";
 const string kMessageDataKey = "data";
-const string kChatInvitation = "chat-invitation";
-const string kChatAccept = "chat-accepted";
 const string kChatDeny = "chat-denied";
 const string kChatStop = "chat-closed";
 const string kChatSignal = "chat-signal";
@@ -42,7 +39,10 @@ const string kChatNegotiationNeeded = "chat-negotiation-needed";
 const string kChatTrackSources = "chat-track-sources";
 const string kChatTracksAdded = "chat-tracks-added";
 const string kChatTracksRemoved = "chat-tracks-removed";
+const string kChatDataReceived = "chat-data-received";
+const string kChatUserAgent = "chat-ua";
 
+// Track information member key
 const string kTrackIdKey = "id";
 const string kTrackSourceKey = "source";
 
@@ -51,18 +51,20 @@ const string kSessionDescriptionTypeKey = "type";
 const string kSessionDescriptionSdpKey = "sdp";
 
 // ICE candidate member key
+const string kIceCandidateSdpNameKey = "candidate";
 const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
-const string kIceCandidateSdpNameKey = "candidate";
 
 // UA member key
-const string kUaKey = "ua";
 const string kUaSdkKey = "sdk";
 const string kUaSdkTypeKey = "type";
 const string kUaSdkVersionKey = "version";
 const string kUaRuntimeKey = "runtime";
 const string kUaRuntimeNameKey = "name";
 const string kUaRuntimeVersionKey = "version";
+const string kUaOsKey = "os";
+const string kUaOsNameKey = "name";
+const string kUaOsVersionKey = "version";
 
 const string kDataChannelLabelForTextMessage = "message";
 
@@ -80,11 +82,11 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       session_state_(kSessionStateReady),
       negotiation_needed_(false),
       set_remote_sdp_task_(nullptr),
-      last_disconnect_(
-          std::chrono::time_point<std::chrono::system_clock>::max()),
+      last_disconnect_(std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
       remote_side_supports_plan_b_(false),
       remote_side_supports_remove_stream_(false),
+      remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
       event_queue_(event_queue) {
   RTC_CHECK(signaling_sender_);
@@ -112,69 +114,93 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
 
 Json::Value P2PPeerConnectionChannel::UaInfo() {
   Json::Value ua;
+
+  // SDK info includes verison and type
   Json::Value sdk;
   SysInfo sys_info = SysInfo::GetInstance();
-  sdk[kUaSdkTypeKey] = sys_info.sdk.type;
   sdk[kUaSdkVersionKey] = sys_info.sdk.version;
-  // Runtime values will be empty string on native SDK and will be browser info
-  // on JavaScript SDK
+  sdk[kUaSdkTypeKey] = sys_info.sdk.type;
+
+  // Runtime values will be empty string on native SDK and
+  // will be browser info on JavaScript SDK
   Json::Value runtime;
   runtime[kUaRuntimeNameKey] = sys_info.runtime.name;
   runtime[kUaRuntimeVersionKey] = sys_info.runtime.version;
+
+  // OS info includes OS name and OS version
+  Json::Value os;
+  os[kUaOsNameKey] = sys_info.os.name;
+  os[kUaOsVersionKey] = sys_info.os.version;
+
   ua[kUaSdkKey] = sdk;
   ua[kUaRuntimeKey] = runtime;
+  ua[kUaOsKey] = os;
   return ua;
 }
 
-void P2PPeerConnectionChannel::Invite(
+void P2PPeerConnectionChannel::Publish(
+    std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (session_state_ != kSessionStateReady &&
-      session_state_ != kSessionStateOffered) {
-    if (on_failure) {
-      LOG(LS_WARNING) << "Cannot send invitation in this state: "
-                      << session_state_;
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Cannot send invitation in this state."));
-        on_failure(std::move(e));
-      });
-    }
+  LOG(LS_INFO) << "Publishing a local stream.";
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
   }
-  SendStop(
-      nullptr,
-      nullptr);  // Just try to clean up remote side. No callback is needed.
-  Json::Value json;
-  json[kMessageTypeKey] = kChatInvitation;
-  Json::Value ua = UaInfo();
-  Json::Value ua_data;
-  ua_data[kUaKey] = ua;
-  json[kMessageDataKey] = ua_data;
-  SendSignalingMessage(json, on_success, on_failure);
-  ChangeSessionState(kSessionStateOffered);
-}
 
-void P2PPeerConnectionChannel::Accept(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (session_state_ != kSessionStatePending) {
+  is_caller_ = true;
+  InitializePeerConnection();
+
+  // The first signaling message of user agent data to remote peer
+  Json::Value json;
+  json[kMessageTypeKey] = kChatUserAgent;
+  Json::Value ua = UaInfo();
+  json[kMessageDataKey] = ua;
+  SendSignalingMessage(json, nullptr, nullptr);
+
+  RTC_CHECK(stream->MediaStream());
+  if (published_streams_.find(stream->MediaStream()->label()) !=
+      published_streams_.end()) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
         std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Cannot accept invitation in this state."));
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "The stream is already published."));
         on_failure(std::move(e));
       });
     }
     return;
   }
-  is_caller_ = false;
-  InitializePeerConnection();
-  SendAcceptance(on_success, on_failure);
-  ChangeSessionState(kSessionStateMatched);
-  CreateDataChannel(kDataChannelLabelForTextMessage);
+
+  scoped_refptr<webrtc::MediaStreamInterface> media_stream =
+      stream->MediaStream();
+  std::pair<std::string, std::string> stream_track_info;
+  for (const auto& track : media_stream->GetAudioTracks()) {
+    if (local_stream_tracks_info_.find(track->id()) != local_stream_tracks_info_.end()) {
+      stream_track_info = std::make_pair(track->id(), media_stream->label());
+      local_stream_tracks_info_.insert(stream_track_info);
+    }
+  }
+  for (const auto& track : media_stream->GetVideoTracks()) {
+    if (local_stream_tracks_info_.find(track->id()) != local_stream_tracks_info_.end()) {
+      stream_track_info = std::make_pair(track->id(), media_stream->label());
+      local_stream_tracks_info_.insert(stream_track_info);
+    }
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
+    pending_publish_streams_.push_back(stream);
+  }
+
+  LOG(LS_INFO) << "Session state: " << session_state_;
+
+  if (on_success) {
+    event_queue_->PostTask([on_success] { on_success(); });
+  }
+
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
+    DrainPendingStreams();
 }
 
 void P2PPeerConnectionChannel::Deny(
@@ -185,7 +211,7 @@ void P2PPeerConnectionChannel::Deny(
       event_queue_->PostTask([on_failure] {
         std::unique_ptr<Exception> e(
             new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Cannot deny invitation in this state."));
+                          "Cannot deny connection in this state."));
         on_failure(std::move(e));
       });
     }
@@ -193,54 +219,6 @@ void P2PPeerConnectionChannel::Deny(
   }
   SendDeny(on_success, on_failure);
   ChangeSessionState(kSessionStateReady);
-}
-
-void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
-    const std::string& message) {
-  LOG(LS_INFO) << "OnIncomingMessage: " << message;
-  RTC_DCHECK(!message.empty());
-  Json::Reader reader;
-  Json::Value json_message;
-  if (!reader.parse(message, json_message)) {
-    LOG(LS_WARNING) << "Cannot parse incoming message.";
-    return;
-  }
-  std::string message_type;
-  rtc::GetStringFromJsonObject(json_message, kMessageTypeKey, &message_type);
-  if (message_type.empty()) {
-    LOG(LS_WARNING) << "Cannot get type from incoming message.";
-    return;
-  }
-  if (message_type == kChatInvitation) {
-    Json::Value ua_data;
-    Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua_data);
-    rtc::GetValueFromJsonObject(ua_data, kUaKey, &ua);
-    OnMessageInvitation(ua);
-  } else if (message_type == kChatStop) {
-    OnMessageStop();
-  } else if (message_type == kChatAccept) {
-    Json::Value ua_data;
-    Json::Value ua;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua_data);
-    rtc::GetValueFromJsonObject(ua_data, kUaKey, &ua);
-    OnMessageAcceptance(ua);
-  } else if (message_type == kChatDeny) {
-    OnMessageDeny();
-  } else if (message_type == kChatSignal) {
-    Json::Value signal;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &signal);
-    OnMessageSignal(signal);
-  } else if (message_type == kChatNegotiationNeeded) {
-    OnMessageNegotiationNeeded();
-  } else if (message_type == kChatTrackSources) {
-    Json::Value track_sources;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &track_sources);
-    OnMessageTrackSources(track_sources);
-  } else {
-    LOG(LS_WARNING) << "Received unknown message type : " << message_type;
-    return;
-  }
 }
 
 void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
@@ -281,11 +259,11 @@ void P2PPeerConnectionChannel::CreateOffer() {
               &P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure,
               this, std::placeholders::_1));
   rtc::TypedMessageData<
-      scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* data =
-      new rtc::TypedMessageData<
+      scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*
+      message_observer = new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
   LOG(LS_INFO) << "Post create offer";
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, message_observer);
 }
 
 void P2PPeerConnectionChannel::CreateAnswer() {
@@ -308,60 +286,85 @@ void P2PPeerConnectionChannel::CreateAnswer() {
 
 void P2PPeerConnectionChannel::SendSignalingMessage(
     const Json::Value& data,
-    std::function<void()> success,
-    std::function<void(std::unique_ptr<Exception>)> failure) {
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_sender_);
   std::string jsonString = rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(
-      jsonString, remote_id_, success, [=](int) {
-        if (failure == nullptr)
+      jsonString,
+      remote_id_,
+      on_success,
+      [=](int) {
+        if (on_failure == nullptr)
           return;
         std::unique_ptr<Exception> e(
             new Exception(ExceptionType::kP2PClientInvalidArgument,
                           "Send signaling message failed."));
-        failure(std::move(e));
-      });
+        on_failure(std::move(e));
+      }
+  );
 }
 
-void P2PPeerConnectionChannel::OnMessageInvitation(Json::Value& ua) {
+void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
+    const std::string& message) {
+  LOG(LS_INFO) << "OnIncomingMessage: " << message;
+  RTC_DCHECK(!message.empty());
+  Json::Reader reader;
+  Json::Value json_message;
+  if (!reader.parse(message, json_message)) {
+    LOG(LS_WARNING) << "Cannot parse incoming message.";
+    return;
+  }
+  std::string message_type;
+  rtc::GetStringFromJsonObject(json_message, kMessageTypeKey, &message_type);
+  if (message_type.empty()) {
+    LOG(LS_WARNING) << "Cannot get type from incoming message.";
+    return;
+  }
+  if (message_type == kChatUserAgent) {
+    Json::Value ua;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
+    OnMessageUserAgent(ua);
+  } else if (message_type == kChatTrackSources) {
+    Json::Value track_sources;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &track_sources);
+    OnMessageTrackSources(track_sources);
+  } else if (message_type == kChatSignal) {
+    Json::Value signal;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &signal);
+    OnMessageSignal(signal);
+  } else if (message_type == kChatTracksAdded) {
+    Json::Value tracks;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &tracks);
+    OnMessageTracksAdded(tracks);
+  } else if (message_type == kChatDataReceived) {
+    Json::Value data;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &data);
+    OnMessageDataReceived(data);
+  } else if (message_type == kChatNegotiationNeeded) {
+    OnMessageNegotiationNeeded();
+  } else if (message_type == kChatStop) {
+    OnMessageStop();
+  } else if (message_type == kChatDeny) {
+    OnMessageDeny();
+  } else {
+    LOG(LS_WARNING) << "Received unknown message type : " << message_type;
+    return;
+  }
+}
+
+void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
   HandleRemoteCapability(ua);
   switch (session_state_) {
     case kSessionStateReady:
     case kSessionStatePending:
-      ChangeSessionState(kSessionStatePending);
-      for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-               observers_.begin();
-           it != observers_.end(); it++) {
-        (*it)->OnInvited(remote_id_);
-      }
-      break;
-    case kSessionStateOffered:
-      if (remote_id_.compare(local_id_) > 0) {
-        SendAcceptance(nullptr, nullptr);
-        ChangeSessionState(kSessionStateMatched);
-      }
+      is_caller_ = false;
+      InitializePeerConnection();
+      ChangeSessionState(kSessionStateMatched);
       break;
     default:
-      LOG(LS_INFO) << "Ignore invitation because already connected.";
+      LOG(LS_INFO) << "Ignore user agent information because already connected.";
   }
-}
-
-void P2PPeerConnectionChannel::OnMessageAcceptance(Json::Value& ua) {
-  LOG(LS_INFO) << "Remote user accepted invitation.";
-  if (session_state_ != kSessionStateOffered &&
-      session_state_ != kSessionStateMatched)
-    return;
-  ChangeSessionState(kSessionStateMatched);
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
-       it != observers_.end(); ++it) {
-    (*it)->OnAccepted(remote_id_);
-  }
-  is_caller_ = true;
-  HandleRemoteCapability(ua);
-  InitializePeerConnection();
-  ChangeSessionState(kSessionStateConnecting);
-  CreateDataChannel(kDataChannelLabelForTextMessage);
 }
 
 void P2PPeerConnectionChannel::OnMessageStop() {
@@ -376,7 +379,7 @@ void P2PPeerConnectionChannel::OnMessageStop() {
     case kSessionStateMatched:
       ChangeSessionState(kSessionStateReady);
       // Maybe we can add another event like "cancel" for such kind scenario.
-      // For now, we trigger OnStop to indicate the invitation has been
+      // For now, we trigger OnStop to indicate the connection has been
       // canceled, and session is stopped.
       TriggerOnStopped();
       break;
@@ -388,7 +391,7 @@ void P2PPeerConnectionChannel::OnMessageStop() {
 }
 
 void P2PPeerConnectionChannel::OnMessageDeny() {
-  LOG(LS_INFO) << "Remote user denied invitation";
+  LOG(LS_INFO) << "Remote user denied connection";
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -470,6 +473,24 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   }
 }
 
+void P2PPeerConnectionChannel::OnMessageTracksAdded(Json::Value& stream_tracks) {
+  // Find the streams with track information, and add them to published stream list
+  for (Json::Value::ArrayIndex idx = 0; idx != stream_tracks.size(); idx++) {
+    std::string track_id = stream_tracks[idx].asString();
+    if (local_stream_tracks_info_.find(track_id) != local_stream_tracks_info_.end()) {
+      std::lock_guard<std::mutex> lock(published_streams_mutex_);
+      auto it = published_streams_.find(local_stream_tracks_info_[track_id]);
+      if (it == published_streams_.end()) {
+        published_streams_.insert(local_stream_tracks_info_[track_id]);
+      }
+    }
+  }
+}
+
+void P2PPeerConnectionChannel::OnMessageDataReceived(Json::Value& data) {
+  // TODO: The data sent in data channel will have id and its message content
+}
+
 void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources) {
   string id;
   string source;
@@ -506,7 +527,6 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
-  LOG(LS_INFO) << "P2PPeerConnectionChannel::OnAddStream";
   bool no_audio_source = true;
   for (const auto& track : stream->GetAudioTracks()) {
     if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
@@ -622,7 +642,7 @@ void P2PPeerConnectionChannel::OnDataChannel(
 }
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
-  LOG(LS_INFO) << "On negotiation needed.";
+  LOG(LS_INFO) << "On renegotiation needed.";
   if (!is_caller_) {
     if (session_state_ == kSessionStateConnecting ||
         session_state_ == kSessionStateConnected) {
@@ -632,8 +652,7 @@ void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
     }
     // If session is not connected, offer will be sent later. Nothing to do
     // here.
-  } else if (SignalingState() ==
-             PeerConnectionInterface::SignalingState::kStable) {
+  } else if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
     CreateOffer();
   } else {
     negotiation_needed_ = true;
@@ -648,8 +667,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
     case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
       if (session_state_ == kSessionStateConnecting) {
         for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-                 observers_.begin();
-             it != observers_.end(); it++) {
+             observers_.begin(); it != observers_.end(); it++) {
           (*it)->OnStarted(remote_id_);
         }
       }
@@ -719,8 +737,8 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
               this, std::placeholders::_1));
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
-  LOG(LS_INFO) << "Post set local desc";
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetLocalDescription, msg);
+  LOG(LS_INFO) << "Post set local desc";
 }
 
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
@@ -748,6 +766,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   Json::Value json;
   json[kMessageTypeKey] = kChatSignal;
   json[kMessageDataKey] = signal;
+  // The third signaling message of SDP to remote peer
   SendSignalingMessage(json, nullptr, nullptr);
 }
 
@@ -784,8 +803,7 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
 
 void P2PPeerConnectionChannel::TriggerOnStopped() {
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
-       it != observers_.end(); it++) {
+       observers_.begin(); it != observers_.end(); it++) {
     (*it)->OnStopped(remote_id_);
   }
 }
@@ -797,74 +815,6 @@ void P2PPeerConnectionChannel::CleanLastPeerConnection() {
   }
   negotiation_needed_ = false;
   last_disconnect_ = std::chrono::time_point<std::chrono::system_clock>::max();
-}
-
-void P2PPeerConnectionChannel::Publish(
-    std::shared_ptr<LocalStream> stream,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  LOG(LS_INFO) << "Publish a local stream.";
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    LOG(LS_INFO) << "Local stream cannot be nullptr.";
-    return;
-  }
-  if (session_state_!=SessionState::kSessionStateConnected){
-    std::string error_message(
-        "Cannot publish a stream when connection is not established.");
-    LOG(LS_WARNING) << error_message;
-    if (on_failure) {
-      event_queue_->PostTask([on_failure, error_message] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState, error_message));
-        on_failure(std::move(e));
-      });
-    }
-  }
-  if (!remote_side_supports_plan_b_ &&
-      published_streams_.size() + pending_publish_streams_.size() > 0) {
-    if (on_failure != nullptr) {
-      LOG(LS_WARNING) << "Remote side does not support Plan B, so at most one "
-                         "audio/video track can be published.";
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(new Exception(
-            ExceptionType::kP2PClientUnsupportedMethod,
-            "Cannot publish multiple streams to remote side."));
-        on_failure(std::move(e));
-      });
-    }
-    return;
-  }
-  RTC_CHECK(stream->MediaStream());
-  if (published_streams_.find(stream->MediaStream()->label()) !=
-      published_streams_.end()) {
-    if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "The stream is already published."));
-        on_failure(std::move(e));
-      });
-    }
-    return;
-  }
-  {
-    std::lock_guard<std::mutex> lock(published_streams_mutex_);
-    published_streams_.insert(stream->MediaStream()->label());
-  }
-  {
-    std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
-    pending_publish_streams_.push_back(stream);
-  }
-
-  LOG(LS_INFO) << "Session state: " << session_state_;
-
-  if (on_success) {
-    event_queue_->PostTask([on_success] { on_success(); });
-  }
-
-  if (session_state_ == SessionState::kSessionStateConnected &&
-      SignalingState() == PeerConnectionInterface::SignalingState::kStable)
-    DrainPendingStreams();
 }
 
 void P2PPeerConnectionChannel::Unpublish(
@@ -1024,6 +974,7 @@ void P2PPeerConnectionChannel::GetStats(
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   LOG(LS_INFO) << "Draining pending stream";
+  ChangeSessionState(kSessionStateConnecting);
   // First to publish the pending_publish_streams_ list
   {
     std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
@@ -1049,18 +1000,21 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       Json::Value track_sources;
       for (const auto& track : media_stream->GetAudioTracks()) {
         track_info[kTrackIdKey] = track->id();
-        track_info[kTrackSourceKey] = "mic";
+        track_info[kTrackSourceKey] = audio_track_source;
         track_sources.append(track_info);
       }
 
       for (const auto& track : media_stream->GetVideoTracks()) {
         track_info[kTrackIdKey] = track->id();
-        track_info[kTrackSourceKey] = "camera";
+        track_info[kTrackSourceKey] = video_track_source;
         track_sources.append(track_info);
       }
 
       json[kMessageDataKey] = track_sources;
+      // The second signaling message of track sources to remote peer
       SendSignalingMessage(json, nullptr, nullptr);
+
+      // Add media stream to the peerconnection
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       LOG(LS_INFO) << "Post add stream";
@@ -1083,18 +1037,6 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
     }
     pending_unpublish_streams_.clear();
   }
-}
-
-void P2PPeerConnectionChannel::SendAcceptance(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  Json::Value json;
-  json[kMessageTypeKey] = kChatAccept;
-  Json::Value ua = UaInfo();
-  Json::Value ua_data;
-  ua_data[kUaKey] = ua;
-  json[kMessageDataKey] = ua_data;
-  SendSignalingMessage(json, on_success, on_failure);
 }
 
 void P2PPeerConnectionChannel::SendStop(
@@ -1177,6 +1119,7 @@ void P2PPeerConnectionChannel::Send(
           std::make_shared<std::string>(message));
       pending_messages_.push_back(message_copy);
     }
+
     if (data_channel_ == nullptr) {  // Otherwise, wait for data channel ready.
       CreateDataChannel(kDataChannelLabelForTextMessage);
     }
@@ -1215,14 +1158,18 @@ void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
   if (runtime_name.compare("FireFox") == 0) {
     remote_side_supports_remove_stream_ = false;
     remote_side_supports_plan_b_ = false;
+    remote_side_supports_unified_plan_ = true;
   } else {
     remote_side_supports_remove_stream_ = true;
     remote_side_supports_plan_b_ = true;
+    remote_side_supports_unified_plan_ = false;
   }
   LOG(LS_INFO) << "Remote side supports removing stream? "
                << remote_side_supports_remove_stream_;
   LOG(LS_INFO) << "Remote side supports WebRTC Plan B? "
                << remote_side_supports_plan_b_;
+  LOG(LS_INFO) << "Remote side supports WebRTC Unified Plan?"
+               << remote_side_supports_unified_plan_;
 }
 }
 }

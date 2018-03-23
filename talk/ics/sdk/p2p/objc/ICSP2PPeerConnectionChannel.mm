@@ -63,23 +63,6 @@
 
 - (void)inviteWithOnSuccess:(void (^)())onSuccess
                   onFailure:(void (^)(NSError*))onFailure {
-  _nativeChannel->Invite(
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:ICSErrorDomain
-                      code:ICSP2PErrorUnknown
-                  userInfo:[[NSDictionary alloc]
-                               initWithObjectsAndKeys:
-                                   [NSString stringForStdString:e->Message()],
-                                   NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
-      });
 }
 
 - (void)denyWithOnSuccess:(void (^)())onSuccess
@@ -105,23 +88,6 @@
 
 - (void)acceptWithOnSuccess:(void (^)())onSuccess
                   onFailure:(void (^)(NSError*))onFailure {
-  _nativeChannel->Accept(
-      [=]() {
-        if (onSuccess != nil)
-          onSuccess();
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        if (onFailure == nil)
-          return;
-        NSError* err = [[NSError alloc]
-            initWithDomain:ICSErrorDomain
-                      code:ICSP2PErrorUnknown
-                  userInfo:[[NSDictionary alloc]
-                               initWithObjectsAndKeys:
-                                   [NSString stringForStdString:e->Message()],
-                                   NSLocalizedDescriptionKey, nil]];
-        onFailure(err);
-      });
 }
 
 - (void)publish:(ICSLocalStream*)stream

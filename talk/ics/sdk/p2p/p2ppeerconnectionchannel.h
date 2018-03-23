@@ -31,10 +31,6 @@ using namespace ics::base;
 // Usually, PeerClient should implement these methods and notify application.
 class P2PPeerConnectionChannelObserver {
  public:
-  // Triggered when received an invitation.
-  virtual void OnInvited(const std::string& remote_id) = 0;
-  // Triggered when remote user accepted the invitation.
-  virtual void OnAccepted(const std::string& remote_id) = 0;
   // Triggered when the WebRTC session is started.
   virtual void OnStarted(const std::string& remote_id) = 0;
   // Triggered when the WebRTC session is ended.
@@ -82,12 +78,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Implementation of P2PSignalingReceiverInterface. Handle signaling message
   // received from remote side.
   void OnIncomingSignalingMessage(const std::string& message) override;
-  // Invite a remote client to start a WebRTC session.
-  void Invite(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<Exception>)> on_failure);
-  // Accept a remote client's invitation.
-  void Accept(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Deny a remote client's invitation.
   void Deny(std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
@@ -120,13 +110,14 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CreateAnswer();
 
   // Received messages from remote client.
-  void OnMessageInvitation(Json::Value& ua);
-  void OnMessageAcceptance(Json::Value& ua);
+  void OnMessageUserAgent(Json::Value& ua);
   void OnMessageStop();
   void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
   void OnMessageNegotiationNeeded();
   void OnMessageTrackSources(Json::Value& track_sources);
+  void OnMessageTracksAdded(Json::Value& stream_tracks);
+  void OnMessageDataReceived(Json::Value& data);
 
   // PeerConnectionObserver
   virtual void OnSignalingChange(
@@ -169,9 +160,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
-  void SendAcceptance(
-      std::function<void()> on_success,
-      std::function<void(std::unique_ptr<Exception>)> on_failure);
   void SendStop(std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
   void SendDeny(std::function<void()> on_success,
@@ -202,15 +190,16 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Indicates if negotiation needed event is triggered or received negotiation
   // request from remote side, but haven't send out offer.
   bool negotiation_needed_;
-  // Key is remote media stream's track id, value is type ("mic", "camera",
-  // "screen-cast").
+  // Key is remote media stream's track id, value is type ("mic", "camera", "screen-cast").
   std::unordered_map<std::string, std::string> remote_track_source_info_;
+  // Key is local media stream's track id, value is media stream's label.
+  std::unordered_map<std::string, std::string> local_stream_tracks_info_;
   // Key is remote media stream's label, value is RemoteStream instance.
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>> remote_streams_;
-  std::vector<std::shared_ptr<LocalStream>>
-      pending_publish_streams_;  // Streams need to be published.
-  std::vector<std::shared_ptr<LocalStream>>
-      pending_unpublish_streams_;  // Streams need to be unpublished.
+  // Streams need to be published.
+  std::vector<std::shared_ptr<LocalStream>> pending_publish_streams_;
+  // Streams need to be unpublished.
+  std::vector<std::shared_ptr<LocalStream>> pending_unpublish_streams_;
   // A set of labels for streams published or will be publish to remote side.
   // |Publish| adds its argument to this vector, |Unpublish| removes it.
   std::unordered_set<std::string> published_streams_;
@@ -235,6 +224,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // If plan B is not supported, at most one audio/video track is supported.
   bool remote_side_supports_plan_b_;
   bool remote_side_supports_remove_stream_;
+  bool remote_side_supports_unified_plan_;
   bool is_creating_offer_;  // It will be true during creating and setting offer.
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.

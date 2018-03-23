@@ -77,23 +77,11 @@ class P2PClientObserver {
    */
   virtual void OnServerDisconnected(){};
   /**
-   @brief This function will be invoked when received a invitation.
-   @param remote_user_id Remote user’s ID
-   */
-  virtual void OnInvited(const std::string& remote_user_id){};
-  /**
    @brief This function will be invoked when a remote user denied current user's
    invitation.
    @param remote_user_id Remote user’s ID
    */
   virtual void OnDenied(const std::string& remote_user_id){};
-  /**
-   @brief This function will be invoked when a remote user accepted current
-   user's
-   invitation.
-   @param remote_user_id Remote user’s ID
-   */
-  virtual void OnAccepted(const std::string& remote_user_id){};
   /**
    @brief This function will be invoked when a chat is stopped. (This event
    haven't been implemented yet)
@@ -280,10 +268,6 @@ class P2PClient final
   virtual void OnDisconnected();
 
   // Handle events from P2PPeerConnectionChannel
-  // Triggered when received an invitation.
-  virtual void OnInvited(const std::string& remote_id);
-  // Triggered when remote user accepted the invitation.
-  virtual void OnAccepted(const std::string& remote_id);
   // Triggered when the WebRTC session is started.
   virtual void OnStarted(const std::string& remote_id);
   // Triggered when the WebRTC session is ended.
