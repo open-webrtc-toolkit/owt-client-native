@@ -25,41 +25,21 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCConfiguration.h>
+#import <ICS/ICSClientConfiguration.h>
+#import <ICS/ICSMediaFormat.h>
 
 /**
- @brief Configuration for RTCPeerClient
+ @brief Configuration for ICSP2PClient
 
- This configuration is used while creating RTCPeerClient. Changing this
- configuration does NOT impact RTCPeerClient already created.
+ This configuration is used while creating ICSP2PClient. Changing this
+ configuration does NOT impact existing ICSP2PClients.
  */
 RTC_EXPORT
-@interface ICSP2PClientConfiguration : NSObject
+@interface ICSP2PClientConfiguration : ICSClientConfiguration
 
-@property(nonatomic, strong, readwrite) NSArray* ICEServers;
-/**
- @brief Max outgoing audio bandwidth, unit: kbps.
- @details Please be noticed different codecs may support different bitrate
- ranges. If you set a bandwidth limitation which is not supported by selected
- codec, connection will fail.
- */
-@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
-/**
- @brief Max outgoing video bandwidth, unit: kbps.
- @details Please be noticed different codecs may support different bitrate
- ranges. If you set a bandwidth limitation which is not supported by selected
- codec, connection will fail.
- */
-@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
+@property(nonatomic, strong) NSArray<ICSAudioEncodingParameters*>* audio;
 
-/**
- @brief Candidate collection policy.
- @details If you do not want cellular network when WiFi is available, please use
- RTCCandidateNetworkPolicyLowCost. Using low cost policy may not have good
- network experience. Default policy is collecting all candidates.
- */
-@property(nonatomic, readwrite, assign)
-    RTCCandidateNetworkPolicy candidateNetworkPolicy;
+@property(nonatomic, strong) NSArray<ICSVideoEncodingParameters*>* video;
 
 @end
 

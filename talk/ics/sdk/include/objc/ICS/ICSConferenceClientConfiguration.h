@@ -28,7 +28,7 @@
 #define ICS_CONFERENCE_OBJC_ICSCONFERENCECLIENTCONFIGURATION_H_
 
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCConfiguration.h>
+#import <ICS/ICSClientConfiguration.h>
 
 /// Configuration for creating a ICSConferenceClient
 /**
@@ -36,32 +36,7 @@
   configuration does NOT impact ICSConferenceClient already created.
 */
 RTC_EXPORT
-@interface ICSConferenceClientConfiguration : NSObject
-
-@property(nonatomic, strong, readwrite) NSArray* ICEServers;
-/**
- @brief Max outgoing audio bandwidth, unit: kbps.
- @details Please be noticed different codecs may support different bitrate
- ranges. If you set a bandwidth limitation which is not supported by selected
- codec, connection will fail.
- */
-@property(nonatomic, readwrite) NSInteger maxAudioBandwidth;
-/**
- @brief Max outgoing video bandwidth, unit: kbps.
- @details Please be noticed different codecs may support different bitrate
- ranges. If you set a bandwidth limitation which is not supported by selected
- codec, connection will fail.
- */
-@property(nonatomic, readwrite) NSInteger maxVideoBandwidth;
-
-/**
- @brief Candidate collection policy.
- @details If you do not want cellular network when WiFi is available, please use
- RTCCandidateNetworkPolicyLowCost. Using low cost policy may not have good
- network experience. Default policy is collecting all candidates.
- */
-@property(nonatomic, assign, readwrite)
-    RTCCandidateNetworkPolicy candidateNetworkPolicy;
+@interface ICSConferenceClientConfiguration : ICSClientConfiguration
 
 @end
 

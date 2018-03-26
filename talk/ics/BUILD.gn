@@ -310,6 +310,7 @@ if (is_ios) {
       "sdk/base/objc/ObjcVideoCodecFactory.h",
       "sdk/base/objc/ObjcVideoCodecFactory.mm",
       "sdk/base/objc/RemoteStreamObserverObjcImpl.mm",
+      "sdk/base/objc/ICSClientConfiguration.mm",
       "sdk/base/objc/ICSConnectionStats+Internal.h",
       "sdk/base/objc/ICSConnectionStats.mm",
       "sdk/base/objc/ICSErrors.m",

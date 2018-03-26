@@ -6,10 +6,4 @@
 
 @implementation ICSConferenceClientConfiguration
 
-- (instancetype)init {
-  self = [super init];
-  _ICEServers = [[NSMutableArray alloc] init];
-  return self;
-}
-
 @end

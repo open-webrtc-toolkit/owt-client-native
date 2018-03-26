@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Intel Corporation. All Rights Reserved.
+ * Copyright © 2018 Intel Corporation. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,23 +24,19 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Base SDK
-#import <ICS/ICSClientConfiguration.h>
-#import <ICS/ICSErrors.h>
-#import <ICS/ICSFrameGeneratorProtocol.h>
-#import <ICS/ICSGlobalConfiguration.h>
-#import <ICS/ICSLocalStream.h>
-#import <ICS/ICSMediaFormat.h>
-#import <ICS/ICSPublishOptions.h>
-#import <ICS/ICSRemoteMixedStream.h>
-#import <ICS/ICSRemoteStream.h>
-#import <ICS/ICSStream.h>
+#import <WebRTC/RTCConfiguration.h>
 
-// P2P SDK
-#import <ICS/ICSP2PErrors.h>
-#import <ICS/ICSP2PClient.h>
-#import <ICS/ICSP2PPublication.h>
+NS_ASSUME_NONNULL_BEGIN
 
-// Conference SDK
-#import <ICS/ICSConferenceClient.h>
-#import <ICS/ICSConferenceErrors.h>
+@class ICSClientConfiguration;
+
+/// Base class for configurations for conference and P2P client.
+RTC_EXPORT
+@interface ICSClientConfiguration : NSObject
+
+/// Configuration for WebRTC connections.
+@property(nonatomic, strong, readonly) RTCConfiguration* rtcConfiguration;
+
+@end
+
+NS_ASSUME_NONNULL_END

@@ -38,24 +38,24 @@
   const std::string nativeRemoteId = [remoteId UTF8String];
   const std::string nativeLocalId = [localId UTF8String];
   webrtc::PeerConnectionInterface::IceServers nativeIceServers;
-  for (RTCIceServer* server in config.ICEServers) {
+  for (RTCIceServer* server in config.rtcConfiguration.iceServers) {
     nativeIceServers.push_back(server.nativeServer);
   }
   ics::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;
-  //nativeConfig.max_audio_bandwidth = [config maxAudioBandwidth];
-  //nativeConfig.max_video_bandwidth = [config maxVideoBandwidth];
-  /*
-  nativeConfig.media_codec.audio_codec =
-      [RTCMediaCodec nativeAudioCodec:config.mediaCodec.audioCodec];
-  nativeConfig.media_codec.video_codec =
-      [RTCMediaCodec nativeVideoCodec:config.mediaCodec.videoCodec];*/
   nativeConfig.candidate_network_policy =
-      ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
+      (config.rtcConfiguration.candidateNetworkPolicy ==
+       RTCCandidateNetworkPolicyLowCost)
           ? webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyLowCost
           : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyAll;
+  for (ICSAudioEncodingParameters* audioEncoding in config.audio) {
+    nativeConfig.audio.push_back(audioEncoding.nativeAudioEncodingParameters);
+  }
+  for (ICSVideoEncodingParameters* videoEncoding in config.video) {
+    nativeConfig.video.push_back(videoEncoding.nativeVideoEncodingParameters);
+  }
   _nativeChannel = new ics::p2p::P2PPeerConnectionChannel(
       nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;

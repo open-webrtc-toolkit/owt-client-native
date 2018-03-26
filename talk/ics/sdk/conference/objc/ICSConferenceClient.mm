@@ -43,7 +43,7 @@
   ics::conference::ConferenceClientConfiguration* nativeConfig =
       new ics::conference::ConferenceClientConfiguration();
   std::vector<ics::base::IceServer> iceServers;
-  for (RTCIceServer* server in config.ICEServers) {
+  for (RTCIceServer* server in config.rtcConfiguration.iceServers) {
     ics::base::IceServer iceServer;
     iceServer.urls = server.nativeServer.urls;
     iceServer.username = server.nativeServer.username;
@@ -51,17 +51,11 @@
     iceServers.push_back(iceServer);
   }
   nativeConfig->ice_servers = iceServers;
-  /*
-  nativeConfig->max_audio_bandwidth = [config maxAudioBandwidth];
-  nativeConfig->max_video_bandwidth = [config maxVideoBandwidth];
-  nativeConfig->audio_codec =
-      [RTCMediaCodec nativeAudioCodec:config.audioCodec];
-  nativeConfig->video_codec =
-      [RTCMediaCodec nativeVideoCodec:config.videoCodec];
   nativeConfig->candidate_network_policy =
-      ([config candidateNetworkPolicy] == RTCCandidateNetworkPolicyLowCost)
+      config.rtcConfiguration.candidateNetworkPolicy ==
+              RTCCandidateNetworkPolicyLowCost
           ? ics::base::ClientConfiguration::CandidateNetworkPolicy::kLowCost
-          : ics::base::ClientConfiguration::CandidateNetworkPolicy::kAll;*/
+          : ics::base::ClientConfiguration::CandidateNetworkPolicy::kAll;
   _nativeConferenceClient =
       ics::conference::ConferenceClient::Create(*nativeConfig);
   _publishedStreams = [[NSMutableDictionary alloc] init];
