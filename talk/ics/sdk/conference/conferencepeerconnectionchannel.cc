@@ -517,7 +517,7 @@ void ConferencePeerConnectionChannel::Subscribe(
     // If bitrateMultiplier is not specified, do not include it in video spec.
     std::string quality_level("x1.0");
     if (subscribe_options.video.bitrateMultiplier != 0) {
-        quality_level = "x" + std::to_string(subscribe_options.video.bitrateMultiplier);
+        quality_level = "x" + std::to_string(subscribe_options.video.bitrateMultiplier).substr(0,3);
     }
     if (quality_level != "x1.0") {
       sio::message::ptr quality_options =
