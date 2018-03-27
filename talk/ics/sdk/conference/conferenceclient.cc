@@ -333,13 +333,27 @@ void ConferenceClient::Publish(
     LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+  if (!CheckNullPointer((uintptr_t)(stream->MediaStream()), on_failure)) {
     LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
-
-  if (!CheckSignalingChannelOnline(on_failure)) {
+  if (stream->MediaStream()->GetAudioTracks().size() == 0 &&
+    stream->MediaStream()->GetVideoTracks().size() == 0) {
+    LOG(LS_ERROR) << "Cannot publish a local stream without audio & video";
+    std::string failure_message(
+      "Publishing local stream with neither audio nor video.");
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(new Exception(
+          ExceptionType::kConferenceUnknown, failure_message));
+        on_failure(std::move(e));
+      });
+    }
     return;
+  }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+      LOG(LS_ERROR) << "Signaling channel disconnected.";
+      return;
   }
 
   // Reorder SDP according to perference list.
