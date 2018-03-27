@@ -295,6 +295,13 @@ void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
 void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
   LOG(LS_INFO) << "Set local sdp failed.";
+  if (failure_callback_) {
+    std::unique_ptr<Exception> e(new Exception(
+      ExceptionType::kConferenceUnknown,
+      "Fail to set local description."));
+    failure_callback_(std::move(e));
+    ResetCallbacks();
+  }
 }
 
 void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
@@ -304,6 +311,13 @@ void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   LOG(LS_INFO) << "Set remote sdp failed.";
+  if (failure_callback_) {
+    std::unique_ptr<Exception> e(new Exception(
+      ExceptionType::kConferenceUnknown,
+      "Fail to set remote description."));
+    failure_callback_(std::move(e));
+    ResetCallbacks();
+  }
 }
 
 void ConferencePeerConnectionChannel::SetRemoteDescription(
