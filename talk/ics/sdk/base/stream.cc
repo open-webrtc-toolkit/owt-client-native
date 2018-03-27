@@ -47,7 +47,9 @@ Stream::Stream(const std::string& id)
 Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
 
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
-    : media_stream_(media_stream), source_(source) {}
+    : media_stream_(nullptr), source_(source) {
+  MediaStream(media_stream);
+}
 
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_(id) {}
@@ -245,7 +247,7 @@ LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
 
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
-    : Stream(media_stream, source) {}
+    : Stream(media_stream, source), media_constraints_(nullptr) {}
 #endif
 
 LocalStream::~LocalStream() {

@@ -107,42 +107,39 @@
 }
 
 - (void)publish:(ICSLocalStream*)stream
-      onSuccess:(void (^)(ICSConferencePublication*))onSuccess
-      onFailure:(void (^)(NSError*))onFailure {
-  auto nativeStreamRefPtr = [stream nativeStream];
-  std::shared_ptr<ics::base::LocalStream> nativeStream(
-      std::static_pointer_cast<ics::base::LocalStream>(nativeStreamRefPtr));
-  _nativeConferenceClient->Publish(
-      nativeStream,
-      [=](std::shared_ptr<ics::conference::ConferencePublication> publication) {
-        [_publishedStreams setObject:stream forKey:[stream streamId]];
-        if (onSuccess != nil)
-          onSuccess([[ICSConferencePublication alloc]
-              initWithNativePublication:publication]);
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
-}
-
-- (void)publish:(ICSLocalStream*)stream
     withOptions:(ICSPublishOptions*)options
       onSuccess:(void (^)(ICSConferencePublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure {
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<ics::base::LocalStream> nativeStream(
       std::static_pointer_cast<ics::base::LocalStream>(nativeStreamRefPtr));
-  _nativeConferenceClient->Publish(
-      nativeStream, *[options nativePublishOptions].get(),
-      [=](std::shared_ptr<ics::conference::ConferencePublication> publication) {
-        [_publishedStreams setObject:stream forKey:[stream streamId]];
-        if (onSuccess != nil)
-          onSuccess([[ICSConferencePublication alloc]
-              initWithNativePublication:publication]);
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
+  if (options == nil) {
+    _nativeConferenceClient->Publish(
+        nativeStream,
+        [=](std::shared_ptr<ics::conference::ConferencePublication>
+                publication) {
+          [_publishedStreams setObject:stream forKey:[stream streamId]];
+          if (onSuccess != nil)
+            onSuccess([[ICSConferencePublication alloc]
+                initWithNativePublication:publication]);
+        },
+        [=](std::unique_ptr<ics::base::Exception> e) {
+          [self triggerOnFailure:onFailure withException:(std::move(e))];
+        });
+  } else {
+    _nativeConferenceClient->Publish(
+        nativeStream, *[options nativePublishOptions].get(),
+        [=](std::shared_ptr<ics::conference::ConferencePublication>
+                publication) {
+          [_publishedStreams setObject:stream forKey:[stream streamId]];
+          if (onSuccess != nil)
+            onSuccess([[ICSConferencePublication alloc]
+                initWithNativePublication:publication]);
+        },
+        [=](std::unique_ptr<ics::base::Exception> e) {
+          [self triggerOnFailure:onFailure withException:(std::move(e))];
+        });
+  }
 }
 
 - (void)subscribe:(ICSRemoteStream*)stream
