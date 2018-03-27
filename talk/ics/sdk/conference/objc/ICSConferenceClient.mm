@@ -110,6 +110,7 @@
     withOptions:(ICSPublishOptions*)options
       onSuccess:(void (^)(ICSConferencePublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure {
+  RTC_CHECK(stream);
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<ics::base::LocalStream> nativeStream(
       std::static_pointer_cast<ics::base::LocalStream>(nativeStreamRefPtr));

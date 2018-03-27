@@ -263,8 +263,10 @@ LocalStream::~LocalStream() {
             media_stream_->RemoveTrack(*it);
         }
     }
-    if (media_constraints_)
+    if (media_constraints_) {
       delete media_constraints_;
+      media_constraints_ = nullptr;
+    }
 }
 
 

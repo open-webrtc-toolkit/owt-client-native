@@ -9,9 +9,7 @@
 #include "talk/ics/sdk/include/cpp/ics/base/options.h"
 #include "webrtc/rtc_base/checks.h"
 
-@implementation ICSAudioCodecParameters {
-  std::shared_ptr<ics::base::AudioCodecParameters> _nativeAudioCodecParameters;
-}
+@implementation ICSAudioCodecParameters
 
 @dynamic nativeAudioCodecParameters;
 
@@ -57,11 +55,9 @@ static std::unordered_map<ICSAudioCodec, const ics::base::AudioCodec>
 
 @end
 
-@implementation ICSVideoCodecParameters{
-  std::shared_ptr<ics::base::VideoCodecParameters> _nativeVideoCodecParameters;
-}
+@implementation ICSVideoCodecParameters
 
-@dynamic name, profile, nativeVideoCodecParameters;
+@dynamic nativeVideoCodecParameters;
 
 static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
     videoCodecMap = {{ICSVideoCodecVP8, ics::base::VideoCodec::kVp8},
@@ -72,36 +68,30 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 - (instancetype)initWithNativeVideoCodecParameters:
     (const ics::base::VideoCodecParameters&)nativeVideoCodecParameters {
   if (self = [super init]) {
-    _nativeVideoCodecParameters =
-        std::shared_ptr<ics::base::VideoCodecParameters>(
-            new ics::base::VideoCodecParameters(nativeVideoCodecParameters));
+    auto it =
+        std::find_if(videoCodecMap.begin(), videoCodecMap.end(),
+                     [&nativeVideoCodecParameters](auto&& codec) {
+                       return codec.second == nativeVideoCodecParameters.name;
+                     });
+    if (it != videoCodecMap.end()) {
+      _name = it->first;
+    } else {
+      RTC_NOTREACHED();
+      _name = ICSVideoCodecUnknown;
+    }
+    _profile =
+        [NSString stringForStdString:nativeVideoCodecParameters.profile];
   }
   return self;
 }
 
-- (ICSVideoCodec)name {
-  auto it = std::find_if(
-      videoCodecMap.begin(), videoCodecMap.end(), [self](auto&& codec) {
-        return codec.second == _nativeVideoCodecParameters->name;
-      });
-  if (it != videoCodecMap.end()) {
-    return it->first;
-  } else {
-    RTC_NOTREACHED();
-    return ICSVideoCodecUnknown;
-  }
-}
-
 - (std::shared_ptr<ics::base::VideoCodecParameters>)nativeVideoCodecParameters {
-  if (_nativeVideoCodecParameters) {
-    return _nativeVideoCodecParameters;
-  }
   ics::base::VideoCodec codec_name = videoCodecMap[self.name];
-  _nativeVideoCodecParameters =
+  auto nativeVideoCodecParameters =
       std::shared_ptr<ics::base::VideoCodecParameters>(
           new ics::base::VideoCodecParameters(
               codec_name, [NSString stdStringForString:self.profile]));
-  return _nativeVideoCodecParameters;
+  return nativeVideoCodecParameters;
 }
 
 @end

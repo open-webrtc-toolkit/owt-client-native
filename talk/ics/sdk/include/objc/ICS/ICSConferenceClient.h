@@ -59,20 +59,13 @@ RTC_EXPORT
 - (void)joinWithToken:(NSString*)token
             onSuccess:(nullable void (^)(ICSConferenceInfo*))onSuccess
             onFailure:(nullable void (^)(NSError*))onFailure;
-/**
-  @brief Publish the stream to the current room.
-  @param stream The stream to be published.
-*/
-- (void)publish:(ICSLocalStream*)stream
-      onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
-      onFailure:(nullable void (^)(NSError*))onFailure;
 
 /**
   @brief Publish the stream to the current room.
   @param stream The stream to be published.
 */
 - (void)publish:(ICSLocalStream*)stream
-    withOptions:(ICSPublishOptions*)options
+    withOptions:(nullable ICSPublishOptions*)options
       onSuccess:(nullable void (^)(ICSConferencePublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 /**
