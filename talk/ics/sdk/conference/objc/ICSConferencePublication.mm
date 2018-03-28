@@ -5,6 +5,7 @@
 #include "talk/ics/sdk/conference/objc/ConferencePublicationObserverObjcImpl.h"
 #include "webrtc/rtc_base/checks.h"
 
+#import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferencePublication+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
@@ -43,6 +44,52 @@
           [stats addObject:statsReport];
         }
         onSuccess(stats);
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
+- (void)mute:(ICSTrackKind)trackKind
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativePublication->Mute(
+      [ICSTrackKindConverter cppTrackKindForObjcTrackKind:trackKind],
+      [onSuccess]() {
+        if (onSuccess)
+          onSuccess();
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
+- (void)unmute:(ICSTrackKind)trackKind
+     onSuccess:(nullable void (^)())onSuccess
+     onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativePublication->Unmute(
+      [ICSTrackKindConverter cppTrackKindForObjcTrackKind:trackKind],
+      [onSuccess]() {
+        if (onSuccess)
+          onSuccess();
       },
       [onFailure](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)

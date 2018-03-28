@@ -51,6 +51,12 @@ RTC_EXPORT
 
 - (instancetype)init NS_UNAVAILABLE;
 - (void)stop;
+- (void)mute:(ICSTrackKind)trackKind
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure;
+- (void)unmute:(ICSTrackKind)trackKind
+     onSuccess:(nullable void (^)())onSuccess
+     onFailure:(nullable void (^)(NSError*))onFailure;
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
 

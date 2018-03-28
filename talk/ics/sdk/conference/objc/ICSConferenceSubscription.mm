@@ -61,6 +61,52 @@
       });
 }
 
+- (void)mute:(ICSTrackKind)trackKind
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeSubscription->Mute(
+      [ICSTrackKindConverter cppTrackKindForObjcTrackKind:trackKind],
+      [onSuccess]() {
+        if (onSuccess)
+          onSuccess();
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
+- (void)unmute:(ICSTrackKind)trackKind
+     onSuccess:(nullable void (^)())onSuccess
+     onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeSubscription->Unmute(
+      [ICSTrackKindConverter cppTrackKindForObjcTrackKind:trackKind],
+      [onSuccess]() {
+        if (onSuccess)
+          onSuccess();
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
 -(void)setDelegate:(id<ICSConferenceSubscriptionDelegate>)delegate{
   _observer = std::unique_ptr<
       ics::conference::ConferenceSubscriptionObserverObjcImpl,
