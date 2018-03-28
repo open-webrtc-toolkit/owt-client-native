@@ -1023,6 +1023,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     AudioCodecParameters audio_codec_param(
         MediaUtils::GetAudioCodecFromString(codec), channel_num, sample_rate);
     publication_settings.audio.codec = audio_codec_param;
+    subscription_capabilities.audio.codecs.push_back(audio_codec_param);
 
     // Optional audio capabilities
     auto audio_format_obj_optional = audio_info->get_map()["optional"];
@@ -1076,6 +1077,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
       return;
     } else {
       has_video = true;
+      VideoSubscriptionCapabilities video_subscription_capabilities;
       // Parse the video publication settings.
       std::string codec_name = video_format_obj->get_map()["codec"]->get_string();
       std::string profile_name("");
@@ -1087,6 +1089,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
       VideoCodecParameters video_codec_parameters(
           MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
       video_publication_settings.codec = video_codec_parameters;
+      video_subscription_capabilities.codecs.push_back(video_codec_parameters);
       auto video_params_obj = video_info->get_map()["parameters"];
       if (video_params_obj != nullptr && video_params_obj->get_flag() == sio::message::flag_object) {
         auto main_resolution = video_params_obj->get_map()["resolution"];
@@ -1094,12 +1097,14 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
           Resolution resolution = Resolution(main_resolution->get_map()["width"]->get_int(),
                                              main_resolution->get_map()["height"]->get_int());
           video_publication_settings.resolution = resolution;
+          video_subscription_capabilities.resolutions.push_back(resolution);
         }
         double frame_rate_num = 0, bitrate_num = 0, keyframe_interval_num = 0;
         auto main_frame_rate = video_params_obj->get_map()["framerate"];
         if (main_frame_rate != nullptr) {
           frame_rate_num = main_frame_rate->get_int();
           video_publication_settings.frame_rate = frame_rate_num;
+          video_subscription_capabilities.frame_rates.push_back(frame_rate_num);
         }
         auto main_bitrate = video_params_obj->get_map()["bitrate"];
         if (main_bitrate != nullptr) {
@@ -1110,12 +1115,12 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
         if (main_keyframe_interval != nullptr) {
           keyframe_interval_num = main_keyframe_interval->get_int();
           video_publication_settings.keyframe_interval = keyframe_interval_num;
+          video_subscription_capabilities.keyframe_intervals.push_back(keyframe_interval_num);
         }
       }
       publication_settings.video = video_publication_settings;
 
       // Parse the video subscription capabilities.
-      VideoSubscriptionCapabilities video_subscription_capabilities;
       auto optional_video_obj = video_info->get_map()["optional"];
       if (optional_video_obj != nullptr && optional_video_obj->get_flag() == sio::message::flag_object) {
         auto optional_video_format_obj = optional_video_obj->get_map()["format"];
