@@ -204,7 +204,7 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
 
 @implementation ICSVideoSubscriptionCapabilities
 
-@dynamic codecs, resolutions, frameRates;
+@dynamic codecs, resolutions, frameRates, bitrateMultipliers, keyframeIntervals;
 
 - (instancetype)initWithNativeVideoSubscriptionCapabilities:
     (const ics::base::VideoSubscriptionCapabilities&)nativeCapabilities {
@@ -239,6 +239,26 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
   NSMutableArray<NSNumber*>* values =
       [NSMutableArray arrayWithCapacity:_nativeCapabilities.frame_rates.size()];
   for (const auto& f : _nativeCapabilities.frame_rates) {
+    NSNumber* v = [NSNumber numberWithFloat:f];
+    [values addObject:v];
+  }
+  return values;
+}
+
+- (NSArray<NSNumber*>*)bitrateMultipliers {
+  NSMutableArray<NSNumber*>* values = [NSMutableArray
+      arrayWithCapacity:_nativeCapabilities.bitrate_multipliers.size()];
+  for (const auto& f : _nativeCapabilities.bitrate_multipliers) {
+    NSNumber* v = [NSNumber numberWithFloat:f];
+    [values addObject:v];
+  }
+  return values;
+}
+
+- (NSArray<NSNumber*>*)keyframeIntervals {
+  NSMutableArray<NSNumber*>* values = [NSMutableArray
+      arrayWithCapacity:_nativeCapabilities.keyframe_intervals.size()];
+  for (const auto& f : _nativeCapabilities.keyframe_intervals) {
     NSNumber* v = [NSNumber numberWithFloat:f];
     [values addObject:v];
   }

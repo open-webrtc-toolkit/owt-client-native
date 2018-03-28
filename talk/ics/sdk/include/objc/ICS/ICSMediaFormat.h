@@ -130,7 +130,8 @@ RTC_EXPORT
 @property(nonatomic, strong) NSArray<ICSVideoCodecParameters*>* codecs;
 @property(nonatomic, strong) NSArray<NSValue*>* resolutions;
 @property(nonatomic, strong) NSArray<NSNumber*>* frameRates;
-//@property(nonatomic, strong) NSArray<NSNumber*>* bitrateMultipliers;
+@property(nonatomic, strong) NSArray<NSNumber*>* bitrateMultipliers;
+@property(nonatomic, strong) NSArray<NSNumber*>* keyframeIntervals;
 
 @end
 
