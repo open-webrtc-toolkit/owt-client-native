@@ -120,6 +120,20 @@ RTC_EXPORT
       onSuccess:(nullable void (^)(ICSP2PPublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 
+/**
+ @brief Get the connection statistics with target client.
+ @param targetId Remote user's ID.
+ @param onSuccess Success callback will be invoked if get statistics
+ information successes.
+ @param onFailure Failure callback will be invoked if one of the following
+ cases happened.
+ 1. Target ID is invalid.
+ 2. There is no WebRTC session with target user.
+ */
+- (void)statsFor:(NSString*)targetId
+       onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+       onFailure:(nullable void (^)(NSError*))onFailure;
+
 @property(nonatomic, weak) id<ICSP2PClientDelegate> delegate;
 @property(nonatomic, strong) NSMutableArray<NSString*>* allowedRemoteIds;
 

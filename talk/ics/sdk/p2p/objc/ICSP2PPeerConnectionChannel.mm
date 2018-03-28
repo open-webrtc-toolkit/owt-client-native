@@ -198,6 +198,35 @@
       });
 }
 
+- (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+                 onFailure:(void (^)(NSError*))onFailure {
+  _nativeChannel->GetStats(
+      [=](const webrtc::StatsReports& reports) {
+        if (onSuccess) {
+          NSMutableArray* stats =
+              [NSMutableArray arrayWithCapacity:reports.size()];
+          for (const auto* report : reports) {
+            RTCLegacyStatsReport* statsReport =
+                [[RTCLegacyStatsReport alloc] initWithNativeReport:*report];
+            [stats addObject:statsReport];
+          }
+          onSuccess(stats);
+        }
+      },
+      [=](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSP2PErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
 - (void)statsForStream:(ICSStream*)stream
              onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
              onFailure:(void (^)(NSError*))onFailure {

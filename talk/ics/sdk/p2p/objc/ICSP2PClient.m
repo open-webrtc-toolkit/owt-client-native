@@ -242,6 +242,14 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [channel send:message withOnSuccess:onSuccess onFailure:onFailure];
 }
 
+- (void)statsFor:(NSString*)targetId
+       onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+       onFailure:(nullable void (^)(NSError*))onFailure {
+  ICSP2PPeerConnectionChannel* channel =
+      [self getPeerConnectionChannel:targetId];
+  [channel statsWithOnSuccess:onSuccess onFailure:onFailure];
+}
+
 - (void)channel:(id<ICSP2PSignalingChannelProtocol>)channel
     didReceiveMessage:(NSString*)message
                  from:(NSString*)senderId {

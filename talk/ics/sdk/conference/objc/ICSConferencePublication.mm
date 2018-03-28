@@ -30,8 +30,8 @@
   _nativePublication->Stop(nullptr, nullptr);
 }
 
-- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
-       onFailure:(nullable void (^)(NSError*))onFailure {
+- (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+                 onFailure:(nullable void (^)(NSError*))onFailure {
   RTC_CHECK(onSuccess);
   _nativePublication->GetNativeStats(
       [onSuccess](const std::vector<const webrtc::StatsReport*>& reports) {

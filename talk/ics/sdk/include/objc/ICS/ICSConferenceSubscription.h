@@ -52,8 +52,8 @@ RTC_EXPORT
 
 - (instancetype)init NS_UNAVAILABLE;
 - (void)stop;
-- (void)statsWith:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
-        onFailure:(nullable void (^)(NSError*))onFailure;
+- (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
+                 onFailure:(nullable void (^)(NSError*))onFailure;
 
 @property(nonatomic, weak) id<ICSConferenceSubscriptionDelegate> delegate;
 
