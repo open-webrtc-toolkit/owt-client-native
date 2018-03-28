@@ -181,7 +181,6 @@ class ConferencePeerConnectionChannel
   // Set publish_success_callback_, subscribe_success_callback_ and
   // failure_callback_ to nullptr.
   void ResetCallbacks();
-  bool isMediaStreamEnded(MediaStreamInterface* stream) const;
 
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::string session_id_;   //session ID is 1:1 mapping to the subscribed/published stream.
