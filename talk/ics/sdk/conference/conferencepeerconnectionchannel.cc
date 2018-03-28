@@ -370,6 +370,16 @@ void ConferencePeerConnectionChannel::Publish(
   if ((!CheckNullPointer((uintptr_t)stream.get(), on_failure)) ||
       (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
     LOG(LS_INFO) << "Local stream cannot be nullptr.";
+  }
+
+  if (isMediaStreamEnded(stream->MediaStream())) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, "Cannot publish ended stream."));
+        on_failure(std::move(e));
+      });
+    }
     return;
   }
 
@@ -914,5 +924,20 @@ void ConferencePeerConnectionChannel::ClosePeerConnection() {
   pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
 }
 
+bool ConferencePeerConnectionChannel::isMediaStreamEnded(
+    MediaStreamInterface* stream) const {
+  RTC_CHECK(stream);
+  for (auto track : stream->GetAudioTracks()) {
+    if (track->state() == webrtc::AudioTrackInterface::TrackState::kLive) {
+      return false;
+    }
+  }
+  for (auto track : stream->GetVideoTracks()) {
+    if (track->state() == webrtc::VideoTrackInterface::TrackState::kLive) {
+      return false;
+    }
+  }
+  return true;
+}
 }
 }
