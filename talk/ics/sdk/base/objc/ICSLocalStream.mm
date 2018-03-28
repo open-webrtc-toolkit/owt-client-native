@@ -48,14 +48,16 @@
     NSArray<AVCaptureDevice*>* captureDevices =
         [RTCCameraVideoCapturer captureDevices];
     if (captureDevices == 0) {
-      *outError = [[NSError alloc]
-          initWithDomain:ICSErrorDomain
-                    code:ICSStreamErrorLocalInvalidOption
-                userInfo:
-                    [[NSDictionary alloc]
-                        initWithObjectsAndKeys:
-                            @"Cannot find capture device on current device.",
-                            NSLocalizedDescriptionKey, nil]];
+      if (outError) {
+        *outError = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSStreamErrorLocalInvalidOption
+                  userInfo:
+                      [[NSDictionary alloc]
+                          initWithObjectsAndKeys:
+                              @"Cannot find capture device on current device.",
+                              NSLocalizedDescriptionKey, nil]];
+      }
       return nil;
     }
     AVCaptureDevice* device = captureDevices[0];
@@ -67,6 +69,9 @@
         }
       }
     }
+    // Configure FPS.
+    NSUInteger fps =
+        constraints.video.frameRate ? constraints.video.frameRate : 24;
     // Configure resolution.
     NSArray<AVCaptureDeviceFormat*>* formats =
         [RTCCameraVideoCapturer supportedFormatsForDevice:device];
@@ -80,23 +85,33 @@
             CMVideoFormatDescriptionGetDimensions(format.formatDescription);
         if (dimension.width == constraints.video.resolution.width &&
             dimension.height == constraints.video.resolution.height) {
-          selectedFormat = format;
+          for (AVFrameRateRange* frameRateRange in
+               [format videoSupportedFrameRateRanges]) {
+            if (frameRateRange.minFrameRate <= fps &&
+                fps <= frameRateRange.maxFrameRate) {
+              selectedFormat = format;
+              break;
+            }
+          }
+        }
+        if(selectedFormat){
           break;
         }
       }
     }
     if (selectedFormat == nil) {
-      *outError = [[NSError alloc]
-          initWithDomain:ICSErrorDomain
-                    code:ICSStreamErrorLocalInvalidOption
-                userInfo:[[NSDictionary alloc]
-                             initWithObjectsAndKeys:@"Resolution specified cannot be satisfied.",
-                                                    NSLocalizedDescriptionKey,
-                                                    nil]];
+      if (outError) {
+        *outError = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSStreamErrorLocalInvalidOption
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   @"Resolution or frame rate specified cannot "
+                                   @"be satisfied.",
+                                   NSLocalizedDescriptionKey, nil]];
+      }
       return nil;
     }
-    // Configure FPS.
-    NSUInteger fps = constraints.video.frameRate ? constraints.video.frameRate : 24;
 
     [capturer startCaptureWithDevice:device format:selectedFormat fps:fps];
     RTCVideoTrack* track =
