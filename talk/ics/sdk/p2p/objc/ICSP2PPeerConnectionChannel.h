@@ -21,12 +21,6 @@
                              remoteId:(NSString*)remoteId
                       signalingSender:
                           (id<ICSP2PSignalingSenderProtocol>)signalingSender;
-- (void)inviteWithOnSuccess:(void (^)())onSuccess
-                  onFailure:(void (^)(NSError*))onFailure;
-- (void)denyWithOnSuccess:(void (^)())onSuccess
-                onFailure:(void (^)(NSError*))onFailure;
-- (void)acceptWithOnSuccess:(void (^)())onSuccess
-                  onFailure:(void (^)(NSError*))onFailure;
 - (void)publish:(ICSLocalStream*)stream
       onSuccess:(void (^)(ICSP2PPublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure;

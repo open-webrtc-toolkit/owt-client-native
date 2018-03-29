@@ -61,16 +61,28 @@
   return self;
 }
 
-- (void)inviteWithOnSuccess:(void (^)())onSuccess
-                  onFailure:(void (^)(NSError*))onFailure {
-}
-
-- (void)denyWithOnSuccess:(void (^)())onSuccess
-                onFailure:(void (^)(NSError*))onFailure {
-  _nativeChannel->Deny(
+- (void)publish:(ICSLocalStream*)stream
+      onSuccess:(void (^)(ICSP2PPublication*))onSuccess
+      onFailure:(void (^)(NSError*))onFailure {
+  // Creating PeerConnection(invite-accept) should be handled in native level.
+  // Since it is not implemented, we temporary send an invitation here.
+  RTCLogInfo(@"ICSP2PPeerConnectionChannel publish stream.");
+  _nativeChannel->Publish(
+      std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
       [=]() {
-        if (onSuccess != nil)
-          onSuccess();
+        if (onSuccess != nil) {
+          ICSP2PPublication* publication =
+              [[ICSP2PPublication alloc] initWithStop:^() {
+                [self unpublish:stream onSuccess:nil onFailure:nil];
+              }
+                  stats:^(void (^statsSuccess)(NSArray<RTCLegacyStatsReport*>*),
+                          void (^statsFailure)(NSError*)) {
+                    [self statsForStream:stream
+                               onSuccess:statsSuccess
+                               onFailure:statsFailure];
+                  }];
+          onSuccess(publication);
+        }
       },
       [=](std::unique_ptr<ics::base::Exception> e) {
         if (onFailure == nil)
@@ -84,50 +96,6 @@
                                    NSLocalizedDescriptionKey, nil]];
         onFailure(err);
       });
-}
-
-- (void)acceptWithOnSuccess:(void (^)())onSuccess
-                  onFailure:(void (^)(NSError*))onFailure {
-}
-
-- (void)publish:(ICSLocalStream*)stream
-      onSuccess:(void (^)(ICSP2PPublication*))onSuccess
-      onFailure:(void (^)(NSError*))onFailure {
-  // Creating PeerConnection(invite-accept) should be handled in native level.
-  // Since it is not implemented, we temporary send an invitation here.
-  [self inviteWithOnSuccess:^() {
-    RTCLogInfo(@"ICSP2PPeerConnectionChannel publish stream.");
-    _nativeChannel->Publish(
-        std::static_pointer_cast<ics::base::LocalStream>([stream nativeStream]),
-        [=]() {
-          if (onSuccess != nil) {
-            ICSP2PPublication* publication = [[ICSP2PPublication alloc]
-                initWithStop:^() {
-                  [self unpublish:stream onSuccess:nil onFailure:nil];
-                }
-                stats:^(void (^statsSuccess)(NSArray<RTCLegacyStatsReport*>*),
-                        void (^statsFailure)(NSError*)) {
-                  [self statsForStream:stream
-                             onSuccess:statsSuccess
-                             onFailure:statsFailure];
-                }];
-            onSuccess(publication);
-          }
-        },
-        [=](std::unique_ptr<ics::base::Exception> e) {
-          if (onFailure == nil)
-            return;
-          NSError* err = [[NSError alloc]
-              initWithDomain:ICSErrorDomain
-                        code:ICSP2PErrorUnknown
-                    userInfo:[[NSDictionary alloc]
-                                 initWithObjectsAndKeys:
-                                     [NSString stringForStdString:e->Message()],
-                                     NSLocalizedDescriptionKey, nil]];
-          onFailure(err);
-        });
-  }
-                  onFailure:onFailure];
 }
 
 - (void)unpublish:(ICSLocalStream*)stream

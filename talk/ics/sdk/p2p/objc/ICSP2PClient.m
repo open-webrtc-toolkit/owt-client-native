@@ -13,50 +13,6 @@
 - (ICSP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId;
 
 /**
- @brief Invite a remote user to start a WebRTC session.
- @param targetId Remote user's ID.
- @param onSuccess Success callback will be invoked if send a invitation
- successfully.
- @param onFailure Failure callback will be invoked if one of the following cases
- happened.
-                1. PeerClient is disconnected from the server.
-                2. Target ID is nil or target user is offline.
- */
-- (void)invite:(NSString*)targetId
-     onSuccess:(nullable void (^)())onSuccess
-     onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
- @brief Accept a remote user's request to start a WebRTC session.
- @param targetId Remote user's ID.
- @param onSuccess Success callback will be invoked if send an acceptance
- successfully.
- @param onFailure Failure callback will be invoked if one of the following cases
- happened.
-                1. PeerClient is disconnected from the server.
-                2. Target ID is nil or target user is offline.
-                3. Haven't received an invitation from target user.
- */
-- (void)accept:(NSString*)targetId
-     onSuccess:(nullable void (^)())onSuccess
-     onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
- @brief Deny a remote user's request to start a WebRTC session.
- @param targetId Remote user's ID.
- @param onSuccess Success callback will be invoked if send deny event
- successfully.
- @param onFailure Failure callback will be invoked if one of the following cases
- happened.
-                1. PeerClient is disconnected from the server.
-                2. Target ID is nil or target user is offline.
-                3. Haven't received an invitation from target user.
- */
-- (void)deny:(NSString*)targetId
-   onSuccess:(nullable void (^)())onSuccess
-   onFailure:(nullable void (^)(NSError*))onFailure;
-
-/**
  @brief Unpublish the stream to the remote client.
  @param stream The stream which will be removed.
  @param targetId Target user's ID.
@@ -147,16 +103,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   return YES;
 }
 
-- (void)invite:(NSString*)targetId
-     onSuccess:(void (^)())onSuccess
-     onFailure:(void (^)(NSError*))onFailure {
-  if (![self checkSignalingChannelOnline:onFailure])
-    return;
-  ICSP2PPeerConnectionChannel* channel =
-      [self getPeerConnectionChannel:targetId];
-  [channel inviteWithOnSuccess:onSuccess onFailure:onFailure];
-}
-
 - (void)publish:(ICSLocalStream*)stream
              to:(NSString*)targetId
       onSuccess:(void (^)(ICSP2PPublication*))onSuccess
@@ -211,26 +157,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [_peerConnectionChannels removeObjectForKey:targetId];
 }
 
-- (void)deny:(NSString*)targetId
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure {
-  if (![self checkSignalingChannelOnline:onFailure])
-    return;
-  ICSP2PPeerConnectionChannel* channel =
-      [self getPeerConnectionChannel:targetId];
-  [channel denyWithOnSuccess:onSuccess onFailure:onFailure];
-}
-
-- (void)accept:(NSString*)targetId
-     onSuccess:(void (^)())onSuccess
-     onFailure:(void (^)(NSError*))onFailure {
-  if (![self checkSignalingChannelOnline:onFailure])
-    return;
-  ICSP2PPeerConnectionChannel* channel =
-      [self getPeerConnectionChannel:targetId];
-  [channel acceptWithOnSuccess:onSuccess onFailure:onFailure];
-}
-
 - (void)send:(NSString*)targetId
      message:(NSString*)message
    onSuccess:(void (^)())onSuccess
@@ -265,9 +191,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 
 - (void)onInvitedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"On invited from %@", remoteUserId);
-  if ([self.allowedRemoteIds containsObject:remoteUserId]) {
-    [self accept:remoteUserId onSuccess:nil onFailure:nil];
-  }
 }
 
 - (void)onStreamAdded:(ICSRemoteStream*)stream {
