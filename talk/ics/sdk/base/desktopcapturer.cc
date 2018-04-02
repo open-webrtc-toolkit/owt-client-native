@@ -134,6 +134,7 @@ bool BasicScreenCapturer::IsRunning() {
 void BasicScreenCapturer::Stop() {
   if (screen_capture_thread_) {
     screen_capture_thread_->Quit();
+    delete screen_capture_thread_;
     screen_capture_thread_ = NULL;
     LOG(LS_INFO) << "Screen capture thread stopped";
   }

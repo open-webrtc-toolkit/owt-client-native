@@ -153,6 +153,7 @@ bool CustomizedFramesCapturer::IsRunning() {
 void CustomizedFramesCapturer::Stop() {
   if (frames_generator_thread) {
     frames_generator_thread->Quit();
+    delete frames_generator_thread;
     frames_generator_thread = nullptr;
     LOG(LS_INFO) << "Yuv Frame Generator stopped";
   }

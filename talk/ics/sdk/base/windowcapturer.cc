@@ -168,6 +168,7 @@ bool BasicWindowCapturer::IsRunning() {
 void BasicWindowCapturer::Stop() {
   if (window_capture_thread_) {
     window_capture_thread_->Quit();
+    delete window_capture_thread_;
     window_capture_thread_ = nullptr;
     LOG(LS_INFO) << "Window capture thread stopped";
   }
