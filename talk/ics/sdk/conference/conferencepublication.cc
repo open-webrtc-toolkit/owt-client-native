@@ -130,6 +130,9 @@ void ConferencePublication::Stop(
   } else {
     that->UnPublish(id_, on_success, on_failure);
     ended_ = true;
+    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+      (*its).get().OnEnded();
+    }
   }
 }
 

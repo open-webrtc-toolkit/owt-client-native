@@ -173,6 +173,9 @@ void ConferenceSubscription::Stop(
   } else {
     that->UnSubscribe(id_, on_success, on_failure);
     ended_ = true;
+    for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+      (*its).get().OnEnded();
+    }
   }
 }
 
