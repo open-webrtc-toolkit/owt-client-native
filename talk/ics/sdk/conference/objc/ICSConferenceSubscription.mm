@@ -30,7 +30,7 @@
 }
 
 - (void)stop {
-  _nativeSubscription->Stop(nullptr, nullptr);
+  _nativeSubscription->Stop();
 }
 
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess

@@ -28,7 +28,7 @@
 }
 
 - (void)stop {
-  _nativePublication->Stop(nullptr, nullptr);
+  _nativePublication->Stop();
 }
 
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess

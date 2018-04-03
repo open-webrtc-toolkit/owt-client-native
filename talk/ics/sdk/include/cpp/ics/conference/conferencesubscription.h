@@ -78,8 +78,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
             const std::vector<const webrtc::StatsReport*>& reports)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Stop current publication.
-    void Stop(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<Exception>)> on_failure);
+    void Stop();
     /// If the Subscription is stopped or not.
     bool Stopped() { return ended_; }
     /// Get the subscription ID

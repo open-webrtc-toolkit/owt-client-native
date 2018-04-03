@@ -156,22 +156,12 @@ void ConferenceSubscription::GetNativeStats(
    }
 }
 
-void ConferenceSubscription::Stop(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+void ConferenceSubscription::Stop() {
   auto that = conference_client_.lock();
   if (that == nullptr || ended_) {
-    std::string failure_message(
-      "Session ended.");
-    if (on_failure != nullptr && event_queue_.get()) {
-      event_queue_->PostTask([on_failure, failure_message]() {
-        std::unique_ptr<Exception> e(new Exception(
-           ExceptionType::kConferenceInvalidParam, failure_message));
-        on_failure(std::move(e));
-      });
-    }
+    return;
   } else {
-    that->UnSubscribe(id_, on_success, on_failure);
+    that->UnSubscribe(id_, nullptr, nullptr);
     ended_ = true;
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnEnded();

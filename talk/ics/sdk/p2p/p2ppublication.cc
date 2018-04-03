@@ -43,22 +43,12 @@ void P2PPublication::GetStats(
 }
 
 /// Stop current publication.
-void P2PPublication::Stop(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+void P2PPublication::Stop() {
   auto that = p2p_client_.lock();
   if (that == nullptr || ended_) {
-    std::string failure_message(
-       "Session ended.");
-    if (on_failure != nullptr) {
-      event_queue_->PostTask([on_failure, failure_message]() {
-        std::unique_ptr<Exception> e(new Exception(
-           ExceptionType::kP2PUnknown, failure_message));
-        on_failure(std::move(e));
-      });
-    }
+    return;
   } else {
-     that->Unpublish(target_id_, local_stream_, on_success, on_failure);
+     that->Unpublish(target_id_, local_stream_, nullptr, nullptr);
      ended_ = true;
   }
 }

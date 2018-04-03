@@ -78,8 +78,7 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
             const std::vector<const webrtc::StatsReport*>& reports)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Stop current publication.
-    void Stop(std::function<void()> on_success,
-              std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+    void Stop() override;
     /// Check if the publication is stopped or not
     bool Stopped() { return ended_; }
     /// Register an observer onto this conference publication.

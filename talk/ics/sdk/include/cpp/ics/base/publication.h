@@ -60,8 +60,7 @@ class Publication {
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Stop current publication.
-  virtual void Stop(std::function<void()> on_success,
-                    std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  virtual void Stop() = 0;
   /// Register an observer onto this publication.
   virtual void AddObserver(PublicationObserver& observer) = 0;
   /// Unregister an observer from this publication.
