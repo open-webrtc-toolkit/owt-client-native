@@ -176,20 +176,21 @@
         [=](std::unique_ptr<ics::base::Exception> e) {
           [self triggerOnFailure:onFailure withException:(std::move(e))];
         });
+  } else {
+    _nativeConferenceClient->Subscribe(
+        nativeStream, *[options nativeSubscribeOptions].get(),
+        [=](std::shared_ptr<ics::conference::ConferenceSubscription>
+                subscription) {
+          ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]
+              initWithNativeSubscription:subscription];
+          if (onSuccess != nil) {
+            onSuccess(sub);
+          }
+        },
+        [=](std::unique_ptr<ics::base::Exception> e) {
+          [self triggerOnFailure:onFailure withException:(std::move(e))];
+        });
   }
-  _nativeConferenceClient->Subscribe(
-      nativeStream, *[options nativeSubscribeOptions].get(),
-      [=](std::shared_ptr<ics::conference::ConferenceSubscription>
-              subscription) {
-        ICSConferenceSubscription* sub = [[ICSConferenceSubscription alloc]
-            initWithNativeSubscription:subscription];
-        if (onSuccess != nil) {
-          onSuccess(sub);
-        }
-      },
-      [=](std::unique_ptr<ics::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
-      });
 }
 
 - (void)send:(NSString*)message
