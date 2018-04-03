@@ -37,6 +37,7 @@ const string kChatStop = "chat-closed";
 const string kChatSignal = "chat-signal";
 const string kChatNegotiationNeeded = "chat-negotiation-needed";
 const string kChatTrackSources = "chat-track-sources";
+const string kChatStreamInfo = "chat-stream-info";
 const string kChatTracksAdded = "chat-tracks-added";
 const string kChatTracksRemoved = "chat-tracks-removed";
 const string kChatDataReceived = "chat-data-received";
@@ -45,6 +46,13 @@ const string kChatUserAgent = "chat-ua";
 // Track information member key
 const string kTrackIdKey = "id";
 const string kTrackSourceKey = "source";
+
+// Stream information member key
+const string kStreamIdKey = "id";
+const string kStreamTracksKey = "tracks";
+const string kStreamAudioSourceKey = "audio";
+const string kStreamVideoSourceKey = "video";
+const string kStreamSourceKey = "source";
 
 // Session description member key
 const string kSessionDescriptionTypeKey = "type";
@@ -329,6 +337,10 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     Json::Value track_sources;
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &track_sources);
     OnMessageTrackSources(track_sources);
+  } else if (message_type == kChatStreamInfo) {
+    Json::Value stream_info;
+    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &stream_info);
+    OnMessageStreamInfo(stream_info);
   } else if (message_type == kChatSignal) {
     Json::Value signal;
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &signal);
@@ -503,6 +515,10 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources)
     track_source_info = std::make_pair(id, source);
     remote_track_source_info_.insert(track_source_info);
   }
+}
+
+void P2PPeerConnectionChannel::OnMessageStreamInfo(Json::Value& stream_info) {
+  // TODO: Stream information is useless in native layer
 }
 
 void P2PPeerConnectionChannel::OnSignalingChange(
@@ -766,7 +782,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   Json::Value json;
   json[kMessageTypeKey] = kChatSignal;
   json[kMessageDataKey] = signal;
-  // The third signaling message of SDP to remote peer
+  // The fourth signaling message of SDP to remote peer
   SendSignalingMessage(json, nullptr, nullptr);
 }
 
@@ -992,27 +1008,43 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         video_track_source = "screen-cast";
       }
 
+      // Collect stream and tracks information
       scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();
-      Json::Value json;
-      json[kMessageTypeKey] = kChatTrackSources;
       Json::Value track_info;
       Json::Value track_sources;
+      Json::Value stream_tracks;
+      Json::Value stream_sources;
       for (const auto& track : media_stream->GetAudioTracks()) {
+        stream_tracks.append(track->id());
+        stream_sources[kStreamAudioSourceKey] = audio_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = audio_track_source;
         track_sources.append(track_info);
       }
-
       for (const auto& track : media_stream->GetVideoTracks()) {
+        stream_tracks.append(track->id());
+        stream_sources[kStreamVideoSourceKey] = video_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = video_track_source;
         track_sources.append(track_info);
       }
 
-      json[kMessageDataKey] = track_sources;
       // The second signaling message of track sources to remote peer
-      SendSignalingMessage(json, nullptr, nullptr);
+      Json::Value json_track_sources;
+      json_track_sources[kMessageTypeKey] = kChatTrackSources;
+      json_track_sources[kMessageDataKey] = track_sources;
+      SendSignalingMessage(json_track_sources, nullptr, nullptr);
+
+      // The third signaling message of stream information to remote peer
+      Json::Value json_stream_info;
+      json_stream_info[kMessageTypeKey] = kChatStreamInfo;
+      Json::Value stream_info;
+      stream_info[kStreamIdKey] = media_stream->label();
+      stream_info[kStreamTracksKey] = stream_tracks;
+      stream_info[kStreamSourceKey] = stream_sources;
+      json_stream_info[kMessageDataKey] = stream_info;
+      SendSignalingMessage(json_stream_info, nullptr, nullptr);
 
       // Add media stream to the peerconnection
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =

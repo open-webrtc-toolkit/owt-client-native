@@ -116,6 +116,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageSignal(Json::Value& signal);
   void OnMessageNegotiationNeeded();
   void OnMessageTrackSources(Json::Value& track_sources);
+  void OnMessageStreamInfo(Json::Value& stream_info);
   void OnMessageTracksAdded(Json::Value& stream_tracks);
   void OnMessageDataReceived(Json::Value& data);
 
