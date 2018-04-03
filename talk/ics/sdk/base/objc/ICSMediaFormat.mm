@@ -352,6 +352,11 @@ static std::unordered_map<ICSVideoSourceInfo,const ics::base::VideoSourceInfo>
 
 @implementation ICSVideoEncodingParameters
 
+- (ics::base::VideoEncodingParameters)nativeVideoEncodingParameters {
+  return ics::base::VideoEncodingParameters(
+      *[self.codec nativeVideoCodecParameters].get(), self.maxBitrate, false);
+}
+
 @end
 
 @implementation ICSTrackKindConverter
