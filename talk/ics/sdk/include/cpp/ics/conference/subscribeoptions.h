@@ -62,16 +62,16 @@ struct SubscribeOptions {
   VideoSubscriptionConstraints video;
 };
 
-/// Video subscribe update option used by subscription's ApplyOptions API.
-struct VideoSubscribeUpdateOption {
+/// Video subscription update constrains used by subscription's ApplyOptions API.
+struct VideoSubscriptionUpdateConstraints {
   /**
-   @brief Construct VideoSubscribeUpdateOption with default value.
+   @brief Construct VideoSubscriptionUpdateConstraints with default value.
    */
-  explicit VideoSubscribeUpdateOption()
-      : resolution(0, 0)
-      , frameRate(0)
-      , bitrateMultiplier(0)
-      , keyFrameInterval(0) {}
+  explicit VideoSubscriptionUpdateConstraints()
+      : resolution(0, 0),
+        frameRate(0),
+        bitrateMultiplier(0),
+        keyFrameInterval(0) {}
 
   ics::base::Resolution resolution;
   double frameRate;
@@ -79,6 +79,11 @@ struct VideoSubscribeUpdateOption {
   unsigned long keyFrameInterval;
 };
 
+/// Subscription update option used by subscription's ApplyOptions API.
+struct SubscriptionUpdateOptions {
+  /// Options for updating a subscription.
+  VideoSubscriptionUpdateConstraints video;
+};
 }
 }
 

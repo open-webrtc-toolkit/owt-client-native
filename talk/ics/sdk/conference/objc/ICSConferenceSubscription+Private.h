@@ -33,3 +33,17 @@
 - (std::shared_ptr<ics::conference::SubscribeOptions>)nativeSubscribeOptions;
 
 @end
+
+@interface ICSConferenceVideoSubscriptionUpdateConstraints ()
+
+- (std::shared_ptr<ics::conference::VideoSubscriptionUpdateConstraints>)
+    nativeVideoSubscriptionUpdateConstraints;
+
+@end
+
+@interface ICSConferenceSubscriptionUpdateOptions ()
+
+- (std::shared_ptr<ics::conference::SubscriptionUpdateOptions>)
+    nativeSubscriptionUpdateOptions;
+
+@end

@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class RTCLegacyStatsReport;
 @class ICSConferenceSubscription;
+@class ICSConferenceSubscriptionUpdateOptions;
 
 RTC_EXPORT
 @protocol ICSConferenceSubscriptionDelegate <NSObject>
@@ -60,6 +61,9 @@ RTC_EXPORT
      onFailure:(nullable void (^)(NSError*))onFailure;
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
+- (void)applyOptions:(ICSConferenceSubscriptionUpdateOptions*)options
+           onSuccess:(nullable void (^)())onSuccess
+           onFailure:(nullable void (^)(NSError*))onFailure;
 
 @property(nonatomic, weak) id<ICSConferenceSubscriptionDelegate> delegate;
 
@@ -67,7 +71,7 @@ RTC_EXPORT
 
 
 RTC_EXPORT
-/// Options for subscribing a remote stream.
+/// Constraints for subscribing a remote stream.
 @interface ICSConferenceAudioSubscriptionConstraints : NSObject
 
 @property(nonatomic, strong) NSArray<ICSAudioCodecParameters*>* codecs;
@@ -75,7 +79,7 @@ RTC_EXPORT
 @end
 
 RTC_EXPORT
-/// Options for subscribing a remote stream.
+/// Constraints for subscribing a remote stream.
 @interface ICSConferenceVideoSubscriptionConstraints : NSObject
 
 @property(nonatomic, assign) CGSize resolution;
@@ -94,6 +98,25 @@ RTC_EXPORT
 
 @property(nonatomic, strong) ICSConferenceAudioSubscriptionConstraints* audio;
 @property(nonatomic, strong) ICSConferenceVideoSubscriptionConstraints* video;
+
+@end
+
+RTC_EXPORT
+/// Constraints for updating a subscription.
+@interface ICSConferenceVideoSubscriptionUpdateConstraints : NSObject
+
+@property(nonatomic, assign) CGSize resolution;
+@property(nonatomic, assign) float frameRate;
+@property(nonatomic, assign) float bitrateMultiplier;
+@property(nonatomic, assign) NSUInteger keyFrameInterval;
+
+@end
+
+RTC_EXPORT
+@interface ICSConferenceSubscriptionUpdateOptions : NSObject
+
+@property(nonatomic, strong)
+    ICSConferenceVideoSubscriptionUpdateConstraints* video;
 
 @end
 

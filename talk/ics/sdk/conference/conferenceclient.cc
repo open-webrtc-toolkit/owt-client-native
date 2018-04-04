@@ -587,7 +587,7 @@ void ConferenceClient::Send(
 void ConferenceClient::UpdateSubscription(
   const std::string& session_id,
   const std::string& stream_id,
-  const VideoSubscribeUpdateOption& option,
+  const SubscriptionUpdateOptions& option,
   std::function<void()> on_success,
   std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckSignalingChannelOnline(on_failure)) {
@@ -609,23 +609,23 @@ void ConferenceClient::UpdateSubscription(
 
   sio::message::ptr update_option = sio::object_message::create();
   sio::message::ptr video_params = sio::object_message::create();
-  if (option.frameRate != 0) {
-    video_params->get_map()["framerate"] = sio::int_message::create(option.frameRate);
+  if (option.video.frameRate != 0) {
+    video_params->get_map()["framerate"] = sio::int_message::create(option.video.frameRate);
   }
-  if (option.resolution.width != 0 && option.resolution.height != 0) {
+  if (option.video.resolution.width != 0 && option.video.resolution.height != 0) {
     sio::message::ptr resolution_param = sio::object_message::create();
     resolution_param->get_map()["width"] =
-      sio::int_message::create(option.resolution.width);
+      sio::int_message::create(option.video.resolution.width);
     resolution_param->get_map()["height"] =
-      sio::int_message::create(option.resolution.height);
+      sio::int_message::create(option.video.resolution.height);
     video_params->get_map()["resolution"] = resolution_param;
   }
-  if (option.keyFrameInterval != 0) {
+  if (option.video.keyFrameInterval != 0) {
     video_params->get_map()["keyFrameInterval"] =
-      sio::int_message::create(option.keyFrameInterval);
+      sio::int_message::create(option.video.keyFrameInterval);
   }
-  if (option.bitrateMultiplier != 0) {
-    std::string multiplier = "x" + std::to_string(option.bitrateMultiplier);
+  if (option.video.bitrateMultiplier != 0) {
+    std::string multiplier = "x" + std::to_string(option.video.bitrateMultiplier);
     video_params->get_map()["bitrate"] =
       sio::string_message::create(multiplier);
   }

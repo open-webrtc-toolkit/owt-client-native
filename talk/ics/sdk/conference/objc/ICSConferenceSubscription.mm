@@ -107,6 +107,29 @@
       });
 }
 
+- (void)applyOptions:(ICSConferenceSubscriptionUpdateOptions*)options
+           onSuccess:(nullable void (^)())onSuccess
+           onFailure:(nullable void (^)(NSError*))onFailure {
+  _nativeSubscription->ApplyOptions(
+      *[options nativeSubscriptionUpdateOptions].get(),
+      [onSuccess]() {
+        if (onSuccess)
+          onSuccess();
+      },
+      [onFailure](std::unique_ptr<ics::base::Exception> e) {
+        if (onFailure == nil)
+          return;
+        NSError* err = [[NSError alloc]
+            initWithDomain:ICSErrorDomain
+                      code:ICSConferenceErrorUnknown
+                  userInfo:[[NSDictionary alloc]
+                               initWithObjectsAndKeys:
+                                   [NSString stringForStdString:e->Message()],
+                                   NSLocalizedDescriptionKey, nil]];
+        onFailure(err);
+      });
+}
+
 -(void)setDelegate:(id<ICSConferenceSubscriptionDelegate>)delegate{
   _observer = std::unique_ptr<
       ics::conference::ConferenceSubscriptionObserverObjcImpl,
@@ -187,6 +210,41 @@
   if (_video) {
     ics::conference::VideoSubscriptionConstraints video(
         *[_video nativeVideoSubscriptionConstraints].get());
+    options->video = video;
+  }
+  return options;
+}
+
+@end
+
+
+@implementation ICSConferenceVideoSubscriptionUpdateConstraints
+
+- (std::shared_ptr<ics::conference::VideoSubscriptionUpdateConstraints>)
+    nativeVideoSubscriptionUpdateConstraints {
+  std::shared_ptr<ics::conference::VideoSubscriptionUpdateConstraints> constrains =
+      std::shared_ptr<ics::conference::VideoSubscriptionUpdateConstraints>(
+          new ics::conference::VideoSubscriptionUpdateConstraints());
+  constrains->resolution =
+      ics::base::Resolution(_resolution.width, _resolution.height);
+  constrains->frameRate = _frameRate;
+  constrains->bitrateMultiplier = _bitrateMultiplier;
+  constrains->keyFrameInterval = _keyFrameInterval;
+  return constrains;
+}
+
+@end
+
+@implementation ICSConferenceSubscriptionUpdateOptions
+
+- (std::shared_ptr<ics::conference::SubscriptionUpdateOptions>)
+    nativeSubscriptionUpdateOptions {
+  std::shared_ptr<ics::conference::SubscriptionUpdateOptions> options =
+      std::shared_ptr<ics::conference::SubscriptionUpdateOptions>(
+          new ics::conference::SubscriptionUpdateOptions());
+  if (_video) {
+    ics::conference::VideoSubscriptionUpdateConstraints video(
+        *[_video nativeVideoSubscriptionUpdateConstraints].get());
     options->video = video;
   }
   return options;

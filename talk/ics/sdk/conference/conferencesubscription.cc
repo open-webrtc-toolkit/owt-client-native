@@ -116,7 +116,7 @@ void ConferenceSubscription::GetStats(
 }
 
 void ConferenceSubscription::ApplyOptions(
-  const VideoSubscribeUpdateOption& option,
+  const SubscriptionUpdateOptions& options,
   std::function<void()> on_success,
   std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto that = conference_client_.lock();
@@ -131,7 +131,7 @@ void ConferenceSubscription::ApplyOptions(
       });
     }
   } else {
-    that->UpdateSubscription(id_, stream_id_, option, on_success, on_failure);
+    that->UpdateSubscription(id_, stream_id_, options, on_success, on_failure);
   }
 }
 

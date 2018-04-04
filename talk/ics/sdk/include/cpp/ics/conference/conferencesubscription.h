@@ -85,7 +85,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     std::string Id() const { return id_; }
     /// Update the subscription with new encoding settings.
     void ApplyOptions(
-        const VideoSubscribeUpdateOption& option,
+        const SubscriptionUpdateOptions& options,
         std::function<void()> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Add observer on the subscription

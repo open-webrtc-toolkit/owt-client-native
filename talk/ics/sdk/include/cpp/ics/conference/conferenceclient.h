@@ -373,7 +373,7 @@ class ConferenceClient final
   void UpdateSubscription(
       const std::string& session_id,
       const std::string& stream_id,
-      const VideoSubscribeUpdateOption& option,
+      const SubscriptionUpdateOptions& option,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
