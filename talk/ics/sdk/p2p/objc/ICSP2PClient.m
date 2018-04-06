@@ -225,6 +225,10 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 
 - (void)channelDidDisconnect:(id<ICSP2PSignalingChannelProtocol>)channel {
   RTCLogInfo(@"PeerClient received disconnect.");
+  _peerClientState = kDisconnected;
+  if ([_delegate respondsToSelector:@selector(p2pClientDidDisconnect:)]) {
+    [_delegate p2pClientDidDisconnect:self];
+  }
 }
 
 - (void)onStoppedFrom:(NSString*)remoteUserId {

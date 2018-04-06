@@ -172,7 +172,7 @@ RTC_EXPORT
  */
 @property(nonatomic, assign) BOOL audio;
 /// Constraints for video track.
-@property(nonatomic, strong) ICSVideoTrackConstraints* video;
+@property(nonatomic, strong, nullable) ICSVideoTrackConstraints* video;
 
 @end
 
