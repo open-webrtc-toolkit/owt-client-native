@@ -21,6 +21,7 @@ static const std::unordered_map<AudioCodec, const std::string>
                          {AudioCodec::kIsac, "ISAC"},
                          {AudioCodec::kG722, "G722"},
                          {AudioCodec::kPcmu, "PCMU"},
+                         {AudioCodec::kIlbc, "ILBC"},
                          {AudioCodec::kPcma, "PCMA"}};
 static const std::unordered_map<VideoCodec, const std::string>
     video_codec_names = {{VideoCodec::kVp8, "VP8"},
