@@ -3,22 +3,24 @@ The Intel CS for WebRTC Client iOS SDK
 # 1 Introduction {#section1}
 The Intel CS for WebRTC Client SDK for iOS provides the tools for developing iOS native WebRTC applications using Objective-C APIs. This document describes all the APIs available in the SDK and how to use them.
 
-This SDK is interoperable with the Intel CS WebRTC Client SDK for JavaScript\* and Android\*.
+This SDK is interoperable with the Intel CS WebRTC Client SDK for JavaScript\*, C++ and Android\*.
 
 Refer to the Release Notes for the latest information in the SDK release package, including features, bug fixes and known issues.
 
 # 2 Supported platforms {#section2}
-The Intel CS for WebRTC Client SDK for iOS supports in iOS 8.0 and later versions.
+The Intel CS for WebRTC Client SDK for iOS supports in iOS 9.0 and later versions.
 
 The following devices have been tested using this SDK:
 
-- iPhone* 5, 5s, 6 and 7 Plus
+- iPhone* 6, 7 Plus and X.
 - iPad Air*
 
 # 3 Getting started {#section3}
 The release package includes two sample applications to get you started quickly with the SDK. The following three static libraries are provided in the SDK along with their respective headers:
 
-- libwoogeen.a - this library includes all the WebRTC features.
+- ICS.framework - a framework including a shared library providing the abilities to connect to conference server or another Intel CS for WebRTC P2P endpoint.
+- WebRTC.framework - a framework providing WebRTC features. You can find its source code at https://webrtc.googlesource.com/src. We modified some code make it work with OpenSSL.
+- libicsdeps.a - some dependencies for WebRTC and ICS.
 - libsioclient.a - this library includes Socket.IO C++ client without TLS features.
 - libsioclient_tls.a - this library includes the Socket.IO C++ client with TLS features.
 
@@ -40,23 +42,31 @@ Socket connections are disconnected when the device is locked. If your app must 
 Intel CS for WebRTC Client SDK for iOS fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 
 # 7 Customize signaling channel {#section7}
-Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel for P2P sessions can be customized by implementing `RTCP2PSignalingChannelProtocol`. We provide a default `SocketSignalingChannel` in sample which works with PeerServer in the release package.
+Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel for P2P sessions can be customized by implementing `ICSP2PSignalingChannelProtocol`. We provide a default `SocketSignalingChannel` in sample which works with PeerServer in the release package.
 
-`PeerClient` implements `RTCP2PSignalingChannelObserver` and will be registered into `RTCP2PSignalingChannelProtocol`'s implementation, so you can invoke its methods to notify `PeerClient` during your signaling channel implementation when a new message is coming or connection is lost.
+`ICSP2PClient` implements `ICSP2PSignalingChannelObserver`, and will be registered into `ICSP2PSignalingChannelProtocol`'s implementation, so you can invoke its methods to notify `ICSP2PClient` during your signaling channel implementation when a new message is coming or connection is lost.
 
 # 8 Known issues {#section8}
 Here is a list of known issues:
 
-- Conference recording is not supported.
 - Subscribing streams with audio/video only option is not supported.
-- If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
+- If you create multiple `ICSLocalStream`s from camera with different resolutions, previous streams will be black.
 
 # 9 Video codecs {#section9}
-Both VP8 and H.264 are supported.
+Both VP8 and H.264 are supported. H.264 is recommended since it has hardware support.
 
 # 10 Video frame filter {#section10}
 Video frame filter allows app to modify captured video frames before sending to video sink or encoder.
 
 To enable video frame filter, please implement one or more filters and make video frames flow like this: RTCCameraVideoCapturer->filter(s)->RTCVideoSource->... An example of video frame filter can be found in conference sample.
+
+# 11 Migrating from 3.x {#section11}
+There are significant API changes since 3.x.
+- Publication was introduced for both conference and P2P mode. You'll get a publication when publish successfully.
+- Subscription was introduced for conference mode. You'll get a subscription when subscribe a stream successfully. P2P mode does not have subscription at this time since remote stream will be added to PeerConnection automatically.
+- Class prefix was changed to ICS which stands for Intel CS for WebRTC.
+- Flexible to work with WebRTC framework. We provide APIs to create a LocalStream through ICS APIs. But it's also possible to create a custom LocalStream through WebRTC APIs which start with `RTC`.
+- SDK was released as a dynamic framework. However, its dependencies (libicsdeps.a) are still provided as static library.
+- Observer pattern was changed to delegate pattern which is commonly used in iOS programming.
 
 > Note: \* Other names and brands may be claimed as the property of others.
