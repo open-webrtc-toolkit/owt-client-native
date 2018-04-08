@@ -151,6 +151,8 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 }
 
 - (void)stop:(NSString*)targetId {
+  if (![self checkSignalingChannelOnline:nil])
+    return;
   ICSP2PPeerConnectionChannel* channel =
       [self getPeerConnectionChannel:targetId];
   [channel stopWithOnSuccess:nil onFailure:nil];
