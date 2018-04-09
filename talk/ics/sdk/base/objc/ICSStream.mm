@@ -25,8 +25,10 @@
     NSLog(@"Attached stream without media stream");
     return;
   }
-  _mediaStream =
-      [[RTCMediaStream alloc] initWithNativeMediaStream:nativeStream->MediaStream()];
+  if (_mediaStream == nil) {
+    _mediaStream = [[RTCMediaStream alloc]
+        initWithNativeMediaStream:nativeStream->MediaStream()];
+  }
   if ([_mediaStream.videoTracks count] == 0)
     return;
   [[_mediaStream.videoTracks objectAtIndex:0] addRenderer:renderer];
