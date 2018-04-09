@@ -157,10 +157,10 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [_peerConnectionChannels removeObjectForKey:targetId];
 }
 
-- (void)send:(NSString*)targetId
-     message:(NSString*)message
-   onSuccess:(void (^)())onSuccess
-   onFailure:(void (^)(NSError*))onFailure {
+- (void)send:(NSString*)message
+           to:(NSString*)targetId
+    onSuccess:(nullable void (^)())onSuccess
+    onFailure:(nullable void (^)(NSError*))onFailure {
   if (![self checkSignalingChannelOnline:onFailure])
     return;
   ICSP2PPeerConnectionChannel* channel =

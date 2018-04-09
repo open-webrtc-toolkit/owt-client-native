@@ -81,8 +81,8 @@ RTC_EXPORT
 
 /**
  @brief Send a message to remote client
- @param targetId Remote user's ID.
  @param message The message to be sent.
+ @param targetId Remote user's ID.
  @param onSuccess Success callback will be invoked if send deny event
  successfully.
  @param onFailure Failure callback will be invoked if one of the following cases
@@ -91,8 +91,8 @@ RTC_EXPORT
  2. Target ID is nil or target user is offline.
  3. There is no WebRTC session with target user.
  */
-- (void)send:(NSString*)targetId
-      message:(NSString*)message
+- (void)send:(NSString*)message
+           to:(NSString*)targetId
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
 
