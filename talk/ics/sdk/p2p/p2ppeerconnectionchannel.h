@@ -201,11 +201,14 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::vector<std::shared_ptr<LocalStream>> pending_publish_streams_;
   // Streams need to be unpublished.
   std::vector<std::shared_ptr<LocalStream>> pending_unpublish_streams_;
-  // A set of labels for streams published or will be publish to remote side.
+  // A set of labels for streams published to remote side.
   // |Publish| adds its argument to this vector, |Unpublish| removes it.
   std::unordered_set<std::string> published_streams_;
+  // A set of labels for streams are publishing to remote side.
+  std::unordered_set<std::string> publishing_streams_;
   std::mutex pending_publish_streams_mutex_;
   std::mutex pending_unpublish_streams_mutex_;
+  // Shared by |published_streams_| and |publishing_streams_|.
   std::mutex published_streams_mutex_;
   std::vector<P2PPeerConnectionChannelObserver*> observers_;
   std::unordered_map<std::string, std::function<void()>> publish_callbacks_;

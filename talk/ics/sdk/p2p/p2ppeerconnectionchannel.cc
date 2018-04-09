@@ -172,7 +172,9 @@ void P2PPeerConnectionChannel::Publish(
 
   RTC_CHECK(stream->MediaStream());
   if (published_streams_.find(stream->MediaStream()->label()) !=
-      published_streams_.end()) {
+          published_streams_.end() ||
+      publishing_streams_.find(stream->MediaStream()->label()) !=
+          publishing_streams_.end()) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
         std::unique_ptr<Exception> e(
@@ -203,6 +205,10 @@ void P2PPeerConnectionChannel::Publish(
   {
     std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
     pending_publish_streams_.push_back(stream);
+  }
+  {
+    std::lock_guard<std::mutex> lock(published_streams_mutex_);
+    publishing_streams_.insert(stream->MediaStream()->label());
   }
 
   LOG(LS_INFO) << "Session state: " << session_state_;
@@ -489,15 +495,23 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   }
 }
 
-void P2PPeerConnectionChannel::OnMessageTracksAdded(Json::Value& stream_tracks) {
-  // Find the streams with track information, and add them to published stream list
+void P2PPeerConnectionChannel::OnMessageTracksAdded(
+    Json::Value& stream_tracks) {
+  // Find the streams with track information, and add them to published stream
+  // list
   for (Json::Value::ArrayIndex idx = 0; idx != stream_tracks.size(); idx++) {
     std::string track_id = stream_tracks[idx].asString();
-    if (local_stream_tracks_info_.find(track_id) != local_stream_tracks_info_.end()) {
+    if (local_stream_tracks_info_.find(track_id) !=
+        local_stream_tracks_info_.end()) {
       std::lock_guard<std::mutex> lock(published_streams_mutex_);
       auto it = published_streams_.find(local_stream_tracks_info_[track_id]);
       if (it == published_streams_.end()) {
         published_streams_.insert(local_stream_tracks_info_[track_id]);
+      }
+      auto it_publishing =
+          publishing_streams_.find(local_stream_tracks_info_[track_id]);
+      if (it != publishing_streams_.end()) {
+        publishing_streams_.erase(it_publishing);
       }
     }
   }
