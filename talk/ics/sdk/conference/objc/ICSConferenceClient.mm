@@ -6,7 +6,6 @@
 #include <functional>
 
 #import <Foundation/Foundation.h>
-#import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSPublishOptions+Private.h"

@@ -74,23 +74,41 @@ typedef NS_OPTIONS(NSInteger, ICSTrackKind) {
   ICSTrackKindVideo = 1 << 1,
 };
 
+/// Codec parameters for an audio track.
 RTC_EXPORT
 @interface ICSAudioCodecParameters : NSObject
 
+/**
+ @brief Name of a codec.
+ @details some functions do not support all the values in ICSAudioCodec.
+*/
 @property(nonatomic, assign) ICSAudioCodec name;
+/// Numbers of channels for an audio track.
 @property(nonatomic, assign) NSUInteger channelCount;
+/// The codec clock rate expressed in Hertz.
 @property(nonatomic, assign) NSUInteger clockRate;
 
 @end
 
+/// Codec parameters for a video track.
 RTC_EXPORT
 @interface ICSVideoCodecParameters : NSObject
 
+/**
+ @brief Name of a codec.
+ @details some functions do not support all the values in ICSVideoCodec.
+*/
 @property(nonatomic, assign) ICSVideoCodec name;
+
+/**
+ @brief The profile of a codec.
+ @details Profile may not apply to all codecs.
+*/ 
 @property(nonatomic, strong) NSString* profile;
 
 @end
 
+/// The audio settings of a publication.
 RTC_EXPORT
 @interface ICSAudioPublicationSettings : NSObject
 
@@ -98,6 +116,7 @@ RTC_EXPORT
 
 @end
 
+/// The video settings of a publication.
 RTC_EXPORT
 @interface ICSVideoPublicationSettings : NSObject
 
@@ -109,6 +128,7 @@ RTC_EXPORT
 
 @end
 
+/// The settings of a publication.
 RTC_EXPORT
 @interface ICSPublicationSettings : NSObject
 
@@ -117,6 +137,7 @@ RTC_EXPORT
 
 @end
 
+/// Represents the audio capability for subscription.
 RTC_EXPORT
 @interface ICSAudioSubscriptionCapabilities : NSObject
 
@@ -124,6 +145,7 @@ RTC_EXPORT
 
 @end
 
+/// Represents the video capability for subscription.
 RTC_EXPORT
 @interface ICSVideoSubscriptionCapabilities : NSObject
 
@@ -135,6 +157,7 @@ RTC_EXPORT
 
 @end
 
+/// Represents the capability for subscription.
 RTC_EXPORT
 @interface ICSSubscriptionCapabilities : NSObject
 
@@ -143,6 +166,7 @@ RTC_EXPORT
 
 @end
 
+/// Information of a stream's source.
 RTC_EXPORT
 @interface ICSStreamSourceInfo : NSObject
 

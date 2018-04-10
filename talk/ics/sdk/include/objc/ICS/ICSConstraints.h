@@ -30,16 +30,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// The audio settings of a publication.
 @interface ICSAudioPublicationSettings
 
 @property(nonatomic, strong, readonly) ICSAudioCodecParameters* codec;
 
 @end
 
+/// The video settings of a publication.
 @interface ICSVideoPublicationSettings
 
 @end
 
+/// The settings of a publication.
 @interface ICSPublicationSettings
 
 @property(nonatomic, strong, readonly) ICSAudioPublicationSettings* audio;

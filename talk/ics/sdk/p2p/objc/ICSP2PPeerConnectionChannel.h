@@ -4,7 +4,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "talk/ics/sdk/include/objc/ICS/ICSConnectionStats.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalStream.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PSignalingSenderProtocol.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PSignalingReceiverProtocol.h"

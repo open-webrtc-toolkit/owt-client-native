@@ -38,25 +38,36 @@ RTC_EXPORT
 
 @optional
 
+/// Publication is ended.
 - (void)publicationDidEnd:(ICSConferencePublication*)publication;
+/// Publication is muted. Client stopped sending audio and/or video data to remote endpoint.
 - (void)publicationDidMute:(ICSConferencePublication*)publication
                   trackKind:(ICSTrackKind)kind;
+/// Publication is unmuted. Client continued sending audio and/or video data to remote endpoint.
 - (void)publicationDidUnmute:(ICSConferencePublication*)publication
                     trackKind:(ICSTrackKind)kind;
 
 @end
 
+/**
+  @brief Publication represents a sender for publishing a stream.
+  @details It handles the actions on a LocalStream published to a conference.
+*/
 RTC_EXPORT
 @interface ICSConferencePublication : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
+/// Stop certain publication. Once a subscription is stopped, it cannot be recovered.
 - (void)stop;
+/// Stop sending data to remote endpoint.
 - (void)mute:(ICSTrackKind)trackKind
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
+/// Continue sending data to remote endpoint.
 - (void)unmute:(ICSTrackKind)trackKind
      onSuccess:(nullable void (^)())onSuccess
      onFailure:(nullable void (^)(NSError*))onFailure;
+/// Get stats of underlying PeerConnection.
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
 

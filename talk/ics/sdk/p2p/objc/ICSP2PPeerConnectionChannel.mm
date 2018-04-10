@@ -10,7 +10,6 @@
 #import "talk/ics/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 #import "talk/ics/sdk/p2p/objc/ICSP2PSignalingSenderObjcImpl.h"
 #import "talk/ics/sdk/p2p/objc/ICSP2PPublication+Private.h"
-#import "talk/ics/sdk/base/objc/ICSConnectionStats+Internal.h"
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
 #import "talk/ics/sdk/base/objc/ICSStream+Private.h"

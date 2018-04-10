@@ -30,6 +30,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// PublishOptions defines options for publishing a ICSLocalStream.
 RTC_EXPORT
 @interface ICSPublishOptions : NSObject
 

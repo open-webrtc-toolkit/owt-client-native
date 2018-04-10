@@ -39,9 +39,16 @@ RTC_EXPORT
 
 - (instancetype)init NS_UNAVAILABLE;
 
+/// Conference ID
 @property(readonly, strong) NSString* conferenceId;
+/// Participants in the conference.
 @property(readonly, strong) NSArray<ICSConferenceParticipant*>* participants;
+/**
+  @brief Streams published by participants.
+  @details It also includes streams published by current user.
+*/
 @property(readonly, strong) NSArray<ICSRemoteStream*>* remoteStreams;
+/// Current user's info.
 @property(readonly, strong) ICSConferenceParticipant* myself;
 
 @end

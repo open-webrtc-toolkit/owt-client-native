@@ -36,17 +36,24 @@ RTC_EXPORT
 
 @optional
 
+/// Publication is ended.
 - (void)publicationDidEnd:(ICSP2PPublication*)publication;
 
 @end
 
+/**
+  @brief Publication represents a sender for publishing a stream.
+  @details It handles the actions on a LocalStream published to a remote endpoint.
+*/
 RTC_EXPORT
 @interface ICSP2PPublication : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
 
+/// Stop certain publication. Once a subscription is stopped, it cannot be recovered.
 - (void)stop;
 
+/// Get stats of underlying PeerConnection.
 - (void)stats:(void (^)(NSArray<RTCLegacyStatsReport*>* stats))onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
 

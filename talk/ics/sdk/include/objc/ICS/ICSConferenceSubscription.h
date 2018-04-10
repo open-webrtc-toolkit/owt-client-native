@@ -40,9 +40,12 @@ RTC_EXPORT
 
 @optional
 
+/// Subscription is ended.
 - (void)subscriptionDidEnd:(ICSConferenceSubscription*)subscription;
+/// Publication is muted. Remote side stopped sending audio and/or video data.
 - (void)subscriptionDidMute:(ICSConferenceSubscription*)subscription
                   trackKind:(ICSTrackKind)kind;
+/// Publication is unmuted. Remote side continued sending audio and/or video data.
 - (void)subscriptionDidUnmute:(ICSConferenceSubscription*)subscription
                     trackKind:(ICSTrackKind)kind;
 
@@ -52,15 +55,20 @@ RTC_EXPORT
 @interface ICSConferenceSubscription : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
+/// Stop certain subscription. Once a subscription is stopped, it cannot be recovered.
 - (void)stop;
+/// Stop reeving data from remote endpoint.
 - (void)mute:(ICSTrackKind)trackKind
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
+/// Continue reeving data from remote endpoint.
 - (void)unmute:(ICSTrackKind)trackKind
      onSuccess:(nullable void (^)())onSuccess
      onFailure:(nullable void (^)(NSError*))onFailure;
+/// Get stats of underlying PeerConnection.
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
+/// Update subscription with given options.
 - (void)applyOptions:(ICSConferenceSubscriptionUpdateOptions*)options
            onSuccess:(nullable void (^)())onSuccess
            onFailure:(nullable void (^)(NSError*))onFailure;
