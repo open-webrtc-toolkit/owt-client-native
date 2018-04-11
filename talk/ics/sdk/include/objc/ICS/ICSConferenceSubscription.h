@@ -91,8 +91,8 @@ RTC_EXPORT
 @interface ICSConferenceVideoSubscriptionConstraints : NSObject
 
 @property(nonatomic, assign) CGSize resolution;
-@property(nonatomic, assign) float frameRate;
-@property(nonatomic, assign) float bitrateMultiplier;
+@property(nonatomic, assign) double frameRate;
+@property(nonatomic, assign) double bitrateMultiplier;
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
 @property(nonatomic, strong) NSArray<ICSVideoCodecParameters*>* codecs;
 
@@ -114,8 +114,8 @@ RTC_EXPORT
 @interface ICSConferenceVideoSubscriptionUpdateConstraints : NSObject
 
 @property(nonatomic, assign) CGSize resolution;
-@property(nonatomic, assign) float frameRate;
-@property(nonatomic, assign) float bitrateMultiplier;
+@property(nonatomic, assign) double frameRate;
+@property(nonatomic, assign) double bitrateMultiplier;
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
 
 @end

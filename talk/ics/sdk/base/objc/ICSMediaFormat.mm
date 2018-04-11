@@ -229,7 +229,7 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
   NSMutableArray<NSNumber*>* values =
       [NSMutableArray arrayWithCapacity:_nativeCapabilities.frame_rates.size()];
   for (const auto& f : _nativeCapabilities.frame_rates) {
-    NSNumber* v = [NSNumber numberWithFloat:f];
+    NSNumber* v = [NSNumber numberWithDouble:f];
     [values addObject:v];
   }
   return values;
@@ -239,7 +239,7 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
   NSMutableArray<NSNumber*>* values = [NSMutableArray
       arrayWithCapacity:_nativeCapabilities.bitrate_multipliers.size()];
   for (const auto& f : _nativeCapabilities.bitrate_multipliers) {
-    NSNumber* v = [NSNumber numberWithFloat:f];
+    NSNumber* v = [NSNumber numberWithDouble:f];
     [values addObject:v];
   }
   return values;
@@ -249,7 +249,7 @@ static std::unordered_map<ICSVideoCodec, const ics::base::VideoCodec>
   NSMutableArray<NSNumber*>* values = [NSMutableArray
       arrayWithCapacity:_nativeCapabilities.keyframe_intervals.size()];
   for (const auto& f : _nativeCapabilities.keyframe_intervals) {
-    NSNumber* v = [NSNumber numberWithFloat:f];
+    NSNumber* v = [NSNumber numberWithDouble:f];
     [values addObject:v];
   }
   return values;
