@@ -74,7 +74,10 @@ const string kUaOsKey = "os";
 const string kUaOsNameKey = "name";
 const string kUaOsVersionKey = "version";
 
+// Text message sent through data channel
 const string kDataChannelLabelForTextMessage = "message";
+const string kTextMessageDataKey = "data";
+const string kTextMessageIdKey = "id";
 
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration,
@@ -92,6 +95,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       set_remote_sdp_task_(nullptr),
       last_disconnect_(std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
+      message_seq_num_(0),
       remote_side_supports_plan_b_(false),
       remote_side_supports_remove_stream_(false),
       remote_side_supports_unified_plan_(true),
@@ -500,7 +504,15 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(Json::Value& stream_tracks) 
 }
 
 void P2PPeerConnectionChannel::OnMessageDataReceived(Json::Value& data) {
-  // TODO: The data sent in data channel will have id and its message content
+  // Here comes the message id for its callback accordingly
+  std::string id = rtc::JsonValueToString(data);
+  if (message_callbacks_.find(id) == message_callbacks_.end()) {
+    LOG(LS_WARNING) << "Received unknown data with message ID: " << id;
+    return;
+  }
+  std::function<void()> callback = message_callbacks_[id];
+  event_queue_->PostTask([callback] { callback(); });
+  message_callbacks_.erase(id);
 }
 
 void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources) {
@@ -518,7 +530,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources)
 }
 
 void P2PPeerConnectionChannel::OnMessageStreamInfo(Json::Value& stream_info) {
-  // TODO: Stream information is useless in native layer
+  // Stream information is useless in native layer
 }
 
 void P2PPeerConnectionChannel::OnSignalingChange(
@@ -1120,8 +1132,37 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
     LOG(LS_WARNING) << "Binary data is not supported.";
     return;
   }
-  std::string message =
+  std::string data =
       std::string(buffer.data.data<char>(), buffer.data.size());
+
+  // Parse the received message with its id and data
+  Json::Reader reader;
+  Json::Value json_data;
+  if (!reader.parse(data, json_data)) {
+    LOG(LS_WARNING) << "Cannot parse incoming text message.";
+    return;
+  }
+  std::string message_id;
+  rtc::GetStringFromJsonObject(json_data, kTextMessageIdKey, &message_id);
+  if (message_id.empty()) {
+    LOG(LS_WARNING) << "Cannot get id from incoming text message.";
+    return;
+  }
+
+  std::string message;
+  rtc::GetStringFromJsonObject(json_data, kTextMessageDataKey, &message);
+  if (message.empty()) {
+    LOG(LS_WARNING) << "Cannot get content from incoming text message.";
+    return;
+  }
+
+  // Send the ack for text message
+  Json::Value ack;
+  ack[kMessageTypeKey] = kChatDataReceived;
+  ack[kMessageDataKey] = message_id;
+  SendSignalingMessage(ack, nullptr, nullptr);
+
+  //  Deal with the received text message
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -1139,25 +1180,29 @@ void P2PPeerConnectionChannel::Send(
     const std::string& message,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  Json::Value content;
+  long message_id = message_seq_num_++;
+  content[kTextMessageIdKey] = std::to_string(message_id);
+  content[kTextMessageDataKey] = message;
+  std::string data = rtc::JsonValueToString(content);
   if (data_channel_ != nullptr &&
-      data_channel_->state() ==
-          webrtc::DataChannelInterface::DataState::kOpen) {
-    data_channel_->Send(CreateDataBuffer(message));
-    LOG(LS_INFO) << "Send message " << message;
+      data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
+    data_channel_->Send(CreateDataBuffer(data));
+    LOG(LS_INFO) << "Send message: " << data;
   } else {
     {
       std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-      std::shared_ptr<std::string> message_copy(
-          std::make_shared<std::string>(message));
-      pending_messages_.push_back(message_copy);
+      std::shared_ptr<std::string> data_copy(std::make_shared<std::string>(data));
+      pending_messages_.push_back(data_copy);
     }
 
-    if (data_channel_ == nullptr) {  // Otherwise, wait for data channel ready.
+    if (data_channel_ == nullptr) // Otherwise, wait for data channel ready.
       CreateDataChannel(kDataChannelLabelForTextMessage);
-    }
   }
+
   if (on_success) {
-    event_queue_->PostTask([on_success] { on_success(); });
+    std::string id_value = std::to_string(message_id);
+    message_callbacks_[id_value] = on_success;
   }
 }
 

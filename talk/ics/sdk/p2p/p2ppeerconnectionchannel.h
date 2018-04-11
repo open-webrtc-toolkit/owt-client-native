@@ -208,18 +208,22 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::mutex pending_unpublish_streams_mutex_;
   std::mutex published_streams_mutex_;
   std::vector<P2PPeerConnectionChannelObserver*> observers_;
+  std::unordered_map<std::string, std::function<void()>> publish_callbacks_;
   // Store remote SDP if it cannot be set currently.
   SetSessionDescriptionMessage* set_remote_sdp_task_;
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect"
   int reconnect_timeout_;  // Unit: second
+
+  long message_seq_num_; // Message ID to be sent through data channel
   std::vector<std::shared_ptr<std::string>> pending_messages_;  // Messages need
                                                                 // to be sent
                                                                 // once data
                                                                 // channel is
                                                                 // ready.
   std::mutex pending_messages_mutex_;
+  std::unordered_map<std::string, std::function<void()>> message_callbacks_;
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
