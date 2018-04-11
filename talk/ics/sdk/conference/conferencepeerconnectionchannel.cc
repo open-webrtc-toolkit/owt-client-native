@@ -496,6 +496,7 @@ void ConferencePeerConnectionChannel::Subscribe(
           on_failure(std::move(e));
       });
     }
+    return;
   }
 
   subscribed_stream_ = stream;
