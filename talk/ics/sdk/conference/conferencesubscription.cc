@@ -87,7 +87,7 @@ void ConferenceSubscription::Unmute(
          return;
        for (auto its = that_cs->observers_.begin();
             its != that_cs->observers_.end(); ++its) {
-         (*its).get().OnMute(track_kind);
+         (*its).get().OnUnmute(track_kind);
        }
        if (on_success != nullptr)
          on_success();
