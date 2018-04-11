@@ -18,9 +18,8 @@ The following devices have been tested using this SDK:
 # 3 Getting started {#section3}
 The release package includes two sample applications to get you started quickly with the SDK. The following three static libraries are provided in the SDK along with their respective headers:
 
-- ICS.framework - a framework including a shared library providing the abilities to connect to conference server or another Intel CS for WebRTC P2P endpoint.
+- ICS.framework - a framework providing the abilities to connect to conference server or another Intel CS for WebRTC P2P endpoints.
 - WebRTC.framework - a framework providing WebRTC features. You can find its source code at https://webrtc.googlesource.com/src. We modified some code make it work with OpenSSL.
-- libicsdeps.a - some dependencies for WebRTC and ICS.
 - libsioclient.a - this library includes Socket.IO C++ client without TLS features.
 - libsioclient_tls.a - this library includes the Socket.IO C++ client with TLS features.
 
@@ -66,7 +65,6 @@ There are significant API changes since 3.x.
 - Subscription was introduced for conference mode. You'll get a subscription when subscribe a stream successfully. P2P mode does not have subscription at this time since remote stream will be added to PeerConnection automatically.
 - Class prefix was changed to ICS which stands for Intel CS for WebRTC.
 - Flexible to work with WebRTC framework. We provide APIs to create a LocalStream through ICS APIs. But it's also possible to create a custom LocalStream through WebRTC APIs which start with `RTC`.
-- SDK was released as a dynamic framework. However, its dependencies (libicsdeps.a) are still provided as static library.
 - Observer pattern was changed to delegate pattern which is commonly used in iOS programming.
 
 > Note: \* Other names and brands may be claimed as the property of others.

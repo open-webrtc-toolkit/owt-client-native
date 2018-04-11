@@ -16,14 +16,13 @@ import sys
 import shutil
 import fileinput
 import re
+import distutils.dir_util
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','mac'))
 import sdk_info
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
-# The lib contains all target architectures
-OUT_FAT_LIB_NAME = 'libics-fat.a'
 # The lib contains all target architectures and external libs(OpenSSL).
 OUT_LIB_NAME = 'libics.a'
 OUT_FRAMEWORK_NAME = "ICS.framework"
@@ -38,8 +37,9 @@ FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
-SDK_TARGETS = ['ics_sdk_base', 'ics_sdk_p2p', 'ics_sdk_conf', 'ics_sdk_objc']
+SDK_TARGETS = ['ics_sdk_base', 'ics_sdk_p2p', 'ics_sdk_conf', 'ics_sdk_objc', 'ics_deps']
 APP_TARGETS = ['AppRTCMobile']
+WEBRTC_FRAMEWORK_NAME = 'WebRTC.framework'
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
     'modules_tests', 'rtc_pc_unittests', 'system_wrappers_unittests', 'test_support_unittests',
@@ -51,7 +51,7 @@ TEST_SIMULATOR_DEVICE = 'iPhone X'
 def gngen(arch, ssl_root, scheme):
   gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
       'ios_enable_code_signing=false ios_deployment_target="9.0" use_xcode_clang=true '\
-      'rtc_libvpx_build_vp9=false enable_ios_bitcode=true'%arch
+      'rtc_libvpx_build_vp9=true enable_ios_bitcode=true'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false')
   else:
@@ -100,7 +100,24 @@ def buildframework():
   shutil.copy(FRAMEWORK_MODULE_MAP_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Modules', 'module.modulemap'))
   shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'ICS'))
 
+def buildwebrtcframework(arch_list, scheme):
+  distutils.dir_util.copy_tree(
+      os.path.join(getoutputpath(arch_list[0], scheme), WEBRTC_FRAMEWORK_NAME),
+      os.path.join(OUT_PATH, WEBRTC_FRAMEWORK_NAME))
+  if len(arch_list) == 1:
+    return True
+  else:
+    # Combine the slices.
+    webrtc_dylib_path = os.path.join(OUT_PATH, WEBRTC_FRAMEWORK_NAME, 'WebRTC')
+    if os.path.exists(webrtc_dylib_path):
+      os.remove(webrtc_dylib_path)
+    webrtc_dylib_arch_paths = [os.path.join(getoutputpath(arch, scheme), WEBRTC_FRAMEWORK_NAME, 'WebRTC') for arch in arch_list]
+    cmd = ['lipo'] + webrtc_dylib_arch_paths + ['-create', '-output', webrtc_dylib_path]
+    subprocess.call(cmd, cwd=HOME_PATH)
+    return True
+
 def dist(arch_list, scheme, ssl_root):
+  buildwebrtcframework(arch_list, scheme)
   out_lib_path = os.path.join(OUT_PATH, OUT_LIB_NAME)
   if os.path.exists(out_lib_path):
     os.remove(out_lib_path)
@@ -118,6 +135,7 @@ def dist(arch_list, scheme, ssl_root):
     subprocess.call(['strip', '-S', '-x', '%s/out/libics.a'%HOME_PATH],
         cwd=HOME_PATH)
   buildframework()
+  os.remove(out_lib_path)
   return True
 
 # Get iOS simulator SDK version
