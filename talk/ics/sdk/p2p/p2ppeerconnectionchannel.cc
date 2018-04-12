@@ -515,7 +515,7 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
       }
       auto it_publishing =
           publishing_streams_.find(local_stream_tracks_info_[track_id]);
-      if (it != publishing_streams_.end()) {
+      if (it_publishing != publishing_streams_.end()) {
         publishing_streams_.erase(it_publishing);
       }
     }
