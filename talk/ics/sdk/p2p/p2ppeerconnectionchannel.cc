@@ -160,16 +160,6 @@ void P2PPeerConnectionChannel::Publish(
     return;
   }
 
-  is_caller_ = true;
-  InitializePeerConnection();
-
-  // The first signaling message of user agent data to remote peer
-  Json::Value json;
-  json[kMessageTypeKey] = kChatUserAgent;
-  Json::Value ua = UaInfo();
-  json[kMessageDataKey] = ua;
-  SendSignalingMessage(json, nullptr, nullptr);
-
   RTC_CHECK(stream->MediaStream());
   if (published_streams_.find(stream->MediaStream()->label()) !=
           published_streams_.end() ||
@@ -186,17 +176,24 @@ void P2PPeerConnectionChannel::Publish(
     return;
   }
 
+  // Initialization
+  is_caller_ = true;
+  InitializePeerConnection();
+
+  // The first signaling message of user agent data to remote peer
+  SendUaInfo();
+
   scoped_refptr<webrtc::MediaStreamInterface> media_stream =
       stream->MediaStream();
   std::pair<std::string, std::string> stream_track_info;
   for (const auto& track : media_stream->GetAudioTracks()) {
-    if (local_stream_tracks_info_.find(track->id()) != local_stream_tracks_info_.end()) {
+    if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
       stream_track_info = std::make_pair(track->id(), media_stream->label());
       local_stream_tracks_info_.insert(stream_track_info);
     }
   }
   for (const auto& track : media_stream->GetVideoTracks()) {
-    if (local_stream_tracks_info_.find(track->id()) != local_stream_tracks_info_.end()) {
+    if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
       stream_track_info = std::make_pair(track->id(), media_stream->label());
       local_stream_tracks_info_.insert(stream_track_info);
     }
@@ -321,6 +318,14 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
         on_failure(std::move(e));
       }
   );
+}
+
+void P2PPeerConnectionChannel::SendUaInfo() {
+  Json::Value json;
+  json[kMessageTypeKey] = kChatUserAgent;
+  Json::Value ua = UaInfo();
+  json[kMessageDataKey] = ua;
+  SendSignalingMessage(json, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
@@ -1194,6 +1199,10 @@ void P2PPeerConnectionChannel::Send(
     const std::string& message,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  // First to send the user agent information to the remote peer
+  SendUaInfo();
+
+  // Try to send the text message
   Json::Value content;
   long message_id = message_seq_num_++;
   content[kTextMessageIdKey] = std::to_string(message_id);
