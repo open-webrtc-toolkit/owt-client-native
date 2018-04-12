@@ -196,6 +196,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::unordered_map<std::string, std::string> remote_track_source_info_;
   // Key is local media stream's track id, value is media stream's label.
   std::unordered_map<std::string, std::string> local_stream_tracks_info_;
+  std::mutex local_stream_tracks_info_mutex_;
   // Key is remote media stream's label, value is RemoteStream instance.
   std::unordered_map<std::string, std::shared_ptr<RemoteStream>> remote_streams_;
   // Streams need to be published.

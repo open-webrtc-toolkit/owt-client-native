@@ -188,14 +188,16 @@ void P2PPeerConnectionChannel::Publish(
       stream->MediaStream();
   std::pair<std::string, std::string> stream_track_info;
   for (const auto& track : media_stream->GetAudioTracks()) {
+    std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
     if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
-      stream_track_info = std::make_pair(track->id(), stream_label);
+      stream_track_info = std::make_pair(track->id(), media_stream->label());
       local_stream_tracks_info_.insert(stream_track_info);
     }
   }
   for (const auto& track : media_stream->GetVideoTracks()) {
+    std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
     if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
-      stream_track_info = std::make_pair(track->id(), stream_label);
+      stream_track_info = std::make_pair(track->id(), media_stream->label());
       local_stream_tracks_info_.insert(stream_track_info);
     }
   }
@@ -505,6 +507,7 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
   // list
   for (Json::Value::ArrayIndex idx = 0; idx != stream_tracks.size(); idx++) {
     std::string track_id = stream_tracks[idx].asString();
+    std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
     if (local_stream_tracks_info_.find(track_id) !=
         local_stream_tracks_info_.end()) {
       std::string stream_label = local_stream_tracks_info_[track_id];
