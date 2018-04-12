@@ -35,7 +35,7 @@ RTC_EXPORT
 @interface ICSClientConfiguration : NSObject
 
 /// Configuration for WebRTC connections.
-@property(nonatomic, strong, readonly) RTCConfiguration* rtcConfiguration;
+@property(nonatomic, strong) RTCConfiguration* rtcConfiguration;
 
 @end
 
