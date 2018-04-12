@@ -44,8 +44,6 @@ RTC_EXPORT
 RTC_EXPORT
 @interface ICSRemoteMixedStream : ICSRemoteStream
 
-- (NSArray*)supportedVideoFormats;
-
 /**
   @brief A property of mixed streams which distinguishes them from other mixed
   streams a conference room provides.

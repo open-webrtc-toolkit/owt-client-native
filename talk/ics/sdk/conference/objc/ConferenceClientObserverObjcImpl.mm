@@ -12,7 +12,7 @@
 #import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSConferenceErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
-#import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteMixedStream.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceClient+Internal.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"

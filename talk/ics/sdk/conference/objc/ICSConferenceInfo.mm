@@ -4,9 +4,10 @@
 
 #include "talk/ics/sdk/include/cpp/ics/base/commontypes.h"
 
+#import "talk/ics/sdk/base/objc/ICSRemoteStream+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceInfo+Private.h"
 #import "talk/ics/sdk/conference/objc/ICSConferenceParticipant+Private.h"
-#import "talk/ics/sdk/conference/objc/ICSRemoteMixedStream+Internal.h"
+#import "talk/ics/sdk/include/objc/ICS/ICSRemoteMixedStream.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 
 @implementation ICSConferenceInfo
