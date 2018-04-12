@@ -289,7 +289,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
 
       before_strip = after_strip;
       std::regex reg_fmtp_xx_map(
-          "a=fmtp:" + codec_value + ".*\\r\\n",
+          "a=fmtp:" + codec_value + " .*\\r\\n",
           std::regex_constants::icase);
       after_strip = std::regex_replace(before_strip, reg_fmtp_xx_map, "");
 
