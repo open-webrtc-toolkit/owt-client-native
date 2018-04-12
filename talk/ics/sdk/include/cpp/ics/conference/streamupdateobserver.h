@@ -19,6 +19,7 @@ public:
   */
   virtual void OnStreamMuteOrUnmute(const std::string& stream_id,
     ics::base::TrackKind track_kind, bool muted) {};
+  virtual void OnStreamRemoved(const std::string& stream_id) {};
 };
 /** @endcond */
 }

@@ -94,6 +94,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     void RemoveObserver(SubscriptionObserver& observer);
   private:
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
+    void OnStreamRemoved(const std::string& stream_id);
     std::string id_;
     std::string stream_id_;
     bool ended_;

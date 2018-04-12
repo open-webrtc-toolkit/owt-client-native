@@ -23,6 +23,9 @@ ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient>
   auto that = conference_client_.lock();
   if (that != nullptr)
     event_queue_ = that->event_queue_;
+  if (that != nullptr && !ended_) {
+    that->AddStreamUpdateObserver(*this);
+  }
 }
 
 ConferenceSubscription::~ConferenceSubscription() {
@@ -183,6 +186,12 @@ void ConferenceSubscription::OnStreamMuteOrUnmute(const std::string& stream_id,
   }
 }
 
+void ConferenceSubscription::OnStreamRemoved(const std::string& stream_id) {
+  if (ended_ || stream_id != stream_id_)
+    return;
+  Stop();
+}
+
 void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<SubscriptionObserver>>::iterator it =
@@ -196,11 +205,6 @@ void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
       return;
   }
   observers_.push_back(observer);
-  // Only when observer is added will we register stream update observer on conference client.
-  auto that = conference_client_.lock();
-  if (that != nullptr && !ended_) {
-    that->AddStreamUpdateObserver(*this);
-  }
 }
 
 void ConferenceSubscription::RemoveObserver(SubscriptionObserver& observer) {

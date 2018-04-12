@@ -38,7 +38,7 @@ H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), ma
     m_pmfxENC = nullptr;
     m_pEncSurfaces = nullptr;
     m_nFramesProcessed = 0;
-    encoder_thread_->SetName("MSDKVideoEncoderThread", NULL);
+    encoder_thread_->SetName("H264MSDKVideoEncoderThread", NULL);
     RTC_CHECK(encoder_thread_->Start()) << "Failed to start encoder thread for MSDK encoder";
 #ifdef ICS_DEBUG_H264_ENC
     output = fopen("out.h264", "wb");
@@ -58,6 +58,10 @@ H264VideoMFTEncoder::~H264VideoMFTEncoder() {
         m_pMFXAllocator = nullptr;
     }
     m_mfxSession_.Close();
+  if (encoder_thread_.get()) {
+    encoder_thread_->Stop();
+    encoder_thread_.reset();
+  }
 }
 
 int H264VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,

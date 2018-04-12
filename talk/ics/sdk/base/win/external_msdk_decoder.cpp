@@ -33,11 +33,18 @@ int32_t ExternalMSDKVideoDecoder::Release() {
     dev_manager_->Release();
     dev_manager_ = nullptr;
   }
-  WipeMfxBitstream(&m_mfxBS);
+  if (inited_)
+    WipeMfxBitstream(&m_mfxBS);
   m_vp8_plugin_.reset();
+  if (m_pmfxDEC) {
+    m_pmfxDEC->Close();
+  }
   MSDK_SAFE_DELETE(m_pmfxDEC);
   m_mfxSession.Close();
   MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
+  if (m_pMFXAllocator != nullptr) {
+    m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_mfxResponse);
+  }
   MSDK_SAFE_DELETE(m_pMFXAllocator);
   MSDK_SAFE_DELETE(m_pmfxAllocatorParams);
   inited_ = false;
@@ -52,7 +59,7 @@ ExternalMSDKVideoDecoder::ExternalMSDKVideoDecoder(webrtc::VideoCodecType type)
       width_(0),
       height_(0),
       decoder_thread_(new rtc::Thread()) {
-  decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
+  decoder_thread_->SetName("ExternalMSDKVideoDecoderThread", NULL);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
   d3d9_ = nullptr;
@@ -76,6 +83,7 @@ ExternalMSDKVideoDecoder::~ExternalMSDKVideoDecoder() {
   timestamps_.clear();
   if (decoder_thread_.get() != nullptr) {
     decoder_thread_->Stop();
+    decoder_thread_.reset();
   }
 }
 

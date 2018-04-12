@@ -40,6 +40,9 @@ int32_t H265MSDKVideoDecoder::Release() {
     m_hevc_plugin_.reset();
     MSDK_SAFE_DELETE(m_pmfxDEC);
     m_mfxSession.Close();
+    if (m_pMFXAllocator != nullptr) {
+      m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_mfxResponse);
+    }
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
     MSDK_SAFE_DELETE(m_pMFXAllocator);
     MSDK_SAFE_DELETE(m_pmfxAllocatorParams);
@@ -53,7 +56,7 @@ H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
       width_(0),
       height_(0),
       decoder_thread_(new rtc::Thread()) {
-  decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
+  decoder_thread_->SetName("H265MSDKVideoDecoderThread", NULL);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
   d3d9_ = nullptr;

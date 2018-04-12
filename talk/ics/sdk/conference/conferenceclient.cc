@@ -1378,6 +1378,9 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   added_stream_type_.erase(stream_type);
   current_conference_info_->TriggerOnStreamEnded(id);
   current_conference_info_->RemoveStreamById(id);
+  for (auto its = stream_update_observers_.begin(); its != stream_update_observers_.end(); ++its) {
+    (*its).get().OnStreamRemoved(id);
+  }
 }
 
 void ConferenceClient::TriggerOnStreamError(
