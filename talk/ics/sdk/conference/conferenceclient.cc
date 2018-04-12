@@ -625,7 +625,7 @@ void ConferenceClient::UpdateSubscription(
       sio::int_message::create(option.video.keyFrameInterval);
   }
   if (option.video.bitrateMultiplier != 0) {
-    std::string multiplier = "x" + std::to_string(option.video.bitrateMultiplier);
+    std::string multiplier = "x" + std::to_string(option.video.bitrateMultiplier).substr(0,3);
     video_params->get_map()["bitrate"] =
       sio::string_message::create(multiplier);
   }
