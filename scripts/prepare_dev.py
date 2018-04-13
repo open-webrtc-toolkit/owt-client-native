@@ -31,6 +31,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Remove-webrtc_overrides.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Turn-off-user-defined-warnings.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
 
 def main(argv):
   _patch()

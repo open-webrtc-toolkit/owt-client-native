@@ -1,0 +1,28 @@
+From c19b1c6a05ef860af1073770bbb0add2683fde77 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Fri, 13 Apr 2018 23:54:48 +0800
+Subject: [PATCH] Turn off user defined warnings.
+
+iOS builds broken after upgrading Xcode to 9.3  because of const call
+operator diagnostic.
+---
+ config/compiler/BUILD.gn | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 7888e2f85..9127c387b 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1288,6 +1288,9 @@ config("default_warnings") {
+ 
+         # TODO(hans): https://crbug.com/637306
+         "-Wno-address-of-packed-member",
++
++        # TODO(thakis ): https://crbug.com/683349
++        "-Wno-user-defined-warnings",
+       ]
+     }
+   }
+-- 
+2.16.1
+
