@@ -17,10 +17,10 @@ The Intel CS for WebRTC Client SDK for Windows should be built with Microsoft Vi
 
 The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK along with their headers:
 
-- woogeen-debug.lib - this library includes all the WebRTC features for debug usages.
-- woogeen-release.lib - this library includes all the WebRTC features for release usages.
+- ics-debug.lib - this library includes all the WebRTC features for debug usages.
+- ics-release.lib - this library includes all the WebRTC features for release usages.
 
-woogeen.lib references libraries in Windows SDK for DXVA support. Your application must statically link
+ics-debug.lib|ics-release references libraries in Windows SDK for DXVA support. Your application must statically link
 mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib and dxva2.lib to build. Depending on your signaling
 channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
 
@@ -50,19 +50,19 @@ VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder 
 Most of the 5th and 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
 Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
 
-Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC, is enabled via {@link woogeen.base.GlobalConfiguration GlobalConfiguration} API,
+Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC, is enabled via {@link ics.base.GlobalConfiguration GlobalConfiguration} API,
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # 8 Publish streams with customized frames {#section8}
 Customized video frames can be I420 frame from yuv file, or encoded H.264 frames.
 For raw YUV frame input, the customized video frame provider needs to implement its own frame generator extending from
-{@link woogeen.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
-{@link woogeen.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
+{@link ics.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
+{@link ics.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
 For encoded H.264 frame input, application is required to implement the customized encoder that inherits
-{@link woogeen.base.VideoEncoderInterface VideoEncoderInterface}, and is required to pass an AU to SDK according to the frame type requested per
-{@link woogeen.base.VideoEncoderInterface.EncodeOneFrame EncodeOneFrame} call.
+{@link ics.base.VideoEncoderInterface VideoEncoderInterface}, and is required to pass an AU to SDK according to the frame type requested per
+{@link ics.base.VideoEncoderInterface.EncodeOneFrame EncodeOneFrame} call.
 
-Customized audio frames provider should implement {@link woogeen.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16-bit little-endian PCM is supported. Please use {@link woogeen.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
+Customized audio frames provider should implement {@link ics.base.AudioFrameGeneratorInterface AudioFrameGeneratorInterface}. Currently, 16-bit little-endian PCM is supported. Please use {@link ics.base.GlobalConfiguration.SetCustomizedAudioInputEnabled GlobalConfiguration.SetCustomizedAudioInputEnabled} to enable customized audio input.
 
 # 9 Known issues {#section9}
 Here is a list of known issues:
