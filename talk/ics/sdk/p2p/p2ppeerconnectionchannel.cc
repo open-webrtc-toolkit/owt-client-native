@@ -161,9 +161,10 @@ void P2PPeerConnectionChannel::Publish(
   }
 
   RTC_CHECK(stream->MediaStream());
-  if (published_streams_.find(stream->MediaStream()->label()) !=
+  std::string stream_label = stream->MediaStream()->label();
+  if (published_streams_.find(stream_label) !=
           published_streams_.end() ||
-      publishing_streams_.find(stream->MediaStream()->label()) !=
+      publishing_streams_.find(stream_label) !=
           publishing_streams_.end()) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
@@ -188,13 +189,13 @@ void P2PPeerConnectionChannel::Publish(
   std::pair<std::string, std::string> stream_track_info;
   for (const auto& track : media_stream->GetAudioTracks()) {
     if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
-      stream_track_info = std::make_pair(track->id(), media_stream->label());
+      stream_track_info = std::make_pair(track->id(), stream_label);
       local_stream_tracks_info_.insert(stream_track_info);
     }
   }
   for (const auto& track : media_stream->GetVideoTracks()) {
     if (local_stream_tracks_info_.find(track->id()) == local_stream_tracks_info_.end()) {
-      stream_track_info = std::make_pair(track->id(), media_stream->label());
+      stream_track_info = std::make_pair(track->id(), stream_label);
       local_stream_tracks_info_.insert(stream_track_info);
     }
   }
@@ -205,13 +206,13 @@ void P2PPeerConnectionChannel::Publish(
   }
   {
     std::lock_guard<std::mutex> lock(published_streams_mutex_);
-    publishing_streams_.insert(stream->MediaStream()->label());
+    publishing_streams_.insert(stream_label);
   }
 
   LOG(LS_INFO) << "Session state: " << session_state_;
 
   if (on_success) {
-    event_queue_->PostTask([on_success] { on_success(); });
+    publish_callbacks_[stream_label] = on_success;
   }
 
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
@@ -419,8 +420,7 @@ void P2PPeerConnectionChannel::OnMessageStop() {
 
 void P2PPeerConnectionChannel::OnMessageDeny() {
   LOG(LS_INFO) << "Remote user denied connection";
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it = observers_.begin();
        it != observers_.end(); ++it) {
     (*it)->OnDenied(remote_id_);
   }
@@ -508,16 +508,26 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
     std::string track_id = stream_tracks[idx].asString();
     if (local_stream_tracks_info_.find(track_id) !=
         local_stream_tracks_info_.end()) {
+      std::string stream_label = local_stream_tracks_info_[track_id];
       std::lock_guard<std::mutex> lock(published_streams_mutex_);
-      auto it = published_streams_.find(local_stream_tracks_info_[track_id]);
-      if (it == published_streams_.end()) {
-        published_streams_.insert(local_stream_tracks_info_[track_id]);
-      }
+      auto it = published_streams_.find(stream_label);
+      if (it == published_streams_.end())
+        published_streams_.insert(stream_label);
       auto it_publishing =
-          publishing_streams_.find(local_stream_tracks_info_[track_id]);
-      if (it != publishing_streams_.end()) {
+          publishing_streams_.find(stream_label);
+      if (it_publishing != publishing_streams_.end())
         publishing_streams_.erase(it_publishing);
+
+      // Trigger the successful callback of publish
+      if (publish_callbacks_.find(stream_label) == publish_callbacks_.end()) {
+        LOG(LS_WARNING) << "No callback available for publishing stream with track id: "
+                        << track_id;
+        return;
       }
+
+      std::function<void()> callback = publish_callbacks_[stream_label];
+      event_queue_->PostTask([callback] { callback(); });
+      publish_callbacks_.erase(stream_label);
     }
   }
 }
