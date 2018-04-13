@@ -102,6 +102,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       is_creating_offer_(false),
       event_queue_(event_queue) {
   RTC_CHECK(signaling_sender_);
+  InitializePeerConnection();
 }
 
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
@@ -179,7 +180,6 @@ void P2PPeerConnectionChannel::Publish(
 
   // Initialization
   is_caller_ = true;
-  InitializePeerConnection();
 
   // The first signaling message of user agent data to remote peer
   SendUaInfo();
@@ -387,7 +387,6 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
     case kSessionStateReady:
     case kSessionStatePending:
       is_caller_ = false;
-      InitializePeerConnection();
       ChangeSessionState(kSessionStateMatched);
       break;
     default:
@@ -585,20 +584,22 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   bool no_audio_source = true;
+  Json::Value stream_tracks;
   for (const auto& track : stream->GetAudioTracks()) {
+    stream_tracks.append(track->id());
     if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
       no_audio_source = false;
-      break;
     }
   }
 
   bool no_video_source = true;
   std::string video_track_source;
   for (const auto& track : stream->GetVideoTracks()) {
+    stream_tracks.append(track->id());
     if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
       no_video_source = false;
-      video_track_source = remote_track_source_info_[track->id()];
-      break;
+      if (video_track_source.empty())
+        video_track_source = remote_track_source_info_[track->id()];
     }
   }
 
@@ -636,6 +637,12 @@ void P2PPeerConnectionChannel::OnAddStream(
   } else {
     LOG(LS_ERROR) << "Newly added stream is not recognized";
   }
+
+  // Send the ack for the newly added stream tracks
+  Json::Value json_tracks;
+  json_tracks[kMessageTypeKey] = kChatTracksAdded;
+  json_tracks[kMessageDataKey] = stream_tracks;
+  SendSignalingMessage(json_tracks, nullptr, nullptr);
 }
 
 void P2PPeerConnectionChannel::OnRemoveStream(
@@ -1210,6 +1217,7 @@ void P2PPeerConnectionChannel::Send(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   // First to send the user agent information to the remote peer
+  is_caller_ = true;
   SendUaInfo();
 
   // Try to send the text message
