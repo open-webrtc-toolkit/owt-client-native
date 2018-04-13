@@ -155,7 +155,7 @@ void PeerConnectionDependencyFactory::
   }
 
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      worker_thread, signaling_thread, nullptr,
+      worker_thread, signaling_thread, adm,
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
 

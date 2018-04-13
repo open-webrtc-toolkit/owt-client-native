@@ -71,8 +71,8 @@ CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
       _id(0),
       _lastProcessTime(rtc::TimeMillis()),
       _initialized(false),
-      _lastError(kAdmErrNone),
-      _outputAdm(nullptr) {
+      _lastError(kAdmErrNone) {
+  CreateOutputAdm();
 }
 
 // ----------------------------------------------------------------------------
@@ -156,10 +156,6 @@ int32_t CustomizedAudioDeviceModule::Init() {
 
   if (_ptrAudioDevice->Init() != AudioDeviceGeneric::InitStatus::OK) {
     return -1;
-  }
-
-  if (!_outputAdm) {
-    CreateOutputAdm();
   }
 
   if (!_outputAdm || _outputAdm->Init() == -1)
