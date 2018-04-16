@@ -217,6 +217,10 @@ void P2PPeerConnectionChannel::Publish(
     publish_callbacks_[stream_label] = on_success;
   }
 
+  if (on_failure) {
+    failure_callbacks_.push_back(on_failure);
+  }
+
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();
 }
@@ -397,35 +401,44 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
 }
 
 void P2PPeerConnectionChannel::OnMessageStop() {
-  switch (session_state_) {
-    case kSessionStateConnecting:
-    case kSessionStateConnected:
-      pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                       nullptr);
-      ChangeSessionState(kSessionStateReady);
-      break;
-    case kSessionStatePending:
-    case kSessionStateMatched:
-      ChangeSessionState(kSessionStateReady);
-      // Maybe we can add another event like "cancel" for such kind scenario.
-      // For now, we trigger OnStop to indicate the connection has been
-      // canceled, and session is stopped.
-      TriggerOnStopped();
-      break;
-    default:
-      LOG(LS_WARNING)
-          << "Received stop event on unexpected state. Current state: "
-          << session_state_;
+  LOG(LS_INFO) << "Remote user stopped.";
+  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+       it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+    event_queue_->PostTask([failure_callback] {
+     std::unique_ptr<Exception> e(
+         new Exception(ExceptionType::kP2PClientInvalidArgument,
+                       "Stop message received."));
+     failure_callback(std::move(e));
+    });
   }
+  failure_callbacks_.clear();
+
+  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
+                   nullptr);
+  ChangeSessionState(kSessionStateReady);
+  TriggerOnStopped();
 }
 
 void P2PPeerConnectionChannel::OnMessageDeny() {
-  LOG(LS_INFO) << "Remote user denied connection";
+  LOG(LS_INFO) << "Remote user denied connection.";
+  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+       it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+    event_queue_->PostTask([failure_callback] {
+     std::unique_ptr<Exception> e(
+         new Exception(ExceptionType::kP2PClientInvalidArgument,
+                       "Deny message received."));
+     failure_callback(std::move(e));
+    });
+  }
+  failure_callbacks_.clear();
+
+  ChangeSessionState(kSessionStateReady);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it = observers_.begin();
        it != observers_.end(); ++it) {
     (*it)->OnDenied(remote_id_);
   }
-  ChangeSessionState(kSessionStateReady);
 }
 
 void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
@@ -1247,6 +1260,10 @@ void P2PPeerConnectionChannel::Send(
   if (on_success) {
     std::string id_value = std::to_string(message_id);
     message_callbacks_[id_value] = on_success;
+  }
+
+  if (on_failure) {
+    failure_callbacks_.push_back(on_failure);
   }
 }
 
