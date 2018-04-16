@@ -476,6 +476,10 @@ static bool SubOptionAllowed(const SubscribeOptions& subscribe_options,
         result = true;
       }
     }
+
+    if (subscribe_options.video.codecs.size() > 0 && (subscribe_options.video.codecs[0].name == ics::base::VideoCodec::kH265)) {
+      return false;
+    }
     return result;
 }
 
