@@ -362,7 +362,7 @@ static std::unordered_map<ICSVideoSourceInfo,const ics::base::VideoSourceInfo>
 @implementation ICSTrackKindConverter
 
 + (ics::base::TrackKind)cppTrackKindForObjcTrackKind:(ICSTrackKind)kind {
-  if (kind == (ICSTrackKindAudio & ICSTrackKindVideo)) {
+  if (kind == (ICSTrackKindAudio | ICSTrackKindVideo)) {
     return ics::base::TrackKind::kAudioAndVideo;
   }
   if (kind == ICSTrackKindAudio) {
@@ -380,7 +380,7 @@ static std::unordered_map<ICSVideoSourceInfo,const ics::base::VideoSourceInfo>
 + (ICSTrackKind)objcTrackKindForCppTrackKind:(ics::base::TrackKind)kind {
   switch (kind) {
     case ics::base::TrackKind::kAudioAndVideo:
-      return ICSTrackKindAudio & ICSTrackKindVideo;
+      return ICSTrackKindAudio | ICSTrackKindVideo;
     case ics::base::TrackKind::kAudio:
       return ICSTrackKindAudio;
     case ics::base::TrackKind::kVideo:
