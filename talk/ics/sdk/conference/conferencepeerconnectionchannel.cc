@@ -760,9 +760,6 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
 
   if (message->get_flag() == sio::message::flag_string) {
     if (message->get_string() == "success") {
-      // TODO(jianlin): remove this mix logic.
-      if (published_stream_ != nullptr)
-        signaling_channel_->SendStreamControlMessage(GetSessionId(), "common", "mix", nullptr, nullptr);
       std::weak_ptr<ConferencePeerConnectionChannel> weak_this =
             shared_from_this();
       if (publish_success_callback_) {
