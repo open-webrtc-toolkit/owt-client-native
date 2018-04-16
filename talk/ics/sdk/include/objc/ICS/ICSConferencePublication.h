@@ -71,6 +71,7 @@ RTC_EXPORT
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
 
+@property(nonatomic, strong, readonly) NSString* publicationId;
 @property(nonatomic, weak) id<ICSConferencePublicationDelegate> delegate;
 
 @end

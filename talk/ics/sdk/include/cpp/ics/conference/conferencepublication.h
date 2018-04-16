@@ -82,7 +82,7 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     /// Stop current publication.
     void Stop() override;
     /// Check if the publication is stopped or not
-    bool Stopped() { return ended_; }
+    bool Ended() const { return ended_; }
     /// Register an observer onto this conference publication.
     void AddObserver(PublicationObserver& observer) override;
     /// Unregister an observer from this conference publication.

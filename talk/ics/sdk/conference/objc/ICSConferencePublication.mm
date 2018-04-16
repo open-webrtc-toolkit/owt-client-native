@@ -105,6 +105,10 @@
       });
 }
 
+- (NSString*)publicationId {
+  return [NSString stringForStdString:_nativePublication->Id()];
+}
+
 -(void)setDelegate:(id<ICSConferencePublicationDelegate>)delegate{
   _observer = std::unique_ptr<
       ics::conference::ConferencePublicationObserverObjcImpl,

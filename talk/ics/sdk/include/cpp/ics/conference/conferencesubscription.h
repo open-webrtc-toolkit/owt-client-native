@@ -80,7 +80,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     /// Stop current publication.
     void Stop();
     /// If the Subscription is stopped or not.
-    bool Stopped() { return ended_; }
+    bool Ended() { return ended_; }
     /// Get the subscription ID
     std::string Id() const { return id_; }
     /// Update the subscription with new encoding settings.

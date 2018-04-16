@@ -53,7 +53,7 @@ void ConferenceSubscription::Mute(
     that->Mute(id_, track_kind,
                [on_success, weak_this, track_kind]() {
                  auto that_cs = weak_this.lock();
-                 if (!that_cs || that_cs->Stopped())
+                 if (!that_cs || that_cs->Ended())
                    return;
                  for (auto its = that_cs->observers_.begin();
                       its != that_cs->observers_.end(); ++its) {
@@ -86,7 +86,7 @@ void ConferenceSubscription::Unmute(
      that->Unmute(id_, track_kind,
        [on_success, weak_this, track_kind]() {
        auto that_cs = weak_this.lock();
-       if (!that_cs || that_cs->Stopped())
+       if (!that_cs || that_cs->Ended())
          return;
        for (auto its = that_cs->observers_.begin();
             its != that_cs->observers_.end(); ++its) {

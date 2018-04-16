@@ -130,6 +130,10 @@
       });
 }
 
+- (NSString*)subscriptionId {
+  return [NSString stringForStdString:_nativeSubscription->Id()];
+}
+
 -(void)setDelegate:(id<ICSConferenceSubscriptionDelegate>)delegate{
   _observer = std::unique_ptr<
       ics::conference::ConferenceSubscriptionObserverObjcImpl,

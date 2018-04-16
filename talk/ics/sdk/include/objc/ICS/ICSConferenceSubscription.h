@@ -73,6 +73,7 @@ RTC_EXPORT
            onSuccess:(nullable void (^)())onSuccess
            onFailure:(nullable void (^)(NSError*))onFailure;
 
+@property(nonatomic, strong, readonly) NSString* subscriptionId;
 @property(nonatomic, weak) id<ICSConferenceSubscriptionDelegate> delegate;
 
 @end
