@@ -144,6 +144,7 @@ class ConferenceInfo {
       return participants_;
     }
 
+    std::string Id() const { return id_; }
    protected:
     // Add participant.
     void AddParticipant(std::shared_ptr<Participant> participant);

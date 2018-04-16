@@ -61,6 +61,8 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
 
     virtual ~ConferencePublication();
 
+    /// Return the ID of the publication.
+    std::string Id() const { return id_; }
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
               std::function<void()> on_success,

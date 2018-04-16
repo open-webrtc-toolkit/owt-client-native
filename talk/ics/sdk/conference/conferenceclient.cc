@@ -265,8 +265,14 @@ void ConferenceClient::Join(
 
     auto room_info = info->get_map()["room"];
     if (room_info == nullptr || room_info->get_flag() != sio::message::flag_object) {
-        RTC_DCHECK(false);
-        return;
+      RTC_DCHECK(false);
+      return;
+    }
+    if (room_info->get_map()["id"]->get_flag() != sio::message::flag_string) {
+      RTC_DCHECK(false);
+      return;
+    } else {
+      current_conference_info_->id_ = room_info->get_map()["id"]->get_string();
     }
     // Trigger OnUserJoin for existed users, and also fill in the ConferenceInfo.
     if (room_info->get_map()["participants"]->get_flag() != sio::message::flag_array) {
