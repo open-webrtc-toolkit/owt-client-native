@@ -943,8 +943,7 @@ void P2PPeerConnectionChannel::Unpublish(
   if (on_success) {
     event_queue_->PostTask([on_success] { on_success(); });
   }
-  if (session_state_ == SessionState::kSessionStateConnected &&
-      SignalingState() == PeerConnectionInterface::SignalingState::kStable)
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();
 }
 
