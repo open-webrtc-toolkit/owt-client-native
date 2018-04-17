@@ -186,6 +186,10 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
                senderId);
     return;
   }
+  if ([message isEqualToString:@"{\"type\":\"chat-closed\"}"] &&
+      [_peerConnectionChannels objectForKey:senderId] == nil) {
+    return;
+  }
   ICSP2PPeerConnectionChannel* pcChannel =
       [self getPeerConnectionChannel:senderId];
   [pcChannel onIncomingSignalingMessage:message];
