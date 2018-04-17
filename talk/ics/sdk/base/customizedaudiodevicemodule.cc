@@ -111,10 +111,6 @@ CustomizedAudioDeviceModule::~CustomizedAudioDeviceModule() {
     delete _ptrAudioDevice;
     _ptrAudioDevice = NULL;
   }
-
-  delete &_critSect;
-  delete &_critSectEventCb;
-  delete &_critSectAudioCb;
 }
 
 // ============================================================================
