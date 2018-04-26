@@ -1,14 +1,14 @@
-From 306059dcc636fc81aa72f1909852634f6a46be40 Mon Sep 17 00:00:00 2001
-From: Jianjun Zhu <jianjun.zhu@intel.com>
-Date: Fri, 1 Dec 2017 13:16:24 +0800
-Subject: [PATCH 1/2] Use OpenSSL for usrsctp.
+From daf293db6a474cd3f0dd43b56e7196a6a13255da Mon Sep 17 00:00:00 2001
+From: Qiu Jianlin <jianlin.qiu@intel.com>
+Date: Wed, 25 Apr 2018 09:30:34 +0800
+Subject: [PATCH] Use OpenSSL for usrsctp
 
 ---
  usrsctp/BUILD.gn | 11 ++++++++---
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/usrsctp/BUILD.gn b/usrsctp/BUILD.gn
-index e505d33..583c8ff 100644
+index 94f26786e1d..98a680dd401 100644
 --- a/usrsctp/BUILD.gn
 +++ b/usrsctp/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -19,15 +19,15 @@ index e505d33..583c8ff 100644
  
  config("usrsctp_config") {
    include_dirs = [
-@@ -130,7 +131,11 @@ static_library("usrsctp") {
-     defines += [ "NON_WINDOWS_DEFINE" ]
+@@ -140,7 +141,11 @@ static_library("usrsctp") {
+   if (is_fuchsia) {
+     defines += [ "__Userspace_os_Fuchsia" ]
    }
- 
 -  deps = [
 -    "//third_party/boringssl",
 -  ]
 +  if (woogeen_use_openssl) {
-+    configs += [ "//build_overrides/ssl:external_openssl" ]
++     configs += [ "//build_overrides/ssl:external_openssl" ]
 +  } else {
 +    deps = [
 +      "//third_party/boringssl",
@@ -35,5 +35,5 @@ index e505d33..583c8ff 100644
 +  }
  }
 -- 
-2.4.4
+2.16.2.windows.1
 

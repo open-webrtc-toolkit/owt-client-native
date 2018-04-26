@@ -74,7 +74,7 @@ if (!is_ios) {
       ":ics_sdk_p2p",
       "//third_party/protobuf:protobuf_lite",
       "//third_party/webrtc",
-      "//third_party/webrtc/api:libjingle_peerconnection",
+      "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
     complete_static_lib = true
   }
