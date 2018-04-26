@@ -9,6 +9,7 @@
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 std::vector<std::string> DeviceUtils::VideoCapturerIds() {
@@ -16,7 +17,7 @@ std::vector<std::string> DeviceUtils::VideoCapturerIds() {
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
-    LOG(LS_ERROR) << "CreateDeviceInfo failed";
+    RTC_LOG(LS_ERROR) << "CreateDeviceInfo failed";
   } else {
     int num_devices = info->NumberOfDevices();
     for (int i = 0; i < num_devices; ++i) {
@@ -38,13 +39,13 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
-    LOG(LS_ERROR) << "CreateDeviceInfo failed";
+    RTC_LOG(LS_ERROR) << "CreateDeviceInfo failed";
   } else {
     for (int32_t i = 0; i < info->NumberOfCapabilities(id.c_str()); i++) {
       if (info->GetCapability(id.c_str(), i, capability) == 0) {
         resolutions.push_back(Resolution(capability.width, capability.height));
       } else {
-        LOG(LS_WARNING) << "Failed to get capability.";
+        RTC_LOG(LS_WARNING) << "Failed to get capability.";
       }
     }
     // Try to get capabilities by device name if getting capabilities by ID is
@@ -72,7 +73,7 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
             resolutions.push_back(
                 Resolution(capability.width, capability.height));
           } else {
-            LOG(LS_WARNING) << "Failed to get capability.";
+            RTC_LOG(LS_WARNING) << "Failed to get capability.";
           }
         }
       }

@@ -13,6 +13,7 @@
 #include "plugin_utils.h"
 #include "plugin_loader.h"
 
+using namespace rtc;
 #define MSDK_BS_INIT_SIZE (1024 * 1024)
 
 enum { kMSDKCodecPollMs = 10 };
@@ -53,12 +54,10 @@ int32_t ExternalMSDKVideoDecoder::Release() {
 
 ExternalMSDKVideoDecoder::ExternalMSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
-
+      decoder_thread_(new rtc::Thread()),
       inited_(false),
-      d3d9_device_created_(false),
       width_(0),
-      height_(0),
-      decoder_thread_(new rtc::Thread()) {
+      height_(0) {
   decoder_thread_->SetName("ExternalMSDKVideoDecoderThread", NULL);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
@@ -99,19 +98,19 @@ bool ExternalMSDKVideoDecoder::CreateD3DDeviceManager() {
   hr = DXVA2CreateDirect3DDeviceManager9(&dev_manager_reset_token_,
                                          &dev_manager_);
   if (FAILED(hr)) {
-    LOG(LS_ERROR) << "Failed to create D3D device manager";
+    RTC_LOG(LS_ERROR) << "Failed to create D3D device manager";
     return false;
   }
   hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9_);
   if (FAILED(hr) || (d3d9_ == NULL)) {
-    LOG(LS_ERROR) << "Failed to create D3D9";
+    RTC_LOG(LS_ERROR) << "Failed to create D3D9";
     return false;
   }
 
   D3DPRESENT_PARAMETERS present_params = {0};
   HWND video_window = GetDesktopWindow();
   if (video_window == NULL) {
-    LOG(LS_ERROR) << "Failed to get desktop window";
+    RTC_LOG(LS_ERROR) << "Failed to get desktop window";
   }
   RECT r;
   GetClientRect((HWND)video_window, &r);
@@ -136,18 +135,18 @@ bool ExternalMSDKVideoDecoder::CreateD3DDeviceManager() {
                              &present_params, NULL, &device_);
 
   if (FAILED(hr)) {
-    LOG(LS_ERROR) << "Failed to create d3d9 device";
+    RTC_LOG(LS_ERROR) << "Failed to create d3d9 device";
     return false;
   }
 
   hr = dev_manager_->ResetDevice(device_, dev_manager_reset_token_);
   if (FAILED(hr)) {
-    LOG(LS_ERROR) << "Failed to set device to device manager";
+    RTC_LOG(LS_ERROR) << "Failed to set device to device manager";
     return false;
   }
   hr = device_->CreateQuery(D3DQUERYTYPE_EVENT, &query_);
   if (FAILED(hr)) {
-    LOG(LS_ERROR) << "Failed to create query";
+    RTC_LOG(LS_ERROR) << "Failed to create query";
     return false;
   }
   hr = query_->Issue(D3DISSUE_END);
@@ -158,9 +157,9 @@ bool ExternalMSDKVideoDecoder::CreateD3DDeviceManager() {
 int32_t ExternalMSDKVideoDecoder::InitDecode(
     const webrtc::VideoCodec* codecSettings,
     int32_t numberOfCores) {
-  LOG(LS_ERROR) << "InitDecode enter";
+  RTC_LOG(LS_ERROR) << "InitDecode enter";
   if (codecSettings == NULL) {
-    LOG(LS_ERROR) << "NULL codec settings";
+    RTC_LOG(LS_ERROR) << "NULL codec settings";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   RTC_CHECK(codecSettings->codecType == codecType_)
@@ -178,8 +177,6 @@ int32_t ExternalMSDKVideoDecoder::InitDecode(
 }
 
 int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
-  LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
-
   // Set m_video_param_extracted flag to false to make sure the delayed
   // DecoderHeader call will happen after Init.
   m_video_param_extracted = false;
@@ -262,7 +259,7 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
     // We're using D3D9 surface, so need to explicitly specify the D3D allocator
     m_pMFXAllocator = new D3DFrameAllocator;
     if (nullptr == m_pMFXAllocator) {
-      LOG(LS_ERROR) << "Failed to allocate allocator for the session.";
+      RTC_LOG(LS_ERROR) << "Failed to allocate allocator for the session.";
       delete m_pmfxDEC;
       m_pmfxDEC = nullptr;
       WipeMfxBitstream(&m_mfxBS);
@@ -272,7 +269,7 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
 
     D3DAllocatorParams* pd3dAllocParams = new D3DAllocatorParams;
     if (nullptr == pd3dAllocParams) {
-      LOG(LS_ERROR) << "Failed to allocate allocator params for the session.";
+      RTC_LOG(LS_ERROR) << "Failed to allocate allocator params for the session.";
       delete m_pmfxDEC;
       m_pmfxDEC = nullptr;
       WipeMfxBitstream(&m_mfxBS);
@@ -287,7 +284,7 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
     // Set allocator to the session.
     sts = m_mfxSession.SetFrameAllocator(m_pMFXAllocator);
     if (MFX_ERR_NONE != sts) {
-      LOG(LS_ERROR) << "FAILED to set frame allocator.";
+      RTC_LOG(LS_ERROR) << "FAILED to set frame allocator.";
       delete m_pmfxDEC;
       m_pmfxDEC = nullptr;
       WipeMfxBitstream(&m_mfxBS);
@@ -300,7 +297,7 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
     // Initialize the allocator
     sts = m_pMFXAllocator->Init(pd3dAllocParams);
     if (MFX_ERR_NONE != sts) {
-      LOG(LS_ERROR) << "Failed to Init the allocator";
+      RTC_LOG(LS_ERROR) << "Failed to Init the allocator";
       delete m_pmfxDEC;
       m_pmfxDEC = nullptr;
       WipeMfxBitstream(&m_mfxBS);
@@ -377,14 +374,14 @@ int32_t ExternalMSDKVideoDecoder::Decode(
 
       if ((request.NumFrameSuggested < m_mfxVideoParams.AsyncDepth) &&
           (impl & MFX_IMPL_HARDWARE_ANY)) {
-        LOG(LS_ERROR) << "Invalid num suggested.";
+        RTC_LOG(LS_ERROR) << "Invalid num suggested.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
       nSurfNum = MSDK_MAX(request.NumFrameSuggested, 1);
       sts = m_pMFXAllocator->Alloc(m_pMFXAllocator->pthis, &request,
                                    &m_mfxResponse);
       if (MFX_ERR_NONE != sts) {
-        LOG(LS_ERROR) << "Failed on allocator's alloc method";
+        RTC_LOG(LS_ERROR) << "Failed on allocator's alloc method";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
       nSurfNum = m_mfxResponse.NumFrameActual;
@@ -393,7 +390,7 @@ int32_t ExternalMSDKVideoDecoder::Decode(
       // sizeof(msdkFrameSurface));
       m_pInputSurfaces = new mfxFrameSurface1[nSurfNum];
       if (nullptr == m_pInputSurfaces) {
-        LOG(LS_ERROR) << "Failed allocating input surfaces.";
+        RTC_LOG(LS_ERROR) << "Failed allocating input surfaces.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
@@ -408,7 +405,7 @@ int32_t ExternalMSDKVideoDecoder::Decode(
 
       sts = m_pmfxDEC->Init(&m_mfxVideoParams);
       if (MFX_ERR_NONE != sts) {
-        LOG(LS_ERROR) << "Failed to init the decoder.";
+        RTC_LOG(LS_ERROR) << "Failed to init the decoder.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
@@ -439,7 +436,7 @@ int32_t ExternalMSDKVideoDecoder::Decode(
     if (moreIdx != MSDK_INVALID_SURF_IDX) {
       moreFreeSurf = &m_pInputSurfaces[moreIdx];
     } else {
-      LOG(LS_ERROR) << "No surface available for decoding";
+      RTC_LOG(LS_ERROR) << "No surface available for decoding";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
@@ -456,7 +453,7 @@ int32_t ExternalMSDKVideoDecoder::Decode(
         if (!device_opened) {
           hr = dev_manager_->OpenDeviceHandle(&hHandle);
           if (FAILED(hr)) {
-            LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
+            RTC_LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
             return WEBRTC_VIDEO_CODEC_ERROR;
           }
           device_opened = true;

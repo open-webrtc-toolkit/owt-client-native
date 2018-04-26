@@ -4,8 +4,6 @@
 
 #include <algorithm>
 #include <string>
-
-
 #include "webrtc/api/statstypes.h"
 #include "webrtc/rtc_base/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
@@ -18,7 +16,7 @@
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
-
+using namespace rtc;
 namespace ics {
 namespace conference {
 
@@ -172,7 +170,7 @@ void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
       return &observer == &(o.get());
   });
   if (it != observers_.end()) {
-      LOG(LS_INFO) << "Adding duplicate observer.";
+      RTC_LOG(LS_INFO) << "Adding duplicate observer.";
       return;
   }
   observers_.push_back(observer);
@@ -196,7 +194,7 @@ void ConferenceClient::AddStreamUpdateObserver(ConferenceStreamUpdateObserver& o
     return &observer == &(o.get());
   });
   if (it != stream_update_observers_.end()) {
-    LOG(LS_INFO) << "Adding duplicate observer.";
+    RTC_LOG(LS_INFO) << "Adding duplicate observer.";
     return;
   }
   stream_update_observers_.push_back(observer);
@@ -230,7 +228,7 @@ void ConferenceClient::Join(
   }
   std::string token_base64(token);
   if (!StringUtils::IsBase64EncodedString(token)) {
-    LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
+    RTC_LOG(LS_WARNING) << "Passing token with Base64 decoded is deprecated, "
                        "please pass it without modification.";
     token_base64 = rtc::Base64::Encode(token);
   }
@@ -242,7 +240,7 @@ void ConferenceClient::Join(
     if (info->get_map()["id"]->get_flag() != sio::message::flag_string ||
         info->get_map()["user"]->get_flag() != sio::message::flag_string ||
         info->get_map()["role"]->get_flag() != sio::message::flag_string) {
-      LOG(LS_ERROR) << "Room info doesn't contain participant's ID/uerID/role.";
+      RTC_LOG(LS_ERROR) << "Room info doesn't contain participant's ID/uerID/role.";
       if (on_failure) {
         event_queue_->PostTask([on_failure]() {
           std::unique_ptr<Exception> e(
@@ -276,7 +274,7 @@ void ConferenceClient::Join(
     }
     // Trigger OnUserJoin for existed users, and also fill in the ConferenceInfo.
     if (room_info->get_map()["participants"]->get_flag() != sio::message::flag_array) {
-      LOG(LS_WARNING) << "Room info doesn't contain valid users.";
+      RTC_LOG(LS_WARNING) << "Room info doesn't contain valid users.";
     } else {
       auto users = room_info->get_map()["participants"]->get_vector();
       // Get current user's ID and trigger |on_success|. Make sure |on_success|
@@ -305,11 +303,11 @@ void ConferenceClient::Join(
 
     // Trigger OnStreamAdded for existed remote streams, and also fill in the ConferenceInfo.
     if (room_info->get_map()["streams"]->get_flag() != sio::message::flag_array) {
-      LOG(LS_WARNING) << "Room info doesn't contain valid streams.";
+      RTC_LOG(LS_WARNING) << "Room info doesn't contain valid streams.";
     } else {
       auto streams = room_info->get_map()["streams"]->get_vector();
       for (auto it = streams.begin(); it != streams.end(); ++it) {
-        LOG(LS_INFO) << "Find streams in the conference.";
+        RTC_LOG(LS_INFO) << "Find streams in the conference.";
         TriggerOnStreamAdded(*it, true);
       }
     }
@@ -336,16 +334,16 @@ void ConferenceClient::Publish(
     std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
+    RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
   if (!CheckNullPointer((uintptr_t)(stream->MediaStream()), on_failure)) {
-    LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
+    RTC_LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
   }
   if (stream->MediaStream()->GetAudioTracks().size() == 0 &&
     stream->MediaStream()->GetVideoTracks().size() == 0) {
-    LOG(LS_ERROR) << "Cannot publish a local stream without audio & video";
+    RTC_LOG(LS_ERROR) << "Cannot publish a local stream without audio & video";
     std::string failure_message(
       "Publishing local stream with neither audio nor video.");
     if (on_failure != nullptr) {
@@ -358,7 +356,7 @@ void ConferenceClient::Publish(
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
-      LOG(LS_ERROR) << "Signaling channel disconnected.";
+      RTC_LOG(LS_ERROR) << "Signaling channel disconnected.";
       return;
   }
 
@@ -407,13 +405,13 @@ void ConferenceClient::Subscribe(
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure )) {
-    LOG(LS_ERROR) << "Local stream cannot be nullptr.";
+    RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  LOG(LS_INFO) << "Stream ID: "<<stream->Id();
+  RTC_LOG(LS_INFO) << "Stream ID: "<<stream->Id();
   if (added_stream_type_.find(stream->Id()) == added_stream_type_.end()) {
     std::string failure_message(
         "Subscribing an invalid stream. Please check whether this stream is "
@@ -753,7 +751,7 @@ void ConferenceClient::GetConnectionStats(
         on_failure(std::move(e));
       });
     }
-    LOG(LS_WARNING)
+    RTC_LOG(LS_WARNING)
         << "Tried to get connection statistics from unknown stream.";
     return;
   }
@@ -776,7 +774,7 @@ void ConferenceClient::GetStats(
         on_failure(std::move(e));
       });
     }
-    LOG(LS_WARNING)
+    RTC_LOG(LS_WARNING)
         << "Tried to get connection statistics from unknown stream.";
     return;
   }
@@ -789,7 +787,7 @@ void ConferenceClient::OnStreamAdded(sio::message::ptr stream) {
 
 void ConferenceClient::OnCustomMessage(std::string& from,
                                        std::string& message) {
-  LOG(LS_INFO) << "ConferenceClient OnCustomMessage";
+  RTC_LOG(LS_INFO) << "ConferenceClient OnCustomMessage";
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnMessageReceived(from, message);
   }
@@ -808,13 +806,13 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
        soac_status->get_string() != "ready" &&
        soac_status->get_string() != "error")) {
     RTC_NOTREACHED();
-    LOG(LS_WARNING) << "Ignore signaling status except soac/ready/error.";
+    RTC_LOG(LS_WARNING) << "Ignore signaling status except soac/ready/error.";
     return;
   }
 
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   if (pcc == nullptr) {
-    LOG(LS_WARNING) << "Received signaling message from unknown sender.";
+    RTC_LOG(LS_WARNING) << "Received signaling message from unknown sender.";
     return;
   }
 
@@ -831,7 +829,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   auto soac_data = message->get_map()["data"];
   if (soac_data == nullptr || soac_data->get_flag() != sio::message::flag_object) {
     RTC_NOTREACHED();
-    LOG(LS_WARNING) << "Received signaling message without offer, answer or candidate.";
+    RTC_LOG(LS_WARNING) << "Received signaling message without offer, answer or candidate.";
     return;
   }
 
@@ -839,7 +837,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
 }
 
 void ConferenceClient::OnStreamRemoved(sio::message::ptr stream) {
-  LOG(LS_INFO) << "Stream removed.";
+  RTC_LOG(LS_INFO) << "Stream removed.";
   TriggerOnStreamRemoved(stream);
 }
 
@@ -856,7 +854,7 @@ void ConferenceClient::OnStreamError(sio::message::ptr stream) {
     return;
   }
   const std::string stream_id(stream->get_map()["streamId"]->get_string());
-  LOG(LS_ERROR) << "MCU reports connection failed for stream " << stream_id;
+  RTC_LOG(LS_ERROR) << "MCU reports connection failed for stream " << stream_id;
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   if (pcc == nullptr) {
     RTC_DCHECK(false);
@@ -965,13 +963,13 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
   auto media_info = stream_info->get_map()["media"];
   if (media_info == nullptr || media_info->get_flag() != sio::message::flag_object) {
     RTC_DCHECK(false);
-    LOG(LS_ERROR) << "Invalid media info from stream " << id
+    RTC_LOG(LS_ERROR) << "Invalid media info from stream " << id
                   << ", this stream will be ignored.";
     return;
   }
   auto type = stream_info->get_map()["type"]->get_string();
   if (type != "mixed" && type != "forward") {
-    LOG(LS_ERROR) << "Invalid stream type.";
+    RTC_LOG(LS_ERROR) << "Invalid stream type.";
     return;
   } else if (type == "mixed") {
     // Get the view info for mixed stream.
@@ -986,7 +984,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     // Get the stream attributes and owner id;
     auto pub_info = stream_info->get_map()["info"];
     if (pub_info == nullptr || pub_info->get_flag() != sio::message::flag_object) {
-      LOG(LS_ERROR) << "Invalid publication info from stream " << id
+      RTC_LOG(LS_ERROR) << "Invalid publication info from stream " << id
                    << ", this stream will be ignored";
       return;
     }
@@ -997,7 +995,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
   PublicationSettings publication_settings;
   auto audio_info = media_info->get_map()["audio"];
   if (audio_info == nullptr || audio_info->get_flag() != sio::message::flag_object) {
-    LOG(LS_INFO) << "No audio in stream " << id;
+    RTC_LOG(LS_INFO) << "No audio in stream " << id;
   } else {
     // Parse the VideoInfo structure.
     auto audio_source_obj = audio_info->get_map()["source"];
@@ -1006,7 +1004,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     }
     auto audio_format_obj = audio_info->get_map()["format"];
     if (audio_format_obj == nullptr || audio_format_obj->get_flag() != sio::message::flag_object) {
-      LOG(LS_ERROR) << "Invalid audio format info in media info";
+      RTC_LOG(LS_ERROR) << "Invalid audio format info in media info";
       return;
     }
     // Main audio capability
@@ -1017,7 +1015,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     auto channel_num_obj = audio_format_obj->get_map()["channelNum"];
 
     if (codec_obj == nullptr || codec_obj->get_flag() != sio::message::flag_string) {
-      LOG(LS_ERROR) << "codec name in optional audio info invalid.";
+      RTC_LOG(LS_ERROR) << "codec name in optional audio info invalid.";
       return;
     }
     has_audio = true;
@@ -1034,11 +1032,11 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     // Optional audio capabilities
     auto audio_format_obj_optional = audio_info->get_map()["optional"];
     if (audio_format_obj_optional == nullptr || audio_format_obj_optional->get_flag() != sio::message::flag_object) {
-      LOG(LS_INFO) << "No optional audio info available";
+      RTC_LOG(LS_INFO) << "No optional audio info available";
     } else {
       auto audio_format_optional = audio_format_obj_optional->get_map()["format"];
       if (audio_format_optional == nullptr || audio_format_optional->get_flag() != sio::message::flag_array) {
-        LOG(LS_INFO) << "Invalid optional audio info";
+        RTC_LOG(LS_INFO) << "Invalid optional audio info";
       } else {
         auto formats = audio_format_optional->get_vector();
         for (auto it = formats.begin(); it != formats.end(); ++it) {
@@ -1048,7 +1046,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
           auto optional_channel_num_obj = (*it)->get_map()["channelNum"];
 
           if (optional_codec_obj == nullptr || optional_codec_obj->get_flag() != sio::message::flag_string) {
-            LOG(LS_ERROR) << "codec name in optional audio info invalid.";
+            RTC_LOG(LS_ERROR) << "codec name in optional audio info invalid.";
             return;
           }
           codec = optional_codec_obj->get_string();
@@ -1070,7 +1068,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
 
   auto video_info = media_info->get_map()["video"];
   if (video_info == nullptr || video_info->get_flag() != sio::message::flag_object) {
-    LOG(LS_INFO) << "No audio info in the media info";
+    RTC_LOG(LS_INFO) << "No audio info in the media info";
   } else {
     // Parse the VideoInfo structure.
     auto video_source_obj = video_info->get_map()["source"];
@@ -1079,7 +1077,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     }
     auto video_format_obj = video_info->get_map()["format"];
     if (video_format_obj == nullptr || video_format_obj->get_flag() != sio::message::flag_object) {
-      LOG(LS_ERROR) << "Invalid video format info.";
+      RTC_LOG(LS_ERROR) << "Invalid video format info.";
       return;
     } else {
       has_video = true;
@@ -1219,7 +1217,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
       }
     } else {
       auto remote_stream = std::make_shared<RemoteStream>(id, owner_id, subscription_capabilities, publication_settings);
-      LOG(LS_INFO) << "OnStreamAdded: screen stream.";
+      RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
       remote_stream->Attributes(attributes);
@@ -1241,7 +1239,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info, bool joini
     owner_id = "mcu";
     auto remote_stream = std::make_shared<RemoteMixedStream>(
           id, owner_id, view, subscription_capabilities, publication_settings);
-      LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
+      RTC_LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
       remote_stream->source_.audio = AudioSourceInfo::kMixed;
@@ -1337,7 +1335,7 @@ ConferenceClient::GetConferencePeerConnectionChannel(
       return *it;
     }
   }
-  LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific session";
+  RTC_LOG(LS_ERROR) << "Cannot find PeerConnectionChannel for specific session";
   return nullptr;
 }
 
@@ -1377,7 +1375,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   auto stream_type = added_stream_type_.find(id);
   if(stream_it==added_streams_.end()||stream_type==added_stream_type_.end()){
     RTC_DCHECK(false);
-    LOG(LS_WARNING) << "Invalid stream or type.";
+    RTC_LOG(LS_WARNING) << "Invalid stream or type.";
     return;
   }
   added_streams_.erase(stream_it);
@@ -1424,7 +1422,7 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   if (stream_it == added_streams_.end() ||
       stream_type == added_stream_type_.end()) {
     RTC_DCHECK(false);
-    LOG(LS_WARNING) << "Invalid stream or type.";
+    RTC_LOG(LS_WARNING) << "Invalid stream or type.";
     return;
   }
   auto stream = stream_it->second;
@@ -1433,7 +1431,7 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   if (event == nullptr || event->get_flag() != sio::message::flag_object
       || event->get_map()["field"] == nullptr
       || event->get_map()["field"]->get_flag() != sio::message::flag_string) {
-    LOG(LS_WARNING) << "Invalid stream update event";
+    RTC_LOG(LS_WARNING) << "Invalid stream update event";
     return;
   }
   //TODO(jianlin): Add notification of audio/video active/inactive.
@@ -1445,12 +1443,12 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   } else if (event_field == "audio.status" || event_field == "video.status") {
     auto value = event->get_map()["value"];
     if (value == nullptr || value->get_flag() != sio::message::flag_string) {
-      LOG(LS_WARNING) << "Invalid stream update data value";
+      RTC_LOG(LS_WARNING) << "Invalid stream update data value";
       return;
     }
     std::string status_value = value->get_string();
     if (status_value != "active" && status_value != "inactive") {
-      LOG(LS_WARNING) << "Invalid stream update status";
+      RTC_LOG(LS_WARNING) << "Invalid stream update status";
       return;
     }
     TrackKind track_kind = (event_field == "audio.status")? TrackKind::kAudio : TrackKind::kVideo;
@@ -1469,14 +1467,14 @@ ConferenceClient::AttributesFromStreamInfo(
       stream_info->get_map().end()) {
     // TODO: CHECK here. However, to compatible with old version, no CHECK at
     // this time.
-    LOG(LS_WARNING) << "Cannot find attributes info.";
+    RTC_LOG(LS_WARNING) << "Cannot find attributes info.";
     return attributes;
   }
   auto attributes_info = stream_info->get_map()["attributes"];
   if (attributes_info->get_flag() != sio::message::flag_object) {
     // TODO: CHECK here. However, to compatible with old version, no CHECK at
     // this time.
-    LOG(LS_WARNING) << "Incorrect attribute format.";
+    RTC_LOG(LS_WARNING) << "Incorrect attribute format.";
     return attributes;
   }
   auto attribute_map = attributes_info->get_map();

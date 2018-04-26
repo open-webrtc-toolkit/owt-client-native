@@ -1,6 +1,7 @@
 /*
  * Intel License
  */
+#include <algorithm>
 #include "webrtc/rtc_base/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
@@ -8,9 +9,9 @@
 #include "talk/ics/sdk/base/stringutils.h"
 #include "talk/ics/sdk/include/cpp/ics/base/exception.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
-
 #include "talk/ics/sdk/include/cpp/ics/conference/conferencepublication.h"
 
+using namespace rtc;
 namespace ics {
 namespace conference {
 
@@ -149,7 +150,7 @@ void ConferencePublication::AddObserver(PublicationObserver& observer) {
       return &observer == &(o.get());
   });
   if (it != observers_.end()) {
-      LOG(LS_INFO) << "Adding duplicate observer.";
+      RTC_LOG(LS_INFO) << "Adding duplicate observer.";
       return;
   }
   observers_.push_back(observer);

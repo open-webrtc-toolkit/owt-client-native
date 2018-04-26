@@ -26,6 +26,7 @@
 #include "ics/base/clientconfiguration.h"
 #include "ics/base/globalconfiguration.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -35,7 +36,7 @@ void PeerConnectionThread::Run() {
 }
 
 PeerConnectionThread::~PeerConnectionThread() {
-  LOG(LS_INFO) << "Quit a PeerConnectionThread.";
+  RTC_LOG(LS_INFO) << "Quit a PeerConnectionThread.";
   Stop();
 }
 
@@ -97,12 +98,12 @@ PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
 
 void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
-  LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
+  RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
 
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
 
   if (!rtc::InitializeSSL()) {
-    LOG(LS_ERROR) << "Failed to initialize SSL.";
+    RTC_LOG(LS_ERROR) << "Failed to initialize SSL.";
     RTC_NOTREACHED();
     return;
   }
@@ -156,10 +157,11 @@ void PeerConnectionDependencyFactory::
 
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       worker_thread, signaling_thread, adm,
+      nullptr, nullptr,            // Audio encoder and decoder factory
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
 
-  LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
+  RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
 
 scoped_refptr<webrtc::PeerConnectionInterface>
@@ -174,7 +176,7 @@ PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
 
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
   RTC_CHECK(!pc_factory_.get());
-  LOG(LS_INFO)
+  RTC_LOG(LS_INFO)
       << "PeerConnectionDependencyFactory::CreatePeerConnectionFactory()";
   RTC_CHECK(pc_thread_);
   pc_thread_->Invoke<void>(RTC_FROM_HERE,

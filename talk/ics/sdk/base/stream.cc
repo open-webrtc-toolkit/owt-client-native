@@ -24,6 +24,7 @@
 #include "talk/ics/sdk/include/cpp/ics/base/framegeneratorinterface.h"
 #include "talk/ics/sdk/include/cpp/ics/base/stream.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -32,17 +33,17 @@ Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
-      id_(""),
-      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown) {}
+      id_("") {}
 
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
-      id_(id),
-      source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown) {}
+      id_(id) {}
 #else
 Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
 
@@ -124,16 +125,16 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
 
 void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (media_stream_ == nullptr) {
-    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
 
   auto video_tracks = media_stream_->GetVideoTracks();
   if (video_tracks.size() == 0) {
-    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
     return;
   } else if (video_tracks.size() > 1) {
-    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+    RTC_LOG(LS_WARNING) << "There are more than one video tracks, the first one "
                        "will be attachecd to renderer.";
   }
 
@@ -146,22 +147,22 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
   if (old_renderer)
     delete old_renderer;
 
-  LOG(LS_INFO) << "Attached the stream to a renderer.";
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
-    LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
 
   auto video_tracks = media_stream_->GetVideoTracks();
   if (video_tracks.size() == 0) {
-    LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
     return;
   } else if (video_tracks.size() > 1) {
-    LOG(LS_WARNING) << "There are more than one video tracks, the first one "
+    RTC_LOG(LS_WARNING) << "There are more than one video tracks, the first one "
                        "will be attachecd to renderer.";
   }
 
@@ -175,7 +176,7 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (old_renderer)
     delete old_renderer;
 
-  LOG(LS_INFO) << "Attached the stream to a renderer.";
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
 
@@ -221,7 +222,7 @@ void Stream::AddObserver(StreamObserver& observer) {
       return &observer == &(o.get());
   });
   if (it != observers_.end()) {
-      LOG(LS_INFO) << "Adding duplicate observer.";
+      RTC_LOG(LS_INFO) << "Adding duplicate observer.";
       return;
   }
   observers_.push_back(observer);
@@ -251,7 +252,7 @@ LocalStream::LocalStream(MediaStreamInterface* media_stream,
 #endif
 
 LocalStream::~LocalStream() {
-    LOG(LS_INFO) << "Destroy LocalCameraStream.";
+    RTC_LOG(LS_INFO) << "Destroy LocalCameraStream.";
     if (media_stream_ != nullptr) {
         // Remove all tracks before dispose stream.
         auto audio_tracks = media_stream_->GetAudioTracks();
@@ -325,7 +326,7 @@ LocalStream::LocalStream(
     const LocalCameraStreamParameters& parameters,
     int& error_code) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
-    LOG(LS_ERROR)
+    RTC_LOG(LS_ERROR)
         << "Cannot create a LocalCameraStream without audio and video.";
     error_code = static_cast<int>(ExceptionType::kLocalInvalidOption);
     return;
@@ -355,7 +356,7 @@ LocalStream::LocalStream(
           cricket::Device(parameters.CameraId(), parameters.CameraId()));
     }
     if (!capturer) {
-      LOG(LS_ERROR)
+      RTC_LOG(LS_ERROR)
           << "Cannot open video capturer " << parameters.CameraId()
           << ". Please make sure camera ID is correct and it is not in use.";
       error_code = static_cast<int>(ExceptionType::kLocalDeviceNotFound);
@@ -368,7 +369,7 @@ LocalStream::LocalStream(
         supported_resolution.begin(), supported_resolution.end(),
         Resolution(parameters.ResolutionWidth(), parameters.ResolutionHeight()));
     if (resolution_iterator == supported_resolution.end()) {
-      LOG(LS_ERROR) << "Resolution " << parameters.ResolutionWidth() << "x"
+      RTC_LOG(LS_ERROR) << "Resolution " << parameters.ResolutionWidth() << "x"
                     << parameters.ResolutionHeight()
                     << " is not supported by video capturer "
                     << parameters.CameraId();
@@ -393,7 +394,7 @@ LocalStream::LocalStream(
 #else
     capturer_ = ObjcVideoCapturerFactory::Create(parameters);
     if (!capturer_) {
-      LOG(LS_ERROR) << "Failed to create capturer. Please check parameters.";
+      RTC_LOG(LS_ERROR) << "Failed to create capturer. Please check parameters.";
       error_code = static_cast<int>(ExceptionType::kLocalNotSupported);
       return;
     }
@@ -452,7 +453,7 @@ LocalStream::LocalStream(
     std::shared_ptr<LocalDesktopStreamParameters> parameters,
     std::unique_ptr<LocalScreenStreamObserver> observer) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
-    LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
+    RTC_LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> factory =
       PeerConnectionDependencyFactory::Get();
@@ -495,7 +496,7 @@ LocalStream::LocalStream(
     std::unique_ptr<VideoFrameGeneratorInterface> framer)
     : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
-    LOG(LS_WARNING) << "Create Local Camera Stream without video and audio.";
+    RTC_LOG(LS_WARNING) << "Create Local Camera Stream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -529,7 +530,7 @@ LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     VideoEncoderInterface* encoder) : media_constraints_(new MediaConstraintsImpl) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
-    LOG(LS_WARNING) << "Create LocalStream without video and audio.";
+    RTC_LOG(LS_WARNING) << "Create LocalStream without video and audio.";
   }
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -568,7 +569,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {
   RTC_CHECK(media_stream);
-  Id(media_stream->label());
+  Id(media_stream->id());
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }

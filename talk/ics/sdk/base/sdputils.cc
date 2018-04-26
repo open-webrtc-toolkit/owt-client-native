@@ -9,6 +9,7 @@
 #include "talk/ics/sdk/base/sdputils.h"
 #include "webrtc/rtc_base/logging.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -35,7 +36,7 @@ std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
   for (auto codec_current : rcodecs) {
     auto codec_it = audio_codec_names.find(codec_current);
     if (codec_it == audio_codec_names.end()) {
-      LOG(LS_WARNING) << "Preferred audio codec is not available.";
+      RTC_LOG(LS_WARNING) << "Preferred audio codec is not available.";
       continue;
     }
     codec_names.push_back(codec_it->second);
@@ -54,7 +55,7 @@ std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
   for (auto codec_current : rcodecs) {
     auto codec_it = video_codec_names.find(codec_current);
     if (codec_it == video_codec_names.end()) {
-      LOG(LS_WARNING) << "Preferred video codec is not available.";
+      RTC_LOG(LS_WARNING) << "Preferred video codec is not available.";
       continue;
     }
     codec_names.push_back(codec_it->second);
@@ -163,7 +164,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
   std::smatch m_line_match;
   auto search_result = std::regex_search(sdp, m_line_match, reg_m_line);
   if (!search_result || m_line_match.size() == 0) {
-    LOG(LS_WARNING) << "M-line is not found. SDP: " << sdp;
+    RTC_LOG(LS_WARNING) << "M-line is not found. SDP: " << sdp;
     return sdp;
   }
 
@@ -176,7 +177,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
     m_line_vector.push_back(item);
   }
   if (m_line_vector.size() < 3) {
-    LOG(LS_WARNING) << "Wrong SDP format description: " << m_line;
+    RTC_LOG(LS_WARNING) << "Wrong SDP format description: " << m_line;
     return sdp;
   }
   std::stringstream m_line_stream;
@@ -189,7 +190,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
   for (auto& codec_value : kept_codec_values) {
     m_line_stream << " " << codec_value;
   }
-  LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
+  RTC_LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
   std::string before_strip = std::regex_replace(sdp, reg_m_line, m_line_stream.str());
   std::string after_strip = before_strip;
 

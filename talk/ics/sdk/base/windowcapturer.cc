@@ -8,11 +8,12 @@
 #include "webrtc/rtc_base/bytebuffer.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/thread.h"
-#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/ics/sdk/base/desktopcapturer.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -127,11 +128,11 @@ void BasicWindowCapturer::Init() {
 
 CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
-    LOG(LS_ERROR) << "Basic Window Capturerer is already running";
+    RTC_LOG(LS_ERROR) << "Basic Window Capturerer is already running";
     return CS_FAILED;
   }
   if (!window_capturer_.get()) {
-    LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
+    RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
     return CS_FAILED;
   }
   SetCaptureFormat(&capture_format);
@@ -143,12 +144,12 @@ CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_form
   window_capture_thread_ = new BasicWindowCaptureThread(this);
   bool ret = window_capture_thread_->Start();
   if (ret) {
-    LOG(LS_INFO) << "Window capture thread started";
+    RTC_LOG(LS_INFO) << "Window capture thread started";
     return CS_RUNNING;
   } else {
     async_invoker_.reset();
     worker_thread_ = nullptr;
-    LOG(LS_ERROR) << "Window capture thread failed to start";
+    RTC_LOG(LS_ERROR) << "Window capture thread failed to start";
     return CS_FAILED;
   }
   if (observer_) {
@@ -170,7 +171,7 @@ void BasicWindowCapturer::Stop() {
     window_capture_thread_->Quit();
     delete window_capture_thread_;
     window_capture_thread_ = nullptr;
-    LOG(LS_INFO) << "Window capture thread stopped";
+    RTC_LOG(LS_INFO) << "Window capture thread stopped";
   }
   SetCaptureFormat(nullptr);
   worker_thread_ = nullptr;
@@ -188,14 +189,14 @@ bool BasicWindowCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
 bool BasicWindowCapturer::GetCurrentWindowList(
     std::unordered_map<int, std::string>* window_list) {
   if (!window_capturer_) {
-    LOG(LS_ERROR) << "No window capturer.";
+    RTC_LOG(LS_ERROR) << "No window capturer.";
     return false;
   }
   webrtc::DesktopCapturer::SourceList sources;
   bool have_source = window_capturer_->GetSourceList(&sources);
 
   if (!have_source) {
-    LOG(LS_ERROR) << "No window available for capture";
+    RTC_LOG(LS_ERROR) << "No window available for capture";
     return false;
   }
 
@@ -211,7 +212,7 @@ bool BasicWindowCapturer::GetCurrentWindowList(
 
 bool BasicWindowCapturer::SetCaptureWindow(int window_id) {
   if (!window_capturer_) {
-    LOG(LS_ERROR) << "No window capturer.";
+    RTC_LOG(LS_ERROR) << "No window capturer.";
     return false;
   }
 
@@ -236,7 +237,7 @@ int BasicWindowCapturer::I420DataSize(int height,
 
 void BasicWindowCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
   if (width_ != width || height != height_ || !frame_buffer_) {
-    LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
+    RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
     width_ = width;
     height_ = height;
     int stride_y = width_;
@@ -253,7 +254,7 @@ void BasicWindowCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
 void BasicWindowCapturer::CaptureFrame() {
   // invoke underlying desktop capture to capture one frame.
   if (!window_capturer_.get()) {
-    LOG(LS_ERROR) << "Failed to capture one Window frame";
+    RTC_LOG(LS_ERROR) << "Failed to capture one Window frame";
     return;
   }
   return window_capturer_->CaptureFrame();
@@ -263,7 +264,7 @@ void BasicWindowCapturer::OnCaptureResult(
     webrtc::DesktopCapturer::Result result,
     std::unique_ptr<webrtc::DesktopFrame> frame) {
   if (result != webrtc::DesktopCapturer::Result::SUCCESS) {
-    LOG(LS_ERROR) << "Failed to cpature one Window frame.";
+    RTC_LOG(LS_ERROR) << "Failed to cpature one Window frame.";
     return;
   }
 
@@ -274,7 +275,7 @@ void BasicWindowCapturer::OnCaptureResult(
   // In case the window is not visible, capture returns frame of size 1x1 so
   // don't pass to stack.
   if (frame_width <= 1 || frame_height <= 1 || frame_data_rgba == nullptr) {
-    LOG(LS_ERROR) << "Invalid Window data";
+    RTC_LOG(LS_ERROR) << "Invalid Window data";
     return;
   }
 

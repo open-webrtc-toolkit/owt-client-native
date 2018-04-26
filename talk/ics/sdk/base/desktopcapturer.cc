@@ -7,11 +7,12 @@
 #include "webrtc/rtc_base/bytebuffer.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/thread.h"
-#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/ics/sdk/base/desktopcapturer.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -101,11 +102,11 @@ void BasicScreenCapturer::Init() {
 
 CaptureState BasicScreenCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
-    LOG(LS_ERROR) << "Basic Screen Capturerer is already running";
+    RTC_LOG(LS_ERROR) << "Basic Screen Capturerer is already running";
     return CS_FAILED;
   }
   if (!screen_capturer_.get()) {
-    LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
+    RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
     return CS_FAILED;
   }
   SetCaptureFormat(&capture_format);
@@ -117,12 +118,12 @@ CaptureState BasicScreenCapturer::Start(const cricket::VideoFormat& capture_form
   screen_capture_thread_ = new BasicScreenCaptureThread(this);
   bool ret = screen_capture_thread_->Start();
   if (ret) {
-    LOG(LS_INFO) << "Screen capture thread started";
+    RTC_LOG(LS_INFO) << "Screen capture thread started";
     return CS_RUNNING;
   } else {
     async_invoker_.reset();
     worker_thread_ = nullptr;
-    LOG(LS_ERROR) << "Screen capture thread failed to start";
+    RTC_LOG(LS_ERROR) << "Screen capture thread failed to start";
     return CS_FAILED;
   }
 }
@@ -136,7 +137,7 @@ void BasicScreenCapturer::Stop() {
     screen_capture_thread_->Quit();
     delete screen_capture_thread_;
     screen_capture_thread_ = NULL;
-    LOG(LS_INFO) << "Screen capture thread stopped";
+    RTC_LOG(LS_INFO) << "Screen capture thread stopped";
   }
   SetCaptureFormat(NULL);
   worker_thread_ = nullptr;
@@ -160,7 +161,7 @@ int BasicScreenCapturer::I420DataSize(int height,
 
 void BasicScreenCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
   if (width_ != width || height != height_ || !frame_buffer_) {
-    LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
+    RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
     width_ = width;
     height_ = height;
     int stride_y = width_;
@@ -177,7 +178,7 @@ void BasicScreenCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
 void BasicScreenCapturer::CaptureFrame() {
   // invoke underlying desktop capture to capture one frame.
   if (!screen_capturer_.get()) {
-    LOG(LS_ERROR) << "Failed to capture one screen frame";
+    RTC_LOG(LS_ERROR) << "Failed to capture one screen frame";
     return;
   }
   return screen_capturer_->CaptureFrame();
@@ -187,7 +188,7 @@ void BasicScreenCapturer::OnCaptureResult(
     webrtc::DesktopCapturer::Result result,
     std::unique_ptr<webrtc::DesktopFrame> frame) {
   if (result != webrtc::DesktopCapturer::Result::SUCCESS) {
-    LOG(LS_ERROR) << "Failed to cpature one screen frame.";
+    RTC_LOG(LS_ERROR) << "Failed to cpature one screen frame.";
     return;
   }
 
@@ -196,7 +197,7 @@ void BasicScreenCapturer::OnCaptureResult(
   uint8_t* frame_data_rgba = frame->data();
   int frame_stride = frame->stride();
   if (frame_width == 0 || frame_height == 0 || frame_data_rgba == nullptr) {
-    LOG(LS_ERROR) << "Invalid screen data";
+    RTC_LOG(LS_ERROR) << "Invalid screen data";
     return;
   }
 

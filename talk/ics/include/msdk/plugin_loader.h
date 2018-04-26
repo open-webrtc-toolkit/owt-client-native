@@ -86,11 +86,10 @@ private:
 
 public:
     PluginLoader(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version, const mfxChar *pluginName, mfxU32 len)
-        : m_session()
+        : ePluginType(type)
+        , m_session()
         , m_uid()
-        , ePluginType(type)
     {
-        len; pluginName;
         mfxStatus sts = MFX_ERR_NONE;
         msdk_stringstream strStream;
 
@@ -124,9 +123,9 @@ public:
     }
 
     PluginLoader(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version)
-        : m_session()
+        : ePluginType(type)
+        , m_session()
         , m_uid()
-        , ePluginType(type)
     {
         mfxStatus sts = MFX_ERR_NONE;
         msdk_stringstream strStream;
@@ -190,22 +189,18 @@ public:
         return m_session != 0;
     }
     virtual mfxStatus PluginInit( mfxCoreInterface *core ) {
-        core;
         return MFX_ERR_NULL_PTR;
     }
     virtual mfxStatus PluginClose() {
         return MFX_ERR_NULL_PTR;
     }
     virtual mfxStatus GetPluginParam( mfxPluginParam *par ) {
-        par;
         return MFX_ERR_NULL_PTR;
     }
     virtual mfxStatus Execute( mfxThreadTask task, mfxU32 uid_p, mfxU32 uid_a ) {
-        task; uid_p; uid_a;
         return MFX_ERR_NULL_PTR;
     }
     virtual mfxStatus FreeResources( mfxThreadTask task, mfxStatus sts ) {
-        task; sts;
         return MFX_ERR_NULL_PTR;
     }
     virtual void Release() {
@@ -214,7 +209,6 @@ public:
         return MFX_ERR_NULL_PTR;
     }
     virtual mfxStatus SetAuxParams( void* auxParam, int auxParamSize ) {
-        auxParam; auxParamSize;
         return MFX_ERR_NULL_PTR;
     }
 };

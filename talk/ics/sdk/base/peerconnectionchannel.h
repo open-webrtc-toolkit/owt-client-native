@@ -89,7 +89,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // Apply the bitrate settings on all tracks available. Failing to set any of them
   // will result in a false return, with remaining settings applicable still applied.
   // Subclasses can override this to implementation specific bitrate allocation policies.
-  bool ApplyBitrateSettings();
+  void ApplyBitrateSettings();
   // Subclasses should prepare observers for these functions and post
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
@@ -99,7 +99,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void OnMessage(rtc::Message* msg);
 
   // PeerConnectionObserver
-  virtual void OnStateChange(StateType state_changed){};
+  virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed){};
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state);
   virtual void OnAddStream(

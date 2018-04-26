@@ -7,6 +7,7 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -184,15 +185,6 @@ bool CustomizedAudioCapturer::Recording() const {
   return recording_;
 }
 
-int32_t CustomizedAudioCapturer::SetAGC(bool enable) {
-  return -1;
-}
-
-bool CustomizedAudioCapturer::AGC() const {
-  return false;
-}
-
-
 int32_t CustomizedAudioCapturer::InitSpeaker() {
   return -1;
 }
@@ -305,10 +297,6 @@ int32_t CustomizedAudioCapturer::PlayoutDelay(uint16_t& delayMS) const {
   return -1;
 }
 
-int32_t CustomizedAudioCapturer::RecordingDelay(uint16_t& delayMS) const {
-  return -1;
-}
-
 void CustomizedAudioCapturer::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {
   rtc::CritScope lock(&crit_sect_);
@@ -348,7 +336,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
       crit_sect_.Leave();
       //RTC_DCHECK(false);
       SleepMs(1);
-      LOG(LS_ERROR) << "Get audio frames failed.";
+      RTC_LOG(LS_ERROR) << "Get audio frames failed.";
       return true;
     }
 
@@ -369,7 +357,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
     SleepMs(need_sleep_ms_);
     real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
   } else {
-    LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
+    RTC_LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
                        "leads to large latency";
   }
   return true;

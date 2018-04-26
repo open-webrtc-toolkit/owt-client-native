@@ -64,4 +64,4 @@ class Logging final {
 }
 }
 
-#endif  // WOOGEEN_BASE_LOGGING_H
+#endif  // ICS_BASE_LOGGING_H

@@ -17,6 +17,7 @@
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 
+using namespace rtc;
 namespace ics {
 namespace p2p {
 
@@ -49,7 +50,7 @@ void P2PClient::Disconnect(
 void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) !=
       allowed_remote_ids_.end()) {
-    LOG(LS_INFO) << "Adding duplicated remote id.";
+    RTC_LOG(LS_INFO) << "Adding duplicated remote id.";
     return;
   }
 
@@ -158,7 +159,7 @@ void P2PClient::OnMessage(const std::string& message,
   // Firstly check whether remote_id is in the allowed_remote_ids_ list
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
       allowed_remote_ids_.end()) {
-     LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
+     RTC_LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
   } else {
   // Secondly dispatch the message to pcc
     auto pcc = GetPeerConnectionChannel(remote_id);
@@ -168,7 +169,7 @@ void P2PClient::OnMessage(const std::string& message,
 
 void P2PClient::OnDisconnected() {
   // TODO: Implement disconnected handler.
-  LOG(LS_INFO) << "Disconnected from signaling server.";
+  RTC_LOG(LS_INFO) << "Disconnected from signaling server.";
 }
 
 void P2PClient::SendSignalingMessage(const std::string& message,

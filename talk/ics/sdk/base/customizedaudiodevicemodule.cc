@@ -4,7 +4,7 @@
 
 #include "talk/ics/sdk/base/customizedaudiocapturer.h"
 #include "talk/ics/sdk/base/customizedaudiodevicemodule.h"
-#include "webrtc/rtc_base/refcount.h"
+#include "webrtc/rtc_base/refcountedobject.h"
 #include "webrtc/rtc_base/timeutils.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
@@ -68,7 +68,6 @@ rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
 
 CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
     : _ptrAudioDevice(NULL),
-      _id(0),
       _lastProcessTime(rtc::TimeMillis()),
       _initialized(false),
       _lastError(kAdmErrNone) {
@@ -97,7 +96,6 @@ int32_t CustomizedAudioDeviceModule::CreateCustomizedAudioDevice(
 // ----------------------------------------------------------------------------
 
 int32_t CustomizedAudioDeviceModule::AttachAudioBuffer() {
-  _audioDeviceBuffer.SetId(_id);
   _ptrAudioDevice->AttachAudioBuffer(&_audioDeviceBuffer);
   return 0;
 }
@@ -129,14 +127,6 @@ int32_t CustomizedAudioDeviceModule::ActiveAudioLayer(
   }
   *audioLayer = activeAudio;
   return 0;
-}
-
-// ----------------------------------------------------------------------------
-//  LastError
-// ----------------------------------------------------------------------------
-
-AudioDeviceModule::ErrorCode CustomizedAudioDeviceModule::LastError() const {
-  return _lastError;
 }
 
 // ----------------------------------------------------------------------------
@@ -445,51 +435,6 @@ int32_t CustomizedAudioDeviceModule::StereoRecording(bool* enabled) const {
 }
 
 // ----------------------------------------------------------------------------
-//  SetRecordingChannel
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::SetRecordingChannel(
-    const ChannelType channel) {
-  if (channel == kChannelBoth) {
-  } else if (channel == kChannelLeft) {
-  } else {
-  }
-  CHECK_INITIALIZED();
-
-  bool stereo(false);
-
-  if (_ptrAudioDevice->StereoRecording(stereo) == -1) {
-    return -1;
-  }
-
-  return (_audioDeviceBuffer.SetRecordingChannel(channel));
-}
-
-// ----------------------------------------------------------------------------
-//  RecordingChannel
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::RecordingChannel(
-    ChannelType* channel) const {
-  CHECK_INITIALIZED();
-
-  ChannelType chType;
-
-  if (_audioDeviceBuffer.RecordingChannel(chType) == -1) {
-    return -1;
-  }
-
-  *channel = chType;
-
-  if (*channel == kChannelBoth) {
-  } else if (*channel == kChannelLeft) {
-  } else {
-  }
-
-  return (0);
-}
-
-// ----------------------------------------------------------------------------
 //  StereoPlayoutIsAvailable
 // ----------------------------------------------------------------------------
 
@@ -512,24 +457,6 @@ int32_t CustomizedAudioDeviceModule::SetStereoPlayout(bool enable) {
 
 int32_t CustomizedAudioDeviceModule::StereoPlayout(bool* enabled) const {
   return _outputAdm->StereoPlayout(enabled);
-}
-
-// ----------------------------------------------------------------------------
-//  SetAGC
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::SetAGC(bool enable) {
-  CHECK_INITIALIZED();
-  return (_ptrAudioDevice->SetAGC(enable));
-}
-
-// ----------------------------------------------------------------------------
-//  AGC
-// ----------------------------------------------------------------------------
-
-bool CustomizedAudioDeviceModule::AGC() const {
-  CHECK_INITIALIZED_BOOL();
-  return (_ptrAudioDevice->AGC());
 }
 
 // ----------------------------------------------------------------------------
@@ -794,94 +721,6 @@ int32_t CustomizedAudioDeviceModule::RegisterAudioCallback(
 
 int32_t CustomizedAudioDeviceModule::PlayoutDelay(uint16_t* delayMS) const {
   return _outputAdm->PlayoutDelay(delayMS);
-}
-
-// ----------------------------------------------------------------------------
-//  RecordingDelay
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::RecordingDelay(uint16_t* delayMS) const {
-  CHECK_INITIALIZED();
-
-  uint16_t delay(0);
-
-  if (_ptrAudioDevice->RecordingDelay(delay) == -1) {
-    return -1;
-  }
-
-  *delayMS = delay;
-
-  return (0);
-}
-
-
-// ----------------------------------------------------------------------------
-//  SetRecordingSampleRate
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::SetRecordingSampleRate(
-    const uint32_t samplesPerSec) {
-  CHECK_INITIALIZED();
-
-  if (_ptrAudioDevice->SetRecordingSampleRate(samplesPerSec) != 0) {
-    return -1;
-  }
-
-  return (0);
-}
-
-// ----------------------------------------------------------------------------
-//  RecordingSampleRate
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::RecordingSampleRate(
-    uint32_t* samplesPerSec) const {
-  CHECK_INITIALIZED();
-
-  int32_t sampleRate = _audioDeviceBuffer.RecordingSampleRate();
-
-  if (sampleRate == -1) {
-    return -1;
-  }
-
-  *samplesPerSec = sampleRate;
-
-  return (0);
-}
-
-// ----------------------------------------------------------------------------
-//  SetPlayoutSampleRate
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::SetPlayoutSampleRate(
-    const uint32_t samplesPerSec) {
-  return _outputAdm->SetPlayoutSampleRate(samplesPerSec);
-}
-
-// ----------------------------------------------------------------------------
-//  PlayoutSampleRate
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::PlayoutSampleRate(
-    uint32_t* samplesPerSec) const {
-  return _outputAdm->PlayoutSampleRate(samplesPerSec);
-}
-
-
-// ----------------------------------------------------------------------------
-//  SetLoudspeakerStatus
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::SetLoudspeakerStatus(bool enable) {
-  return _outputAdm->SetLoudspeakerStatus(enable);
-}
-
-// ----------------------------------------------------------------------------
-//  GetLoudspeakerStatus
-// ----------------------------------------------------------------------------
-
-int32_t CustomizedAudioDeviceModule::GetLoudspeakerStatus(bool* enabled) const {
-  return _outputAdm->GetLoudspeakerStatus(enabled);
 }
 
 bool CustomizedAudioDeviceModule::BuiltInAECIsAvailable() const {

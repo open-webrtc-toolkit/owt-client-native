@@ -11,9 +11,9 @@
 #include <dxva2api.h>
 #include <Windows.h>
 #include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/videosinkinterface.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
-#include "webrtc/media/base/videosinkinterface.h"
 
 namespace ics {
 namespace base {
@@ -23,7 +23,6 @@ class WebrtcVideoRendererD3D9Impl
  public:
   WebrtcVideoRendererD3D9Impl(HWND wnd)
       : wnd_(wnd),
-        first_frame_(true),
         inited_for_raw_(false),
         width_(0),
         height_(0) {}
@@ -34,7 +33,6 @@ class WebrtcVideoRendererD3D9Impl
   void Destroy();
   void Resize(size_t width, size_t height);
   HWND wnd_;
-  bool first_frame_;
   bool inited_for_raw_;
   size_t width_;
   size_t height_;

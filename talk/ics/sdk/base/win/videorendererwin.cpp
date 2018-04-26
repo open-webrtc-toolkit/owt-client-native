@@ -10,6 +10,7 @@
 #include "webrtc/typedefs.h"
 #include "rtc_base/logging.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -71,21 +72,21 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
     HANDLE hDevice = 0;
     HRESULT hr = dev_manager->OpenDeviceHandle(&hDevice);
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to open the d3d device handle";
+      RTC_LOG(LS_ERROR) << "Failed to open the d3d device handle";
       return;
     }
 
     // Our renderer does not need to lock the device.
     hr = dev_manager->LockDevice(hDevice, &pDevice, FALSE);
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to lock device";
+      RTC_LOG(LS_ERROR) << "Failed to lock device";
       dev_manager->CloseDeviceHandle(hDevice);
       return;
     }
     CComPtr<IDirect3DSurface9> back_buffer;
     hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to get back buffer";
+      RTC_LOG(LS_ERROR) << "Failed to get back buffer";
       return;
     }
 
@@ -93,7 +94,7 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       hr = pDevice->StretchRect(surface, nullptr, back_buffer, nullptr,
                                 D3DTEXF_NONE);
       if (FAILED(hr)) {
-        LOG(LS_ERROR) << "Failed to stretch the rectangle";
+        RTC_LOG(LS_ERROR) << "Failed to stretch the rectangle";
         return;
       }
     }

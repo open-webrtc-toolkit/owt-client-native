@@ -5,18 +5,17 @@
 #include <vector>
 #include <thread>
 #include <future>
-
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/media/base/videocapturer.h"
-
 #include "talk/ics/sdk/base/functionalobserver.h"
 #include "talk/ics/sdk/base/mediautils.h"
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/ics/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
 
+using namespace rtc;
 namespace ics {
 namespace conference {
 
@@ -83,7 +82,7 @@ ConferencePeerConnectionChannel::ConferencePeerConnectionChannel(
 }
 
 ConferencePeerConnectionChannel::~ConferencePeerConnectionChannel() {
-  LOG(LS_INFO) << "Deconstruct conference peer connection channel";
+  RTC_LOG(LS_INFO) << "Deconstruct conference peer connection channel";
   if (published_stream_)
     Unpublish(GetSessionId(), nullptr, nullptr);
   if (subscribed_stream_)
@@ -99,7 +98,7 @@ void ConferencePeerConnectionChannel::AddObserver(
           [&](std::reference_wrapper<ConferencePeerConnectionChannelObserver> o)
               -> bool { return &observer == &(o.get()); });
   if (it != observers_.end()) {
-    LOG(LS_WARNING) << "Adding duplicate observer.";
+    RTC_LOG(LS_WARNING) << "Adding duplicate observer.";
     return;
   }
   observers_.push_back(observer);
@@ -115,7 +114,7 @@ void ConferencePeerConnectionChannel::RemoveObserver(
 }
 
 void ConferencePeerConnectionChannel::CreateOffer() {
-  LOG(LS_INFO) << "Create offer.";
+  RTC_LOG(LS_INFO) << "Create offer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
       FunctionalCreateSessionDescriptionObserver::Create(
           std::bind(&ConferencePeerConnectionChannel::
@@ -128,7 +127,7 @@ void ConferencePeerConnectionChannel::CreateOffer() {
       scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* data =
       new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
-  LOG(LS_INFO) << "Post create offer";
+  RTC_LOG(LS_INFO) << "Post create offer";
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
 }
 
@@ -141,7 +140,7 @@ void ConferencePeerConnectionChannel::IceRestart() {
 }
 
 void ConferencePeerConnectionChannel::DoIceRestart() {
-  LOG(LS_INFO) << "ICE restart";
+  RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable);
   media_constraints_.SetMandatory(
@@ -150,7 +149,7 @@ void ConferencePeerConnectionChannel::DoIceRestart() {
 }
 
 void ConferencePeerConnectionChannel::CreateAnswer() {
-  LOG(LS_INFO) << "Create answer.";
+  RTC_LOG(LS_INFO) << "Create answer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
       FunctionalCreateSessionDescriptionObserver::Create(
           std::bind(&ConferencePeerConnectionChannel::
@@ -163,13 +162,13 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
       scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*
       message_observer = new rtc::TypedMessageData<
           scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
-  LOG(LS_INFO) << "Post create answer";
+  RTC_LOG(LS_INFO) << "Post create answer";
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateAnswer, message_observer);
 }
 
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
-  LOG(LS_INFO) << "Signaling state changed: " << new_state;
+  RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
   signaling_state_ = new_state;
   if (new_state == webrtc::PeerConnectionInterface::SignalingState::kStable) {
     if (ice_restart_needed_) {
@@ -187,7 +186,7 @@ void ConferencePeerConnectionChannel::OnSignalingChange(
 
 void ConferencePeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
-  LOG(LS_INFO) << "On add stream.";
+  RTC_LOG(LS_INFO) << "On add stream.";
   if (subscribed_stream_ != nullptr)
     subscribed_stream_->MediaStream(stream);
 }
@@ -202,7 +201,7 @@ void ConferencePeerConnectionChannel::OnRenegotiationNeeded() {}
 
 void ConferencePeerConnectionChannel::OnIceConnectionChange(
     PeerConnectionInterface::IceConnectionState new_state) {
-  LOG(LS_INFO) << "Ice connection state changed: " << new_state;
+  RTC_LOG(LS_INFO) << "Ice connection state changed: " << new_state;
   if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
       new_state == PeerConnectionInterface::kIceConnectionCompleted) {
     connected_ = true;
@@ -221,7 +220,7 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
 
 void ConferencePeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {
-  LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
+  RTC_LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
 }
 
 // TODO(jianlin): New signaling protocol defines candidate as
@@ -229,7 +228,7 @@ void ConferencePeerConnectionChannel::OnIceGatheringChange(
 // side implementation before we switch to it.
 void ConferencePeerConnectionChannel::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate) {
-  LOG(LS_INFO) << "On ice candidate";
+  RTC_LOG(LS_INFO) << "On ice candidate";
   string candidate_string;
   candidate->ToString(&candidate_string);
   candidate_string.insert(0, "a=");
@@ -256,7 +255,7 @@ void ConferencePeerConnectionChannel::OnIceCandidate(
 
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
     webrtc::SessionDescriptionInterface* desc) {
-  LOG(LS_INFO) << "Create sdp success.";
+  RTC_LOG(LS_INFO) << "Create sdp success.";
   scoped_refptr<FunctionalSetSessionDescriptionObserver> observer =
       FunctionalSetSessionDescriptionObserver::Create(
           std::bind(&ConferencePeerConnectionChannel::
@@ -267,17 +266,17 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
                     this, std::placeholders::_1));
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
-  LOG(LS_INFO) << "Post set local desc";
+  RTC_LOG(LS_INFO) << "Post set local desc";
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetLocalDescription, msg);
 }
 
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Create sdp failed.";
+  RTC_LOG(LS_INFO) << "Create sdp failed.";
 }
 
 void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
-  LOG(LS_INFO) << "Set local sdp success.";
+  RTC_LOG(LS_INFO) << "Set local sdp success.";
   // For conference, it's now OK to set bandwidth
   ApplyBitrateSettings();
   auto desc = LocalDescription();
@@ -294,7 +293,7 @@ void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
 
 void ConferencePeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Set local sdp failed.";
+  RTC_LOG(LS_INFO) << "Set local sdp failed.";
   if (failure_callback_) {
     std::unique_ptr<Exception> e(new Exception(
       ExceptionType::kConferenceUnknown,
@@ -310,7 +309,7 @@ void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 
 void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Set remote sdp failed.";
+  RTC_LOG(LS_INFO) << "Set remote sdp failed.";
   if (failure_callback_) {
     std::unique_ptr<Exception> e(new Exception(
       ExceptionType::kConferenceUnknown,
@@ -327,7 +326,7 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
       "answer", sdp,
       nullptr));  // TODO(jianjun): change answer to type.toLowerCase.
   if (!desc) {
-    LOG(LS_ERROR) << "Failed to create session description.";
+    RTC_LOG(LS_ERROR) << "Failed to create session description.";
     return;
   }
   scoped_refptr<FunctionalSetSessionDescriptionObserver> observer =
@@ -338,7 +337,7 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
                     this, std::placeholders::_1));
   SetSessionDescriptionMessage* msg =
       new SetSessionDescriptionMessage(observer.get(), desc);
-  LOG(LS_INFO) << "Post set remote desc";
+  RTC_LOG(LS_INFO) << "Post set remote desc";
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription, msg);
 }
 
@@ -365,11 +364,11 @@ void ConferencePeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  LOG(LS_INFO) << "Publish a local stream.";
+  RTC_LOG(LS_INFO) << "Publish a local stream.";
   published_stream_ = stream;
   if ((!CheckNullPointer((uintptr_t)stream.get(), on_failure)) ||
       (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
-    LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
   }
 
   if (isMediaStreamEnded(stream->MediaStream())) {
@@ -488,10 +487,10 @@ void ConferencePeerConnectionChannel::Subscribe(
     const SubscribeOptions& subscribe_options,
     std::function<void(std::string)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
+  RTC_LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                << stream->has_audio_ << ", has video? " << stream->has_video_;
   if (!SubOptionAllowed(subscribe_options, stream->Capabilities())) {
-    LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
+    RTC_LOG(LS_ERROR) << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
           std::unique_ptr<Exception> e(new Exception(
@@ -505,7 +504,7 @@ void ConferencePeerConnectionChannel::Subscribe(
 
   subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    RTC_LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
   }
   if (subscribe_success_callback_) {
@@ -591,7 +590,7 @@ void ConferencePeerConnectionChannel::Unpublish(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_id != GetSessionId()) {
-    LOG(LS_ERROR) << "Publication ID mismatch.";
+    RTC_LOG(LS_ERROR) << "Publication ID mismatch.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<Exception> e(
@@ -614,7 +613,7 @@ void ConferencePeerConnectionChannel::Unsubscribe(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (session_id != GetSessionId()) {
-    LOG(LS_ERROR) << "Subscription ID mismatch.";
+    RTC_LOG(LS_ERROR) << "Subscription ID mismatch.";
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<Exception> e(
@@ -709,7 +708,7 @@ void ConferencePeerConnectionChannel::PauseVideo(
 void ConferencePeerConnectionChannel::Stop(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  LOG(LS_INFO) << "Stop session.";
+  RTC_LOG(LS_INFO) << "Stop session.";
 }
 
 void ConferencePeerConnectionChannel::GetConnectionStats(
@@ -758,7 +757,7 @@ void ConferencePeerConnectionChannel::GetStats(
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
   if (message == nullptr) {
-    LOG(LS_INFO) << "Ignore empty signaling message";
+    RTC_LOG(LS_INFO) << "Ignore empty signaling message";
     return;
   }
 
@@ -805,29 +804,29 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
     }
     return;
   } else if (message->get_flag() != sio::message::flag_object) {
-    LOG(LS_WARNING) << "Ignore invalid signaling message from MCU.";
+    RTC_LOG(LS_WARNING) << "Ignore invalid signaling message from MCU.";
     return;
   }
   // Since trickle ICE from MCU is not supported, we parse the message as
   // SOAC message, not Canddiate message.
   if (message->get_map().find("type") == message->get_map().end()) {
-      LOG(LS_INFO) << "Ignore erizo message without type from MCU.";
+      RTC_LOG(LS_INFO) << "Ignore erizo message without type from MCU.";
       return;
   }
 
   if(message->get_map()["type"]->get_flag() != sio::message::flag_string
      || message->get_map()["sdp"] == nullptr
      || message->get_map()["sdp"]->get_flag() != sio::message::flag_string) {
-    LOG(LS_ERROR) << "Invalid signaling message";
+    RTC_LOG(LS_ERROR) << "Invalid signaling message";
     return;
   }
   const std::string type = message->get_map()["type"]->get_string();
-  LOG(LS_INFO) << "On signaling message: " << type;
+  RTC_LOG(LS_INFO) << "On signaling message: " << type;
   if (type == "answer") {
     const std::string sdp = message->get_map()["sdp"]->get_string();
     SetRemoteDescription(type, sdp);
   } else {
-    LOG(LS_ERROR) << "Ignoring signaling message from server other than answer.";
+    RTC_LOG(LS_ERROR) << "Ignoring signaling message from server other than answer.";
   }
 }
 
@@ -848,7 +847,7 @@ std::string ConferencePeerConnectionChannel::GetSubStreamId() {
 }
 
 void ConferencePeerConnectionChannel::SetSessionId(const std::string& id) {
-  LOG(LS_INFO) << "Setting session ID for current channel";
+  RTC_LOG(LS_INFO) << "Setting session ID for current channel";
   session_id_ = id;
 }
 
@@ -861,7 +860,7 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   signaling_channel_->SendInitializationMessage(
-      options, stream->MediaStream()->label(), "",
+      options, stream->MediaStream()->id(), "",
       [stream, this](std::string session_id) {
         SetSessionId(session_id);
         rtc::ScopedRefMessageData<MediaStreamInterface>* param =
@@ -874,7 +873,7 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
 }
 
 void ConferencePeerConnectionChannel::OnNetworksChanged(){
-  LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
+  RTC_LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
   IceRestart();
 }
 
@@ -896,7 +895,7 @@ void ConferencePeerConnectionChannel::OnStreamError(
     return;
   }
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    LOG(LS_INFO) << "On stream error.";
+    RTC_LOG(LS_INFO) << "On stream error.";
     (*its).get().OnStreamError(error_stream, e);
   }
 }
@@ -921,7 +920,7 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
 }
 
 void ConferencePeerConnectionChannel::ClosePeerConnection() {
-  LOG(LS_INFO) << "Close peer connection.";
+  RTC_LOG(LS_INFO) << "Close peer connection.";
   RTC_CHECK(pc_thread_);
   pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
 }

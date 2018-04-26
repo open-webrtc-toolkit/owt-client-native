@@ -7,9 +7,7 @@
 #include "talk/ics/sdk/base/win/mftmediadecoder.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
 
-const wchar_t kVPXDecoderDLLPATH[] = L"C:\\Programe Files\\Intel\\Media SDK\\";
-const wchar_t kVP8DecoderDLLName[] = L"mfx_mft_vp8vd_64.dll";
-
+using namespace rtc;
 enum { kMSDKCodecPollMs = 10 };
 enum { MSDK_MSG_HANDLE_INPUT = 0 };
 
@@ -63,37 +61,12 @@ bool MSDKVideoDecoder::isVP8HWAccelerationSupported(){
     return vp8_supported;
 }
 
-static IMFSample* CreateEmptySampleWithBuffer(int buffer_size){
-    IMFSample* sample;
-
-    HRESULT hr = MFCreateSample(&sample);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create empty sample";
-        return NULL;
-    }
-    IMFMediaBuffer *buffer;
-    hr = MFCreateMemoryBuffer(buffer_size, &buffer);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create buffer";
-        sample->Release();
-        return NULL;
-    }
-    hr = sample->AddBuffer(buffer);
-    if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to add buffer";
-        sample->Release();
-        buffer->Release();
-        return NULL;
-    }
-    return sample;
-}
-
 static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& inputImage, int min_buffer_len){
     IMFSample* sample;
 
     HRESULT hr = MFCreateSample(&sample);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create the sample";
+        RTC_LOG(LS_ERROR) << "Failed to create the sample";
         return NULL;
     }
 
@@ -102,14 +75,14 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
     int size = imageSize > min_buffer_len ? imageSize : min_buffer_len;
     hr = MFCreateMemoryBuffer(size, &buffer);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create buffer";
+        RTC_LOG(LS_ERROR) << "Failed to create buffer";
         sample->Release();
         return NULL;
     }
 
     hr = sample->AddBuffer(buffer);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to add buffer to sample";
+        RTC_LOG(LS_ERROR) << "Failed to add buffer to sample";
         buffer->Release();
         sample->Release();
         return NULL;
@@ -119,7 +92,7 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
     //Now copy the image data to the buffer.
     hr = sample->GetBufferByIndex(0, &buffer);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to add buffer to sample";
+        RTC_LOG(LS_ERROR) << "Failed to add buffer to sample";
         sample->RemoveAllBuffers();
         buffer->Release();
         sample->Release();
@@ -131,7 +104,7 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
     DWORD current_length = 0;
     hr = buffer->Lock(&destination, &max_length, &current_length);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to lock buffer for copying image data";
+        RTC_LOG(LS_ERROR) << "Failed to lock buffer for copying image data";
         sample->RemoveAllBuffers();
         buffer->Release();
         sample->Release();
@@ -141,12 +114,12 @@ static IMFSample* CreateSampleFromEncodedImage(const webrtc::EncodedImage& input
 
     hr = buffer->Unlock();
     if (FAILED(hr)) {
-        LOG(LS_ERROR) << "Failed to unlock buffer";
+        RTC_LOG(LS_ERROR) << "Failed to unlock buffer";
     }
 
     hr = buffer->SetCurrentLength(static_cast<DWORD>(inputImage._length));
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to lock buffer for copying image data";
+        RTC_LOG(LS_ERROR) << "Failed to lock buffer for copying image data";
         sample->RemoveAllBuffers();
         buffer->Release();
         sample->Release();
@@ -171,7 +144,7 @@ MSDKVideoDecoder::PendingSampleInfo::PendingSampleInfo(
 
 MSDKVideoDecoder::PendingSampleInfo::~PendingSampleInfo(){}
 
-int32_t MSDKVideoDecoder::Release(){
+int32_t MSDKVideoDecoder::Release() {
     pending_input_buffer.clear();
     pending_output_samples_.clear();
     if (decoder_!=nullptr)
@@ -201,12 +174,12 @@ int32_t MSDKVideoDecoder::Release(){
 
 MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
+      decoder_thread_(new rtc::Thread()),
       inited_(false),
-      width_(0),
-      height_(0),
       state_(kUnitialized),
       output_format_(MFVideoFormat_NV12),
-      decoder_thread_(new rtc::Thread()) {
+      width_(0),
+      height_(0) {
   decoder_thread_->SetName("MSDKVideoDecoderThread", NULL);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
@@ -217,7 +190,7 @@ MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
   decoder_ = nullptr;
 }
 
-MSDKVideoDecoder::~MSDKVideoDecoder(){
+MSDKVideoDecoder::~MSDKVideoDecoder() {
     ntp_time_ms_.clear();
     timestamps_.clear();
     if (decoder_thread_.get() != nullptr){
@@ -282,14 +255,14 @@ WOW64Status MSDKVideoDecoder::GetWOW64Status() {
 bool MSDKVideoDecoder::CreateD3DDeviceManager(){
     HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9_);
     if (FAILED(hr) || (d3d9_ == NULL)){
-        LOG(LS_ERROR) << "Failed to create D3D9";
+        RTC_LOG(LS_ERROR) << "Failed to create D3D9";
         return false;
     }
     D3DPRESENT_PARAMETERS present_params = { 0 };
 
     HWND video_window = GetDesktopWindow();
     if (video_window == NULL){
-        LOG(LS_ERROR) << "Failed to get desktop window";
+        RTC_LOG(LS_ERROR) << "Failed to get desktop window";
     }
     RECT r;
     GetClientRect((HWND)video_window, &r);
@@ -324,23 +297,23 @@ bool MSDKVideoDecoder::CreateD3DDeviceManager(){
     //    D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_DISABLE_PSGP_THREADING | D3DCREATE_MULTITHREADED,
     //    &present_params, &dm, &device_);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create d3d9 device";
+        RTC_LOG(LS_ERROR) << "Failed to create d3d9 device";
         return false;
     }
     hr = DXVA2CreateDirect3DDeviceManager9(&dev_manager_reset_token_,
                                            &dev_manager_);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create D3D device manager";
+        RTC_LOG(LS_ERROR) << "Failed to create D3D device manager";
         return false;
     }
     hr = dev_manager_->ResetDevice(device_, dev_manager_reset_token_);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to set device to device manager";
+        RTC_LOG(LS_ERROR) << "Failed to set device to device manager";
         return false;
     }
     hr = device_->CreateQuery(D3DQUERYTYPE_EVENT, &query_);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create query";
+        RTC_LOG(LS_ERROR) << "Failed to create query";
         return false;
     }
     hr = query_->Issue(D3DISSUE_END);
@@ -354,12 +327,12 @@ bool MSDKVideoDecoder::GetStreamsInfoAndBufferReqs(){
     DWORD output_counts = 0;
     hr = decoder_->GetStreamCount(&input_counts, &output_counts);
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to get stream count";
+      RTC_LOG(LS_ERROR) << "Failed to get stream count";
       return false;
     }
     hr = decoder_->GetInputStreamInfo(0, &input_stream_info);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get input stream info";
+        RTC_LOG(LS_ERROR) << "Failed to get input stream info";
         return false;
     }
 
@@ -383,12 +356,12 @@ bool MSDKVideoDecoder::SetDecoderInputMediaType(){
     IMFMediaType * media_type;
     HRESULT hr = MFCreateMediaType(&media_type);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to create input media type";
+        RTC_LOG(LS_ERROR) << "Failed to create input media type";
         return false;
     }
     hr = media_type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to set major media type";
+        RTC_LOG(LS_ERROR) << "Failed to set major media type";
         media_type->Release();
         return false;
     }
@@ -399,26 +372,26 @@ bool MSDKVideoDecoder::SetDecoderInputMediaType(){
         hr = media_type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
     }
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to set sub media type";
+        RTC_LOG(LS_ERROR) << "Failed to set sub media type";
         media_type->Release();
         return false;
     }
     // MSDN recommends setting to interlace/progressive mixed mode...
     hr = media_type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to set interlace mode";
+        RTC_LOG(LS_ERROR) << "Failed to set interlace mode";
         media_type->Release();
         return false;
     }
 
     hr = decoder_->SetInputType(0, media_type, 0);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to set input type on the decoder MFT" << hr;
+        RTC_LOG(LS_ERROR) << "Failed to set input type on the decoder MFT" << hr;
         media_type->Release();
         return false;
     }
 
-    LOG(LS_INFO) << "Successfully set the input media type";
+    RTC_LOG(LS_INFO) << "Successfully set the input media type";
     media_type->Release();
     return true;
 }
@@ -430,24 +403,24 @@ bool MSDKVideoDecoder::SetDecoderOutputMediaType(const GUID& subtype){
         if (media_type != NULL){
             HRESULT hr = media_type->GetGUID(MF_MT_SUBTYPE, &out_subtype);
             if (FAILED(hr)){
-                LOG(LS_ERROR) << "Failed to get supported output type";
+                RTC_LOG(LS_ERROR) << "Failed to get supported output type";
                 media_type->Release();
                 return false;
             }
             if (out_subtype == subtype){
                 hr = decoder_->SetOutputType(0, media_type, 0);
                 if (FAILED(hr)){
-                    LOG(LS_ERROR) << "Failed to set output type on decoder MFT";
+                    RTC_LOG(LS_ERROR) << "Failed to set output type on decoder MFT";
                     return false;
                 }
                 hr = MFGetAttributeSize(media_type, MF_MT_FRAME_SIZE, reinterpret_cast<UINT32*>(&width_), reinterpret_cast<UINT32*>(&height_));
                 if (FAILED(hr)) {
-                  LOG(LS_ERROR) << "Failed to get output size";
+                  RTC_LOG(LS_ERROR) << "Failed to get output size";
                   return false;
                 }
                 hr = MFGetStrideForBitmapInfoHeader(output_format_.Data1, width_, reinterpret_cast<LONG*>(&stride_));
                 if (FAILED(hr)) {
-                  LOG(LS_ERROR) << "Failed to get stride.";
+                  RTC_LOG(LS_ERROR) << "Failed to get stride.";
                 }
             }
             media_type->Release();
@@ -457,11 +430,11 @@ bool MSDKVideoDecoder::SetDecoderOutputMediaType(const GUID& subtype){
 }
 
 int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores){
-  LOG(LS_INFO) << "InitDecode enter";
+  RTC_LOG(LS_INFO) << "InitDecode enter";
   // The stack is always calling InitDecode with 320x240 resolution. Force this
   // to be 640x480 and see effect?
   if (codecSettings == NULL) {
-    LOG(LS_ERROR) << "NULL codec settings";
+    RTC_LOG(LS_ERROR) << "NULL codec settings";
     return WEBRTC_VIDEO_CODEC_ERROR;
     }
     RTC_CHECK(codecSettings->codecType == codecType_) << "Unsupported codec type" << codecSettings->codecType << " for " << codecType_;
@@ -480,7 +453,7 @@ int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, in
 int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
     //Currently there is issue when resolution changes, stack calls into InitDecode with new CodecSettings again.
     //This results in the re-initialization failure if not cleaned up.
-    LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
+    RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
     CheckOnCodecThread();
     if ((codecType_ == webrtc::kVideoCodecVP8 || codecType_ == webrtc::kVideoCodecH264) && !inited_){
         //Since we're not in a sandbox, we can simply use CoCreateInsatace
@@ -488,7 +461,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
         if ((dxgi_manager_dll = ::GetModuleHandle(L"MFPlat.dll")) == NULL){
             HMODULE mfplat_dll = ::LoadLibrary(L"MFPlat.dll");
             if (mfplat_dll == NULL){
-                LOG(LS_ERROR) << "Failed to load MFPlat.dll.";
+                RTC_LOG(LS_ERROR) << "Failed to load MFPlat.dll.";
                 return WEBRTC_VIDEO_CODEC_ERROR;
             }
             //Once we are able to load the MFPlat.dll, this stands for the existence of the MF.
@@ -497,14 +470,14 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
         //For now we fallback to D3D9 device manager for windows as this works on all platform types.
         HRESULT hr = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to initialize COM for the MFT";
+            RTC_LOG(LS_ERROR) << "Failed to initialize COM for the MFT";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
 
         //Create the MFT to be used
         hr = MFStartup(MF_VERSION, MFSTARTUP_FULL);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to start MF";
+            RTC_LOG(LS_ERROR) << "Failed to start MF";
             //FIXME: use a state to control the shutdown and counitialization
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
@@ -527,18 +500,18 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
                 );
         }
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to load VP8 decoder MFT";
+            RTC_LOG(LS_ERROR) << "Failed to load VP8 decoder MFT";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
         IMFAttributes* attributes;
         hr = decoder_->GetAttributes(&attributes);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to get attributes";
+            RTC_LOG(LS_ERROR) << "Failed to get attributes";
         }
         UINT32 dxva = 0;
         hr = attributes->GetUINT32(MF_SA_D3D_AWARE, &dxva);
         if (!dxva){
-            LOG(LS_ERROR) << "Decoder does not support dxva";
+            RTC_LOG(LS_ERROR) << "Decoder does not support dxva";
             attributes->Release();
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
@@ -549,24 +522,24 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
 
         hr = attributes->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
         if (SUCCEEDED(hr)){
-            LOG(LS_ERROR) << "Succeed to set low latency mode on decoder";
+            RTC_LOG(LS_ERROR) << "Succeed to set low latency mode on decoder";
         }
         //TODO: if the MFT supports DX11, use DXGIDeviceManager instead
         UINT32 dx11 = 0;
         attributes->GetUINT32(MF_SA_D3D11_AWARE, &dx11);
         if (!dx11){
-            LOG(LS_ERROR) << "decoder does not support dx11";
+            RTC_LOG(LS_ERROR) << "decoder does not support dx11";
         }
         //we're done with the attribute, must release it.
         attributes->Release();
         if (!CreateD3DDeviceManager()){
-            LOG(LS_ERROR) << "Failed to create the d3d manager";
+            RTC_LOG(LS_ERROR) << "Failed to create the d3d manager";
             //expecting the caller release everything instead of doing it here.
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
         hr = decoder_->ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER, reinterpret_cast<ULONG_PTR>(dev_manager_));
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to set the d3d manager";
+            RTC_LOG(LS_ERROR) << "Failed to set the d3d manager";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
         //configure the input and output media types;
@@ -575,13 +548,13 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
         }
         hr = decoder_->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, NULL);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed sending begin streaming message";
+            RTC_LOG(LS_ERROR) << "Failed sending begin streaming message";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
 
         hr = decoder_->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, NULL);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed sending start streaming message";
+            RTC_LOG(LS_ERROR) << "Failed sending start streaming message";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
 
@@ -589,7 +562,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
 
         hr = decoder_->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL);
         if (FAILED(hr)){
-            LOG(LS_ERROR) << "Failed to send flush message";
+            RTC_LOG(LS_ERROR) << "Failed to send flush message";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
     }
@@ -597,7 +570,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread(){
     inited_ = true;
     state_ = kNormal;
 
-    LOG(LS_ERROR) << "InitDecoderOnCodecThread exit";
+    RTC_LOG(LS_ERROR) << "InitDecoderOnCodecThread exit";
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -621,7 +594,7 @@ int32_t MSDKVideoDecoder::Decode(
         ntp_time_ms_.push_back(inputImage.ntp_time_ms_);
         timestamps_.push_back(inputImage._timeStamp);
     }
-    //LOG(LS_ERROR) << "Requesting decoding image: ntp_time:" << inputImage.ntp_time_ms_ << " width: " << inputImage._encodedWidth << " height: "
+    //RTC_LOG(LS_ERROR) << "Requesting decoding image: ntp_time:" << inputImage.ntp_time_ms_ << " width: " << inputImage._encodedWidth << " height: "
     //    << inputImage._encodedHeight << " length " << inputImage._length << " size " << inputImage._size;
     return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&MSDKVideoDecoder::DecodeOnCodecThread, this, inputImage));
@@ -635,14 +608,14 @@ int32_t MSDKVideoDecoder::DecodeOnCodecThread(const webrtc::EncodedImage& inputI
     sample = CreateSampleFromEncodedImage(inputImage, in_buffer_size_);
 
     if (sample == NULL){
-        LOG(LS_ERROR) << "Failed to create sample from encoded image";
+        RTC_LOG(LS_ERROR) << "Failed to create sample from encoded image";
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     HRESULT hr = decoder_->ProcessInput(0, sample, 0);
 
     if (hr == MF_E_NOTACCEPTING){
-        //LOG(LS_ERROR) << "Receiving E_NOTACCEPT, handling the outputs";
+        //RTC_LOG(LS_ERROR) << "Receiving E_NOTACCEPT, handling the outputs";
         while (hr == MF_E_NOTACCEPTING){
             //we have some output buffer ready, we need to ProcessOutput first in order to ProcessInput again.
             DoDecode();
@@ -658,7 +631,7 @@ int32_t MSDKVideoDecoder::DecodeOnCodecThread(const webrtc::EncodedImage& inputI
     else {
         if (FAILED(hr)) sample->Release();
         //For all other types of return, we don't handle it and just return to decoder.
-        LOG(LS_ERROR) << "MF returns return code after the ProcessInput:" << hr;
+        RTC_LOG(LS_ERROR) << "MF returns return code after the ProcessInput:" << hr;
         DoDecode();  //drive the output when we succeed.
     }
     //BUGBUG: we're not sure if releasing the sample here is adequate or not. However, if we don't release it here, serious
@@ -688,7 +661,7 @@ void MSDKVideoDecoder::DecodePendingInputBuffers(){
 int32_t MSDKVideoDecoder::DecodeInternal(IMFSample* sample){
     CheckOnCodecThread();
     if (sample == NULL){
-        LOG(LS_ERROR) << "Invalid sample";
+        RTC_LOG(LS_ERROR) << "Invalid sample";
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
     HRESULT hr = decoder_->ProcessInput(0, sample, 0);
@@ -720,12 +693,12 @@ int32_t MSDKVideoDecoder::DoDecode(){
     //It will allocate buffer by itself. Leaving the check here.
     HRESULT hr = decoder_->GetOutputStreamInfo(0, &stream_info);
     if (stream_info.dwFlags&MFT_OUTPUT_STREAM_PROVIDES_SAMPLES){
-        //    LOG(LS_ERROR) << "The MFT allocate the sample:" << "cbSize-" << stream_info.cbSize << "align:" << stream_info.cbAlignment;
-        //    LOG(LS_ERROR) << "Flags:" << std::hex << std::showbase << stream_info.dwFlags;
+        //    RTC_LOG(LS_ERROR) << "The MFT allocate the sample:" << "cbSize-" << stream_info.cbSize << "align:" << stream_info.cbAlignment;
+        //    RTC_LOG(LS_ERROR) << "Flags:" << std::hex << std::showbase << stream_info.dwFlags;
 
     }
     else if (stream_info.dwFlags&MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES){
-        LOG(LS_ERROR) << "The MFT says calller can optionally provide the buffer";
+        RTC_LOG(LS_ERROR) << "The MFT says calller can optionally provide the buffer";
     }
 
     //In any case, we just create output samples by ourselves instead of using MFT allocated(if any)
@@ -741,24 +714,24 @@ int32_t MSDKVideoDecoder::DoDecode(){
         events->Release();
     }
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to process the output sample";
+        RTC_LOG(LS_ERROR) << "Failed to process the output sample";
         if (hr == MF_E_TRANSFORM_STREAM_CHANGE){
-            LOG(LS_ERROR) << "Received stream change message";
+            RTC_LOG(LS_ERROR) << "Received stream change message";
             if (!SetDecoderOutputMediaType(MFVideoFormat_NV12)){
                 return WEBRTC_VIDEO_CODEC_ERROR;
             }
             else{
-                LOG(LS_ERROR) << "Continue to process the output";
+                RTC_LOG(LS_ERROR) << "Continue to process the output";
                 DoDecode();
             }
         }
         else if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT){
             //If decoder asking for more inputs, we simply returns here.
-            LOG(LS_ERROR) << "Decoder asking for more inputs";
+            RTC_LOG(LS_ERROR) << "Decoder asking for more inputs";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
         else{
-            LOG(LS_ERROR) << "Decoder sending other error codes";
+            RTC_LOG(LS_ERROR) << "Decoder sending other error codes";
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
     }
@@ -772,7 +745,7 @@ int32_t MSDKVideoDecoder::DoDecode(){
 //ProcessOutputSample is responsible for retrieving the output buffer from HMFT and invoke callback to send data to
 //renderer.
 int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
-    LOG(LS_ERROR) << "ProcessingOutputSample start";
+    RTC_LOG(LS_ERROR) << "ProcessingOutputSample start";
     int64_t ntp_time_ms = 0;
     int64_t timestamp = 0;
     {
@@ -782,7 +755,7 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
         ntp_time_ms_.erase(ntp_time_ms_.begin());
       }
       if (timestamps_.size() > 0) {
-        LOG(LS_INFO) << "Setting the decoded image timestamp:"
+        RTC_LOG(LS_INFO) << "Setting the decoded image timestamp:"
                      << timestamps_.front();
 
         timestamp = timestamps_.front();
@@ -795,14 +768,14 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
     DWORD buf_count = 0;
     HRESULT hr = sample->GetBufferCount(&buf_count);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get output sample buffer count";
+        RTC_LOG(LS_ERROR) << "Failed to get output sample buffer count";
         sample->Release();
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     hr = sample->GetBufferByIndex(0, &buffer);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get buffer from output";
+        RTC_LOG(LS_ERROR) << "Failed to get buffer from output";
         sample->Release();
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -810,27 +783,27 @@ int32_t MSDKVideoDecoder::ProcessOutputSample(IMFSample* sample){
     IDirect3DSurface9* surface;
     hr = MFGetService(buffer, MR_BUFFER_SERVICE, IID_PPV_ARGS(&surface));
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get D3D surface from output sample";
+        RTC_LOG(LS_ERROR) << "Failed to get D3D surface from output sample";
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     D3DSURFACE_DESC surface_desc;
     hr = surface->GetDesc(&surface_desc);
     if (FAILED(hr)){
-        LOG(LS_ERROR) << "Failed to get surface description";
+        RTC_LOG(LS_ERROR) << "Failed to get surface description";
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
     int width = surface_desc.Width;
     int height = surface_desc.Height;
     D3DFORMAT format = surface_desc.Format;
-    LOG(LS_INFO) << "Surface info - height: " << height << " width: " << width
+    RTC_LOG(LS_INFO) << "Surface info - height: " << height << " width: " << width
                  << " Format:" << format;
 
     HANDLE hHandle = nullptr;
 
     hr = dev_manager_->OpenDeviceHandle(&hHandle);
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
+      RTC_LOG(LS_ERROR) << "Failed to open d3d device handle. Not rendering.";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 

@@ -7,9 +7,9 @@
 
 #include <memory>
 #include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/platform_thread.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/ics/sdk/include/cpp/ics/base/framegeneratorinterface.h"
 
@@ -72,10 +72,6 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   int32_t StopRecording() override;
   bool Recording() const override;
 
-  // Microphone Automatic Gain Control (AGC)
-  int32_t SetAGC(bool enable) override;
-  bool AGC() const override;
-
   // Audio mixer initialization
   int32_t InitSpeaker() override;
   bool SpeakerIsInitialized() const override;
@@ -117,7 +113,6 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
 
   // Delay information and control
   int32_t PlayoutDelay(uint16_t& delayMS) const override;
-  int32_t RecordingDelay(uint16_t& delayMS) const override;
 
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
 

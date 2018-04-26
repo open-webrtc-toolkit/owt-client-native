@@ -19,6 +19,7 @@
 #include "webrtc/rtc_base/json.h"
 #include "webrtc/rtc_base/timeutils.h"
 
+using namespace rtc;
 namespace ics {
 namespace conference {
 
@@ -86,7 +87,7 @@ void ConferenceSocketSignalingChannel::AddObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
   if (std::find(observers_.begin(), observers_.end(), &observer) !=
       observers_.end()) {
-    LOG(LS_INFO) << "Adding duplicated observer.";
+    RTC_LOG(LS_INFO) << "Adding duplicated observer.";
     return;
   }
   observers_.push_back(&observer);
@@ -126,7 +127,7 @@ void ConferenceSocketSignalingChannel::Connect(
   Json::Value json_token;
   Json::Reader reader;
   if (!reader.parse(token_decoded, json_token)) {
-    LOG(LS_ERROR) << "Parsing token failed.";
+    RTC_LOG(LS_ERROR) << "Parsing token failed.";
     if (on_failure != nullptr) {
       std::unique_ptr<Exception> e(new Exception(
           ExceptionType::kConferenceInvalidToken, "Invalid token."));
@@ -144,7 +145,7 @@ void ConferenceSocketSignalingChannel::Connect(
   socket_client_->set_reconnect_delay(kReconnectionDelay);
   socket_client_->set_socket_close_listener(
       [weak_this](std::string const& nsp) {
-        LOG(LS_INFO) << "Socket.IO disconnected.";
+        RTC_LOG(LS_INFO) << "Socket.IO disconnected.";
         auto that = weak_this.lock();
         if (that && (that->reconnection_attempted_ >= kReconnectionAttempts ||
                      that->disconnect_complete_)) {
@@ -152,7 +153,7 @@ void ConferenceSocketSignalingChannel::Connect(
         }
       });
   socket_client_->set_fail_listener([weak_this]() {
-    LOG(LS_ERROR) << "Socket.IO connection failed.";
+    RTC_LOG(LS_ERROR) << "Socket.IO connection failed.";
     auto that = weak_this.lock();
     if (that) {
       that->DropQueuedMessages();
@@ -162,7 +163,7 @@ void ConferenceSocketSignalingChannel::Connect(
     }
   });
   socket_client_->set_reconnecting_listener([weak_this]() {
-    LOG(LS_INFO) << "Socket.IO reconnecting.";
+    RTC_LOG(LS_INFO) << "Socket.IO reconnecting.";
     auto that = weak_this.lock();
     if (that) {
       if (that->reconnection_ticket_ != "") {
@@ -206,7 +207,7 @@ void ConferenceSocketSignalingChannel::Connect(
            [=](sio::message::list const& msg) {
              connect_failure_callback_ = nullptr;
              if (msg.size() < 2) {
-               LOG(LS_ERROR) << "Received unknown message while sending token.";
+               RTC_LOG(LS_ERROR) << "Received unknown message while sending token.";
                if (on_failure != nullptr) {
                  std::unique_ptr<Exception> e(new Exception(
                      ExceptionType::kConferenceInvalidParam,
@@ -219,7 +220,7 @@ void ConferenceSocketSignalingChannel::Connect(
                  msg.at(0);  // The first element indicates the state.
              std::string state = ack->get_string();
              if (state == "error" || state == "timeout") {
-               LOG(LS_ERROR) << "Server returns " << state
+               RTC_LOG(LS_ERROR) << "Server returns " << state
                              << " while joining a conference.";
                if (on_failure != nullptr) {
                  std::unique_ptr<Exception> e(new Exception(
@@ -259,7 +260,7 @@ void ConferenceSocketSignalingChannel::Connect(
       socket_client_->socket()->emit(
           kEventNameRelogin, reconnection_ticket_, [&](sio::message::list const& msg) {
             if (msg.size() < 2) {
-              LOG(LS_WARNING)
+              RTC_LOG(LS_WARNING)
                   << "Received unknown message while reconnection ticket.";
               reconnection_attempted_ = kReconnectionAttempts;
               socket_client_->close();
@@ -269,7 +270,7 @@ void ConferenceSocketSignalingChannel::Connect(
                 msg.at(0);  // The first element indicates the state.
             std::string state = ack->get_string();
             if (state == "error" || state == "timeout") {
-              LOG(LS_WARNING)
+              RTC_LOG(LS_WARNING)
                   << "Server returns " << state
                   << " when relogin. Maybe an invalid reconnection ticket.";
               reconnection_attempted_ = kReconnectionAttempts;
@@ -282,7 +283,7 @@ void ConferenceSocketSignalingChannel::Connect(
             if (message->get_flag() == sio::message::flag_string) {
               OnReconnectionTicket(message->get_string());
             }
-            LOG(LS_VERBOSE) << "Reconnection success";
+            RTC_LOG(LS_VERBOSE) << "Reconnection success";
             DrainQueuedMessages();
           });
     }
@@ -292,7 +293,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received stream event.";
+            RTC_LOG(LS_VERBOSE) << "Received stream event.";
             if (data->get_map()["status"] != nullptr &&
                 data->get_map()["status"]->get_flag() == sio::message::flag_string &&
                 data->get_map()["id"] != nullptr &&
@@ -330,7 +331,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received custom message.";
+            RTC_LOG(LS_VERBOSE) << "Received custom message.";
             std::string from = data->get_map()["from"]->get_string();
             std::string message = data->get_map()["message"]->get_string();
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
@@ -342,7 +343,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux([&](
           std::string const& name, sio::message::ptr const& data, bool is_ack,
           sio::message::list& ack_resp) {
-        LOG(LS_VERBOSE) << "Received user join/leave message.";
+        RTC_LOG(LS_VERBOSE) << "Received user join/leave message.";
         if (data == nullptr || data->get_flag() != sio::message::flag_object ||
             data->get_map()["action"] == nullptr ||
             data->get_map()["action"]->get_flag() != sio::message::flag_string) {
@@ -376,7 +377,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_VERBOSE) << "Received signaling message from erizo.";
+            RTC_LOG(LS_VERBOSE) << "Received signaling message from erizo.";
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnSignalingMessage(data);
             }
@@ -386,7 +387,7 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            LOG(LS_INFO) << "Received drop message.";
+            RTC_LOG(LS_INFO) << "Received drop message.";
             socket_client_->set_reconnect_attempts(0);
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnServerDisconnected();
@@ -458,15 +459,15 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
     event_name = kEventNameSubscribe;
   Emit(event_name, message_list,
        [=](sio::message::list const& msg) {
-         LOG(LS_INFO) << "Received ack from server.";
+         RTC_LOG(LS_INFO) << "Received ack from server.";
          if (on_success == nullptr) {
-           LOG(LS_WARNING) << "Does not implement success callback. Make sure "
+           RTC_LOG(LS_WARNING) << "Does not implement success callback. Make sure "
                               "it is what you want.";
            return;
          }
          sio::message::ptr message = msg.at(0);
          if (message->get_flag() != sio::message::flag_string) {
-           LOG(LS_WARNING)
+           RTC_LOG(LS_WARNING)
                << "The first element of publish ack is not a string.";
            if (on_failure) {
              std::unique_ptr<Exception> e(new Exception(
@@ -642,7 +643,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::ptr ack = msg.at(0);
   if (ack->get_flag() != sio::message::flag_string) {
-    LOG(LS_WARNING) << "The first element of emit ack is not a string.";
+    RTC_LOG(LS_WARNING) << "The first element of emit ack is not a string.";
     if (on_failure) {
       std::unique_ptr<Exception> e(
           new Exception(ExceptionType::kConferenceInvalidParam,
@@ -657,11 +658,11 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
       t.detach();
     }
   } else {
-    LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+    RTC_LOG(LS_WARNING) << "Send message to MCU received negative ack.";
     if (msg.size() > 1) {
       sio::message::ptr error_ptr = msg.at(1);
       if (error_ptr->get_flag() == sio::message::flag_string) {
-        LOG(LS_WARNING) << "Detail negative ack message: "
+        RTC_LOG(LS_WARNING) << "Detail negative ack message: "
                         << error_ptr->get_string();
       }
     }
@@ -676,7 +677,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
 
 void ConferenceSocketSignalingChannel::OnReconnectionTicket(
     const std::string& ticket) {
-  LOG(LS_VERBOSE) << "On reconnection ticket: " << ticket;
+  RTC_LOG(LS_VERBOSE) << "On reconnection ticket: " << ticket;
   reconnection_ticket_ = ticket;
   uint64_t now(0);
 // rtc::TimeMillis() seems not work well on iOS. It returns half of the actual
@@ -694,7 +695,7 @@ void ConferenceSocketSignalingChannel::OnReconnectionTicket(
   Json::Reader ticket_reader;
   if (!ticket_reader.parse(ticket_decoded, ticket_json)) {
     RTC_NOTREACHED();
-    LOG(LS_WARNING) << "Cannot parse reconnection ticket.";
+    RTC_LOG(LS_WARNING) << "Cannot parse reconnection ticket.";
     return;
   }
   Json::Value expiration_json;
@@ -704,11 +705,11 @@ void ConferenceSocketSignalingChannel::OnReconnectionTicket(
     auto expiration_time = std::stoll(expiration_str);
     int delay(expiration_time - now);
     if (delay < 0) {
-      LOG(LS_WARNING)
+      RTC_LOG(LS_WARNING)
           << "Reconnection ticket expiration time is earlier than now.";
       delay = 5 * 60 * 1000;  // Set delay to 5 mins.
     }
-    LOG(LS_VERBOSE) << "Reconnection ticket will expire in: " << delay / 1000
+    RTC_LOG(LS_VERBOSE) << "Reconnection ticket will expire in: " << delay / 1000
                     << "seconds";
     std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
         shared_from_this();
@@ -729,13 +730,13 @@ void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
       [=](sio::message::list const& ack) {
         if (ack.size() != 2) {
           RTC_NOTREACHED();
-          LOG(LS_WARNING) << "Wired ack for refreshing reconnection ticket.";
+          RTC_LOG(LS_WARNING) << "Wired ack for refreshing reconnection ticket.";
           return;
         }
         std::string state = ack.at(0)->get_string();
         std::string message = ack.at(1)->get_string();
         if (state != "success") {
-          LOG(LS_WARNING) << "Refresh reconnection ticket failed. Error: "
+          RTC_LOG(LS_WARNING) << "Refresh reconnection ticket failed. Error: "
                           << message;
           return;
         };
@@ -777,10 +778,10 @@ void ConferenceSocketSignalingChannel::Emit(
       shared_from_this();
   socket_client_->socket()->emit(
       name, message, [weak_this, message_id](sio::message::list const& msg) {
-        LOG(LS_INFO) << "Received ack for message ID: " << message_id;
+        RTC_LOG(LS_INFO) << "Received ack for message ID: " << message_id;
         auto that = weak_this.lock();
         if (!that) {
-          LOG(LS_WARNING) << "Signaling channel was destroyed before ack.";
+          RTC_LOG(LS_WARNING) << "Signaling channel was destroyed before ack.";
           return;
         }
         std::function<void(sio::message::list const&)> callback(nullptr);
@@ -793,11 +794,11 @@ void ConferenceSocketSignalingChannel::Emit(
           /*RTC_DCHECK_EQ(message_id, that->outgoing_messages_.front().id)
               << "Unordered Socket.IO message.";*/
           while (that->outgoing_messages_.front().id < message_id) {
-            LOG(LS_WARNING) << "Potential unordered Socket.IO message.";
+            RTC_LOG(LS_WARNING) << "Potential unordered Socket.IO message.";
             that->outgoing_messages_.pop();
           }
           if (that->outgoing_messages_.front().id > message_id) {
-            LOG(LS_ERROR) << "Original message for " << message_id
+            RTC_LOG(LS_ERROR) << "Original message for " << message_id
                           << " is not found.";
           }
           callback = that->outgoing_messages_.front().ack;
@@ -831,7 +832,7 @@ void ConferenceSocketSignalingChannel::DrainQueuedMessages() {
     std::lock_guard<std::mutex> lock(outgoing_message_mutex_);
     std::swap(temp_queue, outgoing_messages_);
   }
-  LOG(LS_INFO) << "outgoing_messages_ number after swap: "
+  RTC_LOG(LS_INFO) << "outgoing_messages_ number after swap: "
                << outgoing_messages_.size();
   while (!temp_queue.empty()) {
     auto sio_message = temp_queue.front();

@@ -23,6 +23,8 @@
 #define H264_SC_LENGTH 4
 // Maximum allowed NALUs in one output frame.
 #define MAX_NALUS_PERFRAME 32
+using namespace rtc;
+
 namespace ics {
 namespace base {
 
@@ -69,7 +71,7 @@ int CustomizedVideoEncoderProxy::Encode(
     // in the natvie handle instead of that passed uplink.
     external_encoder_ = encoder_buffer_handle->encoder->Copy();
     if (external_encoder_ == nullptr) {
-        LOG(LS_ERROR) << "Fail to duplicate video encoder";
+        RTC_LOG(LS_ERROR) << "Fail to duplicate video encoder";
         delete encoder_buffer_handle;
         encoder_buffer_handle = nullptr;
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -96,7 +98,7 @@ int CustomizedVideoEncoderProxy::Encode(
         media_codec = VideoCodec::kVP9;
 #endif
     else { //Not matching any supported format.
-      LOG(LS_ERROR) << "Requested encoding format not supported";
+      RTC_LOG(LS_ERROR) << "Requested encoding format not supported";
       delete encoder_buffer_handle;
       encoder_buffer_handle = nullptr;
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -106,16 +108,16 @@ int CustomizedVideoEncoderProxy::Encode(
     encoder_buffer_handle = nullptr;
     Resolution resolution(static_cast<int>(width), static_cast<int>(height));
     if (!external_encoder_->InitEncoderContext(resolution, fps, bitrate_kbps, media_codec)) {
-      LOG(LS_ERROR) << "Failed to init external encoder context";
+      RTC_LOG(LS_ERROR) << "Failed to init external encoder context";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   } else if (encoder_buffer_handle != nullptr && encoder_buffer_handle->encoder == nullptr) {
-      LOG(LS_ERROR) << "Invalid external encoder passed.";
+      RTC_LOG(LS_ERROR) << "Invalid external encoder passed.";
       delete encoder_buffer_handle;
       encoder_buffer_handle = nullptr;
       return WEBRTC_VIDEO_CODEC_ERROR;
   } else if (encoder_buffer_handle == nullptr) {
-     LOG(LS_ERROR) << "Invalid native handle passed.";
+     RTC_LOG(LS_ERROR) << "Invalid native handle passed.";
      return WEBRTC_VIDEO_CODEC_ERROR;
   } else { //normal case.
      delete encoder_buffer_handle;
@@ -206,7 +208,7 @@ int CustomizedVideoEncoderProxy::Encode(
       scPosition += static_cast<int32_t>(scLength);
     }
     if (scPositionsLength == 0) {
-      LOG(LS_ERROR) << "Start code is not found for H264 codec!";
+      RTC_LOG(LS_ERROR) << "Start code is not found for H264 codec!";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     scPositions[scPositionsLength] = data_size;
@@ -222,7 +224,7 @@ int CustomizedVideoEncoderProxy::Encode(
 
   const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
-    LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
+    RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 

@@ -7,6 +7,7 @@
 #include "talk/ics/sdk/base/peerconnectionchannel.h"
 #include "talk/ics/sdk/base/sdputils.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -27,7 +28,7 @@ PeerConnectionChannel::~PeerConnectionChannel() {
 }
 
 bool PeerConnectionChannel::InitializePeerConnection() {
-  LOG(LS_INFO) << "Initialize PeerConnection.";
+  RTC_LOG(LS_INFO) << "Initialize PeerConnection.";
   if (factory_.get() == nullptr)
     factory_ = PeerConnectionDependencyFactory::Get();
   media_constraints_.AddOptional(MediaConstraintsInterface::kEnableDtlsSrtp,
@@ -40,7 +41,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
                                                      &media_constraints_, this))
                          .get();
   if (!peer_connection_.get()) {
-    LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
+    RTC_LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
     RTC_DCHECK(false);
     return false;
   }
@@ -58,15 +59,14 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   return true;
 }
 
-bool PeerConnectionChannel::ApplyBitrateSettings() {
+void PeerConnectionChannel::ApplyBitrateSettings() {
   RTC_CHECK(peer_connection_);
-  bool ret = false;
 
   std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
       peer_connection_->GetSenders();
   if (senders.size() == 0) {
-    LOG(LS_WARNING) << "Cannot set max bitrate without stream added.";
-    return ret;
+    RTC_LOG(LS_WARNING) << "Cannot set max bitrate without stream added.";
+    return;
   }
 
   for (auto sender : senders) {
@@ -83,21 +83,21 @@ bool PeerConnectionChannel::ApplyBitrateSettings() {
           if (configuration_.audio.size() > 0 && configuration_.audio[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
                 rtc::Optional<int>(configuration_.audio[0].max_bitrate * 1024);
-            ret |= sender->SetParameters(rtp_parameters);
+            sender->SetParameters(rtp_parameters);
           }
         } else if (sender_track->kind() ==
                    webrtc::MediaStreamTrackInterface::kVideoKind) {
           if (configuration_.video.size() > 0 && configuration_.video[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
                 rtc::Optional<int>(configuration_.video[0].max_bitrate * 1024);
-            ret |= sender->SetParameters(rtp_parameters);
+            sender->SetParameters(rtp_parameters);
           }
         }
       }
     }
   }
 
-  return ret;
+  return;
 }
 
 const webrtc::SessionDescriptionInterface*
@@ -116,7 +116,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
   RTC_CHECK(peer_connection_);
   if (peer_connection_->signaling_state() ==
       webrtc::PeerConnectionInterface::SignalingState::kClosed) {
-    LOG(LS_WARNING)
+    RTC_LOG(LS_WARNING)
         << "Attempt to perform PeerConnection operation when it is closed.";
     return;
   }
@@ -151,7 +151,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       data_channel_ =
           peer_connection_->CreateDataChannel(param->data(), &config);
       data_channel_->RegisterObserver(this);
-      LOG(LS_INFO) << "Created data channel.";
+      RTC_LOG(LS_INFO) << "Created data channel.";
       delete param;
       break;
     }
@@ -162,7 +162,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       webrtc::SessionDescriptionInterface* desc = param->description;
       std::string sdp_string;
       if (!desc->ToString(&sdp_string)) {
-        LOG(LS_ERROR) << "Error parsing local description.";
+        RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
 
@@ -192,7 +192,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       webrtc::SessionDescriptionInterface* desc = param->description;
       std::string sdp_string;
       if (!desc->ToString(&sdp_string)) {
-        LOG(LS_ERROR) << "Error parsing local description.";
+        RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
       webrtc::SessionDescriptionInterface* new_desc(
@@ -232,12 +232,12 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       break;
     }
     default:
-      LOG(LS_WARNING) << "Unknown message type.";
+      RTC_LOG(LS_WARNING) << "Unknown message type.";
   }
 }
 
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
-  LOG(LS_INFO) << "Set remote sdp success.";
+  RTC_LOG(LS_INFO) << "Set remote sdp success.";
   if (peer_connection_->remote_description() &&
       peer_connection_->remote_description()->type() == "offer") {
     CreateAnswer();
@@ -246,26 +246,26 @@ void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Set remote sdp failed.";
+  RTC_LOG(LS_INFO) << "Set remote sdp failed.";
 }
 
 void PeerConnectionChannel::OnCreateSessionDescriptionSuccess(
     webrtc::SessionDescriptionInterface* desc) {
-  LOG(LS_INFO) << "Create sdp success.";
+  RTC_LOG(LS_INFO) << "Create sdp success.";
 }
 
 void PeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Create sdp failed.";
+  RTC_LOG(LS_INFO) << "Create sdp failed.";
 }
 
 void PeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
-  LOG(LS_INFO) << "Set local sdp success.";
+  RTC_LOG(LS_INFO) << "Set local sdp success.";
 }
 
 void PeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
-  LOG(LS_INFO) << "Set local sdp failed.";
+  RTC_LOG(LS_INFO) << "Set local sdp failed.";
 }
 
 void PeerConnectionChannel::OnIceCandidate(
@@ -292,7 +292,7 @@ void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
 
 void PeerConnectionChannel::OnNetworksChanged(){
-  LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
+  RTC_LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
 }
 
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()

@@ -22,6 +22,9 @@
 #define H264_SC_LENGTH 4
 // Maximum allowed NALUs in one output frame.
 #define MAX_NALUS_PERFRAME 32
+
+using namespace rtc;
+
 void MFTEncoderThread::Run() {
     ProcessMessages(kForever);
     SetAllowBlockingCalls(true);
@@ -32,7 +35,7 @@ MFTEncoderThread::~MFTEncoderThread(){
 }
 
 H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), max_bitrate_(0), width_(0),
-  height_(0), framerate_(0), encoder_thread_(new MFTEncoderThread()), inited_(false), m_memType_(SYSTEM_MEMORY){
+  height_(0), framerate_(0), m_memType_(SYSTEM_MEMORY), encoder_thread_(new MFTEncoderThread()), inited_(false) {
     m_pmfxAllocatorParams = nullptr;
     m_pMFXAllocator = nullptr;
     m_pmfxENC = nullptr;
@@ -116,7 +119,7 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     mfxStatus sts;
     mfxVersion minVer;
     //    mfxVersion Version;
-    LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << ",framerate:" <<
+    RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << ",framerate:" <<
         codec_settings->maxFramerate << "targetBitRate:" << codec_settings->targetBitrate;
     minVer.Major = 1;
     minVer.Minor = 0;
@@ -458,7 +461,7 @@ int H264VideoMFTEncoder::Encode(
       scPosition += static_cast<int32_t>(scLength);
     }
     if (scPositionsLength == 0) {
-      LOG(LS_ERROR) << "Start code is not found for H264 codec!";
+      RTC_LOG(LS_ERROR) << "Start code is not found for H264 codec!";
       delete[] pbsData;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -473,7 +476,7 @@ int H264VideoMFTEncoder::Encode(
     }
     const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
     if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
-      LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
+      RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
       delete[] pbsData;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -632,7 +635,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         scPosition += static_cast<int32_t>(scLength);
     }
     if (scPositionsLength == 0) {
-        LOG(LS_ERROR) << "Start code is not found for H264 codec!";
+        RTC_LOG(LS_ERROR) << "Start code is not found for H264 codec!";
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -648,7 +651,7 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
 
     const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
     if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
-        LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
+        RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }

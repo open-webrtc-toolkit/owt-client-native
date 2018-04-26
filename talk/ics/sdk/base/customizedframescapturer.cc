@@ -4,14 +4,15 @@
 
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/ics/sdk/base/customizedframescapturer.h"
 #include "talk/ics/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/ics/sdk/base/nativehandlebuffer.h"
 
+using namespace rtc;
 namespace ics {
 namespace base {
 
@@ -124,7 +125,7 @@ void CustomizedFramesCapturer::Init() {
 cricket::CaptureState CustomizedFramesCapturer::Start(
     const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
-    LOG(LS_ERROR) << "Yuv Frame Generator is already running";
+    RTC_LOG(LS_ERROR) << "Yuv Frame Generator is already running";
     return CS_FAILED;
   }
   SetCaptureFormat(&capture_format);
@@ -136,12 +137,12 @@ cricket::CaptureState CustomizedFramesCapturer::Start(
   frames_generator_thread = new CustomizedFramesThread(this, fps_);
   bool ret = frames_generator_thread->Start();
   if (ret) {
-    LOG(LS_INFO) << "Yuv Frame Generator started";
+    RTC_LOG(LS_INFO) << "Yuv Frame Generator started";
     return CS_RUNNING;
   } else {
     async_invoker_.reset();
     worker_thread_ = nullptr;
-    LOG(LS_ERROR) << "Yuv Frame Generator failed to start";
+    RTC_LOG(LS_ERROR) << "Yuv Frame Generator failed to start";
     return CS_FAILED;
   }
 }
@@ -155,7 +156,7 @@ void CustomizedFramesCapturer::Stop() {
     frames_generator_thread->Quit();
     delete frames_generator_thread;
     frames_generator_thread = nullptr;
-    LOG(LS_INFO) << "Yuv Frame Generator stopped";
+    RTC_LOG(LS_INFO) << "Yuv Frame Generator stopped";
   }
   SetCaptureFormat(nullptr);
   worker_thread_ = nullptr;
@@ -180,7 +181,7 @@ int CustomizedFramesCapturer::I420DataSize(int height,
 
 void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
   if (size > frame_buffer_capacity_ || !frame_buffer_) {
-    LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
+    RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
     width_ = frame_generator_->GetWidth();
     height_ = frame_generator_->GetHeight();
     int stride_y = width_;
@@ -189,7 +190,7 @@ void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
     frame_buffer_capacity_ =
         I420DataSize(height_, stride_y, stride_uv, stride_uv);
     if (frame_buffer_capacity_ < size) {
-      LOG(LS_ERROR) << "User provides invalid data size. Expected size: "
+      RTC_LOG(LS_ERROR) << "User provides invalid data size. Expected size: "
                     << frame_buffer_capacity_ << ", user wants: " << size;
     }
   }
@@ -205,7 +206,7 @@ void CustomizedFramesCapturer::ReadFrame() {
     if (frame_generator_->GenerateNextFrame(
             frame_buffer_->MutableDataY(), frame_buffer_capacity_) != frame_size) {
       RTC_DCHECK(false);
-      LOG(LS_ERROR) << "Failed to get video frame.";
+      RTC_LOG(LS_ERROR) << "Failed to get video frame.";
       return;
     }
     webrtc::VideoFrame capture_frame(frame_buffer_, 0, rtc::TimeMillis(),

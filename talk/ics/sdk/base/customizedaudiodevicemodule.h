@@ -36,9 +36,6 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(AudioLayer* audioLayer) const override;
 
-  // Error handling
-  ErrorCode LastError() const override;
-
   // Full-duplex transportation of PCM audio
   int32_t RegisterAudioCallback(AudioTransport* audioCallback) override;
 
@@ -79,10 +76,6 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int32_t StopRecording() override;
   bool Recording() const override;
 
-  // Microphone Automatic Gain Control (AGC)
-  int32_t SetAGC(bool enable) override;
-  bool AGC() const override;
-
   // Audio mixer initialization
   int32_t InitSpeaker() override;
   bool SpeakerIsInitialized() const override;
@@ -120,22 +113,9 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   int32_t StereoRecordingIsAvailable(bool* available) const override;
   int32_t SetStereoRecording(bool enable) override;
   int32_t StereoRecording(bool* enabled) const override;
-  int32_t SetRecordingChannel(const ChannelType channel) override;
-  int32_t RecordingChannel(ChannelType* channel) const override;
 
   // Delay information and control
   int32_t PlayoutDelay(uint16_t* delayMS) const override;
-  int32_t RecordingDelay(uint16_t* delayMS) const override;
-
-  // Native sample rate controls (samples/sec)
-  int32_t SetRecordingSampleRate(const uint32_t samplesPerSec) override;
-  int32_t RecordingSampleRate(uint32_t* samplesPerSec) const override;
-  int32_t SetPlayoutSampleRate(const uint32_t samplesPerSec) override;
-  int32_t PlayoutSampleRate(uint32_t* samplesPerSec) const override;
-
-  // Mobile device specific functions
-  int32_t SetLoudspeakerStatus(bool enable) override;
-  int32_t GetLoudspeakerStatus(bool* enabled) const override;
 
   // Only supported on Android.
   bool BuiltInAECIsAvailable() const override;
@@ -168,7 +148,6 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
 
   AudioDeviceBuffer _audioDeviceBuffer;
 
-  int32_t _id;
   int64_t _lastProcessTime;
   bool _initialized;
   mutable ErrorCode _lastError;
