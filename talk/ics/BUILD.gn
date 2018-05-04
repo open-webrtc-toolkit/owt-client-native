@@ -74,6 +74,7 @@ if (!is_ios) {
       ":ics_sdk_p2p",
       "//third_party/protobuf:protobuf_lite",
       "//third_party/webrtc",
+      "//third_party/webrtc:webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
     complete_static_lib = true
@@ -132,6 +133,19 @@ static_library("ics_sdk_base") {
     "//third_party/webrtc/rtc_base:rtc_json",
     "//third_party/webrtc/system_wrappers:metrics_default",
     "//third_party/webrtc/system_wrappers:system_wrappers_default",
+    "//third_party/webrtc/system_wrappers:field_trial_default",
+    "//third_party/webrtc/system_wrappers:runtime_enabled_features_default",
+    "//third_party/webrtc/api:libjingle_peerconnection_api",
+    "//third_party/webrtc/api:video_frame_api",
+    "//third_party/webrtc/api:video_frame_api_i420",
+    "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
+    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
+    "//third_party/webrtc/media:rtc_audio_video",
+    "//third_party/webrtc/media:rtc_media_base",
+    "//third_party/webrtc/modules/video_capture:video_capture_module",
+    "//third_party/webrtc/pc:libjingle_peerconnection",
+    "//third_party/webrtc/rtc_base:rtc_base",
+    "//third_party/webrtc/rtc_base:rtc_base_approved",
   ]
 
   include_dirs = [
