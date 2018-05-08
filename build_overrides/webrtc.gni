@@ -18,7 +18,7 @@ rtc_include_internal_audio_device = true
 rtc_include_tests = false
 
 # Enable this to use H.265 encoder/decoder on Windows.
-if (is_win) {
+if (is_win || is_ios) {
   # TODO: Enable H.265 on Windows.
   rtc_use_h265 = true
 } else {

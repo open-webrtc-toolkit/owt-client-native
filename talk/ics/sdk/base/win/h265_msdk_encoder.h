@@ -81,8 +81,8 @@ private:
     std::auto_ptr<MFXPlugin> m_hevc_plugin_;
     mfxBitstream            m_mfxBS; // contains encoded data
     mfxU32 m_nFramesProcessed;
-    H265MemType m_memType_;
     std::unique_ptr<H265EncoderThread> encoder_thread_;
+    H265MemType m_memType_;
     bool inited_;
 #ifdef ICS_DEBUG_H265_ENC
     FILE *output;

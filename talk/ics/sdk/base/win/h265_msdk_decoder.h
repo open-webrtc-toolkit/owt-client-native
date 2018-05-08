@@ -79,7 +79,6 @@ private:
 
     // Type of video codec.
     webrtc::VideoCodecType codecType_;
-    std::unique_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
     mfxStatus ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize);
     void WipeMfxBitstream(mfxBitstream* pBitstream);
     void ReadFromInputStream(mfxBitstream* pBitstream, uint8_t *data, size_t len);
@@ -108,7 +107,7 @@ private:
     bool inited_;
     int width_;
     int height_;
-
+    std::unique_ptr<rtc::Thread> decoder_thread_;  //thread on which the decoder will be working on.
     webrtc::VideoCodec codec_;
     //webrtc::I420VideoFrame decoded_image_;
     webrtc::I420BufferPool decoded_frame_pool_;

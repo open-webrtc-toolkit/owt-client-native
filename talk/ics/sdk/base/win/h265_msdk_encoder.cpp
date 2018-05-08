@@ -36,15 +36,23 @@ H265EncoderThread::~H265EncoderThread(){
     Stop();
 }
 
-H265VideoMFTEncoder::H265VideoMFTEncoder() : callback_(nullptr), bitrate_(0), width_(0),
-  height_(0), framerate_(0), m_memType_(H265_SYSTEM_MEMORY), encoder_thread_(new H265EncoderThread()), inited_(false) {
-    m_pmfxAllocatorParams = nullptr;
-    m_pMFXAllocator = nullptr;
-    m_pmfxENC = nullptr;
-    m_pEncSurfaces = nullptr;
-    m_nFramesProcessed = 0;
-    encoder_thread_->SetName("H265MSDKVideoEncoderThread", NULL);
-    RTC_CHECK(encoder_thread_->Start()) << "Failed to start encoder thread for MSDK encoder";
+H265VideoMFTEncoder::H265VideoMFTEncoder()
+    : callback_(nullptr),
+      bitrate_(0),
+      width_(0),
+      height_(0),
+      framerate_(0),
+      encoder_thread_(new H265EncoderThread()),
+      m_memType_(H265_SYSTEM_MEMORY),
+      inited_(false) {
+  m_pmfxAllocatorParams = nullptr;
+  m_pMFXAllocator = nullptr;
+  m_pmfxENC = nullptr;
+  m_pEncSurfaces = nullptr;
+  m_nFramesProcessed = 0;
+  encoder_thread_->SetName("H265MSDKVideoEncoderThread", NULL);
+  RTC_CHECK(encoder_thread_->Start())
+      << "Failed to start encoder thread for MSDK encoder";
 #ifdef ICS_DEBUG_H265_ENC
     output = fopen("out.H265", "wb");
     input = fopen("in.yuv", "wb");
@@ -124,9 +132,11 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     //Create the session
     mfxStatus sts;
     mfxVersion minVer;
-    //    mfxVersion Version;
-    RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << "framerate:" <<
-        codec_settings->maxFramerate << "targetBitRate:" << codec_settings->targetBitrate;
+    // mfxVersion Version;
+    RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:"
+                      << codec_settings->maxBitrate
+                      << "framerate:" << codec_settings->maxFramerate
+                      << "targetBitRate:" << codec_settings->targetBitrate;
     minVer.Major = 1;
     minVer.Minor = 0;
     mfxInitParam initParam;
@@ -161,7 +171,7 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         //Depending on the implementation type, loads HW/SW Hevc encoder plugin
         m_hevc_plugin_.reset(LoadPlugin(MFX_PLUGINTYPE_VIDEO_ENCODE, m_mfxSession_, MFX_PLUGINID_HEVCE_HW, 1));
         if (m_hevc_plugin_.get() == nullptr) {
-        //Fails to load HW plugin. check GACC and SW implementation accordingly. 
+        //Fails to load HW plugin. check GACC and SW implementation accordingly.
             m_hevc_plugin_.reset(LoadPlugin(MFX_PLUGINTYPE_VIDEO_ENCODE, m_mfxSession_, MFX_PLUGINID_HEVCE_GACC, 1));
             if (m_hevc_plugin_.get() == nullptr) {
                 //Normally we don't have SW plugin in the system. Just put here as the last effort.
@@ -727,7 +737,7 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
     info.codecType = codecType_;
-    // Generate a header describing a single fragment. Intel hevc encoder might generate NAL with start code 0x000001 
+    // Generate a header describing a single fragment. Intel hevc encoder might generate NAL with start code 0x000001
     // instead of 0x00000001, so we need to handle it accordingly.
     webrtc::RTPFragmentationHeader header;
     memset(&header, 0, sizeof(header));

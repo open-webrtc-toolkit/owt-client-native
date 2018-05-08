@@ -453,17 +453,11 @@ void P2PPeerConnectionChannel::OnMessageNegotiationNeeded() {
 }
 
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
-  if (session_state_ == kSessionStateReady ||
-      session_state_ == kSessionStateOffered ||
-      session_state_ == kSessionStatePending) {
-    RTC_LOG(LS_WARNING)
-        << "Received signaling message in invalid state. Current state: "
-        << session_state_;
-    return;
-  }
+  RTC_LOG(LS_INFO) << "OnMessageSignal";
   string type;
   string desc;
   rtc::GetStringFromJsonObject(message, kSessionDescriptionTypeKey, &type);
+  RTC_LOG(LS_INFO) << "Received message type: " << type;
   if (type == "offer" || type == "answer") {
     if (type == "offer" && session_state_ == kSessionStateMatched) {
       ChangeSessionState(kSessionStateConnecting);
@@ -492,6 +486,8 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
         new SetSessionDescriptionMessage(observer.get(), desc);
     if (type == "offer" &&
         SignalingState() != webrtc::PeerConnectionInterface::kStable) {
+      RTC_LOG(LS_INFO) << "Signaling state is " << SignalingState()
+                       << ", set SDP later.";
       if (set_remote_sdp_task_) {
         delete set_remote_sdp_task_;
       }

@@ -96,7 +96,7 @@ deps = {
   'src/third_party/gtest-parallel':
     Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + 'a8f5453ffc8d6c55a456d3b8395801c3aea9c714',
   'src/third_party/webrtc':
-    Var('internal_ccr1_git') + '/webrtc-webrtcstack.git' + '@' + '977616e2bba7b5dfde27e4cd0f286df1ed9eca8f',
+    Var('internal_ccr1_git') + '/webrtc-webrtcstack.git' + '@' + 'd1cedb3aba02f04e4bfd85916b6c1de6d21d7cc9',
 }
 
 deps_os = {

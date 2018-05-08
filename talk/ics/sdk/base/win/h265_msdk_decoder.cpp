@@ -54,10 +54,10 @@ int32_t H265MSDKVideoDecoder::Release() {
 
 H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
-      decoder_thread_(new rtc::Thread()),
       inited_(false),
       width_(0),
-      height_(0) {
+      height_(0),
+      decoder_thread_(new rtc::Thread()) {
   decoder_thread_->SetName("H265MSDKVideoDecoderThread", NULL);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";

@@ -14,6 +14,7 @@
 #include "webrtc/media/base/mediachannel.h"
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/system_wrappers/include/field_trial_default.h"
 #if defined(WEBRTC_WIN)
 #include "talk/ics/sdk/base/win/mftvideodecoderfactory.h"
@@ -114,36 +115,44 @@ void PeerConnectionDependencyFactory::
   worker_thread->SetName("worker_thread", NULL);
   rtc::Thread* signaling_thread = new rtc::Thread();
   signaling_thread->SetName("signaling_thread", NULL);
-  RTC_CHECK(worker_thread->Start() && signaling_thread->Start())
+  rtc::Thread* network_thread = new rtc::Thread();
+  network_thread->SetName("network_thread", nullptr);
+  RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
+            network_thread->Start())
       << "Failed to start threads";
-  std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-  std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
 
 #if defined(WEBRTC_IOS)
+  // Use webrtc::VideoEn(De)coderFactory on iOS.
+  std::unique_ptr<VideoEncoderFactory> encoder_factory;
+  std::unique_ptr<VideoDecoderFactory> decoder_factory;
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
-#endif
-
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-  #if defined(WEBRTC_WIN)
-    if (render_hardware_acceleration_enabled_) {
-      if (!encoded_frame_) {
-        encoder_factory.reset(new MSDKVideoEncoderFactory());
-      }
-      if (!GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
-        decoder_factory.reset(new MSDKVideoDecoderFactory());
-      }
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+  std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
+#if defined(WEBRTC_WIN)
+  if (render_hardware_acceleration_enabled_) {
+    if (!encoded_frame_) {
+      encoder_factory.reset(new MSDKVideoEncoderFactory());
     }
-#endif
-    if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
-      decoder_factory.reset(new CustomizedVideoDecoderFactory(GlobalConfiguration::GetCustomizedVideoDecoder()));
+    if (!GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+      decoder_factory.reset(new MSDKVideoDecoderFactory());
     }
+  }
 #endif
+  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+    decoder_factory.reset(new CustomizedVideoDecoderFactory(
+        GlobalConfiguration::GetCustomizedVideoDecoder()));
+  }
 
   // Encoded video frame enabled
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   }
+#else
+#error "Unsupported platform."
+#endif
+
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
@@ -157,12 +166,23 @@ void PeerConnectionDependencyFactory::
                     this));
   }
 
+#if defined(WEBRTC_IOS)
+  pc_factory_ = webrtc::CreatePeerConnectionFactory(
+      network_thread, worker_thread, signaling_thread, adm,
+      webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
+      std::move(decoder_factory), nullptr,
+      nullptr);  // Decoder factory
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       worker_thread, signaling_thread, adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
+#else
+#error "Unsupported platform."
+#endif
 
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }

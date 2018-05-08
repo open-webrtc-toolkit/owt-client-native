@@ -34,7 +34,7 @@ namespace base{
 
 // TODO: The following exceptions need to sync with other SDKs
 enum class ExceptionType : int {
-  kUnknown = 101, // General exception
+  kUnknown = 1000, // General exception
 
   // kLocal* for local stream exceptions
   kLocalUnknown = 1100,
