@@ -1382,6 +1382,7 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   added_stream_type_.erase(stream_type);
   current_conference_info_->TriggerOnStreamEnded(id);
   current_conference_info_->RemoveStreamById(id);
+  const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
   for (auto its = stream_update_observers_.begin(); its != stream_update_observers_.end(); ++its) {
     (*its).get().OnStreamRemoved(id);
   }
