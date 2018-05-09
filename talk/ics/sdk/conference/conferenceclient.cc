@@ -1306,7 +1306,7 @@ bool ConferenceClient::ParseUser(sio::message::ptr user_message,
   std::string user_name = user_message->get_map()["user"]->get_string();
   std::string role = user_message->get_map()["role"]->get_string();
 
-  *participant = new Participant(id, user_name, role);
+  *participant = new Participant(id, role, user_name);
   return true;
 }
 
