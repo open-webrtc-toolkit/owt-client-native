@@ -334,6 +334,7 @@ LocalStream::LocalStream(
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  Id(media_stream_id);
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   // Create audio track
@@ -419,6 +420,7 @@ LocalStream::LocalStream(
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  Id(media_stream_id);
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   // Create audio track
@@ -458,6 +460,7 @@ LocalStream::LocalStream(
   scoped_refptr<PeerConnectionDependencyFactory> factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  Id(media_stream_id);
   scoped_refptr<MediaStreamInterface> stream =
       factory->CreateLocalMediaStream(media_stream_id);
   std::unique_ptr<BasicDesktopCapturer> capturer(nullptr);
@@ -501,6 +504,7 @@ LocalStream::LocalStream(
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  Id(media_stream_id);
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   std::unique_ptr<CustomizedFramesCapturer> capturer(nullptr);
@@ -535,6 +539,7 @@ LocalStream::LocalStream(
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
+  Id(media_stream_id);
   scoped_refptr<MediaStreamInterface> stream =
       pcd_factory->CreateLocalMediaStream(media_stream_id);
   std::unique_ptr<CustomizedFramesCapturer> capturer(nullptr);
