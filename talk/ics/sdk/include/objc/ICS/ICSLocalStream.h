@@ -25,7 +25,7 @@
  */
 
 #import "ICS/ICSStream.h"
-#import "WebRTC/WebRTC.h"
+#import "WebRTC/RTCMediaStream.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -5,8 +5,8 @@
 #include "talk/ics/sdk/base/objc/ObjcVideoCodecFactory.h"
 
 #import "WebRTC/RTCVideoCodecH264.h"
-#include "webrtc/sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.h"
-#include "webrtc/sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.h"
+#include "webrtc/sdk/objc/Framework/Native/src/objc_video_decoder_factory.h"
+#include "webrtc/sdk/objc/Framework/Native/src/objc_video_encoder_factory.h"
 
 namespace ics {
 namespace base {

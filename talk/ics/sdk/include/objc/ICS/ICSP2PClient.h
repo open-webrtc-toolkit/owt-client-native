@@ -26,6 +26,8 @@
 
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+#import <WebRTC/RTCLegacyStatsReport.h>
+
 #import "ICS/ICSLocalStream.h"
 #import "ICS/ICSP2PClientConfiguration.h"
 #import "ICS/ICSP2PPeerConnectionChannelObserver.h"

@@ -29,7 +29,7 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
              parameters.CameraId() == "Front Camera") {
     position = AVCaptureDevicePositionFront;
   } else {
-    LOG(LS_ERROR) << "Cannot find suitable camera device.";
+    RTC_LOG(LS_ERROR) << "Cannot find suitable camera device.";
     RTC_NOTREACHED();
     return nullptr;
   }
@@ -43,7 +43,7 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     }
   }
   if (device == nullptr) {
-    LOG(LS_ERROR) << "Cannot find suitable camera devices.";
+    RTC_LOG(LS_ERROR) << "Cannot find suitable camera devices.";
     return nullptr;
   }
   AVCaptureDeviceFormat* format = nil;
@@ -59,7 +59,7 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     }
   }
   if (format == nil) {
-    LOG(LS_ERROR) << "Cannot open camera with suitable format.";
+    RTC_LOG(LS_ERROR) << "Cannot open camera with suitable format.";
     return nullptr;
   }
   bool valid_fps(false);
@@ -71,7 +71,7 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     }
   }
   if (!valid_fps) {
-    LOG(LS_ERROR) << "Cannot open camera with suitable FPS.";
+    RTC_LOG(LS_ERROR) << "Cannot open camera with suitable FPS.";
     return nullptr;
   }
   [capturer startCaptureWithDevice:device format:format fps:parameters.Fps()];

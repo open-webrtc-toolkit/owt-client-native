@@ -3,6 +3,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <WebRTC/RTCLegacyStatsReport.h>
 
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalStream.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSP2PSignalingSenderProtocol.h"

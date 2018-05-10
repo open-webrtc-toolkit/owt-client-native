@@ -32,22 +32,22 @@ void NetworkMonitorIos::StartReachabilityNotifications() {
   if (SCNetworkReachabilitySetCallback(reachability_,
                                        &NetworkMonitorIos::ReachabilityCallback,
                                        &reachability_context)) {
-    LOG(LS_INFO) << "SCNetworkReachabilitySetCallback";
+    RTC_LOG(LS_INFO) << "SCNetworkReachabilitySetCallback";
   }
 
   if (!SCNetworkReachabilitySetCallback(
           reachability_, &NetworkMonitorIos::ReachabilityCallback,
           &reachability_context)) {
-    LOG(LS_ERROR) << "Could not set network reachability callback";
+    RTC_LOG(LS_ERROR) << "Could not set network reachability callback";
     reachability_ = nullptr;
   } else if (!SCNetworkReachabilitySetDispatchQueue(
                  reachability_, dispatch_get_global_queue(
                                     DISPATCH_QUEUE_PRIORITY_DEFAULT, 0))) {
-    LOG(LS_ERROR)
+    RTC_LOG(LS_ERROR)
         << "Could not schedule network reachability on dispatch queue.";
     reachability_ = nullptr;
   }
-  LOG(LS_INFO) << "StartReachabilityNotifications";
+  RTC_LOG(LS_INFO) << "StartReachabilityNotifications";
 }
 
 void NetworkMonitorIos::StopReachabilityNotifications() {
@@ -59,7 +59,7 @@ void NetworkMonitorIos::StopReachabilityNotifications() {
 void NetworkMonitorIos::ReachabilityCallback(SCNetworkReachabilityRef target,
                                              SCNetworkConnectionFlags flags,
                                              void* notifier) {
-  LOG(LS_INFO) << "NetworkMonitorIos::ReachabilityCallback";
+  RTC_LOG(LS_INFO) << "NetworkMonitorIos::ReachabilityCallback";
 
   NetworkMonitorIos* network_monitor_ios =
       static_cast<NetworkMonitorIos*>(notifier);
@@ -74,7 +74,7 @@ rtc::AdapterType NetworkMonitorIos::GetAdapterType(
 
 void NetworkMonitorIos::Init() {
   // Check reachability for 0.0.0.0.
-  struct sockaddr_in addr = {0};
+  struct sockaddr_in addr;
   addr.sin_len = sizeof(addr);
   addr.sin_family = AF_INET;
   reachability_ = SCNetworkReachabilityCreateWithAddress(

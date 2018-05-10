@@ -25,5 +25,8 @@ if (woogeen_use_openssl) {
     } else {
       assert(false, "External OpenSSL only supported on iOS and Windows.")
     }
+    if (is_clang) {
+      cflags = [ "-Wno-deprecated-declarations" ]
+    }
   }
 }

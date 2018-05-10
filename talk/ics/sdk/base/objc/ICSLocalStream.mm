@@ -6,6 +6,9 @@
 #include <unordered_map>
 
 #import <Foundation/Foundation.h>
+#import <WebRTC/RTCCameraVideoCapturer.h>
+#import <WebRTC/RTCVideoSource.h>
+
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
 #import "talk/ics/sdk/base/objc/RTCPeerConnectionFactory+ICS.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalStream.h"

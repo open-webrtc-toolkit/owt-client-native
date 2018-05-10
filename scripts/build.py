@@ -42,8 +42,7 @@ APP_TARGETS = ['AppRTCMobile']
 WEBRTC_FRAMEWORK_NAME = 'WebRTC.framework'
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
 TEST_TARGETS=['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
-    'modules_tests', 'rtc_pc_unittests', 'system_wrappers_unittests', 'test_support_unittests',
-    'voice_engine_unittests']
+    'modules_tests', 'rtc_pc_unittests', 'system_wrappers_unittests', 'test_support_unittests']
 TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
 TEST_SIMULATOR_DEVICE = 'iPhone X'
