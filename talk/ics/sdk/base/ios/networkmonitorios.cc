@@ -8,6 +8,8 @@
 
 #include "talk/ics/sdk/base/ios/networkmonitorios.h"
 
+using namespace rtc;
+
 namespace ics {
 namespace base {
 

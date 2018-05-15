@@ -6,6 +6,8 @@
 #include "talk/ics/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/ics/sdk/base/encodedvideoencoderfactory.h"
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
+#include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssladapter.h"
 #include "webrtc/rtc_base/thread.h"
@@ -157,7 +159,8 @@ void PeerConnectionDependencyFactory::
 
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       worker_thread, signaling_thread, adm,
-      nullptr, nullptr,            // Audio encoder and decoder factory
+      webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateBuiltinAudioDecoderFactory(),
       encoder_factory.release(),   // Encoder factory
       decoder_factory.release());  // Decoder factory
 

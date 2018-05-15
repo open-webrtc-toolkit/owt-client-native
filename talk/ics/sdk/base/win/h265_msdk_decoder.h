@@ -105,15 +105,10 @@ private:
     IDirect3DDeviceManager9* dev_manager_;
     UINT dev_manager_reset_token_;
     IDirect3DQuery9* query_;
-    bool key_frame_required_;
     bool inited_;
-
-    int stride_;
     int width_;
     int height_;
 
-    int in_buffer_size_;  //the minimum buffer size for input
-    int out_buffer_size_;
     webrtc::VideoCodec codec_;
     //webrtc::I420VideoFrame decoded_image_;
     webrtc::I420BufferPool decoded_frame_pool_;

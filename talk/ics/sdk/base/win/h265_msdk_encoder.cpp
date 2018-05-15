@@ -16,6 +16,8 @@
 #include "plugin_loader.h"
 #include "mfxcommon.h"
 
+using namespace rtc;
+
 #ifdef ICS_DEBUG_H265_ENC
 #include <fstream>
 #endif
@@ -35,7 +37,7 @@ H265EncoderThread::~H265EncoderThread(){
 }
 
 H265VideoMFTEncoder::H265VideoMFTEncoder() : callback_(nullptr), bitrate_(0), width_(0),
-  height_(0), framerate_(0), encoder_thread_(new H265EncoderThread()), inited_(false), m_memType_(H265_SYSTEM_MEMORY){
+  height_(0), framerate_(0), m_memType_(H265_SYSTEM_MEMORY), encoder_thread_(new H265EncoderThread()), inited_(false) {
     m_pmfxAllocatorParams = nullptr;
     m_pMFXAllocator = nullptr;
     m_pmfxENC = nullptr;
@@ -123,7 +125,7 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     mfxStatus sts;
     mfxVersion minVer;
     //    mfxVersion Version;
-    LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << "framerate:" <<
+    RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:" << codec_settings->maxBitrate << "framerate:" <<
         codec_settings->maxFramerate << "targetBitRate:" << codec_settings->targetBitrate;
     minVer.Major = 1;
     minVer.Minor = 0;
@@ -540,7 +542,7 @@ retry:
         //scPosition += H265_SC_LENGTH;
     }
     if (scPositionsLength == 0) {
-        LOG(LS_ERROR) << "Start code is not found for H265 codec!";
+        RTC_LOG(LS_ERROR) << "Start code is not found for H265 codec!";
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -746,7 +748,7 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         scLengths[scPositionsLength - 1] = start_code_length;
     }
     if (scPositionsLength == 0) {
-        LOG(LS_ERROR) << "Start code is not found for H265 codec!";
+        RTC_LOG(LS_ERROR) << "Start code is not found for H265 codec!";
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -762,7 +764,7 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
 
     const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
     if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
-        LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
+        RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
