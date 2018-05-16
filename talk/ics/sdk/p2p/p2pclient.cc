@@ -105,6 +105,9 @@ void P2PClient::Publish(
   auto pcc = GetPeerConnectionChannel(target_id);
   std::weak_ptr<P2PClient> weak_this = shared_from_this();
   pcc->Publish(stream, [on_success, weak_this, target_id, stream] () {
+    if (!on_success)
+      return;
+
     auto that = weak_this.lock();
     if (!that)
       return;
