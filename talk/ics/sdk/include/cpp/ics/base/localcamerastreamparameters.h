@@ -276,4 +276,4 @@ class LocalDesktopStreamParameters final {
 }
 }
 
-#endif  // WOOGEEN_BASE_LOCALCAMERASTREAMPARAMETERS_H_
+#endif  // ICS_BASE_LOCALCAMERASTREAMPARAMETERS_H_
