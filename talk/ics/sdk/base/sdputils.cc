@@ -13,14 +13,14 @@ using namespace rtc;
 namespace ics {
 namespace base {
 
-static const std::unordered_map<AudioCodec, const std::string>
+static const std::unordered_map<AudioCodec, const std::string, EnumClassHash>
     audio_codec_names = {{AudioCodec::kOpus, "OPUS"},
                          {AudioCodec::kIsac, "ISAC"},
                          {AudioCodec::kG722, "G722"},
                          {AudioCodec::kPcmu, "PCMU"},
                          {AudioCodec::kIlbc, "ILBC"},
                          {AudioCodec::kPcma, "PCMA"}};
-static const std::unordered_map<VideoCodec, const std::string>
+static const std::unordered_map<VideoCodec, const std::string, EnumClassHash>
     video_codec_names = {{VideoCodec::kVp8, "VP8"},
                          {VideoCodec::kH264, "H264"},
                          {VideoCodec::kVp9, "VP9"},

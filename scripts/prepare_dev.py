@@ -36,6 +36,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-ICS-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0007-Disable-thin-archive-and-isystem-for-linux.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
 
 def main(argv):
   _patch()

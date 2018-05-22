@@ -27,7 +27,10 @@ if (woogeen_use_openssl) {
         defines = [ "__GNUC__" ]
       }
     } else {
-      assert(false, "External OpenSSL only supported on iOS and Windows.")
+      libs = [
+        "libeay32.lib",
+        "ssleay32.lib",
+      ]
     }
     if (is_clang) {
       cflags = [ "-Wno-deprecated-declarations" ]

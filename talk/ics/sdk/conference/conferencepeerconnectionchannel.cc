@@ -7,8 +7,6 @@
 #include <future>
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
-#include "webrtc/media/base/videocommon.h"
-#include "webrtc/media/base/videocapturer.h"
 #include "talk/ics/sdk/base/functionalobserver.h"
 #include "talk/ics/sdk/base/mediautils.h"
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
