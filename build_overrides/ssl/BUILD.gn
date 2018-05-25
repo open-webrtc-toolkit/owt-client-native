@@ -19,9 +19,13 @@ if (woogeen_use_openssl) {
       ]
     } else if (is_win) {
       libs = [
-        "libeay32.lib",
-        "ssleay32.lib",
+        "libcrypto.lib",
+        "libssl.lib",
       ]
+
+      if (is_clang) {
+        defines = [ "__GNUC__" ]
+      }
     } else {
       assert(false, "External OpenSSL only supported on iOS and Windows.")
     }
