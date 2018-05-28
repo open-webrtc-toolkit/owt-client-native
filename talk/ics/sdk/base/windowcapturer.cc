@@ -124,20 +124,10 @@ void BasicWindowCapturer::Init() {
   std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
-}
-
-CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
     RTC_LOG(LS_ERROR) << "Basic Window Capturerer is already running";
-    return CS_FAILED;
+    return;
   }
-  if (!window_capturer_.get()) {
-    RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
-    return CS_FAILED;
-  }
-  SetCaptureFormat(&capture_format);
-  window_capturer_->Start(this);
-
   worker_thread_ = rtc::Thread::Current();
   RTC_DCHECK(!async_invoker_);
   async_invoker_.reset(new rtc::AsyncInvoker());
@@ -145,12 +135,11 @@ CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_form
   bool ret = window_capture_thread_->Start();
   if (ret) {
     RTC_LOG(LS_INFO) << "Window capture thread started";
-    return CS_RUNNING;
   } else {
     async_invoker_.reset();
     worker_thread_ = nullptr;
     RTC_LOG(LS_ERROR) << "Window capture thread failed to start";
-    return CS_FAILED;
+    return;
   }
   if (observer_) {
     std::unordered_map<int, std::string> window_map;
@@ -160,6 +149,16 @@ CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_form
       SetCaptureWindow(window_id);
     }
   }
+}
+
+CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
+  if (!window_capturer_.get()) {
+    RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
+    return CS_FAILED;
+  }
+  SetCaptureFormat(&capture_format);
+  window_capturer_->Start(this);
+  return CS_RUNNING;
 }
 
 bool BasicWindowCapturer::IsRunning() {

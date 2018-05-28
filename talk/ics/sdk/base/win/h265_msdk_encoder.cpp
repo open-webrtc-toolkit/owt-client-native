@@ -559,7 +559,7 @@ retry:
     scPositions[scPositionsLength] = encoded_data_size;
     header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
     for (int i = 0; i < scPositionsLength; i++) {
-        header.fragmentationOffset[i] = scPositions[i] /* + scLengths[i]*/;
+        header.fragmentationOffset[i] = scPositions[i]  + scLengths[i];
         header.fragmentationLength[i] =
             scPositions[i + 1] - header.fragmentationOffset[i];
         header.fragmentationPlType[i] = 0;
