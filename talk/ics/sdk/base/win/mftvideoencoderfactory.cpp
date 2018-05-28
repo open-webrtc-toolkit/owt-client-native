@@ -80,19 +80,17 @@ webrtc::VideoEncoder* MSDKVideoEncoderFactory::CreateVideoEncoder(
   if (supported_codecs_.empty()) {
     return NULL;
   }
-  for (std::vector<cricket::VideoCodec>::const_iterator it =
-           supported_codecs_.begin();
-       it != supported_codecs_.end(); ++it) {
-    if (FindMatchingCodec(supported_codecs_, codec) &&
-        !_stricmp(codec.name.c_str(), "H264")) {
-      return new H264VideoMFTEncoder();
+
+  if (FindMatchingCodec(supported_codecs_, codec) &&
+      !_stricmp(codec.name.c_str(), "H264")) {
+    return new H264VideoMFTEncoder();
 #ifndef DISABLE_H265
-    } else if (FindMatchingCodec(supported_codecs_, codec) &&
-               !_stricmp(codec.name.c_str(), "H265")) {
-      return new H265VideoMFTEncoder();
+  } else if (FindMatchingCodec(supported_codecs_, codec) &&
+             !_stricmp(codec.name.c_str(), "H265")) {
+    return new H265VideoMFTEncoder();
 #endif
-    }
   }
+
   return NULL;
 }
 
