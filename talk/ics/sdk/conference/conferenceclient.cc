@@ -117,8 +117,7 @@ bool ConferenceInfo::RemoteStreamPresent(const std::string& stream_id) {
 }
 
 void ConferenceInfo::TriggerOnParticipantLeft(const std::string& participant_id) {
-  // TODO: Do we need to lock this?
-  //const std::lock_guard<std::mutex> lock(participants_mutex_);
+  const std::lock_guard<std::mutex> lock(participants_mutex_);
   for (auto& it : participants_) {
     if (it->Id() == participant_id) {
       it->TriggerOnParticipantLeft();

@@ -121,6 +121,7 @@ void ConferencePublication::Stop() {
   } else {
     that->UnPublish(id_, nullptr, nullptr);
     ended_ = true;
+    const std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto its = observers_.begin(); its != observers_.end(); ++its) {
       (*its).get().OnEnded();
     }
