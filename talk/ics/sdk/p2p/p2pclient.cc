@@ -16,6 +16,7 @@
 #include "talk/ics/sdk/include/cpp/ics/p2p/p2pclient.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/ics/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
+#include "talk/ics/sdk/p2p/p2psignalingsenderimpl.h"
 
 using namespace rtc;
 namespace ics {
@@ -75,11 +76,6 @@ void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
   }
 
   Stop(target_id, on_success, on_failure);
-
-  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
-  allowed_remote_ids_.erase(
-      std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
-      allowed_remote_ids_.end());
 }
 
 void P2PClient::Publish(
@@ -147,6 +143,12 @@ void P2PClient::Stop(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
+
+  pc_channels_.erase(target_id);
+  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+  allowed_remote_ids_.erase(
+      std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
+      allowed_remote_ids_.end());
 }
 
 void P2PClient::GetConnectionStats(
@@ -164,7 +166,12 @@ void P2PClient::OnMessage(const std::string& message,
       allowed_remote_ids_.end()) {
      RTC_LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
   } else {
-  // Secondly dispatch the message to pcc
+    if (message == "{\"type\":\"chat-closed\"}" && !IsPeerConnectionChannelCreated(remote_id)) {
+      RTC_LOG(LS_WARNING) << "Non-existed chat cannot be stopped.";
+      return;
+    }
+
+    // Secondly dispatch the message to pcc
     auto pcc = GetPeerConnectionChannel(remote_id);
     pcc->OnIncomingSignalingMessage(message);
   }
@@ -176,9 +183,9 @@ void P2PClient::OnDisconnected() {
 }
 
 void P2PClient::SendSignalingMessage(const std::string& message,
-                                      const std::string& remote_id,
-                                      std::function<void()> on_success,
-                                      std::function<void(int)> on_failure) {
+                                     const std::string& remote_id,
+                                     std::function<void()> on_success,
+                                     std::function<void(int)> on_failure) {
   signaling_channel_->SendMessage(message, remote_id, on_success,
                                   nullptr);  // TODO:fix on_failure.
 }
@@ -204,15 +211,24 @@ void P2PClient::Unpublish(
   pcc->Unpublish(stream, on_success, on_failure);
 }
 
+bool P2PClient::IsPeerConnectionChannelCreated(const std::string& target_id) {
+  if (pc_channels_.find(target_id) == pc_channels_.end())
+    return false;
+
+  return true;
+}
+
 std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   auto pcc_it = pc_channels_.find(target_id);
   if (pcc_it == pc_channels_.end()) {  // Create new channel if it doesn't exist
     PeerConnectionChannelConfiguration config =
         GetPeerConnectionChannelConfiguration();
+    P2PSignalingSenderInterface* signaling_sender =
+        new P2PSignalingSenderImpl(this);
     std::shared_ptr<P2PPeerConnectionChannel> pcc =
         std::shared_ptr<P2PPeerConnectionChannel>(new P2PPeerConnectionChannel(
-            config, local_id_, target_id, this, event_queue_));
+            config, local_id_, target_id, signaling_sender, event_queue_));
     P2PPeerConnectionChannelObserverCppImpl* pcc_observer =
         new P2PPeerConnectionChannelObserverCppImpl(*this);
     pcc->AddObserver(pcc_observer);
@@ -259,13 +275,11 @@ void P2PClient::OnStarted(const std::string& remote_id) {
 }
 
 void P2PClient::OnStopped(const std::string& remote_id) {
-  pc_channels_.erase(remote_id);
   EventTrigger::OnEvent1(observers_, event_queue_,
                          &P2PClientObserver::OnChatStopped, remote_id);
 }
 
 void P2PClient::OnDenied(const std::string& remote_id) {
-  pc_channels_.erase(remote_id);
   EventTrigger::OnEvent1(observers_, event_queue_,
                          &P2PClientObserver::OnDenied, remote_id);
 }

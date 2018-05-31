@@ -292,6 +292,7 @@ class P2PClient final
                  std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
       const std::string& target_id);
+  bool IsPeerConnectionChannelCreated(const std::string& target_id);
   ics::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
 
   // Queue for callbacks and events. Shared among P2PClient and all of it's

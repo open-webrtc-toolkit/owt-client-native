@@ -240,6 +240,8 @@ static_library("ics_sdk_p2p") {
     "sdk/p2p/p2ppeerconnectionchannel.h",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.cc",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
+    "sdk/p2p/p2psignalingsenderimpl.cc",
+    "sdk/p2p/p2psignalingsenderimpl.h",
     "sdk/p2p/p2ppublication.cc",
   ]
 
