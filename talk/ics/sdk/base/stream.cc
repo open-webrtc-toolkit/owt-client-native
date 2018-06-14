@@ -467,7 +467,7 @@ LocalStream::LocalStream(
   if (parameters->VideoEnabled()) {
     webrtc::DesktopCaptureOptions options =
         webrtc::DesktopCaptureOptions::CreateDefault();
-    options.set_allow_directx_capturer(true);
+    // options.set_allow_directx_capturer(true);
     if (parameters->SourceType() ==
         LocalDesktopStreamParameters::DesktopSourceType::kFullScreen) {
       capturer = std::unique_ptr<BasicScreenCapturer>(new BasicScreenCapturer(options));

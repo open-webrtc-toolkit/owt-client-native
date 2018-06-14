@@ -169,6 +169,7 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     MSDK_ZERO_MEMORY(m_mfxEncParams);
     m_mfxEncParams.mfx.CodecId = MFX_CODEC_AVC;
     m_mfxEncParams.mfx.CodecProfile = MFX_PROFILE_AVC_BASELINE;
+    //m_mfxEncParams.mfx.CodecLevel = MFX_LEVEL_AVC_3;
     m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
     // TODO: MSDK encoder has constraint on target bitrate. Need to fallback to default
     // if TargetKbps falls below lower threshhold(500 for 720p for example).
