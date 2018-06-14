@@ -461,9 +461,9 @@ int32_t ExternalMSDKVideoDecoder::Decode(
         IDirect3DDevice9* device;
         hr = dev_manager_->LockDevice(hHandle, &device, false);
         if (FAILED(hr)) {
+          RTC_LOG(LS_ERROR) << "Failed to lock device.";
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         mfxHDLPair* dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
 
         if (callback_) {
