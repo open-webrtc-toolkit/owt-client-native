@@ -99,8 +99,11 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       }
     }
 
-    pDevice->Present(nullptr, nullptr, wnd_, nullptr);
+    hr = pDevice->Present(nullptr, nullptr, wnd_, nullptr);
 
+    if (hr == D3DERR_DEVICELOST) {
+      RTC_LOG(LS_WARNING) << "Device lost for present.";
+    }
     dev_manager->UnlockDevice(hDevice, FALSE);
     dev_manager->CloseDeviceHandle(hDevice);
 

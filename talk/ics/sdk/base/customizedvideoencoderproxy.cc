@@ -89,14 +89,13 @@ int CustomizedVideoEncoderProxy::Encode(
         media_codec = VideoCodec::kH264;
     else if (codec_type_ == webrtc::kVideoCodecVP8)
         media_codec = VideoCodec::kVp8;
-#if 0
 #ifndef DISABLE_H265
     else if (codec_type_ == webrtc::kVideoCodecH265)
         media_codec = VideoCodec::kH265;
 #endif
     else if (codec_type_ == webrtc::kVideoCodecVP9)
-        media_codec = VideoCodec::kVP9;
-#endif
+        media_codec = VideoCodec::kVp9;
+
     else { //Not matching any supported format.
       RTC_LOG(LS_ERROR) << "Requested encoding format not supported";
       delete encoder_buffer_handle;
@@ -166,10 +165,27 @@ int CustomizedVideoEncoderProxy::Encode(
   encodedframe.capture_time_ms_ = input_image.render_time_ms();
   encodedframe._timeStamp = input_image.timestamp();
 
+  // VP9 requires setting the frame type according to actual frame type.
+  if (codec_type_ == webrtc::kVideoCodecVP9 && data_size > 2) {
+    bool au_key = false;
+    uint8_t first_byte = data_ptr[0], second_byte = data_ptr[1];
+    uint8_t shift_bits = 4, profile = (first_byte >> shift_bits) & 0x3;
+    shift_bits = (profile == 3) ? 2 : 3;
+    uint8_t show_existing_frame = (first_byte >> shift_bits) & 0x1;
+    if (profile == 3 && show_existing_frame) {
+      au_key = (second_byte >> 6) & 0x1;
+    } else if (profile == 3 && !show_existing_frame) {
+      au_key = (first_byte >> 1) & 0x1;
+    } else if (profile != 3 && show_existing_frame) {
+      au_key = second_byte >> 7;
+    } else {
+      au_key = (first_byte >> 2) & 0x1;
+    }
+    encodedframe._frameType = au_key ? kVideoFrameKey : kVideoFrameDelta;
+  }
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
   info.codecType = codec_type_;
-  info.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
   if (codec_type_ == webrtc::kVideoCodecVP8) {
     info.codecSpecific.VP8.pictureId = picture_id_;
     info.codecSpecific.VP8.nonReference = false;
@@ -183,14 +199,18 @@ int CustomizedVideoEncoderProxy::Encode(
   // Generate a header describing a single fragment.
   webrtc::RTPFragmentationHeader header;
   memset(&header, 0, sizeof(header));
-  if (codec_type_ == webrtc::kVideoCodecVP8) {
+  if (codec_type_ == webrtc::kVideoCodecVP8 || codec_type_ == webrtc::kVideoCodecVP9) {
     header.VerifyAndAllocateFragmentationHeader(1);
     header.fragmentationOffset[0] = 0;
     header.fragmentationLength[0] = encodedframe._length;
     header.fragmentationPlType[0] = 0;
     header.fragmentationTimeDiff[0] = 0;
+#ifndef DISABLE_H265
+  } else if (codec_type_ == webrtc::kVideoCodecH264 || codec_type_ == webrtc::kVideoCodecH265) {
+#else
   } else if (codec_type_ == webrtc::kVideoCodecH264) {
-    // For H.264 search for start codes.
+#endif
+    // For H.264/H.265 search for start codes.
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
     size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
@@ -208,7 +228,7 @@ int CustomizedVideoEncoderProxy::Encode(
       scPosition += static_cast<int32_t>(scLength);
     }
     if (scPositionsLength == 0) {
-      RTC_LOG(LS_ERROR) << "Start code is not found for H264 codec!";
+      RTC_LOG(LS_ERROR) << "Start code is not found for H264/H265 codec!";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     scPositions[scPositionsLength] = data_size;
