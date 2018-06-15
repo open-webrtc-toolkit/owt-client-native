@@ -5,142 +5,104 @@
 #include <iostream>
 #include <mutex>
 #include "libyuv/convert.h"
+#include "libyuv/scale_argb.h"
+#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/bytebuffer.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "talk/ics/sdk/base/desktopcapturer.h"
 
 using namespace rtc;
 namespace ics {
 namespace base {
-
-///////////////////////////////////////////////////////////////////////
-// Definition of private class BasicWindowCaptureThread that periodically
-// generates frames.
-///////////////////////////////////////////////////////////////////////
-class BasicWindowCapturer::BasicWindowCaptureThread
-    : public rtc::Thread,
-      public rtc::MessageHandler {
- public:
-  explicit BasicWindowCaptureThread(BasicWindowCapturer* capturer)
-      : capturer_(capturer), finished_(false), source_specified_(false) {
-    waiting_time_ms_ = 1000 / 30;
-  }
-
-  virtual ~BasicWindowCaptureThread() { Stop(); }
-
-  // Override virtual method of parent Thread. Context: Worker Thread.
-  virtual void Run() {
-    // Read the first frame and start the message pump. The pump runs until
-    // Stop() is called externally or Quit() is called by OnMessage().
-    bool has_source = false;
-    if (capturer_) {
-      {
-        std::lock_guard<std::mutex> lock(window_source_mutex_);
-        has_source = source_specified_;
-      }
-      if (has_source)
-        capturer_->CaptureFrame();
-      rtc::Thread::Current()->Post(RTC_FROM_HERE, this, kMessageTypeContinue);
-      rtc::Thread::Current()->ProcessMessages(kForever);
-    }
-
-    rtc::CritScope cs(&crit_);
-    finished_ = true;
-  }
-
-  virtual void OnMessage(rtc::Message* msg) {
-    switch (msg->message_id) {
-      case kMessageTypeContinue:
-        if (capturer_) {
-          {
-            std::lock_guard<std::mutex> lock(window_source_mutex_);
-            if (source_specified_)
-              capturer_->CaptureFrame();
-          }
-          rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, waiting_time_ms_,
-                                              this, kMessageTypeContinue);
-        } else {
-          rtc::Thread::Current()->Quit();
-        }
-        break;
-      case kMessageTypeWindowSpecified: {
-        std::lock_guard<std::mutex> lock(window_source_mutex_);
-        source_specified_ = true;
-      } break;
-      default:
-        break;
-    }
-  }
-
-  // Check if Run() is finished.
-  bool Finished() const {
-    rtc::CritScope cs(&crit_);
-    return finished_;
-  }
-
- private:
-  BasicWindowCapturer* capturer_;
-  mutable rtc::CriticalSection crit_;
-  bool finished_;
-  bool source_specified_;
-  mutable std::mutex window_source_mutex_;
-  int waiting_time_ms_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(BasicWindowCaptureThread);
-};
-
 /////////////////////////////////////////////////////////////////////
 // Implementation of class BasicWindowCapturer. Window capturer is
 // different from window capturer as the window may be disposed
 // at any time.
 /////////////////////////////////////////////////////////////////////
+void ScreenCaptureThread::Run() {
+  SetAllowBlockingCalls(true);
+  ProcessMessages(kForever);
+}
+
+ScreenCaptureThread::~ScreenCaptureThread() {
+  Stop();
+}
 
 BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options, std::unique_ptr<LocalScreenStreamObserver> observer)
-    : window_capture_thread_(nullptr),
-      width_(0),
-      height_(0),
-      frame_buffer_capacity_(0),
-      frame_buffer_(nullptr),
-      async_invoker_(nullptr),
-      window_capture_options_(options),
-      source_specified_(false),
-      observer_(std::move(observer)) {
-  window_capturer_ =
+  : width_(0),
+  height_(0),
+  frame_buffer_capacity_(0),
+  frame_buffer_(nullptr),
+  async_invoker_(nullptr),
+  window_capture_options_(options),
+  source_specified_(false),
+  last_call_record_millis_(0),
+  clock_(webrtc::Clock::GetRealTimeClock()),
+  need_sleep_ms_(0),
+  real_sleep_ms_(0),
+  capturing_(false),
+  stopped_(false),
+  observer_(std::move(observer)) {
+    window_capturer_ =
       webrtc::DesktopCapturer::CreateWindowCapturer(window_capture_options_);
 }
 
 BasicWindowCapturer::~BasicWindowCapturer() {
-  Stop();
+  if(capturing_)
+    Stop();
+}
+
+bool BasicWindowCapturer::WindowCaptureThreadFunc(void* pThis) {
+  return (static_cast<BasicWindowCapturer*>(pThis)->CaptureThreadProcess());
+}
+bool BasicWindowCapturer::CaptureThreadProcess() {
+  if (!capturing_) {
+    webrtc::SleepMs(10);
+    return true;
+  }
+
+  uint64_t current_time = clock_->CurrentNtpInMilliseconds();
+  lock_.Enter();
+  if (last_call_record_millis_ == 0 ||
+    (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
+
+    if (source_specified_ && window_capturer_) {
+      window_capturer_->CaptureFrame();
+    }
+  }
+  lock_.Leave();
+  int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
+  need_sleep_ms_ = 33 - cost_ms + need_sleep_ms_ - real_sleep_ms_;
+  if (need_sleep_ms_ > 0) {
+    current_time = clock_->CurrentNtpInMilliseconds();
+    webrtc::SleepMs(need_sleep_ms_);
+    real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
+  }
+  else {
+    RTC_LOG(LS_WARNING) << "Cost too much time on window frame capture. This may "
+      "leads to large latency";
+  }
+  return true;
 }
 
 void BasicWindowCapturer::Init() {
+  worker_thread_.reset(new ics::base::ScreenCaptureThread());
+  worker_thread_->SetName("CaptureInvokeThread", nullptr);
+  worker_thread_->Start();
   // Only I420 frame is supported. RGBA frame is not supported here.
   cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
-                     cricket::FOURCC_I420);
+    cricket::FOURCC_I420);
   std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
-  if (IsRunning()) {
-    RTC_LOG(LS_ERROR) << "Basic Window Capturerer is already running";
-    return;
-  }
-  worker_thread_ = rtc::Thread::Current();
-  RTC_DCHECK(!async_invoker_);
-  async_invoker_.reset(new rtc::AsyncInvoker());
-  window_capture_thread_ = new BasicWindowCaptureThread(this);
-  bool ret = window_capture_thread_->Start();
-  if (ret) {
-    RTC_LOG(LS_INFO) << "Window capture thread started";
-  } else {
-    async_invoker_.reset();
-    worker_thread_ = nullptr;
-    RTC_LOG(LS_ERROR) << "Window capture thread failed to start";
-    return;
-  }
+
+  worker_thread_->Invoke<void>(RTC_FROM_HERE,
+    rtc::Bind(&BasicWindowCapturer::InitOnWorkerThread, this));
   if (observer_) {
     std::unordered_map<int, std::string> window_map;
     int window_id;
@@ -151,30 +113,50 @@ void BasicWindowCapturer::Init() {
   }
 }
 
+void BasicWindowCapturer::InitOnWorkerThread() {
+  if (IsRunning()) {
+    RTC_LOG(LS_ERROR) << "Basic Window Capturerer is already running";
+    return;
+  }
+  if (!capture_thread_) {
+    capture_thread_.reset(new rtc::PlatformThread(WindowCaptureThreadFunc, this, "WindowCaptureThread"));
+    capture_thread_->Start();
+    capture_thread_->SetPriority(kHighPriority);
+  }
+}
+
 CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (!window_capturer_.get()) {
     RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
     return CS_FAILED;
   }
   SetCaptureFormat(&capture_format);
+  capturing_ = true;
   window_capturer_->Start(this);
   return CS_RUNNING;
 }
 
 bool BasicWindowCapturer::IsRunning() {
-  return window_capture_thread_ && !window_capture_thread_->Finished();
+  return capture_thread_ && capture_thread_->IsRunning();
 }
 
+// Stop must be called on the same thread as Init as the underlying
+// PlatformThread require that.
 void BasicWindowCapturer::Stop() {
-  if (window_capture_thread_) {
-    window_capture_thread_->Quit();
-    delete window_capture_thread_;
-    window_capture_thread_ = nullptr;
-    RTC_LOG(LS_INFO) << "Window capture thread stopped";
+  // Make sure invoke get passed through.
+  rtc::Thread::Current()->SetAllowBlockingCalls(true);
+  worker_thread_->Invoke<void>(RTC_FROM_HERE,
+    rtc::Bind(&BasicWindowCapturer::StopOnWorkerThread, this));
+}
+
+void BasicWindowCapturer::StopOnWorkerThread() {
+  if (capture_thread_) {
+    stopped_ = true;
+    capture_thread_->Stop();
+    capture_thread_.reset();
   }
+  capturing_ = false;
   SetCaptureFormat(nullptr);
-  worker_thread_ = nullptr;
-  async_invoker_.reset();
 }
 
 bool BasicWindowCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
@@ -220,8 +202,6 @@ bool BasicWindowCapturer::SetCaptureWindow(int window_id) {
     source_specified_ = true;
     // Notify capture thread.
     window_capturer_->FocusOnSelectedSource();
-    window_capture_thread_->Post(RTC_FROM_HERE, window_capture_thread_,
-                                 kMessageTypeWindowSpecified, nullptr);
     return true;
   }
   return false;
@@ -277,15 +257,45 @@ void BasicWindowCapturer::OnCaptureResult(
     RTC_LOG(LS_ERROR) << "Invalid Window data";
     return;
   }
+  // On hosts with GEN & NV gfx co-existing, frame must be of even both
+  // for width and height. So we will always scale for that.
+  bool scale_required = false;
+  int32_t old_frame_width = frame_width;
+  int32_t old_frame_height = frame_height;
+  int new_frame_stride = frame_stride;
+  if (frame_width % 2 != 0) {
+    frame_width -= 1;
+    scale_required = true;
+  }
+  if (frame_height % 2 != 0) {
+    frame_height -= 1;
+    scale_required = true;
+  }
+
+  std::unique_ptr<uint8_t []> new_frame_data_rgba;
+  if (scale_required) {
+    new_frame_data_rgba.reset(new uint8_t[frame_width * frame_height * 4]);
+    new_frame_stride = frame_width * 4;
+    libyuv::ARGBScale(frame_data_rgba, frame_stride, old_frame_width, old_frame_height,
+      new_frame_data_rgba.get(), new_frame_stride, frame_width, frame_height, libyuv::FilterMode::kFilterBilinear);
+  }
 
   // The captured frame is of memory layout ABRG. convert it to I420 as
   // required.
   AdjustFrameBuffer(frame_width, frame_height);
-  libyuv::ARGBToI420(frame_data_rgba, frame_stride,
-                     frame_buffer_->MutableDataY(), frame_buffer_->StrideY(),
-                     frame_buffer_->MutableDataU(), frame_buffer_->StrideU(),
-                     frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
-                     frame_width, frame_height);
+  if (scale_required) {
+    libyuv::ARGBToI420(new_frame_data_rgba.get(), new_frame_stride,
+      frame_buffer_->MutableDataY(), frame_buffer_->StrideY(),
+      frame_buffer_->MutableDataU(), frame_buffer_->StrideU(),
+      frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
+      frame_width, frame_height);
+  } else {
+    libyuv::ARGBToI420(frame_data_rgba, frame_stride,
+      frame_buffer_->MutableDataY(), frame_buffer_->StrideY(),
+      frame_buffer_->MutableDataU(), frame_buffer_->StrideU(),
+      frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
+      frame_width, frame_height);
+  }
 
   webrtc::VideoFrame capturedFrame(frame_buffer_, 0, rtc::TimeMillis(),
                                    webrtc::kVideoRotation_0);

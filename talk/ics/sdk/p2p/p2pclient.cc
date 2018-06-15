@@ -253,8 +253,6 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
     ice_servers.push_back(ice_server);
   }
   config.servers = ice_servers;
-  // TODO: configuration structure changed.
-  // config.media_codec = configuration_.media_codec;
   config.candidate_network_policy =
       (configuration_.candidate_network_policy ==
        ClientConfiguration::CandidateNetworkPolicy::kLowCost)
@@ -262,6 +260,12 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
                 kCandidateNetworkPolicyLowCost
           : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyAll;
+  for (auto codec : configuration_.video_encodings) {
+    config.video.push_back(VideoEncodingParameters(codec));
+  }
+  for (auto codec : configuration_.audio_encodings) {
+    config.audio.push_back(AudioEncodingParameters(codec));
+  }
   return config;
 }
 
