@@ -67,15 +67,17 @@ class P2PPublication : public Publication {
               std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure) override {}
   /// Register an observer onto this p2p publication.
-  void AddObserver(PublicationObserver& observer) override {}
+  void AddObserver(PublicationObserver& observer) override;
   /// Unregister an observer from this p2p publication.
-  void RemoveObserver(PublicationObserver& observer) override {}
+  void RemoveObserver(PublicationObserver& observer) override;
 
  private:
   std::string target_id_;
   std::shared_ptr<LocalStream> local_stream_;
   std::weak_ptr<P2PClient> p2p_client_;   // Weak ref to associated p2p client
   std::shared_ptr<rtc::TaskQueue> event_queue_;
+  mutable std::mutex observer_mutex_;
+  std::vector<std::reference_wrapper<PublicationObserver>> observers_;
 
   bool ended_;
 };
