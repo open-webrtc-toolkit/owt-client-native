@@ -177,9 +177,9 @@ void P2PClient::OnMessage(const std::string& message,
   }
 }
 
-void P2PClient::OnDisconnected() {
-  // TODO: Implement disconnected handler.
-  RTC_LOG(LS_INFO) << "Disconnected from signaling server.";
+void P2PClient::OnServerDisconnected() {
+  EventTrigger::OnEvent0(observers_, event_queue_,
+                         &P2PClientObserver::OnServerDisconnected);
 }
 
 void P2PClient::SendSignalingMessage(const std::string& message,
@@ -236,10 +236,6 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
             target_id, pcc);
     pc_channels_.insert(pcc_pair);
-    auto pcc_observer_pair =
-        std::pair<std::string, P2PPeerConnectionChannelObserverCppImpl*>(
-            target_id, pcc_observer);
-    pcc_observers_.insert(pcc_observer_pair);
     return pcc;
   } else {
     return pcc_it->second;

@@ -42,7 +42,7 @@ using namespace ics::base;
 /**
  @brief Signaling channel will notify observer when event triggers.
  */
-class P2PSignalingChannelInterfaceObserver {
+class P2PSignalingChannelObserver {
  public:
   /**
    @brief This function will be triggered when new message arrives.
@@ -54,7 +54,7 @@ class P2PSignalingChannelInterfaceObserver {
   /**
    @brief This function will be triggered when disconnected from signaling server.
    */
-  virtual void OnDisconnected() = 0;
+  virtual void OnServerDisconnected() = 0;
 };
 
 /**
@@ -68,13 +68,13 @@ class P2PSignalingChannelInterface {
    @brief Add an observer for P2PSignalingChannel
    @param observer An observer instance.
    */
-  virtual void AddObserver(P2PSignalingChannelInterfaceObserver& observer) = 0;
+  virtual void AddObserver(P2PSignalingChannelObserver& observer) = 0;
   /**
    @brief Remove an observer for P2PSignalingChannel
    @param observer An observer instance.
    */
   virtual void RemoveObserver(
-      P2PSignalingChannelInterfaceObserver& observer) = 0;
+      P2PSignalingChannelObserver& observer) = 0;
   /**
    @brief Connect to the signaling server
    @param host The URL of signaling server to connect

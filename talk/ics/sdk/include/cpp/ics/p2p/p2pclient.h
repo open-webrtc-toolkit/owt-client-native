@@ -119,7 +119,7 @@ class P2PClientObserver {
 /// An async client for P2P WebRTC sessions
 class P2PClient final
     : protected P2PSignalingSenderInterface,
-      protected P2PSignalingChannelInterfaceObserver,
+      protected P2PSignalingChannelObserver,
       public std::enable_shared_from_this<P2PClient> {
   friend class P2PPublication;
   friend class P2PPeerConnectionChannelObserverCppImpl;
@@ -263,9 +263,9 @@ class P2PClient final
                                     const std::string& remote_id,
                                     std::function<void()> on_success,
                                     std::function<void(int)> on_failure);
-  // Implement P2PSignalingChannelInterfaceObserver
+  // Implement P2PSignalingChannelObserver
   virtual void OnMessage(const std::string& message, const std::string& sender);
-  virtual void OnDisconnected();
+  virtual void OnServerDisconnected();
 
   // Handle events from P2PPeerConnectionChannel
   // Triggered when the WebRTC session is started.
@@ -301,13 +301,8 @@ class P2PClient final
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;
-  // P2PPeerConnectionChannelObserver adapter for each PeerConnectionChannel
-  std::unordered_map<std::string, P2PPeerConnectionChannelObserverCppImpl*>
-      pcc_observers_;
   std::string local_id_;
   std::vector<std::reference_wrapper<P2PClientObserver>> observers_;
-  // It receives events from P2PPeerConnectionChannel and notify P2PClient.
-  P2PPeerConnectionChannelObserverCppImpl* pcc_observer_impl_;
   P2PClientConfiguration configuration_;
 
   mutable std::mutex remote_ids_mutex_;

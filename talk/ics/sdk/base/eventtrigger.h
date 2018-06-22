@@ -19,6 +19,16 @@ namespace base {
  */
 class EventTrigger final {
  public:
+  template <typename O, typename A, typename F>
+  static void OnEvent0(std::vector<O, A> const& observers,
+                       std::shared_ptr<rtc::TaskQueue> queue,
+                       F func) {
+    for (auto it = observers.begin(); it != observers.end(); ++it) {
+      auto f = std::bind(func, *it);
+      queue->PostTask([f] { f(); });
+    }
+  }
+
   template <typename O, typename A, typename F, typename T1>
   static void OnEvent1(std::vector<O, A> const& observers,
                        std::shared_ptr<rtc::TaskQueue> queue,
@@ -29,6 +39,7 @@ class EventTrigger final {
       queue->PostTask([f] { f(); });
     }
   }
+
   template <typename O, typename A, typename F, typename T1, typename T2>
   static void OnEvent2(std::vector<O, A> const& observers,
                        std::shared_ptr<rtc::TaskQueue> queue,
