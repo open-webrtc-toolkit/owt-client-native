@@ -77,7 +77,7 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
       const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;
   virtual bool IsRunning() override;
-  virtual bool IsScreencast() const { return true; }
+  virtual bool IsScreencast() const { return false; }
 
   // DesktopCapturer::Callback implementation
   virtual void OnCaptureResult(
