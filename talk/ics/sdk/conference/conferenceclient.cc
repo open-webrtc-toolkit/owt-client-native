@@ -385,8 +385,10 @@ void ConferenceClient::Publish(
       return;
 
     // map current pcc
-    std::shared_ptr<ConferencePublication> cp(new ConferencePublication(that, session_id, stream_id));
-    on_success(cp);
+    if (on_success != nullptr) {
+      std::shared_ptr<ConferencePublication> cp(new ConferencePublication(that, session_id, stream_id));
+      on_success(cp);
+    }
   }, on_failure);
 }
 
@@ -471,8 +473,10 @@ void ConferenceClient::Subscribe(
         if (!that)
             return;
         // map current pcc
-        std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id, stream_id));
-        on_success(cp);
+        if (on_success != nullptr) {
+          std::shared_ptr<ConferenceSubscription> cp(new ConferenceSubscription(that, session_id, stream_id));
+          on_success(cp);
+        }
       },
       on_failure);
 }
@@ -895,7 +899,6 @@ void ConferenceClient::OnStreamId(const std::string& id,
   }
   auto pcc = GetConferencePeerConnectionChannel(id);
   RTC_CHECK(pcc != nullptr);
-  //pcc->SetStreamId(id);
 }
 
 void ConferenceClient::OnSubscriptionId(const std::string& subscription_id,
@@ -906,7 +909,6 @@ void ConferenceClient::OnSubscriptionId(const std::string& subscription_id,
   }
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   RTC_CHECK(pcc != nullptr);
-  //pcc->SetStreamId(subscription_id);
 }
 
 bool ConferenceClient::CheckNullPointer(
