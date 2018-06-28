@@ -70,14 +70,14 @@ bool BasicWindowCapturer::CaptureThreadProcess() {
   lock_.Enter();
   if (last_call_record_millis_ == 0 ||
     (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
-
     if (source_specified_ && window_capturer_) {
+      last_call_record_millis_ = current_time;
       window_capturer_->CaptureFrame();
     }
   }
   lock_.Leave();
   int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
-  need_sleep_ms_ = 33 - cost_ms + need_sleep_ms_ - real_sleep_ms_;
+  need_sleep_ms_ = 33 - cost_ms;
   if (need_sleep_ms_ > 0) {
     current_time = clock_->CurrentNtpInMilliseconds();
     webrtc::SleepMs(need_sleep_ms_);
