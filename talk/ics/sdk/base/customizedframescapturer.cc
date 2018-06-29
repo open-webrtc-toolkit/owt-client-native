@@ -219,9 +219,9 @@ void CustomizedFramesCapturer::ReadFrame() {
     encoder_context->height = height_;
     encoder_context->fps = fps_;
     encoder_context->bitrate_kbps = bitrate_kbps_;
-    rtc::scoped_refptr<ics::base::NativeHandleBuffer> buffer =
-        new rtc::RefCountedObject<ics::base::NativeHandleBuffer>(
-           (void*)encoder_context, width_, height_);
+
+    rtc::scoped_refptr<ics::base::EncodedFrameBuffer> buffer =
+        new rtc::RefCountedObject<ics::base::EncodedFrameBuffer>(encoder_context);
     webrtc::VideoFrame pending_frame(buffer, 0, rtc::TimeMillis(),
                                     webrtc::kVideoRotation_0);
     OnFrame(pending_frame, width_, height_);
