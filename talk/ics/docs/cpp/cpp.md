@@ -13,9 +13,9 @@ bug fixes and known issues.
 The Intel CS for WebRTC Client SDK for Windows supports Windows 7 and later versions.
 
 # 3 Getting started {#section3}
-The Intel CS for WebRTC Client SDK for Windows should be built with Microsoft Visual Studio\* 2015. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x86.
+Application on Intel CS for WebRTC Client SDK for Windows should be built with Microsoft Visual Studio\* 2015 or 2017. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platforms are x86 and x64.
 
-The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK along with their headers:
+The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for both x86 and x64, along with their headers:
 
 - ics-debug.lib - this library includes all the WebRTC features for debug usages.
 - ics-release.lib - this library includes all the WebRTC features for release usages.
@@ -30,10 +30,8 @@ Socket.IO cpp client is an open source project hosted on [Github](https://github
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
 connections, link your application with sioclient_tls.lib; otherwise, link it with sioclient.lib.
 
-The sioclient_tls.lib included in release package has been enhanced to verify server's certificate. Handshake fails if the server is using an invalid certificate.
-
 # 5 NAT and firewall traversal {#section5}
-Intel CS for WebRTC Client SDK for C++ fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
+Intel CS for WebRTC Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 
 # 6 Customize signaling channel {#section6}
 Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel
@@ -45,20 +43,20 @@ can invoke its methods to notify `PeerClient` during your customized signaling c
 message is coming or connection is lost.
 
 # 7 Video codecs {#section7}
-For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
+For the decoder, if hardware acceleration is not enabled, only VP8/VP9/H264 is supported. If hardware acceleration is enabled, VP8,
 VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
-Most of the 5th and 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
+Most of the 5th/6th/7th/8th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
 Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
 
 Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC, is enabled via {@link ics.base.GlobalConfiguration GlobalConfiguration} API,
 by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 
 # 8 Publish streams with customized frames {#section8}
-Customized video frames can be I420 frame from yuv file, or encoded H.264 frames.
+Customized video frames can be I420 frame from yuv file, or encoded H.264/VP8/VP9/HEVC frames.
 For raw YUV frame input, the customized video frame provider needs to implement its own frame generator extending from
 {@link ics.base.VideoFrameGeneratorInterface VideoFrameGeneratorInterface}, which generates customized frames as our sample code and feeds the frame generator to
 {@link ics.base.LocalCustomizedStream LocalCustomizedStream} for stream publishing.
-For encoded H.264 frame input, application is required to implement the customized encoder that inherits
+For encoded frame input, application is required to implement the customized encoder that inherits
 {@link ics.base.VideoEncoderInterface VideoEncoderInterface}, and is required to pass an AU to SDK according to the frame type requested per
 {@link ics.base.VideoEncoderInterface.EncodeOneFrame EncodeOneFrame} call.
 
@@ -69,7 +67,6 @@ Here is a list of known issues:
 
 - Conference recording from Windows SDK is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
-- Bandwidth setting for publishing H264 stream does not take effect.
 
 
 > Note: \* Other names and brands may be claimed as the property of others.</i>
