@@ -75,7 +75,7 @@ class StreamObserver {
   virtual void OnEnded() {};
 };
 
-class WebrtcVideoRendererARGBImpl;
+class WebrtcVideoRendererImpl;
 
 #if defined(WEBRTC_WIN)
 class WebrtcVideoRendererD3D9Impl;
@@ -101,10 +101,10 @@ class Stream {
   virtual void EnableAudio();
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
-  /// Attach the stream to a renderer to receive ARGB frames for local or remote stream.
+  /// Attach the stream to a renderer to receive ARGB/I420 frames for local or remote stream.
   /// Be noted if you turned hardware acceleration on, calling this API on remote stream
   /// will have no effect.
-  virtual void AttachVideoRenderer(VideoRendererARGBInterface& renderer);
+  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
 
   /**
     @brief Returns a user-defined attribute map.
@@ -142,7 +142,7 @@ class Stream {
   void TriggerOnStreamEnded();
   MediaStreamInterface* media_stream_;
   std::unordered_map<std::string, std::string> attributes_;
-  WebrtcVideoRendererARGBImpl* renderer_impl_;
+  WebrtcVideoRendererImpl* renderer_impl_;
 #if defined(WEBRTC_WIN)
   WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
 #endif

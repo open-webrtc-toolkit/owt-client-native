@@ -45,7 +45,11 @@ Stream::Stream(const std::string& id)
       ended_(false),
       id_(id) {}
 #else
-Stream::Stream() : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
+Stream::Stream()
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      ended_(false),
+      id_("") {}
 
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr), source_(source) {
@@ -53,7 +57,10 @@ Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
 }
 
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      ended_(false),
+      id_(id) {}
 #endif
 
 MediaStreamInterface* Stream::MediaStream() const {
@@ -123,7 +130,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   }
 }
 
-void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
+void Stream::AttachVideoRenderer(VideoRendererInterface& renderer){
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
@@ -138,10 +145,10 @@ void Stream::AttachVideoRenderer(VideoRendererARGBInterface& renderer){
                        "will be attachecd to renderer.";
   }
 
-  WebrtcVideoRendererARGBImpl* old_renderer =
+  WebrtcVideoRendererImpl* old_renderer =
       renderer_impl_ ? renderer_impl_ : nullptr;
 
-  renderer_impl_ = new WebrtcVideoRendererARGBImpl(renderer);
+  renderer_impl_ = new WebrtcVideoRendererImpl(renderer);
   video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
 
   if (old_renderer)
@@ -183,7 +190,8 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
 void Stream::DetachVideoRenderer() {
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
-      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
+      (renderer_impl_ == nullptr
+       && d3d9_renderer_impl_ == nullptr))
     return;
 #else
   if (media_stream_ == nullptr || renderer_impl_ == nullptr)

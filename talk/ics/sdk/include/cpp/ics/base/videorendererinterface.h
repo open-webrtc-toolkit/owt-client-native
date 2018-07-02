@@ -38,14 +38,25 @@
 namespace ics {
 namespace base {
 
-/// ARGB buffer and its information
-struct ARGBBuffer {
-  /// ARGB buffer
-  uint8_t* buffer;
-  /// Resolution for the ARGB buffer
-  Resolution resolution;
+enum class VideoBufferType {
+  kI420,
+  kARGB,
+};
 
-  ~ARGBBuffer() { delete buffer; }
+enum class VideoRendererType {
+  kI420,
+  kARGB,
+};
+
+/// Video buffer and its information
+struct VideoBuffer {
+  /// Video buffer
+  uint8_t* buffer;
+  /// Resolution for the Video buffer
+  Resolution resolution;
+  // Buffer type
+  VideoBufferType type;
+  ~VideoBuffer() { delete buffer; }
 };
 
 /// VideoRenderWindow wraps a native Window handle
@@ -90,13 +101,18 @@ class VideoRenderWindow {
 };
 #endif
 
-/// Interface for rendering VideoFrames from a VideoTrack
-class VideoRendererARGBInterface {
+/// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack
+class VideoRendererInterface {
  public:
-  virtual void RenderFrame(std::unique_ptr<ARGBBuffer> buffer) = 0;
-  virtual ~VideoRendererARGBInterface() {}
-};
-}
-}
+  /// Passes video buffer to renderer.
+  virtual void RenderFrame(std::unique_ptr<VideoBuffer> buffer) = 0;
 
-#endif // ICS_BASE_VIDEORENDERERINTERFACE_H_
+  virtual ~VideoRendererInterface() {}
+  /// Render type that indicates the VideoBufferType the renderer would receive.
+  virtual VideoRendererType Type() = 0;
+};
+
+}  // namespace base
+}  // namespace ics
+
+#endif  // ICS_BASE_VIDEORENDERERINTERFACE_H_

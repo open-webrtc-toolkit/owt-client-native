@@ -153,7 +153,7 @@ class ConferenceInfo {
     // Remove participant.
     void RemoveParticipantById(const std::string& id);
     // Add remote stream.
-    void AddStream(std::shared_ptr<RemoteStream> remote_stream);
+    void AddOrUpdateStream(std::shared_ptr<RemoteStream> remote_stream, bool &updated);
     // Remove remote stream.
     void RemoveStreamById(const std::string& stream_id);
     // Trigger participant left event.

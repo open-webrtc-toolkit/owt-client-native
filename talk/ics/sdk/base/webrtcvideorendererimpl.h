@@ -13,17 +13,18 @@
 namespace ics {
 namespace base {
 
-class WebrtcVideoRendererARGBImpl
+class WebrtcVideoRendererImpl
     : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  WebrtcVideoRendererARGBImpl(VideoRendererARGBInterface& renderer)
+  WebrtcVideoRendererImpl(VideoRendererInterface& renderer)
       : renderer_(renderer) {}
   virtual void OnFrame(const webrtc::VideoFrame& frame) override;
-  virtual ~WebrtcVideoRendererARGBImpl() {}
+  virtual ~WebrtcVideoRendererImpl() {}
 
  private:
-  VideoRendererARGBInterface& renderer_;
+  VideoRendererInterface& renderer_;
 };
+
 }
 }
 
