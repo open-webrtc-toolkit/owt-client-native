@@ -59,6 +59,13 @@ struct AudioProcessingSettings {
   @details If set to true, will enable AGC.
   */
   bool NSEnabled;
+
+  /**
+  @brief AEC3 enabling/disabling. By default enabled.
+  @details AEC3 will only be enabled when AEC3 is enabled and AEC is
+  enabled.
+  */
+  bool AEC3Enabled;
 };
 /** @endcond */
 
@@ -127,6 +134,14 @@ class GlobalConfiguration {
   }
 
   /**
+    @breif This function disables/enables auto echo cancellation 3.
+    @details When it is enabled, SDK will turn on AEC3 functionality.
+    @param enabled AEC3 is enabled or not.
+    */
+  static void SetAEC3Enabled(bool enabled) {
+    audio_processing_settings_.AEC3Enabled = enabled;
+  }
+  /**
   @breif This function disables/enables auto gain control.
   @details When it is enabled, SDK will turn on AGC functionality.
   @param enabled AGC is enabled or not.
@@ -177,6 +192,13 @@ class GlobalConfiguration {
    */
   static bool GetAECEnabled() {
     return audio_processing_settings_.AECEnabled ? true : false;
+  }
+  /**
+   @brief This function gets whether auto echo cancellation 3 is enabled or not.
+   @return true or false.
+   */
+  static bool GetAEC3Enabled() {
+    return audio_processing_settings_.AEC3Enabled ? true : false;
   }
   /**
   @brief This function gets whether auto gain control is enabled or not.

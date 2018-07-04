@@ -17,7 +17,12 @@ std::unique_ptr<AudioFrameGeneratorInterface>
 std::unique_ptr<VideoDecoderInterface>
     GlobalConfiguration::video_decoder_ = nullptr;
 #endif
+#if defined(WEBRTC_IOS)
 AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
-    true, true, true};
+    true, true, true, false};
+#else
+AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
+    true, true, true, true};
+#endif
 }
 }

@@ -103,6 +103,10 @@ void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
 
+  if (GlobalConfiguration::GetAECEnabled()
+      && GlobalConfiguration::GetAEC3Enabled()) {
+    field_trial_ += "ICS-EchoCanceller3/Enabled/";
+  }
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
 
   if (!rtc::InitializeSSL()) {
