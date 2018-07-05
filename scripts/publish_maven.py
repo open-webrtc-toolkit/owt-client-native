@@ -40,11 +40,11 @@ def validatePath(path):
     checkExists(os.path.join(path, 'debug', 'armeabi-v7a/libjingle_peerconnection_so.so'))
     checkExists(os.path.join(path, 'debug', 'arm64-v8a/libjingle_peerconnection_so.so'))
     checkExists(os.path.join(path, 'debug', 'x86/libjingle_peerconnection_so.so'))
-    checkExists(os.path.join(path, 'debug', 'libjingle_peerconnection.jar'))
+    checkExists(os.path.join(path, 'debug', 'libwebrtc.jar'))
     checkExists(os.path.join(path, 'release', 'armeabi-v7a/libjingle_peerconnection_so.so'))
     checkExists(os.path.join(path, 'release', 'arm64-v8a/libjingle_peerconnection_so.so'))
     checkExists(os.path.join(path, 'release', 'x86/libjingle_peerconnection_so.so'))
-    checkExists(os.path.join(path, 'release', 'libjingle_peerconnection.jar'))
+    checkExists(os.path.join(path, 'release', 'libwebrtc.jar'))
 
 def zipLibs(location):
     print '> zipping .so files into on .jar file...'
@@ -61,7 +61,7 @@ def zipLibs(location):
 def publishLibs(location, version):
     for s in ['debug', 'release']:
         path = os.path.join(location, s)
-        publish(os.path.join(path, 'libjingle_peerconnection.jar'), 'libjingle-jar-' + s, version)
+        publish(os.path.join(path, 'libwebrtc.jar'), 'libjingle-jar-' + s, version)
         publish(os.path.join(path, 'lib.jar'), 'libjingle-so-' + s, version)
 
 def publish(file_name, artifact_id, version):

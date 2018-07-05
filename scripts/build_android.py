@@ -25,27 +25,27 @@ def gn_gen(arch, debug):
         sys.exit();
 
 def ninja_build(arch, debug):
-    print '\n> building libjingle_woogeen_so for', arch, ('debug' if debug else 'release')
+    print '\n> building libjingle_peerconnection_so for', arch, ('debug' if debug else 'release')
     output_location = get_location(arch, debug)
-    cmd = ['ninja', '-C', output_location, 'libjingle_woogeen_so']
+    cmd = ['ninja', '-C', output_location, 'libjingle_peerconnection_so']
     if subprocess.call(cmd) :
         sys.exit();
 
     print '\n> building libwebrtc for', arch, ('debug' if debug else 'release')
-    cmd = ['ninja', '-C', output_location, 'libjingle_woogeen_java']
+    cmd = ['ninja', '-C', output_location, 'libwebrtc']
     if subprocess.call(cmd) :
         sys.exit();
 
 def dist(arch, debug):
     print '\n> copying libs to distribution location'
     output_location = get_location(arch, debug)
-    jar_location = os.path.join(output_location, 'lib.java/libjingle_woogeen_java.jar')
-    so_location = os.path.join(output_location, 'lib.unstripped/libjingle_woogeen_so.so') if debug\
-                  else os.path.join(output_location, 'libjingle_woogeen_so.so')
+    jar_location = os.path.join(output_location, 'lib.java/third_party/webrtc/sdk/android/libwebrtc.jar')
+    so_location = os.path.join(output_location, 'lib.unstripped/libjingle_peerconnection_so.so') if debug\
+                  else os.path.join(output_location, 'libjingle_peerconnection_so.so')
     to_location = os.path.join(OUTPUT_PATH, 'dist', ('debug' if debug else 'release'))
 
     #copy .jar file
-    cmd = ['cp', jar_location, to_location + '/libjingle_peerconnection.jar']
+    cmd = ['cp', jar_location, to_location]
     subprocess.call(cmd)
 
     #change the folder names to keep consistent with android jni folder.
