@@ -203,7 +203,9 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
       new_state == PeerConnectionInterface::kIceConnectionCompleted) {
     connected_ = true;
-  } else if (new_state == PeerConnectionInterface::kIceConnectionClosed) {
+  } else if (new_state == PeerConnectionInterface::kIceConnectionFailed) {
+    // TODO(jianlin): Change trigger condition back to kIceConnectionClosed
+    // once MCU re-enables IceRestart and client supports it as well.
     if (connected_) {
       OnStreamError(std::string("Stream connection closed unexpectedly."));
     }
