@@ -29,8 +29,11 @@ declare_args() {
   # FORCE_MAC_TOOLCHAIN].
   use_system_xcode = true
 
-  # Enable H.265.
-  rtc_use_h265 = false
+  if (is_win || is_ios || is_android) {
+    rtc_use_h265 = true
+  } else {
+    rtc_use_h265 = false
+  }
 
   # Includes tests.
   woogeen_include_tests = false
