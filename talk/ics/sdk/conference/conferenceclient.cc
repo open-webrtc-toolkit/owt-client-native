@@ -454,6 +454,18 @@ void ConferenceClient::Subscribe(
     }
     return;
   }
+  if (options.video.disabled && options.audio.disabled) {
+    std::string failure_message(
+        "Subscribing with both audio and video disabled is not allowed.");
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown, failure_message));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
   // Avoid subscribing the same stream twice.
   {
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);

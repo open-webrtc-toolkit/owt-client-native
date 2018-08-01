@@ -34,6 +34,13 @@ namespace conference {
 
 /// Audio subscription contraints.
 struct AudioSubscriptionConstraints {
+  /**
+   @brief Construct AudioSubcriptionConstraints with defaut settings.
+   @details By default the audio suscription is enabled.
+  */
+  explicit AudioSubscriptionConstraints() :
+      disabled(false) {}
+  bool disabled;
   std::vector<ics::base::AudioCodecParameters> codecs;
 };
 
@@ -41,14 +48,15 @@ struct AudioSubscriptionConstraints {
 struct VideoSubscriptionConstraints {
   /**
    @brief Construct VideoSubscriptionConstraints with default values.
-   @defatils By default the publication settings of stream is used.
+   @details By default the publication settings of stream is used.
   */
-    explicit VideoSubscriptionConstraints()
-        : resolution(0, 0)
-        , frameRate(0)
-        , bitrateMultiplier(0)
-        , keyFrameInterval(0) {}
-
+  explicit VideoSubscriptionConstraints()
+      : disabled(false),
+        resolution(0, 0),
+        frameRate(0),
+        bitrateMultiplier(0),
+        keyFrameInterval(0) {}
+  bool disabled;
   std::vector<ics::base::VideoCodecParameters> codecs;
   ics::base::Resolution resolution;
   double frameRate;
@@ -62,7 +70,8 @@ struct SubscribeOptions {
   VideoSubscriptionConstraints video;
 };
 
-/// Video subscription update constrains used by subscription's ApplyOptions API.
+/// Video subscription update constrains used by subscription's ApplyOptions
+/// API.
 struct VideoSubscriptionUpdateConstraints {
   /**
    @brief Construct VideoSubscriptionUpdateConstraints with default value.
@@ -84,7 +93,7 @@ struct SubscriptionUpdateOptions {
   /// Options for updating a subscription.
   VideoSubscriptionUpdateConstraints video;
 };
-}
-}
+}  // namespace conference
+}  // namespace ics
 
 #endif  // ICS_CONFERENCE_SUBSCRIBEOPTIONS_H_

@@ -517,7 +517,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   failure_callback_ = on_failure;
   sio::message::ptr sio_options = sio::object_message::create();
   sio::message::ptr media_options = sio::object_message::create();
-  if (stream->has_audio_) {
+  if (stream->has_audio_ && !subscribe_options.audio.disabled) {
     sio::message::ptr audio_options = sio::object_message::create();
     audio_options->get_map()["from"] = sio::string_message::create(stream->Id());
     media_options->get_map()["audio"] = audio_options;
@@ -525,7 +525,7 @@ void ConferencePeerConnectionChannel::Subscribe(
     media_options->get_map()["audio"] = sio::bool_message::create(false);
   }
 
-  if (stream->has_video_) {
+  if (stream->has_video_ && !subscribe_options.video.disabled) {
     sio::message::ptr video_options = sio::object_message::create();
     video_options->get_map()["from"] = sio::string_message::create(stream->Id());
     sio::message::ptr video_spec = sio::object_message::create();
@@ -567,10 +567,10 @@ void ConferencePeerConnectionChannel::Subscribe(
 
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveAudio,
-      stream->has_audio_);
+      (stream->has_audio_ && !subscribe_options.audio.disabled));
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
-      stream->has_video_);
+      (stream->has_video_ && !subscribe_options.video.disabled));
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id) {

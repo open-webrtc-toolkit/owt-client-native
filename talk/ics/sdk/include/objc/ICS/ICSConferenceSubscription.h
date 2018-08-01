@@ -83,6 +83,7 @@ RTC_EXPORT
 /// Constraints for subscribing a remote stream.
 @interface ICSConferenceAudioSubscriptionConstraints : NSObject
 
+@property(nonatomic, assign) BOOL disabled;
 @property(nonatomic, strong) NSArray<ICSAudioCodecParameters*>* codecs;
 
 @end
@@ -91,6 +92,7 @@ RTC_EXPORT
 /// Constraints for subscribing a remote stream.
 @interface ICSConferenceVideoSubscriptionConstraints : NSObject
 
+@property(nonatomic, assign) BOOL disabled;
 @property(nonatomic, assign) CGSize resolution;
 @property(nonatomic, assign) double frameRate;
 @property(nonatomic, assign) double bitrateMultiplier;

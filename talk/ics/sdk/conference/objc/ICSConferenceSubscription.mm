@@ -155,6 +155,7 @@
   std::shared_ptr<ics::conference::AudioSubscriptionConstraints> constrains =
       std::shared_ptr<ics::conference::AudioSubscriptionConstraints>(
           new ics::conference::AudioSubscriptionConstraints());
+  constrains->disabled = _disabled;
   constrains->codecs =
       std::vector<ics::base::AudioCodecParameters>([_codecs count]);
   for (ICSAudioCodecParameters* codec in _codecs) {
@@ -174,6 +175,7 @@
   std::shared_ptr<ics::conference::VideoSubscriptionConstraints> constrains =
       std::shared_ptr<ics::conference::VideoSubscriptionConstraints>(
           new ics::conference::VideoSubscriptionConstraints());
+  constrains->disabled = _disabled;
   constrains->codecs =
       std::vector<ics::base::VideoCodecParameters>([_codecs count]);
   for (ICSVideoCodecParameters* codec in _codecs) {
