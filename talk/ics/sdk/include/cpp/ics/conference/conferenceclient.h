@@ -147,6 +147,10 @@ class ConferenceInfo {
     /// Conference ID.
     std::string Id() const { return id_; }
 
+    /// The participant info of current conference client.
+    std::shared_ptr<Participant> Self() const {
+      return self_;
+    }
    protected:
     // Add participant.
     void AddParticipant(std::shared_ptr<Participant> participant);
