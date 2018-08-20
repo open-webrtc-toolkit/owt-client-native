@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B12702AD-ABFB-343A-A199-8E24837244A3}</ProjectGuid>
+    <Keyword>Qt4VSv1.0</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;WIN64;_WINDOWS;NDEBUG;WEBRTC_WIN;UNICODE;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_TESTLIB_LIB;QT_XML_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtTest;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MultiThreaded</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</TreatWChar_tAsBuiltInType>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Console</SubSystem>
+      <OutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\$(ProjectName).exe</OutputFile>
+      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateDebugInformation>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">winmm.lib;crypt32.lib;secur32.lib;ws2_32.lib;dmoguids.lib;msdmo.lib;wmcodecdspuuid.lib;amstrmid.lib;mfuuid.lib;mf.lib;mfplat.lib;d3d9.lib;d3d11.lib;dxgi.lib;dxva2.lib;ics-release.lib;sioclient.lib;libboost_date_time-vc140-mt-s-1_59.lib;libboost_random-vc140-mt-s-1_59.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Test.lib;Qt5Xml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <QtMoc>
+      <InputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(FullPath)</InputFile>
+      <OutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">output</DynamicSource>
+      <ExecutionDescription Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc'ing %(Identity)...</ExecutionDescription>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtTest;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</IncludePath>
+      <Define Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;WIN64;_WINDOWS;NDEBUG;WEBRTC_WIN;UNICODE;QT_DLL;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_TESTLIB_LIB;QT_XML_LIB;%(PreprocessorDefinitions)</Define>
+      <QTDIR Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)</QTDIR>
+    </QtMoc>
+    <QtUic>
+      <ExecutionDescription Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Uic'ing %(Identity)...</ExecutionDescription>
+      <OutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\ui_%(Filename).h</OutputFile>
+    </QtUic>
+    <QtRcc>
+      <ExecutionDescription Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Rcc'ing %(Identity)...</ExecutionDescription>
+      <OutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\qrc_%(Filename).cpp</OutputFile>
+    </QtRcc>
+    <PreBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">python pre_build.py</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <PropertyGroup Condition="'$(QtMsBuild)'=='' or !Exists('$(QtMsBuild)\qt.targets')">
+    <QtMsBuild>$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>C:\workspace\boost_1_59_0;C:\workspace\sco\socket.io-client-cpp\src;//D:\workspace\4.0Release\CS_WebRTC_Client_SDK_Windows.v4.0\include;D:\workspace\40-sdk\src\talk\ics\sdk\include\cpp;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>//D:\workspace\4.0Release\CS_WebRTC_Client_SDK_Windows.v4.0\libs\x86;D:\workspace\40-sdk\src\dist;C:\workspace\sco\socket.io-client-cpp\Debug;C:\workspace\boost_1_59_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>C:\workspace\boost_1_59_0;//D:\workspace\TestApp\CS_WebRTC_Client_SDK_Windows.v4.0.1\include;D:\workspace\40-sdk\src\talk\ics\sdk\include\cpp;$(IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>//D:\workspace\TestApp\CS_WebRTC_Client_SDK_Windows.v4.0.1\libs\x86;D:\workspace\40-sdk\src\dist;C:\workspace\sco\socket.io-client-cpp\Release;C:\workspace\boost_1_59_0\stage\lib;$(IncludePath);$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
+    <Import Project="$(QtMsBuild)\qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;_LIB;WEBRTC_WIN;_WINDOWS;UNICODE;WIN32;WIN64;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_TESTLIB_LIB;QT_XML_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtTest;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>secur32.lib;iphlpapi.lib;crypt32.lib;dmoguids.lib;wmcodecdspuuid.lib;amstrmid.lib;msdmo.lib;libboost_regex-vc140-mt-sgd-1_59.lib;libboost_chrono-vc140-mt-sgd-1_59.lib;libboost_date_time-vc140-mt-sgd-1_59.lib;kernel32.lib;user32.lib;shell32.lib;uuid.lib;ole32.lib;advapi32.lib;ws2_32.lib;gdi32.lib;comdlg32.lib;oleaut32.lib;imm32.lib;winmm.lib;mf.lib;mfplat.lib;mfuuid.lib;d3d9.lib;d3d11.lib;dxgi.lib;dxva2.lib;ics-debug.lib;sioclient.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Testd.lib;Qt5Xmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
+    </Link>
+    <QtMoc>
+      <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
+      <IncludePath>.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtTest;$(QTDIR)\include\QtXml</IncludePath>
+      <Define>_DEBUG;_LIB;WEBRTC_WIN;_WINDOWS;UNICODE;WIN32;WIN64;QT_CORE_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_TESTLIB_LIB;QT_XML_LIB</Define>
+    </QtMoc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\ui_%(Filename).h</OutputFile>
+    </QtUic>
+    <QtRcc>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\qrc_%(Filename).cpp</OutputFile>
+      <DynamicSource>output</DynamicSource>
+    </QtRcc>
+    <PreBuildEvent>
+      <Command>python pre_build.py</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AutoTestClient.cpp" />
+    <ClCompile Include="EncodedVideoInput.cpp" />
+    <ClCompile Include="FrameJudger.cpp" />
+    <ClCompile Include="ICSConference.cpp" />
+    <ClCompile Include="ICSObserver.cpp" />
+    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="main.cpp">
+      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile Include="PcmAudioInput.cpp" />
+    <ClCompile Include="PopVideo.cpp" />
+    <ClCompile Include="RunCaseThread.cpp" />
+    <ClCompile Include="TestStream.cpp" />
+    <ClCompile Include="TestGetStats.cpp" />
+    <ClCompile Include="TestJoin.cpp" />
+    <ClCompile Include="TestLeave.cpp" />
+    <ClCompile Include="TestMuteAndUnmute.cpp" />
+    <ClCompile Include="TestPublish.cpp" />
+    <ClCompile Include="TestResultListDialog.cpp" />
+    <ClCompile Include="TestSdk.cpp" />
+    <ClCompile Include="TestSdkCaseName.cpp" />
+    <ClCompile Include="TestSend.cpp" />
+    <ClCompile Include="TestStop.cpp" />
+    <ClCompile Include="TestSubscribe.cpp" />
+    <ClCompile Include="WebRequest.cpp" />
+    <ClCompile Include="YuvVideoInput.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ICSConference.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="ICSConference.ui" />
+    <QtUic Include="PopVideo.ui" />
+    <QtUic Include="TestResultListDialog.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="ICSConference.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ICSConference.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AutoTestClient.h" />
+    <ClInclude Include="EncodedVideoInput.h" />
+    <ClInclude Include="FrameJudger.h" />
+    <ClInclude Include="ics.h" />
+    <ClInclude Include="ICSObserver.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="PcmAudioInput.h" />
+    <QtMoc Include="TestResultListDialog.h" />
+    <QtMoc Include="RunCaseThread.h" />
+    <QtMoc Include="TestSdk.h" />
+    <QtMoc Include="PopVideo.h" />
+    <ClInclude Include="WebRequest.h" />
+    <ClInclude Include="YuvVideoInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="generateRunCaseCmd.py" />
+    <None Include="pre_build.py" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_Win32="msvc2015_596" MocOptions="" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
