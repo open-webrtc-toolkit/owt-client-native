@@ -236,6 +236,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool remote_side_supports_remove_stream_;
   bool remote_side_supports_unified_plan_;
   bool is_creating_offer_;  // It will be true during creating and setting offer.
+  bool remote_side_supports_continual_ice_gathering_;
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;

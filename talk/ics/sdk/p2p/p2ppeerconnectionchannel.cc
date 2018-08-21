@@ -94,13 +94,15 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       session_state_(kSessionStateReady),
       negotiation_needed_(false),
       set_remote_sdp_task_(nullptr),
-      last_disconnect_(std::chrono::time_point<std::chrono::system_clock>::max()),
+      last_disconnect_(
+          std::chrono::time_point<std::chrono::system_clock>::max()),
       reconnect_timeout_(10),
       message_seq_num_(0),
       remote_side_supports_plan_b_(false),
       remote_side_supports_remove_stream_(false),
       remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
+      remote_side_supports_continual_ice_gathering_(true),
       event_queue_(event_queue) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
@@ -1298,10 +1300,16 @@ void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
     remote_side_supports_remove_stream_ = false;
     remote_side_supports_plan_b_ = false;
     remote_side_supports_unified_plan_ = true;
+    remote_side_supports_continual_ice_gathering_ = false;
   } else {
     remote_side_supports_remove_stream_ = true;
     remote_side_supports_plan_b_ = true;
     remote_side_supports_unified_plan_ = false;
+    if (runtime_name.compare("Safari") == 0) {
+      remote_side_supports_continual_ice_gathering_ = false;
+    } else {
+      remote_side_supports_continual_ice_gathering_ = true;
+    }
   }
   RTC_LOG(LS_INFO) << "Remote side supports removing stream? "
                << remote_side_supports_remove_stream_;

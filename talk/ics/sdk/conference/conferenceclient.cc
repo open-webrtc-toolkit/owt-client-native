@@ -1455,6 +1455,8 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
                 kCandidateNetworkPolicyLowCost
           : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyAll;
+  config.continual_gathering_policy =
+      PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
 

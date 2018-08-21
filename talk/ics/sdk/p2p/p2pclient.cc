@@ -266,6 +266,10 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
   for (auto codec : configuration_.audio_encodings) {
     config.audio.push_back(AudioEncodingParameters(codec));
   }
+  // TODO(jianlin): For publisher, peerconnection is created before UA info is received.
+  // so signaling protocol change is needed if we would like to remove this HC.
+  config.continual_gathering_policy =
+      PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
 
