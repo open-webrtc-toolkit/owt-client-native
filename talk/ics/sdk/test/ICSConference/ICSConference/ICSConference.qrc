@@ -1,5 +1,0 @@
-<RCC>
-  <qresource prefix="ICSConference">
-    <file>Resources/fullScreen.png</file>
-  </qresource>
-</RCC>
