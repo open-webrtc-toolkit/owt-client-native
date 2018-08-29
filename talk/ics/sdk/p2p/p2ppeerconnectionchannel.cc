@@ -33,8 +33,8 @@ enum P2PPeerConnectionChannel::SessionState : int {
 // Signaling message type
 const string kMessageTypeKey = "type";
 const string kMessageDataKey = "data";
-const string kChatDeny = "chat-denied";
-const string kChatStop = "chat-closed";
+const string kChatDenied = "chat-denied";
+const string kChatClosed = "chat-closed";
 const string kChatSignal = "chat-signal";
 const string kChatNegotiationNeeded = "chat-negotiation-needed";
 const string kChatTrackSources = "chat-track-sources";
@@ -185,6 +185,9 @@ void P2PPeerConnectionChannel::Publish(
 
   // Initialization
   is_caller_ = true;
+
+  // Send chat-closed to workaround known browser bugs
+  SendStop(nullptr, nullptr);
 
   // The first signaling message of user agent data to remote peer
   SendUaInfo();
@@ -382,9 +385,9 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     OnMessageDataReceived(data);
   } else if (message_type == kChatNegotiationNeeded) {
     OnMessageNegotiationNeeded();
-  } else if (message_type == kChatStop) {
+  } else if (message_type == kChatClosed) {
     OnMessageStop();
-  } else if (message_type == kChatDeny) {
+  } else if (message_type == kChatDenied) {
     OnMessageDeny();
   } else {
     RTC_LOG(LS_WARNING) << "Received unknown message type : " << message_type;
@@ -1143,7 +1146,7 @@ void P2PPeerConnectionChannel::SendStop(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_LOG(LS_INFO) << "Send stop.";
   Json::Value json;
-  json[kMessageTypeKey] = kChatStop;
+  json[kMessageTypeKey] = kChatClosed;
   SendSignalingMessage(json, on_success, on_failure);
 }
 
@@ -1151,7 +1154,7 @@ void P2PPeerConnectionChannel::SendDeny(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   Json::Value json;
-  json[kMessageTypeKey] = kChatDeny;
+  json[kMessageTypeKey] = kChatDenied;
   SendSignalingMessage(json, on_success, on_failure);
 }
 
