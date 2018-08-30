@@ -84,10 +84,14 @@ void ConferenceInfo::AddOrUpdateStream(
                              update = true;
                            return match;
                          });
-  if (it != remote_streams_.end()) {
-    remote_streams_.erase(it);
+  if (update && it != remote_streams_.end()) {
+    (*it)->Capabilities(remote_stream->Capabilities());
+    (*it)->Settings(remote_stream->Settings());
+    // Attributes is not supported to be updated so we will not update it.
+    TriggerOnStreamUpdated(stream_id);
+  } else {
+    remote_streams_.push_back(remote_stream);
   }
-  remote_streams_.push_back(remote_stream);
 }
 
 void ConferenceInfo::RemoveParticipantById(const std::string& id) {
@@ -139,6 +143,15 @@ void ConferenceInfo::TriggerOnStreamEnded(const std::string& stream_id) {
   for (auto& it : remote_streams_) {
     if (it->Id() == stream_id) {
       it->TriggerOnStreamEnded();
+      break;
+    }
+  }
+}
+
+void ConferenceInfo::TriggerOnStreamUpdated(const std::string& stream_id) {
+  for (auto& it : remote_streams_) {
+    if (it->Id() == stream_id) {
+      it->TriggerOnStreamUpdated();
       break;
     }
   }

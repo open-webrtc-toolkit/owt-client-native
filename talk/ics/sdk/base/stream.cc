@@ -251,6 +251,13 @@ void Stream::TriggerOnStreamEnded() {
     (*its).get().OnEnded();
   }
 }
+
+void Stream::TriggerOnStreamUpdated() {
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnUpdated();
+  }
+}
+
 #if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
 

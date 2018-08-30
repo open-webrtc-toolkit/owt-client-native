@@ -164,6 +164,8 @@ class ConferenceInfo {
     void TriggerOnParticipantLeft(const std::string& participant_id);
     // Trigger stream ended event.
     void TriggerOnStreamEnded(const std::string& stream_id);
+    // Trigger stream updated event.
+    void TriggerOnStreamUpdated(const std::string& stream_id);
   private:
     bool ParticipantPresent(const std::string& participant_id);
     bool RemoteStreamPresent(const std::string& stream_id);

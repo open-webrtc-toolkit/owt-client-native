@@ -73,6 +73,8 @@ class StreamObserver {
   /// Triggered when a stream is ended, or the stream is no longer available in
   /// conference mode.
   virtual void OnEnded() {};
+  /// Triggered when the stream info is updated in conference mode.
+  virtual void OnUpdated() {};
 };
 
 class WebrtcVideoRendererImpl;
@@ -140,6 +142,7 @@ class Stream {
   void Id(const std::string& id);
   void MediaStream(MediaStreamInterface* media_stream);
   void TriggerOnStreamEnded();
+  void TriggerOnStreamUpdated();
   MediaStreamInterface* media_stream_;
   std::unordered_map<std::string, std::string> attributes_;
   WebrtcVideoRendererImpl* renderer_impl_;
@@ -320,6 +323,17 @@ class RemoteStream : public Stream {
   /// Get the publication settings of the stream.
   PublicationSettings Settings() { return publication_settings_; }
   /// Stop the remote stream.
+  /** @cond */
+  /// Setter for subscription capabilities
+  void Capabilities(
+      ics::base::SubscriptionCapabilities subscription_capabilities) {
+    subscription_capabilities_ = subscription_capabilities;
+  }
+  /// Setter for publication settings
+  void Settings(PublicationSettings publication_settings) {
+    publication_settings_ = publication_settings;
+  }
+  /** @endcond */
   void Stop() {};
 
  protected:
