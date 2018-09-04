@@ -180,6 +180,9 @@ void P2PPeerConnectionChannel::Publish(
     }
     return;
   }
+  latest_local_stream_ = stream;
+  latest_publish_success_callback_ = on_success;
+  latest_publish_failure_callback_ = on_failure;
 
   // Initialization
   is_caller_ = true;
@@ -1057,6 +1060,22 @@ void P2PPeerConnectionChannel::GetStats(
       observer, nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
+}
+
+bool P2PPeerConnectionChannel::HaveLocalOffer() {
+  return SignalingState() == webrtc::PeerConnectionInterface::kHaveLocalOffer;
+}
+
+std::shared_ptr<LocalStream> P2PPeerConnectionChannel::GetLatestLocalStream() {
+  return latest_local_stream_;
+}
+
+std::function<void()> P2PPeerConnectionChannel::GetLatestPublishSuccessCallback() {
+  return latest_publish_success_callback_;
+}
+
+std::function<void(std::unique_ptr<Exception>)> P2PPeerConnectionChannel::GetLatestPublishFailureCallback() {
+  return latest_publish_failure_callback_;
 }
 
 void P2PPeerConnectionChannel::DrainPendingStreams() {

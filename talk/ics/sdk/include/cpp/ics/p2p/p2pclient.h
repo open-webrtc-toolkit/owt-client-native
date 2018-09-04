@@ -156,7 +156,7 @@ class P2PClient final
    */
   void Connect(const std::string& host,
                const std::string& token,
-               std::function<void()> on_success,
+               std::function<void(const std::string&)> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
 
   /**
@@ -256,6 +256,10 @@ class P2PClient final
       const std::string& target_id,
       std::function<void(std::shared_ptr<ics::base::ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
+
+  /** @cond */
+  void SetLocalId(const std::string& local_id);
+  /** @endcond */
 
  protected:
   // Implement P2PSignalingSenderInterface

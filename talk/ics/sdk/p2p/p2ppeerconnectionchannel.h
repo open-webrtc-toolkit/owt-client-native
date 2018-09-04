@@ -105,6 +105,11 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       std::function<void(const webrtc::StatsReports& reports)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
 
+  bool HaveLocalOffer();
+  std::shared_ptr<LocalStream> GetLatestLocalStream();
+  std::function<void()> GetLatestPublishSuccessCallback();
+  std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
+
  protected:
   void CreateOffer();
   void CreateAnswer();
@@ -242,6 +247,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::shared_ptr<rtc::TaskQueue> event_queue_;
 
   std::vector<std::function<void(std::unique_ptr<Exception>)>> failure_callbacks_;
+
+  std::shared_ptr<LocalStream> latest_local_stream_;
+  std::function<void()> latest_publish_success_callback_;
+  std::function<void(std::unique_ptr<Exception>)> latest_publish_failure_callback_;
 };
 }
 }

@@ -83,7 +83,7 @@ class P2PSignalingChannelInterface {
   virtual void Connect(
       const std::string& host,
       const std::string& token,
-      std::function<void()> on_success,
+      std::function<void(const std::string&)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /**
    @brief Disconnect from signaling server.
