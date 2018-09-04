@@ -106,8 +106,6 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       event_queue_(event_queue) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
-  if (data_channel_ == nullptr)
-    CreateDataChannel(kDataChannelLabelForTextMessage);
 }
 
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
@@ -231,6 +229,9 @@ void P2PPeerConnectionChannel::Publish(
 
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
     DrainPendingStreams();
+
+  if (data_channel_ == nullptr)
+    CreateDataChannel(kDataChannelLabelForTextMessage);
 }
 
 void P2PPeerConnectionChannel::Deny(
