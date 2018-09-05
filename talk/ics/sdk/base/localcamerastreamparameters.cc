@@ -8,8 +8,8 @@
 namespace ics {
 namespace base {
 
-LocalCameraStreamParameters::LocalCameraStreamParameters(bool video_enabled,
-                                                         bool audio_enabled)
+LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
+                                                         bool video_enabled)
     : resolution_width_(320),
       resolution_height_(240),
       fps_(30),
@@ -38,15 +38,13 @@ void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
 }
 
 LocalDesktopStreamParameters::LocalDesktopStreamParameters(
-    bool video_enabled,
     bool audio_enabled,
-    DesktopSourceType source_type,
-    DesktopCapturePolicy capture_policy)
+    bool video_enabled)
     : video_enabled_(video_enabled),
       audio_enabled_(audio_enabled),
       fps_(30),
-      source_type_(source_type),
-      capture_policy_(capture_policy) {}
+      source_type_(DesktopSourceType::kFullScreen),
+      capture_policy_(DesktopCapturePolicy::kDefault) {}
 
 void LocalDesktopStreamParameters::Fps(int fps) {
   fps_ = fps;

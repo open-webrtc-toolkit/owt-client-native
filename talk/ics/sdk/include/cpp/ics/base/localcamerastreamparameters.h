@@ -45,10 +45,10 @@ class LocalCameraStreamParameters final {
  public:
   /**
     @brief Initialize a LocalCameraStreamParameters.
-    @param video_enabled Indicates if video is enabled for this stream.
-    @param audio_anabled Indicates if audio is enabled for this stream.
+    @param audio_enabled Indicates if audio is enabled for this stream.
+    @param video_anabled Indicates if video is enabled for this stream.
   */
-  LocalCameraStreamParameters(bool video_enabled, bool audio_enabled);
+  LocalCameraStreamParameters(bool audio_enabled, bool video_enabled);
   /**
     @brief Set the ID of the camera to be used.
     @param camera_id Camera ID. On Windows, camera ID is the DevicePath of
@@ -72,7 +72,6 @@ class LocalCameraStreamParameters final {
     @param height The height of the video.
   */
   void Resolution(int width, int height);
-  /** @cond */
   /**
     @brief Set the frame rate.
 
@@ -81,6 +80,7 @@ class LocalCameraStreamParameters final {
     @param fps The frame rate of the video.
   */
   void Fps(int fps);
+  /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
   int ResolutionWidth() const { return resolution_width_; }
@@ -111,33 +111,15 @@ class LocalCustomizedStreamParameters final {
  public:
   /**
     @brief Initialize a LocalCustomizedStreamParameters for YUV input.
-    @param video_enabled Indicates if video is enabled for this stream.
-    @param audio_anabled Indicates if audio is enabled for this stream.
+    @param audio_enabled Indicates if audio is enabled for this stream.
+    @param video_anabled Indicates if video is enabled for this stream.
   */
-  LocalCustomizedStreamParameters(bool video_enabled, bool audio_enabled) {
+  LocalCustomizedStreamParameters(bool audio_enabled, bool video_enabled) {
      video_enabled_ = video_enabled;
      audio_enabled_ = audio_enabled;
      fps_ = 0;
      bitrate_kbps_ = 0;
      resolution_width_ = resolution_height_ = 0;
-  }
-  /**
-    @brief Initialize a LocalCustomizedStreamParameters for encoded input.
-    @param video_enabled Indicates if video is enabled for this stream.
-    @param audio_anabled Indicates if audio is enabled for this stream.
-    @param resolution Resolution of the encoded video.
-    @param fps FPS of the encoded video.
-    @param bitrate Bitrate of the encoded video.
-  */
-  LocalCustomizedStreamParameters(bool video_enabled, bool audio_enabled,
-    Resolution& resolution,
-    uint32_t fps, uint32_t bitrate_kbps) {
-    video_enabled_ = video_enabled;
-    audio_enabled_ = audio_enabled;
-    fps_ = fps;
-    bitrate_kbps_ = bitrate_kbps;
-    resolution_width_ = resolution.width;
-    resolution_height_ = resolution.height;
   }
   ~LocalCustomizedStreamParameters() {}
   /**
@@ -152,7 +134,6 @@ class LocalCustomizedStreamParameters final {
     resolution_width_ = width;
     resolution_height_ = height;
   }
-  /** @cond */
   /**
     @brief Set the frame rate.
 
@@ -163,17 +144,17 @@ class LocalCustomizedStreamParameters final {
   void Fps(int fps) {
     fps_ = fps;
   }
-
-  int ResolutionWidth() const { return resolution_width_; }
-  int ResolutionHeight() const { return resolution_height_; }
-  int Fps() const { return fps_; }
   /**
     @brief Set the bitrate of encoded frame.
     @param bitrate_kbps The bitrate expected for the encoded stream.
   */
   void Bitrate(int bitrate_kbps) {
-      bitrate_kbps_ = bitrate_kbps;
+    bitrate_kbps_ = bitrate_kbps;
   }
+  /** @cond */
+  int ResolutionWidth() const { return resolution_width_; }
+  int ResolutionHeight() const { return resolution_height_; }
+  int Fps() const { return fps_; }
   uint32_t Bitrate() const { return bitrate_kbps_; }
   /**
     @brief Get video is enabled or not for this stream.
@@ -229,16 +210,14 @@ class LocalDesktopStreamParameters final {
 
   /**
   @brief Initialize a LocalDesktopStreamParameters.
-  @param video_enabled Indicates if video is enabled for this stream.
-  @param audio_anabled Indicates if audio is enabled for this stream.
+  @param audio_enabled Indicates if audio is enabled for this stream.
+  @param video_anabled Indicates if video is enabled for this stream.
   @param soruce_type Indicates if capture from screen or an app.
   @param capture_policy the OR of any of the DesktopCapturePolicy options.
   */
   LocalDesktopStreamParameters(
-      bool video_enabled,
       bool audio_enabled,
-      DesktopSourceType source_type,
-      DesktopCapturePolicy capture_policy = DesktopCapturePolicy::kDefault);
+      bool video_enabled);
 
   ~LocalDesktopStreamParameters() {}
 
@@ -252,14 +231,28 @@ class LocalDesktopStreamParameters final {
   @return true or false.
   */
   bool AudioEnabled() const { return audio_enabled_; }
-  /** @cond */
   /**
-  @brief Set the frame rate.
-  The actual frame rate of window/screen capturing may be lower than this.
-  @param fps The frame rate of the captured screen/window.
+    @brief Set the source type of screen/app sharing
+    @param source_type Indicate if capturing the full screen
+    or an application.
+  */
+  void SourceType(DesktopSourceType source_type) {
+    source_type_ = source_type;
+  }
+  /**
+    @brief Set the capturer features
+    @params capture_policy Indicate the feature used by the capturer.
+  */
+  void CapturePolicy(DesktopCapturePolicy capture_policy) {
+    capture_policy_ = capture_policy;
+  }
+  /**
+    @brief Set the frame rate.
+     The actual frame rate of window/screen capturing may be lower than this.
+    @param fps The frame rate of the captured screen/window.
   */
   void Fps(int fps);
-
+  /** @cond */
   int Fps() const { return fps_; }
 
   DesktopSourceType SourceType() const { return source_type_; }
