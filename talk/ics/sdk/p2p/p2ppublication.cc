@@ -24,7 +24,7 @@ P2PPublication::P2PPublication(std::shared_ptr<P2PClient> client, std::string ta
     event_queue_ = that->event_queue_;
 }
 
-/// Get connection stats of current publication
+/// Get connection stats of current publication.
 void P2PPublication::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {

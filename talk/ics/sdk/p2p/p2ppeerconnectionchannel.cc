@@ -64,16 +64,24 @@ const string kIceCandidateSdpNameKey = "candidate";
 const string kIceCandidateSdpMidKey = "sdpMid";
 const string kIceCandidateSdpMLineIndexKey = "sdpMLineIndex";
 
-// UA member key
+// UA member keys
+// SDK section
 const string kUaSdkKey = "sdk";
 const string kUaSdkTypeKey = "type";
 const string kUaSdkVersionKey = "version";
+// Runtime section
 const string kUaRuntimeKey = "runtime";
 const string kUaRuntimeNameKey = "name";
 const string kUaRuntimeVersionKey = "version";
+// OS section
 const string kUaOsKey = "os";
 const string kUaOsNameKey = "name";
 const string kUaOsVersionKey = "version";
+// Capabilities section
+const string kUaCapabilitiesKey = "capabilities";
+const string kUaContinualGatheringKey = "continualIceGathering";
+const string kUaUnifiedPlanKey = "unifiedPlan";
+const string kUaStreamRemovableKey = "streamRemovable";
 
 // Text message sent through data channel
 const string kDataChannelLabelForTextMessage = "message";
@@ -103,7 +111,9 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
       remote_side_supports_continual_ice_gathering_(true),
-      event_queue_(event_queue) {
+      event_queue_(event_queue),
+      ua_sent_(false),
+      stop_send_needed_(true) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
 }
@@ -128,32 +138,6 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
     delete signaling_sender_;
 }
 
-Json::Value P2PPeerConnectionChannel::UaInfo() {
-  Json::Value ua;
-
-  // SDK info includes verison and type
-  Json::Value sdk;
-  SysInfo sys_info = SysInfo::GetInstance();
-  sdk[kUaSdkVersionKey] = sys_info.sdk.version;
-  sdk[kUaSdkTypeKey] = sys_info.sdk.type;
-
-  // Runtime values will be empty string on native SDK and
-  // will be browser info on JavaScript SDK
-  Json::Value runtime;
-  runtime[kUaRuntimeNameKey] = sys_info.runtime.name;
-  runtime[kUaRuntimeVersionKey] = sys_info.runtime.version;
-
-  // OS info includes OS name and OS version
-  Json::Value os;
-  os[kUaOsNameKey] = sys_info.os.name;
-  os[kUaOsVersionKey] = sys_info.os.version;
-
-  ua[kUaSdkKey] = sdk;
-  ua[kUaRuntimeKey] = runtime;
-  ua[kUaOsKey] = os;
-  return ua;
-}
-
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
@@ -166,10 +150,8 @@ void P2PPeerConnectionChannel::Publish(
 
   RTC_CHECK(stream->MediaStream());
   std::string stream_label = stream->MediaStream()->id();
-  if (published_streams_.find(stream_label) !=
-          published_streams_.end() ||
-      publishing_streams_.find(stream_label) !=
-          publishing_streams_.end()) {
+  if (published_streams_.find(stream_label) != published_streams_.end() ||
+      publishing_streams_.find(stream_label) != publishing_streams_.end()) {
     if (on_failure) {
       event_queue_->PostTask([on_failure] {
         std::unique_ptr<Exception> e(
@@ -184,14 +166,19 @@ void P2PPeerConnectionChannel::Publish(
   latest_publish_success_callback_ = on_success;
   latest_publish_failure_callback_ = on_failure;
 
-  // Initialization
   is_caller_ = true;
 
-  // Send chat-closed to workaround known browser bugs
-  SendStop(nullptr, nullptr);
+  // Send chat-closed to workaround known browser bugs, together with
+  // user agent information once and once only.
+  if (stop_send_needed_) {
+    SendStop(nullptr, nullptr);
+    stop_send_needed_ = false;
+  }
 
-  // The first signaling message of user agent data to remote peer
-  SendUaInfo();
+  if (!ua_sent_) {
+    SendUaInfo();
+    ua_sent_ = true;
+  }
 
   scoped_refptr<webrtc::MediaStreamInterface> media_stream =
       stream->MediaStream();
@@ -223,7 +210,7 @@ void P2PPeerConnectionChannel::Publish(
   RTC_LOG(LS_INFO) << "Session state: " << session_state_;
 
   if (on_success) {
-    publish_callbacks_[stream_label] = on_success;
+    publish_success_callbacks_[stream_label] = on_success;
   }
 
   if (on_failure) {
@@ -235,6 +222,56 @@ void P2PPeerConnectionChannel::Publish(
 
   if (data_channel_ == nullptr)
     CreateDataChannel(kDataChannelLabelForTextMessage);
+}
+
+void P2PPeerConnectionChannel::Send(
+  const std::string& message,
+  std::function<void()> on_success,
+  std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  is_caller_ = true;
+
+  // Send chat-closed to workaround known browser bugs, together with
+  // user agent information once and once only.
+  if (stop_send_needed_) {
+    SendStop(nullptr, nullptr);
+    stop_send_needed_ = false;
+  }
+
+  if (!ua_sent_) {
+    SendUaInfo();
+    ua_sent_ = true;
+  }
+
+  // Try to send the text message.
+  Json::Value content;
+  long message_id = message_seq_num_++;
+  content[kTextMessageIdKey] = std::to_string(message_id);
+  content[kTextMessageDataKey] = message;
+  std::string data = rtc::JsonValueToString(content);
+  if (data_channel_ != nullptr &&
+    data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
+    data_channel_->Send(CreateDataBuffer(data));
+    RTC_LOG(LS_INFO) << "Send message: " << data;
+  }
+  else {
+    {
+      std::lock_guard<std::mutex> lock(pending_messages_mutex_);
+      std::shared_ptr<std::string> data_copy(std::make_shared<std::string>(data));
+      pending_messages_.push_back(data_copy);
+    }
+
+    if (data_channel_ == nullptr) // Otherwise, wait for data channel ready.
+      CreateDataChannel(kDataChannelLabelForTextMessage);
+  }
+
+  if (on_success) {
+    std::string id_value = std::to_string(message_id);
+    message_success_callbacks_[id_value] = on_success;
+  }
+
+  if (on_failure) {
+    failure_callbacks_.push_back(on_failure);
+  }
 }
 
 void P2PPeerConnectionChannel::Deny(
@@ -339,14 +376,6 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
   );
 }
 
-void P2PPeerConnectionChannel::SendUaInfo() {
-  Json::Value json;
-  json[kMessageTypeKey] = kChatUserAgent;
-  Json::Value ua = UaInfo();
-  json[kMessageDataKey] = ua;
-  SendSignalingMessage(json, nullptr, nullptr);
-}
-
 void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     const std::string& message) {
   RTC_LOG(LS_INFO) << "OnIncomingMessage: " << message;
@@ -363,7 +392,15 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     RTC_LOG(LS_WARNING) << "Cannot get type from incoming message.";
     return;
   }
+
   if (message_type == kChatUserAgent) {
+    // Send back user agent info once and only once.
+    if (!ua_sent_) {
+      SendUaInfo();
+      ua_sent_ = true;
+      stop_send_needed_ = false;
+    }
+
     Json::Value ua;
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &ua);
     OnMessageUserAgent(ua);
@@ -525,7 +562,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
 void P2PPeerConnectionChannel::OnMessageTracksAdded(
     Json::Value& stream_tracks) {
   // Find the streams with track information, and add them to published stream
-  // list
+  // list.
   for (Json::Value::ArrayIndex idx = 0; idx != stream_tracks.size(); idx++) {
     std::string track_id = stream_tracks[idx].asString();
     std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
@@ -541,30 +578,30 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
       if (it_publishing != publishing_streams_.end())
         publishing_streams_.erase(it_publishing);
 
-      // Trigger the successful callback of publish
-      if (publish_callbacks_.find(stream_label) == publish_callbacks_.end()) {
+      // Trigger the successful callback of publish.
+      if (publish_success_callbacks_.find(stream_label) == publish_success_callbacks_.end()) {
         RTC_LOG(LS_WARNING) << "No callback available for publishing stream with track id: "
                         << track_id;
         return;
       }
 
-      std::function<void()> callback = publish_callbacks_[stream_label];
+      std::function<void()> callback = publish_success_callbacks_[stream_label];
       event_queue_->PostTask([callback] { callback(); });
-      publish_callbacks_.erase(stream_label);
+      publish_success_callbacks_.erase(stream_label);
     }
   }
 }
 
 void P2PPeerConnectionChannel::OnMessageDataReceived(Json::Value& data) {
-  // Here comes the message id for its callback accordingly
+  // Here comes the message id for its callback accordingly.
   std::string id = rtc::JsonValueToString(data);
-  if (message_callbacks_.find(id) == message_callbacks_.end()) {
+  if (message_success_callbacks_.find(id) == message_success_callbacks_.end()) {
     RTC_LOG(LS_WARNING) << "Received unknown data with message ID: " << id;
     return;
   }
-  std::function<void()> callback = message_callbacks_[id];
+  std::function<void()> callback = message_success_callbacks_[id];
   event_queue_->PostTask([callback] { callback(); });
-  message_callbacks_.erase(id);
+  message_success_callbacks_.erase(id);
 }
 
 void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources) {
@@ -574,7 +611,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources)
     rtc::GetStringFromJsonObject(track_sources[idx], kTrackIdKey, &id);
     rtc::GetStringFromJsonObject(track_sources[idx], kTrackSourceKey, &source);
 
-    // Track source information collect
+    // Track source information collect.
     std::pair<std::string, std::string> track_source_info;
     track_source_info = std::make_pair(id, source);
     remote_track_source_info_.insert(track_source_info);
@@ -582,7 +619,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources)
 }
 
 void P2PPeerConnectionChannel::OnMessageStreamInfo(Json::Value& stream_info) {
-  // Stream information is useless in native layer
+  // Stream information is useless in native layer.
 }
 
 void P2PPeerConnectionChannel::OnSignalingChange(
@@ -594,7 +631,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(
         RTC_LOG(LS_INFO) << "Set stored remote description.";
         pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription,
                          set_remote_sdp_task_);
-        // Ownership will be transferred to message handler
+        // Ownership will be transferred to message handler.
         set_remote_sdp_task_ = nullptr;
       } else {
         CheckWaitedList();
@@ -662,7 +699,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     RTC_LOG(LS_ERROR) << "Newly added stream is not recognized";
   }
 
-  // Send the ack for the newly added stream tracks
+  // Send the ack for the newly added stream tracks.
   Json::Value json_tracks;
   json_tracks[kMessageTypeKey] = kChatTracksAdded;
   json_tracks[kMessageDataKey] = stream_tracks;
@@ -761,7 +798,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }
       ChangeSessionState(kSessionStateConnected);
       CheckWaitedList();
-      // reset |last_disconnect_|
+      // reset |last_disconnect_|.
       last_disconnect_ =
           std::chrono::time_point<std::chrono::system_clock>::max();
       break;
@@ -843,7 +880,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
       is_creating_offer_ = false;
     }
   }
-  // Setting maximum bandwidth here
+  // Setting maximum bandwidth here.
   ApplyBitrateSettings();
   auto desc = LocalDescription();
   string sdp;
@@ -854,7 +891,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   Json::Value json;
   json[kMessageTypeKey] = kChatSignal;
   json[kMessageDataKey] = signal;
-  // The fourth signaling message of SDP to remote peer
+  // The fourth signaling message of SDP to remote peer.
   SendSignalingMessage(json, nullptr, nullptr);
 }
 
@@ -963,14 +1000,17 @@ void P2PPeerConnectionChannel::Stop(
       pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                        nullptr);
       SendStop(nullptr, nullptr);
+      stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       break;
     case kSessionStateMatched:
       SendStop(nullptr, nullptr);
+      stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       break;
     case kSessionStateOffered:
       SendStop(nullptr, nullptr);
+      stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       TriggerOnStopped();
       break;
@@ -1081,7 +1121,7 @@ std::function<void(std::unique_ptr<Exception>)> P2PPeerConnectionChannel::GetLat
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   RTC_LOG(LS_INFO) << "Draining pending stream";
   ChangeSessionState(kSessionStateConnecting);
-  // First to publish the pending_publish_streams_ list
+  // First to publish the pending_publish_streams_ list.
   {
     std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
     for (auto it = pending_publish_streams_.begin();
@@ -1098,7 +1138,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         video_track_source = "screen-cast";
       }
 
-      // Collect stream and tracks information
+      // Collect stream and tracks information.
       scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();
       Json::Value track_info;
@@ -1120,13 +1160,13 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         track_sources.append(track_info);
       }
 
-      // The second signaling message of track sources to remote peer
+      // The second signaling message of track sources to remote peer.
       Json::Value json_track_sources;
       json_track_sources[kMessageTypeKey] = kChatTrackSources;
       json_track_sources[kMessageDataKey] = track_sources;
       SendSignalingMessage(json_track_sources, nullptr, nullptr);
 
-      // The third signaling message of stream information to remote peer
+      // The third signaling message of stream information to remote peer.
       Json::Value json_stream_info;
       json_stream_info[kMessageTypeKey] = kChatStreamInfo;
       Json::Value stream_info;
@@ -1136,7 +1176,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       json_stream_info[kMessageDataKey] = stream_info;
       SendSignalingMessage(json_stream_info, nullptr, nullptr);
 
-      // Add media stream to the peerconnection
+      // Add media stream to the peerconnection.
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
       RTC_LOG(LS_INFO) << "Post add stream";
@@ -1144,7 +1184,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
     }
     pending_publish_streams_.clear();
   }
-  // Then to unpublish the pending_unpublish_streams_ list
+  // Then to unpublish the pending_unpublish_streams_ list.
   {
     std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
     for (auto it = pending_unpublish_streams_.begin();
@@ -1213,7 +1253,7 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
   std::string data =
       std::string(buffer.data.data<char>(), buffer.data.size());
 
-  // Parse the received message with its id and data
+  // Parse the received message with its id and data.
   Json::Reader reader;
   Json::Value json_data;
   if (!reader.parse(data, json_data)) {
@@ -1234,13 +1274,13 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
     return;
   }
 
-  // Send the ack for text message
+  // Send the ack for text message.
   Json::Value ack;
   ack[kMessageTypeKey] = kChatDataReceived;
   ack[kMessageDataKey] = message_id;
   SendSignalingMessage(ack, nullptr, nullptr);
 
-  //  Deal with the received text message
+  //  Deal with the received text message.
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -1252,45 +1292,6 @@ void P2PPeerConnectionChannel::CreateDataChannel(const std::string& label) {
   rtc::TypedMessageData<std::string>* data =
       new rtc::TypedMessageData<std::string>(label);
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateDataChannel, data);
-}
-
-void P2PPeerConnectionChannel::Send(
-    const std::string& message,
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  // First to send the user agent information to the remote peer
-  is_caller_ = true;
-  SendUaInfo();
-
-  // Try to send the text message
-  Json::Value content;
-  long message_id = message_seq_num_++;
-  content[kTextMessageIdKey] = std::to_string(message_id);
-  content[kTextMessageDataKey] = message;
-  std::string data = rtc::JsonValueToString(content);
-  if (data_channel_ != nullptr &&
-      data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
-    data_channel_->Send(CreateDataBuffer(data));
-    RTC_LOG(LS_INFO) << "Send message: " << data;
-  } else {
-    {
-      std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-      std::shared_ptr<std::string> data_copy(std::make_shared<std::string>(data));
-      pending_messages_.push_back(data_copy);
-    }
-
-    if (data_channel_ == nullptr) // Otherwise, wait for data channel ready.
-      CreateDataChannel(kDataChannelLabelForTextMessage);
-  }
-
-  if (on_success) {
-    std::string id_value = std::to_string(message_id);
-    message_callbacks_[id_value] = on_success;
-  }
-
-  if (on_failure) {
-    failure_callbacks_.push_back(on_failure);
-  }
 }
 
 webrtc::DataBuffer P2PPeerConnectionChannel::CreateDataBuffer(
@@ -1314,26 +1315,54 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
   }
 }
 
-void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
+Json::Value P2PPeerConnectionChannel::UaInfo() {
+  Json::Value ua;
+
+  // SDK info includes verison and type.
+  Json::Value sdk;
+  SysInfo sys_info = SysInfo::GetInstance();
+  sdk[kUaSdkVersionKey] = sys_info.sdk.version;
+  sdk[kUaSdkTypeKey] = sys_info.sdk.type;
+
+  // Runtime values  with system information.
   Json::Value runtime;
-  rtc::GetValueFromJsonObject(ua, kUaRuntimeKey, &runtime);
-  std::string runtime_name;
-  rtc::GetStringFromJsonObject(runtime, kUaRuntimeNameKey, &runtime_name);
-  if (runtime_name.compare("FireFox") == 0) {
-    remote_side_supports_remove_stream_ = false;
-    remote_side_supports_plan_b_ = false;
-    remote_side_supports_unified_plan_ = true;
-    remote_side_supports_continual_ice_gathering_ = false;
-  } else {
-    remote_side_supports_remove_stream_ = true;
-    remote_side_supports_plan_b_ = true;
-    remote_side_supports_unified_plan_ = false;
-    if (runtime_name.compare("Safari") == 0) {
-      remote_side_supports_continual_ice_gathering_ = false;
-    } else {
-      remote_side_supports_continual_ice_gathering_ = true;
-    }
-  }
+  runtime[kUaRuntimeNameKey] = sys_info.runtime.name;
+  runtime[kUaRuntimeVersionKey] = sys_info.runtime.version;
+
+  // OS info includes OS name and OS version.
+  Json::Value os;
+  os[kUaOsNameKey] = sys_info.os.name;
+  os[kUaOsVersionKey] = sys_info.os.version;
+
+  // Capabilities and customized configuration
+  // TODO: currently default to support continual ICE gathering,
+  // Plan-B, and stream removable.
+  Json::Value capabilities;
+  capabilities[kUaContinualGatheringKey] = true;
+  capabilities[kUaUnifiedPlanKey] = false;
+  capabilities[kUaStreamRemovableKey] = true;
+
+  ua[kUaSdkKey] = sdk;
+  ua[kUaRuntimeKey] = runtime;
+  ua[kUaOsKey] = os;
+  ua[kUaCapabilitiesKey] = capabilities;
+  return ua;
+}
+
+void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
+  Json::Value capabilities;
+  rtc::GetValueFromJsonObject(ua, kUaCapabilitiesKey, &capabilities);
+  rtc::GetBoolFromJsonObject(capabilities,
+      kUaContinualGatheringKey,
+      &remote_side_supports_continual_ice_gathering_);
+  rtc::GetBoolFromJsonObject(capabilities,
+      kUaUnifiedPlanKey,
+      &remote_side_supports_unified_plan_);
+  remote_side_supports_plan_b_ = !remote_side_supports_unified_plan_;
+  rtc::GetBoolFromJsonObject(capabilities,
+      kUaStreamRemovableKey,
+      &remote_side_supports_remove_stream_);
+
   RTC_LOG(LS_INFO) << "Remote side supports removing stream? "
                << remote_side_supports_remove_stream_;
   RTC_LOG(LS_INFO) << "Remote side supports WebRTC Plan B? "
@@ -1341,5 +1370,14 @@ void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
   RTC_LOG(LS_INFO) << "Remote side supports WebRTC Unified Plan?"
                << remote_side_supports_unified_plan_;
 }
+
+void P2PPeerConnectionChannel::SendUaInfo() {
+  Json::Value json;
+  json[kMessageTypeKey] = kChatUserAgent;
+  Json::Value ua = UaInfo();
+  json[kMessageDataKey] = ua;
+  SendSignalingMessage(json, nullptr, nullptr);
+}
+
 }
 }

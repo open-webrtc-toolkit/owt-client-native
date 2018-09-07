@@ -218,7 +218,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Shared by |published_streams_| and |publishing_streams_|.
   std::mutex published_streams_mutex_;
   std::vector<P2PPeerConnectionChannelObserver*> observers_;
-  std::unordered_map<std::string, std::function<void()>> publish_callbacks_;
+  std::unordered_map<std::string, std::function<void()>> publish_success_callbacks_;
   // Store remote SDP if it cannot be set currently.
   SetSessionDescriptionMessage* set_remote_sdp_task_;
   std::chrono::time_point<std::chrono::system_clock>
@@ -233,7 +233,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                                                                 // channel is
                                                                 // ready.
   std::mutex pending_messages_mutex_;
-  std::unordered_map<std::string, std::function<void()>> message_callbacks_;
+  std::unordered_map<std::string, std::function<void()>> message_success_callbacks_;
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
@@ -251,6 +251,9 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::shared_ptr<LocalStream> latest_local_stream_;
   std::function<void()> latest_publish_success_callback_;
   std::function<void(std::unique_ptr<Exception>)> latest_publish_failure_callback_;
+
+  bool ua_sent_;
+  bool stop_send_needed_;
 };
 }
 }
