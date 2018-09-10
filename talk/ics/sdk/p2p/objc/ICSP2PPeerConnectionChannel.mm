@@ -42,6 +42,8 @@
   }
   ics::p2p::PeerConnectionChannelConfiguration nativeConfig;
   nativeConfig.servers = nativeIceServers;
+  nativeConfig.continual_gathering_policy =
+      webrtc::PeerConnectionInterface::GATHER_CONTINUALLY;
   nativeConfig.candidate_network_policy =
       (config.rtcConfiguration.candidateNetworkPolicy ==
        RTCCandidateNetworkPolicyLowCost)
