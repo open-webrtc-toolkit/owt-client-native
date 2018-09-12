@@ -21,6 +21,7 @@
 #include "webrtc/rtc_base/json.h"
 #include "webrtc/rtc_base/messagehandler.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "webrtc/rtc_base/thread_annotations.h"
 
 namespace ics {
 namespace p2p {
@@ -198,8 +199,11 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Indicates if negotiation needed event is triggered or received negotiation
   // request from remote side, but haven't send out offer.
   bool negotiation_needed_;
-  // Key is remote media stream's track id, value is type ("mic", "camera", "screen-cast").
-  std::unordered_map<std::string, std::string> remote_track_source_info_;
+  // Key is remote media stream's track id, value is type ("mic", "camera",
+  // "screen-cast").
+  rtc::CriticalSection remote_track_source_info_crit_;
+  std::unordered_map<std::string, std::string> remote_track_source_info_
+      RTC_GUARDED_BY(remote_track_source_info_crit_);
   // Key is local media stream's track id, value is media stream's label.
   std::unordered_map<std::string, std::string> local_stream_tracks_info_;
   std::mutex local_stream_tracks_info_mutex_;

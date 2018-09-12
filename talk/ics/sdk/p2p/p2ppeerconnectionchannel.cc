@@ -625,6 +625,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources)
     // Track source information collect.
     std::pair<std::string, std::string> track_source_info;
     track_source_info = std::make_pair(id, source);
+    rtc::CritScope cs(&remote_track_source_info_crit_);
     remote_track_source_info_.insert(track_source_info);
   }
 }
@@ -656,22 +657,27 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   bool no_audio_source = true;
-  Json::Value stream_tracks;
-  for (const auto& track : stream->GetAudioTracks()) {
-    stream_tracks.append(track->id());
-    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
-      no_audio_source = false;
-    }
-  }
-
   bool no_video_source = true;
   std::string video_track_source;
-  for (const auto& track : stream->GetVideoTracks()) {
-    stream_tracks.append(track->id());
-    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
-      no_video_source = false;
-      if (video_track_source.empty())
-        video_track_source = remote_track_source_info_[track->id()];
+  Json::Value stream_tracks;
+  {
+    rtc::CritScope cs(&remote_track_source_info_crit_);
+    for (const auto& track : stream->GetAudioTracks()) {
+      stream_tracks.append(track->id());
+      if (remote_track_source_info_.find(track->id()) !=
+          remote_track_source_info_.end()) {
+        no_audio_source = false;
+      }
+    }
+
+    for (const auto& track : stream->GetVideoTracks()) {
+      stream_tracks.append(track->id());
+      if (remote_track_source_info_.find(track->id()) !=
+          remote_track_source_info_.end()) {
+        no_video_source = false;
+        if (video_track_source.empty())
+          video_track_source = remote_track_source_info_[track->id()];
+      }
     }
   }
 
@@ -727,7 +733,9 @@ void P2PPeerConnectionChannel::OnRemoveStream(
 
   std::string video_track_source;
   for (const auto& track : stream->GetVideoTracks()) {
-    if (remote_track_source_info_.find(track->id()) != remote_track_source_info_.end()) {
+    rtc::CritScope cs(&remote_track_source_info_crit_);
+    if (remote_track_source_info_.find(track->id()) !=
+        remote_track_source_info_.end()) {
       video_track_source = remote_track_source_info_[track->id()];
       break;
     }
@@ -757,6 +765,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
         &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
   }
   remote_streams_.erase(stream->id());
+  rtc::CritScope cs(&remote_track_source_info_crit_);
   for (const auto& track : stream->GetAudioTracks())
     remote_track_source_info_.erase(track->id());
 
