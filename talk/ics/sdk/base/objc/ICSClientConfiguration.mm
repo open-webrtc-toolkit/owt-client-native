@@ -7,6 +7,13 @@
 
 @implementation ICSClientConfiguration
 
+- (instancetype)init {
+  if (self = [super init]) {
+    _rtcConfiguration = [[RTCConfiguration alloc] init];
+  }
+  return self;
+}
+
 - (std::shared_ptr<ics::base::ClientConfiguration>)nativeClientConfiguration {
   std::shared_ptr<ics::base::ClientConfiguration> config(
       new ics::base::ClientConfiguration());
