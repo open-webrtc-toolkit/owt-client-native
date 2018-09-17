@@ -27,8 +27,11 @@
 #ifndef ICS_P2P_SIGNALINGSENDERINTERFACE_H_
 #define ICS_P2P_SIGNALINGSENDERINTERFACE_H_
 
-#include <string>
 #include <functional>
+#include <memory>
+#include <string>
+
+#include "ics/base/exception.h"
 
 namespace ics {
 namespace p2p {
@@ -46,7 +49,7 @@ class P2PSignalingSenderInterface {
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,
                                     std::function<void()> success,
-                                    std::function<void(int)> failure) = 0;
+                                    std::function<void(std::unique_ptr<ics::base::Exception>)> failure) = 0;
 };
 }
 }

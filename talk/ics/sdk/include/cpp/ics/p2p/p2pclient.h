@@ -266,7 +266,7 @@ class P2PClient final
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,
                                     std::function<void()> on_success,
-                                    std::function<void(int)> on_failure);
+                                    std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Implement P2PSignalingChannelObserver
   virtual void OnMessage(const std::string& message, const std::string& sender);
   virtual void OnServerDisconnected();

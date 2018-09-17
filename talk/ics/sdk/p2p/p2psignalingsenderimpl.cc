@@ -19,7 +19,7 @@ void P2PSignalingSenderImpl::SendSignalingMessage(
     const std::string& message,
     const std::string& remote_id,
     std::function<void()> success,
-    std::function<void(int)> failure) {
+    std::function<void(std::unique_ptr<ics::base::Exception>)> failure) {
   RTC_CHECK(sender_);
   sender_->SendSignalingMessage(message, remote_id, success, failure);
 }

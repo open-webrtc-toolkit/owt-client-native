@@ -19,7 +19,7 @@ class P2PSignalingSenderImpl
   void SendSignalingMessage(const std::string& message,
                             const std::string& remote_id,
                             std::function<void()> success,
-                            std::function<void(int)> failure) override;
+                            std::function<void(std::unique_ptr<ics::base::Exception>)> failure) override;
  private:
   P2PSignalingSenderInterface* sender_;
 };

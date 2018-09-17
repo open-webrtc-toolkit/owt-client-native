@@ -18,7 +18,7 @@ void ICSP2PSignalingSenderObjcImpl::SendSignalingMessage(
     const std::string& message,
     const std::string& remote_id,
     std::function<void()> success,
-    std::function<void(int)> failure) {
+    std::function<void(std::unique_ptr<ics::base::Exception>)> failure) {
   [_sender sendSignalingMessage:[NSString stringWithUTF8String:message.c_str()]
       to:[NSString stringWithUTF8String:remote_id.c_str()]
       onSuccess:^() {
@@ -31,7 +31,8 @@ void ICSP2PSignalingSenderObjcImpl::SendSignalingMessage(
         if (failure == nullptr)
           return;
         NSLog(@"Send signaling message failed.");
-        failure(0);
+        // Jianjun TODO: Update the exception logic here
+        //failure(0);
       }];
 }
 }

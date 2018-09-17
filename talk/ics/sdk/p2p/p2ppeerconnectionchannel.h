@@ -109,6 +109,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::shared_ptr<LocalStream> GetLatestLocalStream();
   std::function<void()> GetLatestPublishSuccessCallback();
   std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
+  bool IsAbandoned();
 
  protected:
   void CreateOffer();
@@ -161,8 +162,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void ChangeSessionState(SessionState state);
   void SendSignalingMessage(
       const Json::Value& data,
-      std::function<void()> success,
-      std::function<void(std::unique_ptr<Exception>)> failure);
+      std::function<void()> success = nullptr,
+      std::function<void(std::unique_ptr<Exception>)> failure = nullptr);
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
@@ -254,6 +255,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
 
   bool ua_sent_;
   bool stop_send_needed_;
+  bool remote_side_offline_;
 };
 }
 }

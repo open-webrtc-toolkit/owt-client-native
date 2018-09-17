@@ -248,9 +248,8 @@ void P2PClient::OnServerDisconnected() {
 void P2PClient::SendSignalingMessage(const std::string& message,
                                      const std::string& remote_id,
                                      std::function<void()> on_success,
-                                     std::function<void(int)> on_failure) {
-  signaling_channel_->SendMessage(message, remote_id, on_success,
-                                  nullptr);  // TODO:fix on_failure.
+                                     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  signaling_channel_->SendMessage(message, remote_id, on_success, on_failure);
 }
 
 void P2PClient::AddObserver(P2PClientObserver& observer) {
@@ -284,6 +283,12 @@ bool P2PClient::IsPeerConnectionChannelCreated(const std::string& target_id) {
 std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   auto pcc_it = pc_channels_.find(target_id);
+  // if the channel has already been abandoned
+  if (pcc_it != pc_channels_.end() && pcc_it->second->IsAbandoned()) {
+    pc_channels_.erase(target_id);
+    pcc_it = pc_channels_.end();
+  }
+
   // Create new channel if it doesn't exist.
   if (pcc_it == pc_channels_.end()) {
     PeerConnectionChannelConfiguration config =

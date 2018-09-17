@@ -113,7 +113,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       remote_side_supports_continual_ice_gathering_(true),
       event_queue_(event_queue),
       ua_sent_(false),
-      stop_send_needed_(true) {
+      stop_send_needed_(true),
+      remote_side_offline_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
 }
@@ -360,18 +361,29 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_sender_);
-  std::string jsonString = rtc::JsonValueToString(data);
+  std::string json_string = rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(
-      jsonString,
+      json_string,
       remote_id_,
       on_success,
-      [=](int) {
-        if (on_failure == nullptr)
-          return;
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "Send signaling message failed."));
-        on_failure(std::move(e));
+      [=](std::unique_ptr<Exception> exception) {
+        if (exception->Type() == ExceptionType::kP2PMessageTargetUnreachable) {
+          remote_side_offline_ = true;
+          ExceptionType type = exception->Type();
+          std::string msg = exception->Message();
+          for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+              it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+            std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+            event_queue_->PostTask([failure_callback, type, msg] {
+                std::unique_ptr<Exception> e(new Exception(type, msg));
+              failure_callback(std::move(e));
+            });
+          }
+          failure_callbacks_.clear();
+        }
+
+        if (on_failure)
+          on_failure(std::move(exception));
       }
   );
 }
@@ -703,7 +715,7 @@ void P2PPeerConnectionChannel::OnAddStream(
   Json::Value json_tracks;
   json_tracks[kMessageTypeKey] = kChatTracksAdded;
   json_tracks[kMessageDataKey] = stream_tracks;
-  SendSignalingMessage(json_tracks, nullptr, nullptr);
+  SendSignalingMessage(json_tracks);
 }
 
 void P2PPeerConnectionChannel::OnRemoveStream(
@@ -773,7 +785,7 @@ void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
         session_state_ == kSessionStateConnected) {
       Json::Value json;
       json[kMessageTypeKey] = kChatNegotiationNeeded;
-      SendSignalingMessage(json, nullptr, nullptr);
+      SendSignalingMessage(json);
     }
     // If session is not connected, offer will be sent later. Nothing to do
     // here.
@@ -846,7 +858,7 @@ void P2PPeerConnectionChannel::OnIceCandidate(
   Json::Value json;
   json[kMessageTypeKey] = kChatSignal;
   json[kMessageDataKey] = signal;
-  SendSignalingMessage(json, nullptr, nullptr);
+  SendSignalingMessage(json);
 }
 
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
@@ -892,7 +904,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   json[kMessageTypeKey] = kChatSignal;
   json[kMessageDataKey] = signal;
   // The fourth signaling message of SDP to remote peer.
-  SendSignalingMessage(json, nullptr, nullptr);
+  SendSignalingMessage(json);
 }
 
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
@@ -1118,6 +1130,10 @@ std::function<void(std::unique_ptr<Exception>)> P2PPeerConnectionChannel::GetLat
   return latest_publish_failure_callback_;
 }
 
+bool P2PPeerConnectionChannel::IsAbandoned() {
+  return remote_side_offline_;
+}
+
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   RTC_LOG(LS_INFO) << "Draining pending stream";
   ChangeSessionState(kSessionStateConnecting);
@@ -1164,7 +1180,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       Json::Value json_track_sources;
       json_track_sources[kMessageTypeKey] = kChatTrackSources;
       json_track_sources[kMessageDataKey] = track_sources;
-      SendSignalingMessage(json_track_sources, nullptr, nullptr);
+      SendSignalingMessage(json_track_sources);
 
       // The third signaling message of stream information to remote peer.
       Json::Value json_stream_info;
@@ -1174,7 +1190,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       stream_info[kStreamTracksKey] = stream_tracks;
       stream_info[kStreamSourceKey] = stream_sources;
       json_stream_info[kMessageDataKey] = stream_info;
-      SendSignalingMessage(json_stream_info, nullptr, nullptr);
+      SendSignalingMessage(json_stream_info);
 
       // Add media stream to the peerconnection.
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
@@ -1278,7 +1294,7 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
   Json::Value ack;
   ack[kMessageTypeKey] = kChatDataReceived;
   ack[kMessageDataKey] = message_id;
-  SendSignalingMessage(ack, nullptr, nullptr);
+  SendSignalingMessage(ack);
 
   //  Deal with the received text message.
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
@@ -1376,7 +1392,7 @@ void P2PPeerConnectionChannel::SendUaInfo() {
   json[kMessageTypeKey] = kChatUserAgent;
   Json::Value ua = UaInfo();
   json[kMessageDataKey] = ua;
-  SendSignalingMessage(json, nullptr, nullptr);
+  SendSignalingMessage(json);
 }
 
 }

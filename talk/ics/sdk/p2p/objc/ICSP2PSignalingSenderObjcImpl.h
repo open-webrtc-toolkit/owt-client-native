@@ -19,7 +19,7 @@ class ICSP2PSignalingSenderObjcImpl : public P2PSignalingSenderInterface {
   virtual void SendSignalingMessage(const std::string& message,
                                     const std::string& remote_id,
                                     std::function<void()> success,
-                                    std::function<void(int)> failure);
+                                    std::function<void(std::unique_ptr<ics::base::Exception>)> failure);
 
  private:
   id<ICSP2PSignalingSenderProtocol> _sender;
