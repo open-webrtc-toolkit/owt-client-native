@@ -59,12 +59,4 @@ Video frame filter allows app to modify captured video frames before sending to 
 
 To enable video frame filter, please implement one or more filters and make video frames flow like this: RTCCameraVideoCapturer->filter(s)->RTCVideoSource->... An example of video frame filter can be found in conference sample.
 
-# 11 Migrating from 3.x {#section11}
-There are significant API changes since 3.x.
-- Publication was introduced for both conference and P2P mode. You'll get a publication when publish successfully.
-- Subscription was introduced for conference mode. You'll get a subscription when subscribe a stream successfully. P2P mode does not have subscription at this time since remote stream will be added to PeerConnection automatically.
-- Class prefix was changed to ICS which stands for Intel CS for WebRTC.
-- Flexible to work with WebRTC framework. We provide APIs to create a LocalStream through ICS APIs. But it's also possible to create a custom LocalStream through WebRTC APIs which start with `RTC`.
-- Observer pattern was changed to delegate pattern which is commonly used in iOS programming.
-
 > Note: \* Other names and brands may be claimed as the property of others.
