@@ -908,7 +908,6 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
 
 void ConferencePeerConnectionChannel::OnNetworksChanged() {
   RTC_LOG(LS_INFO) << "ConferencePeerConnectionChannel::OnNetworksChanged";
-  IceRestart();
 }
 
 void ConferencePeerConnectionChannel::OnStreamError(
