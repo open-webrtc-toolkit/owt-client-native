@@ -16,12 +16,12 @@
       std::shared_ptr<ics::base::PublishOptions>(
           new ics::base::PublishOptions());
   options->audio =
-      std::vector<ics::base::AudioEncodingParameters>([self.audio count]);
+      std::vector<ics::base::AudioEncodingParameters>();
   for (ICSAudioEncodingParameters* parameter in _audio) {
     options->audio.push_back([parameter nativeAudioEncodingParameters]);
   }
   options->video =
-      std::vector<ics::base::VideoEncodingParameters>([self.video count]);
+      std::vector<ics::base::VideoEncodingParameters>();
   for (ICSVideoEncodingParameters* parameter in _video) {
     options->video.push_back([parameter nativeVideoEncodingParameters]);
   }
