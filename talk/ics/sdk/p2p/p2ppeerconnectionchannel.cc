@@ -433,9 +433,9 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &tracks);
     OnMessageTracksAdded(tracks);
   } else if (message_type == kChatDataReceived) {
-    Json::Value data;
-    rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &data);
-    OnMessageDataReceived(data);
+    std::string id;
+    rtc::GetStringFromJsonObject(json_message, kMessageDataKey, &id);
+    OnMessageDataReceived(id);
   } else if (message_type == kChatNegotiationNeeded) {
     OnMessageNegotiationNeeded();
   } else if (message_type == kChatClosed) {
@@ -604,9 +604,8 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
   }
 }
 
-void P2PPeerConnectionChannel::OnMessageDataReceived(Json::Value& data) {
+void P2PPeerConnectionChannel::OnMessageDataReceived(std::string& id) {
   // Here comes the message id for its callback accordingly.
-  std::string id = rtc::JsonValueToString(data);
   if (message_success_callbacks_.find(id) == message_success_callbacks_.end()) {
     RTC_LOG(LS_WARNING) << "Received unknown data with message ID: " << id;
     return;

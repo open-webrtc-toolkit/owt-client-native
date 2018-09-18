@@ -124,7 +124,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageTrackSources(Json::Value& track_sources);
   void OnMessageStreamInfo(Json::Value& stream_info);
   void OnMessageTracksAdded(Json::Value& stream_tracks);
-  void OnMessageDataReceived(Json::Value& data);
+  void OnMessageDataReceived(std::string& id);
 
   // PeerConnectionObserver
   virtual void OnSignalingChange(
