@@ -20,5 +20,11 @@ void RemoteStreamObserverObjcImpl::OnEnded() {
     [delegate_ streamDidEnd:stream_];
   }
 }
+
+void RemoteStreamObserverObjcImpl::OnUpdated() {
+  if ([delegate_ respondsToSelector:@selector(streamDidUpdate:)]) {
+    [delegate_ streamDidUpdate:stream_];
+  }
+}
 }
 }

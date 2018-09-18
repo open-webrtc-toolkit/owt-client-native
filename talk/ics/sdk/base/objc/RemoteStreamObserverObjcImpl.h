@@ -17,6 +17,7 @@ class RemoteStreamObserverObjcImpl : public StreamObserver {
 
  protected:
   virtual void OnEnded() override;
+  virtual void OnUpdated() override;
 
  private:
   ICSRemoteStream* stream_;

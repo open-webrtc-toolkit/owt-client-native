@@ -61,7 +61,10 @@ RTC_EXPORT
 
 /// Triggered when a stream is ended, or the stream is no longer available in
 /// conference.
--(void)streamDidEnd:(ICSRemoteStream*)stream;
+- (void)streamDidEnd:(ICSRemoteStream*)stream;
+
+/// Triggered when a stream is updated.
+- (void)streamDidUpdate:(ICSRemoteStream*)stream;
 
 @end
 
