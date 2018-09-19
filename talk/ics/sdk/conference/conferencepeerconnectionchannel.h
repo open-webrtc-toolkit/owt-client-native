@@ -209,6 +209,10 @@ class ConferencePeerConnectionChannel
   std::vector<std::reference_wrapper<ConferencePeerConnectionChannelObserver>>
       observers_;
   bool connected_;
+  // Mutex for firing subscription succeed callback.
+  std::mutex sub_stream_added_mutex_;
+  bool sub_stream_added_;
+  bool sub_server_ready_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
