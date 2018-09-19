@@ -45,8 +45,6 @@ class P2PPeerConnectionChannelObserver {
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteStream> stream) = 0;
-  virtual void OnStreamRemoved(
-      std::shared_ptr<RemoteStream> stream) = 0;
 };
 
 // An instance of P2PPeerConnectionChannel manages a session for a specified

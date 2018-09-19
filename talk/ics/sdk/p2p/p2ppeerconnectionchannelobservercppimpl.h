@@ -35,8 +35,6 @@ class P2PPeerConnectionChannelObserverCppImpl
   virtual void OnData(const std::string& remote_id, const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(std::shared_ptr<RemoteStream> stream);
-  // Triggered when a remote stream is removed.
-  virtual void OnStreamRemoved(std::shared_ptr<RemoteStream> stream);
 
  private:
   P2PClient& peer_client_;

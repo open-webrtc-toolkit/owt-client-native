@@ -28,8 +28,9 @@ class P2PPeerConnectionChannelObserverObjcImpl
               const std::string& message) override;
   void OnStreamAdded(
       std::shared_ptr<ics::base::RemoteStream> stream) override;
+  // Jianjun TODO: Remove OnStreamRemoved event
   void OnStreamRemoved(
-      std::shared_ptr<ics::base::RemoteStream> stream) override;
+      std::shared_ptr<ics::base::RemoteStream> stream);
 
  private:
   void TriggerStreamRemoved(std::shared_ptr <

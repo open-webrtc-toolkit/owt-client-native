@@ -90,6 +90,13 @@ void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
     return;
   }
 
+  {
+    const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+    allowed_remote_ids_.erase(
+        std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
+        allowed_remote_ids_.end());
+  }
+
   Stop(target_id, on_success, on_failure);
 }
 
@@ -156,20 +163,39 @@ void P2PClient::Stop(
     const std::string& target_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!IsPeerConnectionChannelCreated(target_id)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidState,
+            "Non-existed chat need not be stopped."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
   pc_channels_.erase(target_id);
-
-  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
-  allowed_remote_ids_.erase(
-      std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
-      allowed_remote_ids_.end());
 }
 
 void P2PClient::GetConnectionStats(
     const std::string& target_id,
     std::function<void(std::shared_ptr<ics::base::ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!IsPeerConnectionChannelCreated(target_id)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidState,
+            "Non-existed peer connection cannot provide stats."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->GetConnectionStats(on_success, on_failure);
 }
@@ -269,6 +295,18 @@ void P2PClient::Unpublish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!IsPeerConnectionChannelCreated(target_id)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidState,
+            "Non-existed chat need not be unpublished."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Unpublish(stream, on_success, on_failure);
 }
@@ -372,12 +410,5 @@ void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
       stream);
 }
 
-void P2PClient::OnStreamRemoved(std::shared_ptr<RemoteStream> stream) {
-  EventTrigger::OnEvent1(
-      observers_, event_queue_,
-      (void (P2PClientObserver::*)(std::shared_ptr<RemoteStream>))(
-          &P2PClientObserver::OnStreamRemoved),
-      stream);
-}
 }
 }

@@ -731,39 +731,8 @@ void P2PPeerConnectionChannel::OnRemoveStream(
     return;
   }
 
-  std::string video_track_source;
-  for (const auto& track : stream->GetVideoTracks()) {
-    rtc::CritScope cs(&remote_track_source_info_crit_);
-    if (remote_track_source_info_.find(track->id()) !=
-        remote_track_source_info_.end()) {
-      video_track_source = remote_track_source_info_[track->id()];
-      break;
-    }
-  }
-
-  if (video_track_source == "screen-cast") {
-    std::shared_ptr<RemoteStream> remote_stream =
-            remote_streams_[stream->id()];
-    EventTrigger::OnEvent1<
-        P2PPeerConnectionChannelObserver*,
-        std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteStream>),
-        std::shared_ptr<RemoteStream>>(
-        observers_, event_queue_,
-        &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
-  } else if(video_track_source == "camera") {
-    std::shared_ptr<RemoteStream> remote_stream =
-            remote_streams_[stream->id()];
-    EventTrigger::OnEvent1<
-        P2PPeerConnectionChannelObserver*,
-        std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteStream>),
-        std::shared_ptr<RemoteStream>>(
-        observers_, event_queue_,
-        &P2PPeerConnectionChannelObserver::OnStreamRemoved, remote_stream);
-  }
+  std::shared_ptr<RemoteStream> remote_stream = remote_streams_[stream->id()];
+  remote_stream->TriggerOnStreamEnded();
   remote_streams_.erase(stream->id());
   rtc::CritScope cs(&remote_track_source_info_crit_);
   for (const auto& track : stream->GetAudioTracks())
@@ -839,6 +808,17 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
       TriggerOnStopped();
       CleanLastPeerConnection();
+      break;
+    case webrtc::PeerConnectionInterface::kIceConnectionFailed:
+      for (std::unordered_map<std::string, std::shared_ptr<RemoteStream>>::iterator
+          it = remote_streams_.begin(); it != remote_streams_.end(); it++)
+        it->second->TriggerOnStreamEnded();
+
+      remote_streams_.clear();
+      {
+        rtc::CritScope cs(&remote_track_source_info_crit_);
+        remote_track_source_info_.clear();
+      }
       break;
     default:
       break;

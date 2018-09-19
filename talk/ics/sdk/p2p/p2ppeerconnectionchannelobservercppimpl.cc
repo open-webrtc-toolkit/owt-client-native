@@ -33,9 +33,5 @@ void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
   peer_client_.OnStreamAdded(stream);
 }
 
-void P2PPeerConnectionChannelObserverCppImpl::OnStreamRemoved(
-    std::shared_ptr<RemoteStream> stream) {
-  peer_client_.OnStreamRemoved(stream);
-}
 }
 }

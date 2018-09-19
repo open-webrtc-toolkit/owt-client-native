@@ -45,10 +45,14 @@ namespace webrtc {
 }
 
 namespace ics {
-namespace conference{
+namespace conference {
   class ConferencePeerConnectionChannel;
   class ConferenceClient;
   class ConferenceInfo;
+}
+
+namespace p2p {
+  class P2PPeerConnectionChannel;
 }
 
 namespace base {
@@ -299,6 +303,7 @@ class RemoteStream : public Stream {
   friend class ics::conference::ConferencePeerConnectionChannel;
   friend class ics::conference::ConferenceClient;
   friend class ics::conference::ConferenceInfo;
+  friend class ics::p2p::P2PPeerConnectionChannel;
  public:
   /** @cond */
   explicit RemoteStream(const std::string& id,
