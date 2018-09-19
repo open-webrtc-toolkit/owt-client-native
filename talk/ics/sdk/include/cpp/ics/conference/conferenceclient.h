@@ -187,7 +187,7 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnStreamRemoved(std::shared_ptr<sio::message> stream) = 0;
   virtual void OnStreamUpdated(std::shared_ptr<sio::message> stream) = 0;
   virtual void OnServerDisconnected() = 0;
-  virtual void OnCustomMessage(std::string& from, std::string& message) = 0;
+  virtual void OnCustomMessage(std::string& from, std::string& message, std::string& to) = 0;
   virtual void OnSignalingMessage(std::shared_ptr<sio::message> message) = 0;
   virtual void OnStreamError(std::shared_ptr<sio::message> stream) = 0;
   // Notify the ID for a published/subscribed stream.
@@ -227,11 +227,14 @@ class ConferenceClientObserver {
       std::shared_ptr<RemoteMixedStream> stream){};
   /**
     @brief Triggers when a message is received.
-    @param sender_id Sender's ID.
     @param message Message received.
+    @param sender_id Sender's ID.
+    @param to "all" if it is a broadcast message. "me"
+    if it is sent only to current conference client.
   */
-  virtual void OnMessageReceived(std::string& sender_id,
-                                 std::string& message){};
+  virtual void OnMessageReceived(std::string& message,
+                                 std::string& sender_id,
+                                 std::string& to){};
   /**
     @brief Triggers when a participant joined conference.
     @param user The user joined.
@@ -341,7 +344,8 @@ class ConferenceClient final
   // Implementing ConferenceSocketSignalingChannelObserver.
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) override;
   virtual void OnCustomMessage(std::string& from,
-                               std::string& message) override;
+                               std::string& message,
+                               std::string& to) override;
   virtual void OnSignalingMessage(
       std::shared_ptr<sio::message> stream) override;
   virtual void OnUserJoined(std::shared_ptr<sio::message> user) override;

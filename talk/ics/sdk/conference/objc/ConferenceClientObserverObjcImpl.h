@@ -27,8 +27,9 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
       std::shared_ptr<ics::base::RemoteStream> stream) override;
   virtual void OnStreamAdded(
       std::shared_ptr<ics::conference::RemoteMixedStream> stream) override;
-  virtual void OnMessageReceived(std::string& sender_id,
-                                 std::string& message) override;
+  virtual void OnMessageReceived(std::string& message,
+                                 std::string& sender_id,
+                                 std::string& target_type) override;
   virtual void OnParticipantJoined(
       std::shared_ptr<ics::conference::Participant> user) override;
   virtual void OnServerDisconnected() override;

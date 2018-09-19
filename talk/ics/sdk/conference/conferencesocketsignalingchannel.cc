@@ -334,8 +334,13 @@ void ConferenceSocketSignalingChannel::Connect(
             RTC_LOG(LS_VERBOSE) << "Received custom message.";
             std::string from = data->get_map()["from"]->get_string();
             std::string message = data->get_map()["message"]->get_string();
+            std::string to = "me";
+            auto target = data->get_map()["to"];
+            if (target != nullptr && target->get_flag() == sio::message::flag_string) {
+              to = target->get_string();
+            }
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnCustomMessage(from, message);
+              (*it)->OnCustomMessage(from, message, to);
             }
           }));
   socket_client_->socket()->on(

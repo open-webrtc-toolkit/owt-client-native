@@ -840,10 +840,11 @@ void ConferenceClient::OnStreamAdded(sio::message::ptr stream) {
 }
 
 void ConferenceClient::OnCustomMessage(std::string& from,
-                                       std::string& message) {
+                                       std::string& message,
+                                       std::string& to) {
   RTC_LOG(LS_INFO) << "ConferenceClient OnCustomMessage";
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnMessageReceived(from, message);
+    (*its).get().OnMessageReceived(message, from, to);
   }
 }
 

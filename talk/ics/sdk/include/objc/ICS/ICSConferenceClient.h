@@ -124,10 +124,13 @@ RTC_EXPORT
   @brief Triggers when a message is received.
   @param senderId Sender's ID.
   @param message Message received.
+  @param targetType "all" if broadcast message. "me"
+  if the message is sent only to current conference client.
 */
 - (void)conferenceClient:(ICSConferenceClient*)client
        didReceiveMessage:(NSString*)message
-                    from:(NSString*)senderId;
+                    from:(NSString*)senderId
+                    to:(NSString*)targetType;
 /**
   @brief Triggers when a user joined conference.
   @param user The user joined.

@@ -83,13 +83,15 @@ void ConferenceClientObserverObjcImpl::TriggerOnStreamRemoved(
   [observer_ onStreamRemoved:remote_stream];*/
 }
 
-void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& sender_id,
-                                                         std::string& message) {
+void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& message,
+                                                         std::string& sender_id,
+                                                         std::string& target_type) {
   if ([delegate_ respondsToSelector:@selector
-                 (conferenceClient:didReceiveMessage:from:)]) {
+                 (conferenceClient:didReceiveMessage:from:to:)]) {
     [delegate_ conferenceClient:client_
               didReceiveMessage:[NSString stringForStdString:message]
-                           from:[NSString stringForStdString:sender_id]];
+                           from:[NSString stringForStdString:sender_id]
+                             to:[NSString stringForStdString:target_type]];
   }
 }
 
