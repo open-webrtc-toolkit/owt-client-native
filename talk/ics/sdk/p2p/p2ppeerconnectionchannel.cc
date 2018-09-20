@@ -850,6 +850,18 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Create sdp failed.";
+  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+    event_queue_->PostTask([failure_callback] {
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientInvalidArgument,
+          "Failed to create SDP."));
+      failure_callback(std::move(e));
+    });
+  }
+  failure_callbacks_.clear();
+
   Stop(nullptr, nullptr);
 }
 
@@ -879,6 +891,18 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set local sdp failed.";
+  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+    event_queue_->PostTask([failure_callback] {
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientInvalidArgument,
+          "Failed to set local SDP."));
+      failure_callback(std::move(e));
+    });
+  }
+  failure_callbacks_.clear();
+
   Stop(nullptr, nullptr);
 }
 
@@ -889,6 +913,18 @@ void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set remote sdp failed.";
+  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+    event_queue_->PostTask([failure_callback] {
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientInvalidArgument,
+          "Failed to set remote SDP."));
+      failure_callback(std::move(e));
+    });
+  }
+  failure_callbacks_.clear();
+
   Stop(nullptr, nullptr);
 }
 
