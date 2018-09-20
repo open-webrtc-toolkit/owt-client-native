@@ -658,7 +658,6 @@ void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   bool no_audio_source = true;
   bool no_video_source = true;
-  std::string video_track_source;
   Json::Value stream_tracks;
   {
     rtc::CritScope cs(&remote_track_source_info_crit_);
@@ -667,6 +666,7 @@ void P2PPeerConnectionChannel::OnAddStream(
       if (remote_track_source_info_.find(track->id()) !=
           remote_track_source_info_.end()) {
         no_audio_source = false;
+        break;
       }
     }
 
@@ -675,8 +675,7 @@ void P2PPeerConnectionChannel::OnAddStream(
       if (remote_track_source_info_.find(track->id()) !=
           remote_track_source_info_.end()) {
         no_video_source = false;
-        if (video_track_source.empty())
-          video_track_source = remote_track_source_info_[track->id()];
+        break;
       }
     }
   }
@@ -686,35 +685,17 @@ void P2PPeerConnectionChannel::OnAddStream(
     RTC_DCHECK(false);
   }
 
-  if (video_track_source == "screen-cast") {
-    RTC_LOG(LS_INFO) << "Add screen stream";
-    std::shared_ptr<RemoteStream> remote_stream(
-        new RemoteStream(stream, remote_id_));
-    EventTrigger::OnEvent1<
-        P2PPeerConnectionChannelObserver*,
-        std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteStream>),
-        std::shared_ptr<RemoteStream>>(
-            observers_, event_queue_,
-            &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
-    remote_streams_[stream->id()] = remote_stream;
-  } else if (video_track_source == "camera") {
-    RTC_LOG(LS_INFO) << "Add camera stream.";
-    std::shared_ptr<RemoteStream> remote_stream(
-        new RemoteStream(stream, remote_id_));
-    EventTrigger::OnEvent1<
-        P2PPeerConnectionChannelObserver*,
-        std::allocator<P2PPeerConnectionChannelObserver*>,
-        void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
-            std::shared_ptr<RemoteStream>),
-        std::shared_ptr<RemoteStream>>(
-            observers_, event_queue_,
-            &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
-    remote_streams_[stream->id()] = remote_stream;
-  } else {
-    RTC_LOG(LS_ERROR) << "Newly added stream is not recognized";
-  }
+  std::shared_ptr<RemoteStream> remote_stream(
+      new RemoteStream(stream, remote_id_));
+  EventTrigger::OnEvent1<
+      P2PPeerConnectionChannelObserver*,
+      std::allocator<P2PPeerConnectionChannelObserver*>,
+      void (ics::p2p::P2PPeerConnectionChannelObserver::*)(
+          std::shared_ptr<RemoteStream>),
+      std::shared_ptr<RemoteStream>>(
+          observers_, event_queue_,
+          &P2PPeerConnectionChannelObserver::OnStreamAdded, remote_stream);
+  remote_streams_[stream->id()] = remote_stream;
 
   // Send the ack for the newly added stream tracks.
   Json::Value json_tracks;
