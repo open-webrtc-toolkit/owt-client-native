@@ -1488,7 +1488,6 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
   auto stream_type = added_stream_type_.find(id);
   if (stream_it == added_streams_.end() ||
       stream_type == added_stream_type_.end()) {
-    RTC_DCHECK(false);
     RTC_LOG(LS_WARNING) << "Invalid stream or type.";
     return;
   }
