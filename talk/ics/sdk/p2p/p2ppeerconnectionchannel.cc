@@ -215,7 +215,8 @@ void P2PPeerConnectionChannel::Publish(
   }
 
   if (on_failure) {
-    failure_callbacks_.push_back(on_failure);
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    failure_callbacks_[stream_label] = on_failure;
   }
 
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable)
@@ -265,13 +266,13 @@ void P2PPeerConnectionChannel::Send(
       CreateDataChannel(kDataChannelLabelForTextMessage);
   }
 
-  if (on_success) {
-    std::string id_value = std::to_string(message_id);
+  std::string id_value = std::to_string(message_id);
+  if (on_success)
     message_success_callbacks_[id_value] = on_success;
-  }
 
   if (on_failure) {
-    failure_callbacks_.push_back(on_failure);
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    failure_callbacks_[id_value] = on_failure;
   }
 }
 
@@ -371,11 +372,13 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
           remote_side_offline_ = true;
           ExceptionType type = exception->Type();
           std::string msg = exception->Message();
-          for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
+
+          std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+          for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
               it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-            std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
+            std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
             event_queue_->PostTask([failure_callback, type, msg] {
-                std::unique_ptr<Exception> e(new Exception(type, msg));
+              std::unique_ptr<Exception> e(new Exception(type, msg));
               failure_callback(std::move(e));
             });
           }
@@ -463,17 +466,19 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
 
 void P2PPeerConnectionChannel::OnMessageStop() {
   RTC_LOG(LS_INFO) << "Remote user stopped.";
-  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
-       it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
-    event_queue_->PostTask([failure_callback] {
-     std::unique_ptr<Exception> e(
-         new Exception(ExceptionType::kP2PClientInvalidArgument,
-                       "Stop message received."));
-     failure_callback(std::move(e));
-    });
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
+      it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidArgument, "Stop message received."));
+        failure_callback(std::move(e));
+      });
+    }
+    failure_callbacks_.clear();
   }
-  failure_callbacks_.clear();
 
   pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                    nullptr);
@@ -483,21 +488,23 @@ void P2PPeerConnectionChannel::OnMessageStop() {
 
 void P2PPeerConnectionChannel::OnMessageDeny() {
   RTC_LOG(LS_INFO) << "Remote user denied connection.";
-  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
-       it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
-    event_queue_->PostTask([failure_callback] {
-     std::unique_ptr<Exception> e(
-         new Exception(ExceptionType::kP2PClientInvalidArgument,
-                       "Deny message received."));
-     failure_callback(std::move(e));
-    });
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
+      it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidArgument, "Deny message received."));
+        failure_callback(std::move(e));
+      });
+    }
+    failure_callbacks_.clear();
   }
-  failure_callbacks_.clear();
 
   ChangeSessionState(kSessionStateReady);
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it = observers_.begin();
-       it != observers_.end(); ++it) {
+      it != observers_.end(); ++it) {
     (*it)->OnDenied(remote_id_);
   }
 }
@@ -581,25 +588,34 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
     if (local_stream_tracks_info_.find(track_id) !=
         local_stream_tracks_info_.end()) {
       std::string stream_label = local_stream_tracks_info_[track_id];
-      std::lock_guard<std::mutex> lock(published_streams_mutex_);
-      auto it = published_streams_.find(stream_label);
-      if (it == published_streams_.end())
-        published_streams_.insert(stream_label);
-      auto it_publishing =
+      {
+        std::lock_guard<std::mutex> lock(published_streams_mutex_);
+        auto it = published_streams_.find(stream_label);
+        if (it == published_streams_.end())
+          published_streams_.insert(stream_label);
+
+        auto it_publishing =
           publishing_streams_.find(stream_label);
-      if (it_publishing != publishing_streams_.end())
-        publishing_streams_.erase(it_publishing);
+        if (it_publishing != publishing_streams_.end())
+          publishing_streams_.erase(it_publishing);
+
+      }
 
       // Trigger the successful callback of publish.
       if (publish_success_callbacks_.find(stream_label) == publish_success_callbacks_.end()) {
         RTC_LOG(LS_WARNING) << "No callback available for publishing stream with track id: "
-                        << track_id;
+                            << track_id;
         return;
       }
 
       std::function<void()> callback = publish_success_callbacks_[stream_label];
       event_queue_->PostTask([callback] { callback(); });
       publish_success_callbacks_.erase(stream_label);
+
+      // Remove the failure callback accordingly
+      std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+      if (failure_callbacks_.find(stream_label) != failure_callbacks_.end())
+        failure_callbacks_.erase(stream_label);
     }
   }
 }
@@ -613,6 +629,11 @@ void P2PPeerConnectionChannel::OnMessageDataReceived(std::string& id) {
   std::function<void()> callback = message_success_callbacks_[id];
   event_queue_->PostTask([callback] { callback(); });
   message_success_callbacks_.erase(id);
+
+  // Remove the failure callback accordingly
+  std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+  if (failure_callbacks_.find(id) != failure_callbacks_.end())
+    failure_callbacks_.erase(id);
 }
 
 void P2PPeerConnectionChannel::OnMessageTrackSources(Json::Value& track_sources) {
@@ -850,17 +871,19 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Create sdp failed.";
-  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
-    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
-    event_queue_->PostTask([failure_callback] {
-      std::unique_ptr<Exception> e(
-        new Exception(ExceptionType::kP2PClientInvalidArgument,
-          "Failed to create SDP."));
-      failure_callback(std::move(e));
-    });
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
+      it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidArgument, "Failed to create SDP."));
+        failure_callback(std::move(e));
+      });
+    }
+    failure_callbacks_.clear();
   }
-  failure_callbacks_.clear();
 
   Stop(nullptr, nullptr);
 }
@@ -891,17 +914,19 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
 void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set local sdp failed.";
-  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
-    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
-    event_queue_->PostTask([failure_callback] {
-      std::unique_ptr<Exception> e(
-        new Exception(ExceptionType::kP2PClientInvalidArgument,
-          "Failed to set local SDP."));
-      failure_callback(std::move(e));
-    });
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
+      it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidArgument, "Failed to set local SDP."));
+        failure_callback(std::move(e));
+      });
+    }
+    failure_callbacks_.clear();
   }
-  failure_callbacks_.clear();
 
   Stop(nullptr, nullptr);
 }
@@ -913,17 +938,19 @@ void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set remote sdp failed.";
-  for (std::vector<std::function<void(std::unique_ptr<Exception>)>>::iterator
-    it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
-    std::function<void(std::unique_ptr<Exception>)> failure_callback = *it;
-    event_queue_->PostTask([failure_callback] {
-      std::unique_ptr<Exception> e(
-        new Exception(ExceptionType::kP2PClientInvalidArgument,
-          "Failed to set remote SDP."));
-      failure_callback(std::move(e));
-    });
+  {
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>>::iterator
+      it = failure_callbacks_.begin(); it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback = it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidArgument, "Failed to set remote SDP."));
+        failure_callback(std::move(e));
+      });
+    }
+    failure_callbacks_.clear();
   }
-  failure_callbacks_.clear();
 
   Stop(nullptr, nullptr);
 }
