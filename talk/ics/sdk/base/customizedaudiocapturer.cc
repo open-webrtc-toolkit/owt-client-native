@@ -359,6 +359,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   } else {
     RTC_LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
                        "leads to large latency";
+    real_sleep_ms_ = 0;
   }
   return true;
 };
