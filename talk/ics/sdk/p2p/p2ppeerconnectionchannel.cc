@@ -98,7 +98,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       signaling_sender_(sender),
       local_id_(local_id),
       remote_id_(remote_id),
-      is_caller_(false),
+      is_caller_(true),
       session_state_(kSessionStateReady),
       negotiation_needed_(false),
       set_remote_sdp_task_(nullptr),
@@ -114,7 +114,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       event_queue_(event_queue),
       ua_sent_(false),
       stop_send_needed_(true),
-      remote_side_offline_(false) {
+      remote_side_offline_(false),
+      ended_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
 }
@@ -137,6 +138,8 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
     delete set_remote_sdp_task_;
   if (signaling_sender_)
     delete signaling_sender_;
+
+  ended_ = true;
 }
 
 void P2PPeerConnectionChannel::Publish(
@@ -166,8 +169,6 @@ void P2PPeerConnectionChannel::Publish(
   latest_local_stream_ = stream;
   latest_publish_success_callback_ = on_success;
   latest_publish_failure_callback_ = on_failure;
-
-  is_caller_ = true;
 
   // Send chat-closed to workaround known browser bugs, together with
   // user agent information once and once only.
@@ -230,8 +231,6 @@ void P2PPeerConnectionChannel::Send(
   const std::string& message,
   std::function<void()> on_success,
   std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  is_caller_ = true;
-
   // Send chat-closed to workaround known browser bugs, together with
   // user agent information once and once only.
   if (stop_send_needed_) {
@@ -393,6 +392,9 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
 
 void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     const std::string& message) {
+  if (ended_)
+    return;
+
   RTC_LOG(LS_INFO) << "OnIncomingMessage: " << message;
   RTC_DCHECK(!message.empty());
   Json::Reader reader;
@@ -456,7 +458,6 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
   switch (session_state_) {
     case kSessionStateReady:
     case kSessionStatePending:
-      is_caller_ = false;
       ChangeSessionState(kSessionStateMatched);
       break;
     default:
@@ -758,6 +759,9 @@ void P2PPeerConnectionChannel::OnDataChannel(
 }
 
 void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
+  if (ended_)
+    return;
+
   RTC_LOG(LS_INFO) << "On renegotiation needed.";
   if (!is_caller_) {
     if (session_state_ == kSessionStateConnecting ||
@@ -933,6 +937,10 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
 
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
   PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess();
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kHaveRemoteOffer ||
+    LocalDescription() == nullptr) {
+    is_caller_ = false;
+  }
 }
 
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
