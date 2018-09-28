@@ -14,4 +14,16 @@
   return self;
 }
 
+- (NSString*)participantId {
+  return [NSString stringForStdString:_nativeParticipant->Id()];
+}
+
+- (NSString*)role {
+  return [NSString stringForStdString:_nativeParticipant->Role()];
+}
+
+- (NSString*)userId {
+  return [NSString stringForStdString:_nativeParticipant->UserId()];
+}
+
 @end

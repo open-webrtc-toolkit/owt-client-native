@@ -7,6 +7,7 @@
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 
 /// This class represent an attendee in a conference.
+RTC_EXPORT
 @interface ICSConferenceParticipant ()
 
 @property(nonatomic, readonly)

@@ -103,11 +103,11 @@ class Participant {
     /// Remove an observer for participant.
     void RemoveObserver(ParticipantObserver& observer);
     /// Get the participant's ID.
-    std::string Id() { return id_; }
+    std::string Id() const { return id_; }
     /// Get the participant's role.
-    std::string Role() {return role_; }
+    std::string Role() const {return role_; }
     /// Get the participant's user id.
-    std::string UserId() { return user_id_; }
+    std::string UserId() const { return user_id_; }
   protected:
     /// Set the participant's ID.
     void Id(std::string id) { id_ = id; }

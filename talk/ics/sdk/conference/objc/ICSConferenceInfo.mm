@@ -57,8 +57,10 @@
 }
 
 - (ICSConferenceParticipant*)myself {
-  // TODO: Implement it after conference info is implemented in C++.
-  return nil;
+  const auto& nativeParticipant = _nativeInfo->Self();
+  ICSConferenceParticipant* participant = [[ICSConferenceParticipant alloc]
+        initWithNativeParticipant:nativeParticipant];
+  return participant;
 }
 
 @end
