@@ -28,7 +28,7 @@ channel implementation, you can optionally link sioclient.lib or sioclient_tls.l
 Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp).
 
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
-connections, link your application with sioclient_tls.lib; otherwise, link it with sioclient.lib.
+connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to SSL1.1.0h, so sioclient_tls.lib must be compiled using the same SSL version.
 
 # 5 NAT and firewall traversal {#section5}
 Intel CS for WebRTC Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
