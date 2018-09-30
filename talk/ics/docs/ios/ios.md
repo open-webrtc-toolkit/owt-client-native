@@ -22,6 +22,7 @@ The release package includes two sample applications to get you started quickly 
 - WebRTC.framework - a framework providing WebRTC features. You can find its source code at https://webrtc.googlesource.com/src. We modified some code make it work with OpenSSL.
 - libsioclient.a - this library includes Socket.IO C++ client without TLS features.
 - libsioclient_tls.a - this library includes the Socket.IO C++ client with TLS features.
+- libsioclient_tls_no_verification.a - this library includes the Socket.IO C++ client with TLS feature, but will skip verification of server's certificate.
 
 Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 
@@ -32,7 +33,7 @@ Please make sure your app has network access before making Socket.IO connection.
 
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a. Conference sample use libsioclient_tls_no_verification.a by default. This lib enables TLS but does not verify server's certification. It was provided for evaluation use only. Do not use it in production environments.
 
-The libsioclient_tls.a included in release package has been enhanced so it will verify server's certificate. If the server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (commit 725a8e0e17ecead64574fd9879bd7029b0bf25fa) by yourself.
+The libsioclient_tls.a included in release package has been enhanced so it will verify server's certificate. If the server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (commit 725a8e0e17ecead64574fd9879bd7029b0bf25fa) by yourself. Make sure you link to OpenSSL 1.1.0i to build Socket.IO lib.
 
 # 5 Background modes {#section5}
 Socket connections are disconnected when the device is locked. If your app must remain connected with server, "VoIP" needs to be added to your app's background modes. For detailed information about background execution, please refer to the [iOS developer library](https://developer.apple.com/library/ios/documentation/iPhone/Conceptual/iPhoneOSProgrammingGuide/BackgroundExecution/BackgroundExecution.html).
