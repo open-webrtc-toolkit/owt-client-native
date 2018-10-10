@@ -7,7 +7,7 @@
 
 #import "third_party/webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #import "third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h"
-#import "talk/ics/sdk/base/objc/RTCPeerConnectionFactory+ICS.h"
+#import "talk/ics/sdk/include/objc/ICS/RTCPeerConnectionFactory+ICS.h"
 
 namespace ics {
 namespace base {

@@ -24,6 +24,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// WebRTC extensions
+#import <ICS/RTCPeerConnectionFactory+ICS.h>
+
 // Base SDK
 #import <ICS/ICSClientConfiguration.h>
 #import <ICS/ICSErrors.h>

@@ -10,12 +10,15 @@
 #import <WebRTC/RTCVideoSource.h>
 
 #import "talk/ics/sdk/base/objc/ICSLocalStream+Private.h"
-#import "talk/ics/sdk/base/objc/RTCPeerConnectionFactory+ICS.h"
+#import "talk/ics/sdk/base/objc/ICSMediaFormat+Private.h"
+#import "talk/ics/sdk/include/objc/ICS/RTCPeerConnectionFactory+ICS.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSLocalStream.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSErrors.h"
 #import "talk/ics/sdk/include/objc/ICS/ICSMediaFormat.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
+
+#include "webrtc/rtc_base/helpers.h"
 
 @interface ICSLocalStream ()
 
@@ -28,6 +31,11 @@
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
                              source:(ICSStreamSourceInfo*)source {
   self = [super initWithMediaStream:mediaStream source:source];
+  std::shared_ptr<ics::base::LocalStream> nativeStream =
+      std::make_shared<ics::base::LocalStream>(
+          [mediaStream nativeMediaStream].get(),
+          [source nativeStreamSourceInfo]);
+  [self setNativeStream:nativeStream];
   return self;
 }
 

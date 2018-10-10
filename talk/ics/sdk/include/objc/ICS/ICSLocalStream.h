@@ -38,6 +38,9 @@ RTC_EXPORT
 /**
   Create an ICSLocalStream from given RTCMediaStream.
   @param source Information about stream's source.
+  @details Please create RTCMediaStream, RTCMediaStreamTrack by the
+  RTCPeerConnectionFactory returned by [RTCPeerConnectionFactory
+  sharedInstance]. This method is defined in RTCPeerConnectionFactory+ICS.h.
 */
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
                              source:(ICSStreamSourceInfo*)source;

@@ -2,11 +2,14 @@
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
 
-#import "talk/ics/sdk/base/objc/RTCPeerConnectionFactory+ICS.h"
+#import "talk/ics/sdk/include/objc/ICS/RTCPeerConnectionFactory+ICS.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory+Native.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory+Private.h"
 
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 
-@implementation RTCPeerConnectionFactory (Woogeen)
+
+@implementation RTCPeerConnectionFactory (ICS)
 
 + (RTCPeerConnectionFactory*)sharedInstance {
   static RTCPeerConnectionFactory* factory;
