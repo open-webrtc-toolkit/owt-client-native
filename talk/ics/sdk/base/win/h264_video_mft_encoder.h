@@ -25,7 +25,7 @@ enum MemType {
 
 class MFTEncoderThread : public rtc::Thread {
 public:
-    virtual void Run();
+    virtual void Run() override;
     ~MFTEncoderThread() override;
 };
 
@@ -49,7 +49,7 @@ public:
 
     int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
 
-    bool SupportsNativeHandle() const { return false; }
+    bool SupportsNativeHandle() const override { return false; }
 
     int Release() override;
 

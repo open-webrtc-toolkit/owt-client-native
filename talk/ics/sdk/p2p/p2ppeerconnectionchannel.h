@@ -111,8 +111,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool IsAbandoned();
 
  protected:
-  void CreateOffer();
-  void CreateAnswer();
+  void CreateOffer() override;
+  void CreateAnswer() override;
 
   // Received messages from remote client.
   void OnMessageUserAgent(Json::Value& ua);
@@ -127,32 +127,32 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
 
   // PeerConnectionObserver
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state);
-  virtual void OnAddStream(rtc::scoped_refptr<MediaStreamInterface> stream);
-  virtual void OnRemoveStream(rtc::scoped_refptr<MediaStreamInterface> stream);
+      PeerConnectionInterface::SignalingState new_state) override;
+  virtual void OnAddStream(rtc::scoped_refptr<MediaStreamInterface> stream) override;
+  virtual void OnRemoveStream(rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel);
-  virtual void OnRenegotiationNeeded();
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state);
+      PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state);
-  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
+      PeerConnectionInterface::IceGatheringState new_state) override;
+  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
 
   // DataChannelObserver
-  virtual void OnDataChannelStateChange();
-  virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer);
+  virtual void OnDataChannelStateChange() override;
+  virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer) override;
 
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
-      webrtc::SessionDescriptionInterface* desc);
-  virtual void OnCreateSessionDescriptionFailure(const std::string& error);
+      webrtc::SessionDescriptionInterface* desc) override;
+  virtual void OnCreateSessionDescriptionFailure(const std::string& error) override;
 
   // SetSessionDescriptionObserver
-  virtual void OnSetLocalSessionDescriptionSuccess();
-  virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
-  virtual void OnSetRemoteSessionDescriptionSuccess();
-  virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
+  virtual void OnSetLocalSessionDescriptionSuccess() override;
+  virtual void OnSetLocalSessionDescriptionFailure(const std::string& error) override;
+  virtual void OnSetRemoteSessionDescriptionSuccess() override;
+  virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error) override;
 
   enum SessionState : int;
   enum NegotiationState : int;

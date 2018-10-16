@@ -71,13 +71,12 @@ PeerConnectionDependencyFactory::~PeerConnectionDependencyFactory() {}
 rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
-    const webrtc::MediaConstraintsInterface* constraints,
     webrtc::PeerConnectionObserver* observer) {
   return pc_thread_
       ->Invoke<scoped_refptr<webrtc::PeerConnectionInterface>>(
           RTC_FROM_HERE, Bind(&PeerConnectionDependencyFactory::
                                   CreatePeerConnectionOnCurrentThread,
-                              this, config, constraints, observer))
+                              this, config, observer))
       .get();
 }
 
@@ -116,9 +115,9 @@ void PeerConnectionDependencyFactory::
   }
 
   rtc::Thread* worker_thread = new rtc::Thread();
-  worker_thread->SetName("worker_thread", NULL);
+  worker_thread->SetName("worker_thread", nullptr);
   rtc::Thread* signaling_thread = new rtc::Thread();
-  signaling_thread->SetName("signaling_thread", NULL);
+  signaling_thread->SetName("signaling_thread", nullptr);
   rtc::Thread* network_thread = new rtc::Thread();
   network_thread->SetName("network_thread", nullptr);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
@@ -179,7 +178,7 @@ void PeerConnectionDependencyFactory::
       nullptr);  // Decoder factory
 #elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      worker_thread, signaling_thread, adm,
+      network_thread, worker_thread, signaling_thread, adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
       encoder_factory.release(),   // Encoder factory
@@ -194,9 +193,8 @@ void PeerConnectionDependencyFactory::
 scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
-    const webrtc::MediaConstraintsInterface* constraints,
     webrtc::PeerConnectionObserver* observer) {
-  return (pc_factory_->CreatePeerConnection(config, constraints, nullptr,
+  return (pc_factory_->CreatePeerConnection(config, nullptr,
                                             nullptr, observer))
       .get();
 }
@@ -257,11 +255,11 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
   ns_enabled = GlobalConfiguration::GetNSEnabled();
   if (!aec_enabled || !agc_enabled || !ns_enabled) {
     cricket::AudioOptions options;
-    options.echo_cancellation = rtc::Optional<bool>(aec_enabled ? true : false);
-    options.auto_gain_control = rtc::Optional<bool>(agc_enabled ? true : false);
-    options.noise_suppression = rtc::Optional<bool>(ns_enabled ? true : false);
+    options.echo_cancellation = absl::optional<bool>(aec_enabled ? true : false);
+    options.auto_gain_control = absl::optional<bool>(agc_enabled ? true : false);
+    options.noise_suppression = absl::optional<bool>(ns_enabled ? true : false);
     options.residual_echo_detector =
-        rtc::Optional<bool>(aec_enabled ? true : false);
+        absl::optional<bool>(aec_enabled ? true : false);
     scoped_refptr<webrtc::AudioSourceInterface> audio_source =
         CreateAudioSource(options);
     return pc_thread_

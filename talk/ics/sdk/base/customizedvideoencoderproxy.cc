@@ -190,12 +190,10 @@ int CustomizedVideoEncoderProxy::Encode(
   memset(&info, 0, sizeof(info));
   info.codecType = codec_type_;
   if (codec_type_ == webrtc::kVideoCodecVP8) {
-    info.codecSpecific.VP8.pictureId = picture_id_;
     info.codecSpecific.VP8.nonReference = false;
     info.codecSpecific.VP8.simulcastIdx = 0;
     info.codecSpecific.VP8.temporalIdx = webrtc::kNoTemporalIdx;
     info.codecSpecific.VP8.layerSync = false;
-    info.codecSpecific.VP8.tl0PicIdx = webrtc::kNoTl0PicIdx;
     info.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
     picture_id_ = (picture_id_ + 1) & 0x7FFF;
   } else if (codec_type_ == webrtc::kVideoCodecVP9) {
@@ -205,10 +203,7 @@ int CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP9.inter_pic_predicted =
         (encodedframe._frameType == kVideoFrameKey);
     info.codecSpecific.VP9.flexible_mode = false;
-    info.codecSpecific.VP9.end_of_superframe = true;
-    info.codecSpecific.VP9.tl0_pic_idx = kNoTl0PicIdx;
     info.codecSpecific.VP9.inter_layer_predicted = false;
-    info.codecSpecific.VP9.picture_id = kNoPictureId;
     info.codecSpecific.VP9.temporal_up_switch = false;
     info.codecSpecific.VP9.gof_idx = kNoGofIdx;
     info.codecSpecific.VP9.ss_data_available = false;

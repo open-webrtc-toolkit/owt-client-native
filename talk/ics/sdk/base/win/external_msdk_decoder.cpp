@@ -324,7 +324,6 @@ int32_t ExternalMSDKVideoDecoder::InitDecodeOnCodecThread() {
 int32_t ExternalMSDKVideoDecoder::Decode(
     const webrtc::EncodedImage& inputImage,
     bool missingFrames,
-    const webrtc::RTPFragmentationHeader* fragmentation,
     const webrtc::CodecSpecificInfo* codecSpecificInfo,
     int64_t renderTimeMs) {
   // The decoding process involves following steps:

@@ -17,6 +17,9 @@ rtc_include_internal_audio_device = true
 # Don't include WebRTC tests.
 rtc_include_tests = false
 
+# By default enable internal codecs.
+rtc_use_builtin_sw_codecs = true
+
 if (woogeen_include_tests) {
   rtc_include_tests = true
 }

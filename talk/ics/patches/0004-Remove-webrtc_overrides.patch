@@ -1,26 +1,26 @@
-From a6d259b59195e1dd22b71444f311abbb70fe7ca2 Mon Sep 17 00:00:00 2001
+From 843adc48765b91c40a1199c39604b8532128e1fb Mon Sep 17 00:00:00 2001
 From: Qiu Jianlin <jianlin.qiu@intel.com>
-Date: Wed, 25 Apr 2018 09:15:51 +0800
-Subject: [PATCH] Remove webrtc overrides
+Date: Tue, 16 Oct 2018 08:33:39 +0800
+Subject: [PATCH] Remove webrtc_overrides
 
 ---
- webrtc_overrides/BUILD.gn                      | 157 ---------------
- webrtc_overrides/DEPS                          |   7 -
- webrtc_overrides/OWNERS                        |   5 -
- webrtc_overrides/README.chromium               |  20 --
- webrtc_overrides/field_trial.cc                |  15 --
- webrtc_overrides/init_webrtc.cc                |  89 ---------
- webrtc_overrides/init_webrtc.h                 |  13 --
- webrtc_overrides/rtc_base/diagnostic_logging.h | 150 ---------------
- webrtc_overrides/rtc_base/event.cc             |  38 ----
- webrtc_overrides/rtc_base/event.h              |  41 ----
- webrtc_overrides/rtc_base/gtest_prod_util.h    |  10 -
- webrtc_overrides/rtc_base/logging.cc           | 256 -------------------------
- webrtc_overrides/rtc_base/logging.h            | 119 ------------
- webrtc_overrides/rtc_base/task_queue.cc        | 229 ----------------------
- webrtc_overrides/rtc_base/win32socketinit.cc   |  22 ---
- webrtc_overrides/runtime_enabled_features.cc   |  26 ---
- 16 files changed, 1197 deletions(-)
+ webrtc_overrides/BUILD.gn                     | 157 -----------
+ webrtc_overrides/DEPS                         |   7 -
+ webrtc_overrides/OWNERS                       |   5 -
+ webrtc_overrides/README.chromium              |  20 --
+ webrtc_overrides/field_trial.cc               |  15 -
+ webrtc_overrides/init_webrtc.cc               |  96 -------
+ webrtc_overrides/init_webrtc.h                |  13 -
+ .../rtc_base/diagnostic_logging.h             | 150 ----------
+ webrtc_overrides/rtc_base/event.cc            |  38 ---
+ webrtc_overrides/rtc_base/event.h             |  41 ---
+ webrtc_overrides/rtc_base/gtest_prod_util.h   |  10 -
+ webrtc_overrides/rtc_base/logging.cc          | 256 ------------------
+ webrtc_overrides/rtc_base/logging.h           | 119 --------
+ webrtc_overrides/rtc_base/task_queue.cc       | 233 ----------------
+ webrtc_overrides/rtc_base/win32socketinit.cc  |  22 --
+ webrtc_overrides/runtime_enabled_features.cc  |  26 --
+ 16 files changed, 1208 deletions(-)
  delete mode 100644 webrtc_overrides/BUILD.gn
  delete mode 100644 webrtc_overrides/DEPS
  delete mode 100644 webrtc_overrides/OWNERS
@@ -274,10 +274,10 @@ index 878e6cc576b..00000000000
 -}  // namespace webrtc
 diff --git a/webrtc_overrides/init_webrtc.cc b/webrtc_overrides/init_webrtc.cc
 deleted file mode 100644
-index 185275f5aa0..00000000000
+index b26b7c5ac0d..00000000000
 --- a/webrtc_overrides/init_webrtc.cc
 +++ /dev/null
-@@ -1,89 +0,0 @@
+@@ -1,96 +0,0 @@
 -// Copyright 2013 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -289,6 +289,7 @@ index 185275f5aa0..00000000000
 -#include "base/files/file_util.h"
 -#include "base/logging.h"
 -#include "base/metrics/histogram.h"
+-#include "base/metrics/sparse_histogram.h"
 -#include "base/native_library.h"
 -#include "base/path_service.h"
 -#include "base/trace_event/trace_event.h"
@@ -343,6 +344,12 @@ index 185275f5aa0..00000000000
 -  return reinterpret_cast<Histogram*>(
 -      base::LinearHistogram::FactoryGet(name, 1, boundary, boundary + 1,
 -          base::HistogramBase::kUmaTargetedHistogramFlag));
+-}
+-
+-Histogram* SparseHistogramFactoryGetEnumeration(const std::string& name,
+-                                                int boundary) {
+-  return reinterpret_cast<Histogram*>(base::SparseHistogram::FactoryGet(
+-      name, base::HistogramBase::kUmaTargetedHistogramFlag));
 -}
 -
 -const char* GetHistogramName(Histogram* histogram_pointer) {
@@ -1038,10 +1045,10 @@ index 85622bc05da..00000000000
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_WEBRTC_RTC_BASE_LOGGING_H_
 diff --git a/webrtc_overrides/rtc_base/task_queue.cc b/webrtc_overrides/rtc_base/task_queue.cc
 deleted file mode 100644
-index 116a3c00811..00000000000
+index c569be8aff2..00000000000
 --- a/webrtc_overrides/rtc_base/task_queue.cc
 +++ /dev/null
-@@ -1,229 +0,0 @@
+@@ -1,233 +0,0 @@
 -/*
 - *  Copyright 2016 The WebRTC Project Authors. All rights reserved.
 - *
@@ -1058,7 +1065,7 @@ index 116a3c00811..00000000000
 -#include "base/lazy_instance.h"
 -#include "base/memory/ref_counted.h"
 -#include "base/synchronization/waitable_event.h"
--#include "base/task_scheduler/post_task.h"
+-#include "base/task/post_task.h"
 -#include "base/threading/thread_local.h"
 -#include "build/build_config.h"
 -#include "third_party/webrtc/rtc_base/refcount.h"
@@ -1087,7 +1094,7 @@ index 116a3c00811..00000000000
 -#endif
 -      break;
 -    case TaskQueue::Priority::LOW:
--      return {base::MayBlock(), base::TaskPriority::BACKGROUND};
+-      return {base::MayBlock(), base::TaskPriority::BEST_EFFORT};
 -    case TaskQueue::Priority::NORMAL:
 -    default:
 -#if defined(OS_ANDROID)
@@ -1183,20 +1190,24 @@ index 116a3c00811..00000000000
 -  WaitableEvent event(WaitableEvent::ResetPolicy::MANUAL,
 -                      WaitableEvent::InitialState::NOT_SIGNALED);
 -  task_runner_->PostTask(
--      FROM_HERE, base::BindOnce(&TaskQueue::Impl::Deactivate, this, &event));
+-      FROM_HERE, base::BindOnce(&TaskQueue::Impl::Deactivate,
+-                                rtc::scoped_refptr<Impl>(this), &event));
 -  event.Wait();
 -}
 -
 -void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
--  task_runner_->PostTask(FROM_HERE, base::BindOnce(&TaskQueue::Impl::RunTask,
--                                                   this, base::Passed(&task)));
+-  task_runner_->PostTask(
+-      FROM_HERE,
+-      base::BindOnce(&TaskQueue::Impl::RunTask, rtc::scoped_refptr<Impl>(this),
+-                     std::move(task)));
 -}
 -
 -void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
 -                                      uint32_t milliseconds) {
 -  task_runner_->PostDelayedTask(
 -      FROM_HERE,
--      base::BindOnce(&TaskQueue::Impl::RunTask, this, base::Passed(&task)),
+-      base::BindOnce(&TaskQueue::Impl::RunTask, rtc::scoped_refptr<Impl>(this),
+-                     std::move(task)),
 -      base::TimeDelta::FromMilliseconds(milliseconds));
 -}
 -
@@ -1332,5 +1343,5 @@ index bbb5deba5b5..00000000000
 -
 -}  // namespace webrtc
 -- 
-2.16.2.windows.1
+2.18.0.windows.1
 

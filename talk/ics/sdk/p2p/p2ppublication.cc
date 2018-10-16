@@ -3,7 +3,7 @@
  */
 #include <algorithm>
 
-#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"

@@ -3,7 +3,7 @@
  */
 
 #include "talk/ics/sdk/base/stringutils.h"
-#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/third_party/base64/base64.h"
 
 namespace ics {
 namespace base {

@@ -11,7 +11,7 @@
 #include <dxva2api.h>
 #include <Windows.h>
 #include "webrtc/api/mediastreaminterface.h"
-#include "webrtc/api/videosinkinterface.h"
+#include "webrtc/api/video/video_sink_interface.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
 

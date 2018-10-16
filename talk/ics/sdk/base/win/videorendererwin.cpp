@@ -7,7 +7,7 @@
 #include "talk/ics/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/media/base/videocommon.h"
-#include "webrtc/typedefs.h"
+//#include "webrtc/typedefs.h"
 #include "rtc_base/logging.h"
 
 using namespace rtc;

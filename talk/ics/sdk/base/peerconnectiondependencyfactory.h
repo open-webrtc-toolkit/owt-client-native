@@ -28,7 +28,7 @@ using rtc::Bind;
 // synchronized methods on this thread.
 class PeerConnectionThread : public rtc::Thread {
  public:
-  virtual void Run();
+  virtual void Run() override;
   ~PeerConnectionThread() override;
 };
 
@@ -40,7 +40,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   static PeerConnectionDependencyFactory* Get();
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> CreatePeerConnection(
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
-      const webrtc::MediaConstraintsInterface* constraints,
       webrtc::PeerConnectionObserver* observer);
   rtc::scoped_refptr<MediaStreamInterface> CreateLocalMediaStream(
       const std::string& label);
@@ -77,7 +76,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface>
   CreatePeerConnectionOnCurrentThread(
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
-      const webrtc::MediaConstraintsInterface* constraints,
       webrtc::PeerConnectionObserver* observer);
   void CreateNetworkMonitorOnCurrentThread();
   rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();

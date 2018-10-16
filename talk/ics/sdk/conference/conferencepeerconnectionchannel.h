@@ -120,37 +120,37 @@ class ConferencePeerConnectionChannel
   void OnStreamError(const std::string& error_message);
 
  protected:
-  void CreateOffer();
-  void CreateAnswer();
+  void CreateOffer() override;
+  void CreateAnswer() override;
 
   // PeerConnectionObserver
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state);
+      PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnRemoveStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-  virtual void OnRenegotiationNeeded();
+  virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state);
+      PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state);
-  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
+      PeerConnectionInterface::IceGatheringState new_state) override;
+  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
 
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
-      webrtc::SessionDescriptionInterface* desc);
-  virtual void OnCreateSessionDescriptionFailure(const std::string& error);
+      webrtc::SessionDescriptionInterface* desc) override;
+  virtual void OnCreateSessionDescriptionFailure(const std::string& error) override;
 
   // SetSessionDescriptionObserver
-  virtual void OnSetLocalSessionDescriptionSuccess();
-  virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
-  virtual void OnSetRemoteSessionDescriptionSuccess();
-  virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
+  virtual void OnSetLocalSessionDescriptionSuccess() override;
+  virtual void OnSetLocalSessionDescriptionFailure(const std::string& error) override;
+  virtual void OnSetRemoteSessionDescriptionSuccess() override;
+  virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error) override;
 
-  virtual void OnNetworksChanged();
+  virtual void OnNetworksChanged() override;
 
   enum SessionState : int;
   enum NegotiationState : int;

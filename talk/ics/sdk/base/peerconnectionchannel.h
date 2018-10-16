@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "webrtc/rtc_base/messagehandler.h"
-#include "webrtc/rtc_base/sigslot.h"
+#include "webrtc/rtc_base/third_party/sigslot/sigslot.h"
 
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/ics/sdk/base/mediaconstraintsimpl.h"
@@ -96,24 +96,24 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void CreateAnswer() = 0;
 
   // Message looper event
-  virtual void OnMessage(rtc::Message* msg);
+  virtual void OnMessage(rtc::Message* msg) override;
 
   // PeerConnectionObserver
-  virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed){};
+  virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {};
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state);
+      PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnRemoveStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-  virtual void OnRenegotiationNeeded();
+  virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state);
+      PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state);
-  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
+      PeerConnectionInterface::IceGatheringState new_state) override;
+  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
 
   // DataChannelObserver proxy
   // Data channel events will be bridged to these methods to avoid name
@@ -156,11 +156,12 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // the future.
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   MediaConstraintsImpl media_constraints_;
+  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions offer_answer_options_;
 
  private:
   // DataChannelObserver
-  virtual void OnStateChange() { OnDataChannelStateChange(); }
-  virtual void OnMessage(const webrtc::DataBuffer& buffer) {
+  virtual void OnStateChange() override { OnDataChannelStateChange(); }
+  virtual void OnMessage(const webrtc::DataBuffer& buffer) override {
     OnDataChannelMessage(buffer);
   };
 

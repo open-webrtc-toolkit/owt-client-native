@@ -40,7 +40,6 @@ int32_t CustomizedVideoDecoderProxy::InitDecode(const webrtc::VideoCodec* codec_
 
 int32_t CustomizedVideoDecoderProxy::Decode(const EncodedImage& input_image,
                                             bool missing_frames,
-                                            const RTPFragmentationHeader* fragmentation,
                                             const CodecSpecificInfo* codec_specific_info,
                                             int64_t render_time_ms) {
   if (!decoded_image_callback_) {

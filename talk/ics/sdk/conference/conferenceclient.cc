@@ -11,7 +11,7 @@
 #include "talk/ics/sdk/include/cpp/ics/conference/conferenceclient.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
 #include "webrtc/api/statstypes.h"
-#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"

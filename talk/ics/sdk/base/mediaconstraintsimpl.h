@@ -20,12 +20,12 @@ class MediaConstraintsImpl : public webrtc::MediaConstraintsInterface {
 
   virtual const Constraints& GetOptional() const { return optional_; }
 
-  template <class T>
+  template <typename T>
   void AddMandatory(const std::string& key, const T& value) {
-    mandatory_.push_back(Constraint(key, rtc::ToString<T>(value)));
+    mandatory_.push_back(Constraint(key, rtc::ToString(value)));
   }
 
-  template <class T>
+  template <typename T>
   void SetMandatory(const std::string& key, const T& value) {
     std::string value_str;
     if (mandatory_.FindFirst(key, &value_str)) {
@@ -37,12 +37,12 @@ class MediaConstraintsImpl : public webrtc::MediaConstraintsInterface {
         }
       }
     }
-    mandatory_.push_back(Constraint(key, rtc::ToString<T>(value)));
+    mandatory_.push_back(Constraint(key, rtc::ToString(value)));
   }
 
-  template <class T>
+  template <typename T>
   void AddOptional(const std::string& key, const T& value) {
-    optional_.push_back(Constraint(key, rtc::ToString<T>(value)));
+    optional_.push_back(Constraint(key, rtc::ToString(value)));
   }
 
  private:

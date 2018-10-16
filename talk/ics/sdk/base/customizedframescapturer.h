@@ -37,11 +37,11 @@ class CustomizedFramesCapturer : public VideoCapturer {
       const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;
   virtual bool IsRunning() override;
-  virtual bool IsScreencast() const { return false; }
+  virtual bool IsScreencast() const override { return false; }
 
  protected:
   // Override virtual methods of parent class VideoCapturer.
-  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
+  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs) override;
 
   // Read a frame and determine how long to wait for the next frame.
   virtual void ReadFrame();

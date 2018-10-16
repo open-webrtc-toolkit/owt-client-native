@@ -61,7 +61,6 @@ public:
 
     int32_t Decode(
         const webrtc::EncodedImage& inputImage, bool missingFrames,
-        const webrtc::RTPFragmentationHeader* fragmentation,
         const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
         int64_t renderTimeMs = -1) override;
 

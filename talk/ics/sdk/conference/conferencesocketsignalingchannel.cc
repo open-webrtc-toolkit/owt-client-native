@@ -13,7 +13,7 @@
 #include "talk/ics/sdk/base/stringutils.h"
 #include "talk/ics/sdk/base/sysinfo.h"
 #include "talk/ics/sdk/conference/conferencesocketsignalingchannel.h"
-#include "webrtc/rtc_base/base64.h"
+#include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/json.h"

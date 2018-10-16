@@ -88,7 +88,7 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     /// Unregister an observer from this conference publication.
     void RemoveObserver(PublicationObserver& observer) override;
   private:
-    void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
+    void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted) override;
      std::string id_;
      std::string stream_id_;
      bool ended_;

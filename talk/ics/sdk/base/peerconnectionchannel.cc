@@ -31,14 +31,15 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   RTC_LOG(LS_INFO) << "Initialize PeerConnection.";
   if (factory_.get() == nullptr)
     factory_ = PeerConnectionDependencyFactory::Get();
-  media_constraints_.AddOptional(MediaConstraintsInterface::kEnableDtlsSrtp,
-                                 true);
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
-  peer_connection_ = (factory_->CreatePeerConnection(configuration_,
-                                                     &media_constraints_, this))
+
+  offer_answer_options_ =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+
+  offer_answer_options_.offer_to_receive_audio = true;
+  offer_answer_options_.offer_to_receive_video = true;
+
+  configuration_.enable_dtls_srtp = true;
+  peer_connection_ = (factory_->CreatePeerConnection(configuration_, this))
                          .get();
   if (!peer_connection_.get()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
@@ -82,14 +83,14 @@ void PeerConnectionChannel::ApplyBitrateSettings() {
             webrtc::MediaStreamTrackInterface::kAudioKind) {
           if (configuration_.audio.size() > 0 && configuration_.audio[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.audio[0].max_bitrate * 1024);
+                absl::optional<int>(configuration_.audio[0].max_bitrate * 1024);
             sender->SetParameters(rtp_parameters);
           }
         } else if (sender_track->kind() ==
                    webrtc::MediaStreamTrackInterface::kVideoKind) {
           if (configuration_.video.size() > 0 && configuration_.video[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
-                rtc::Optional<int>(configuration_.video[0].max_bitrate * 1024);
+                absl::optional<int>(configuration_.video[0].max_bitrate * 1024);
             sender->SetParameters(rtp_parameters);
           }
         }
@@ -130,7 +131,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateOffer(param->data(), &media_constraints_);
+      peer_connection_->CreateOffer(
+          param->data(),
+          offer_answer_options_);
       delete param;
       break;
     }
@@ -140,7 +143,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateAnswer(param->data(), nullptr);
+      peer_connection_->CreateAnswer(
+          param->data(),
+          offer_answer_options_);
       delete param;
       break;
     }

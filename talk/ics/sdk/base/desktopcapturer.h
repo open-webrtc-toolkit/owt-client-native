@@ -30,7 +30,7 @@ namespace base {
 
 class ScreenCaptureThread : public rtc::Thread {
  public:
-  virtual void Run();
+  virtual void Run() override;
   ~ScreenCaptureThread() override;
 };
 
@@ -49,7 +49,7 @@ class BasicDesktopCapturer : public VideoCapturer,
   };
   virtual void Stop() override{};
   virtual bool IsRunning() override { return false; };
-  virtual bool IsScreencast() const { return true; }
+  virtual bool IsScreencast() const override { return true; }
 
   virtual void OnCaptureResult(
       webrtc::DesktopCapturer::Result result,
@@ -77,7 +77,7 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
       const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;
   virtual bool IsRunning() override;
-  virtual bool IsScreencast() const { return false; }
+  virtual bool IsScreencast() const override { return false; }
 
   // DesktopCapturer::Callback implementation
   virtual void OnCaptureResult(
@@ -86,7 +86,7 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
 
  protected:
   // Override virtual methods of parent class VideoCapturer.
-  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
+  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs) override;
 
  private:
   class BasicScreenCaptureThread;  // Forward declaration, defined in .cc.
@@ -119,21 +119,21 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   BasicWindowCapturer(webrtc::DesktopCaptureOptions options, std::unique_ptr<LocalScreenStreamObserver> observer);
   virtual ~BasicWindowCapturer();
 
-  void Init();
+  void Init() override;
   // Override virtual methods of parent class VideoCapturer.
   virtual CaptureState Start(
       const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;
   virtual bool IsRunning() override;
-  virtual bool IsScreencast() const { return true; }
+  virtual bool IsScreencast() const override { return true; }
 
   // DesktopCapturer::Callback implementation
   void OnCaptureResult(webrtc::DesktopCapturer::Result result,
                        std::unique_ptr<webrtc::DesktopFrame> frame) final;
 
-  bool GetCurrentWindowList(std::unordered_map<int, std::string>* window_list);
+  bool GetCurrentWindowList(std::unordered_map<int, std::string>* window_list) override;
 
-  bool SetCaptureWindow(int window_id);
+  bool SetCaptureWindow(int window_id) override;
 
   enum MessageType : int {
     kMessageTypeWindowSpecified = 1,
@@ -142,7 +142,7 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
 
  protected:
   // Override virtual methods of parent class VideoCapturer.
-  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
+  virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs) override;
 
  private:
   class BasicWindowCaptureThread;  // Forward declaration, defined in .cc.
