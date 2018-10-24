@@ -17,7 +17,7 @@ index 1b94aaa8d..cc3c031dd 100644
    use_custom_libcxx =
        is_msan || is_fuchsia ||
 -      (is_linux &&
-+      (is_linux && is_clang
++      (is_linux && is_clang &&
         (!is_chromeos || default_toolchain != "//build/toolchain/cros:target"))
  
    # Use libc++ instead of stdlibc++ when using the host_cpu toolchain, even if
