@@ -138,7 +138,8 @@ class ConferencePeerConnectionChannel
   virtual void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-
+  virtual void OnIceCandidatesRemoved(
+      const std::vector<cricket::Candidate>& candidates) override;
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
       webrtc::SessionDescriptionInterface* desc) override;

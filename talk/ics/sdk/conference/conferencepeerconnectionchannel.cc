@@ -2,13 +2,13 @@
  * Intel License
  */
 
+#include "talk/ics/sdk/conference/conferencepeerconnectionchannel.h"
 #include <future>
 #include <thread>
 #include <vector>
 #include "talk/ics/sdk/base/functionalobserver.h"
 #include "talk/ics/sdk/base/mediautils.h"
 #include "talk/ics/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/ics/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/ics/sdk/include/cpp/ics/conference/remotemixedstream.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
@@ -275,6 +275,35 @@ void ConferencePeerConnectionChannel::OnIceCandidate(
     signaling_channel_->SendSdp(message, nullptr, nullptr);
   } else {
     ice_candidates_.push_back(message);
+  }
+}
+
+void ConferencePeerConnectionChannel::OnIceCandidatesRemoved(
+    const std::vector<cricket::Candidate>& candidates) {
+  RTC_LOG(LS_INFO) << "On ice candidate removed";
+  if (candidates.empty())
+    return;
+  sio::message::ptr message = sio::object_message::create();
+  message->get_map()["id"] = sio::string_message::create(session_id_);
+  sio::message::ptr remove_candidates_msg = sio::object_message::create();
+  remove_candidates_msg->get_map()["type"] =
+      sio::string_message::create("remove-candidates");
+  sio::message::ptr removed_candidates = sio::array_message::create();
+  for (auto candidate : candidates) {
+    std::string candidate_string = candidate.ToString();
+    candidate_string.insert(0, "a=");
+    sio::message::ptr current_candidate = sio::object_message::create();
+    current_candidate->get_map()["candidate"] =
+        sio::string_message::create(candidate_string);
+    // jianlin: Native stack does not pop sdpMid & sdpMLineIndex to observer.
+    // Maybe need to create a hash table to map candidate id to sdpMid/sdpMlineIndex
+    // in OnIceCandidate().
+    removed_candidates->get_vector().push_back(current_candidate);
+  }
+  remove_candidates_msg->get_map()["candidates"] = removed_candidates;
+  message->get_map()["signaling"] = remove_candidates_msg;
+  if (signaling_channel_) {
+    signaling_channel_->SendSdp(message, nullptr, nullptr);
   }
 }
 

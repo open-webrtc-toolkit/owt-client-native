@@ -114,7 +114,8 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-
+  virtual void OnIceCandidatesRemoved(
+      const std::vector<cricket::Candidate>& candidates) override;
   // DataChannelObserver proxy
   // Data channel events will be bridged to these methods to avoid name
   // conflict.

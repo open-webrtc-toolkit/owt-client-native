@@ -276,6 +276,9 @@ void PeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
 void PeerConnectionChannel::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate) {}
 
+void PeerConnectionChannel::OnIceCandidatesRemoved(
+    const std::vector<cricket::Candidate>& candidates) {}
+
 void PeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {}
 
