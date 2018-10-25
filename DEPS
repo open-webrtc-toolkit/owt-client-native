@@ -7,7 +7,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'internal_ccr1_git': 'ssh://git-ccr-1.devtools.intel.com:29418',
+  'internal_ccr1_git': 'https://github.com/intel-webrtc',
   'chromium_revision': 'ca3a5e1cbb792be549303987e0fc387092f7ee81',
   'boringssl_git': 'https://boringssl.googlesource.com',
   # Three lines of non-changing comments so that
