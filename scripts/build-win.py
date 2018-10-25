@@ -15,7 +15,7 @@ import argparse
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
-OUT_LIB = 'woogeen.lib'
+OUT_LIB = 'oms.lib'
 LIB_BLACK_LIST = ['video_capture']
 PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests', 'common_video_unittests',
     'modules_tests', 'modules_unittests', 'peerconnection_unittests', 'rtc_pc_unittests',
@@ -42,7 +42,7 @@ def _mergelibs(scheme):
   if os.path.exists(os.path.join(OUT_PATH, OUT_LIB)):
     os.remove(os.path.join(OUT_PATH, OUT_LIB))
   libs=_getlibs(scheme)
-  command=['lib.exe', '/OUT:out\woogeen.lib']
+  command=['lib.exe', '/OUT:out\oms.lib']
   command.extend(libs)
   subprocess.call(command, cwd=HOME_PATH)
 

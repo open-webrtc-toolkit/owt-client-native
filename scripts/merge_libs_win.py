@@ -15,7 +15,7 @@ import argparse
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'dist')
-OUT_LIB = 'ics_dist.lib'
+OUT_LIB = 'oms_dist.lib'
 
 def _getlibs(scheme):
   '''Returns an array contains all .lib files' path
@@ -34,7 +34,7 @@ def _mergelibs(scheme):
   if os.path.exists(os.path.join(OUT_PATH, OUT_LIB)):
     os.remove(os.path.join(OUT_PATH, OUT_LIB))
   libs=_getlibs(scheme)
-  command=['lib.exe', '/OUT:dist\ics_dist.lib']
+  command=['lib.exe', '/OUT:dist\oms_dist.lib']
   command.extend(libs)
   subprocess.call(command, cwd=HOME_PATH)
 

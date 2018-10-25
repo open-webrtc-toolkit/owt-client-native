@@ -13,12 +13,12 @@ group("default") {
   }
 
   if (is_ios) {
-    deps += [ "//talk/ics:ics_sdk_objc" ]
+    deps += [ "//talk/oms:oms_sdk_objc" ]
   } else {
-    deps += [ "//talk/ics" ]
+    deps += [ "//talk/oms" ]
   }
 
   if (woogeen_include_tests) {
-    deps += [ "talk/ics:woogeen_tests" ]
+    deps += [ "talk/oms:woogeen_tests" ]
   }
 }

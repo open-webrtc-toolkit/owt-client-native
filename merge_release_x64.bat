@@ -1,7 +1,7 @@
-copy /B /Y out\release_x64\obj\talk\ics\ics.lib dist\Release_x64\
+copy /B /Y out\release_x64\obj\talk\oms\oms.lib dist\Release_x64\
 cd scripts
 call python merge_libs_win.py --scheme release_x64
 cd ../dist
-del ics-release.lib
-rename ics_dist.lib ics-release.lib
+del oms-release.lib
+rename oms_dist.lib oms-release.lib
 cd ..

@@ -1,0 +1,6 @@
+framework module Woogeen {
+  umbrella header "Woogeen.h"
+
+  export *
+  module * { export * }
+}

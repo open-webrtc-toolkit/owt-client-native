@@ -11,7 +11,7 @@ import sys
 import subprocess
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'ics', 'patches')
+PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'oms', 'patches')
 TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
@@ -32,8 +32,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Remove-webrtc_overrides.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Suppress-some-warnings-and-disable-thin-archieve.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
+  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Suppress-some-warnings-and-disable-thin-archieve.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
+    #subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
   #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-ICS-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
    # subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
   #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0008-ios-Various-build-fixes-for-Xcode-10.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
