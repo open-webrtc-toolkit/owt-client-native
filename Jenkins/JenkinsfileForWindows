@@ -1,0 +1,53 @@
+pipeline {
+    agent none
+    options {
+        buildDiscarder(logRotator(numToKeepStr:'5'))
+        timeout(time: 40, unit: 'MINUTES')
+    }
+    stages {
+        stage('BuildAndEnv'){
+            parallel {
+                stage('build') {
+                    agent{
+                        node {
+                            label 'windows'
+                            customWorkspace "D:/workspace/jenkins"
+                        }
+                    }
+                    steps {
+                        bat 'buildSdk.bat %GERRIT_PATCHSET_REVISION% %GERRIT_EVENT_TYPE% %GERRIT_REFSPEC% %GERRIT_BRANCH%'
+                    }
+                }
+                stage('startMCU') {
+                    agent{
+                        node {
+                            label 'webrtc151'
+                            customWorkspace "/home/webrtc/workspace/script"
+                        }
+                    }
+                    steps {
+                        script{
+                            withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                                sh './killserver.sh'
+                                sh './startmcu.sh'
+                                echo 'start mcu success'
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing..'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying....'
+            }
+        }
+    }
+}
+
