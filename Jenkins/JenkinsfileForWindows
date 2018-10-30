@@ -11,21 +11,33 @@ pipeline {
                     agent{
                         node {
                             label 'windows'
-                            customWorkspace "D:/workspace/jenkins"
+                            customWorkspace "D:/workspace/jenkins/ci"
                         }
                     }
                     steps {
-                        bat 'buildSdk.bat %GIT_COMMIT%'
+                        //bat 'buildSdk.bat %GIT_COMMIT%'
                     }
                 }
             }
         }
         stage('Test') {
+			agent{
+                node {
+                    label 'windows'
+                    customWorkspace "D:/workspace/jenkins/ci"
+                }
+            }
             steps {
                 echo 'Testing..'
             }
         }
         stage('Deploy') {
+			agent{
+                node {
+                    label 'windows'
+                    customWorkspace "D:/workspace/jenkins/ci"
+                }
+            }
             steps {
                 echo 'Deploying....'
             }
