@@ -18,24 +18,6 @@ pipeline {
                         bat 'buildSdk.bat %GERRIT_PATCHSET_REVISION% %GERRIT_EVENT_TYPE% %GERRIT_REFSPEC% %GERRIT_BRANCH%'
                     }
                 }
-                stage('startMCU') {
-                    agent{
-                        node {
-                            label 'webrtc151'
-                            customWorkspace "/home/webrtc/workspace/script"
-                        }
-                    }
-                    steps {
-                        script{
-                            withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
-                                sh './killserver.sh'
-                                sh './startmcu.sh'
-                                echo 'start mcu success'
-                            }
-                        }
-                    }
-                }
-
             }
         }
         stage('Test') {
