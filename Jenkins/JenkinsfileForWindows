@@ -15,7 +15,7 @@ pipeline {
                         }
                     }
                     steps {
-                        bat 'buildSdk.bat %GERRIT_PATCHSET_REVISION% %GERRIT_EVENT_TYPE% %GERRIT_REFSPEC% %GERRIT_BRANCH%'
+                        bat 'buildSdk.bat %GIT_COMMIT%'
                     }
                 }
             }
