@@ -15,7 +15,7 @@ pipeline {
                         }
                     }
                     steps {
-                        //bat 'buildSdk.bat %GIT_COMMIT%'
+                        echo "%GIT_COMMIT%"
                     }
                 }
             }
