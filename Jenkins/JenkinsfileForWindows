@@ -35,7 +35,6 @@ pipeline {
                         }
                     }
                 }
-
             }
         }
         stage('Test') {
