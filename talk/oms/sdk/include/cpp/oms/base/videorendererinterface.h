@@ -56,7 +56,7 @@ struct VideoBuffer {
   Resolution resolution;
   // Buffer type
   VideoBufferType type;
-  ~VideoBuffer() { delete buffer; }
+  ~VideoBuffer() { delete[] buffer; }
 };
 
 /// VideoRenderWindow wraps a native Window handle
