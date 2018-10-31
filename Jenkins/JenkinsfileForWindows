@@ -11,7 +11,7 @@ pipeline {
                     agent{
                         node {
                             label 'windows'
-                            customWorkspace "D:/workspace/jenkins/ci"
+                            customWorkspace "D:/workspace/jenkins/src"
                         }
                     }
                     steps {
@@ -29,6 +29,7 @@ pipeline {
             }
             steps {
                 echo 'Testing..'
+                bat 'D:/workspace/CppCheckin/ICSConference/runCase.bat'
             }
         }
         stage('Deploy') {
