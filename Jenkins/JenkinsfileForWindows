@@ -15,15 +15,15 @@ pipeline {
                         }
                     }
                     steps {
-                        cd ../
+                        //cd ../
                         echo $GIT_COMMIT
-                        bat 'buildSdk.bat %GIT_COMMIT%'
+                        //bat 'buildSdk.bat %GIT_COMMIT%'
                     }
                 }
             }
         }
         stage('Test') {
-			agent{
+            agent{
                 node {
                     label 'windows'
                     customWorkspace "D:/workspace/jenkins/co"
@@ -34,7 +34,7 @@ pipeline {
             }
         }
         stage('Deploy') {
-			agent{
+            agent{
                 node {
                     label 'windows'
                     customWorkspace "D:/workspace/jenkins/co"
