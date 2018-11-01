@@ -11,12 +11,12 @@ pipeline {
                     agent{
                         node {
                             label 'windows'
-                            customWorkspace "D:/workspace/jenkins/src"
+                            customWorkspace "${windowsCIPath}/src"
                         }
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat 'D:/workspace/jenkins/buildSdk.bat %GIT_COMMIT%'
+                        bat '${windowsCIPath}/buildSdk.bat %GIT_COMMIT%'
                     }
                 }
                 stage('startMcu') {
@@ -31,6 +31,18 @@ pipeline {
                         }
                     }
                 }
+                /*stage('startP2PServer') {
+                    agent{
+                        node {
+                            label "$env.p2pServer"
+                        }
+                    }
+                    steps {
+                        withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                            sh "${p2pScriptPath}/startp2p.sh"
+                        }
+                    }
+                }*/
             }
         }
         stage('Test') {
@@ -41,17 +53,20 @@ pipeline {
             }
             steps {
                 echo 'Testing..'
-                bat 'D:/workspace/CppCheckin/ICSConference/runCase.bat'
+                bat '${windowsConferenceCasePath}/runCase.bat'
             }
         }
         stage('Deploy') {
             agent{
                 node {
-                    label 'windows'
+                label "$env.mcuServer"
                 }
             }
             steps {
                 echo 'Deploying....'
+                withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                    sh "${mcuScriptPath}/killmcu.sh"
+                }
             }
         }
     }
