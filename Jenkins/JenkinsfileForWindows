@@ -19,6 +19,18 @@ pipeline {
                         bat 'D:/workspace/jenkins/buildSdk.bat %GIT_COMMIT%'
                     }
                 }
+                stage('startMcu') {
+                    agent{
+                        node {
+                            label "$env.mcuServer"
+                        }
+                    }
+                    steps {
+                        withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                            sh "${mcuScriptPath}/startmcu.sh"
+                        }
+                    }
+                }
             }
         }
         stage('Test') {
@@ -42,6 +54,35 @@ pipeline {
                 echo 'Deploying....'
             }
         }
+    }
+    post {
+        always {
+            echo 'One way or another, I have finished'
+        }
+        success {
+            echo 'I succeeeded!'
+            mail to: 'jincheng.shi@intel.com',
+            subject: "Success Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Success with ${env.BUILD_URL}"
+        }
+        /*unstable {
+            echo 'I am unstable :/'
+            mail to: 'jincheng.shi@intel.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Something is wrong with ${env.BUILD_URL}"
+        }*/
+        failure {
+            echo 'I failed :('
+            mail to: 'jincheng.shi@intel.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Something is wrong with ${env.BUILD_URL}"
+        }
+        /*changed {
+            echo 'Things were different before...'
+            mail to: 'jincheng.shi@intel.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Something is wrong with ${env.BUILD_URL}"
+        }*/
     }
 }
 
