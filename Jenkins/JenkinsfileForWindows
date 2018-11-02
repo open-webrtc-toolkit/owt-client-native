@@ -17,6 +17,8 @@ pipeline {
                     steps {
                         echo "$GIT_COMMIT"
                         bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
+                        bat "%windowsConferenceCasePath%/build.bat"
+                        bat "%windowsP2PCasePath%/build.bat"
                     }
                 }
                 stage("startMcu") {
