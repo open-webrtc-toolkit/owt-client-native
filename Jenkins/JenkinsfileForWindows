@@ -55,7 +55,7 @@ pipeline {
                 echo "Testing.."
                 bat "%windowsConferenceCasePath%/runCase.bat"
             }
-			steps {
+            steps {
                 echo "Testing.."
                 bat "%windowsP2PCasePath%/runCase.bat"
             }
