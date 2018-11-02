@@ -55,6 +55,10 @@ pipeline {
                 echo "Testing.."
                 bat "%windowsConferenceCasePath%/runCase.bat"
             }
+			steps {
+                echo "Testing.."
+                bat "%windowsP2PCasePath%/runCase.bat"
+            }
         }
         stage("Deploy") {
             agent{
