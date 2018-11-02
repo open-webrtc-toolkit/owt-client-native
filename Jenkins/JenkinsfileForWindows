@@ -98,7 +98,7 @@ pipeline {
             steps {
                 echo "Deploying...."
                 withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                    sh "${mcuScriptPath}/killmcu.sh"
+                    sh "${mcuScriptPath}/killserver.sh"
                 }
             }
         }
