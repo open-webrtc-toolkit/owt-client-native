@@ -45,7 +45,7 @@ pipeline {
                 }
             }
         }
-        stage("Test") {
+        stage("TestConference") {
             agent{
                 node {
                     label "windows"
@@ -54,6 +54,13 @@ pipeline {
             steps {
                 echo "Testing.."
                 bat "%windowsConferenceCasePath%/runCase.bat"
+            }
+        }
+        stage("TestP2P") {
+            agent{
+                node {
+                    label "windows"
+                }
             }
             steps {
                 echo "Testing.."
