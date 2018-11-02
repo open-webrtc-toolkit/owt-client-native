@@ -17,7 +17,27 @@ pipeline {
                     steps {
                         echo "$GIT_COMMIT"
                         bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
+                    }
+                }
+                stage("BulidConference") {
+                    agent{
+                        node {
+                            label "windows"
+                        }
+                    }
+                    steps {
+                        echo "Testing.."
                         bat "%windowsConferenceCasePath%/build.bat"
+                    }
+                }
+                stage("BulidTestP2P") {
+                    agent{
+                        node {
+                            label "windows"
+                        }
+                    }
+                    steps {
+                        echo "Testing.."
                         bat "%windowsP2PCasePath%/build.bat"
                     }
                 }
