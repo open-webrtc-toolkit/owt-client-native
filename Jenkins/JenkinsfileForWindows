@@ -16,7 +16,7 @@ pipeline {
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat '${windowsCIPath}/buildSdk.bat %GIT_COMMIT%'
+                        bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
                     }
                 }
                 stage('startMcu') {
