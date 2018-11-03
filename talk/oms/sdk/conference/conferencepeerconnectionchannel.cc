@@ -455,6 +455,7 @@ void ConferencePeerConnectionChannel::Publish(
   // media
   sio::message::ptr media_ptr = sio::object_message::create();
   if (stream->MediaStream()->GetAudioTracks().size() == 0) {
+    offer_answer_options_.offer_to_receive_audio = false;
     media_ptr->get_map()["audio"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr audio_options = sio::object_message::create();
@@ -467,6 +468,7 @@ void ConferencePeerConnectionChannel::Publish(
     media_ptr->get_map()["audio"] = audio_options;
   }
   if (stream->MediaStream()->GetVideoTracks().size() == 0) {
+    offer_answer_options_.offer_to_receive_video = false;
     media_ptr->get_map()["video"] = sio::bool_message::create(false);
   } else {
     sio::message::ptr video_options = sio::object_message::create();
