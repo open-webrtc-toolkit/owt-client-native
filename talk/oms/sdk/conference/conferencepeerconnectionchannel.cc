@@ -438,11 +438,8 @@ void ConferencePeerConnectionChannel::Publish(
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
 
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, false);
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, false);
-
+  offer_answer_options_.offer_to_receive_audio = false;
+  offer_answer_options_.offer_to_receive_video = false;
   sio::message::ptr options = sio::object_message::create();
   // attributes
   sio::message::ptr attributes_ptr = sio::object_message::create();
@@ -628,12 +625,11 @@ void ConferencePeerConnectionChannel::Subscribe(
   }
   sio_options->get_map()["media"] = media_options;
 
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveAudio,
-      (stream->has_audio_ && !subscribe_options.audio.disabled));
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kOfferToReceiveVideo,
-      (stream->has_video_ && !subscribe_options.video.disabled));
+  offer_answer_options_.offer_to_receive_audio =
+      stream->has_audio_ && !subscribe_options.audio.disabled;
+  offer_answer_options_.offer_to_receive_video =
+      stream->has_video_ && !subscribe_options.video.disabled;
+
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id) {
