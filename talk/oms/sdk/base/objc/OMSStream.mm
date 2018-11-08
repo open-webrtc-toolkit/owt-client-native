@@ -7,6 +7,7 @@
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSStream.h"
+#import "talk/oms/sdk/include/objc/OMS/RTCPeerConnectionFactory+OMS.h"
 #import "talk/oms/sdk/base/objc/OMSStream+Private.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
 
@@ -27,7 +28,8 @@
   }
   if (_mediaStream == nil) {
     _mediaStream = [[RTCMediaStream alloc]
-        initWithNativeMediaStream:nativeStream->MediaStream()];
+          initWithFactory:[RTCPeerConnectionFactory sharedInstance]
+        nativeMediaStream:nativeStream->MediaStream()];
   }
   if ([_mediaStream.videoTracks count] == 0)
     return;

@@ -6,6 +6,7 @@
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaConstraints+Private.h"
 #import "talk/oms/sdk/base/objc/OMSPeerConnectionDependencyFactory.h"
 #import "talk/oms/sdk/base/peerconnectiondependencyfactory.h"
+#import "talk/oms/sdk/include/objc/OMS/RTCPeerConnectionFactory+OMS.h"
 
 @interface OMSPeerConnectionDependencyFactory ()
 
@@ -42,7 +43,9 @@ static OMSPeerConnectionDependencyFactory* sharedFactory;
   rtc::scoped_refptr<webrtc::MediaStreamInterface> nativeMediaStream =
       self.nativePeerConnectionDependencyFactory->CreateLocalMediaStream(
           [label UTF8String]);
-  return [[RTCMediaStream alloc] initWithNativeMediaStream:nativeMediaStream];
+  return [[RTCMediaStream alloc]
+        initWithFactory:[RTCPeerConnectionFactory sharedInstance]
+      nativeMediaStream:nativeMediaStream];
 }
 
 @end

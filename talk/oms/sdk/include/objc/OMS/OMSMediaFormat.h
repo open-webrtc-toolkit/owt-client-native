@@ -25,7 +25,7 @@
  */
 
 #import <AVFoundation/AVFoundation.h>
-#import <CoreGraphoms/CoreGraphoms.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 

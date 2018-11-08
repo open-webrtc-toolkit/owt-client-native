@@ -25,7 +25,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <CoreGraphoms/CoreGraphoms.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <WebRTC/RTCMacros.h>
 #import <OMS/OMSMediaFormat.h>
 
