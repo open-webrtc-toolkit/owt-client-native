@@ -23,11 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
-
 extern NSString* const OMSErrorDomain;
-
 typedef NS_ENUM(NSInteger, OMSStreamErrors) {
   OMSStreamErrorUnknown = 1100,
   OMSStreamErrorLocalDeviceNotFound = 1102,

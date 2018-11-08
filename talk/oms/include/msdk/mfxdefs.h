@@ -1,7 +1,5 @@
 /* ****************************************************************************** *\
-
 Copyright (C) 2007-2013 Intel Corporation.  All rights reserved.
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 - Redistributions of source code must retain the above copyright notice,
@@ -12,7 +10,6 @@ and/or other materials provided with the distribution.
 - Neither the name of Intel Corporation nor the names of its contributors
 may be used to endorse or promote products derived from this software
 without specific prior written permission.
-
 THIS SOFTWARE IS PROVIDED BY INTEL CORPORATION "AS IS" AND ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -23,18 +20,14 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 File Name: mfxdefs.h
-
 \* ****************************************************************************** */
 #ifndef __MFXDEFS_H__
 #define __MFXDEFS_H__
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
 
 #if (defined( _WIN32 ) || defined ( _WIN64 )) && !defined (__GNUC__)
   #define __INT64   __int64
@@ -43,7 +36,6 @@ extern "C"
   #define __INT64   long long
   #define __UINT64  unsigned long long
 #endif
-
 #ifdef _WIN32
     #define MFX_CDECL __cdecl
     #define MFX_STDCALL __stdcall
@@ -51,9 +43,7 @@ extern "C"
     #define MFX_CDECL
     #define MFX_STDCALL
 #endif /* _WIN32 */
-
 #define MFX_INFINITE 0xFFFFFFFF
-
 typedef unsigned char       mfxU8;
 typedef char                mfxI8;
 typedef short               mfxI16;
@@ -75,17 +65,14 @@ typedef void*               mfxHDL;
 typedef mfxHDL              mfxMemId;
 typedef void*               mfxThreadTask;
 typedef char                mfxChar;
-
 typedef struct {
     mfxI16  x;
     mfxI16  y;
 } mfxI16Pair;
-
 typedef struct {
     mfxHDL first;
     mfxHDL second;
 } mfxHDLPair;
-
 
 /*********************************************************************************\
 Error message
@@ -94,10 +81,8 @@ typedef enum
 {
     /* no error */
     MFX_ERR_NONE                        = 0,    /* no error */
-
     /* reserved for unexpected errors */
     MFX_ERR_UNKNOWN                     = -1,   /* unknown error. */
-
     /* error codes <0 */
     MFX_ERR_NULL_PTR                    = -2,   /* null pointer */
     MFX_ERR_UNSUPPORTED                 = -3,   /* undeveloped feature */
@@ -118,7 +103,6 @@ typedef enum
     MFX_ERR_MORE_BITSTREAM              = -18,  /* expect more bitstream buffers at output */
     MFX_ERR_INCOMPATIBLE_AUDIO_PARAM    = -19,  /* incompatible audio parameters */
     MFX_ERR_INVALID_AUDIO_PARAM         = -20,  /* invalid audio parameters */
-
     /* warnings >0 */
     MFX_WRN_IN_EXECUTION                = 1,    /* the previous asynchrous operation is in execution */
     MFX_WRN_DEVICE_BUSY                 = 2,    /* the HW acceleration device is busy */
@@ -129,16 +113,12 @@ typedef enum
     MFX_WRN_OUT_OF_RANGE                = 7,      /* the value is out of valid range */
     MFX_WRN_FILTER_SKIPPED              = 10,     /* one of requested filters has been skipped */
     MFX_WRN_INCOMPATIBLE_AUDIO_PARAM    = 11,    /* incompatible audio parameters */
-
     /* threading statuses */
     MFX_TASK_DONE = MFX_ERR_NONE, /* task has been completed */
     MFX_TASK_WORKING = 8, /*  there is some more work to do */
     MFX_TASK_BUSY = 9 /* task is waiting for resources */
-
 } mfxStatus;
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* __MFXDEFS_H__ */

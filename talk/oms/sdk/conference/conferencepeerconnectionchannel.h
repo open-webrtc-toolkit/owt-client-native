@@ -1,27 +1,21 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_
 #define OMS_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_
-
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <chrono>
 #include <random>
-
 #include "talk/oms/sdk/base/peerconnectionchannel.h"
 #include "talk/oms/sdk/conference/conferencesocketsignalingchannel.h"
 #include "talk/oms/sdk/include/cpp/oms/base/stream.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/subscribeoptions.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferencepublication.h"
-
 namespace oms {
 namespace conference {
-
 using namespace oms::base;
-
 // An instance of ConferencePeerConnectionChannel manages a PeerConnection with
 // MCU as well as it's signaling through Socket.IO.
 class ConferencePeerConnectionChannel
@@ -96,13 +90,10 @@ class ConferencePeerConnectionChannel
   void Stop(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   // Initialize an ICE restarat.
   void IceRestart();
-
   // Get the associated stream id if it is a subscription channel.
   std::string GetSubStreamId();
-
   // Set stream's session ID. This ID is returned by MCU per publish/subscribe.
   void SetSessionId(const std::string& id);
   // Get published or subscribed stream's publicationID or subcriptionID.
@@ -118,11 +109,9 @@ class ConferencePeerConnectionChannel
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Called when MCU reports stream/connection is failed or ICE failed.
   void OnStreamError(const std::string& error_message);
-
  protected:
   void CreateOffer() override;
   void CreateAnswer() override;
-
   // PeerConnectionObserver
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state) override;
@@ -144,18 +133,14 @@ class ConferencePeerConnectionChannel
   virtual void OnCreateSessionDescriptionSuccess(
       webrtc::SessionDescriptionInterface* desc) override;
   virtual void OnCreateSessionDescriptionFailure(const std::string& error) override;
-
   // SetSessionDescriptionObserver
   virtual void OnSetLocalSessionDescriptionSuccess() override;
   virtual void OnSetLocalSessionDescriptionFailure(const std::string& error) override;
   virtual void OnSetRemoteSessionDescriptionSuccess() override;
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error) override;
-
   virtual void OnNetworksChanged() override;
-
   enum SessionState : int;
   enum NegotiationState : int;
-
  private:
   // Publish and/or unpublish all streams in pending stream list.
   void ClosePeerConnection();  // Stop session and clean up.
@@ -183,23 +168,19 @@ class ConferencePeerConnectionChannel
   // failure_callback_ to nullptr.
   void ResetCallbacks();
   bool isMediaStreamEnded(MediaStreamInterface* stream) const;
-
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::string session_id_;   //session ID is 1:1 mapping to the subscribed/published stream.
   webrtc::PeerConnectionInterface::SignalingState signaling_state_;
-
   // If this pc is used for publishing, |local_stream_| will be the stream to be
   // published.
   // Otherwise, |remote_stream_| will be the stream to be subscribed.
   std::shared_ptr<RemoteStream> subscribed_stream_;
   std::shared_ptr<LocalStream> published_stream_;
-
   // Callbacks for publish or subscribe.
   std::function<void(std::string)> publish_success_callback_;
   std::function<void(std::string)> subscribe_success_callback_;
   std::function<void(std::unique_ptr<Exception>)> failure_callback_;
   std::mutex callback_mutex_;
-
   // Stored candidates, will be send out after setting remote description.
   // Use sio::message::ptr instead of IceCandidateInterface* to avoid one more
   // deep copy.
@@ -219,5 +200,4 @@ class ConferencePeerConnectionChannel
 };
 }
 }
-
 #endif  // OMS_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_

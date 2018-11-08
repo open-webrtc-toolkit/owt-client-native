@@ -1,7 +1,6 @@
 /*
 * Intel License
 */
-
 #include <string>
 #include <vector>
 #include "talk/oms/sdk/base/win/h265_msdk_encoder.h"
@@ -15,27 +14,22 @@
 #include "plugin_utils.h"
 #include "plugin_loader.h"
 #include "mfxcommon.h"
-
 using namespace rtc;
-
 #ifdef OMS_DEBUG_H265_ENC
 #include <fstream>
 #endif
 // H.265 start code length.
 #define H265_SC_LENGTH 4
 #define H265_SC_ALT_LENGTH 3
-
 // Maximum allowed NALUs in one output frame.
 #define MAX_NALUS_PERFRAME 32
 void H265EncoderThread::Run() {
     ProcessMessages(kForever);
     SetAllowBlockingCalls(true);
 }
-
 H265EncoderThread::~H265EncoderThread(){
     Stop();
 }
-
 H265VideoMFTEncoder::H265VideoMFTEncoder()
     : callback_(nullptr),
       bitrate_(0),
@@ -59,7 +53,6 @@ H265VideoMFTEncoder::H265VideoMFTEncoder()
     raw_in = fopen("source.yuv", "r");
 #endif
 }
-
 H265VideoMFTEncoder::~H265VideoMFTEncoder() {
     if (m_pmfxENC != nullptr){
         m_pmfxENC->Close();
@@ -69,7 +62,6 @@ H265VideoMFTEncoder::~H265VideoMFTEncoder() {
     MSDK_SAFE_DELETE_ARRAY(m_pEncSurfaces);
     m_hevc_plugin_.reset();
     m_mfxSession_.Close();
-
     if (m_pMFXAllocator) {
         m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_EncResponse);
         delete m_pMFXAllocator;
@@ -79,13 +71,11 @@ H265VideoMFTEncoder::~H265VideoMFTEncoder() {
     encoder_thread_->Stop();
   }
 }
-
 int H265VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
     size_t max_payload_size) {
     RTC_DCHECK(codec_settings);
     RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH265);
-
     width_ = codec_settings->width;
     height_ = codec_settings->height;
     // We can only set average bitrate on the HW encoder.
@@ -97,35 +87,26 @@ int H265VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
         rtc::Bind(&H265VideoMFTEncoder::InitEncodeOnEncoderThread, this,
                   codec_settings, number_of_cores, max_payload_size));
 }
-
 mfxStatus H265ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD) {
     MSDK_CHECK_POINTER(pnFrameRateExtN, MFX_ERR_NULL_PTR);
     MSDK_CHECK_POINTER(pnFrameRateExtD, MFX_ERR_NULL_PTR);
-
     mfxU32 fr;
-
     fr = (mfxU32)(dFrameRate + 0.5);
-
     if (fabs(fr - dFrameRate) < 0.0001) {
         *pnFrameRateExtN = fr;
         *pnFrameRateExtD = 1;
         return MFX_ERR_NONE;
     }
-
     fr = (mfxU32)(dFrameRate * 1.001 + 0.5);
-
     if (fabs(fr * 1000 - dFrameRate * 1001) < 10) {
         *pnFrameRateExtN = fr * 1000;
         *pnFrameRateExtD = 1001;
         return MFX_ERR_NONE;
     }
-
     *pnFrameRateExtN = (mfxU32)(dFrameRate * 10000 + .5);
     *pnFrameRateExtD = 10000;
-
     return MFX_ERR_NONE;
 }
-
 int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
     size_t max_payload_size) {
@@ -157,17 +138,14 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     }else {
         mfxIMPL impl = MFX_IMPL_HARDWARE_ANY/*MFX_IMPL_SOFTWARE*/;
         sts = m_mfxSession_.InitEx(initParam);
-
         //Fallback to software if hardware fails.
         if (MFX_ERR_NONE != sts) {
             impl = MFX_IMPL_SOFTWARE;
             sts = m_mfxSession_.InitEx(initParam);
         }
-
         if (MFX_ERR_NONE != sts) {
             return WEBRTC_VIDEO_CODEC_ERROR; //We don't have software H265 encoder in the stack, so never return FALL_BACK_TO_SW at present
         }
-
         //Depending on the implementation type, loads HW/SW Hevc encoder plugin
         m_hevc_plugin_.reset(LoadPlugin(MFX_PLUGINTYPE_VIDEO_ENCODE, m_mfxSession_, MFX_PLUGINID_HEVCE_HW, 1));
         if (m_hevc_plugin_.get() == nullptr) {
@@ -186,18 +164,15 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         if (MFX_ERR_NONE != sts) {
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         //For HEVC encoder. Setting frame allocator if it's system memory will result in
         //encoder initialization failure. Actually for allocator with system memory,
         //MSDK will not need to set allocator for the session.
-
         //Create the encoder
         m_pmfxENC = new MFXVideoENCODE(m_mfxSession_);
         if (m_pmfxENC == nullptr){
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
     }
-
     //Init the encoding params:
     MSDK_ZERO_MEMORY(m_mfxEncParams);
     m_mfxEncParams.mfx.CodecId = MFX_CODEC_HEVC;
@@ -209,7 +184,6 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     H265ConvertFrameRate(30, &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN, &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
     m_mfxEncParams.mfx.EncodedOrder = 0;
     m_mfxEncParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
-
     // frame info parameters
     m_mfxEncParams.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     m_mfxEncParams.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -221,16 +195,13 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     //On SKL we need to set the frame height/width dst to be 32-bits aligned if HW HEVC enc is used..
     m_mfxEncParams.mfx.FrameInfo.Height = MSDK_ALIGN32(codec_settings->height);
     m_mfxEncParams.mfx.FrameInfo.Width = MSDK_ALIGN32(codec_settings->width);
-
     m_mfxEncParams.AsyncDepth = 4;
     m_mfxEncParams.mfx.NumRefFrame = 1;
-
     MSDK_ZERO_MEMORY(m_ExtHEVCParam);
     //If the crop width/height is 8-bit aligned but not 16-bit aligned, add extended param to
     //boost the performance.
     m_ExtHEVCParam.Header.BufferId = MFX_EXTBUFF_HEVC_PARAM;
     m_ExtHEVCParam.Header.BufferSz = sizeof(m_ExtHEVCParam);
-
     if ((!((m_mfxEncParams.mfx.FrameInfo.CropW & 15) ^ 8) ||
         !((m_mfxEncParams.mfx.FrameInfo.CropH & 15) ^ 8)) &&
         (m_mfxEncParams.mfx.CodecId == MFX_CODEC_HEVC)) {
@@ -238,17 +209,14 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         m_ExtHEVCParam.PicHeightInLumaSamples = m_mfxEncParams.mfx.FrameInfo.CropH;
         m_EncExtParams.push_back((mfxExtBuffer*)&m_ExtHEVCParam);
     }
-
     if (!m_EncExtParams.empty()) {
         m_mfxEncParams.ExtParam = &m_EncExtParams[0]; // vector is stored linearly in memory
         m_mfxEncParams.NumExtParam = (mfxU16)m_EncExtParams.size();
     }
-
     //allocate frame for encoder
     mfxFrameAllocRequest EncRequest;
     mfxU16 nEncSurfNum = 0; // number of surfaces for encoder
     MSDK_ZERO_MEMORY(EncRequest);
-
     sts = m_pmfxENC->Close();
     //Finally init the encoder
     sts = m_pmfxENC->Init(&m_mfxEncParams);
@@ -258,7 +226,6 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     else if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     sts = m_pmfxENC->QueryIOSurf(&m_mfxEncParams, &EncRequest);
     if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -269,7 +236,6 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     //prepare mfxFrameSurface1 array for encoder
     m_pEncSurfaces = new mfxFrameSurface1[m_EncResponse.NumFrameActual];
     if (m_pEncSurfaces == nullptr) {
@@ -300,41 +266,31 @@ int H265VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     //mfxU8* pbsData = new mfxU8[bsDataSize];
     //m_mfxBS.Data = pbsData;
     //m_mfxBS.MaxLength = bsDataSize;
-
     inited_ = true;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 void H265VideoMFTEncoder::WipeMfxBitstream(mfxBitstream* pBitstream) {
     MSDK_CHECK_POINTER(pBitstream);
-
     //free allocated memory
     MSDK_SAFE_DELETE_ARRAY(pBitstream->Data);
 }
-
 #ifdef OMS_DEBUG_H265_ENC
 int count = 0;
 #endif
-
 mfxU16 H265VideoMFTEncoder::H265GetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     mfxU32 SleepInterval = 10; // milliseconds
-
     mfxU16 idx = MSDK_INVALID_SURF_IDX;
-
     //wait if there's no free surface
     for (mfxU32 i = 0; i < MSDK_WAIT_INTERVAL; i += SleepInterval) {
         idx = H265GetFreeSurfaceIndex(pSurfacesPool, nPoolSize);
-
         if (MSDK_INVALID_SURF_IDX != idx) {
             break;
         }else {
             MSDK_SLEEP(SleepInterval);
         }
     }
-
     return idx;
 }
-
 mfxU16 H265VideoMFTEncoder::H265GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     if (pSurfacesPool) {
         for (mfxU16 i = 0; i < nPoolSize; i++) {
@@ -343,10 +299,8 @@ mfxU16 H265VideoMFTEncoder::H265GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesP
             }
         }
     }
-
     return MSDK_INVALID_SURF_IDX;
 }
-
 int H265VideoMFTEncoder::Encode(
     const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
@@ -355,12 +309,10 @@ int H265VideoMFTEncoder::Encode(
     mfxStatus sts = MFX_ERR_NONE;
     mfxFrameSurface1* pSurf = NULL; // dispatching pointer
     mfxU16 nEncSurfIdx = 0;
-
     nEncSurfIdx = H265GetFreeSurface(m_pEncSurfaces, m_EncResponse.NumFrameActual);
     if (MSDK_INVALID_SURF_IDX == nEncSurfIdx) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     pSurf = &m_pEncSurfaces[nEncSurfIdx];
     /*
     sts = m_pMFXAllocator->Lock(m_pMFXAllocator->pthis, pSurf->Data.MemId, &(pSurf->Data));
@@ -372,7 +324,6 @@ int H265VideoMFTEncoder::Encode(
     mfxFrameInfo& pInfo = pSurf->Info;
     mfxFrameData& pData = pSurf->Data;
     pData.FrameOrder = m_nFramesProcessed;
-
     if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -386,21 +337,16 @@ int H265VideoMFTEncoder::Encode(
         w = pInfo.Width;
         h = pInfo.Height;
     }
-
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
-
 #ifdef OMS_DEBUG_H265_ENC
     if (input != nullptr && count < 30) {
-
 
         fwrite((void*)(input_image.buffer(webrtc::kYPlane)), input_image.allocated_size(webrtc::kYPlane), 1, input);
         fwrite((void*)(input_image.buffer(webrtc::kUPlane)), input_image.allocated_size(webrtc::kUPlane), 1, input);
         fwrite((void*)(input_image.buffer(webrtc::kVPlane)), input_image.allocated_size(webrtc::kVPlane), 1, input);
-
     }
 #endif
-
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
@@ -430,7 +376,6 @@ int H265VideoMFTEncoder::Encode(
     if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }*/
-
     //Prepare done. Start encode.
     mfxEncodeCtrl ctrl;
     memset((void*)&ctrl, 0, sizeof(ctrl));
@@ -454,7 +399,6 @@ int H265VideoMFTEncoder::Encode(
     if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
 #if 1
     MSDK_ZERO_MEMORY(bs);
     mfxU32 bsDataSize = param.mfx.FrameInfo.Width*param.mfx.FrameInfo.Height * 4;
@@ -469,7 +413,6 @@ int H265VideoMFTEncoder::Encode(
     bs.MaxLength = bsDataSize;
 #endif
     //If the encoder does not prompt about need more data, we continue the same process.
-
     ctrl.FrameType = is_keyframe_required ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
 retry:
     sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
@@ -492,7 +435,6 @@ retry:
       pbsData = nullptr;
       return WEBRTC_VIDEO_CODEC_OK;
     }
-
     sts = m_mfxSession_.SyncOperation(sync, MSDK_WAIT_INTERVAL);
     if (MFX_ERR_NONE != sts) {
       if (pbsData != nullptr) {
@@ -505,7 +447,6 @@ retry:
       }
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data) + bs.DataOffset;
     int encoded_data_size = bs.DataLength;
 #ifdef OMS_DEBUG_H265_ENC
@@ -518,7 +459,6 @@ retry:
     }
 #endif
     webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size, encoded_data_size);
-
     //For current MSDK, AUD and SEI can be removed so we don't explicitly remove them.
     encodedFrame._encodedHeight = input_image.height();
     encodedFrame._encodedWidth = input_image.width();
@@ -526,14 +466,12 @@ retry:
     encodedFrame.capture_time_ms_ = input_image.render_time_ms();
     encodedFrame._timeStamp = input_image.timestamp();
     encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
-
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
     info.codecType = codecType_;
     // Generate a header describing a single fragment.
     webrtc::RTPFragmentationHeader header;
     memset(&header, 0, sizeof(header));
-
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
     uint8_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
@@ -581,12 +519,10 @@ retry:
       newPbsData = nullptr;
     }
     m_nFramesProcessed++;
-
     bs.DataLength = 0;  //Mark we don't need the data anymore.
     bs.DataOffset = 0;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 //This version of encode implementation is reserved here in case we have further demand to encode the same thread.
 //For MSDK, it's not mandatory to encode in same thread...And it's not good practice to allow blocking call on
 //worker thread.
@@ -601,7 +537,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
     pSurf = &m_pEncSurfaces[nEncSurfIdx];
-
     //Since we're not sharing the surface with MSDK, we don't need to lock/unlock it.
     /*
     sts = m_pMFXAllocator->Lock(m_pMFXAllocator->pthis, pSurf->Data.MemId, &(pSurf->Data));
@@ -612,7 +547,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     mfxFrameInfo& pInfo = pSurf->Info;
     mfxFrameData& pData = pSurf->Data;
     pData.FrameOrder = m_nFramesProcessed;
-
     if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -628,7 +562,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         w = pInfo.Width;
         h = pInfo.Height;
     }
-
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
 #ifdef OMS_DEBUG_H265_ENC
@@ -638,7 +571,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         fwrite((void*)(input_image.video_frame_buffer()->DataV()), w*h / 4, 1, input);
     }
 #endif
-
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(input_image.video_frame_buffer()->ToI420());
         libyuv::I420ToNV12(buffer->DataY(),
@@ -665,7 +597,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
     */
-
     //Prepare done. Start encode.
     mfxEncodeCtrl ctrl;
     memset((void*)&ctrl, 0, sizeof(ctrl));
@@ -687,7 +618,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     MSDK_ZERO_MEMORY(bs);
     mfxU32 bsDataSize = param.mfx.BufferSizeInKB * 1000;
     mfxU8* pbsData = new mfxU8[bsDataSize];
@@ -697,7 +627,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     memset((void*)pbsData, 0, bsDataSize);
     bs.Data = pbsData;
     bs.MaxLength = bsDataSize;
-
     ctrl.FrameType = is_keyframe_required ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
     sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
     if (MFX_ERR_NONE != sts) {
@@ -705,7 +634,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     sts = m_mfxSession_.SyncOperation(sync, MSDK_ENC_WAIT_INTERVAL);
     if (MFX_ERR_NONE != sts) {
         //Get the output buffer from bs.
@@ -726,14 +654,12 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         output = nullptr;
     }
 #endif
-
     encodedFrame._encodedHeight = input_image.height();
     encodedFrame._encodedWidth = input_image.width();
     encodedFrame._completeFrame = true;
     encodedFrame.capture_time_ms_ = input_image.render_time_ms();
     encodedFrame._timeStamp = input_image.timestamp();
     encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
-
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
     info.codecType = codecType_;
@@ -741,7 +667,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     // instead of 0x00000001, so we need to handle it accordingly.
     webrtc::RTPFragmentationHeader header;
     memset(&header, 0, sizeof(header));
-
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
@@ -771,7 +696,6 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         header.fragmentationPlType[i] = 0;
         header.fragmentationTimeDiff[i] = 0;
     }
-
     const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
     if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
         RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
@@ -782,31 +706,26 @@ int H265VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     m_nFramesProcessed++;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H265VideoMFTEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
     callback_ = callback;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H265VideoMFTEncoder::SetChannelParameters(uint32_t packet_loss,
     int64_t rtt) {
     // Encoder doesn't know anything about packet loss or rtt so just return.
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H265VideoMFTEncoder::SetRates(uint32_t new_bitrate_kbit,
     uint32_t frame_rate) {
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H265VideoMFTEncoder::Release() {
     callback_ = nullptr;
     // Need to reset to that the session is invalidated and won't use the
     // callback anymore.
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int32_t H265VideoMFTEncoder::NextNaluPosition(
     uint8_t *buffer, size_t buffer_size, uint8_t *sc_length) {
     if (buffer_size < H265_SC_LENGTH) {
@@ -817,7 +736,6 @@ int32_t H265VideoMFTEncoder::NextNaluPosition(
     // Set end buffer pointer to 4 bytes before actual buffer end so we can
     // access head[1], head[2] and head[3] in a loop without buffer overrun.
     uint8_t *end = buffer + buffer_size - H265_SC_LENGTH;
-
     while (head < end) {
         if (head[0]) {
             head++;
@@ -835,13 +753,10 @@ int32_t H265VideoMFTEncoder::NextNaluPosition(
             head++; // xx != 1, continue searching.
             continue;
         }
-
         *sc_length = (head[2] == 1) ? 3 : 4;
         return (int32_t)(head - buffer);
     }
     return -1;
 }
-
-
 
 

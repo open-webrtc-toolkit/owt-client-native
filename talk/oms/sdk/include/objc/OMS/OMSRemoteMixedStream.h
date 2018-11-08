@@ -23,27 +23,19 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import "OMS/OMSRemoteStream.h"
-
 NS_ASSUME_NONNULL_BEGIN
-
 @class OMSRemoteMixedStream;
-
 RTC_EXPORT
 @protocol OMSRemoteMixedStreamDelegate<OMSRemoteStreamDelegate>
-
 /**
   @brief Triggers when video layout is changed.
 */
 - (void)streamDidChangeVideoLayout:(OMSRemoteMixedStream*)stream;
-
 @end
-
 /// This class represent a mixed remote stream.
 RTC_EXPORT
 @interface OMSRemoteMixedStream : OMSRemoteStream
-
 /**
   @brief A property of mixed streams which distinguishes them from other mixed
   streams a conference room provides.
@@ -56,9 +48,6 @@ RTC_EXPORT
   value, which must be unique within a room.
 */
 @property(readonly, strong) NSString* viewport;
-
 @property(nonatomic, weak) id<OMSRemoteMixedStreamDelegate> delegate;
-
 @end
-
 NS_ASSUME_NONNULL_END

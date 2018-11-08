@@ -1,10 +1,8 @@
 /*
  * Intel License
  */
-
 #import "talk/oms/sdk/base/objc/AVFoundationVideoCapturerFactory.h"
 #import "webrtc/sdk/objc/Framework/Classes/avfoundationvideocapturer.h"
-
 namespace oms {
 namespace base {
 std::unique_ptr<cricket::VideoCapturer> AVFoundationVideoCapturerFactory::Create(

@@ -1,12 +1,9 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_BASE_STRINGUTILS_H_
 #define OMS_BASE_STRINGUTILS_H_
-
 #include <string>
-
 namespace oms {
 namespace base {
 /// This class provides utilities for string processing.

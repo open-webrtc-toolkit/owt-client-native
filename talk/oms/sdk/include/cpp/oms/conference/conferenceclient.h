@@ -23,17 +23,14 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_CONFERENCECLIENT_H_
 #define OMS_CONFERENCE_CONFERENCECLIENT_H_
-
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
 #include <set>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/clientconfiguration.h"
 #include "oms/base/connectionstats.h"
@@ -44,15 +41,12 @@
 #include "oms/conference/conferencesubscription.h"
 #include "oms/conference/streamupdateobserver.h"
 #include "oms/conference/subscribeoptions.h"
-
 namespace sio{
   class message;
 }
-
 namespace webrtc{
   class StatsReport;
 }
-
 namespace oms {
 namespace base {
   struct PeerConnectionChannelConfiguration;
@@ -61,7 +55,6 @@ namespace base {
 namespace oms {
 namespace conference {
 class Participant;
-
 using namespace oms::base;
 /**
   @brief Configuration for creating a ConferenceClient
@@ -70,11 +63,9 @@ using namespace oms::base;
   created.
 */
 struct ConferenceClientConfiguration : ClientConfiguration {};
-
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 class ConferenceSocketSignalingChannel;
-
 /**
   @brief Observer interface for participant
   @details Provides interface for receiving events with regard to the associated
@@ -87,7 +78,6 @@ class ParticipantObserver {
     */
     virtual void OnLeft() {};
 };
-
 /// Participant represents one conference client in a conference room.
 class Participant {
   friend class ConferenceInfo;
@@ -96,7 +86,6 @@ class Participant {
       : id_(id)
       , role_(role)
       , user_id_(user_id) {}
-
     virtual ~Participant() {}
     /// Add an observer for pariticipant.
     void AddObserver(ParticipantObserver& observer);
@@ -124,7 +113,6 @@ class Participant {
     mutable std::mutex observer_mutex_;
     std::vector<std::reference_wrapper<ParticipantObserver>> observers_;
 };
-
 /**
   @brief Information about the conference.
   @details This information contains current details of the conference.
@@ -133,7 +121,6 @@ class ConferenceInfo {
   friend class ConferenceClient;
   public:
     ConferenceInfo() {}
-
     virtual ~ConferenceInfo() {}
     /// Current remote streams in the conference.
     std::vector<std::shared_ptr<RemoteStream>> RemoteStreams() const {
@@ -143,10 +130,8 @@ class ConferenceInfo {
     std::vector<std::shared_ptr<Participant>> Participants() const {
       return participants_;
     }
-
     /// Conference ID.
     std::string Id() const { return id_; }
-
     /// The participant info of current conference client.
     std::shared_ptr<Participant> Self() const {
       return self_;
@@ -176,7 +161,6 @@ class ConferenceInfo {
     std::vector<std::shared_ptr<RemoteStream>> remote_streams_; // Remote streams in the conference.
     std::shared_ptr<Participant> self_;                           // Self participant in the conference.
 };
-
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
@@ -195,7 +179,6 @@ class ConferenceSocketSignalingChannelObserver {
   virtual void OnSubscriptionId(const std::string& subscription_id,
                                 const std::string& stream_id) = 0;
 };
-
 // ConferencePeerConnectionChannel callback interface.
 // Usually, ConferenceClient should implement these methods and notify
 // application.
@@ -209,7 +192,6 @@ class ConferencePeerConnectionChannelObserver {
       std::shared_ptr<const Exception> exception) = 0;
 };
 /** @endcond */
-
 /// Observer for OMSConferenceClient.
 class ConferenceClientObserver {
  public:
@@ -245,7 +227,6 @@ class ConferenceClientObserver {
   */
   virtual void OnServerDisconnected(){};
 };
-
 
 /// An asynchronous class for app to communicate with a conference in MCU.
 class ConferenceClient final
@@ -320,7 +301,6 @@ class ConferenceClient final
       const SubscribeOptions& options,
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
     @brief Send messsage to all participants in the conference.
     @param message The message to be sent.
@@ -362,7 +342,6 @@ class ConferenceClient final
   virtual void OnStreamError(
       std::shared_ptr<Stream> stream,
       std::shared_ptr<const Exception> exception) override;
-
   // Provide access for Publication and Subscription instances.
   /**
     @brief Un-publish the stream from the current room.
@@ -437,7 +416,6 @@ class ConferenceClient final
   // |session_id|. Return |nullptr| if not found.
   std::shared_ptr<ConferencePeerConnectionChannel>
   GetConferencePeerConnectionChannel(const std::string& session_id) const;
-
   void TriggerOnUserJoined(std::shared_ptr<sio::message> user_info, bool joining = false);
   void TriggerOnUserLeft(std::shared_ptr<sio::message> user_info);
   void TriggerOnStreamAdded(std::shared_ptr<sio::message> stream_info, bool joining = false);
@@ -454,13 +432,11 @@ class ConferenceClient final
   std::function<void()> RunInEventQueue(std::function<void()> func);
   // Check if all characters are base 64 allowed or '='.
   bool IsBase64EncodedString(const std::string str) const;
-
   /// Add an observer for conferenc client.
   void AddStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
   /// Remove an object from conference client.
   void RemoveStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
   enum StreamType: int;
-
   ConferenceClientConfiguration configuration_;
   // Queue for callbacks and events. Shared among ConferenceClient and all of
   // it's ConferencePeerConnectionChannel.
@@ -495,5 +471,4 @@ class ConferenceClient final
 };
 }
 }
-
 #endif  // OMS_CONFERENCE_CONFERENCECLIENT_H_

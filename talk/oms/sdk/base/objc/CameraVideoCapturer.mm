@@ -1,17 +1,13 @@
 /*
  * Intel License
  */
-
 #include "talk/oms/sdk/base/objc/CameraVideoCapturer.h"
 #include "third_party/webrtc/rtc_base/logging.h"
-
 #import "third_party/webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #import "third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h"
 #import "talk/oms/sdk/include/objc/OMS/RTCPeerConnectionFactory+OMS.h"
-
 namespace oms {
 namespace base {
-
 std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     const LocalCameraStreamParameters& parameters) {
   RTCPeerConnectionFactory* pc_factor =
@@ -78,19 +74,16 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
   return std::unique_ptr<CameraVideoCapturer>(
       new CameraVideoCapturer(capturer, source));
 }
-
 CameraVideoCapturer::CameraVideoCapturer(RTCVideoCapturer* capturer,
                                          RTCVideoSource* source)
     : capturer_(capturer), source_(source) {
   RTC_DCHECK(capturer_);
   RTC_DCHECK(source_);
 }
-
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
 CameraVideoCapturer::source() {
   return [source_ nativeVideoSource];
 }
-
 CameraVideoCapturer::~CameraVideoCapturer() {
   // Remove it once a capturer can be shared among multiple streams.
   if ([capturer_ isKindOfClass:[RTCCameraVideoCapturer class]]) {
@@ -101,6 +94,5 @@ CameraVideoCapturer::~CameraVideoCapturer() {
   capturer_ = nil;
   source_ = nil;
 }
-
 }
 }

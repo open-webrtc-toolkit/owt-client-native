@@ -1,14 +1,11 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_BASE_SDPUTILS_H_
 #define OMS_BASE_SDPUTILS_H_
-
 #include <string>
 #include <vector>
 #include "talk/oms/sdk/include/cpp/oms/base/commontypes.h"
-
 namespace oms {
 namespace base {
 /// This class provides utilities for SDP parsing and modification

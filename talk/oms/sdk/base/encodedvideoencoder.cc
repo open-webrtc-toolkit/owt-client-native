@@ -1,7 +1,6 @@
 /*
  * Intel License
  */
-
 #include <string>
 #include <vector>
 #include "talk/oms/sdk/base/encodedvideoencoder.h"
@@ -13,20 +12,16 @@
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/api/video/video_frame.h"
-
 // H.264 start code length.
 #define H264_SC_LENGTH 4
 // Maximum allowed NALUs in one output frame.
 #define MAX_NALUS_PERFRAME 32
-
 EncodedVideoEncoder::EncodedVideoEncoder(webrtc::VideoCodecType type)
     : callback_(nullptr) {
   codecType_ = type;
   picture_id_ = 0;
 }
-
 EncodedVideoEncoder::~EncodedVideoEncoder() {}
-
 int EncodedVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                     int number_of_cores,
                                     size_t max_payload_size) {
@@ -36,10 +31,8 @@ int EncodedVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   height_ = codec_settings->height;
   bitrate_ = codec_settings->startBitrate * 1000;
   picture_id_ = static_cast<uint16_t>(rand()) & 0x7FFF;
-
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int EncodedVideoEncoder::Encode(
     const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
@@ -62,7 +55,6 @@ int EncodedVideoEncoder::Encode(
   }
   uint8* data = new uint8[data_size];
   fread(data, 1, data_size, fd);*/
-
   webrtc::EncodedImage encodedframe(data, data_size, data_size);
   encodedframe._encodedWidth = input_image.width();
   encodedframe._encodedHeight = input_image.height();
@@ -81,7 +73,6 @@ int EncodedVideoEncoder::Encode(
   webrtc::kDeltaFrame;*/
   encodedframe.capture_time_ms_ = input_image.render_time_ms();
   encodedframe._timeStamp = input_image.timestamp();
-
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
   info.codecType = codecType_;
@@ -95,7 +86,6 @@ int EncodedVideoEncoder::Encode(
     info.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
     picture_id_ = (picture_id_ + 1) & 0x7FFF;
   }
-
   // Generate a header describing a single fragment.
   webrtc::RTPFragmentationHeader header;
   memset(&header, 0, sizeof(header));
@@ -134,7 +124,6 @@ int EncodedVideoEncoder::Encode(
       header.fragmentationTimeDiff[i] = 0;
     }
   }
-
   const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
@@ -142,33 +131,27 @@ int EncodedVideoEncoder::Encode(
   }
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int EncodedVideoEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int EncodedVideoEncoder::SetChannelParameters(uint32_t packet_loss,
                                               int64_t rtt) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int EncodedVideoEncoder::SetRates(uint32_t new_bitrate_kbit,
                                   uint32_t frame_rate) {
   bitrate_ = new_bitrate_kbit * 1000;
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 bool EncodedVideoEncoder::SupportsNativeHandle() const {
   return true;
 }
-
 int EncodedVideoEncoder::Release() {
   callback_ = nullptr;
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int32_t EncodedVideoEncoder::NextNaluPosition(uint8_t* buffer,
                                               size_t buffer_size) {
   if (buffer_size < H264_SC_LENGTH) {
@@ -178,7 +161,6 @@ int32_t EncodedVideoEncoder::NextNaluPosition(uint8_t* buffer,
   // Set end buffer pointer to 4 bytes before actual buffer end so we can
   // access head[1], head[2] and head[3] in a loop without buffer overrun.
   uint8_t* end = buffer + buffer_size - H264_SC_LENGTH;
-
   while (head < end) {
     if (head[0]) {
       head++;

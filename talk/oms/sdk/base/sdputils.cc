@@ -1,18 +1,15 @@
 /*
  * Intel License
  */
-
 #include <regex>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
 #include "talk/oms/sdk/base/sdputils.h"
 #include "webrtc/rtc_base/logging.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
-
 static const std::unordered_map<AudioCodec, const std::string, EnumClassHash>
     audio_codec_names = {{AudioCodec::kOpus, "OPUS"},
                          {AudioCodec::kIsac, "ISAC"},
@@ -25,7 +22,6 @@ static const std::unordered_map<VideoCodec, const std::string, EnumClassHash>
                          {VideoCodec::kH264, "H264"},
                          {VideoCodec::kVp9, "VP9"},
                          {VideoCodec::kH265, "H265"}};
-
 std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
                                           std::vector<AudioCodec>& codec) {
   std::string cur_sdp(original_sdp);
@@ -44,7 +40,6 @@ std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
   cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, true);
   return cur_sdp;
 }
-
 std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
                                           std::vector<VideoCodec>& codec) {
   std::string cur_sdp(original_sdp);
@@ -63,7 +58,6 @@ std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
   cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, false);
   return cur_sdp;
 }
-
 std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
     std::string& codec_name,
     bool is_audio) {
@@ -72,7 +66,6 @@ std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
   std::regex reg_rtp_map(
       "a=rtpmap:(\\d+) " + codec_name + "\\/\\d+(?=[\r]?[\n]?)",
       std::regex_constants::icase);
-
   std::smatch rtp_map_match;
   while (std::regex_search(sdp_current, rtp_map_match, reg_rtp_map)) {
     codec_values.push_back(rtp_map_match[1]);
@@ -80,7 +73,6 @@ std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
   }
   return codec_values;
 }
-
 // Remove non-prefer codecs out of the list. Keeping red and ulpfec,
 // assuming the binding to original codec is out-of-bound.
 // Keeping corresponding rtx payloads. Reorder m-line according to
@@ -115,7 +107,6 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       red_codec_value = red_map_match[1];
       has_red = true;
     }
-
     std::regex reg_ulpfec_map(
         "a=rtpmap:(\\d+) ulpfec\\/\\d+(?=[\r]?[\n]?)",
         std::regex_constants::icase);
@@ -126,7 +117,6 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       ulpfec_codec_value = ulpfec_map_match[1];
       has_ulpfec = true;
     }
-
     if (has_red) {
       kept_codec_values.push_back(red_codec_value);
       for (auto& rtx_value : rtx_maps) {
@@ -157,7 +147,6 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       }
     }
   }
-
   std::string media_type;
   media_type = is_audio ? "audio" : "video";
   std::regex reg_m_line("m=" + media_type + ".*(?=[\r]?[\n]?)");
@@ -167,7 +156,6 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
     RTC_LOG(LS_WARNING) << "M-line is not found. SDP: " << sdp;
     return sdp;
   }
-
   std::string m_line(m_line_match[0]);
   // Split m_line into vector and put preferred codec in the first place.
   std::vector<std::string> m_line_vector;
@@ -193,7 +181,6 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
   RTC_LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
   std::string before_strip = std::regex_replace(sdp, reg_m_line, m_line_stream.str());
   std::string after_strip = before_strip;
-
   // Remove all a=fmtp:xx, a=rtpmap:xx and a=rtcp-fb:xx where xx is not in m-line,
   // this includes the a=fmtp:xx apt:yy lines for rtx.
   for (size_t i = 3, m_line_vector_size = m_line_vector.size(); i < m_line_vector_size; i++) {
@@ -204,13 +191,11 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
           "a=rtpmap:" + codec_value + " .*\\r\\n",
           std::regex_constants::icase);
       after_strip = std::regex_replace(before_strip, reg_rtp_xx_map, "");
-
       before_strip = after_strip;
       std::regex reg_fmtp_xx_map(
           "a=fmtp:" + codec_value + " .*\\r\\n",
           std::regex_constants::icase);
       after_strip = std::regex_replace(before_strip, reg_fmtp_xx_map, "");
-
       before_strip = after_strip;
       std::regex reg_rtcp_map(
           "a=rtcp-fb:" + codec_value + " .*\\r\\n",

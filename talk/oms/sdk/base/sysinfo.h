@@ -1,15 +1,11 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_BASE_SYSINFO_H_
 #define OMS_BASE_SYSINFO_H_
-
 #include <string>
-
 namespace oms {
 namespace base {
-
 /// OMS SDK info.
 struct SdkInfo {
   SdkInfo(const std::string& type, const std::string& version)
@@ -17,7 +13,6 @@ struct SdkInfo {
   const std::string type;
   const std::string version;
 };
-
 /// Operating system info.
 struct OsInfo {
   OsInfo(const std::string& name, const std::string& version)
@@ -25,7 +20,6 @@ struct OsInfo {
   const std::string name;
   const std::string version;
 };
-
 /// WebRTC runtime info.
 struct RuntimeInfo {
   RuntimeInfo(const std::string& name, const std::string& version)
@@ -33,17 +27,14 @@ struct RuntimeInfo {
   const std::string name;
   const std::string version;
 };
-
 /// System information.
 class SysInfo final{
  public:
   /// Get system info.
   static SysInfo GetInstance();
-
   const SdkInfo sdk;
   const OsInfo os;
   const RuntimeInfo runtime;
-
  private:
   SysInfo(const SdkInfo sdk_info,
           const OsInfo os_info,
@@ -54,5 +45,4 @@ class SysInfo final{
 };
 }
 }
-
 #endif  // WOOGEEN_BASE_SYSINFO_H_

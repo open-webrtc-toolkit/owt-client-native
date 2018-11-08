@@ -1,15 +1,12 @@
 /*
  * Intel License
  */
-
 #include <string>
 #include <functional>
 #include <unordered_map>
 #include "talk/oms/sdk/include/objc/OMS/OMSP2PPeerConnectionChannelObserver.h"
 #include "talk/oms/sdk/p2p/p2ppeerconnectionchannel.h"
-
 #import "talk/oms/sdk/include/objc/OMS/OMSRemoteStream.h"
-
 namespace oms {
 namespace p2p {
 // It wraps an id<OMSP2PPeerConnectionChannelObserver> and call methods on that
@@ -19,7 +16,6 @@ class P2PPeerConnectionChannelObserverObjcImpl
  public:
   P2PPeerConnectionChannelObserverObjcImpl(
       id<OMSP2PPeerConnectionChannelObserver> observer);
-
  protected:
   void OnDenied(const std::string& remote_id) override;
   void OnStarted(const std::string& remote_id) override;
@@ -31,7 +27,6 @@ class P2PPeerConnectionChannelObserverObjcImpl
   // Jianjun TODO: Remove OnStreamRemoved event
   void OnStreamRemoved(
       std::shared_ptr<oms::base::RemoteStream> stream);
-
  private:
   void TriggerStreamRemoved(std::shared_ptr <
                             oms::base::RemoteStream> stream);

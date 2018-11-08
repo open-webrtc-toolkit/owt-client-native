@@ -23,33 +23,24 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_P2P_PUBLICATION_H_
 #define OMS_P2P_PUBLICATION_H_
-
 #include <vector>
 #include <mutex>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/mediaconstraints.h"
 #include "oms/base/publication.h"
-
 namespace rtc {
 class TaskQueue;
 }
-
 namespace oms {
 namespace p2p {
-
 using namespace oms::base;
-
 class P2PClient;
-
 class P2PPublication : public Publication {
  public:
   P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream);
   virtual ~P2PPublication() {}
-
   /// Get connection stats of current publication
   void GetStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
@@ -70,7 +61,6 @@ class P2PPublication : public Publication {
   void AddObserver(PublicationObserver& observer) override;
   /// Unregister an observer from this p2p publication.
   void RemoveObserver(PublicationObserver& observer) override;
-
  private:
   std::string target_id_;
   std::shared_ptr<LocalStream> local_stream_;
@@ -78,11 +68,8 @@ class P2PPublication : public Publication {
   std::shared_ptr<rtc::TaskQueue> event_queue_;
   mutable std::mutex observer_mutex_;
   std::vector<std::reference_wrapper<PublicationObserver>> observers_;
-
   bool ended_;
 };
-
 } // namespace p2p
 } // namespace oms
-
 #endif  // OMS_P2P_PUBLICATION_H_

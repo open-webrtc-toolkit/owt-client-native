@@ -1,5 +1,4 @@
 package com.intel.webrtc.base;
-
 /**
 * Callback for VideoFrameFilter
 */

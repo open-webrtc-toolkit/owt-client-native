@@ -2,11 +2,9 @@ From ad0501ceed919f5b2e12724ec5b2ba0c2b47b58e Mon Sep 17 00:00:00 2001
 From: Zhang He <he.zhang@intel.com>
 Date: Thu, 31 May 2018 15:38:12 +0800
 Subject: [PATCH] Adjusted jni_generator.py to fit OMS code structure.
-
 ---
  android/jni_generator/jni_generator.py | 12 ++++++++++++
  1 file changed, 12 insertions(+)
-
 diff --git a/android/jni_generator/jni_generator.py b/android/jni_generator/jni_generator.py
 index 031f203..b870a0d 100755
 --- a/android/jni_generator/jni_generator.py
@@ -53,4 +51,3 @@ index 031f203..b870a0d 100755
  
 -- 
 2.7.4
-

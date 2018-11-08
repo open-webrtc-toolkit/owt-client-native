@@ -1,6 +1,5 @@
 % Latex header for doxygen 1.8.9.1
 \documentclass[twoside]{book}
-
 % Packages required by doxygen
 \usepackage{fixltx2e}
 \usepackage{calc}
@@ -15,7 +14,6 @@
 \usepackage{textcomp}
 \usepackage[nointegrals]{wasysym}
 \usepackage[table]{xcolor}
-
 % Font selection
 \usepackage[T1]{fontenc}
 \usepackage[scaled=.90]{helvet}
@@ -32,7 +30,6 @@
   \color{darkgray}%
 }
 \newcommand{\+}{\discretionary{\mbox{\scriptsize$\hookleftarrow$}}{}{}}
-
 % Page & text layout
 \usepackage{geometry}
 \geometry{%
@@ -60,7 +57,6 @@
   }%
 }
 \makeatother
-
 % Headers & footers
 \usepackage{fancyhdr}
 \pagestyle{fancyplain}
@@ -83,14 +79,12 @@
 \renewcommand{\sectionmark}[1]{%
   \markright{\thesection\ #1}%
 }
-
 % Indices & bibliography
 \usepackage{natbib}
 \usepackage[titles]{tocloft}
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{5}
 \makeindex
-
 % Hyperlinks (required, but should be loaded last)
 \usepackage{ifpdf}
 \ifpdf
@@ -104,17 +98,13 @@
   citecolor=blue,%
   unicode%
 }
-
 % Custom commands
 \newcommand{\clearemptydoublepage}{%
   \newpage{\pagestyle{empty}\cleardoublepage}%
 }
 
-
 %===== C O N T E N T S =====
-
 \begin{document}
-
 % Titlepage & ToC
 \hypersetup{pageanchor=false,
              bookmarks=true,
@@ -137,5 +127,4 @@
 \clearemptydoublepage
 \pagenumbering{arabic}
 \hypersetup{pageanchor=true}
-
 %--- Begin generated contents ---

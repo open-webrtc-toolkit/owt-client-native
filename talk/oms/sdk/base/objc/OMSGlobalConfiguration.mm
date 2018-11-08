@@ -1,13 +1,10 @@
 //
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
-
 #import "talk/oms/sdk/include/objc/OMS/OMSGlobalConfiguration.h"
 #import "talk/oms/sdk/include/cpp/oms/base/globalconfiguration.h"
 #import "talk/oms/sdk/base/objc/FrameGeneratorObjcImpl.h"
-
 @implementation OMSGlobalConfiguration
-
 + (void)setCustomizedAudioInputEnabled:(BOOL)enabled
                    audioFrameGenerator:
                        (id<RTCAudioFrameGeneratorProtocol>)audioFrameGenerator {
@@ -20,5 +17,4 @@
   oms::base::GlobalConfiguration::SetCustomizedAudioInputEnabled(
       true, std::move(generator));
 }
-
 @end

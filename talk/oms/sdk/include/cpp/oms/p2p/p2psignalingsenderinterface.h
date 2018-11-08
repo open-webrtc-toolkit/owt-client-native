@@ -23,19 +23,14 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_P2P_SIGNALINGSENDERINTERFACE_H_
 #define OMS_P2P_SIGNALINGSENDERINTERFACE_H_
-
 #include <functional>
 #include <memory>
 #include <string>
-
 #include "oms/base/exception.h"
-
 namespace oms {
 namespace p2p {
-
 /** @cond */
 /**
   @brief Interface for signaling sender.
@@ -54,5 +49,4 @@ class P2PSignalingSenderInterface {
 }
 }
 /** @endcond */
-
 #endif  // OMS_P2P_SIGNALINGSENDERINTERFACE_H_

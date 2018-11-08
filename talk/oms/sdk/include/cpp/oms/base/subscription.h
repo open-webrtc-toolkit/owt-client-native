@@ -23,16 +23,12 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_SUBSCRIPTION_H_
 #define OMS_BASE_SUBSCRIPTION_H_
-
 #include "oms/base/commontypes.h"
 #include "oms/base/mediaconstraints.h"
-
 namespace oms {
 namespace base {
-
 /// Observer that receives events from subscription.
 class SubscriptionObserver {
   public:
@@ -43,8 +39,6 @@ class SubscriptionObserver {
     // Triggered when audio and/or video is unmuted.
     virtual void OnUnmute(TrackKind track_kind) = 0;
 };
-
 } // namespace base
 } // namespace oms
-
 #endif  // OMS_BASE_SUBSCRIPTION_H_

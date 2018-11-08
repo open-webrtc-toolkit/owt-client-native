@@ -1,7 +1,6 @@
 % stylesheet for doxygen 1.8.9.1
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{doxygen}
-
 % Packages used by this style file
 \RequirePackage{alltt}
 \RequirePackage{array}
@@ -11,9 +10,7 @@
 \RequirePackage{verbatim}
 \RequirePackage[table]{xcolor}
 \RequirePackage{xtab}
-
 %---------- Internal commands used in this style file ----------------
-
 \newcommand{\ensurespace}[1]{%
   \begingroup%
     \setlength{\dimen@}{#1}%
@@ -25,7 +22,6 @@
     \vskip\z@skip% hide the previous |\vskip| from |\addvspace|
   \endgroup%
 }
-
 \newcommand{\DoxyLabelFont}{}
 \newcommand{\entrylabel}[1]{%
   {%
@@ -35,7 +31,6 @@
     }%
   }%
 }
-
 \newenvironment{DoxyDesc}[1]{%
   \ensurespace{4\baselineskip}%
   \begin{list}{}{%
@@ -49,7 +44,6 @@
 }{%
   \end{list}%
 }
-
 \newsavebox{\xrefbox}
 \newlength{\xreflength}
 \newcommand{\xreflabel}[1]{%
@@ -64,9 +58,7 @@
    \parbox[b]{\labelwidth}{\makebox[0pt][l]{\textbf{#1}}}%
   }%
 }
-
 %---------- Commands used by doxygen LaTeX output generator ----------
-
 % Used by <pre> ... </pre>
 \newenvironment{DoxyPre}{%
   \small%
@@ -75,7 +67,6 @@
   \end{alltt}%
   \normalsize%
 }
-
 % Used by @code ... @endcode
 \newenvironment{DoxyCode}{%
   \par%
@@ -85,14 +76,12 @@
   \end{alltt}%
   \normalsize%
 }
-
 % Used by @example, @include, @includelineno and @dontinclude
 \newenvironment{DoxyCodeInclude}{%
   \DoxyCode%
 }{%
   \endDoxyCode%
 }
-
 % Used by @verbatim ... @endverbatim
 \newenvironment{DoxyVerb}{%
   \footnotesize%
@@ -101,35 +90,30 @@
   \endverbatim%
   \normalsize%
 }
-
 % Used by @verbinclude
 \newenvironment{DoxyVerbInclude}{%
   \DoxyVerb%
 }{%
   \endDoxyVerb%
 }
-
 % Used by numbered lists (using '-#' or <ol> ... </ol>)
 \newenvironment{DoxyEnumerate}{%
   \enumerate%
 }{%
   \endenumerate%
 }
-
 % Used by bullet lists (using '-', @li, @arg, or <ul> ... </ul>)
 \newenvironment{DoxyItemize}{%
   \itemize%
 }{%
   \enditemize%
 }
-
 % Used by description lists (using <dl> ... </dl>)
 \newenvironment{DoxyDescription}{%
   \description%
 }{%
   \enddescription%
 }
-
 % Used by @image, @dotfile, @dot ... @enddot, and @msc ... @endmsc
 % (only if caption is specified)
 \newenvironment{DoxyImage}{%
@@ -139,7 +123,6 @@
     \end{center}%
   \end{figure}%
 }
-
 % Used by @image, @dotfile, @dot ... @enddot, and @msc ... @endmsc
 % (only if no caption is specified)
 \newenvironment{DoxyImageNoCaption}{%
@@ -147,111 +130,95 @@
 }{%
   \end{center}%
 }
-
 % Used by @attention
 \newenvironment{DoxyAttention}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @author and @authors
 \newenvironment{DoxyAuthor}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @date
 \newenvironment{DoxyDate}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @invariant
 \newenvironment{DoxyInvariant}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @note
 \newenvironment{DoxyNote}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @post
 \newenvironment{DoxyPostcond}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @pre
 \newenvironment{DoxyPrecond}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @copyright
 \newenvironment{DoxyCopyright}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @remark
 \newenvironment{DoxyRemark}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @return and @returns
 \newenvironment{DoxyReturn}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @since
 \newenvironment{DoxySince}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @see
 \newenvironment{DoxySeeAlso}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @version
 \newenvironment{DoxyVersion}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @warning
 \newenvironment{DoxyWarning}[1]{%
   \begin{DoxyDesc}{#1}%
 }{%
   \end{DoxyDesc}%
 }
-
 % Used by @internal
 \newenvironment{DoxyInternal}[1]{%
   \paragraph*{#1}%
 }{%
 }
-
 % Used by @par and @paragraph
 \newenvironment{DoxyParagraph}[1]{%
   \begin{list}{}{%
@@ -265,7 +232,6 @@
 }{%
   \end{list}%
 }
-
 % Used by parameter lists
 \newenvironment{DoxyParams}[2][]{%
     \par%
@@ -293,7 +259,6 @@
     \tablefirsthead{}%
     \vspace{6pt}%
 }
-
 % Used for fields of simple structs
 \newenvironment{DoxyFields}[1]{%
     \par%
@@ -310,13 +275,11 @@
     \tablefirsthead{}%
     \vspace{6pt}%
 }
-
 % Used for parameters within a detailed function description
 \newenvironment{DoxyParamCaption}{%
   \renewcommand{\item}[2][]{##1 {\em ##2}}%
 }{%
 }
-
 % Used by return value lists
 \newenvironment{DoxyRetVals}[1]{%
     \par%
@@ -332,7 +295,6 @@
     \tablefirsthead{}%
     \vspace{6pt}%
 }
-
 % Used by exception lists
 \newenvironment{DoxyExceptions}[1]{%
     \par%
@@ -348,7 +310,6 @@
     \tablefirsthead{}%
     \vspace{6pt}%
 }
-
 % Used by template parameter lists
 \newenvironment{DoxyTemplParams}[1]{%
     \par%
@@ -364,7 +325,6 @@
     \tablefirsthead{}%
     \vspace{6pt}%
 }
-
 % Used for member lists
 \newenvironment{DoxyCompactItemize}{%
   \begin{itemize}%
@@ -375,7 +335,6 @@
 }{%
   \end{itemize}%
 }
-
 % Used for member descriptions
 \newenvironment{DoxyCompactList}{%
   \begin{list}{}{%
@@ -388,7 +347,6 @@
 }{%
   \end{list}%
 }
-
 % Used for reference lists (@bug, @deprecated, @todo, etc.)
 \newenvironment{DoxyRefList}{%
   \begin{list}{}{%
@@ -400,7 +358,6 @@
 }{%
   \end{list}%
 }
-
 % Used by @bug, @deprecated, @todo, etc.
 \newenvironment{DoxyRefDesc}[1]{%
   \begin{list}{}{%
@@ -411,7 +368,6 @@
 }{%
   \end{list}%
 }
-
 % Used by parameter lists and simple sections
 \newenvironment{Desc}
 {\begin{list}{}{%
@@ -424,7 +380,6 @@
 }{%
   \end{list}%
 }
-
 % Used by tables
 \newcommand{\PBS}[1]{\let\temp=\\#1\let\\=\temp}%
 \newlength{\tmplength}%
@@ -436,7 +391,6 @@
              {*{#1}{|>{\PBS\raggedright\hspace{0pt}}p{\the\tmplength}}|}%
 }%
 {\end{xtabular*}\par}%
-
 % Used by nested tables
 \newenvironment{TabularNC}[1]%
 {%
@@ -446,7 +400,6 @@
              {*{#1}{|>{\PBS\raggedright\hspace{0pt}}p{\the\tmplength}}|}%
 }%
 {\end{tabular*}\par}%
-
 % Used for member group headers
 \newenvironment{Indent}{%
   \begin{list}{}{%
@@ -457,16 +410,13 @@
   \unskip%
   \end{list}%
 }
-
 % Used when hyperlinks are turned off
 \newcommand{\doxyref}[3]{%
   \textbf{#1} (\textnormal{#2}\,\pageref{#3})%
 }
-
 % Used by @addindex
 \newcommand{\lcurly}{\{}
 \newcommand{\rcurly}{\}}
-
 % Used for syntax highlighting
 \definecolor{comment}{rgb}{0.5,0.0,0.0}
 \definecolor{keyword}{rgb}{0.0,0.5,0.0}

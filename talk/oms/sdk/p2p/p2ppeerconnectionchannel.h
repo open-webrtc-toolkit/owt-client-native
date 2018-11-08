@@ -1,16 +1,13 @@
 /*
  * Intel License
  */
-
 #ifndef WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_
-
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
 #include <chrono>
-
 #include "talk/oms/sdk/base/mediaconstraintsimpl.h"
 #include "talk/oms/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/oms/sdk/base/peerconnectionchannel.h"
@@ -22,12 +19,9 @@
 #include "webrtc/rtc_base/messagehandler.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/thread_annotations.h"
-
 namespace oms {
 namespace p2p {
-
 using namespace oms::base;
-
 // P2PPeerConnectionChannel callback interface.
 // Usually, PeerClient should implement these methods and notify application.
 class P2PPeerConnectionChannelObserver {
@@ -46,7 +40,6 @@ class P2PPeerConnectionChannelObserver {
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteStream> stream) = 0;
 };
-
 // An instance of P2PPeerConnectionChannel manages a session for a specified
 // remote client.
 class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
@@ -95,7 +88,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Stop current WebRTC session.
   void Stop(std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   // Get statistoms data for the specific connection.
   void GetConnectionStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
@@ -103,17 +95,14 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void GetStats(
       std::function<void(const webrtc::StatsReports& reports)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   bool HaveLocalOffer();
   std::shared_ptr<LocalStream> GetLatestLocalStream();
   std::function<void()> GetLatestPublishSuccessCallback();
   std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
   bool IsAbandoned();
-
  protected:
   void CreateOffer() override;
   void CreateAnswer() override;
-
   // Received messages from remote client.
   void OnMessageUserAgent(Json::Value& ua);
   void OnMessageStop();
@@ -124,7 +113,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageStreamInfo(Json::Value& stream_info);
   void OnMessageTracksAdded(Json::Value& stream_tracks);
   void OnMessageDataReceived(std::string& id);
-
   // PeerConnectionObserver
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state) override;
@@ -138,25 +126,20 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   virtual void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-
   // DataChannelObserver
   virtual void OnDataChannelStateChange() override;
   virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer) override;
-
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
       webrtc::SessionDescriptionInterface* desc) override;
   virtual void OnCreateSessionDescriptionFailure(const std::string& error) override;
-
   // SetSessionDescriptionObserver
   virtual void OnSetLocalSessionDescriptionSuccess() override;
   virtual void OnSetLocalSessionDescriptionFailure(const std::string& error) override;
   virtual void OnSetRemoteSessionDescriptionSuccess() override;
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error) override;
-
   enum SessionState : int;
   enum NegotiationState : int;
-
  private:
   void ChangeSessionState(SessionState state);
   void SendSignalingMessage(
@@ -188,7 +171,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Set remote capability flags based on UA.
   void HandleRemoteCapability(Json::Value& ua);
   void SendUaInfo();
-
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
   std::string remote_id_;
@@ -228,7 +210,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect"
   int reconnect_timeout_;  // Unit: second
-
   long message_seq_num_; // Message ID to be sent through data channel
   std::vector<std::shared_ptr<std::string>> pending_messages_;  // Messages need
                                                                 // to be sent
@@ -248,14 +229,11 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
-
   std::mutex failure_callbacks_mutex_;
   std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>> failure_callbacks_;
-
   std::shared_ptr<LocalStream> latest_local_stream_;
   std::function<void()> latest_publish_success_callback_;
   std::function<void(std::unique_ptr<Exception>)> latest_publish_failure_callback_;
-
   bool ua_sent_;
   bool stop_send_needed_;
   bool remote_side_offline_;
@@ -263,5 +241,4 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
 };
 }
 }
-
 #endif  // WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_

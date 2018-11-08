@@ -1,11 +1,8 @@
 //
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
-
 #include "talk/oms/sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.h"
-
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
-
 namespace oms {
 namespace conference {
 void ConferenceSubscriptionObserverObjcImpl::OnEnded() {
@@ -13,7 +10,6 @@ void ConferenceSubscriptionObserverObjcImpl::OnEnded() {
     [delegate_ subscriptionDidEnd:subscription_];
   }
 }
-
 void ConferenceSubscriptionObserverObjcImpl::OnMute(
     oms::base::TrackKind track_kind) {
   if ([delegate_
@@ -24,7 +20,6 @@ void ConferenceSubscriptionObserverObjcImpl::OnMute(
                                 objcTrackKindForCppTrackKind:track_kind]];
   }
 }
-
 void ConferenceSubscriptionObserverObjcImpl::OnUnmute(
     oms::base::TrackKind track_kind) {
   if ([delegate_

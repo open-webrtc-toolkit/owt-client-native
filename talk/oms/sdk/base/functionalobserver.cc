@@ -1,18 +1,14 @@
 /*
  * Intel License
  */
-
 #include "talk/oms/sdk/base/functionalobserver.h"
-
 namespace oms {
 namespace base {
-
 FunctionalCreateSessionDescriptionObserver::
     FunctionalCreateSessionDescriptionObserver(
         std::function<void(webrtc::SessionDescriptionInterface*)> on_success,
         std::function<void(const std::string&)> on_failure)
     : on_success_(on_success), on_failure_(on_failure) {}
-
 rtc::scoped_refptr<FunctionalCreateSessionDescriptionObserver>
 FunctionalCreateSessionDescriptionObserver::Create(
     std::function<void(webrtc::SessionDescriptionInterface*)> on_success,
@@ -20,27 +16,23 @@ FunctionalCreateSessionDescriptionObserver::Create(
   return new rtc::RefCountedObject<FunctionalCreateSessionDescriptionObserver>(
       on_success, on_failure);
 }
-
 void FunctionalCreateSessionDescriptionObserver::OnSuccess(
     webrtc::SessionDescriptionInterface* desc) {
   if (on_success_ != nullptr) {
     on_success_(desc);
   }
 }
-
 void FunctionalCreateSessionDescriptionObserver::OnFailure(
     const std::string& error) {
   if (on_failure_ != nullptr) {
     on_failure_(error);
   }
 }
-
 FunctionalSetSessionDescriptionObserver::
     FunctionalSetSessionDescriptionObserver(
         std::function<void()> on_success,
         std::function<void(const std::string&)> on_failure)
     : on_success_(on_success), on_failure_(on_failure) {}
-
 rtc::scoped_refptr<FunctionalSetSessionDescriptionObserver>
 FunctionalSetSessionDescriptionObserver::Create(
     std::function<void()> on_success,
@@ -48,29 +40,24 @@ FunctionalSetSessionDescriptionObserver::Create(
   return new rtc::RefCountedObject<FunctionalSetSessionDescriptionObserver>(
       on_success, on_failure);
 }
-
 void FunctionalSetSessionDescriptionObserver::OnSuccess() {
   if (on_success_ != nullptr) {
     on_success_();
   }
 }
-
 void FunctionalSetSessionDescriptionObserver::OnFailure(
     const std::string& error) {
   if (on_failure_ != nullptr) {
     on_failure_(error);
   }
 }
-
 FunctionalStatsObserver::FunctionalStatsObserver(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_complete)
     : on_complete_(on_complete) {}
-
 rtc::scoped_refptr<FunctionalStatsObserver> FunctionalStatsObserver::Create(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_complete) {
   return new rtc::RefCountedObject<FunctionalStatsObserver>(on_complete);
 }
-
 void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
   if (on_complete_ != nullptr) {
     std::shared_ptr<ConnectionStats> connection_stats(new ConnectionStats());
@@ -252,11 +239,9 @@ void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
         break;
       }
     }
-
     on_complete_(connection_stats);
   }
 }
-
 IceCandidateType FunctionalStatsObserver::GetCandidateType(const std::string& type) {
   // |type| may be values defines in statscollector.cc, STATSREPORT_*_TYPE
   if (type == "host") {
@@ -274,7 +259,6 @@ IceCandidateType FunctionalStatsObserver::GetCandidateType(const std::string& ty
   RTC_DCHECK(false);
   return IceCandidateType::kUnknown;
 }
-
 TransportProtocolType FunctionalStatsObserver::GetTransportProtocolType(const std::string& protocol) {
   if (protocol == cricket::UDP_PROTOCOL_NAME) {
     return TransportProtocolType::kUdp;
@@ -285,7 +269,6 @@ TransportProtocolType FunctionalStatsObserver::GetTransportProtocolType(const st
   RTC_DCHECK(false);
   return TransportProtocolType::kUnknown;
 }
-
 std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateReport(const webrtc::StatsReport& report){
    std::shared_ptr<IceCandidateReport> candidate_report_ptr(new IceCandidateReport(
       report.id()->ToString(),
@@ -296,7 +279,6 @@ std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateRepo
       report.FindValue(webrtc::StatsReport::kStatsValueNameCandidatePriority)->int_val()));
    return candidate_report_ptr;
 }
-
 FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
     const webrtc::StatsReport* report) {
   // Check if it's ssrc report.
@@ -309,16 +291,13 @@ FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
     if (report->FindValue(
             webrtc::StatsReport::kStatsValueNameBytesSent))  // this is sending
       isSending = true;
-
     if (report->FindValue(webrtc::StatsReport::kStatsValueNameFrameWidthSent) ||
         report->FindValue(
             webrtc::StatsReport::kStatsValueNameFrameWidthReceived))
       isVideo = true;
-
   } else if (report->type() == webrtc::StatsReport::kStatsReportTypeBwe) {
     isBWE = true;
   }
-
   if (isSSRC & isSending & !isVideo) {
     return REPORT_AUDIO_SENDER;
   } else if (isSSRC & !isSending & !isVideo) {
@@ -332,13 +311,11 @@ FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
   } else
     return REPORT_TYPE_UKNOWN;
 }
-
 rtc::scoped_refptr<FunctionalNativeStatsObserver>
 FunctionalNativeStatsObserver::Create(
     std::function<void(const webrtc::StatsReports& reports)> on_complete) {
   return new rtc::RefCountedObject<FunctionalNativeStatsObserver>(on_complete);
 }
-
 void FunctionalNativeStatsObserver::OnComplete(
     const webrtc::StatsReports& reports) {
   if (!on_complete_) {

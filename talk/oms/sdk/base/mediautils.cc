@@ -1,13 +1,11 @@
 /*
  * Intel License
  */
-
 #include <algorithm>
 #include <map>
 #include <string>
 #include "webrtc/rtc_base/checks.h"
 #include "talk/oms/sdk/base/mediautils.h"
-
 namespace oms {
 namespace base {
 static const std::map<const std::string, const Resolution> resolution_name_map = {
@@ -15,7 +13,6 @@ static const std::map<const std::string, const Resolution> resolution_name_map =
     {"vga", Resolution(640, 480)},
     {"hd720p", Resolution(1280, 720)},
     {"hd1080p", Resolution(1920, 1080)}};
-
 static const std::map<const std::string, const AudioCodec>
     audio_codec_names = {
         {"opus", AudioCodec::kOpus}, {"isac", AudioCodec::kIsac},
@@ -23,13 +20,11 @@ static const std::map<const std::string, const AudioCodec>
         {"pcma", AudioCodec::kPcma}, {"ilbc", AudioCodec::kIlbc},
         {"aac", AudioCodec::kAac},   {"ac3", AudioCodec::kAc3},
         {"asao", AudioCodec::kAsao}, {"unknown", AudioCodec::kUnknown}};
-
 static const std::map<const std::string, const VideoCodec>
     video_codec_names = {{"vp8", VideoCodec::kVp8},
                          {"vp9", VideoCodec::kVp9},
                          {"h264", VideoCodec::kH264},
                          {"h265", VideoCodec::kH265}};
-
 std::string MediaUtils::GetResolutionName(const Resolution& resolution) {
   for (auto it = resolution_name_map.begin(); it != resolution_name_map.end();
        ++it) {
@@ -39,7 +34,6 @@ std::string MediaUtils::GetResolutionName(const Resolution& resolution) {
   }
   return "";
 }
-
 AudioCodec MediaUtils::GetAudioCodecFromString(const std::string& codec_name) {
   auto it = audio_codec_names.find(codec_name);
   if (it != audio_codec_names.end()) {
@@ -48,7 +42,6 @@ AudioCodec MediaUtils::GetAudioCodecFromString(const std::string& codec_name) {
   RTC_NOTREACHED();
   return AudioCodec::kUnknown;
 }
-
 VideoCodec MediaUtils::GetVideoCodecFromString(const std::string& codec_name) {
   auto it = video_codec_names.find(codec_name);
   if (it != video_codec_names.end()) {
@@ -57,7 +50,6 @@ VideoCodec MediaUtils::GetVideoCodecFromString(const std::string& codec_name) {
   RTC_NOTREACHED();
   return VideoCodec::kUnknown;
 }
-
 std::string MediaUtils::AudioCodecToString(const AudioCodec& audio_codec) {
   auto it = std::find_if(audio_codec_names.begin(), audio_codec_names.end(),
                          [&audio_codec](const auto& codec) {
@@ -70,7 +62,6 @@ std::string MediaUtils::AudioCodecToString(const AudioCodec& audio_codec) {
     return "unknown";
   }
 }
-
 std::string MediaUtils::VideoCodecToString(const VideoCodec& video_codec) {
   auto it = std::find_if(video_codec_names.begin(), video_codec_names.end(),
                          [&video_codec](const auto& codec) {

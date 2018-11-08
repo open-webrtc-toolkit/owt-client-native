@@ -1,11 +1,9 @@
 /*
  * Intel License
  */
-
 #include "oms/base/globalconfiguration.h"
 namespace oms {
 namespace base {
-
 #if defined(WEBRTC_WIN)
 // Enable hardware acceleration by default is on.
 bool GlobalConfiguration::hardware_acceleration_enabled_ = true;

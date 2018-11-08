@@ -23,16 +23,12 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import "OMS/OMSRemoteStream.h"
-
 /// @cond
-
 /// OMSP2PPeerConnectionChannelObserver is an ObjectiveC wrapper for
 /// P2PPeerConnectionChannelObserver.
 @protocol OMSP2PPeerConnectionChannelObserver<NSObject>
-
 /**
   @brief This function will be invoked when received a invitation.
   @param remoteUserId Remote user’s ID
@@ -79,7 +75,5 @@
   @param remoteUserId Remote user’s ID
 */
 - (void)onStreamRemoved:(OMSRemoteStream*)stream;
-
 @end
-
 /// @endcond

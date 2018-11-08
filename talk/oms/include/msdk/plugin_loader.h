@@ -1,25 +1,19 @@
 /*********************************************************************************
-
 INTEL CORPORATION PROPRIETARY INFORMATION
 This software is supplied under the terms of a license agreement or nondisclosure
 agreement with Intel Corporation and may not be copied or disclosed except in
 accordance with the terms of that agreement
 Copyright(c) 2013-2014 Intel Corporation. All Rights Reserved.
-
 **********************************************************************************/
-
 #pragma once
-
 #ifndef __PLUGIN_LOADER_H__
 #define __PLUGIN_LOADER_H__
-
 #include "vm/so_defs.h"
 #include "sample_utils.h"
 //#include "mfx_plugin_module.h"
 #include <iostream>
 #include <iomanip> // for std::setfill, std::setw
 #include <memory> // for std::auto_ptr
-
 class MsdkSoModule
 {
 protected:
@@ -47,7 +41,6 @@ public:
         }
         return pCreateFunc;
     }
-
     virtual ~MsdkSoModule()
     {
         if (m_module)
@@ -57,7 +50,6 @@ public:
         }
     }
 };
-
 /*
 * Rationale: class to load+register any mediasdk plugin decoder/encoder/generic by given name
 */
@@ -65,10 +57,8 @@ class PluginLoader : public MFXPlugin
 {
 protected:
     mfxPluginType     ePluginType;
-
     mfxSession        m_session;
     mfxPluginUID      m_uid;
-
 private:
     const msdk_char* msdkGetPluginName(const mfxPluginUID& guid)
     {
@@ -83,7 +73,6 @@ private:
         else
             return MSDK_STRING("Unknown plugin");
     }
-
 public:
     PluginLoader(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version, const mfxChar *pluginName, mfxU32 len)
         : ePluginType(type)
@@ -92,14 +81,12 @@ public:
     {
         mfxStatus sts = MFX_ERR_NONE;
         msdk_stringstream strStream;
-
         MSDK_MEMCPY(&m_uid, &uid, sizeof(mfxPluginUID));
         for (size_t i = 0; i != sizeof(mfxPluginUID); i++)
         {
             strStream << MSDK_STRING("0x") << std::setfill(MSDK_CHAR('0')) << std::setw(2) << std::hex << (int)m_uid.Data[i];
             if (i != (sizeof(mfxPluginUID)-1)) strStream << MSDK_STRING(", ");
         }
-
         if ((ePluginType == MFX_PLUGINTYPE_AUDIO_DECODE) ||
             (ePluginType == MFX_PLUGINTYPE_AUDIO_ENCODE))
         {
@@ -110,7 +97,6 @@ public:
         {
             sts = MFXVideoUSER_LoadByPath(session, &m_uid, version, pluginName, len);
         }
-
         if (MFX_ERR_NONE != sts)
         {
             MSDK_TRACE_ERROR(MSDK_STRING("Failed to load plugin from GUID, sts=") << sts << MSDK_STRING(": { ") << strStream.str().c_str() << MSDK_STRING(" } (") << msdkGetPluginName(m_uid) << MSDK_STRING(")"));
@@ -121,7 +107,6 @@ public:
             m_session = session;
         }
     }
-
     PluginLoader(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version)
         : ePluginType(type)
         , m_session()
@@ -129,14 +114,12 @@ public:
     {
         mfxStatus sts = MFX_ERR_NONE;
         msdk_stringstream strStream;
-
         MSDK_MEMCPY(&m_uid, &uid, sizeof(mfxPluginUID));
         for (size_t i = 0; i != sizeof(mfxPluginUID); i++)
         {
             strStream << MSDK_STRING("0x") << std::setfill(MSDK_CHAR('0')) << std::setw(2) << std::hex << (int)m_uid.Data[i];
             if (i != (sizeof(mfxPluginUID)-1)) strStream << MSDK_STRING(", ");
         }
-
         if ((ePluginType == MFX_PLUGINTYPE_AUDIO_DECODE) ||
             (ePluginType == MFX_PLUGINTYPE_AUDIO_ENCODE))
         {
@@ -146,7 +129,6 @@ public:
         {
             sts = MFXVideoUSER_Load(session, &m_uid, version);
         }
-
         if (MFX_ERR_NONE != sts)
         {
             MSDK_TRACE_ERROR(MSDK_STRING("Failed to load plugin from GUID, sts=") << sts << MSDK_STRING(": { ") << strStream.str().c_str() << MSDK_STRING(" } (") << msdkGetPluginName(m_uid) << MSDK_STRING(")"));
@@ -158,7 +140,6 @@ public:
             m_session = session;
         }
     }
-
     virtual ~PluginLoader()
     {
         mfxStatus sts = MFX_ERR_NONE;
@@ -173,7 +154,6 @@ public:
             {
                 sts = MFXVideoUSER_UnLoad(m_session, &m_uid);
             }
-
             if (sts != MFX_ERR_NONE)
             {
                   MSDK_TRACE_ERROR(MSDK_STRING("Failed to unload plugin from GUID, sts=") << sts);
@@ -184,7 +164,6 @@ public:
             }
         }
     }
-
     bool IsOk() {
         return m_session != 0;
     }
@@ -212,21 +191,17 @@ public:
         return MFX_ERR_NULL_PTR;
     }
 };
-
 inline MFXPlugin * LoadPluginByType(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version, const mfxChar *pluginName, mfxU32 len) {
     std::auto_ptr<PluginLoader> plg(new PluginLoader (type, session, uid, version, pluginName, len));
     return plg->IsOk() ? plg.release() : NULL;
 }
-
 inline MFXPlugin * LoadPluginByGUID(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version) {
     std::auto_ptr<PluginLoader> plg(new PluginLoader (type, session, uid, version));
     return plg->IsOk() ? plg.release() : NULL;
 }
-
 inline MFXPlugin * LoadPlugin(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version, const mfxChar *pluginName, mfxU32 len) {
     return LoadPluginByType(type, session, uid, version, pluginName, len);
 }
-
 inline MFXPlugin * LoadPlugin(mfxPluginType type, mfxSession session, const mfxPluginUID & uid, mfxU32 version) {
     return LoadPluginByGUID(type, session, uid, version);
 }

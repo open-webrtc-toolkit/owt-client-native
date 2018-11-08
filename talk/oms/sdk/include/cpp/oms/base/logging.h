@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_LOGGING_H_
 #define OMS_BASE_LOGGING_H_
-
 namespace oms {
 namespace base {
-
 enum class LoggingSeverity : int {
   /// Information which should only be logged with the consent of the user, due to privacy concerns.
   kSensitive = 1,
@@ -44,7 +41,6 @@ enum class LoggingSeverity : int {
   /// Don't log.
   kNone
 };
-
 /// Logger configuration class. Choose either LogToConsole or LogToFileRotate in
 /// your application for logging to console or file.
 class Logging final {
@@ -63,5 +59,4 @@ class Logging final {
 };
 }
 }
-
 #endif  // OMS_BASE_LOGGING_H

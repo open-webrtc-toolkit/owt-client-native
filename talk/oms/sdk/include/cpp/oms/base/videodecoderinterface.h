@@ -23,17 +23,12 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_VIDEODECODERINTERFACE_H_
 #define OMS_BASE_VIDEODECODERINTERFACE_H_
-
 #include <memory>
-
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace base {
-
 /**
  @brief Video encoded frame definition
 */
@@ -47,7 +42,6 @@ struct VideoEncodedFrame {
   /// Key frame flag
   bool is_key_frame;
 };
-
 /**
  @brief Video decoder interface
  @details Encoded frames will be passed for further customized decoding
@@ -82,5 +76,4 @@ class VideoDecoderInterface {
 };
 }
 }
-
 #endif // OMS_BASE_VIDEODECODERINTERFACE_H_

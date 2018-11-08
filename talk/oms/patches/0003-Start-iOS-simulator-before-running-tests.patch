@@ -2,11 +2,9 @@ From e4195f2b3811695e74ed0c85f23a63cc9dbf5e9a Mon Sep 17 00:00:00 2001
 From: Jianjun Zhu <jianjun.zhu@intel.com>
 Date: Tue, 8 May 2018 16:00:57 +0800
 Subject: [PATCH] Start iOS simulator before running tests.
-
 ---
  iossim/iossim.mm | 4 ++++
  1 file changed, 4 insertions(+)
-
 diff --git a/iossim/iossim.mm b/iossim/iossim.mm
 index dc2db6fa..1cbf5777 100644
 --- a/iossim/iossim.mm
@@ -31,4 +29,3 @@ index dc2db6fa..1cbf5777 100644
  }
 -- 
 2.16.1
-

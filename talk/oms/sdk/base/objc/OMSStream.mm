@@ -1,7 +1,6 @@
 //
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCVideoTrack.h>
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
@@ -10,16 +9,13 @@
 #import "talk/oms/sdk/include/objc/OMS/RTCPeerConnectionFactory+OMS.h"
 #import "talk/oms/sdk/base/objc/OMSStream+Private.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
-
 @implementation OMSStream {
   std::shared_ptr<oms::base::Stream> _nativeStream;
   RTCMediaStream* _mediaStream;
 }
-
 - (instancetype)init {
   return self;
 }
-
 - (void)attach:(NSObject<RTCVideoRenderer>*)renderer {
   auto nativeStream = [self nativeStream];
   if (nativeStream == nullptr || nativeStream->MediaStream() == nullptr) {
@@ -36,7 +32,6 @@
   [[_mediaStream.videoTracks objectAtIndex:0] addRenderer:renderer];
   NSLog(@"Attached stream.");
 }
-
 - (NSDictionary<NSString*, NSString*>*)attributes {
   NSMutableDictionary<NSString*, NSString*>* attrs =
       [NSMutableDictionary dictionary];
@@ -49,7 +44,6 @@
   }
   return attrs;
 }
-
 - (instancetype)initWithNativeStream:
     (std::shared_ptr<oms::base::Stream>)stream {
   self = [super init];
@@ -62,7 +56,6 @@
       initWithNativeStreamSourceInfo:sharedNativeSource];
   return self;
 }
-
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
                              source:(OMSStreamSourceInfo*)source {
   if (self = [super init]) {
@@ -71,13 +64,10 @@
   }
   return self;
 }
-
 - (void)setNativeStream:(std::shared_ptr<oms::base::Stream>)stream {
   _nativeStream = stream;
 }
-
 - (std::shared_ptr<oms::base::Stream>)nativeStream {
   return _nativeStream;
 }
-
 @end

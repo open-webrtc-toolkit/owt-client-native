@@ -23,26 +23,19 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_CLIENTCONFIGURATION_H_
 #define OMS_BASE_CLIENTCONFIGURATION_H_
-
 #include <vector>
 #include <string>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/network.h"
-
 namespace oms {
 namespace base{
-
 /// Client configurations
 struct ClientConfiguration {
   enum class CandidateNetworkPolicy : int { kAll = 1, kLowCost };
-
   ClientConfiguration()
        : candidate_network_policy(CandidateNetworkPolicy::kAll) {};
-
   /// List of ICE servers
   std::vector<IceServer> ice_servers;
   /**
@@ -55,5 +48,4 @@ struct ClientConfiguration {
 };
 }
 }
-
 #endif  // OMS_BASE_CLIENTCONFIGURATION_H_

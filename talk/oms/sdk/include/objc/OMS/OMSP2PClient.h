@@ -23,28 +23,22 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 #import <WebRTC/RTCLegacyStatsReport.h>
-
 #import "OMS/OMSLocalStream.h"
 #import "OMS/OMSP2PClientConfiguration.h"
 #import "OMS/OMSP2PPeerConnectionChannelObserver.h"
 #import "OMS/OMSP2PSignalingChannelProtocol.h"
 #import "OMS/OMSP2PSignalingSenderProtocol.h"
-
 NS_ASSUME_NONNULL_BEGIN
-
 @protocol OMSP2PClientDelegate;
 @class OMSP2PPublication;
-
 /// An async client for P2P WebRTC sessions
 RTC_EXPORT
 @interface OMSP2PClient : NSObject<OMSP2PPeerConnectionChannelObserver,
                                    OMSP2PSignalingSenderProtocol,
                                    OMSP2PSignalingChannelDelegate>
-
 /**
  @brief Initialize a OMSP2PClient instance with a specific signaling channel.
  @param configuration Configuration for creating the OMSP2PClient.
@@ -53,7 +47,6 @@ RTC_EXPORT
 - (instancetype)initWithConfiguration:(OMSP2PClientConfiguration*)configuration
                      signalingChannel:
                          (id<OMSP2PSignalingChannelProtocol>)signalingChannel;
-
 /**
  @brief Connect to the signaling server.
  @param token A token used for connection and authentication
@@ -67,10 +60,8 @@ RTC_EXPORT
 - (void)connect:(NSString*)token
       onSuccess:(nullable void (^)(NSString*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
  @brief Disconnect from the signaling server.
-
  It will stop all active WebRTC sessions.
  @param onSuccess Success callback will be invoked if disconnect from server
  successfully.
@@ -80,7 +71,6 @@ RTC_EXPORT
  */
 - (void)disconnectWithOnSuccess:(nullable void (^)())onSuccess
                       onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
  @brief Send a message to remote client
  @param message The message to be sent.
@@ -97,14 +87,12 @@ RTC_EXPORT
            to:(NSString*)targetId
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
  @brief Stop a WebRTC session.
  @details Clean all resources associated with given remote endpoint. It may include RTCPeerConnection, RTCRtpTransceiver and RTCDataChannel. It still possible to publish a stream, or send a message to given remote endpoint after stop.
  @param targetId Remote user's ID.
  */
 - (void)stop:(NSString*)targetId;
-
 /**
  @brief Publish a stream to the remote client.
  @param stream The stream which will be published.
@@ -120,7 +108,6 @@ RTC_EXPORT
              to:(NSString*)targetId
       onSuccess:(nullable void (^)(OMSP2PPublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
  @brief Get the connection statistoms with target client.
  @param targetId Remote user's ID.
@@ -134,28 +121,22 @@ RTC_EXPORT
 - (void)statsFor:(NSString*)targetId
        onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
        onFailure:(nullable void (^)(NSError*))onFailure;
-
 @property(nonatomic, weak) id<OMSP2PClientDelegate> delegate;
 @property(nonatomic, strong) NSMutableArray<NSString*>* allowedRemoteIds;
-
 @end
-
 /// Delegate for OMSConferenceClient.
 RTC_EXPORT
 @protocol OMSP2PClientDelegate<NSObject>
-
 @optional
 /**
   @brief Triggered when client is disconnected from signaling server.
 */
 - (void)p2pClientDidDisconnect:(OMSP2PClient*)client;
-
 /**
   @brief Triggered when a stream is added.
   @param stream The stream which is added.
 */
 - (void)p2pClient:(OMSP2PClient*)client didAddStream:(OMSRemoteStream*)stream;
-
 /**
   @brief Triggered when a message is received.
   @param senderId Sender's ID.
@@ -164,7 +145,5 @@ RTC_EXPORT
 - (void)p2pClient:(OMSP2PClient*)client
     didReceiveMessage:(NSString*)message
                  from:(NSString*)senderId;
-
 @end
-
 NS_ASSUME_NONNULL_END

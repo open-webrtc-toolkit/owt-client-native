@@ -1,19 +1,15 @@
 //
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
-
 #import "talk/oms/sdk/base/objc/OMSClientConfiguration+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
-
 @implementation OMSClientConfiguration
-
 - (instancetype)init {
   if (self = [super init]) {
     _rtcConfiguration = [[RTCConfiguration alloc] init];
   }
   return self;
 }
-
 - (std::shared_ptr<oms::base::ClientConfiguration>)nativeClientConfiguration {
   std::shared_ptr<oms::base::ClientConfiguration> config(
       new oms::base::ClientConfiguration());
@@ -33,5 +29,4 @@
           : oms::base::ClientConfiguration::CandidateNetworkPolicy::kAll;
   return config;
 }
-
 @end

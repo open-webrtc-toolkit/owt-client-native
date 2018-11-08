@@ -1,55 +1,42 @@
 /*
  * Intel License
  */
-
 #ifndef WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
-
 #include <vector>
-
 #include "webrtc/rtc_base/messagehandler.h"
 #include "webrtc/rtc_base/third_party/sigslot/sigslot.h"
-
 #include "talk/oms/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/oms/sdk/base/mediaconstraintsimpl.h"
 #include "talk/oms/sdk/base/functionalobserver.h"
 #include "talk/oms/sdk/include/cpp/oms/base/commontypes.h"
-
 namespace rtc {
 class NetworkMonitorInterface;
 }
-
 namespace oms {
 namespace base {
-
 using webrtc::PeerConnectionInterface;
-
 struct SetSessionDescriptionMessage : public rtc::MessageData {
   explicit SetSessionDescriptionMessage(
       FunctionalSetSessionDescriptionObserver* observer,
       webrtc::SessionDescriptionInterface* desc)
       : observer(observer), description(desc) {}
-
   virtual ~SetSessionDescriptionMessage() {
     delete description;
   }
-
   rtc::scoped_refptr<FunctionalSetSessionDescriptionObserver> observer;
   webrtc::SessionDescriptionInterface* description;
 };
-
 struct GetStatsMessage : public rtc::MessageData {
   explicit GetStatsMessage(
       FunctionalStatsObserver* observer,
       webrtc::MediaStreamInterface* stream,
       webrtc::PeerConnectionInterface::StatsOutputLevel level)
       : observer(observer), stream(stream), level(level) {}
-
   rtc::scoped_refptr<FunctionalStatsObserver> observer;
   webrtc::MediaStreamInterface* stream;
   webrtc::PeerConnectionInterface::StatsOutputLevel level;
 };
-
 struct GetNativeStatsMessage : public rtc::MessageData {
   explicit GetNativeStatsMessage(
       FunctionalNativeStatsObserver* observer,
@@ -60,32 +47,26 @@ struct GetNativeStatsMessage : public rtc::MessageData {
   webrtc::MediaStreamInterface* stream;
   webrtc::PeerConnectionInterface::StatsOutputLevel level;
 };
-
 struct PeerConnectionChannelConfiguration
     : public webrtc::PeerConnectionInterface::RTCConfiguration {
  public:
   explicit PeerConnectionChannelConfiguration();
-
   std::vector<VideoEncodingParameters> video;
   std::vector<AudioEncodingParameters> audio;
-
   /// Indicate whether this PeerConnection is used for sending encoded frame.
   bool encoded_video_frame_;
 };
-
 class PeerConnectionChannel : public rtc::MessageHandler,
                               public webrtc::PeerConnectionObserver,
                               public webrtc::DataChannelObserver,
                               public sigslot::has_slots<> {
  public:
   PeerConnectionChannel(PeerConnectionChannelConfiguration configuration);
-
  protected:
   virtual ~PeerConnectionChannel();
   bool InitializePeerConnection();
   const webrtc::SessionDescriptionInterface* LocalDescription();
   PeerConnectionInterface::SignalingState SignalingState() const;
-
   // Apply the bitrate settings on all tracks available. Failing to set any of them
   // will result in a false return, with remaining settings applicable still applied.
   // Subclasses can override this to implementation specific bitrate allocation policies.
@@ -94,10 +75,8 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
-
   // Message looper event
   virtual void OnMessage(rtc::Message* msg) override;
-
   // PeerConnectionObserver
   virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {};
   virtual void OnSignalingChange(
@@ -121,21 +100,17 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // conflict.
   virtual void OnDataChannelStateChange(){};
   virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer){};
-
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
       webrtc::SessionDescriptionInterface* desc);
   virtual void OnCreateSessionDescriptionFailure(const std::string& error);
-
   // SetSessionDescriptionObserver
   virtual void OnSetLocalSessionDescriptionSuccess();
   virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
   virtual void OnSetRemoteSessionDescriptionSuccess();
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
-
   // Fired when networks changed. (Only works on iOS)
   virtual void OnNetworksChanged();
-
   enum MessageType : int {
     kMessageTypeCreateOffer = 101,
     kMessageTypeCreateAnswer,
@@ -149,7 +124,6 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     kMessageTypeGetStats,
     kMessageTypeCreateNetworkMonitor=201,
   };
-
   Thread* pc_thread_;
   PeerConnectionChannelConfiguration configuration_;
   // Use this data channel to send p2p messages.
@@ -158,14 +132,12 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   MediaConstraintsImpl media_constraints_;
   webrtc::PeerConnectionInterface::RTCOfferAnswerOptions offer_answer_options_;
-
  private:
   // DataChannelObserver
   virtual void OnStateChange() override { OnDataChannelStateChange(); }
   virtual void OnMessage(const webrtc::DataBuffer& buffer) override {
     OnDataChannelMessage(buffer);
   };
-
   // |factory_| is got from PeerConnectionDependencyFactory::Get() which is
   // shared among all PeerConnectionChannels.
   rtc::scoped_refptr<PeerConnectionDependencyFactory> factory_;
@@ -173,5 +145,4 @@ class PeerConnectionChannel : public rtc::MessageHandler,
 };
 }
 }
-
 #endif  // OMS_BASE_PEERCONNECTIONCHANNEL_H_

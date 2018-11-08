@@ -23,10 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
-
 /// Define ICE candidate types.
 typedef NS_ENUM(NSUInteger, RTCIceCandidateType) {
   /// Host candidate.
@@ -40,7 +38,6 @@ typedef NS_ENUM(NSUInteger, RTCIceCandidateType) {
   /// Unknown.
   RTCIceCandidateTypeUnknown = 99,
 };
-
 /// Defines transport protocol.
 typedef NS_ENUM(NSUInteger, RTCTransportProtocolType) {
   /// TCP.

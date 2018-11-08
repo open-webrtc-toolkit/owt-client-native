@@ -6,7 +6,6 @@
 #include <d3d9.h>
 #include <dxva2api.h>
 #include "webrtc/common_video/include/video_frame_buffer.h"
-
 namespace oms {
 namespace base {
 // structure that containts d3d9 device manager

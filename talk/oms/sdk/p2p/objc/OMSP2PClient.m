@@ -1,17 +1,12 @@
 //
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
-
 #import <WebRTC/RTCLogging.h>
-
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PClient.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PErrors.h"
 #import "talk/oms/sdk/p2p/objc/OMSP2PPeerConnectionChannel.h"
-
 @interface OMSP2PClient ()
-
 - (OMSP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId;
-
 /**
  @brief Unpublish the stream to the remote client.
  @param stream The stream which will be removed.
@@ -28,11 +23,8 @@
                to:(NSString*)targetId
         onSuccess:(nullable void (^)())onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
-
 @end
-
 typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
-
 @implementation OMSP2PClient {
   id<OMSP2PSignalingChannelProtocol> _signalingChannel;
   SignalingChannelState _peerClientState;
@@ -40,7 +32,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   NSString* _localId;
   OMSP2PClientConfiguration* _configuration;
 }
-
 - (instancetype)initWithConfiguration:(OMSP2PClientConfiguration*)configuration
                 signalingChannel:
                     (id<OMSP2PSignalingChannelProtocol>)signalingChannel {
@@ -52,7 +43,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   _peerClientState = kDisconnected;
   return self;
 }
-
 - (void)connect:(NSString*)token
       onSuccess:(void (^)(NSString*))onSuccess
       onFailure:(void (^)(NSError*))onFailure {
@@ -72,7 +62,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
         }
       }];
 }
-
 - (void)disconnectWithOnSuccess:(void (^)())onSuccess
                       onFailure:(void (^)(NSError*))onFailure {
   for (id key in _peerConnectionChannels) {
@@ -83,7 +72,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   }
   [_signalingChannel disconnectWithOnSuccess:onSuccess onFailure:onFailure];
 }
-
 - (BOOL)checkSignalingChannelOnline:(void (^)(NSError*))failure {
   if (_peerClientState != kConnected) {
     if (failure) {
@@ -102,7 +90,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   }
   return YES;
 }
-
 - (void)publish:(OMSLocalStream*)stream
              to:(NSString*)targetId
       onSuccess:(void (^)(OMSP2PPublication*))onSuccess
@@ -113,7 +100,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
       [self getPeerConnectionChannel:targetId];
   [channel publish:stream onSuccess:onSuccess onFailure:onFailure];
 }
-
 - (void)unpublish:(OMSLocalStream*)stream
                to:(NSString*)targetId
         onSuccess:(void (^)())onSuccess
@@ -124,7 +110,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
       [self getPeerConnectionChannel:targetId];
   [channel unpublish:stream onSuccess:onSuccess onFailure:onFailure];
 }
-
 - (OMSP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId {
   OMSP2PPeerConnectionChannel* channel =
       [_peerConnectionChannels objectForKey:targetId];
@@ -139,7 +124,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   }
   return channel;
 }
-
 - (void)sendSignalingMessage:(NSString*)data
                           to:(NSString*)targetId
                    onSuccess:(void (^)())onSuccess
@@ -149,7 +133,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
                        onSuccess:onSuccess
                        onFailure:onFailure];
 }
-
 - (void)stop:(NSString*)targetId {
   if (![self checkSignalingChannelOnline:nil])
     return;
@@ -158,7 +141,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   [channel stopWithOnSuccess:nil onFailure:nil];
   [_peerConnectionChannels removeObjectForKey:targetId];
 }
-
 - (void)send:(NSString*)message
            to:(NSString*)targetId
     onSuccess:(nullable void (^)())onSuccess
@@ -169,7 +151,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
       [self getPeerConnectionChannel:targetId];
   [channel send:message withOnSuccess:onSuccess onFailure:onFailure];
 }
-
 - (void)statsFor:(NSString*)targetId
        onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
        onFailure:(nullable void (^)(NSError*))onFailure {
@@ -177,7 +158,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
       [self getPeerConnectionChannel:targetId];
   [channel statsWithOnSuccess:onSuccess onFailure:onFailure];
 }
-
 - (void)channel:(id<OMSP2PSignalingChannelProtocol>)channel
     didReceiveMessage:(NSString*)message
                  from:(NSString*)senderId {
@@ -194,31 +174,25 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
       [self getPeerConnectionChannel:senderId];
   [pcChannel onIncomingSignalingMessage:message];
 }
-
 - (void)onInvitedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"On invited from %@", remoteUserId);
 }
-
 - (void)onStreamAdded:(OMSRemoteStream*)stream {
   RTCLogInfo(@"PeerClient received stream add.");
   if ([_delegate respondsToSelector:@selector(p2pClient:didAddStream:)]) {
     [_delegate p2pClient:self didAddStream:stream];
   }
 }
-
 - (void)onStreamRemoved:(OMSRemoteStream*)stream {
   RTCLogInfo(@"PeerClient received stream removed.");
 }
-
 - (void)onAcceptedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received accepted.");
 }
-
 - (void)onDeniedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received Denied.");
   [_peerConnectionChannels removeObjectForKey: remoteUserId];
 }
-
 - (void)onDataReceivedFrom:(NSString*)remoteUserId withData:(NSString*)data {
   RTCLogInfo(@"Received data from data channel.");
   if ([_delegate
@@ -228,7 +202,6 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
                      from:remoteUserId];
   }
 }
-
 - (void)channelDidDisconnect:(id<OMSP2PSignalingChannelProtocol>)channel {
   RTCLogInfo(@"PeerClient received disconnect.");
   _peerClientState = kDisconnected;
@@ -236,13 +209,10 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
     [_delegate p2pClientDidDisconnect:self];
   }
 }
-
 - (void)onStoppedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received chat stopped.");
 }
-
 - (void)onStartedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received chat started.");
 }
-
 @end

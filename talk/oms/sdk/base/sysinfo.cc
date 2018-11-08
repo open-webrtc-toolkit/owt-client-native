@@ -6,15 +6,12 @@
 #endif  // WEBRTC_LINUX
 #include "webrtc/rtc_base/checks.h"
 #include "talk/oms/sdk/base/sysinfo.h"
-
 namespace oms {
 namespace base {
-
 static const std::string kSdkVersion("4.1");
 static const std::string kRuntimeName("WebRTC");
 static const std::string kRuntimeVersion("67");
 static const std::string kUnknown("Unknown");
-
 std::string SysInfo::SdkType() {
 #if defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
   return "Objective-C";
@@ -22,18 +19,15 @@ std::string SysInfo::SdkType() {
   return "C++";
 #endif
 }
-
 #if defined(WEBRTC_WIN)
 std::string SysInfo::OsName() {
   return "Windows NT";
 }
-
 std::string SysInfo::OsVersion() {
   // TODO: Implement it.
   return kUnknown;
 }
 #endif  // WEBRTC_WIN
-
 #if defined(WEBRTC_LINUX)
 std::string SysInfo::OsName(){
   struct utsname info;
@@ -43,7 +37,6 @@ std::string SysInfo::OsName(){
   }
   return std::string(info.sysname);
 }
-
 std::string SysInfo::OsVersion() {
   struct utsname info;
   if (uname(&info) < 0) {
@@ -53,14 +46,12 @@ std::string SysInfo::OsVersion() {
   return std::string(info.release);
 }
 #endif  // WEBRTC_LINUX
-
 SysInfo SysInfo::GetInstance() {
   SdkInfo sdk(SdkType(), kSdkVersion);
   OsInfo os(OsName(), OsVersion());
   RuntimeInfo runtime(kRuntimeName, kRuntimeVersion);
   return SysInfo(sdk, os, runtime);
 }
-
 SysInfo::SysInfo(const SdkInfo sdk_info,
                  const OsInfo os_info,
                  const RuntimeInfo runtime_info)

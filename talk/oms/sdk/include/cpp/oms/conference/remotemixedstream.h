@@ -23,22 +23,17 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_REMOTEMIXEDSTREAM_H_
 #define OMS_CONFERENCE_REMOTEMIXEDSTREAM_H_
-
 #include "oms/base/commontypes.h"
 #include "oms/base/stream.h"
-
 namespace oms {
 namespace conference {
-
 /// Observer class for remote mixed stream.
 class RemoteMixedStreamObserver : public oms::base::StreamObserver {
  public:
   virtual void OnVideoLayoutChanged(){};
 };
-
 /// This class represent a mixed remote stream.
 class RemoteMixedStream : public oms::base::RemoteStream {
  public:
@@ -49,12 +44,10 @@ class RemoteMixedStream : public oms::base::RemoteStream {
                     const oms::base::SubscriptionCapabilities& subscription_capabilities,
                     const oms::base::PublicationSettings& publication_settings);
   /** @endcond **/
-
   /// Add an observer for conferenc client.
   void AddObserver(RemoteMixedStreamObserver& observer);
   /// Remove an object from conference client.
   void RemoveObserver(RemoteMixedStreamObserver& observer);
-
   /**
     @brief Returns an attribute of mixed streams which distinguishes them from
     other mixed streams a conference room provides.
@@ -67,17 +60,13 @@ class RemoteMixedStream : public oms::base::RemoteStream {
     string-typed value, which must be unique within a room.
   */
   std::string Viewport();
-
  protected:
   virtual void OnVideoLayoutChanged();
-
  private:
   const std::string viewport_;
   std::vector<std::reference_wrapper<RemoteMixedStreamObserver>> observers_;
-
   friend class oms::conference::ConferenceClient;
 };
 }
 }
-
 #endif  // OMS_CONFERENCE_REMOTEMIXEDSTREAM_H_

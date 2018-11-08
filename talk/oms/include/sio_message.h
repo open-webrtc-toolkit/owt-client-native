@@ -3,7 +3,6 @@
 //
 //  Created by Melo Yao on 3/25/15.
 //
-
 #ifndef __SIO_MESSAGE_H__
 #define __SIO_MESSAGE_H__
 #include <string>
@@ -30,18 +29,15 @@ namespace sio
 			flag_boolean,
 			flag_null
         };
-
 		virtual ~message(){};
         
         class list;
-
         flag get_flag() const
         {
             return _flag;
         }
         
         typedef shared_ptr<message> ptr;
-
 		virtual bool get_bool() const
 		{
 			//assert(false);
@@ -83,7 +79,6 @@ namespace sio
             s_empty_vector.clear();
             return s_empty_vector;
         }
-
         virtual vector<ptr>& get_vector()
         {
             //assert(false);
@@ -113,7 +108,6 @@ namespace sio
     protected:
         message(flag f):_flag(f){}
     };
-
 	class null_message : public message
 	{
 	protected:
@@ -121,18 +115,15 @@ namespace sio
 			:message(flag_null)
         {
         }
-
 	public:
         static message::ptr create()
         {
             return ptr(new null_message());
         }
 	};
-
 	class bool_message : public message
 	{
 		bool _v;
-
 	protected:
         bool_message(bool v)
             :message(flag_boolean),_v(v)
@@ -204,7 +195,6 @@ namespace sio
             :message(flag_string),_v(v)
         {
         }
-
         string_message(string&& v)
             :message(flag_string),_v(move(v))
         {
@@ -214,7 +204,6 @@ namespace sio
         {
             return ptr(new string_message(v));
         }
-
         static message::ptr create(string&& v)
         {
             return ptr(new string_message(move(v)));
@@ -291,98 +280,78 @@ namespace sio
             return _v;
         }
     };
-
     class message::list
     {
     public:
         list()
         {
         }
-
         list(nullptr_t)
         {
         }
-
         list(message::list&& rhs):
             m_vector(std::move(rhs.m_vector))
         {
-
         }
-
         list & operator= (const message::list && rhs)
         {
             m_vector = std::move(rhs.m_vector);
             return *this;
         }
-
 		template <typename T>
 		list(T&& content,
 			typename enable_if<is_same<vector<message::ptr>,typename remove_reference<T>::type>::value>::type* = 0):
 			m_vector(std::forward<T>(content))
         {
         }
-
         list(message::list const& rhs):
             m_vector(rhs.m_vector)
         {
-
         }
-
         list(message::ptr const& message)
         {
             if(message)
                 m_vector.push_back(message);
         }
-
         list(const string& text)
         {
             m_vector.push_back(string_message::create(text));
         }
-
         list(string&& text)
         {
             m_vector.push_back(string_message::create(move(text)));
         }
-
         list(shared_ptr<string> const& binary)
         {
             if(binary)
                 m_vector.push_back(binary_message::create(binary));
         }
-
         list(shared_ptr<const string> const& binary)
         {
             if(binary)
                 m_vector.push_back(binary_message::create(binary));
         }
-
         void push(message::ptr const& message)
         {
             if(message)
                 m_vector.push_back(message);
-
         }
-
         void insert(size_t pos,message::ptr const& message)
         {
             m_vector.insert(m_vector.begin()+pos, message);
         }
-
         size_t size() const
         {
             return m_vector.size();
         }
-
         const message::ptr& at(size_t i) const
         {
             return m_vector[i];
         }
-
         const message::ptr& operator[] (size_t i) const
         {
             return m_vector[i];
         }
-
         message::ptr to_array_message(string const& event_name) const
         {
             message::ptr arr = array_message::create();
@@ -390,17 +359,14 @@ namespace sio
             arr->get_vector().insert(arr->get_vector().end(),m_vector.begin(),m_vector.end());
             return arr;
         }
-
         message::ptr to_array_message() const
         {
             message::ptr arr = array_message::create();
             arr->get_vector().insert(arr->get_vector().end(),m_vector.begin(),m_vector.end());
             return arr;
         }
-
     private:
         vector<message::ptr> m_vector;
     };
 }
-
 #endif

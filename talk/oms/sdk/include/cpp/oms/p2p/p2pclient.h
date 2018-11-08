@@ -23,17 +23,14 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_P2P_P2PCLIENT_H_
 #define OMS_P2P_P2PCLIENT_H_
-
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
 #include <set>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/connectionstats.h"
 #include "oms/base/stream.h"
@@ -42,21 +39,16 @@
 #include "oms/p2p/p2psignalingsenderinterface.h"
 #include "oms/base/clientconfiguration.h"
 #include "oms/base/globalconfiguration.h"
-
 namespace rtc {
   class TaskQueue;
 }
-
 namespace oms {
 namespace base {
   struct PeerConnectionChannelConfiguration;
 }
-
 namespace p2p{
-
 /**
  @brief Configuration for P2PClient
-
  This configuration is used while creating P2PClient. Changing this
  configuration does NOT impact P2PClient already created.
 */
@@ -64,10 +56,8 @@ struct P2PClientConfiguration : oms::base::ClientConfiguration {
   std::vector<AudioEncodingParameters> audio_encodings;
   std::vector<VideoEncodingParameters> video_encodings;
 };
-
 class P2PPeerConnectionChannelObserverCppImpl;
 class P2PPeerConnectionChannel;
-
 /// Observer for P2PClient
 class P2PClientObserver {
  public:
@@ -109,7 +99,6 @@ class P2PClientObserver {
   virtual void OnStreamAdded(
       std::shared_ptr<oms::base::RemoteStream> stream){};
 };
-
 /// An async client for P2P WebRTC sessions
 class P2PClient final
     : protected P2PSignalingSenderInterface,
@@ -125,18 +114,15 @@ class P2PClient final
    */
   P2PClient(P2PClientConfiguration& configuration,
             std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
-
   /*! Add an observer for peer client.
    @param observer Add this object to observer list.
           Do not delete this object until it is removed from observer list.
    */
   void AddObserver(P2PClientObserver& observer);
-
   /*! Remove an observer from peer client.
    @param observer Remove this object from observer list.
    */
   void RemoveObserver(P2PClientObserver& observer);
-
   /**
    @brief Connect to the signaling server.
    @param host The URL of signaling server to connect
@@ -152,7 +138,6 @@ class P2PClient final
                const std::string& token,
                std::function<void(const std::string&)> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
   @brief Disconnect from the signaling server.
          It will stop all active WebRTC sessions.
@@ -164,13 +149,11 @@ class P2PClient final
    */
   void Disconnect(std::function<void()> on_success,
                   std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
   @brief Add a remote user to the allowed list to start a WebRTC session.
   @param target_id Remote user's ID.
    */
   void AddAllowedRemoteId(const std::string& target_id);
-
   /**
   @brief Remove a remote user from the allowed list to stop a WebRTC session.
   @param target_id Remote user's ID.
@@ -184,7 +167,6 @@ class P2PClient final
   void RemoveAllowedRemoteId(const std::string& target_id,
                              std::function<void()> on_success,
                              std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
    @brief Stop a WebRTC session.
    @param target_id Remote user's ID.
@@ -200,7 +182,6 @@ class P2PClient final
   void Stop(const std::string& target_id,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
    @brief Publish a stream to the remote client.
    @param stream The stream which will be published.
@@ -217,7 +198,6 @@ class P2PClient final
                std::shared_ptr<oms::base::LocalStream> stream,
                std::function<void(std::shared_ptr<P2PPublication>)> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
    @brief Send a message to remote client
    @param target_id Remote user's ID.
@@ -234,7 +214,6 @@ class P2PClient final
             const std::string& message,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /**
    @brief Get the connection statistoms with target client.
    @param target_id Remote user's ID.
@@ -250,11 +229,9 @@ class P2PClient final
       const std::string& target_id,
       std::function<void(std::shared_ptr<oms::base::ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
   /** @cond */
   void SetLocalId(const std::string& local_id);
   /** @endcond */
-
  protected:
   // Implement P2PSignalingSenderInterface
   virtual void SendSignalingMessage(const std::string& message,
@@ -264,7 +241,6 @@ class P2PClient final
   // Implement P2PSignalingChannelObserver
   virtual void OnMessage(const std::string& message, const std::string& sender);
   virtual void OnServerDisconnected();
-
   // Handle events from P2PPeerConnectionChannel
   // Triggered when the WebRTC session is started.
   virtual void OnStarted(const std::string& remote_id);
@@ -279,7 +255,6 @@ class P2PClient final
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
       std::shared_ptr<oms::base::RemoteStream> stream);
-
  private:
   void Unpublish(const std::string& target_id,
                  std::shared_ptr<LocalStream> stream,
@@ -289,7 +264,6 @@ class P2PClient final
       const std::string& target_id);
   bool IsPeerConnectionChannelCreated(const std::string& target_id);
   oms::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
-
   // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
@@ -299,12 +273,9 @@ class P2PClient final
   std::string local_id_;
   std::vector<std::reference_wrapper<P2PClientObserver>> observers_;
   P2PClientConfiguration configuration_;
-
   mutable std::mutex remote_ids_mutex_;
   std::vector<std::string> allowed_remote_ids_;
 };
-
 }
 }
-
 #endif  // OMS_P2P_P2PCLIENT_H_

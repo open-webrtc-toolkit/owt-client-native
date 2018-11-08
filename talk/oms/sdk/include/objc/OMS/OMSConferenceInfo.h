@@ -23,22 +23,17 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <WebRTC/RTCMacros.h>
 #import <OMS/OMSConferenceParticipant.h>
 #import <OMS/OMSRemoteStream.h>
-
 NS_ASSUME_NONNULL_BEGIN
-
 /**
   @brief Information about the conference.
   @details This information contains current details of the conference.
 */
 RTC_EXPORT
 @interface OMSConferenceInfo : NSObject
-
 - (instancetype)init NS_UNAVAILABLE;
-
 /// Conference ID
 @property(readonly, strong) NSString* conferenceId;
 /// Participants in the conference.
@@ -50,7 +45,5 @@ RTC_EXPORT
 @property(readonly, strong) NSArray<OMSRemoteStream*>* remoteStreams;
 /// Current user's info.
 @property(readonly, strong) OMSConferenceParticipant* myself;
-
 @end
-
 NS_ASSUME_NONNULL_END

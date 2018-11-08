@@ -23,18 +23,14 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 /// @cond
-
 // RTCSignalingSenderInterface is an ObjectiveC wrapper for
 // SignalingSenderInterface.
 @protocol OMSP2PSignalingSenderProtocol<NSObject>
-
 - (void)sendSignalingMessage:(NSString*)message
                           to:(NSString*)targetId
                    onSuccess:(void (^)())onSuccess
                    onFailure:(void (^)(NSError*))onFailure;
-
 @end
 /// @endcond

@@ -1,13 +1,10 @@
 /*
  * Intel License
  */
-
 #import <Foundation/Foundation.h>
 #import "talk/oms/sdk/base/objc/OMSRemoteStream+Private.h"
 #import "WebRTC/RTCLogging.h"
-
 #include "talk/oms/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
-
 namespace oms {
 namespace p2p {
 P2PPeerConnectionChannelObserverObjcImpl::
@@ -15,22 +12,18 @@ P2PPeerConnectionChannelObserverObjcImpl::
         id<OMSP2PPeerConnectionChannelObserver> observer) {
   _observer = observer;
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnStarted(
     const std::string& remote_id) {
   [_observer onStartedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(
     const std::string& remote_id) {
   [_observer onStoppedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(
     const std::string& remote_id) {
   [_observer onDeniedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnData(
     const std::string& remote_id,
     const std::string& message) {
@@ -38,7 +31,6 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnData(
       onDataReceivedFrom:[NSString stringWithUTF8String:remote_id.c_str()]
                 withData:[NSString stringWithUTF8String:message.c_str()]];
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
     std::shared_ptr<oms::base::RemoteStream> stream) {
   OMSRemoteStream* remote_stream = (OMSRemoteStream*)[
@@ -47,12 +39,10 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStreamAdded(
   [_observer onStreamAdded:remote_stream];
   NSLog(@"On stream added.");
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::OnStreamRemoved(
     std::shared_ptr<oms::base::RemoteStream> stream) {
   TriggerStreamRemoved(stream);
 }
-
 void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(
     std::shared_ptr<oms::base::RemoteStream> stream) {
   if (remote_streams_.find(stream->Id()) == remote_streams_.end()) {

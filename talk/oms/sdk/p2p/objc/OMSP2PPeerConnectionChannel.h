@@ -1,21 +1,16 @@
 /*
  * Intel License
  */
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCLegacyStatsReport.h>
-
 #import "talk/oms/sdk/include/objc/OMS/OMSLocalStream.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PSignalingSenderProtocol.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PSignalingReceiverProtocol.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PPeerConnectionChannelObserver.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PClientConfiguration.h"
-
 @class OMSP2PPublication;
-
 @interface OMSP2PPeerConnectionChannel
     : NSObject<OMSP2PSignalingReceiverProtocol>
-
 - (instancetype)initWithConfiguration:(OMSP2PClientConfiguration*)config
                               localId:(NSString*)localId
                              remoteId:(NSString*)remoteId
@@ -40,5 +35,4 @@
 - (void)addObserver:(id<OMSP2PPeerConnectionChannelObserver>)observer;
 - (void)removeObserver:(id<OMSP2PPeerConnectionChannelObserver>)observer;
 - (NSString*)getRemoteUserId;
-
 @end

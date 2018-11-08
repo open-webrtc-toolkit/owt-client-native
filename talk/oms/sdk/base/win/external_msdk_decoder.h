@@ -3,7 +3,6 @@
 */
 #include <utility>
 #include <vector>
-
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/test/fakeconstraints.h"
 #include "webrtc/rtc_base/logging.h"
@@ -11,18 +10,15 @@
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/thread.h"
-
 // For decoder and encoder factory
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
-
 #ifdef FOURCC
 #undef FOURCC
 #endif
 #include "third_party/libyuv/include/libyuv.h"
-
 #include "talk/oms/sdk/base/win/d3dnativeframe.h"
 #include <atlbase.h>
 #include <codecapi.h>
@@ -34,12 +30,10 @@
 #include "mfxvideo++.h"
 #include "mfx_buffering.h"
 #include "mfxplugin++.h"
-
 #pragma once
 //
 // MSDK Video Decoder declaration.
 //
-
 namespace oms {
 namespace base {
 class ExternalMSDKVideoDecoder : public webrtc::VideoDecoder,
@@ -54,28 +48,21 @@ class ExternalMSDKVideoDecoder : public webrtc::VideoDecoder,
   };
   ExternalMSDKVideoDecoder(webrtc::VideoCodecType codecType);
   virtual ~ExternalMSDKVideoDecoder();
-
   int32_t InitDecode(const webrtc::VideoCodec* codecSettings,
                      int32_t numberOfCores) override;
-
   int32_t Decode(const webrtc::EncodedImage& inputImage,
                  bool missingFrames,
                  const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
                  int64_t renderTimeMs = -1) override;
-
   int32_t RegisterDecodeCompleteCallback(
       webrtc::DecodedImageCallback* callback) override;
-
   int32_t Release() override;
-
   // rtc::MessageHandler implementation.
   void OnMessage(rtc::Message* msg) override;
-
  private:
   int32_t InitDecodeOnCodecThread();
   void CheckOnCodecThread();
   bool CreateD3DDeviceManager();
-
   // Type of video codec.
   webrtc::VideoCodecType codecType_;
   std::unique_ptr<rtc::Thread>
@@ -102,7 +89,6 @@ class ExternalMSDKVideoDecoder : public webrtc::VideoDecoder,
   bool m_video_param_extracted;
   int m_decHeaderFrameCount;  // For dec_header phase FIR request.
   uint32_t m_decBsOffset;
-
   // End of MSDK variables
   rtc::CriticalSection critical_section_;
   IDirect3D9Ex* d3d9_;
