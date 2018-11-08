@@ -167,7 +167,7 @@ deps = {
   'src/third_party/gflags/src':
     Var('chromium_git') + '/external/github.com/gflags/gflags' + '@' + '03bebcb065c83beff83d50ae025a55a4bf94dfca',
   'src/third_party/webrtc':
-    Var('internal_ccr1_git') + '/oms-webrtcstack' + '@' + 'bda7d376b4961997c579a49feb7b8ac9a51b727d',
+    Var('internal_ccr1_git') + '/oms-webrtcstack' + '@' + '59a3082aba013fec777a9b07eeffe59a35540b1d',
   'src/third_party/accessibility_test_framework': {
     'packages': [
         {
