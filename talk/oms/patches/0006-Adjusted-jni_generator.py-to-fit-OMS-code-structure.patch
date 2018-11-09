@@ -1,33 +1,36 @@
-From ad0501ceed919f5b2e12724ec5b2ba0c2b47b58e Mon Sep 17 00:00:00 2001
+From 18f2b2ee54447993e27b9dac24f68f5c57a1dcbf Mon Sep 17 00:00:00 2001
 From: Zhang He <he.zhang@intel.com>
-Date: Thu, 31 May 2018 15:38:12 +0800
+Date: Fri, 9 Nov 2018 09:12:25 +0800
 Subject: [PATCH] Adjusted jni_generator.py to fit OMS code structure.
+
 ---
- android/jni_generator/jni_generator.py | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ android/jni_generator/jni_generator.py | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
 diff --git a/android/jni_generator/jni_generator.py b/android/jni_generator/jni_generator.py
-index 031f203..b870a0d 100755
+index ee6a52b..6b9f341 100755
 --- a/android/jni_generator/jni_generator.py
 +++ b/android/jni_generator/jni_generator.py
-@@ -16,6 +16,7 @@ import subprocess
- import sys
- import textwrap
- import zipfile
+@@ -11,6 +11,7 @@ import errno
+ import optparse
+ import os
+ import re
 +import shutil
- 
- CHROMIUM_SRC = os.path.join(
-     os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
-@@ -980,6 +981,9 @@ $CLOSE_NAMESPACE
+ from string import Template
+ import subprocess
+ import sys
+@@ -993,6 +994,10 @@ $METHOD_STUBS
      if not self.options.includes:
        return ''
      includes = self.options.includes.split(',')
 +    for i in range(len(includes)):
 +      if includes[i] == '../../../../../../../../../sdk/android/src/jni/jni_generator_helper.h':
 +        includes[i] = '../../../../../../../third_party/webrtc/sdk/android/src/jni/jni_generator_helper.h'
-     return '\n'.join('#include "%s"' % x for x in includes)
++
+     return '\n'.join('#include "%s"' % x for x in includes) + '\n'
  
    def GetOpenNamespaceString(self):
-@@ -1321,6 +1325,12 @@ def GetScriptName():
+@@ -1339,6 +1344,13 @@ def GetScriptName():
        break
    return os.sep.join(script_components[base_index:])
  
@@ -37,17 +40,18 @@ index 031f203..b870a0d 100755
 +  if not os.path.exists(new_path):
 +    os.makedirs(new_path)
 +  shutil.copy2(output_file, new_path)
++
  
  def main(argv):
    usage = """usage: %prog [OPTIONS]
-@@ -1381,6 +1391,8 @@ See SampleForTests.java for more details.
+@@ -1399,6 +1411,7 @@ See SampleForTests.java for more details.
+     root_name = os.path.splitext(os.path.basename(input_file))[0]
      output_file = os.path.join(options.output_dir, root_name) + '_jni.h'
    GenerateJNIHeader(input_file, output_file, options)
- 
 +  _MoveJNIHeader4OMS(options.output_dir, output_file)
-+
-   if options.depfile:
-     build_utils.WriteDepfile(options.depfile, output_file)
  
+ 
+ if __name__ == '__main__':
 -- 
 2.7.4
+

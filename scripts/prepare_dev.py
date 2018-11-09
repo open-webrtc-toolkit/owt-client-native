@@ -34,8 +34,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
   #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Suppress-some-warnings-and-disable-thin-archieve.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
     #subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-ICS-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
-   # subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-OMS-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
   #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0008-ios-Various-build-fixes-for-Xcode-10.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
    # subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
 
