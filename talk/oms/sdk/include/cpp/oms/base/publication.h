@@ -23,17 +23,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_PUBLICATION_H_
 #define OMS_BASE_PUBLICATION_H_
-
 #include "oms/base/commontypes.h"
 #include "oms/base/exception.h"
 #include "oms/base/connectionstats.h"
-
 namespace oms {
 namespace base {
-
 /// Observer that receives event from publication.
 class PublicationObserver {
  public:
@@ -44,7 +40,6 @@ class PublicationObserver {
   /// Triggered when audio and/or video is unmuted.
   virtual void OnUnmute(TrackKind track_kind) = 0;
 };
-
 class Publication {
  public:
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
@@ -66,8 +61,6 @@ class Publication {
   /// Unregister an observer from this publication.
   virtual void RemoveObserver(PublicationObserver& observer) = 0;
 };
-
 } // namespace base
 } // namespace oms
-
 #endif  // OMS_BASE_PUBLICATION_H_

@@ -1,7 +1,5 @@
 package com.intel.webrtc.base;
-
 import org.webrtc.VideoCapturer;
-
 /**
 * Video Frame Filter Interface.
 */

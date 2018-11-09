@@ -1,7 +1,6 @@
 /*
 * Intel License.
 */
-
 //
 //C++ SDK specific video renderer implementation. This render will check if native buffer impl ptr is set or not.
 //If received buffer is i420 data, will create a new D3D device for rendering the I420 frame.
@@ -10,19 +9,15 @@
 //
 #ifndef OMS_BASE_WIN_D3DVIDEORENDERER_H
 #define OMS_BASE_WIN_D3DVIDEORENDERER_H
-
 #include "webrtc/api/mediastreaminterface.h"
-
 namespace oms {
 namespace base {
 class D3DVideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   D3DVideoRenderer(HWND wnd, webrtc::VideoTrackInterface* track_to_render);
   virtual ~D3DVideoRenderer();
-
   // VideoSinkInterface implementation
   virtual void OnFrame(const webrtc::VideoFrame& frame) override;
-
  private:
   HWND wnd_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> rendered_track_;

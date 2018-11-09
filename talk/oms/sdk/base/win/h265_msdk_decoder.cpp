@@ -1,7 +1,6 @@
 /*
 * Intel License
 */
-
 #include "talk/oms/sdk/base/nativehandlebuffer.h"
 #include "talk/oms/sdk/base/win/h265_msdk_decoder.h"
 #include "talk/oms/sdk/base/win/d3dnativeframe.h"
@@ -13,18 +12,13 @@
 #include "sample_defs.h"
 #include "plugin_utils.h"
 #include "plugin_loader.h"
-
 using namespace rtc;
-
 #ifdef OMS_DEBUG_H265_DEC
 #include <fstream>
 #endif
-
 #define MSDK_BS_INIT_SIZE (1024*1024)
-
 enum { kMSDKCodecPollMs = 10 };
 enum { MSDK_MSG_HANDLE_INPUT = 0 };
-
 int32_t H265MSDKVideoDecoder::Release() {
     if (d3d9_ != nullptr) {
         d3d9_->Release();
@@ -51,7 +45,6 @@ int32_t H265MSDKVideoDecoder::Release() {
     inited_ = false;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
     : codecType_(type),
       inited_(false),
@@ -66,7 +59,6 @@ H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
   dev_manager_ = nullptr;
   m_pmfxDEC = NULL;
   MSDK_ZERO_MEMORY(m_mfxVideoParams);
-
   m_pMFXAllocator = NULL;
   m_pmfxAllocatorParams = NULL;
   MSDK_ZERO_MEMORY(m_mfxResponse);
@@ -76,7 +68,6 @@ H265MSDKVideoDecoder::H265MSDKVideoDecoder(webrtc::VideoCodecType type)
     input = fopen("input.h265", "wb");
 #endif
 }
-
 H265MSDKVideoDecoder::~H265MSDKVideoDecoder() {
     ntp_time_ms_.clear();
     timestamps_.clear();
@@ -84,13 +75,11 @@ H265MSDKVideoDecoder::~H265MSDKVideoDecoder() {
         decoder_thread_->Stop();
     }
 }
-
 void H265MSDKVideoDecoder::CheckOnCodecThread() {
   RTC_CHECK(decoder_thread_.get() ==
             rtc::ThreadManager::Instance()->CurrentThread())
       << "Running on wrong thread!";
 }
-
 bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
     HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9_);
     if (FAILED(hr) || (d3d9_ == NULL)){
@@ -98,7 +87,6 @@ bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
         return false;
     }
     D3DPRESENT_PARAMETERS present_params = { 0 };
-
     HWND video_window = GetDesktopWindow();
     if (video_window == NULL){
         RTC_LOG(LS_ERROR) << "Failed to get desktop window";
@@ -116,13 +104,11 @@ bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
     present_params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER|D3DPRESENTFLAG_VIDEO;
     present_params.Windowed = TRUE;
     present_params.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-
     hr = d3d9_->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, video_window,
                                D3DCREATE_SOFTWARE_VERTEXPROCESSING |
                                    D3DCREATE_FPU_PRESERVE |
                                    D3DCREATE_MULTITHREADED,
                                &present_params, NULL, &device_);
-
     if (FAILED(hr)){
         RTC_LOG(LS_ERROR) << "Failed to create d3d9 device";
         return false;
@@ -146,9 +132,7 @@ bool H265MSDKVideoDecoder::CreateD3DDeviceManager() {
     hr = query_->Issue(D3DISSUE_END);
     return true;
 }
-
 int32_t H265MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores) {
-
     RTC_LOG(LS_ERROR) << "InitDecode enter";
     if (codecSettings == NULL){
         RTC_LOG(LS_ERROR) << "NULL codec settings";
@@ -157,21 +141,16 @@ int32_t H265MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings
     RTC_CHECK(codecSettings->codecType == codecType_) << "Unsupported codec type" << codecSettings->codecType << " for " << codecType_;
     timestamps_.clear();
     ntp_time_ms_.clear();
-
     if (&codec_ != codecSettings)
         codec_ = *codecSettings;
-
     return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
         Bind(&H265MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
-
 int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
     RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
     CheckOnCodecThread();
-
     //Set videoParamExtracted flag to false to make sure the delayed DecoderHeader call will happen after Init.
     m_video_param_extracted = false;
-
     mfxStatus sts;
     mfxInitParam initParam;
     MSDK_ZERO_MEMORY(initParam);
@@ -181,11 +160,9 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
     width_ = codec_.width;
     height_ = codec_.height;
 
-
     if (inited_) {
         m_pmfxDEC->Close();
         MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
-
         if (m_pMFXAllocator) {
             m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_mfxResponse);
         }
@@ -195,12 +172,10 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             //hardware version does not work, try the software impl
             initParam.Implementation = MFX_IMPL_SOFTWARE;
             sts = m_mfxSession.InitEx(initParam);
-
             if (MFX_ERR_NONE != sts) {
                 return WEBRTC_VIDEO_CODEC_ERROR;
             }
         }
-
         m_hevc_plugin_.reset(LoadPlugin(MFX_PLUGINTYPE_VIDEO_DECODE, m_mfxSession, MFX_PLUGINID_HEVCD_HW, 1));
         if (m_hevc_plugin_.get() == nullptr) {
             m_hevc_plugin_.reset(LoadPlugin(MFX_PLUGINTYPE_VIDEO_DECODE, m_mfxSession, MFX_PLUGINID_HEVCD_SW, 1));
@@ -216,7 +191,6 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
         MSDK_ZERO_MEMORY(m_mfxBS);
         m_mfxBS.Data = new mfxU8[MSDK_BS_INIT_SIZE];
         m_mfxBS.MaxLength = MSDK_BS_INIT_SIZE;
-
         //Next step we create the allocator, and D3D9 devices.
         bool dev_ret = CreateD3DDeviceManager();
         if (!dev_ret) {
@@ -226,12 +200,10 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             m_mfxSession.Close();
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         //Set the handle to MFX
         mfxHDL dev_man_handle = dev_manager_;
         mfxHandleType handle_type = MFX_HANDLE_D3D9_DEVICE_MANAGER;
         sts = m_mfxSession.SetHandle(handle_type, dev_man_handle);
-
         if (MFX_ERR_NONE != sts) {
             delete m_pmfxDEC;
             m_pmfxDEC = nullptr;
@@ -239,7 +211,6 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             m_mfxSession.Close();
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         //We're using D3D9 surface, so need to explicitly specify the D3D allocator
         m_pMFXAllocator = new D3DFrameAllocator;
         if (nullptr == m_pMFXAllocator) {
@@ -250,7 +221,6 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             m_mfxSession.Close();
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         D3DAllocatorParams *pd3dAllocParams = new D3DAllocatorParams;
         if (nullptr == pd3dAllocParams) {
             RTC_LOG(LS_ERROR) << "Failed to allocate allocator params for the session.";
@@ -263,7 +233,6 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
         }
         pd3dAllocParams->pManager = reinterpret_cast<IDirect3DDeviceManager9*>(dev_man_handle);
         m_pmfxAllocatorParams = pd3dAllocParams;
-
         //Set allocator to the session.
         sts = m_mfxSession.SetFrameAllocator(m_pMFXAllocator);
         if (MFX_ERR_NONE != sts) {
@@ -276,7 +245,6 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             MSDK_SAFE_DELETE(m_pmfxAllocatorParams);
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         //Initialize the allocator
         sts = m_pMFXAllocator->Init(pd3dAllocParams);
         if (MFX_ERR_NONE != sts) {
@@ -290,18 +258,15 @@ int32_t H265MSDKVideoDecoder::InitDecodeOnCodecThread() {
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
     }
-
     //We actually don't initialize the decoder here... As the decoder needs the first few NALs before it can
     //initialize the decoder for H265. For this sake, we will leave remaining task in Decode call.
     m_mfxVideoParams.mfx.CodecId = MFX_CODEC_HEVC;
-
     inited_ = true;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 #ifdef OMS_DEBUG_H265_DEC
 int e_count = 0;
 #endif
-
 int32_t H265MSDKVideoDecoder::Decode(
     const webrtc::EncodedImage& inputImage, bool missingFrames,
     const webrtc::CodecSpecificInfo* codecSpecificInfo,
@@ -321,7 +286,6 @@ int32_t H265MSDKVideoDecoder::Decode(
                                          // acceleration.
     m_mfxVideoParams.AsyncDepth = 4;
     ReadFromInputStream(&m_mfxBS, inputImage._buffer, inputImage._length);
-
 #ifdef OMS_DEBUG_H265_DEC
     //
     if (e_count < 300 && input != nullptr) {
@@ -350,10 +314,8 @@ int32_t H265MSDKVideoDecoder::Decode(
       if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-
       mfxIMPL impl = 0;
       sts = m_mfxSession.QueryIMPL(&impl);
-
       if ((request.NumFrameSuggested < m_mfxVideoParams.AsyncDepth) &&
           (impl & MFX_IMPL_HARDWARE_ANY)) {
         RTC_LOG(LS_ERROR) << "Invalid num suggested.";
@@ -375,7 +337,6 @@ int32_t H265MSDKVideoDecoder::Decode(
         RTC_LOG(LS_ERROR) << "Failed allocating input surfaces.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-
       for (int i = 0; i < nSurfNum; i++) {
         memset(&(m_pInputSurfaces[i]), 0, sizeof(mfxFrameSurface1));
         MSDK_MEMCPY_VAR(m_pInputSurfaces[i].Info, &(request.Info),
@@ -384,13 +345,11 @@ int32_t H265MSDKVideoDecoder::Decode(
       }
       // Finally we're done with all configurations and we're OK to init the
       // decoder
-
       sts = m_pmfxDEC->Init(&m_mfxVideoParams);
       if (MFX_ERR_NONE != sts) {
         RTC_LOG(LS_ERROR) << "Failed to init the decoder.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-
       m_video_param_extracted = true;
     } else {
       // with current bitstream, if we're not able to extract the video param
@@ -399,13 +358,10 @@ int32_t H265MSDKVideoDecoder::Decode(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
-
   if (inputImage._completeFrame) {
     m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
   }
-
   mfxSyncPoint syncp;
-
   // If we get video param changed, that means we need to continue with
   // decoding.
   while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_SURFACE == sts) {
@@ -437,9 +393,7 @@ int32_t H265MSDKVideoDecoder::Decode(
         if (FAILED(hr)) {
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         mfxHDLPair* dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
-
         if (callback_) {
           oms::base::NativeD3DSurfaceHandle* d3d_context =
               new oms::base::NativeD3DSurfaceHandle;
@@ -448,7 +402,6 @@ int32_t H265MSDKVideoDecoder::Decode(
           d3d_context->width_ = width_;
           d3d_context->height_ = height_;
           d3d_context->surface_ = (IDirect3DSurface9*)dxMemId->first;
-
           rtc::scoped_refptr<oms::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<oms::base::NativeHandleBuffer>(
                   (void*)d3d_context, width_, height_);
@@ -457,7 +410,6 @@ int32_t H265MSDKVideoDecoder::Decode(
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
           callback_->Decoded(decoded_frame);
         }
-
         dev_manager_->UnlockDevice(hHandle, false);
         hr = dev_manager_->CloseDeviceHandle(hHandle);
         if (FAILED(hr)) {
@@ -472,23 +424,16 @@ int32_t H265MSDKVideoDecoder::Decode(
 }
 mfxStatus H265MSDKVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize) {
     MSDK_CHECK_POINTER(pBitstream, MFX_ERR_NULL_PTR);
-
     MSDK_CHECK_ERROR(nSize <= pBitstream->MaxLength, true, MFX_ERR_UNSUPPORTED);
-
     mfxU8* pData = new mfxU8[nSize];
     MSDK_CHECK_POINTER(pData, MFX_ERR_MEMORY_ALLOC);
-
     memmove(pData, pBitstream->Data + pBitstream->DataOffset, pBitstream->DataLength);
-
     WipeMfxBitstream(pBitstream);
-
     pBitstream->Data = pData;
     pBitstream->DataOffset = 0;
     pBitstream->MaxLength = nSize;
-
     return MFX_ERR_NONE;
 }
-
 void H265MSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream, uint8_t *data, size_t len) {
     if (m_mfxBS.MaxLength < len){
         //remaining BS size is not enough to hold current image, we enlarge it the gap*2.
@@ -500,22 +445,17 @@ void H265MSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream, uint8_t
     m_mfxBS.DataOffset = 0;
     return;
 }
-
 void H265MSDKVideoDecoder::WipeMfxBitstream(mfxBitstream* pBitstream) {
     MSDK_CHECK_POINTER(pBitstream);
-
     //free allocated memory
     MSDK_SAFE_DELETE_ARRAY(pBitstream->Data);
 }
-
 mfxU16 H265MSDKVideoDecoder::H265DecGetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     mfxU32 SleepInterval = 10; // milliseconds
     mfxU16 idx = MSDK_INVALID_SURF_IDX;
-
     //wait if there's no free surface
     for (mfxU32 i = 0; i < MSDK_WAIT_INTERVAL; i += SleepInterval) {
         idx = H265DecGetFreeSurfaceIndex(pSurfacesPool, nPoolSize);
-
         if (MSDK_INVALID_SURF_IDX != idx) {
             break;
         }
@@ -525,7 +465,6 @@ mfxU16 H265MSDKVideoDecoder::H265DecGetFreeSurface(mfxFrameSurface1* pSurfacesPo
     }
     return idx;
 }
-
 mfxU16 H265MSDKVideoDecoder::H265DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     if (pSurfacesPool) {
         for (mfxU16 i = 0; i < nPoolSize; i++) {
@@ -536,12 +475,10 @@ mfxU16 H265MSDKVideoDecoder::H265DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfa
     }
     return MSDK_INVALID_SURF_IDX;
 }
-
 int32_t H265MSDKVideoDecoder::RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* callback) {
     callback_ = callback;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 void H265MSDKVideoDecoder::OnMessage(rtc::Message* msg) {
     switch (msg->message_id){
     case MSDK_MSG_HANDLE_INPUT:

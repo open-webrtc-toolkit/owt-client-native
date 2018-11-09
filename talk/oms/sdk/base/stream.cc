@@ -1,7 +1,6 @@
 /*
  * Intel License
  */
-
 #include "webrtc/rtc_base/helpers.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
@@ -23,11 +22,9 @@
 #include "talk/oms/sdk/include/cpp/oms/base/deviceutils.h"
 #include "talk/oms/sdk/include/cpp/oms/base/framegeneratorinterface.h"
 #include "talk/oms/sdk/include/cpp/oms/base/stream.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
-
 #if defined(WEBRTC_WIN)
 Stream::Stream()
     : media_stream_(nullptr),
@@ -36,7 +33,6 @@ Stream::Stream()
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
       id_("") {}
-
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
@@ -50,68 +46,53 @@ Stream::Stream()
       renderer_impl_(nullptr),
       ended_(false),
       id_("") {}
-
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr), source_(source) {
   MediaStream(media_stream);
 }
-
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       ended_(false),
       id_(id) {}
 #endif
-
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
 }
-
 Stream::~Stream() {
   DetachVideoRenderer();
-
   if (media_stream_)
     media_stream_->Release();
 }
-
 void Stream::MediaStream(MediaStreamInterface* media_stream) {
   if (media_stream == nullptr) {
     RTC_DCHECK(false);
     return;
   }
-
   if (media_stream_ != nullptr) {
     media_stream_->Release();
   }
-
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
-
 std::string Stream::Id() const {
   return id_;
 }
-
 void Stream::Id(const std::string& id) {
   id_ = id;
 }
-
 void Stream::DisableVideo() {
   SetVideoTracksEnabled(false);
 }
-
 void Stream::EnableVideo() {
   SetVideoTracksEnabled(true);
 }
-
 void Stream::DisableAudio() {
   SetAudioTracksEnabled(false);
 }
-
 void Stream::EnableAudio() {
   SetAudioTracksEnabled(true);
 }
-
 void Stream::SetVideoTracksEnabled(bool enabled) {
   if (media_stream_ == nullptr)
     return;
@@ -120,7 +101,6 @@ void Stream::SetVideoTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
-
 void Stream::SetAudioTracksEnabled(bool enabled) {
   if (media_stream_ == nullptr)
     return;
@@ -129,13 +109,11 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
-
 void Stream::AttachVideoRenderer(VideoRendererInterface& renderer){
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
-
   auto video_tracks = media_stream_->GetVideoTracks();
   if (video_tracks.size() == 0) {
     RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
@@ -144,26 +122,20 @@ void Stream::AttachVideoRenderer(VideoRendererInterface& renderer){
     RTC_LOG(LS_WARNING) << "There are more than one video tracks, the first one "
                        "will be attachecd to renderer.";
   }
-
   WebrtcVideoRendererImpl* old_renderer =
       renderer_impl_ ? renderer_impl_ : nullptr;
-
   renderer_impl_ = new WebrtcVideoRendererImpl(renderer);
   video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
-
   if (old_renderer)
     delete old_renderer;
-
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
-
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
   }
-
   auto video_tracks = media_stream_->GetVideoTracks();
   if (video_tracks.size() == 0) {
     RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
@@ -172,21 +144,16 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
     RTC_LOG(LS_WARNING) << "There are more than one video tracks, the first one "
                        "will be attachecd to renderer.";
   }
-
   WebrtcVideoRendererD3D9Impl* old_renderer =
       d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
-
   d3d9_renderer_impl_ =
       new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
   video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
-
   if (old_renderer)
     delete old_renderer;
-
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
-
 void Stream::DetachVideoRenderer() {
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
@@ -197,11 +164,9 @@ void Stream::DetachVideoRenderer() {
   if (media_stream_ == nullptr || renderer_impl_ == nullptr)
     return;
 #endif
-
   auto video_tracks = media_stream_->GetVideoTracks();
   if(video_tracks.size() == 0)
     return;
-
   // Detach from the first stream.
   if (renderer_impl_ != nullptr) {
     video_tracks[0]->RemoveSink(renderer_impl_);
@@ -216,11 +181,9 @@ void Stream::DetachVideoRenderer() {
   }
 #endif
 }
-
 StreamSourceInfo Stream::Source() const {
   return source_;
 }
-
 void Stream::AddObserver(StreamObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<StreamObserver>>::iterator it =
@@ -235,7 +198,6 @@ void Stream::AddObserver(StreamObserver& observer) {
   }
   observers_.push_back(observer);
 }
-
 void Stream::RemoveObserver(StreamObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   observers_.erase(std::find_if(
@@ -244,28 +206,23 @@ void Stream::RemoveObserver(StreamObserver& observer) {
         return &observer == &(o.get());
       }));
 }
-
 void Stream::TriggerOnStreamEnded() {
   ended_ = true;
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnEnded();
   }
 }
-
 void Stream::TriggerOnStreamUpdated() {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnUpdated();
   }
 }
-
 #if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
-
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
     : Stream(media_stream, source), media_constraints_(nullptr) {}
 #endif
-
 LocalStream::~LocalStream() {
     RTC_LOG(LS_INFO) << "Destroy LocalCameraStream.";
     if (media_stream_ != nullptr) {
@@ -285,7 +242,6 @@ LocalStream::~LocalStream() {
     }
 }
 
-
 std::shared_ptr<LocalStream> LocalStream::Create(
     const LocalCameraStreamParameters& parameters,
     int& error_code) {
@@ -297,7 +253,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
   else
     return stream;
 }
-
 std::shared_ptr<LocalStream> LocalStream::Create(
     const bool is_audio_enabled,
     webrtc::VideoTrackSourceInterface* video_source,
@@ -310,7 +265,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
   else
     return stream;
 }
-
 #if defined(WEBRTC_WIN)
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalDesktopStreamParameters> parameters,
@@ -320,7 +274,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
     return stream;
 }
 #endif
-
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
@@ -328,7 +281,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
         new LocalStream(parameters, std::move(framer)));
     return stream;
 }
-
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     VideoEncoderInterface* encoder) {
@@ -336,7 +288,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
         new LocalStream(parameters, encoder));
     return stream;
 }
-
 LocalStream::LocalStream(
     const LocalCameraStreamParameters& parameters,
     int& error_code) : media_constraints_(new MediaConstraintsImpl) {
@@ -404,7 +355,6 @@ LocalStream::LocalStream(
     media_constraints_->SetMandatory(
         webrtc::MediaConstraintsInterface::kMinHeight,
         std::to_string(parameters.ResolutionHeight()));
-
     scoped_refptr<VideoTrackSourceInterface> source =
         pcd_factory->CreateVideoSource(std::move(capturer), media_constraints_);
 #else
@@ -426,7 +376,6 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-
 LocalStream::LocalStream(
       const bool is_audio_enabled,
       webrtc::VideoTrackSourceInterface* video_source,
@@ -452,19 +401,14 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-
 void LocalStream::Close() {
   RTC_CHECK(media_stream_);
-
   DetachVideoRenderer();
-
   for (auto const& audio_track : media_stream_->GetAudioTracks())
     media_stream_->RemoveTrack(audio_track);
-
   for (auto const& video_track : media_stream_->GetVideoTracks())
     media_stream_->RemoveTrack(video_track);
 }
-
 #if defined(WEBRTC_WIN)
 LocalStream::LocalStream(
     std::shared_ptr<LocalDesktopStreamParameters> parameters,
@@ -497,7 +441,6 @@ LocalStream::LocalStream(
         factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
-
   if (parameters->AudioEnabled()) {
     std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
@@ -508,7 +451,6 @@ LocalStream::LocalStream(
   media_stream_->AddRef();
 }
 #endif
-
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer)
@@ -534,7 +476,6 @@ LocalStream::LocalStream(
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
-
   if (parameters->AudioEnabled()) {
     std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
@@ -544,7 +485,6 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     VideoEncoderInterface* encoder) : media_constraints_(new MediaConstraintsImpl) {
@@ -574,7 +514,6 @@ LocalStream::LocalStream(
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
     stream->AddTrack(video_track);
   }
-
   if (parameters->AudioEnabled()) {
     std::string audio_track_id("AudioTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<AudioTrackInterface> audio_track =
@@ -584,7 +523,6 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {
@@ -593,7 +531,6 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
-
 RemoteStream::RemoteStream(const std::string& id, const std::string& from,
                            const oms::base::SubscriptionCapabilities& subscription_capabilities,
                            const oms::base::PublicationSettings& publication_settings)
@@ -601,16 +538,13 @@ RemoteStream::RemoteStream(const std::string& id, const std::string& from,
       origin_(from),
       subscription_capabilities_(subscription_capabilities),
       publication_settings_(publication_settings) {}
-
 std::string RemoteStream::Origin() {
   return origin_;
 }
-
 void RemoteStream::MediaStream(
     MediaStreamInterface* media_stream) {
   Stream::MediaStream(media_stream);
 }
-
 MediaStreamInterface* RemoteStream::MediaStream() {
   return media_stream_;
 }

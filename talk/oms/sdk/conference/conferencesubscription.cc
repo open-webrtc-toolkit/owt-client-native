@@ -9,11 +9,9 @@
 #include "talk/oms/sdk/base/stringutils.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferenceclient.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferencesubscription.h"
-
 using namespace rtc;
 namespace oms {
 namespace conference {
-
 ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,
                                                const std::string& stream_id)
       : id_(sub_id),
@@ -27,13 +25,11 @@ ConferenceSubscription::ConferenceSubscription(std::shared_ptr<ConferenceClient>
     that->AddStreamUpdateObserver(*this);
   }
 }
-
 ConferenceSubscription::~ConferenceSubscription() {
   auto that = conference_client_.lock();
   if (that != nullptr)
     that->RemoveStreamUpdateObserver(*this);
 }
-
 void ConferenceSubscription::Mute(
     TrackKind track_kind,
     std::function<void()> on_success,
@@ -65,7 +61,6 @@ void ConferenceSubscription::Mute(
                on_failure);
   }
 }
-
 void ConferenceSubscription::Unmute(
     TrackKind track_kind,
     std::function<void()> on_success,
@@ -98,7 +93,6 @@ void ConferenceSubscription::Unmute(
    }
 }
 
-
 void ConferenceSubscription::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -117,7 +111,6 @@ void ConferenceSubscription::GetStats(
      that->GetConnectionStats(id_, on_success, on_failure);
    }
 }
-
 void ConferenceSubscription::ApplyOptions(
   const SubscriptionUpdateOptions& options,
   std::function<void()> on_success,
@@ -138,7 +131,6 @@ void ConferenceSubscription::ApplyOptions(
   }
 }
 
-
 void ConferenceSubscription::GetNativeStats(
     std::function<void(const std::vector<const webrtc::StatsReport*>& reports)>
         on_success,
@@ -158,7 +150,6 @@ void ConferenceSubscription::GetNativeStats(
      that->GetStats(id_, on_success, on_failure);
    }
 }
-
 void ConferenceSubscription::Stop() {
   auto that = conference_client_.lock();
   if (that == nullptr || ended_) {
@@ -172,7 +163,6 @@ void ConferenceSubscription::Stop() {
     }
   }
 }
-
 void ConferenceSubscription::OnStreamMuteOrUnmute(const std::string& stream_id,
                                                   TrackKind track_kind,bool muted) {
   if (ended_ || stream_id != stream_id_)
@@ -186,13 +176,11 @@ void ConferenceSubscription::OnStreamMuteOrUnmute(const std::string& stream_id,
     }
   }
 }
-
 void ConferenceSubscription::OnStreamRemoved(const std::string& stream_id) {
   if (ended_ || stream_id != stream_id_)
     return;
   Stop();
 }
-
 void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<SubscriptionObserver>>::iterator it =
@@ -207,7 +195,6 @@ void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
   }
   observers_.push_back(observer);
 }
-
 void ConferenceSubscription::RemoveObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   auto it = std::find_if(

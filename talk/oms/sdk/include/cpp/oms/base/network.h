@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_NETWORK_H_
 #define OMS_BASE_NETWORK_H_
-
 namespace oms {
 namespace base {
-
 /// Defines ICE server.
 struct IceServer {
   /// URLs for this group of ICE server.
@@ -39,7 +36,6 @@ struct IceServer {
   /// Password.
   std::string password;
 };
-
 /// Defines ICE candidate types.
 enum class IceCandidateType : int {
   /// Host candidate.
@@ -53,7 +49,6 @@ enum class IceCandidateType : int {
   /// Unknown.
   kUnknown = 99,
 };
-
 /// Defines transport protocol.
 enum class TransportProtocolType : int {
   /// TCP.
@@ -63,8 +58,6 @@ enum class TransportProtocolType : int {
   /// Unknown.
   kUnknown=99,
 };
-
 }
 }
-
 #endif  // OMS_BASE_NETWORK_H_

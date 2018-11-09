@@ -5,17 +5,14 @@
 #include "talk/oms/sdk/base/win/mftmediadecoder.h"
 #include "talk/oms/sdk/base/win/external_msdk_decoder.h"
 #include "talk/oms/sdk/base/win/h265_msdk_decoder.h"
-
 MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   supported_codec_types_.clear();
-
   // Only BDW and SKL and above supports VP8 HW decoding. So we need to check if
   // we're able to set input type on the
   // decoder mft. This is the simpliest method to check VP8 capability on IA.
   if (MSDKVideoDecoder::isVP8HWAccelerationSupported()) {
     supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
   }
-
   bool is_h264_hw_supported = true;
   if (is_h264_hw_supported) {
     supported_codec_types_.push_back(webrtc::kVideoCodecH264);
@@ -29,12 +26,10 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
 #endif
 }
 
-
 MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {
     MFShutdown();
     ::CoUninitialize();
 }
-
 webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoCodecType type) {
     if (supported_codec_types_.empty()) {
         return NULL;
@@ -54,7 +49,6 @@ webrtc::VideoDecoder* MSDKVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoC
     }
     return NULL;
 }
-
 void MSDKVideoDecoderFactory::DestroyVideoDecoder(
     webrtc::VideoDecoder* decoder) {
     delete decoder;

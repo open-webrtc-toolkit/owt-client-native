@@ -23,12 +23,9 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_USER_H_
 #define OMS_CONFERENCE_USER_H_
-
 #include <string>
-
 namespace oms {
 namespace conference {
 /// This class represent a user's permission.
@@ -37,7 +34,6 @@ class Permission {
   /** @cond */
   Permission(bool publish, bool subscribe, bool record)
       : publish_(publish), record_(record), subscribe_(subscribe) {}
-
   /// Indicates whether publish is allowed.
   bool CanPublish() const { return publish_; };
   /// Indicates whether record is allowed.
@@ -45,13 +41,11 @@ class Permission {
   /// Indicates whether subscribe is allowed.
   bool CanSubscribe() const { return subscribe_; };
   /** @endcond */
-
  private:
   bool publish_;
   bool record_;
   bool subscribe_;
 };
-
 /// This class represent an attendee of a conference, replaced by Participant class
 class User {
  public:
@@ -69,15 +63,12 @@ class User {
   /** @cond */
   Permission Permissions() const { return permissions_; };
   /** @endcond */
-
  private:
   std::string role_;
   std::string name_;
   std::string id_;
   class Permission permissions_;
 };
-
 }  // conference
 }  // oms
-
 #endif  // OMS_CONFERENCE_USER_H_

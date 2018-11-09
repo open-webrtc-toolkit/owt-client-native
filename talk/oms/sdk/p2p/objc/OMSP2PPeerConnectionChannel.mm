@@ -1,7 +1,6 @@
 /*
  * Intel License
  */
-
 #import "Foundation/Foundation.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSErrors.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PPeerConnectionChannelObserver.h"
@@ -17,14 +16,11 @@
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import <WebRTC/RTCLogging.h>
-
 #include "talk/oms/sdk/p2p/p2ppeerconnectionchannel.h"
-
 @implementation OMSP2PPeerConnectionChannel {
   oms::p2p::P2PPeerConnectionChannel* _nativeChannel;
   NSString* _remoteId;
 }
-
 - (instancetype)initWithConfiguration:(OMSP2PClientConfiguration*)config
                               localId:(NSString*)localId
                              remoteId:(NSString*)remoteId
@@ -61,7 +57,6 @@
       nativeConfig, nativeLocalId, nativeRemoteId, sender);
   return self;
 }
-
 - (void)publish:(OMSLocalStream*)stream
       onSuccess:(void (^)(OMSP2PPublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure {
@@ -98,7 +93,6 @@
         onFailure(err);
       });
 }
-
 - (void)unpublish:(OMSLocalStream*)stream
         onSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {
@@ -122,7 +116,6 @@
         onFailure(err);
       });
 }
-
 - (void)send:(NSString*)message
     withOnSuccess:(void (^)())onSuccess
         onFailure:(void (^)(NSError*))onFailure {
@@ -145,7 +138,6 @@
         onFailure(err);
       });
 }
-
 - (void)stopWithOnSuccess:(void (^)())onSuccess
                 onFailure:(void (^)(NSError*))onFailure {
   _nativeChannel->Stop(
@@ -166,7 +158,6 @@
         onFailure(err);
       });
 }
-
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(void (^)(NSError*))onFailure {
   _nativeChannel->GetStats(
@@ -195,7 +186,6 @@
         onFailure(err);
       });
 }
-
 - (void)statsForStream:(OMSStream*)stream
              onSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
              onFailure:(void (^)(NSError*))onFailure {
@@ -225,22 +215,17 @@
         onFailure(err);
       });
 }
-
 - (void)onIncomingSignalingMessage:(NSString*)message {
   _nativeChannel->OnIncomingSignalingMessage([message UTF8String]);
 }
-
 - (void)addObserver:(id<OMSP2PPeerConnectionChannelObserver>)observer {
   oms::p2p::P2PPeerConnectionChannelObserver* nativeObserver =
       new oms::p2p::P2PPeerConnectionChannelObserverObjcImpl(observer);
   _nativeChannel->AddObserver(nativeObserver);
 }
-
 - (void)removeObserver:(id<OMSP2PPeerConnectionChannelObserver>)observer {
 }
-
 - (NSString*)getRemoteUserId {
   return _remoteId;
 }
-
 @end

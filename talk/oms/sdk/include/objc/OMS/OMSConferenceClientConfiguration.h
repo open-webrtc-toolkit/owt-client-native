@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENTCONFIGURATION_H_
 #define OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENTCONFIGURATION_H_
-
 #import <Foundation/Foundation.h>
 #import <OMS/OMSClientConfiguration.h>
-
 /// Configuration for creating a OMSConferenceClient
 /**
   This configuration is used while creating OMSConferenceClient. Changing this
@@ -37,7 +34,5 @@
 */
 RTC_EXPORT
 @interface OMSConferenceClientConfiguration : OMSClientConfiguration
-
 @end
-
 #endif  // OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENTCONFIGURATION_H_

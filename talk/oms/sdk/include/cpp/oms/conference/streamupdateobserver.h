@@ -1,15 +1,11 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_CONFERENCE_STREAMUPDATEOBSERVER_H
 #define OMS_CONFERENCE_STREAMUPDATEOBSERVER_H
-
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace conference {
-
 /** @cond */
 /// Observer provided to publication/subscription to report mute/unmute event.
 class ConferenceStreamUpdateObserver {
@@ -24,5 +20,4 @@ public:
 /** @endcond */
 }
 }
-
 #endif  // OMS_CONFERENCE_STREAMUPDATEOBSERVER_H

@@ -23,10 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_GLOBALCONFIGURATION_H_
 #define OMS_BASE_GLOBALCONFIGURATION_H_
-
 #include <memory>
 #include "oms/base/framegeneratorinterface.h"
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
@@ -35,10 +33,8 @@
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
-
 namespace oms {
 namespace base{
-
 /** @cond */
 /// Audio processing settings.
 struct AudioProcessingSettings {
@@ -47,19 +43,16 @@ struct AudioProcessingSettings {
   @details If set to true, will enable auto echo cancellation.
   */
   bool AECEnabled;
-
   /**
   @brief Auto gain control enabling/disabling. By default enabled.
   @details If set to true, will enable auto gain control.
   */
   bool AGCEnabled;
-
   /**
   @brief Noise suppression enabling/disabling. By default enabled.
   @details If set to true, will enable AGC.
   */
   bool NSEnabled;
-
   /**
   @brief AEC3 enabling/disabling. By default enabled.
   @details AEC3 will only be enabled when AEC3 is enabled and AEC is
@@ -68,10 +61,8 @@ struct AudioProcessingSettings {
   bool AEC3Enabled;
 };
 /** @endcond */
-
 /**
  @brief configuration of global using.
-
  GlobalConfiguration class of setting for encoded frame and hardware accecleartion configuration.
 */
 class GlobalConfiguration {
@@ -113,7 +104,6 @@ class GlobalConfiguration {
     if (enabled)
       audio_frame_generator_ = std::move(audio_frame_generator);
   }
-
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function sets the customized video decoder to decode the encoded images.
@@ -132,7 +122,6 @@ class GlobalConfiguration {
   static void SetAECEnabled(bool enabled) {
     audio_processing_settings_.AECEnabled = enabled;
   }
-
   /**
     @breif This function disables/enables auto echo cancellation 3.
     @details When it is enabled, SDK will turn on AEC3 functionality.
@@ -149,7 +138,6 @@ class GlobalConfiguration {
   static void SetAGCEnabled(bool enabled) {
     audio_processing_settings_.AGCEnabled = enabled;
   }
-
   /**
   @breif This function disables/enables noise suppression.
   @details When it is enabled, SDK will turn on NS functionality.
@@ -158,7 +146,6 @@ class GlobalConfiguration {
   static void SetNSEnabled(bool enabled) {
     audio_processing_settings_.NSEnabled = enabled;
   }
-
  private:
   GlobalConfiguration() {}
   virtual ~GlobalConfiguration() {}
@@ -242,7 +229,6 @@ class GlobalConfiguration {
   static std::unique_ptr<VideoDecoderInterface> GetCustomizedVideoDecoder() {
     return std::move(video_decoder_);
   }
-
   /**
    * Customized video decoder. Default is nullptr.
    */
@@ -250,7 +236,6 @@ class GlobalConfiguration {
 #endif
   static AudioProcessingSettings audio_processing_settings_;
 };
-
 }
 }
 #endif  // OMS_BASE_GLOBALCONFIGURATION_H_

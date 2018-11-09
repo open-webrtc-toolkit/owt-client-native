@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_P2P_SIGNALINGRECEIVERINTERFACE_H_
 #define OMS_P2P_SIGNALINGRECEIVERINTERFACE_H_
-
 namespace oms {
 namespace p2p {
-
 /** @cond */
 /**
   @brief Interface for signaling receiver.
@@ -43,7 +40,5 @@ class P2PSignalingReceiverInterface {
 };
 }
 }
-
 /** @endcond */
-
 #endif  // OMS_P2P_SIGNALINGRECEIVERINTERFACE_H_

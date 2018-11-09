@@ -2,7 +2,6 @@
  * Intel License
  */
 #include <algorithm>
-
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
@@ -10,10 +9,8 @@
 #include "talk/oms/sdk/base/stringutils.h"
 #include "talk/oms/sdk/include/cpp/oms/p2p/p2pclient.h"
 #include "talk/oms/sdk/include/cpp/oms/p2p/p2ppublication.h"
-
 namespace oms {
 namespace p2p {
-
 P2PPublication::P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream)
     : target_id_(target_id),
       local_stream_(stream),
@@ -23,7 +20,6 @@ P2PPublication::P2PPublication(std::shared_ptr<P2PClient> client, std::string ta
   if (that != nullptr)
     event_queue_ = that->event_queue_;
 }
-
 /// Get connection stats of current publication.
 void P2PPublication::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
@@ -43,7 +39,6 @@ void P2PPublication::GetStats(
      that->GetConnectionStats(target_id_, on_success, on_failure);
   }
 }
-
 /// Stop current publication.
 void P2PPublication::Stop() {
   auto that = p2p_client_.lock();
@@ -52,13 +47,11 @@ void P2PPublication::Stop() {
   } else {
     that->Unpublish(target_id_, local_stream_, nullptr, nullptr);
     ended_ = true;
-
     const std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto its = observers_.begin(); its != observers_.end(); ++its)
       (*its).get().OnEnded();
   }
 }
-
 void P2PPublication::AddObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<PublicationObserver>>::iterator it =
@@ -73,7 +66,6 @@ void P2PPublication::AddObserver(PublicationObserver& observer) {
   }
   observers_.push_back(observer);
 }
-
 void P2PPublication::RemoveObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   auto it = std::find_if(
@@ -81,13 +73,11 @@ void P2PPublication::RemoveObserver(PublicationObserver& observer) {
     [&](std::reference_wrapper<PublicationObserver> o) -> bool {
       return &observer == &(o.get());
   });
-
   if (it == observers_.end()) {
     RTC_LOG(LS_WARNING) << "Trying to delete non-existing observer.";
     return;
   }
   observers_.erase(it);
 }
-
 }
 }

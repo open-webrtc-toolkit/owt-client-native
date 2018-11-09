@@ -1,27 +1,21 @@
 #
 # Intel License
 #
-
 import("//build_overrides/webrtc.gni")
 import("//testing/test.gni")
-
 if (is_android) {
   import("//build/config/android/config.gni")
   import("//build/config/android/rules.gni")
 }
-
 if (is_ios) {
   import("//build/config/ios/rules.gni")
 }
-
 declare_args() {
   include_internal_audio_device = true
   woogeen_msdk_lib_root = ""
-
   # Disable some features while rebasing to M63. It should be removed once rebasing is finished.
   oms_rebase_m63 = true
 }
-
 if (is_ios || is_mac) {
   config("woogeen_sdk_objc_warnings_config") {
     # Bug 1375. Fix -Wobjc-missing-property-synthesis warnings.
@@ -29,7 +23,6 @@ if (is_ios || is_mac) {
     cflags_objcc = [ "-Wno-objc-missing-property-synthesis" ]
   }
 }
-
 if (is_android) {
   config("libjingle_peerconnection_jni_warnings_config") {
     # The warnings below are enabled by default. Since GN orders compiler flags
@@ -43,7 +36,6 @@ if (is_android) {
     }
   }
 }
-
 static_library("oms_deps") {
   deps = [
     "//third_party/jsoncpp",
@@ -52,7 +44,6 @@ static_library("oms_deps") {
   ]
   complete_static_lib = true
 }
-
 if (!is_ios) {
   static_library("oms") {
     deps = [
@@ -67,7 +58,6 @@ if (!is_ios) {
     complete_static_lib = true
   }
 }
-
 static_library("oms_sdk_base") {
   sources = [
     "sdk/base/customizedframescapturer.cc",
@@ -113,7 +103,6 @@ static_library("oms_sdk_base") {
     "sdk/include/cpp/oms/base/videodecoderinterface.h",
     "sdk/include/cpp/oms/base/videorendererinterface.h",
   ]
-
   public_deps = [
     "//third_party/libyuv:libyuv",
     "//third_party/webrtc/api:libjingle_peerconnection_api",
@@ -135,17 +124,13 @@ static_library("oms_sdk_base") {
     "//third_party/webrtc/system_wrappers:runtime_enabled_features_default",
     "//third_party/webrtc/system_wrappers:system_wrappers_default",
   ]
-
   include_dirs = [
     "sdk/include/cpp",
     "include/msdk",
     "//third_party",
   ]
-
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
-
   defines += [ "USE_BUILTIN_SW_CODECS" ]
-
   if (is_ios) {
     sources += [
       "sdk/base/ios/networkmonitorios.cc",
@@ -155,7 +140,6 @@ static_library("oms_sdk_base") {
       "//third_party/webrtc/sdk:framework_objc+link",
     ]
   }
-
   if (is_win) {
     sources += [
       "sdk/base/desktopcapturer.cc",
@@ -176,7 +160,6 @@ static_library("oms_sdk_base") {
       "sdk/base/windowcapturer.cc",
       "sdk/base/windowcapturer.h",
     ]
-
     if (rtc_use_h265) {
       sources += [
         "sdk/base/win/h265_msdk_decoder.cpp",
@@ -186,7 +169,6 @@ static_library("oms_sdk_base") {
       ]
     }
   }
-
   if (!is_ios) {
     sources += [
       "sdk/base/customizedvideodecoderfactory.cc",
@@ -195,7 +177,6 @@ static_library("oms_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-
   if (include_internal_audio_device) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
@@ -204,34 +185,28 @@ static_library("oms_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.h",
     ]
   }
-
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
-
   if (is_win && is_clang) {
     cflags = [
       "-Wno-microsoft-extra-qualification",
       "-Wno-reorder",
     ]
   }
-
   if (!oms_rebase_m63) {
     defines += [ "OMS_REBASE_M63" ]
   }
 }
-
 static_library("oms_sdk_p2p") {
   deps = [
     ":oms_sdk_base",
     "//third_party/jsoncpp:jsoncpp",
   ]
-
   include_dirs = [
     "sdk/include/cpp",
     "//third_party",
   ]
-
   sources = [
     "sdk/include/cpp/oms/p2p/p2pclient.h",
     "sdk/include/cpp/oms/p2p/p2ppublication.h",
@@ -247,24 +222,20 @@ static_library("oms_sdk_p2p") {
     "sdk/p2p/p2psignalingsenderimpl.h",
     "sdk/p2p/p2ppublication.cc",
   ]
-
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
-
 static_library("oms_sdk_conf") {
   deps = [
     ":oms_sdk_base",
     "//third_party/jsoncpp:jsoncpp",
     "//third_party/webrtc/rtc_base:rtc_json",
   ]
-
   include_dirs = [
     "sdk/include/cpp",
     "//third_party",
   ]
-
   sources = [
     "sdk/conference/conferenceclient.cc",
     "sdk/conference/conferencepeerconnectionchannel.cc",
@@ -279,12 +250,10 @@ static_library("oms_sdk_conf") {
     "sdk/include/cpp/oms/conference/remotemixedstream.h",
     "sdk/include/cpp/oms/conference/user.h",
   ]
-
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
-
 if (is_ios) {
   static_library("oms_sdk_objc") {
     deps = [
@@ -294,19 +263,16 @@ if (is_ios) {
       "//third_party/jsoncpp",
       "//third_party/webrtc/system_wrappers:system_wrappers_default",
     ]
-
     include_dirs = [
       "//third_party",
       "//third_party/webrtc/sdk/objc/Framework/Headers",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
-
     configs += [
       "//build/config/compiler:enable_arc",
       ":woogeen_sdk_objc_warnings_config",
     ]
-
     sources = [
       "sdk/base/objc/CameraVideoCapturer.h",
       "sdk/base/objc/CameraVideoCapturer.mm",
@@ -392,35 +358,27 @@ if (is_ios) {
     ]
   }
 }
-
 if (woogeen_include_tests) {
   group("woogeen_tests") {
     testonly = true
-
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
-
     deps = [
       ":woogeen_unittests",
     ]
   }
-
   test("woogeen_unittests") {
     testonly = true
-
     sources = [
       "sdk/base/mediautils_unittest.cc",
       "sdk/test/unittest_main.cc",
     ]
-
     deps = [
       ":oms_sdk_base",
       "//testing/gmock",
       "//testing/gtest",
     ]
-
     libs = []
-
     if (is_win) {
       libs += [
         "amstrmid.lib",
@@ -436,7 +394,6 @@ if (woogeen_include_tests) {
         "wmcodecdspuuid.lib",
         "ws2_32.lib",
       ]
-
       if (woogeen_msdk_lib_root != "") {
         libs += [
           "libmfx.lib",
@@ -444,7 +401,6 @@ if (woogeen_include_tests) {
         ]
         lib_dirs = [ woogeen_msdk_lib_root ]
       }
-
       ldflags = [
         "/ignore:4098",
         "/ignore:4099",

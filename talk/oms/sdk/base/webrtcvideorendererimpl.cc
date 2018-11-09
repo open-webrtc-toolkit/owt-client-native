@@ -15,10 +15,8 @@
 #endif
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/media/base/videocommon.h"
-
 namespace oms {
 namespace base {
-
 void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
   if (frame.video_frame_buffer()->type() ==
           webrtc::VideoFrameBuffer::Type::kNative) {
@@ -28,7 +26,6 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
   if (renderer_type != VideoRendererType::kI420 &&
       renderer_type != VideoRendererType::kARGB)
     return;
-
   Resolution resolution(frame.width(), frame.height());
   if (renderer_type == VideoRendererType::kARGB) {
     uint8_t* buffer = new uint8_t[resolution.width * resolution.height * 4];
@@ -46,6 +43,5 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
     renderer_.RenderFrame(std::move(video_buffer));
   }
 }
-
 }  // namespace base
 }  // namespace oms

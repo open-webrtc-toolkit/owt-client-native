@@ -1,7 +1,6 @@
 //
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
-
 #include <iostream>
 #include <thread>
 #include <algorithm>
@@ -18,11 +17,9 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/json.h"
 #include "webrtc/rtc_base/timeutils.h"
-
 using namespace rtc;
 namespace oms {
 namespace conference {
-
 #define SIGNALING_PROTOCOL_VERSION "1.0"
 const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
@@ -61,16 +58,13 @@ const std::string kEventNameOnUserLeave = "user_leave";
 const std::string kEventNameOnUserPresence = "participant";
 const std::string kEventNameOnDrop = "drop";
 const std::string kEventNameConnectionFailed = "connection_failed";
-
 #if defined(WEBRTC_IOS)
 // The epoch of Mach kernel is 2001/1/1 00:00:00, while Linux is 1970/1/1
 // 00:00:00.
 const uint64_t kMachLinuxTimeDelta = 978307200;
 #endif
-
 const int kReconnectionAttempts = 10;
 const int kReconnectionDelay = 2000;
-
 ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
     : socket_client_(new sio::client()),
       reconnection_ticket_(""),
@@ -78,11 +72,9 @@ ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
       reconnection_attempted_(0),
       is_reconnection_(false),
       outgoing_message_id_(1) {}
-
 ConferenceSocketSignalingChannel::~ConferenceSocketSignalingChannel() {
   delete socket_client_;
 }
-
 void ConferenceSocketSignalingChannel::AddObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
   if (std::find(observers_.begin(), observers_.end(), &observer) !=
@@ -92,13 +84,11 @@ void ConferenceSocketSignalingChannel::AddObserver(
   }
   observers_.push_back(&observer);
 }
-
 void ConferenceSocketSignalingChannel::RemoveObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
   observers_.erase(std::remove(observers_.begin(), observers_.end(), &observer),
                    observers_.end());
 }
-
 void ConferenceSocketSignalingChannel::Connect(
     const std::string& token,
     std::function<void(sio::message::ptr room_info)> on_success,
@@ -411,7 +401,6 @@ void ConferenceSocketSignalingChannel::Connect(
   connect_failure_callback_ = on_failure;
   socket_client_->connect(scheme.append(host));
 }
-
 void ConferenceSocketSignalingChannel::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -434,7 +423,6 @@ void ConferenceSocketSignalingChannel::Disconnect(
                                    });
   }
 }
-
 void ConferenceSocketSignalingChannel::SendSubscriptionUpdateMessage(
   sio::message::ptr options,
   std::function<void()> on_success,
@@ -448,7 +436,6 @@ void ConferenceSocketSignalingChannel::SendSubscriptionUpdateMessage(
     }
   }, on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendInitializationMessage(
     sio::message::ptr options,
     std::string publish_stream_label,
@@ -513,7 +500,6 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendSdp(
     sio::message::ptr message,
     std::function<void()> on_success,
@@ -531,7 +517,6 @@ void ConferenceSocketSignalingChannel::SendSdp(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendStreamEvent(
     const std::string& event,
     const std::string& stream_id,
@@ -549,7 +534,6 @@ void ConferenceSocketSignalingChannel::SendStreamEvent(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendCustomMessage(
     const std::string& message,
     const std::string& receiver,
@@ -572,7 +556,6 @@ void ConferenceSocketSignalingChannel::SendCustomMessage(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendStreamControlMessage(
     const std::string& stream_id,
     const std::string& action,
@@ -588,7 +571,6 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
     //TODO(jianlin): Combine mute/unmute API with this.
     payload->get_map()["data"] = sio::string_message::create(action);
   }
-
   std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
       shared_from_this();
   Emit(kEventNameStreamControl, payload,
@@ -599,7 +581,6 @@ void ConferenceSocketSignalingChannel::SendStreamControlMessage(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
     const std::string& stream_id,
     const std::string& action,
@@ -613,7 +594,6 @@ void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
     if (operation == "pause" || operation == "play") {
       payload->get_map()["data"] = sio::string_message::create(action);
     }
-
     std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
         shared_from_this();
     Emit(kEventNameSubscriptionControl, payload,
@@ -624,7 +604,6 @@ void ConferenceSocketSignalingChannel::SendSubscriptionControlMessage(
     },
         on_failure);
 }
-
 void ConferenceSocketSignalingChannel::Unsubscribe(
     const std::string& id,
     std::function<void()> on_success,
@@ -641,7 +620,6 @@ void ConferenceSocketSignalingChannel::Unsubscribe(
        },
        on_failure);
 }
-
 void ConferenceSocketSignalingChannel::OnEmitAck(
     sio::message::list const& msg,
     std::function<void()> on_success,
@@ -679,7 +657,6 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
     }
   }
 }
-
 void ConferenceSocketSignalingChannel::OnReconnectionTicket(
     const std::string& ticket) {
   RTC_LOG(LS_VERBOSE) << "On reconnection ticket: " << ticket;
@@ -728,7 +705,6 @@ void ConferenceSocketSignalingChannel::OnReconnectionTicket(
     }).detach();
   }
 }
-
 void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
   socket_client_->socket()->emit(
       kEventNameRefreshReconnectionTicket, nullptr,
@@ -748,7 +724,6 @@ void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
         OnReconnectionTicket(message);
       });
 }
-
 void ConferenceSocketSignalingChannel::TriggerOnServerDisconnected() {
   if (disconnect_complete_) {
     disconnect_complete_();
@@ -758,7 +733,6 @@ void ConferenceSocketSignalingChannel::TriggerOnServerDisconnected() {
     (*it)->OnServerDisconnected();
   }
 }
-
 void ConferenceSocketSignalingChannel::Emit(
     const std::string& name,
     const sio::message::list& message,
@@ -814,7 +788,6 @@ void ConferenceSocketSignalingChannel::Emit(
         }
       });
 }
-
 void ConferenceSocketSignalingChannel::DropQueuedMessages() {
   // TODO(jianjunz): Trigger on_failure in another thread. In current
   // implementation, failure callback MUST NOT acquire
@@ -830,7 +803,6 @@ void ConferenceSocketSignalingChannel::DropQueuedMessages() {
     outgoing_messages_.pop();
   }
 }
-
 void ConferenceSocketSignalingChannel::DrainQueuedMessages() {
   std::queue<SioMessage> temp_queue;
   {
@@ -848,7 +820,6 @@ void ConferenceSocketSignalingChannel::DrainQueuedMessages() {
     temp_queue.pop();
   }
 }
-
 sio::message::ptr ConferenceSocketSignalingChannel::ResolutionMessage(
     const oms::base::Resolution& resolution) {
   sio::message::ptr resolution_message = sio::object_message::create();

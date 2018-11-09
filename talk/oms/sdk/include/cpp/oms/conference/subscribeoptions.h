@@ -23,15 +23,11 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_SUBSCRIBEOPTIONS_H_
 #define OMS_CONFERENCE_SUBSCRIBEOPTIONS_H_
-
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace conference {
-
 /// Audio subscription contraints.
 struct AudioSubscriptionConstraints {
   /**
@@ -43,7 +39,6 @@ struct AudioSubscriptionConstraints {
   bool disabled;
   std::vector<oms::base::AudioCodecParameters> codecs;
 };
-
 /// Video subscription constraints.
 struct VideoSubscriptionConstraints {
   /**
@@ -63,13 +58,11 @@ struct VideoSubscriptionConstraints {
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
 };
-
 /// Subscribe options
 struct SubscribeOptions {
   AudioSubscriptionConstraints audio;
   VideoSubscriptionConstraints video;
 };
-
 /// Video subscription update constrains used by subscription's ApplyOptions
 /// API.
 struct VideoSubscriptionUpdateConstraints {
@@ -81,13 +74,11 @@ struct VideoSubscriptionUpdateConstraints {
         frameRate(0),
         bitrateMultiplier(0),
         keyFrameInterval(0) {}
-
   oms::base::Resolution resolution;
   double frameRate;
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
 };
-
 /// Subscription update option used by subscription's ApplyOptions API.
 struct SubscriptionUpdateOptions {
   /// Options for updating a subscription.
@@ -95,5 +86,4 @@ struct SubscriptionUpdateOptions {
 };
 }  // namespace conference
 }  // namespace oms
-
 #endif  // OMS_CONFERENCE_SUBSCRIBEOPTIONS_H_

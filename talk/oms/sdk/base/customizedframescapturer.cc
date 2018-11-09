@@ -1,7 +1,6 @@
 /*
  * Intel License
  */
-
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
@@ -11,11 +10,9 @@
 #include "talk/oms/sdk/base/customizedframescapturer.h"
 #include "talk/oms/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/oms/sdk/base/nativehandlebuffer.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
-
 ///////////////////////////////////////////////////////////////////////
 // Definition of private class CustomizedFramesThread that periodically
 // generates frames.
@@ -28,9 +25,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       : capturer_(capturer), finished_(false) {
     waiting_time_ms = 1000 / fps;
   }
-
   virtual ~CustomizedFramesThread() { Stop(); }
-
   // Override virtual method of parent Thread. Context: Worker Thread.
   virtual void Run() {
     // Read the first frame and start the message pump. The pump runs until
@@ -40,11 +35,9 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
       rtc::Thread::Current()->ProcessMessages(kForever);
     }
-
     rtc::CritScope cs(&crit_);
     finished_ = true;
   }
-
   // Override virtual method of parent MessageHandler. Context: Worker Thread.
   virtual void OnMessage(rtc::Message* /*pmsg*/) {
     if (capturer_) {
@@ -54,29 +47,23 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       rtc::Thread::Current()->Quit();
     }
   }
-
   // Check if Run() is finished.
   bool Finished() const {
     rtc::CritScope cs(&crit_);
     return finished_;
   }
-
  private:
   CustomizedFramesCapturer* capturer_;
   mutable rtc::CriticalSection crit_;
   bool finished_;
   int waiting_time_ms;
-
   RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesThread);
 };
-
 /////////////////////////////////////////////////////////////////////
 // Implementation of class CustomizedFramesCapturer.
 /////////////////////////////////////////////////////////////////////
-
 const char* CustomizedFramesCapturer::kRawFrameDeviceName =
     "CustomizedFramesGenerator";
-
 CustomizedFramesCapturer::CustomizedFramesCapturer(
     std::unique_ptr<VideoFrameGeneratorInterface> raw_frameGenerator)
     : frame_generator_(std::move(raw_frameGenerator)),
@@ -90,7 +77,6 @@ CustomizedFramesCapturer::CustomizedFramesCapturer(
       frame_buffer_capacity_(0),
       frame_buffer_(nullptr),
       async_invoker_(nullptr) {}
-
 CustomizedFramesCapturer::CustomizedFramesCapturer(
     int width, int height, int fps, int bitrate_kbps, VideoEncoderInterface* encoder)
     : frame_generator_(nullptr),
@@ -103,7 +89,6 @@ CustomizedFramesCapturer::CustomizedFramesCapturer(
       frame_buffer_capacity_(0),
       frame_buffer_(nullptr),
       async_invoker_(nullptr) {}
-
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   Stop();
   frame_generator_.reset(nullptr);
@@ -112,7 +97,6 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   // passing native buffer to stack.
   encoder_ = nullptr;
 }
-
 void CustomizedFramesCapturer::Init() {
   // Only I420 frame is supported. Encoded frame is not supported here.
   cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
@@ -121,7 +105,6 @@ void CustomizedFramesCapturer::Init() {
   supported.push_back(format);
   SetSupportedFormats(supported);
 }
-
 cricket::CaptureState CustomizedFramesCapturer::Start(
     const cricket::VideoFormat& capture_format) {
   if (IsRunning()) {
@@ -129,7 +112,6 @@ cricket::CaptureState CustomizedFramesCapturer::Start(
     return CS_FAILED;
   }
   SetCaptureFormat(&capture_format);
-
   worker_thread_ = rtc::Thread::Current();
   RTC_DCHECK(!async_invoker_);
   async_invoker_.reset(new rtc::AsyncInvoker());
@@ -146,11 +128,9 @@ cricket::CaptureState CustomizedFramesCapturer::Start(
     return CS_FAILED;
   }
 }
-
 bool CustomizedFramesCapturer::IsRunning() {
   return frames_generator_thread && !frames_generator_thread->Finished();
 }
-
 void CustomizedFramesCapturer::Stop() {
   if (frames_generator_thread) {
     frames_generator_thread->Quit();
@@ -162,7 +142,6 @@ void CustomizedFramesCapturer::Stop() {
   worker_thread_ = nullptr;
   async_invoker_.reset();
 }
-
 bool CustomizedFramesCapturer::GetPreferredFourccs(
     std::vector<uint32_t>* fourccs) {
   if (!fourccs) {
@@ -171,14 +150,12 @@ bool CustomizedFramesCapturer::GetPreferredFourccs(
   fourccs->push_back(GetSupportedFormats()->at(0).fourcc);
   return true;
 }
-
 int CustomizedFramesCapturer::I420DataSize(int height,
                                            int stride_y,
                                            int stride_u,
                                            int stride_v) {
   return stride_y * height + (stride_u + stride_v) * ((height + 1) / 2);
 }
-
 void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
   if (size > frame_buffer_capacity_ || !frame_buffer_) {
     RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
@@ -195,7 +172,6 @@ void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
     }
   }
 }
-
 // Executed in the context of CustomizedFramesThread.
 void CustomizedFramesCapturer::ReadFrame() {
   // Signal the previously read frame to downstream in worker_thread.
@@ -219,7 +195,6 @@ void CustomizedFramesCapturer::ReadFrame() {
     encoder_context->height = height_;
     encoder_context->fps = fps_;
     encoder_context->bitrate_kbps = bitrate_kbps_;
-
     rtc::scoped_refptr<oms::base::EncodedFrameBuffer> buffer =
         new rtc::RefCountedObject<oms::base::EncodedFrameBuffer>(encoder_context);
     webrtc::VideoFrame pending_frame(buffer, 0, rtc::TimeMillis(),
@@ -227,6 +202,5 @@ void CustomizedFramesCapturer::ReadFrame() {
     OnFrame(pending_frame, width_, height_);
   }
 }
-
 }  // namespace base
 }  // namespace oms

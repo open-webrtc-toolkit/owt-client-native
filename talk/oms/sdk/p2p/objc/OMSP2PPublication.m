@@ -1,13 +1,9 @@
 //
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
-
 #import <WebRTC/RTCLogging.h>
-
 #import "talk/oms/sdk/p2p/objc/OMSP2PPublication+Private.h"
-
 @implementation OMSP2PPublication
-
 - (instancetype)initWithStop:(void (^)())stopMethod
                        stats:
                            (void (^)(void (^)(NSArray<RTCLegacyStatsReport*>*),
@@ -18,19 +14,16 @@
   }
   return self;
 }
-
 - (void)stop {
   _stopMethod();
   if ([_delegate respondsToSelector:@selector(publicationDidEnd:)]) {
     [_delegate publicationDidEnd:self];
   }
 }
-
 - (void)stats:(void (^)(NSArray<RTCLegacyStatsReport*>* stats))onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure {
   _statsMethod(onSuccess, onFailure);
 }
-
 /**
   @brief This function will be invoked when received a invitation.
   @param remoteUserId Remote user’s ID
@@ -88,5 +81,4 @@
 */
 - (void)onStreamRemoved:(OMSRemoteStream*)stream {
 }
-
 @end

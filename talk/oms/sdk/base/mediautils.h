@@ -1,12 +1,9 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_BASE_MEDIAUTILS_H_
 #define OMS_BASE_MEDIAUTILS_H_
-
 #include "talk/oms/sdk/include/cpp/oms/base/commontypes.h"
-
 namespace oms {
 namespace base {
 class MediaUtils {
@@ -19,5 +16,4 @@ class MediaUtils {
 };
 }
 }
-
 #endif  // OMS_BASE_MEDIAUTILS_H_

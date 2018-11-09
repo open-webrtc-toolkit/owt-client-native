@@ -1,15 +1,12 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #define OMS_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
-
 #include <mutex>
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/rtc_base/bind.h"
-
 namespace oms {
 namespace base {
 using webrtc::MediaStreamInterface;
@@ -23,7 +20,6 @@ using webrtc::MediaConstraintsInterface;
 using rtc::scoped_refptr;
 using rtc::Thread;
 using rtc::Bind;
-
 // PeerConnectionThread allows blocking calls so other thread can invoke
 // synchronized methods on this thread.
 class PeerConnectionThread : public rtc::Thread {
@@ -31,7 +27,6 @@ class PeerConnectionThread : public rtc::Thread {
   virtual void Run() override;
   ~PeerConnectionThread() override;
 };
-
 // Object factory for WebRTC PeerConnections.
 class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
  public:
@@ -61,13 +56,11 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
-
   ~PeerConnectionDependencyFactory();
  protected:
   explicit PeerConnectionDependencyFactory();
   virtual const rtc::scoped_refptr<PeerConnectionFactoryInterface>&
   GetPeerConnectionFactory();
-
  private:
   // Create a PeerConnectionDependencyFactory instance.
   // static rtc::scoped_refptr<PeerConnectionDependencyFactory> Create();
@@ -79,7 +72,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       webrtc::PeerConnectionObserver* observer);
   void CreateNetworkMonitorOnCurrentThread();
   rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
-
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>
       dependency_factory_;  // Get() always return this instance.

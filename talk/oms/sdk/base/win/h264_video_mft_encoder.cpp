@@ -1,7 +1,6 @@
 /*
 * Intel License
 */
-
 #include "talk/oms/sdk/base/win/h264_video_mft_encoder.h"
 #include <string>
 #include <vector>
@@ -13,7 +12,6 @@
 #include "sysmem_allocator.h"
 #include "sample_defs.h"
 #include <iostream>
-
 #ifdef OMS_DEBUG_H264_ENC
 #include <fstream>
 #include <stdio.h>
@@ -22,18 +20,14 @@
 #define H264_SC_LENGTH 4
 // Maximum allowed NALUs in one output frame.
 #define MAX_NALUS_PERFRAME 32
-
 using namespace rtc;
-
 void MFTEncoderThread::Run() {
     ProcessMessages(kForever);
     SetAllowBlockingCalls(true);
 }
-
 MFTEncoderThread::~MFTEncoderThread(){
     Stop();
 }
-
 H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), max_bitrate_(0), width_(0),
   height_(0), framerate_(0), m_memType_(SYSTEM_MEMORY), encoder_thread_(new MFTEncoderThread()), inited_(false) {
     m_pmfxAllocatorParams = nullptr;
@@ -47,7 +41,6 @@ H264VideoMFTEncoder::H264VideoMFTEncoder() : callback_(nullptr), bitrate_(0), ma
     output = fopen("out.h264", "wb");
 #endif
 }
-
 H264VideoMFTEncoder::~H264VideoMFTEncoder() {
     if (m_pmfxENC != nullptr){
         m_pmfxENC->Close();
@@ -66,13 +59,11 @@ H264VideoMFTEncoder::~H264VideoMFTEncoder() {
     encoder_thread_.reset();
   }
 }
-
 int H264VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
     size_t max_payload_size) {
     RTC_DCHECK(codec_settings);
     RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
-
     width_ = codec_settings->width;
     height_ = codec_settings->height;
     bitrate_ = codec_settings->targetBitrate * 1000;
@@ -81,37 +72,27 @@ int H264VideoMFTEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     //MSDK does not require all operations dispatched to the same thread. We however always use dedicated thread
     return encoder_thread_->Invoke<int>(RTC_FROM_HERE,
         rtc::Bind(&H264VideoMFTEncoder::InitEncodeOnEncoderThread, this, codec_settings, number_of_cores, max_payload_size));
-
 }
-
 mfxStatus H264ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD) {
     MSDK_CHECK_POINTER(pnFrameRateExtN, MFX_ERR_NULL_PTR);
     MSDK_CHECK_POINTER(pnFrameRateExtD, MFX_ERR_NULL_PTR);
-
     mfxU32 fr;
-
     fr = (mfxU32)(dFrameRate + 0.5);
-
     if (fabs(fr - dFrameRate) < 0.0001) {
         *pnFrameRateExtN = fr;
         *pnFrameRateExtD = 1;
         return MFX_ERR_NONE;
     }
-
     fr = (mfxU32)(dFrameRate * 1.001 + 0.5);
-
     if (fabs(fr * 1000 - dFrameRate * 1001) < 10) {
         *pnFrameRateExtN = fr * 1000;
         *pnFrameRateExtD = 1001;
         return MFX_ERR_NONE;
     }
-
     *pnFrameRateExtN = (mfxU32)(dFrameRate * 10000 + .5);
     *pnFrameRateExtD = 10000;
-
     return MFX_ERR_NONE;
 }
-
 int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
     size_t max_payload_size) {
@@ -123,7 +104,6 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         codec_settings->maxFramerate << "targetBitRate:" << codec_settings->targetBitrate;
     minVer.Major = 1;
     minVer.Minor = 0;
-
     //If already inited, what we need to do is to reset the encoder, instead of setting it all over again.
     if (inited_) {
         m_pmfxENC->Close();
@@ -136,13 +116,11 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     }else {
         mfxIMPL impl = MFX_IMPL_HARDWARE_ANY/*MFX_IMPL_SOFTWARE*/;
         sts = m_mfxSession_.Init(impl, &minVer);
-
         //Fallback to software if hardware fails.
         if (MFX_ERR_NONE != sts) {
             impl = MFX_IMPL_SOFTWARE;
             sts = m_mfxSession_.Init(impl, &minVer);
         }
-
         if (MFX_ERR_NONE != sts) {
             return WEBRTC_VIDEO_CODEC_ERROR; //We don't have software H264 encoder in the stack, so never return FALL_BACK_TO_SW at present
         }
@@ -152,19 +130,16 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         if (MFX_ERR_NONE != sts) {
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         sts = m_mfxSession_.SetFrameAllocator(m_pMFXAllocator);
         if (MFX_ERR_NONE != sts) {
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
-
         //Create the encoder
         m_pmfxENC = new MFXVideoENCODE(m_mfxSession_);
         if (m_pmfxENC == nullptr){
             return WEBRTC_VIDEO_CODEC_ERROR;
         }
     }
-
     //Init the encoding params:
     MSDK_ZERO_MEMORY(m_mfxEncParams);
     m_mfxEncParams.mfx.CodecId = MFX_CODEC_AVC;
@@ -182,7 +157,6 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
         &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
     m_mfxEncParams.mfx.EncodedOrder = 0;
     m_mfxEncParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
-
     // frame info parameters
     m_mfxEncParams.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     m_mfxEncParams.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -195,11 +169,9 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     m_mfxEncParams.mfx.FrameInfo.CropH = codec_settings->height;
     m_mfxEncParams.mfx.FrameInfo.Height = MSDK_ALIGN16(codec_settings->height);
     m_mfxEncParams.mfx.FrameInfo.Width = MSDK_ALIGN16(codec_settings->width);
-
     m_mfxEncParams.AsyncDepth = 4;
     m_mfxEncParams.mfx.NumRefFrame = 1;
     m_mfxEncParams.mfx.GopRefDist = 1;
-
     mfxExtCodingOption extendedCodingOptions;
     MSDK_ZERO_MEMORY(extendedCodingOptions);
     extendedCodingOptions.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
@@ -210,25 +182,20 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     extendedCodingOptions.PicTimingSEI = MFX_CODINGOPTION_OFF;
     extendedCodingOptions.VuiNalHrdParameters = MFX_CODINGOPTION_OFF;
     //extendedCodingOptions.VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
-
     mfxExtCodingOption2 extendedCodingOptions2;
     MSDK_ZERO_MEMORY(extendedCodingOptions2);
     extendedCodingOptions2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
     extendedCodingOptions2.Header.BufferSz = sizeof(extendedCodingOptions2);
     extendedCodingOptions2.RepeatPPS = MFX_CODINGOPTION_OFF;
-
     mfxExtBuffer* extendedBuffers[2];
     extendedBuffers[0] = (mfxExtBuffer*)&extendedCodingOptions;
     extendedBuffers[1] = (mfxExtBuffer*)&extendedCodingOptions2;
-
     m_mfxEncParams.ExtParam = extendedBuffers;
     m_mfxEncParams.NumExtParam = 2;
-
     //allocate frame for encoder
     mfxFrameAllocRequest EncRequest;
     mfxU16 nEncSurfNum = 0; // number of surfaces for encoder
     MSDK_ZERO_MEMORY(EncRequest);
-
     sts = m_pmfxENC->QueryIOSurf(&m_mfxEncParams, &EncRequest);
     if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -239,7 +206,6 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     //prepare mfxFrameSurface1 array for encoder
     m_pEncSurfaces = new mfxFrameSurface1[m_EncResponse.NumFrameActual];
     if (m_pEncSurfaces == nullptr) {
@@ -261,30 +227,23 @@ int H264VideoMFTEncoder::InitEncodeOnEncoderThread(const webrtc::VideoCodec* cod
     inited_ = true;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 #ifdef OMS_DEBUG_H264_ENC
 int count = 0;
 #endif
-
 mfxU16 H264VideoMFTEncoder::H264GetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     mfxU32 SleepInterval = 10; // milliseconds
-
     mfxU16 idx = MSDK_INVALID_SURF_IDX;
-
     //wait if there's no free surface
     for (mfxU32 i = 0; i < MSDK_WAIT_INTERVAL; i += SleepInterval) {
         idx = H264GetFreeSurfaceIndex(pSurfacesPool, nPoolSize);
-
         if (MSDK_INVALID_SURF_IDX != idx) {
             break;
         }else {
             MSDK_SLEEP(SleepInterval);
         }
     }
-
     return idx;
 }
-
 mfxU16 H264VideoMFTEncoder::H264GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize) {
     if (pSurfacesPool) {
         for (mfxU16 i = 0; i < nPoolSize; i++) {
@@ -293,10 +252,8 @@ mfxU16 H264VideoMFTEncoder::H264GetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesP
             }
         }
     }
-
     return MSDK_INVALID_SURF_IDX;
 }
-
 int H264VideoMFTEncoder::Encode(
     const webrtc::VideoFrame& input_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
@@ -305,12 +262,10 @@ int H264VideoMFTEncoder::Encode(
     mfxStatus sts = MFX_ERR_NONE;
     mfxFrameSurface1* pSurf = NULL; // dispatching pointer
     mfxU16 nEncSurfIdx = 0;
-
     nEncSurfIdx = H264GetFreeSurface(m_pEncSurfaces, m_EncResponse.NumFrameActual);
     if (MSDK_INVALID_SURF_IDX == nEncSurfIdx){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     pSurf = &m_pEncSurfaces[nEncSurfIdx];
     sts = m_pMFXAllocator->Lock(m_pMFXAllocator->pthis, pSurf->Data.MemId, &(pSurf->Data));
     if (MFX_ERR_NONE != sts) {
@@ -320,7 +275,6 @@ int H264VideoMFTEncoder::Encode(
     mfxFrameInfo& pInfo = pSurf->Info;
     mfxFrameData& pData = pSurf->Data;
    // pData.FrameOrder = m_nFramesProcessed;
-
     if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -333,10 +287,8 @@ int H264VideoMFTEncoder::Encode(
         w = pInfo.Width;
         h = pInfo.Height;
     }
-
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
-
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         //Todo: As an optimization target, later we will use VPP for CSC conversion. For now
         //I420 to NV12 CSC is AVX2 instruction optimized.
@@ -359,7 +311,6 @@ int H264VideoMFTEncoder::Encode(
     if (MFX_ERR_NONE != sts) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     //Prepare done. Start encode.
     mfxEncodeCtrl ctrl;
     memset((void*)&ctrl, 0, sizeof(ctrl));
@@ -381,7 +332,6 @@ int H264VideoMFTEncoder::Encode(
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     MSDK_ZERO_MEMORY(bs);
     mfxU32 bsDataSize = param.mfx.BufferSizeInKB * 1000;
     mfxU8* pbsData = new mfxU8[bsDataSize];
@@ -391,7 +341,6 @@ int H264VideoMFTEncoder::Encode(
     memset((void*)pbsData, 0, bsDataSize);
     bs.Data = pbsData;
     bs.MaxLength = bsDataSize;
-
     ctrl.FrameType = is_keyframe_required ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
     if (is_keyframe_required) {
         sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
@@ -403,19 +352,15 @@ int H264VideoMFTEncoder::Encode(
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_OK;
     }
-
     sts = m_mfxSession_.SyncOperation(sync, MSDK_ENC_WAIT_INTERVAL);
     if (MFX_ERR_NONE != sts) {
         //Get the output buffer from bs.
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data);
-
     int encoded_data_size = bs.DataLength;
     webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size, encoded_data_size);
-
 #ifdef OMS_DEBUG_H264_ENC
     count++;
     if (output != nullptr && count < 300){
@@ -435,7 +380,6 @@ int H264VideoMFTEncoder::Encode(
     encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
     encodedFrame.content_type_ = webrtc::VideoContentType::UNSPECIFIED;
     encodedFrame.rotation_ = webrtc::kVideoRotation_0;
-
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
     info.codecType = codecType_;
@@ -443,7 +387,6 @@ int H264VideoMFTEncoder::Encode(
     // Generate a header describing a single fragment.
     webrtc::RTPFragmentationHeader header;
     memset(&header, 0, sizeof(header));
-
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
     size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
@@ -483,7 +426,6 @@ int H264VideoMFTEncoder::Encode(
     m_nFramesProcessed++;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 //This version of encode implementation is reserved here in case we have further demand to encode the same thread.
 //For MSDK, it's not mandatory to encode in same thread...And it's not good practice to allow blocking call on
 //worker thread.
@@ -506,7 +448,6 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     mfxFrameInfo& pInfo = pSurf->Info;
     mfxFrameData& pData = pSurf->Data;
     pData.FrameOrder = m_nFramesProcessed;
-
     if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC) {
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -522,10 +463,8 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         w = pInfo.Width;
         h = pInfo.Height;
     }
-
     pitch = pData.Pitch;
     ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
-
     if (MFX_FOURCC_NV12 == pInfo.FourCC) {
         rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(input_image.video_frame_buffer()->ToI420());
         libyuv::I420ToNV12(buffer->DataY(),
@@ -544,7 +483,6 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     //Prepare done. Start encode.
     mfxEncodeCtrl ctrl;
     memset((void*)&ctrl, 0, sizeof(ctrl));
@@ -566,7 +504,6 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     if (MFX_ERR_NONE != sts){
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     MSDK_ZERO_MEMORY(bs);
     mfxU32 bsDataSize = param.mfx.BufferSizeInKB * 1000;
     mfxU8* pbsData = new mfxU8[bsDataSize];
@@ -576,14 +513,12 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     memset((void*)pbsData, 0, bsDataSize);
     bs.Data = pbsData;
     bs.MaxLength = bsDataSize;
-
     ctrl.FrameType = is_keyframe_required ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
     sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
     if (MFX_ERR_NONE != sts) {
         delete[] pbsData;
         return WEBRTC_VIDEO_CODEC_ERROR;
     }
-
     sts = m_mfxSession_.SyncOperation(sync, MSDK_ENC_WAIT_INTERVAL);
     if (MFX_ERR_NONE != sts) {
         //Get the output buffer from bs.
@@ -603,21 +538,18 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         output = nullptr;
     }
 #endif
-
     encodedFrame._encodedHeight = input_image.height();
     encodedFrame._encodedWidth = input_image.width();
     encodedFrame._completeFrame = true;
     encodedFrame.capture_time_ms_ = input_image.render_time_ms();
     encodedFrame._timeStamp = input_image.timestamp();
     encodedFrame._frameType = is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
-
     webrtc::CodecSpecificInfo info;
     memset(&info, 0, sizeof(info));
     info.codecType = codecType_;
     // Generate a header describing a single fragment.
     webrtc::RTPFragmentationHeader header;
     memset(&header, 0, sizeof(header));
-
     int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
     size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
     int32_t scPositionsLength = 0;
@@ -647,7 +579,6 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
         header.fragmentationPlType[i] = 0;
         header.fragmentationTimeDiff[i] = 0;
     }
-
     const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
     if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
         RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
@@ -658,31 +589,26 @@ int H264VideoMFTEncoder::EncodeOnEncoderThread(const webrtc::VideoFrame& input_i
     m_nFramesProcessed++;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H264VideoMFTEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
     callback_ = callback;
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H264VideoMFTEncoder::SetChannelParameters(uint32_t packet_loss,
     int64_t rtt) {
     // Encoder doesn't know anything about packet loss or rtt so just return.
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H264VideoMFTEncoder::SetRates(uint32_t new_bitrate_kbit,
     uint32_t frame_rate) {
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int H264VideoMFTEncoder::Release() {
     callback_ = nullptr;
     // Need to reset to that the session is invalidated and won't use the
     // callback anymore.
     return WEBRTC_VIDEO_CODEC_OK;
 }
-
 int32_t H264VideoMFTEncoder::NextNaluPosition(
     uint8_t *buffer, size_t buffer_size, size_t *sc_length) {
     if (buffer_size < H264_SC_LENGTH) {
@@ -692,7 +618,6 @@ int32_t H264VideoMFTEncoder::NextNaluPosition(
     // Set end buffer pointer to 4 bytes before actual buffer end so we can
     // access head[1], head[2] and head[3] in a loop without buffer overrun.
     uint8_t *end = buffer + buffer_size - H264_SC_LENGTH;
-
     while (head < end) {
       if (head[0]) {
         head++;
@@ -719,5 +644,4 @@ int32_t H264VideoMFTEncoder::NextNaluPosition(
     }
     return -1;
 }
-
 

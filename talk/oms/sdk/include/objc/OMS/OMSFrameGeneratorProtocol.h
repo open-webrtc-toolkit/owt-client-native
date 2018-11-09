@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <WebRTC/RTCMacros.h>
-
 NS_ASSUME_NONNULL_BEGIN
-
 /**
  @brief frame generator interface for audio
  @details Sample rate and channel numbers cannot be changed once the generator is
@@ -37,7 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 */
 RTC_EXPORT
 @protocol RTCAudioFrameGeneratorProtocol<NSObject>
-
 /**
  @brief Generate frames for next 10ms.
  @param buffer Points to the start address for frame data. The memory is
@@ -53,10 +49,8 @@ RTC_EXPORT
 /// Get numbers of channel for frames generated.
 - (NSUInteger)channelNumber;
 @end
-
 /**
  @brief Protocol for video frame generators
-
  RTCLocalCustomizedStream pulls video frames from an object implements this
  protocol. Height, width and frame rate cannot be changed once generator is
  created.
@@ -82,5 +76,4 @@ RTC_EXPORT
 */
 - (NSUInteger)frameRate;
 @end
-
 NS_ASSUME_NONNULL_END

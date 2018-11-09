@@ -1,10 +1,8 @@
 /*
  * Intel License
  */
-
 #include "talk/oms/sdk/base/objc/RemoteStreamObserverObjcImpl.h"
 #include "webrtc/rtc_base/checks.h"
-
 namespace oms {
 namespace base {
 RemoteStreamObserverObjcImpl::RemoteStreamObserverObjcImpl(
@@ -14,13 +12,11 @@ RemoteStreamObserverObjcImpl::RemoteStreamObserverObjcImpl(
   RTC_CHECK(stream);
   RTC_CHECK(delegate);
 }
-
 void RemoteStreamObserverObjcImpl::OnEnded() {
   if ([delegate_ respondsToSelector:@selector(streamDidEnd:)]) {
     [delegate_ streamDidEnd:stream_];
   }
 }
-
 void RemoteStreamObserverObjcImpl::OnUpdated() {
   if ([delegate_ respondsToSelector:@selector(streamDidUpdate:)]) {
     [delegate_ streamDidUpdate:stream_];

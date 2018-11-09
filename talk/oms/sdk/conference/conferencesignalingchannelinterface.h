@@ -1,23 +1,18 @@
 /*
  * Intel License
  */
-
 #ifndef OMS_CONFERENCE_SIGNALINGCHANNELINTERFACE_H_
 #define OMS_CONFERENCE_SIGNALINGCHANNELINTERFACE_H_
-
 #include <functional>
 #include <memory>
 #include "talk/oms/sdk/include/cpp/oms/conference/conferenceuser.h"
 #include "webrtc/rtc_base/json.h"
-
 namespace oms {
 namespace conference {
-
 class ConferenceSocketSignalingChannel {
  public:
   virtual void AddObserver(ConferenceSignalingChannelObserver& observer) = 0;
   virtual void RemoveObserver(ConferenceSignalingChannelObserver& observer) = 0;
-
   virtual void Connect(
       const std::string& token,
       std::function<void(Json::Value& room_info,
@@ -50,5 +45,4 @@ class ConferenceSocketSignalingChannel {
 };
 }
 }
-
 #endif  // OMS_CONFERENCE_SIGNALINGCHANNELINTERFACE_H_

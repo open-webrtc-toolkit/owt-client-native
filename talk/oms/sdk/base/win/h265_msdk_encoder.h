@@ -3,7 +3,6 @@
 */
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_H265_VIDEO_MFT_ENCODER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_H265_VIDEO_MFT_ENCODER_H_
-
 #include "base_allocator.h"
 #include "mfxvideo.h"
 #include "mfxvideo++.h"
@@ -11,7 +10,6 @@
 #include <vector>
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
-
 // This file provides a H264 encoder implementation using the WMF
 // APIs.
 enum H265MemType {
@@ -19,37 +17,26 @@ enum H265MemType {
     H265_D3D9_MEMORY = 0x01,
     H265_D3D11_MEMORY = 0x02,
 };
-
 class H265EncoderThread : public rtc::Thread {
 public:
     virtual void Run() override;
     ~H265EncoderThread() override;
 };
-
 class H265VideoMFTEncoder : public webrtc::VideoEncoder {
 public:
     H265VideoMFTEncoder();
-
     ~H265VideoMFTEncoder() override;
-
     int InitEncode(const webrtc::VideoCodec* codec_settings,
         int number_of_cores,
         size_t max_payload_size) override;
-
     int Encode(const webrtc::VideoFrame& input_image,
         const webrtc::CodecSpecificInfo* codec_specific_info,
         const std::vector<webrtc::FrameType>* frame_types) override;
-
     int RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) override;
-
     int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-
     int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
-
     bool SupportsNativeHandle() const override { return false; }
-
     int Release() override;
-
 private:
     int InitEncodeOnEncoderThread(const webrtc::VideoCodec* codec_settings,
         int number_of_cores,
@@ -68,7 +55,6 @@ private:
     int32_t height_;
     int32_t framerate_;
     webrtc::VideoCodecType codecType_;
-
     MFXVideoSession m_mfxSession_;
     MFXVideoENCODE* m_pmfxENC;
     MFXFrameAllocator* m_pMFXAllocator;

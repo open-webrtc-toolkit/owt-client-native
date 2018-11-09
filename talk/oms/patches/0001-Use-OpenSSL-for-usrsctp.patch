@@ -2,11 +2,9 @@ From daf293db6a474cd3f0dd43b56e7196a6a13255da Mon Sep 17 00:00:00 2001
 From: Qiu Jianlin <jianlin.qiu@intel.com>
 Date: Wed, 25 Apr 2018 09:30:34 +0800
 Subject: [PATCH] Use OpenSSL for usrsctp
-
 ---
  usrsctp/BUILD.gn | 11 ++++++++---
  1 file changed, 8 insertions(+), 3 deletions(-)
-
 diff --git a/usrsctp/BUILD.gn b/usrsctp/BUILD.gn
 index 94f26786e1d..98a680dd401 100644
 --- a/usrsctp/BUILD.gn
@@ -36,4 +34,3 @@ index 94f26786e1d..98a680dd401 100644
  }
 -- 
 2.16.2.windows.1
-

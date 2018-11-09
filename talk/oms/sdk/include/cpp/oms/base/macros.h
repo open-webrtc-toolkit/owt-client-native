@@ -23,10 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_MACROS_H_
 #define OMS_BASE_MACROS_H_
-
 #if __cplusplus > 201402L
 #define OMS_DEPRECATED [[deprecated]]
 #else
@@ -39,5 +37,4 @@
 #define OMS_DEPRECATED
 #endif
 #endif
-
 #endif  // OMS_BASE_MACROS_H_

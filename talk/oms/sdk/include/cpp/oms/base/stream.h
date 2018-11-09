@@ -23,14 +23,11 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_STREAM_H_
 #define OMS_BASE_STREAM_H_
-
 #include <mutex>
 #include <unordered_map>
 #include <vector>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/exception.h"
 #include "oms/base/localcamerastreamparameters.h"
@@ -38,39 +35,28 @@
 #include "oms/base/options.h"
 #include "oms/base/videoencoderinterface.h"
 #include "oms/base/videorendererinterface.h"
-
 namespace webrtc {
   class MediaStreamInterface;
   class VideoTrackSourceInterface;
 }
-
 namespace oms {
 namespace conference {
   class ConferencePeerConnectionChannel;
   class ConferenceClient;
   class ConferenceInfo;
 }
-
 namespace p2p {
   class P2PPeerConnectionChannel;
 }
-
 namespace base {
-
 class MediaConstraintsImpl;
-
 class CustomizedFramesCapturer;
-
 class BasicDesktopCapturer;
-
 class VideoFrameGeneratorInterface;
-
 #if defined(WEBRTC_MAC)
 class ObjcVideoCapturerInterface;
 #endif
-
 using webrtc::MediaStreamInterface;
-
 /// Observer for Stream
 class StreamObserver {
  public:
@@ -80,13 +66,10 @@ class StreamObserver {
   /// Triggered when the stream info is updated in conference mode.
   virtual void OnUpdated() {};
 };
-
 class WebrtcVideoRendererImpl;
-
 #if defined(WEBRTC_WIN)
 class WebrtcVideoRendererD3D9Impl;
 #endif
-
 /// Base class of all streams with media stream
 class Stream {
  public:
@@ -111,7 +94,6 @@ class Stream {
   /// Be noted if you turned hardware acceleration on, calling this API on remote stream
   /// will have no effect.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
-
   /**
     @brief Returns a user-defined attribute map.
     @details These attributes are defined by publisher. P2P mode always return
@@ -162,7 +144,6 @@ class Stream {
   mutable std::mutex observer_mutex_;
   std::vector<std::reference_wrapper<StreamObserver>> observers_;
 };
-
 class LocalScreenStreamObserver {
 public:
     /**
@@ -173,7 +154,6 @@ public:
     @param dest_window application will set this id to be used by it.
     */
     virtual void OnCaptureSourceNeeded(const std::unordered_map<int, std::string>& window_list, int& dest_window) {}
-
     virtual ~LocalScreenStreamObserver() {}
 };
 /**
@@ -186,9 +166,7 @@ class LocalStream : public Stream {
   LocalStream();
   LocalStream(MediaStreamInterface* media_stream, StreamSourceInfo source);
 #endif
-
   virtual ~LocalStream();
-
   using Stream::Attributes;
   /**
     @brief Set a user-defined attribute map.
@@ -205,7 +183,6 @@ class LocalStream : public Stream {
    sink previously attached.
   */
   void Close();
-
   /**
    @brief Create a local camera stream.
    @detail This creates a local camera stream with specified device
@@ -293,7 +270,6 @@ private:
     std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
 #endif
 };
-
 /**
   @brief This class represents a remote stream.
   @details A remote is published from a remote client or MCU. Do not construct
@@ -312,17 +288,14 @@ class RemoteStream : public Stream {
                         const oms::base::PublicationSettings& publication_settings);
   explicit RemoteStream(MediaStreamInterface* media_stream,
                         const std::string& from);
-
   virtual void Attributes(const std::unordered_map<std::string, std::string>& attributes) {
                           attributes_ = attributes;
   }
   /** @endcond */
-
   /// Return the remote user ID, indicates who published this stream.
   /// If it's mixed stream, origin will be "mcu".
   std::string Origin();
   using Stream::Attributes;
-
   /// Get the subscription capabilities on the stream.
   SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
   /// Get the publication settings of the stream.
@@ -340,11 +313,9 @@ class RemoteStream : public Stream {
   }
   /** @endcond */
   void Stop() {};
-
  protected:
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);
-
  private:
   std::string origin_;
   bool has_audio_ = true;
@@ -352,8 +323,6 @@ class RemoteStream : public Stream {
   oms::base::SubscriptionCapabilities subscription_capabilities_;
   oms::base::PublicationSettings publication_settings_;
 };
-
 } // namespace base
 } // namespace oms
-
 #endif  // OMS_BASE_STREAM_H_

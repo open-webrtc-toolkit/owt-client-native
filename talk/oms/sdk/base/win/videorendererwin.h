@@ -14,10 +14,8 @@
 #include "webrtc/api/video/video_sink_interface.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/rtc_base/scoped_ref_ptr.h"
-
 namespace oms {
 namespace base {
-
 class WebrtcVideoRendererD3D9Impl
     : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
@@ -28,7 +26,6 @@ class WebrtcVideoRendererD3D9Impl
         height_(0) {}
   virtual void OnFrame(const webrtc::VideoFrame& frame) override;
   virtual ~WebrtcVideoRendererD3D9Impl() { Destroy(); }
-
  private:
   void Destroy();
   void Resize(size_t width, size_t height);
@@ -38,7 +35,6 @@ class WebrtcVideoRendererD3D9Impl
   size_t height_;
   rtc::scoped_refptr<IDirect3D9> m_d3d_;
   rtc::scoped_refptr<IDirect3DDevice9> m_d3d_device_;
-
   rtc::scoped_refptr<IDirect3DTexture9> m_texture_;
   rtc::scoped_refptr<IDirect3DVertexBuffer9> m_vertex_buffer_;
 };

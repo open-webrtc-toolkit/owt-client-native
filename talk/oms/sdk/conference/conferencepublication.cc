@@ -10,11 +10,9 @@
 #include "talk/oms/sdk/include/cpp/oms/base/exception.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferenceclient.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferencepublication.h"
-
 using namespace rtc;
 namespace oms {
 namespace conference {
-
 ConferencePublication::ConferencePublication(std::shared_ptr<ConferenceClient> client, const std::string& pub_id,
                                              const std::string& stream_id)
       : id_(pub_id),
@@ -25,7 +23,6 @@ ConferencePublication::ConferencePublication(std::shared_ptr<ConferenceClient> c
   if (that != nullptr)
     event_queue_ = that->event_queue_;
 }
-
 ConferencePublication::~ConferencePublication() {
   // All the streamupdate observers must be removed on conference client
   // before publication is destructed.
@@ -33,7 +30,6 @@ ConferencePublication::~ConferencePublication() {
   if (that != nullptr)
     that->RemoveStreamUpdateObserver(*this);
 }
-
 void ConferencePublication::Mute(
     TrackKind track_kind,
     std::function<void()> on_success,
@@ -53,7 +49,6 @@ void ConferencePublication::Mute(
       that->Mute(id_, track_kind, on_success, on_failure);
    }
 }
-
 void ConferencePublication::Unmute(
     TrackKind track_kind,
     std::function<void()> on_success,
@@ -74,7 +69,6 @@ void ConferencePublication::Unmute(
    }
 }
 
-
 void ConferencePublication::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -93,7 +87,6 @@ void ConferencePublication::GetStats(
       that->GetConnectionStats(id_, on_success, on_failure);
    }
 }
-
 void ConferencePublication::GetNativeStats(
     std::function<void(const std::vector<const webrtc::StatsReport*>& reports)>
         on_success,
@@ -113,7 +106,6 @@ void ConferencePublication::GetNativeStats(
      that->GetStats(id_, on_success, on_failure);
    }
 }
-
 void ConferencePublication::Stop() {
   auto that = conference_client_.lock();
   if (that == nullptr || ended_) {
@@ -127,7 +119,6 @@ void ConferencePublication::Stop() {
     }
   }
 }
-
 void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
                                                  TrackKind track_kind,
                                                  bool muted) {
@@ -141,7 +132,6 @@ void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
     }
   }
 }
-
 void ConferencePublication::AddObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<PublicationObserver>>::iterator it =
@@ -161,7 +151,6 @@ void ConferencePublication::AddObserver(PublicationObserver& observer) {
     that->AddStreamUpdateObserver(*this);
   }
 }
-
 void ConferencePublication::RemoveObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   auto it = std::find_if(
@@ -173,6 +162,5 @@ void ConferencePublication::RemoveObserver(PublicationObserver& observer) {
   if (it != observers_.end())
     observers_.erase(it);
 }
-
 }
 }

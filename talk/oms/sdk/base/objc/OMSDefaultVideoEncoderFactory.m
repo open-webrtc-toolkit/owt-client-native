@@ -4,11 +4,8 @@
 #import "WebRTC/RTCVideoCodecH265.h"
 #endif
 #import "talk/oms/sdk/base/objc/OMSDefaultVideoEncoderFactory.h"
-
 @implementation OMSDefaultVideoEncoderFactory
-
 @synthesize preferredCodec;
-
 + (NSArray<RTCVideoCodecInfo*>*)supportedCodecs {
   NSMutableArray<RTCVideoCodecInfo*>* codecs =
       [[RTCDefaultVideoEncoderFactory supportedCodecs] mutableCopy];
@@ -20,7 +17,6 @@
 #endif
   return codecs;
 }
-
 - (id<RTCVideoEncoder>)createEncoder:(RTCVideoCodecInfo*)info {
 #if !defined(RTC_DISABLE_H265)
   if (@available(iOS 11.0, *)) {
@@ -31,9 +27,7 @@
 #endif
   return [super createEncoder:info];
 }
-
 - (NSArray<RTCVideoCodecInfo*>*)supportedCodecs {
   return [super supportedCodecs];
 }
-
 @end

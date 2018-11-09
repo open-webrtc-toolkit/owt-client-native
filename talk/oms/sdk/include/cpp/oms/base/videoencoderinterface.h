@@ -23,17 +23,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_VIDEOENCODERINTERFACE_H_
 #define OMS_BASE_VIDEOENCODERINTERFACE_H_
-
 #include <memory>
 #include <vector>
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace base {
-
 /**
   @brief Video encoder interface
   @details Internal webrtc encoder will request from this
@@ -84,8 +80,6 @@ class VideoEncoderInterface {
    */
   virtual VideoEncoderInterface* Copy() = 0;
 };
-
 }
 }
-
 #endif  // OMS_BASE_VIDEOENCODERINTERFACE_H_

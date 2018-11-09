@@ -23,18 +23,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import "OMS/OMSStream.h"
 #import "WebRTC/RTCMediaStream.h"
-
 NS_ASSUME_NONNULL_BEGIN
-
 @class OMSStreamConstraints;
-
 /// This class represent a local stream.
 RTC_EXPORT
 @interface OMSLocalStream : OMSStream
-
 /**
   Create an OMSLocalStream from given RTCMediaStream.
   @param source Information about stream's source.
@@ -44,7 +39,6 @@ RTC_EXPORT
 */
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
                              source:(OMSStreamSourceInfo*)source;
-
 /**
   Create an OMSLocalStream from mic and camera with given constraints.
   @param constraints Constraints for creating the stream. The stream will not be
@@ -54,14 +48,11 @@ RTC_EXPORT
 */
 - (instancetype)initWithConstratins:(OMSStreamConstraints*)constraints
                               error:(NSError**)outError;
-
 /**
   @brief Set a user-defined attribute map.
   @details Remote user can get attribute map by calling setAttributes:. P2P mode
   does not support setting attributes.
 */
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes;
-
 @end
-
 NS_ASSUME_NONNULL_END

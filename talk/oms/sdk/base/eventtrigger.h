@@ -1,18 +1,14 @@
 /*
  * Intel License
  */
-
 #include <future>
 #include <thread>
 #include <vector>
 #include "webrtc/rtc_base/task_queue.h"
-
 #ifndef OMS_BASE_EVENTTRIGGER_H_
 #define OMS_BASE_EVENTTRIGGER_H_
-
 namespace oms {
 namespace base {
-
 /* @brief Functions for event execution
  * @details This class provide several static functions to execute event on its
  * observer asynchronously.
@@ -28,7 +24,6 @@ class EventTrigger final {
       queue->PostTask([f] { f(); });
     }
   }
-
   template <typename O, typename A, typename F, typename T1>
   static void OnEvent1(std::vector<O, A> const& observers,
                        std::shared_ptr<rtc::TaskQueue> queue,
@@ -39,7 +34,6 @@ class EventTrigger final {
       queue->PostTask([f] { f(); });
     }
   }
-
   template <typename O, typename A, typename F, typename T1, typename T2>
   static void OnEvent2(std::vector<O, A> const& observers,
                        std::shared_ptr<rtc::TaskQueue> queue,
@@ -54,5 +48,4 @@ class EventTrigger final {
 };
 }
 }
-
 #endif  // OMS_BASE_EVENTTRIGGER_H_

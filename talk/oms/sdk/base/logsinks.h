@@ -7,21 +7,16 @@
 *  in the file PATENTS.  All contributing project authors may
 *  be found in the AUTHORS file in the root of the source tree.
 */
-
 // This file is borrowed from webrtc/rtc_base/logsinks.h
 #ifndef OMS_BASE_LOGSINKS_H_
 #define OMS_BASE_LOGSINKS_H_
-
 #include <memory>
 #include <string>
-
 #include "webrtc/rtc_base/constructormagic.h"
 #include "webrtc/rtc_base/filerotatingstream.h"
 #include "webrtc/rtc_base/logging.h"
-
 namespace oms {
 namespace base {
-
 using namespace rtc;
 // Log sink that uses a FileRotatingStream to write to disk.
 // Init() must be called before adding this sink.
@@ -34,32 +29,24 @@ class RotatingLogSink : public LogSink {
                       size_t max_log_size,
                       size_t num_log_files);
   ~RotatingLogSink() override;
-
   // Writes the message to the current file. It will spill over to the next
   // file if needed.
   void OnLogMessage(const std::string& message) override;
-
   // Deletes any existing files in the directory and creates a new log file.
   virtual bool Init();
-
   // Disables buffering on the underlying stream.
   bool DisableBuffering();
-
  protected:
   explicit RotatingLogSink(FileRotatingStream* stream);
-
  private:
   std::unique_ptr<FileRotatingStream> stream_;
-
   RTC_DISALLOW_COPY_AND_ASSIGN(RotatingLogSink);
 };
-
 // Log sink that uses a OMSFileRotatingStream to write to disk.
 // Init() must be called before adding this sink.
 class CallSessionRotatingLogSink : public RotatingLogSink {
  public:
   ~CallSessionRotatingLogSink() override;
-
   static std::shared_ptr<CallSessionRotatingLogSink> Create(const std::string& log_dir_path,
       size_t max_total_log_size) {
       static std::shared_ptr<CallSessionRotatingLogSink> s(new CallSessionRotatingLogSink(log_dir_path, max_total_log_size));
@@ -72,5 +59,4 @@ class CallSessionRotatingLogSink : public RotatingLogSink {
 };
 }  // namespace base
 }  // namespace oms
-
 #endif  // OMS_BASE_LOGSINKS_H_

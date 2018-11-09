@@ -1,30 +1,23 @@
 //
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
-
 #include "talk/oms/sdk/include/cpp/oms/base/commontypes.h"
-
 #import "talk/oms/sdk/base/objc/OMSRemoteStream+Private.h"
 #import "talk/oms/sdk/conference/objc/OMSConferenceInfo+Private.h"
 #import "talk/oms/sdk/conference/objc/OMSConferenceParticipant+Private.h"
 #import "talk/oms/sdk/include/objc/OMS/OMSRemoteMixedStream.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
-
 @implementation OMSConferenceInfo
-
 @dynamic conferenceId, participants, remoteStreams, myself;
-
 - (instancetype)initWithNativeInfo:
     (std::shared_ptr<const oms::conference::ConferenceInfo>)info {
   self = [super init];
   _nativeInfo = info;
   return self;
 }
-
 - (NSString*)conferenceId {
   return [NSString stringForStdString:_nativeInfo->Id()];
 }
-
 - (NSArray<OMSConferenceParticipant*>*)participants {
   const auto& nativeParticipants = _nativeInfo->Participants();
   NSMutableArray<OMSConferenceParticipant*>* participants =
@@ -36,7 +29,6 @@
   }
   return participants;
 }
-
 - (NSArray<OMSRemoteStream*>*)remoteStreams {
   const auto& nativeStreams = _nativeInfo->RemoteStreams();
   NSMutableArray<OMSRemoteStream*>* streams =
@@ -55,12 +47,10 @@
   }
   return streams;
 }
-
 - (OMSConferenceParticipant*)myself {
   const auto& nativeParticipant = _nativeInfo->Self();
   OMSConferenceParticipant* participant = [[OMSConferenceParticipant alloc]
         initWithNativeParticipant:nativeParticipant];
   return participant;
 }
-
 @end

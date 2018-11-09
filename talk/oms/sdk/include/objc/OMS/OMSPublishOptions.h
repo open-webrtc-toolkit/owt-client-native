@@ -23,21 +23,14 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
 #import <OMS/OMSMediaFormat.h>
-
 NS_ASSUME_NONNULL_BEGIN
-
 /// PublishOptions defines options for publishing a OMSLocalStream.
 RTC_EXPORT
 @interface OMSPublishOptions : NSObject
-
 @property(nonatomic, strong) NSArray<OMSAudioEncodingParameters*>* audio;
-
 @property(nonatomic, strong) NSArray<OMSVideoEncodingParameters*>* video;
-
 @end
-
 NS_ASSUME_NONNULL_END

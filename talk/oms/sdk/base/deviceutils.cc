@@ -1,14 +1,12 @@
 /*
  * Intel License
  */
-
 #include "talk/oms/sdk/include/cpp/oms/base/deviceutils.h"
 #include "webrtc/rtc_base/arraysize.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/engine/webrtcvideocapturerfactory.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
@@ -31,7 +29,6 @@ std::vector<std::string> DeviceUtils::VideoCapturerIds() {
   }
   return device_ids;
 }
-
 std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
     const std::string& id) {
   std::vector<Resolution> resolutions;
@@ -81,6 +78,5 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   }
   return resolutions;
 }
-
 }
 }

@@ -1,7 +1,6 @@
 /*
  * Intel License
  */
-
 #include <iostream>
 #include <mutex>
 #include "libyuv/convert.h"
@@ -15,7 +14,6 @@
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "talk/oms/sdk/base/desktopcapturer.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
@@ -28,11 +26,9 @@ void ScreenCaptureThread::Run() {
   SetAllowBlockingCalls(true);
   ProcessMessages(kForever);
 }
-
 ScreenCaptureThread::~ScreenCaptureThread() {
   Stop();
 }
-
 BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options, std::unique_ptr<LocalScreenStreamObserver> observer)
   : width_(0),
   height_(0),
@@ -51,12 +47,10 @@ BasicWindowCapturer::BasicWindowCapturer(webrtc::DesktopCaptureOptions options, 
     window_capturer_ =
       webrtc::DesktopCapturer::CreateWindowCapturer(window_capture_options_);
 }
-
 BasicWindowCapturer::~BasicWindowCapturer() {
   if(capturing_)
     Stop();
 }
-
 bool BasicWindowCapturer::WindowCaptureThreadFunc(void* pThis) {
   return (static_cast<BasicWindowCapturer*>(pThis)->CaptureThreadProcess());
 }
@@ -65,7 +59,6 @@ bool BasicWindowCapturer::CaptureThreadProcess() {
     webrtc::SleepMs(10);
     return true;
   }
-
   uint64_t current_time = clock_->CurrentNtpInMilliseconds();
   lock_.Enter();
   if (last_call_record_millis_ == 0 ||
@@ -89,7 +82,6 @@ bool BasicWindowCapturer::CaptureThreadProcess() {
   }
   return true;
 }
-
 void BasicWindowCapturer::Init() {
   worker_thread_.reset(new oms::base::ScreenCaptureThread());
   worker_thread_->SetName("CaptureInvokeThread", nullptr);
@@ -100,7 +92,6 @@ void BasicWindowCapturer::Init() {
   std::vector<cricket::VideoFormat> supported;
   supported.push_back(format);
   SetSupportedFormats(supported);
-
   worker_thread_->Invoke<void>(RTC_FROM_HERE,
     rtc::Bind(&BasicWindowCapturer::InitOnWorkerThread, this));
   if (observer_) {
@@ -112,7 +103,6 @@ void BasicWindowCapturer::Init() {
     }
   }
 }
-
 void BasicWindowCapturer::InitOnWorkerThread() {
   if (IsRunning()) {
     RTC_LOG(LS_ERROR) << "Basic Window Capturerer is already running";
@@ -124,7 +114,6 @@ void BasicWindowCapturer::InitOnWorkerThread() {
     capture_thread_->SetPriority(kHighPriority);
   }
 }
-
 CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_format) {
   if (!window_capturer_.get()) {
     RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
@@ -135,11 +124,9 @@ CaptureState BasicWindowCapturer::Start(const cricket::VideoFormat& capture_form
   window_capturer_->Start(this);
   return CS_RUNNING;
 }
-
 bool BasicWindowCapturer::IsRunning() {
   return capture_thread_ && capture_thread_->IsRunning();
 }
-
 // Stop must be called on the same thread as Init as the underlying
 // PlatformThread require that.
 void BasicWindowCapturer::Stop() {
@@ -148,7 +135,6 @@ void BasicWindowCapturer::Stop() {
   worker_thread_->Invoke<void>(RTC_FROM_HERE,
     rtc::Bind(&BasicWindowCapturer::StopOnWorkerThread, this));
 }
-
 void BasicWindowCapturer::StopOnWorkerThread() {
   if (capture_thread_) {
     stopped_ = true;
@@ -158,7 +144,6 @@ void BasicWindowCapturer::StopOnWorkerThread() {
   capturing_ = false;
   SetCaptureFormat(nullptr);
 }
-
 bool BasicWindowCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
   if (!fourccs) {
     return false;
@@ -166,7 +151,6 @@ bool BasicWindowCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
   fourccs->push_back(GetSupportedFormats()->at(0).fourcc);
   return true;
 }
-
 bool BasicWindowCapturer::GetCurrentWindowList(
     std::unordered_map<int, std::string>* window_list) {
   if (!window_capturer_) {
@@ -175,12 +159,10 @@ bool BasicWindowCapturer::GetCurrentWindowList(
   }
   webrtc::DesktopCapturer::SourceList sources;
   bool have_source = window_capturer_->GetSourceList(&sources);
-
   if (!have_source) {
     RTC_LOG(LS_ERROR) << "No window available for capture";
     return false;
   }
-
   // Clear window_list if not empty.
   if (!window_list->empty()) {
     window_list->clear();
@@ -190,13 +172,11 @@ bool BasicWindowCapturer::GetCurrentWindowList(
   }
   return true;
 }
-
 bool BasicWindowCapturer::SetCaptureWindow(int window_id) {
   if (!window_capturer_) {
     RTC_LOG(LS_ERROR) << "No window capturer.";
     return false;
   }
-
   // Do we need to switch focus to this window? Currently we do.
   if (window_capturer_->SelectSource(window_id)) {
     source_specified_ = true;
@@ -206,14 +186,12 @@ bool BasicWindowCapturer::SetCaptureWindow(int window_id) {
   }
   return false;
 }
-
 int BasicWindowCapturer::I420DataSize(int height,
                                       int stride_y,
                                       int stride_u,
                                       int stride_v) {
   return stride_y * height + (stride_u + stride_v) * ((height + 1) / 2);
 }
-
 void BasicWindowCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
   if (width_ != width || height != height_ || !frame_buffer_) {
     RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
@@ -228,7 +206,6 @@ void BasicWindowCapturer::AdjustFrameBuffer(int32_t width, int32_t height) {
     return;
   }
 }
-
 // Executed in the context of BasicWindowCaptureThread.
 void BasicWindowCapturer::CaptureFrame() {
   // invoke underlying desktop capture to capture one frame.
@@ -238,7 +215,6 @@ void BasicWindowCapturer::CaptureFrame() {
   }
   return window_capturer_->CaptureFrame();
 }
-
 void BasicWindowCapturer::OnCaptureResult(
     webrtc::DesktopCapturer::Result result,
     std::unique_ptr<webrtc::DesktopFrame> frame) {
@@ -246,7 +222,6 @@ void BasicWindowCapturer::OnCaptureResult(
     RTC_LOG(LS_ERROR) << "Failed to cpature one Window frame.";
     return;
   }
-
   int32_t frame_width = frame->size().width();
   int32_t frame_height = frame->size().height();
   uint8_t* frame_data_rgba = frame->data();
@@ -271,7 +246,6 @@ void BasicWindowCapturer::OnCaptureResult(
     frame_height -= 1;
     scale_required = true;
   }
-
   std::unique_ptr<uint8_t []> new_frame_data_rgba;
   if (scale_required) {
     new_frame_data_rgba.reset(new uint8_t[frame_width * frame_height * 4]);
@@ -279,7 +253,6 @@ void BasicWindowCapturer::OnCaptureResult(
     libyuv::ARGBScale(frame_data_rgba, frame_stride, old_frame_width, old_frame_height,
       new_frame_data_rgba.get(), new_frame_stride, frame_width, frame_height, libyuv::FilterMode::kFilterBilinear);
   }
-
   // The captured frame is of memory layout ABRG. convert it to I420 as
   // required.
   AdjustFrameBuffer(frame_width, frame_height);
@@ -296,11 +269,9 @@ void BasicWindowCapturer::OnCaptureResult(
       frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
       frame_width, frame_height);
   }
-
   webrtc::VideoFrame capturedFrame(frame_buffer_, 0, rtc::TimeMillis(),
                                    webrtc::kVideoRotation_0);
   OnFrame(capturedFrame, frame_width, frame_height);
 }
-
 }  // namespace base
 }  // namespace oms

@@ -2,11 +2,9 @@ From ac67a0da28a1b0e0b5bbddf8dc895cd399842aad Mon Sep 17 00:00:00 2001
 From: Jianjun Zhu <jianjun.zhu@intel.com>
 Date: Mon, 17 Jul 2017 09:07:13 +0800
 Subject: [PATCH] Use OpenSSL for libsrtp.
-
 ---
  BUILD.gn | 11 ++++++++---
  1 file changed, 8 insertions(+), 3 deletions(-)
-
 diff --git a/BUILD.gn b/BUILD.gn
 index df1e9b2..6335dc9 100644
 --- a/BUILD.gn
@@ -38,4 +36,3 @@ index df1e9b2..6335dc9 100644
  if (build_libsrtp_tests) {
 -- 
 2.4.4
-

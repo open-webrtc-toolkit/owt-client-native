@@ -23,13 +23,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_SUBSCRIPTION_H_
 #define OMS_CONFERENCE_SUBSCRIPTION_H_
-
 #include <vector>
 #include <mutex>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/mediaconstraints.h"
 #include "oms/base/subscription.h"
@@ -37,30 +34,22 @@
 #include "oms/base/exception.h"
 #include "oms/conference/streamupdateobserver.h"
 #include "oms/conference/subscribeoptions.h"
-
 namespace rtc {
   class TaskQueue;
 }
-
 namespace webrtc{
   class StatsReport;
 }
-
 namespace oms {
 namespace conference {
-
 class ConferenceClient;
-
 using namespace oms::base;
-
 class ConferenceSubscription : public ConferenceStreamUpdateObserver,
                                public std::enable_shared_from_this<ConferenceSubscription> {
   public:
     ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,
                            const std::string& stream_id);
-
     virtual ~ConferenceSubscription();
-
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
               std::function<void()> on_success,
@@ -104,8 +93,6 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
 
-
 } // namespace conference
 } // namespace oms
-
 #endif  // OMS_CONFERENCE_SUBSCRIPTION_H_

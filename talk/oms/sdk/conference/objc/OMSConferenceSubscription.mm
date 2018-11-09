@@ -1,17 +1,14 @@
 //
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
-
 #include "talk/oms/sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.h"
 #include "webrtc/rtc_base/checks.h"
-
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
 #import "talk/oms/sdk/conference/objc/OMSConferenceSubscription+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import <OMS/OMSErrors.h>
 #import <OMS/OMSConferenceErrors.h>
-
 @implementation OMSConferenceSubscription {
   std::shared_ptr<oms::conference::ConferenceSubscription> _nativeSubscription;
   std::unique_ptr<
@@ -20,7 +17,6 @@
           oms::conference::ConferenceSubscriptionObserverObjcImpl*)>>
       _observer;
 }
-
 - (instancetype)initWithNativeSubscription:
     (std::shared_ptr<oms::conference::ConferenceSubscription>)
         nativeSubscription {
@@ -28,11 +24,9 @@
   _nativeSubscription = nativeSubscription;
   return self;
 }
-
 - (void)stop {
   _nativeSubscription->Stop();
 }
-
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure {
   RTC_CHECK(onSuccess);
@@ -60,7 +54,6 @@
         onFailure(err);
       });
 }
-
 - (void)mute:(OMSTrackKind)trackKind
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure {
@@ -83,7 +76,6 @@
         onFailure(err);
       });
 }
-
 - (void)unmute:(OMSTrackKind)trackKind
      onSuccess:(nullable void (^)())onSuccess
      onFailure:(nullable void (^)(NSError*))onFailure {
@@ -106,7 +98,6 @@
         onFailure(err);
       });
 }
-
 - (void)applyOptions:(OMSConferenceSubscriptionUpdateOptions*)options
            onSuccess:(nullable void (^)())onSuccess
            onFailure:(nullable void (^)(NSError*))onFailure {
@@ -129,11 +120,9 @@
         onFailure(err);
       });
 }
-
 - (NSString*)subscriptionId {
   return [NSString stringForStdString:_nativeSubscription->Id()];
 }
-
 -(void)setDelegate:(id<OMSConferenceSubscriptionDelegate>)delegate{
   _observer = std::unique_ptr<
       oms::conference::ConferenceSubscriptionObserverObjcImpl,
@@ -145,11 +134,8 @@
   _nativeSubscription->AddObserver(*_observer.get());
   _delegate = delegate;
 }
-
 @end
-
 @implementation OMSConferenceAudioSubscriptionConstraints
-
 - (std::shared_ptr<oms::conference::AudioSubscriptionConstraints>)
     nativeAudioSubscriptionConstraints {
   std::shared_ptr<oms::conference::AudioSubscriptionConstraints> constrains =
@@ -165,11 +151,8 @@
   }
   return constrains;
 }
-
 @end
-
 @implementation OMSConferenceVideoSubscriptionConstraints
-
 - (std::shared_ptr<oms::conference::VideoSubscriptionConstraints>)
     nativeVideoSubscriptionConstraints {
   std::shared_ptr<oms::conference::VideoSubscriptionConstraints> constrains =
@@ -190,11 +173,8 @@
   constrains->keyFrameInterval = _keyFrameInterval;
   return constrains;
 }
-
 @end
-
 @implementation OMSConferenceSubscribeOptions 
-
 - (instancetype)initWithAudio:(OMSConferenceAudioSubscriptionConstraints*)audio
                         video:
                             (OMSConferenceVideoSubscriptionConstraints*)video {
@@ -204,7 +184,6 @@
   }
   return self;
 }
-
 - (std::shared_ptr<oms::conference::SubscribeOptions>)nativeSubscribeOptions {
   std::shared_ptr<oms::conference::SubscribeOptions> options(
       new oms::conference::SubscribeOptions);
@@ -220,12 +199,9 @@
   }
   return options;
 }
-
 @end
 
-
 @implementation OMSConferenceVideoSubscriptionUpdateConstraints
-
 - (std::shared_ptr<oms::conference::VideoSubscriptionUpdateConstraints>)
     nativeVideoSubscriptionUpdateConstraints {
   std::shared_ptr<oms::conference::VideoSubscriptionUpdateConstraints> constrains =
@@ -238,11 +214,8 @@
   constrains->keyFrameInterval = _keyFrameInterval;
   return constrains;
 }
-
 @end
-
 @implementation OMSConferenceSubscriptionUpdateOptions
-
 - (std::shared_ptr<oms::conference::SubscriptionUpdateOptions>)
     nativeSubscriptionUpdateOptions {
   std::shared_ptr<oms::conference::SubscriptionUpdateOptions> options =
@@ -255,5 +228,4 @@
   }
   return options;
 }
-
 @end

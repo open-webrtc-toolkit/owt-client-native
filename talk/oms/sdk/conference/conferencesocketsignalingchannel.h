@@ -1,10 +1,8 @@
 //
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
-
 #ifndef conference_ConferenceSocketSignalingChannel_h
 #define conference_ConferenceSocketSignalingChannel_h
-
 #include <memory>
 #include <future>
 #include <queue>
@@ -14,25 +12,20 @@
 #include "talk/oms/include/sio_message.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/conferenceclient.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/user.h"
-
 namespace oms {
 namespace conference {
-
 // TODO: Signaling... should be moved to a signaling message definition file.
-
 /// Ack for starting and updating external output.
 struct SignalingSubscriptionAck {
   std::string id;
   explicit SignalingSubscriptionAck(const std::string& id) : id(id) {}
   explicit SignalingSubscriptionAck() : id("") {}
 };
-
 class ConferenceSocketSignalingChannel
     : public std::enable_shared_from_this<ConferenceSocketSignalingChannel> {
  public:
   explicit ConferenceSocketSignalingChannel();
   virtual ~ConferenceSocketSignalingChannel();
-
   virtual void AddObserver(ConferenceSocketSignalingChannelObserver& observer);
   virtual void RemoveObserver(
       ConferenceSocketSignalingChannelObserver& observer);
@@ -86,13 +79,11 @@ class ConferenceSocketSignalingChannel
   virtual void Disconnect(
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
  protected:
   virtual void OnEmitAck(
       sio::message::list const& msg,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-
  private:
   class SioMessage final {
    public:
@@ -130,7 +121,6 @@ class ConferenceSocketSignalingChannel
   // Convert an resolution object to a sio message.
   sio::message::ptr ResolutionMessage(
       const oms::base::Resolution& resolution);
-
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
   std::function<void(std::unique_ptr<Exception>)>
@@ -148,5 +138,4 @@ class ConferenceSocketSignalingChannel
 };
 }
 }
-
 #endif

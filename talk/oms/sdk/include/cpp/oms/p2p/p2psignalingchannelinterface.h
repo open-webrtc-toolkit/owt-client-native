@@ -24,21 +24,15 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef OMS_P2P_SIGNALINGCHANNELINTERFACE_H_
 #define OMS_P2P_SIGNALINGCHANNELINTERFACE_H_
-
 #include <functional>
 #include <memory>
 #include <string>
-
 #include "oms/base/exception.h"
-
 namespace oms {
 namespace p2p {
-
 using namespace oms::base;
-
 /**
  @brief Signaling channel will notify observer when event triggers.
  */
@@ -56,10 +50,8 @@ class P2PSignalingChannelObserver {
    */
   virtual void OnServerDisconnected() = 0;
 };
-
 /**
  @brief Protocol for signaling channel.
-
  Developers may utilize their own signaling server by implmenting this protocol.
  */
 class P2PSignalingChannelInterface {
@@ -104,5 +96,4 @@ class P2PSignalingChannelInterface {
 };
 }
 }
-
 #endif  // OMS_P2P_SIGNALINGCHANNELINTERFACE_H_

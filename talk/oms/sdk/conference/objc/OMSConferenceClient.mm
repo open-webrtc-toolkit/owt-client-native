@@ -1,10 +1,8 @@
 //
 //  Copyright (c) 2016 Intel Corporation. All rights reserved.
 //
-
 #include <string>
 #include <functional>
-
 #import <Foundation/Foundation.h>
 #import "talk/oms/sdk/base/objc/OMSStream+Private.h"
 #import "talk/oms/sdk/base/objc/OMSLocalStream+Private.h"
@@ -26,7 +24,6 @@
 #import "talk/oms/sdk/include/cpp/oms/conference/remotemixedstream.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
-
 @implementation OMSConferenceClient {
   std::shared_ptr<oms::conference::ConferenceClient> _nativeConferenceClient;
   std::unique_ptr<
@@ -35,7 +32,6 @@
       _observer;
   NSMutableDictionary<NSString*, OMSLocalStream*>* _publishedStreams;
 }
-
 - (instancetype)initWithConfiguration:
     (OMSConferenceClientConfiguration*)config {
   self = [super init];
@@ -60,7 +56,6 @@
   _publishedStreams = [[NSMutableDictionary alloc] init];
   return self;
 }
-
 - (void)triggerOnFailure:(void (^)(NSError*))onFailure
            withException:
                (std::unique_ptr<oms::base::Exception>)e {
@@ -75,7 +70,6 @@
                              NSLocalizedDescriptionKey, nil]];
   onFailure(err);
 }
-
 - (void)joinWithToken:(NSString*)token
             onSuccess:(void (^)(OMSConferenceInfo*))onSuccess
             onFailure:(void (^)(NSError*))onFailure {
@@ -104,7 +98,6 @@
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
-
 - (void)publish:(OMSLocalStream*)stream
     withOptions:(OMSPublishOptions*)options
       onSuccess:(void (^)(OMSConferencePublication*))onSuccess
@@ -141,7 +134,6 @@
         });
   }
 }
-
 - (void)subscribe:(OMSRemoteStream*)stream
         onSuccess:(void (^)(OMSConferenceSubscription*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
@@ -152,7 +144,6 @@
         onSuccess:onSuccess
         onFailure:onFailure];
 }
-
 - (void)subscribe:(OMSRemoteStream*)stream
       withOptions:(OMSConferenceSubscribeOptions*)options
         onSuccess:(void (^)(OMSConferenceSubscription*))onSuccess
@@ -191,7 +182,6 @@
         });
   }
 }
-
 - (void)send:(NSString*)message
    onSuccess:(void (^)())onSuccess
    onFailure:(void (^)(NSError*))onFailure {
@@ -205,7 +195,6 @@
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
-
 - (void)send:(NSString*)message
            to:(NSString*)receiver
     onSuccess:(void (^)())onSuccess
@@ -220,7 +209,6 @@
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
-
 typedef void (^SuccessBlock)();
 std::function<void()> PlayPauseSuccessCallback(SuccessBlock on_success) {
   return [=]() {
@@ -228,7 +216,6 @@ std::function<void()> PlayPauseSuccessCallback(SuccessBlock on_success) {
       on_success();
   };
 }
-
 typedef void (^FailureBlock)(NSError*);
 std::function<void(std::unique_ptr<oms::base::Exception>)>
 PlayPauseFailureCallback(FailureBlock on_failure,
@@ -237,7 +224,6 @@ PlayPauseFailureCallback(FailureBlock on_failure,
     [client triggerOnFailure:on_failure withException:(std::move(e))];
   };
 }
-
 - (void)leaveWithOnSuccess:(void (^)())onSuccess
                  onFailure:(void (^)(NSError*))onFailure {
   _nativeConferenceClient->Leave(
@@ -249,7 +235,6 @@ PlayPauseFailureCallback(FailureBlock on_failure,
         [self triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
-
 - (void)setDelegate:(id<OMSConferenceClientDelegate>)delegate {
   _observer = std::unique_ptr<
       oms::conference::ConferenceClientObserverObjcImpl,
@@ -261,13 +246,9 @@ PlayPauseFailureCallback(FailureBlock on_failure,
   _nativeConferenceClient->AddObserver(*_observer.get());
   _delegate = delegate;
 }
-
 @end
-
 @implementation OMSConferenceClient (Internal)
-
 - (OMSLocalStream*)publishedStreamWithId:(NSString*)streamId {
   return _publishedStreams[streamId];
 }
-
 @end

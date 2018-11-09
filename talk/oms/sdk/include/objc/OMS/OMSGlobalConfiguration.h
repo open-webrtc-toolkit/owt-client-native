@@ -23,16 +23,12 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import "OMS/OMSFrameGeneratorProtocol.h"
 #import <WebRTC/RTCMacros.h>
-
 NS_ASSUME_NONNULL_BEGIN
-
 RTC_EXPORT
 @interface OMSGlobalConfiguration : NSObject
-
 /**
  @brief Sets customized audio input enabled or not.
  @details When it is enabled, SDK will fetch audio frames from
@@ -47,7 +43,5 @@ RTC_EXPORT
                    audioFrameGenerator:
                        (nullable id<RTCAudioFrameGeneratorProtocol>)
                            audioFrameGenerator;
-
 @end
-
 NS_ASSUME_NONNULL_END

@@ -23,10 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_VIDEORENDERERINTERFACE_H_
 #define OMS_BASE_VIDEORENDERERINTERFACE_H_
-
 #include <memory>
 #include "oms/base/commontypes.h"
 #if defined(WEBRTC_WIN)
@@ -37,17 +35,14 @@
 #endif
 namespace oms {
 namespace base {
-
 enum class VideoBufferType {
   kI420,
   kARGB,
 };
-
 enum class VideoRendererType {
   kI420,
   kARGB,
 };
-
 /// Video buffer and its information
 struct VideoBuffer {
   /// Video buffer
@@ -58,7 +53,6 @@ struct VideoBuffer {
   VideoBufferType type;
   ~VideoBuffer() { delete[] buffer; }
 };
-
 /// VideoRenderWindow wraps a native Window handle
 #if defined(WEBRTC_WIN)
 class VideoRenderWindow {
@@ -75,7 +69,6 @@ class VideoRenderWindow {
     @return Returns the window handle.
   */
   HWND GetWindowHandle() { return wnd_; }
-
  private:
   HWND wnd_;
 };
@@ -95,24 +88,19 @@ class VideoRenderWindow {
     @return Returns the window handle.
   */
   Window GetWindowHandle() { return wnd_; }
-
  private:
   Window wnd_;
 };
 #endif
-
 /// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack
 class VideoRendererInterface {
  public:
   /// Passes video buffer to renderer.
   virtual void RenderFrame(std::unique_ptr<VideoBuffer> buffer) = 0;
-
   virtual ~VideoRendererInterface() {}
   /// Render type that indicates the VideoBufferType the renderer would receive.
   virtual VideoRendererType Type() = 0;
 };
-
 }  // namespace base
 }  // namespace oms
-
 #endif  // OMS_BASE_VIDEORENDERERINTERFACE_H_

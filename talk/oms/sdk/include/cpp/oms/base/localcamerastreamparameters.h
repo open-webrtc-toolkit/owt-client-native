@@ -24,20 +24,15 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef OMS_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 #define OMS_BASE_LOCALCAMERASTREAMPARAMETERS_H_
-
 #include <string>
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace base{
-
 /**
   @brief This class contains parameters and methods that needed for creating a
   local camera stream.
-
   When a stream is created, it will not be impacted if these parameters are
   changed.
 */
@@ -65,7 +60,6 @@ class LocalCameraStreamParameters final {
   void StreamName(const std::string& stream_name);
   /**
     @brief Set the video resolution.
-
     If the resolution specified is not supported on current device, creation
     will failed.
     @param width The width of the video.
@@ -74,7 +68,6 @@ class LocalCameraStreamParameters final {
   void Resolution(int width, int height);
   /**
     @brief Set the frame rate.
-
     If the frame rate specified is not supported on current device, creation
     will failed.
     @param fps The frame rate of the video.
@@ -89,7 +82,6 @@ class LocalCameraStreamParameters final {
   bool VideoEnabled() const { return video_enabled_; }
   bool AudioEnabled() const { return audio_enabled_; }
   /** @endcond */
-
  private:
   std::string camera_id_;
   std::string stream_name_;
@@ -99,11 +91,9 @@ class LocalCameraStreamParameters final {
   bool video_enabled_;
   bool audio_enabled_;
 };
-
 /**
   @brief This class contains parameters and methods that needed for creating a
   local customized stream.
-
   When a stream is created, it will not be impacted if these parameters are
   changed.
 */
@@ -124,7 +114,6 @@ class LocalCustomizedStreamParameters final {
   ~LocalCustomizedStreamParameters() {}
   /**
     @brief Set the video resolution.
-
     If the resolution specified is not supported on current device, creation
     will failed.
     @param width The width of the video.
@@ -136,7 +125,6 @@ class LocalCustomizedStreamParameters final {
   }
   /**
     @brief Set the frame rate.
-
     If the frame rate specified is not supported on current device, creation
     will failed.
     @param fps The frame rate of the video.
@@ -175,11 +163,9 @@ class LocalCustomizedStreamParameters final {
   uint32_t fps_;
   uint32_t bitrate_kbps_;
 };
-
 /**
 @brief This class contains parameters and methods that's needed for creating a
 local stream with certain screen or window as source.
-
 When a stream is created, it will not be impacted if these parameters are
 changed.
 */
@@ -200,14 +186,12 @@ class LocalDesktopStreamParameters final {
     /// With this policy set, capturer can send out scaled captured frame.
     kEnableMagnification = 8
   };
-
   enum class DesktopSourceType : int {
     /// Capture from whole screen
     kFullScreen = 1,
     /// Capture from application
     kApplication
   };
-
   /**
   @brief Initialize a LocalDesktopStreamParameters.
   @param audio_enabled Indicates if audio is enabled for this stream.
@@ -218,9 +202,7 @@ class LocalDesktopStreamParameters final {
   LocalDesktopStreamParameters(
       bool audio_enabled,
       bool video_enabled);
-
   ~LocalDesktopStreamParameters() {}
-
   /**
   @brief Get video is enabled or not for this stream.
   @return true or false.
@@ -254,9 +236,7 @@ class LocalDesktopStreamParameters final {
   void Fps(int fps);
   /** @cond */
   int Fps() const { return fps_; }
-
   DesktopSourceType SourceType() const { return source_type_; }
-
   DesktopCapturePolicy CapturePolicy() const { return capture_policy_; }
   /** @endcond */
  private:
@@ -268,5 +248,4 @@ class LocalDesktopStreamParameters final {
 };
 }
 }
-
 #endif  // OMS_BASE_LOCALCAMERASTREAMPARAMETERS_H_

@@ -23,23 +23,16 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #import <Foundation/Foundation.h>
 #import <OMS/OMSClientConfiguration.h>
 #import <OMS/OMSMediaFormat.h>
-
 /**
  @brief Configuration for OMSP2PClient
-
  This configuration is used while creating OMSP2PClient. Changing this
  configuration does NOT impact existing OMSP2PClients.
  */
 RTC_EXPORT
 @interface OMSP2PClientConfiguration : OMSClientConfiguration
-
 @property(nonatomic, strong) NSArray<OMSAudioEncodingParameters*>* audio;
-
 @property(nonatomic, strong) NSArray<OMSVideoEncodingParameters*>* video;
-
 @end
-

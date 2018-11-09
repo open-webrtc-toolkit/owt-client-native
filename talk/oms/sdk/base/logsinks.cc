@@ -7,20 +7,14 @@
 *  in the file PATENTS.  All contributing project authors may
 *  be found in the AUTHORS file in the root of the source tree.
 */
-
 // This file is borrowed from webrtc/rtc_base/logsinks.cc
 #include "talk/oms/sdk/base/logsinks.h"
-
 #include <iostream>
 #include <string>
-
 #include "webrtc/rtc_base/checks.h"
-
 namespace oms {
 namespace base {
-
 using namespace rtc;
-
 RotatingLogSink::RotatingLogSink(const std::string& log_dir_path,
                                          const std::string& log_prefix,
                                          size_t max_log_size,
@@ -30,15 +24,12 @@ RotatingLogSink::RotatingLogSink(const std::string& log_dir_path,
                                                  max_log_size,
                                                  num_log_files)) {
 }
-
 RotatingLogSink::RotatingLogSink(FileRotatingStream* stream)
     : stream_(stream) {
   RTC_DCHECK(stream);
 }
-
 RotatingLogSink::~RotatingLogSink() {
 }
-
 void RotatingLogSink::OnLogMessage(const std::string& message) {
   if (stream_->GetState() != SS_OPEN) {
     std::cerr << "Init() must be called before adding this sink." << std::endl;
@@ -46,22 +37,18 @@ void RotatingLogSink::OnLogMessage(const std::string& message) {
   }
   stream_->WriteAll(message.c_str(), message.size(), nullptr, nullptr);
 }
-
 bool RotatingLogSink::Init() {
   return stream_->Open();
 }
-
 bool RotatingLogSink::DisableBuffering() {
   return stream_->DisableBuffering();
 }
-
 CallSessionRotatingLogSink::CallSessionRotatingLogSink(
     const std::string& log_dir_path,
     size_t max_total_log_size)
     : RotatingLogSink(
           new CallSessionFileRotatingStream(log_dir_path, max_total_log_size)) {
 }
-
 CallSessionRotatingLogSink::~CallSessionRotatingLogSink() {
 }
 }  // namespace base

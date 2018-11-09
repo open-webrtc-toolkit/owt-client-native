@@ -2,12 +2,10 @@ From 07e2ddb4cc112b07ef1d468792d5309b3cb18b23 Mon Sep 17 00:00:00 2001
 From: Qiu Jianlin <jianlin.qiu@intel.com>
 Date: Tue, 16 Oct 2018 10:59:30 +0800
 Subject: [PATCH] Supress some warnings and disable thin archieve for Linux
-
 ---
  config/c++/c++.gni       |  2 +-
  config/compiler/BUILD.gn | 12 ++++++------
  2 files changed, 7 insertions(+), 7 deletions(-)
-
 diff --git a/config/c++/c++.gni b/config/c++/c++.gni
 index 1b94aaa8d..cc3c031dd 100644
 --- a/config/c++/c++.gni
@@ -81,4 +79,3 @@ index 2ec751f32..010039c49 100644
  }
 -- 
 2.18.0.windows.1
-

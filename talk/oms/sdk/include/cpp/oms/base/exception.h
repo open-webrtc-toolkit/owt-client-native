@@ -23,25 +23,19 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_EXCEPTION_H_
 #define OMS_BASE_EXCEPTION_H_
-
 #include <string>
-
 namespace oms {
 namespace base{
-
 // TODO: The following exceptions need to sync with other SDKs
 enum class ExceptionType : int {
   kUnknown = 1000, // General exception
-
   // kLocal* for local stream exceptions
   kLocalUnknown = 1100,
   kLocalDeviceNotFound = 1102,
   kLocalInvalidOption = 1104,
   kLocalNotSupported = 1105,
-
   // kP2P* for p2p exceptions
   kP2PUnknown = 2001,
   kP2PConnectionAuthFailed = 2121,
@@ -51,7 +45,6 @@ enum class ExceptionType : int {
   kP2PClientInvalidState = 2403,
   kP2PClientRemoteNotAllowed = 2404,
   kP2PClientRemoteNotExisted = 2405,
-
   // kConference* for conference exceptions
   kConferenceUnknown = 3001,
   kConferenceInvalidUser,
@@ -60,7 +53,6 @@ enum class ExceptionType : int {
   kConferenceInvalidToken,
   kConferenceInvalidSession
 };
-
 /// Class for exceptions
 class Exception {
  public:
@@ -72,7 +64,6 @@ class Exception {
     @param message Exception message.
   */
   Exception(const ExceptionType& type, const std::string& message);
-
   virtual ~Exception() {}
   /**
     @brief Get exception type.
@@ -84,13 +75,10 @@ class Exception {
     @return Exception message.
   */
   std::string Message() const;
-
  private:
   const ExceptionType type_;
   const std::string message_;
 };
-
 }
 }
-
 #endif  // OMS_BASE_EXCEPTION_H_

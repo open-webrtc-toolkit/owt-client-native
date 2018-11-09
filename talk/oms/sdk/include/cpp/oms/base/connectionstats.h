@@ -23,20 +23,16 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_CONNECTIONSTATS_H_
 #define OMS_BASE_CONNECTIONSTATS_H_
-
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
 #include "oms/base/commontypes.h"
 #include "oms/base/network.h"
-
 namespace oms {
 namespace base {
-
 /// Define audio sender report
 struct AudioSenderReport {
   AudioSenderReport(int64_t bytes_sent, int32_t packets_sent,
@@ -54,7 +50,6 @@ struct AudioSenderReport {
   /// Audio codec name for sending
   std::string codec_name;
 };
-
 /// Define audio receiver report
 struct AudioReceiverReport {
   AudioReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd,
@@ -72,7 +67,6 @@ struct AudioReceiverReport {
   /// Audio codec name for receiving
   std::string codec_name;
 };
-
 /// Define video sender report
 struct VideoSenderReport {
   VideoSenderReport(int64_t bytes_sent, int32_t packets_sent, int32_t packets_lost,
@@ -83,7 +77,6 @@ struct VideoSenderReport {
       , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count), frame_resolution_sent(Resolution(sent_frame_width, sent_frame_height))
       , framerate_sent(framerate_sent), last_adapt_reason(last_adapt_reason)
       , adapt_changes(adapt_changes), round_trip_time(round_trip_time), codec_name(codec_name) {}
-
   /// Define adapt reason
   enum class AdaptReason : int32_t {
     kUnknown = 0,
@@ -94,7 +87,6 @@ struct VideoSenderReport {
     /// Adapt for view limitation
     kViewLimitation = 4,
   };
-
   /// Video bytes sent
   int64_t bytes_sent;
   /// Video packets sent
@@ -120,7 +112,6 @@ struct VideoSenderReport {
   /// Video codec name for sending
   std::string codec_name;
 };
-
 /// Define video receiver report
 struct VideoReceiverReport {
   VideoReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd, int32_t packets_lost,
@@ -156,7 +147,6 @@ struct VideoReceiverReport {
   /// Packet Jitter measured in milliseconds
   int32_t jitter;
 };
-
 /// Define video bandwidth statistoms
 struct VideoBandwidthStats {
   VideoBandwidthStats() : available_send_bandwidth(0), available_receive_bandwidth(0)
@@ -175,7 +165,6 @@ struct VideoBandwidthStats {
   /// Actual encoding bitrate, unit: bps
   int32_t actual_encoding_bitrate;
 };
-
 /// Define ICE candidate report
 struct IceCandidateReport {
   IceCandidateReport(const std::string& id,
@@ -204,7 +193,6 @@ struct IceCandidateReport {
   /// Calculated as defined in RFC5245
   int32_t priority;
 };
-
 /// Define ICE candidate pair report.
 struct IceCandidatePairReport {
   IceCandidatePairReport(
@@ -225,7 +213,6 @@ struct IceCandidatePairReport {
   /// Remote candidate of this pair.
   std::shared_ptr<IceCandidateReport> remote_ice_candidate;
 };
-
 typedef std::unique_ptr<AudioSenderReport> AudioSenderReportPtr;
 typedef std::vector<AudioSenderReportPtr> AudioSenderReports;
 typedef std::unique_ptr<AudioReceiverReport> AudioReceiverReportPtr;
@@ -238,11 +225,9 @@ typedef std::shared_ptr<IceCandidateReport> IceCandidateReportPtr;
 typedef std::vector<IceCandidateReportPtr> IceCandidateReports;
 typedef std::shared_ptr<IceCandidatePairReport> IceCandidatePairPtr;
 typedef std::vector<IceCandidatePairPtr> IceCandidatePairReports;
-
 /// Connection statistoms
 struct ConnectionStats {
   ConnectionStats() {}
-
   /// Time stamp of connection statistoms generation
   std::chrono::system_clock::time_point time_stamp = std::chrono::system_clock::now();
   /// Video bandwidth statistoms
@@ -264,5 +249,4 @@ struct ConnectionStats {
 };
 } // namespace base
 } // namespace oms
-
 #endif  // OMS_BASE_CONNECTIONSTATS_H_

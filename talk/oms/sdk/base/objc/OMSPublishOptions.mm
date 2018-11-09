@@ -1,16 +1,11 @@
 //
 //  Copyright (c) 2018 Intel Corporation. All rights reserved.
 //
-
 #include "talk/oms/sdk/include/cpp/oms/base/options.h"
-
 #import "talk/oms/sdk/base/objc/OMSPublishOptions+Private.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
-
 @implementation OMSPublishOptions
-
 @dynamic nativePublishOptions;
-
 - (std::shared_ptr<oms::base::PublishOptions>)nativePublishOptions {
   std::shared_ptr<oms::base::PublishOptions> options =
       std::shared_ptr<oms::base::PublishOptions>(
@@ -27,5 +22,4 @@
   }
   return options;
 }
-
 @end 

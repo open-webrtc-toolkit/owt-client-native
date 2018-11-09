@@ -23,44 +23,32 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_PUBLICATION_H_
 #define OMS_CONFERENCE_PUBLICATION_H_
-
 #include <vector>
 #include <mutex>
-
 #include "oms/base/commontypes.h"
 #include "oms/base/mediaconstraints.h"
 #include "oms/base/publication.h"
 #include "oms/conference/streamupdateobserver.h"
-
 namespace rtc {
   class TaskQueue;
 }
-
 namespace webrtc{
   class StatsReport;
 }
-
 namespace oms {
 namespace base {
 struct ConnectionStats;
 }
-
 namespace conference {
-
 class ConferenceClient;
-
 using namespace oms::base;
-
 class ConferencePublication : public Publication, public ConferenceStreamUpdateObserver {
   public:
     ConferencePublication(std::shared_ptr<ConferenceClient> client, const std::string& pub_id,
                           const std::string& stream_id);
-
     virtual ~ConferencePublication();
-
     /// Return the ID of the publication.
     std::string Id() const { return id_; }
     /// Pause current publication's audio or/and video basing on |track_kind| provided.
@@ -97,8 +85,6 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
      std::weak_ptr<ConferenceClient> conference_client_;   // Weak ref to associated conference client
      std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
-
 } // namespace conference
 } // namespace oms
-
 #endif  // OMS_CONFERENCE_PUBLICATION_H_

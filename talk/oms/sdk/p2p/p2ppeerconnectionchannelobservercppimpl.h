@@ -1,18 +1,13 @@
 /*
  * Intel License
  */
-
 #ifndef WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_
-
 #include "talk/oms/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/oms/sdk/include/cpp/oms/p2p/p2pclient.h"
-
 namespace oms {
 namespace p2p {
-
 using namespace oms::base;
-
 // This class connects a P2PClient and a P2PPeerConnectionChannel, so the
 // P2PPeerConnectionChannel can notify P2PClient when event raises.
 // Note: an alternative way is make P2PClient derived from
@@ -23,7 +18,6 @@ class P2PPeerConnectionChannelObserverCppImpl
  public:
   explicit P2PPeerConnectionChannelObserverCppImpl(P2PClient& peer_client)
       : peer_client_(peer_client) {}
-
   // Triggered when the WebRTC session is started.
   virtual void OnStarted(const std::string& remote_id);
   // Triggered when the WebRTC session is ended.
@@ -35,11 +29,9 @@ class P2PPeerConnectionChannelObserverCppImpl
   virtual void OnData(const std::string& remote_id, const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(std::shared_ptr<RemoteStream> stream);
-
  private:
   P2PClient& peer_client_;
 };
 }
 }
-
 #endif  // WOOGEEN_P2P_P2PPEERCONNECTIONCHANNELOBSERVERCPPIMPL_H_

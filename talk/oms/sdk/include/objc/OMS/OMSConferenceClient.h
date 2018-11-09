@@ -23,10 +23,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENT_H_
 #define OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENT_H_
-
 #import <WebRTC/RTCMacros.h>
 #import "OMS/OMSConferenceClientConfiguration.h"
 #import "OMS/OMSConferencePublication.h"
@@ -37,15 +35,11 @@
 #import "OMS/OMSRemoteMixedStream.h"
 #import "OMS/OMSRemoteStream.h"
 #import "OMS/OMSPublishOptions.h"
-
 NS_ASSUME_NONNULL_BEGIN
-
 @protocol OMSConferenceClientDelegate;
-
 /// An asynchronous class for app to communicate with a conference in MCU
 RTC_EXPORT
 @interface OMSConferenceClient : NSObject
-
 /**
   @brief Initialize a OMSConferenceClient with configuration
   @param config Configuration for creating the OMSConferenceClient.
@@ -59,7 +53,6 @@ RTC_EXPORT
 - (void)joinWithToken:(NSString*)token
             onSuccess:(nullable void (^)(OMSConferenceInfo*))onSuccess
             onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
   @brief Publish the stream to the current room.
   @param stream The stream to be published.
@@ -94,21 +87,16 @@ RTC_EXPORT
            to:(NSString*)receiver
     onSuccess:(nullable void (^)())onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
-
 /**
   @brief Leave current conference.
 */
 - (void)leaveWithOnSuccess:(nullable void (^)())onSuccess
                  onFailure:(nullable void (^)(NSError*))onFailure;
-
 @property(nonatomic, weak) id<OMSConferenceClientDelegate> delegate;
-
 @end
-
 /// Delegate for OMSConferenceClient.
 RTC_EXPORT
 @protocol OMSConferenceClientDelegate<NSObject>
-
 @optional
 /**
   @brief Triggers when client is disconnected from conference server.
@@ -137,9 +125,6 @@ RTC_EXPORT
 */
 - (void)conferenceClient:(OMSConferenceClient*)client
        didAddParticipant:(OMSConferenceParticipant*)user;
-
 @end
-
 NS_ASSUME_NONNULL_END
-
 #endif  // OMS_CONFERENCE_OBJC_OMSCONFERENCECLIENT_H_

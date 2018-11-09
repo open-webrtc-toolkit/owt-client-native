@@ -1,19 +1,14 @@
 /*
  * Intel License
  */
-
 #import <Foundation/Foundation.h>
-
 #include "talk/oms/sdk/p2p/objc/OMSP2PSignalingSenderObjcImpl.h"
-
 namespace oms {
 namespace p2p {
-
 OMSP2PSignalingSenderObjcImpl::OMSP2PSignalingSenderObjcImpl(
     id<OMSP2PSignalingSenderProtocol> sender) {
   _sender = sender;
 }
-
 void OMSP2PSignalingSenderObjcImpl::SendSignalingMessage(
     const std::string& message,
     const std::string& remote_id,

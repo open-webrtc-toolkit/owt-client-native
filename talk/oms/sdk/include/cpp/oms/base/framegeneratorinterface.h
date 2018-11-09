@@ -3,9 +3,7 @@
  */
 #ifndef OMS_BASE_FRAMEGENERATORINTERFACE_H_
 #define OMS_BASE_FRAMEGENERATORINTERFACE_H_
-
 #include "stdint.h"
-
 namespace oms {
 namespace base {
 /**
@@ -32,10 +30,8 @@ class AudioFrameGeneratorInterface {
   virtual int GetChannelNumber() = 0;
   virtual ~AudioFrameGeneratorInterface(){};
 };
-
 /**
  @brief frame generator interface for users to generates frame.
-
  FrameGeneratorInterface is the virtual class to implement its own frame generator.
 */
 class VideoFrameGeneratorInterface {
@@ -55,10 +51,8 @@ class VideoFrameGeneratorInterface {
    @return The size of actually frame buffer size.
    */
   VideoFrameGeneratorInterface() {};
-
   virtual uint32_t GenerateNextFrame(uint8_t* buffer,
                                      const uint32_t capacity) = 0;
-
   virtual ~VideoFrameGeneratorInterface() {};
   /**
    @brief This function gets the size of next video frame.
@@ -81,7 +75,6 @@ class VideoFrameGeneratorInterface {
    */
   virtual VideoFrameCodec GetType() = 0;
 };
-
 } // namespace base
 } // namespace oms
 #endif  // OMS_BASE_FRAMEGENERATORINTERFACE_H_

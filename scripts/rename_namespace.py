@@ -1,12 +1,9 @@
 # Copyright (c) 2018 Intel Corporation. All Rights Reserved.
-
 import os
 import re
 import sys
 import argparse
-
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
 def replaceFiles(dirPath):
 	for root,dirs,files in os.walk(dirPath):
 		for curFile in files:

@@ -1,16 +1,13 @@
 /*
  * Intel License
  */
-
 #include <vector>
 #include "webrtc/rtc_base/logging.h"
 #include "talk/oms/sdk/base/peerconnectionchannel.h"
 #include "talk/oms/sdk/base/sdputils.h"
-
 using namespace rtc;
 namespace oms {
 namespace base {
-
 PeerConnectionChannel::PeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration)
     : pc_thread_(nullptr),
@@ -18,7 +15,6 @@ PeerConnectionChannel::PeerConnectionChannel(
       factory_(nullptr),
       peer_connection_(nullptr) {
 }
-
 PeerConnectionChannel::~PeerConnectionChannel() {
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
@@ -26,18 +22,14 @@ PeerConnectionChannel::~PeerConnectionChannel() {
   if (pc_thread_ != nullptr)
     delete pc_thread_;
 }
-
 bool PeerConnectionChannel::InitializePeerConnection() {
   RTC_LOG(LS_INFO) << "Initialize PeerConnection.";
   if (factory_.get() == nullptr)
     factory_ = PeerConnectionDependencyFactory::Get();
-
   offer_answer_options_ =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
-
   offer_answer_options_.offer_to_receive_audio = true;
   offer_answer_options_.offer_to_receive_video = true;
-
   configuration_.enable_dtls_srtp = true;
   peer_connection_ = (factory_->CreatePeerConnection(configuration_, this))
                          .get();
@@ -59,17 +51,14 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   }
   return true;
 }
-
 void PeerConnectionChannel::ApplyBitrateSettings() {
   RTC_CHECK(peer_connection_);
-
   std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
       peer_connection_->GetSenders();
   if (senders.size() == 0) {
     RTC_LOG(LS_WARNING) << "Cannot set max bitrate without stream added.";
     return;
   }
-
   for (auto sender : senders) {
     auto sender_track = sender->track();
     if (sender_track != nullptr) {
@@ -97,22 +86,18 @@ void PeerConnectionChannel::ApplyBitrateSettings() {
       }
     }
   }
-
   return;
 }
-
 const webrtc::SessionDescriptionInterface*
 PeerConnectionChannel::LocalDescription() {
   RTC_CHECK(peer_connection_);
   return peer_connection_->local_description();
 }
-
 PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
     const {
   RTC_CHECK(peer_connection_);
   return peer_connection_->signaling_state();
 }
-
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
   RTC_CHECK(peer_connection_);
   if (peer_connection_->signaling_state() ==
@@ -170,7 +155,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
-
       std::vector<AudioCodec> audio_codecs;
       for (auto& audio_enc_param : configuration_.audio) {
         audio_codecs.push_back(audio_enc_param.codec.name);
@@ -183,7 +167,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       }
       sdp_string = SdpUtils::SetPreferVideoCodecs(
           sdp_string, video_codecs);
-
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);
@@ -240,7 +223,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       RTC_LOG(LS_WARNING) << "Unknown message type.";
   }
 }
-
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
   RTC_LOG(LS_INFO) << "Set remote sdp success.";
   if (peer_connection_->remote_description() &&
@@ -248,61 +230,45 @@ void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
     CreateAnswer();
   }
 }
-
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set remote sdp failed.";
 }
-
 void PeerConnectionChannel::OnCreateSessionDescriptionSuccess(
     webrtc::SessionDescriptionInterface* desc) {
   RTC_LOG(LS_INFO) << "Create sdp success.";
 }
-
 void PeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Create sdp failed.";
 }
-
 void PeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
   RTC_LOG(LS_INFO) << "Set local sdp success.";
 }
-
 void PeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set local sdp failed.";
 }
-
 void PeerConnectionChannel::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate) {}
-
 void PeerConnectionChannel::OnIceCandidatesRemoved(
     const std::vector<cricket::Candidate>& candidates) {}
-
 void PeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {}
-
 void PeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {}
-
 void PeerConnectionChannel::OnRemoveStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {}
-
 void PeerConnectionChannel::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
-
 void PeerConnectionChannel::OnRenegotiationNeeded() {}
-
 void PeerConnectionChannel::OnIceConnectionChange(
     PeerConnectionInterface::IceConnectionState new_state) {}
-
 void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
-
 void PeerConnectionChannel::OnNetworksChanged(){
   RTC_LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
 }
-
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()
     : RTCConfiguration() {}
 }

@@ -23,18 +23,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef OMS_BASE_DEVICEUTILS_H_
 #define OMS_BASE_DEVICEUTILS_H_
-
 #include <vector>
 #include <string>
-
 #include "oms/base/commontypes.h"
-
 namespace oms {
 namespace base {
-
 class DeviceUtils {
  public:
   /// Get video capturer IDs.
@@ -50,5 +45,4 @@ class DeviceUtils {
 };
 }
 }
-
 #endif  // OMS_BASE_DEVICEUTILS_H_

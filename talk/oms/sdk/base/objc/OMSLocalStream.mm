@@ -1,14 +1,11 @@
 //
 //  Copyright (c) 2015 Intel Corporation. All rights reserved.
 //
-
 #include <string>
 #include <unordered_map>
-
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCCameraVideoCapturer.h>
 #import <WebRTC/RTCVideoSource.h>
-
 #import "talk/oms/sdk/base/objc/OMSLocalStream+Private.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
 #import "talk/oms/sdk/include/objc/OMS/RTCPeerConnectionFactory+OMS.h"
@@ -17,17 +14,11 @@
 #import "talk/oms/sdk/include/objc/OMS/OMSMediaFormat.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
-
 #include "webrtc/rtc_base/helpers.h"
-
 @interface OMSLocalStream ()
-
 - (NSString*)createRandomUuid;
-
 @end
-
 @implementation OMSLocalStream
-
 - (instancetype)initWithMediaStream:(RTCMediaStream*)mediaStream
                              source:(OMSStreamSourceInfo*)source {
   self = [super initWithMediaStream:mediaStream source:source];
@@ -38,7 +29,6 @@
   [self setNativeStream:nativeStream];
   return self;
 }
-
 - (instancetype)initWithConstratins:(OMSStreamConstraints*)constraints
                               error:(NSError**)outError {
   RTCPeerConnectionFactory* factory = [RTCPeerConnectionFactory sharedInstance];
@@ -123,7 +113,6 @@
       }
       return nil;
     }
-
     [capturer startCaptureWithDevice:device format:selectedFormat fps:fps];
     RTCVideoTrack* track =
         [factory videoTrackWithSource:source trackId:[self createRandomUuid]];
@@ -142,7 +131,6 @@
   [self setNativeStream:nativeStream];
   return self;
 }
-
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes {
   auto localStream = [self nativeLocalStream];
   std::unordered_map<std::string, std::string> attributes_map;
@@ -153,21 +141,17 @@
   }
   localStream->Attributes(attributes_map);
 }
-
 - (std::shared_ptr<oms::base::LocalStream>)nativeLocalStream {
   std::shared_ptr<oms::base::Stream> stream = [super nativeStream];
   return std::static_pointer_cast<oms::base::LocalStream>(stream);
 }
-
 - (NSString*)streamId {
   auto nativeStream = [self nativeStream];
   return [NSString stringForStdString:nativeStream->Id()];
 }
-
 - (NSString*)createRandomUuid{
   return [NSString stringForStdString:rtc::CreateRandomUuid()];
 }
-
 - (void)dealloc {
   if (_capturer && [_capturer isKindOfClass:[RTCCameraVideoCapturer class]]) {
     RTCCameraVideoCapturer* cameraVideoCapturer =
@@ -176,5 +160,4 @@
   }
   _capturer = nil;
 }
-
 @end
