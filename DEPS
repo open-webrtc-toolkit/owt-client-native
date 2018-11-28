@@ -726,7 +726,7 @@ hooks = [
         'python',
         'src/build/landmines.py',
         '--landmine-scripts',
-        'src/third_party/webrtc/tools_webrtc/get_landmines.py',
+        'src/build/get_landmines.py',
         '--src-dir',
         'src',
     ],
