@@ -29,10 +29,6 @@ CustomizedVideoEncoderProxy::CustomizedVideoEncoderProxy(
   picture_id_ = 0;
 }
 CustomizedVideoEncoderProxy::~CustomizedVideoEncoderProxy() {
-  if (external_encoder_) {
-    delete external_encoder_;
-    external_encoder_ = nullptr;
-  }
 }
 int CustomizedVideoEncoderProxy::InitEncode(
     const webrtc::VideoCodec* codec_settings,

@@ -16,8 +16,8 @@
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/system_wrappers/include/field_trial_default.h"
 #if defined(WEBRTC_WIN)
-#include "talk/oms/sdk/base/win/mftvideodecoderfactory.h"
-#include "talk/oms/sdk/base/win/mftvideoencoderfactory.h"
+#include "talk/oms/sdk/base/win/msdkvideodecoderfactory.h"
+#include "talk/oms/sdk/base/win/msdkvideoencoderfactory.h"
 #elif defined(WEBRTC_IOS)
 #include "talk/oms/sdk/base/ios/networkmonitorios.h"
 #include "talk/oms/sdk/base/objc/ObjcVideoCodecFactory.h"

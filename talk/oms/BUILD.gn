@@ -13,6 +13,8 @@ if (is_ios) {
 declare_args() {
   include_internal_audio_device = true
   woogeen_msdk_lib_root = ""
+  woogeen_msdk_header_root = ""
+
   # Disable some features while rebasing to M63. It should be removed once rebasing is finished.
   oms_rebase_m63 = true
 }
@@ -126,9 +128,13 @@ static_library("oms_sdk_base") {
   ]
   include_dirs = [
     "sdk/include/cpp",
-    "include/msdk",
     "//third_party",
   ]
+
+  if (woogeen_msdk_header_root != "") {
+    include_dirs += [ woogeen_msdk_header_root ]
+  }
+
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   defines += [ "USE_BUILTIN_SW_CODECS" ]
   if (is_ios) {
@@ -145,30 +151,29 @@ static_library("oms_sdk_base") {
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
       "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/external_msdk_decoder.cpp",
-      "sdk/base/win/external_msdk_decoder.h",
-      "sdk/base/win/h264_video_mft_encoder.cpp",
-      "sdk/base/win/h264_video_mft_encoder.h",
-      "sdk/base/win/mftmediadecoder.cpp",
-      "sdk/base/win/mftmediadecoder.h",
-      "sdk/base/win/mftvideodecoderfactory.cpp",
-      "sdk/base/win/mftvideodecoderfactory.h",
-      "sdk/base/win/mftvideoencoderfactory.cpp",
-      "sdk/base/win/mftvideoencoderfactory.h",
-      "sdk/base/win/videorendererwin.cpp",
+      "sdk/base/win/msdkvideodecoder.cc",
+      "sdk/base/win/msdkvideodecoder.h",
+      "sdk/base/win/msdkvideoencoder.cc",
+      "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
+      "sdk/base/win/msdkvideoencoderfactory.cc",
+      "sdk/base/win/msdkvideoencoderfactory.h",
+      "sdk/base/win/base_allocator.cc",
+      "sdk/base/win/base_allocator.h",
+      "sdk/base/win/d3d_allocator.cc",
+      "sdk/base/win/d3d_allocator.h",
+      "sdk/base/win/sysmem_allocator.h",
+      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/msdkvideobase.cc",
+      "sdk/base/win/msdkvideobase.h",
+      "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
       "sdk/base/windowcapturer.cc",
       "sdk/base/windowcapturer.h",
     ]
-    if (rtc_use_h265) {
-      sources += [
-        "sdk/base/win/h265_msdk_decoder.cpp",
-        "sdk/base/win/h265_msdk_decoder.h",
-        "sdk/base/win/h265_msdk_encoder.cpp",
-        "sdk/base/win/h265_msdk_encoder.h",
-      ]
-    }
   }
+
   if (!is_ios) {
     sources += [
       "sdk/base/customizedvideodecoderfactory.cc",
