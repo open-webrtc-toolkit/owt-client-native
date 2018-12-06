@@ -31,6 +31,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   offer_answer_options_.offer_to_receive_audio = true;
   offer_answer_options_.offer_to_receive_video = true;
   configuration_.enable_dtls_srtp = true;
+  configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   peer_connection_ = (factory_->CreatePeerConnection(configuration_, this))
                          .get();
   if (!peer_connection_.get()) {
