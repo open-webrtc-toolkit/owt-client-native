@@ -2,7 +2,7 @@ void setBuildStatus(String message, String state) {
     step([
         $class: "GitHubCommitStatusSetter",
         reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/open-media-streamer/oms-client-native"],
-        contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/windows"],
+        contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/ios"],
         errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
         statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]]]
     ]);
@@ -20,19 +20,19 @@ pipeline {
                 stage("build") {
                     agent{
                         node {
-                            label "windows"
-                            customWorkspace "$env.windowsCIPath/src"
+                            label "mac"
+                            customWorkspace "$env.iosCIPath/src"
                         }
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
+                        sh "${iosCIPath}/buildSdk.sh ${GIT_COMMIT}"
                     }
                 }
                 stage("startMcu") {
                     agent{
                         node {
-                            label "$env.windowsServer"
+                            label "$env.iosServer"
                         }
                     }
                     steps {
@@ -44,7 +44,7 @@ pipeline {
                 stage("startP2PServer") {
                     agent{
                         node {
-                            label "$env.windowsServer"
+                            label "$env.iosServer"
                         }
                     }
                     steps {
@@ -58,51 +58,51 @@ pipeline {
         stage("BulidConference") {
             agent{
                 node {
-                    label "windows"
+                    label "mac"
                 }
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsConferenceCasePath%/build.bat"
+                sh "${iosConferenceCasePath}/build.sh"
             }
         }
         stage("BulidTestP2P") {
             agent{
                 node {
-                    label "windows"
+                    label "mac"
                 }
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsP2PCasePath%/build.bat"
+                sh "${iosP2PCasePath}/build.sh"
             }
         }
         stage("TestConference") {
             agent{
                 node {
-                    label "windows"
+                    label "mac"
                 }
             }
             steps {
                 echo "Testing.."
-                bat "%windowsConferenceCasePath%/runCase.bat"
+                sh "${iosConferenceCasePath}/runTest.sh"
             }
         }
         stage("TestP2P") {
             agent{
                 node {
-                    label "windows"
+                    label "mac"
                 }
             }
             steps {
                 echo "Testing.."
-                bat "%windowsP2PCasePath%/runCase.bat"
+                sh "${iosP2PCasePath}/runTest.sh"
             }
         }
         stage("Deploy") {
             agent{
                 node {
-                label "$env.windowsServer"
+                    label "$env.iosServer"
                 }
             }
             steps {
