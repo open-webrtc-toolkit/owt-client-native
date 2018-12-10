@@ -38,6 +38,7 @@ limitations under the License.
 
 #include <atlbase.h>
 #include <d3d9.h>
+#include <initguid.h>
 #include <dxva2api.h>
 #include "base_allocator.h"
 #include <vector>
