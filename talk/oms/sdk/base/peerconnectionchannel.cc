@@ -202,7 +202,13 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       rtc::ScopedRefMessageData<MediaStreamInterface>* param =
           static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
               msg->pdata);
-      peer_connection_->AddStream(param->data());
+      MediaStreamInterface* stream = param->data();
+      for (const auto track : stream->GetAudioTracks()) {
+        peer_connection_->AddTrack(track, {stream->id()});
+      }
+      for (const auto track : stream->GetVideoTracks()) {
+        peer_connection_->AddTrack(track, {stream->id()});
+      }
       delete param;
       break;
     }

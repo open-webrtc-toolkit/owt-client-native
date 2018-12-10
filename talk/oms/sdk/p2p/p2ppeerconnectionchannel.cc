@@ -1271,7 +1271,7 @@ Json::Value P2PPeerConnectionChannel::UaInfo() {
   // Plan-B, and stream removable.
   Json::Value capabilities;
   capabilities[kUaContinualGatheringKey] = true;
-  capabilities[kUaUnifiedPlanKey] = false;
+  capabilities[kUaUnifiedPlanKey] = true;
   capabilities[kUaStreamRemovableKey] = true;
   ua[kUaSdkKey] = sdk;
   ua[kUaRuntimeKey] = runtime;
