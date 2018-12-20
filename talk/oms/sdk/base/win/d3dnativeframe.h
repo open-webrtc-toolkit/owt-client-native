@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_BASE_WIN_D3DNATIVEFRAME_H
 #define OMS_BASE_WIN_D3DNATIVEFRAME_H
 #include <d3d9.h>

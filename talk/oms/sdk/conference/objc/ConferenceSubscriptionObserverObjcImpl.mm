@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2018 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
 namespace oms {

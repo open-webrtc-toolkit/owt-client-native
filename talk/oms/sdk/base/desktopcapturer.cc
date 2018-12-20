@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include <iostream>
 #include "libyuv/convert.h"
 #include "webrtc/rtc_base/bytebuffer.h"

@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #import "talk/oms/sdk/include/objc/OMS/OMSP2PSignalingSenderProtocol.h"
 #include <string>
 #include <functional>

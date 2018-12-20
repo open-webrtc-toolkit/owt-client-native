@@ -1,3 +1,7 @@
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 import subprocess
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))

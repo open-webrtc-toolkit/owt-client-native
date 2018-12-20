@@ -1,3 +1,7 @@
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 '''Script to generate Objective-C headers.
 
 It generates Objective-C headers without building SDK framework. So it can be run on multiple platfomrs.

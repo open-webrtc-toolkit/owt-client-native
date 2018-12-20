@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_BASE_CUSTOMIZEDVIDEODECODERFACTORY_H_
 #define OMS_BASE_CUSTOMIZEDVIDEODECODERFACTORY_H_
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"

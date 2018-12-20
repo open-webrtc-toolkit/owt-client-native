@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 namespace oms {
 namespace p2p {

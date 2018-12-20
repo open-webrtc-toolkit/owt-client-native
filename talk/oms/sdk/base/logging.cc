@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include <unordered_map>
 #include <string>
 #include "talk/oms/sdk/include/cpp/oms/base/logging.h"

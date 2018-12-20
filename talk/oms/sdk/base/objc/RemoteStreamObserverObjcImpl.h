@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_BASE_OBJC_REMOTESTREAMOBSERVEROBJCIMPL_H_
 #define OMS_BASE_OBJC_REMOTESTREAMOBSERVEROBJCIMPL_H_
 #import "talk/oms/sdk/include/cpp/oms/base/stream.h"

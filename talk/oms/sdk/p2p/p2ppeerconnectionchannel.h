@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_P2P_P2PPEERCONNECTIONCHANNEL_H_
 #include <memory>

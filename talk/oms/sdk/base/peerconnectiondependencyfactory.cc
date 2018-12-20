@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include <iostream>
 #include "talk/oms/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/oms/sdk/base/encodedvideoencoderfactory.h"

@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_
 #define OMS_CONFERENCE_CONFERENCEPEERCONNECTIONCHANNEL_H_
 #include <memory>

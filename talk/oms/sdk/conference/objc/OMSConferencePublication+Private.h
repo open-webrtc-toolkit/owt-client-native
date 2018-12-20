@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2018 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #include <memory>
 #include "talk/oms/sdk/include/cpp/oms/conference/conferencepublication.h"
 #import "OMS/OMSConferencePublication.h"

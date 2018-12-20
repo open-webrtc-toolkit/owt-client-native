@@ -1,3 +1,7 @@
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) 2018 Intel Corporation. All Rights Reserved.
 import os
 import re
@@ -17,7 +21,7 @@ def replaceFiles(dirPath):
 				replace = 'oms'
 				f.write(line.replace(orig, replace))
 			f.close();
-		
+
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dir', default='talk', help='root directory to be replaced')
@@ -26,6 +30,6 @@ def main():
 	replaceFiles(replace_root_path)
 	print 'Done'
 	return 0
-	
+
 if __name__ == '__main__':
   sys.exit(main())
