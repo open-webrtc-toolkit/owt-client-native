@@ -46,7 +46,7 @@ target_os = []
 + Go to src/srcitps/ directory, and run: ```` python build-win.py --sdk --tests```` The built binary will be under src/dist directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure.
 
 ## How to contribute
-We warmly welcome community contributions to oms-client-android repository. If you are willing to contribute your features and ideas to OMS, follow the process below:
+We warmly welcome community contributions to oms-client-native repository. If you are willing to contribute your features and ideas to OMS, follow the process below:
 
 + Make sure your patch will not break anything, including all the build and tests
 + Submit a pull request onto <a href="https://github.com/open-media-streamer/oms-client-native/pulls">Pull Requests</a>
