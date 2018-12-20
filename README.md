@@ -26,7 +26,7 @@ Before you start, make sure you have following prerequisites installed/built:
 + Boost 1.67.0 or higher. 
 + Intel Media SDK for Windows, version 2018 R1 or higher: <https://software.intel.com/en-us/media-sdk/choose-download/client>
 
-#### Get the code
+#### Get the code and build
 + Make sure you clone the source code to **src** dir.
 + Create file named .gclient under the same directory of **src** dir, with below contents:<br>
 <pre>
@@ -42,7 +42,7 @@ solutions = [
 ]  
 target_os = []  
 </pre>
-+ Set environmental variable BOOST_ROOT to your boost source tree, and SSL_ROOT to the directory of your OpenSSL 1.1.0 binary.
++ Set environmental variable ````BOOST_ROOT```` to your boost source tree, and ````SSL_ROOT```` to the directory of your OpenSSL 1.1.0 binary.
 + Go to src/srcitps/ directory, and run: ```` python build-win.py --sdk --tests```` The built binary will be under src/dist directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure.
 
 ## How to contribute
