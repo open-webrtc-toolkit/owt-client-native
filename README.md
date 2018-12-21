@@ -54,6 +54,11 @@ target_os = []
 - Run `gclient sync`. It may take a long time to download large amount of data.
 - Build OMS iOS SDK with `scripts\build.py`.
 
+#### Android
+- Replace the last line of `.gclient` with `target_os=["android"]`
+- Run `gclient sync`. It may take a long time to download large amount of data.
+- Build libwebrtc for OMS Android SDK with `scripts/build_android.py`.
+
 ## How to contribute
 We warmly welcome community contributions to oms-client-native repository. If you are willing to contribute your features and ideas to OMS, follow the process below:
 
