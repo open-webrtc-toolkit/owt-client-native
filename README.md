@@ -14,8 +14,6 @@ You need [Doxygen](http://www.doxygen.nl/) in your path.
 
 ## How to build
 
-### Build Windows SDK
-
 ### Prepare the development environment
 Before you start, make sure you have following prerequisites installed/built:
 
