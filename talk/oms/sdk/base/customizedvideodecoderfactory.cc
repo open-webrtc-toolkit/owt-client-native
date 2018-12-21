@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/base/customizedvideodecoderfactory.h"
 #include "oms/base/globalconfiguration.h"
 CustomizedVideoDecoderFactory::CustomizedVideoDecoderFactory(std::unique_ptr<oms::base::VideoDecoderInterface> external_decoder)

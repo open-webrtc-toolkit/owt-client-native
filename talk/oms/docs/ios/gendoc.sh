@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 GEN_DOC_PATH=$(cd "$(dirname "$0")"; pwd)
 GEN_HEADER_PATH=$(cd ../../../../scripts; pwd)
 #COPY HEADER

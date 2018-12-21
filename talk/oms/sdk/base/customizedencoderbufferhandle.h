@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
 #define OMS_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
 #include "rtc_base/atomicops.h"

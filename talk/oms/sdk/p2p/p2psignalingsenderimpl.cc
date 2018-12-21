@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "webrtc/rtc_base/checks.h"
 #include "talk/oms/sdk/p2p/p2psignalingsenderimpl.h"
 namespace oms {

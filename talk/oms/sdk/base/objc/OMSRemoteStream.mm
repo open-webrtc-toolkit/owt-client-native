@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2016 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #import "talk/oms/sdk/include/objc/OMS/OMSRemoteStream.h"
 #import <Foundation/Foundation.h>
 #import "WebRTC/RTCMediaStream.h"

@@ -1,6 +1,7 @@
-/*
- * Copyright (c) 2017 Intel Corporation. All rights reserved.
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include <algorithm>
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/oms/sdk/base/ios/networkmonitorios.h"

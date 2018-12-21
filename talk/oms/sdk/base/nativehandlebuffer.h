@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_NATIVE_HANDLE_BUFFER_H_
 #define OMS_NATIVE_HANDLE_BUFFER_H_
 #include "api/video/video_frame_buffer.h"
@@ -20,9 +20,9 @@ class NativeHandleBuffer : public VideoFrameBuffer{
    int height() const override { return height_; }
    rtc::scoped_refptr<I420BufferInterface> ToI420() override {
      RTC_NOTREACHED();
-     return nullptr;  
+     return nullptr;
    }
- 
+
    void* native_handle() { return native_handle_; }
  private:
    void* native_handle_;

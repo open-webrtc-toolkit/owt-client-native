@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef p2p_SignalingChannelProtocol_h
 #define p2p_SignalingChannelProtocol_h
 #import "OMS/OMSErrors.h"

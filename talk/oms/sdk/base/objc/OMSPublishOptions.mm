@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2018 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/include/cpp/oms/base/options.h"
 #import "talk/oms/sdk/base/objc/OMSPublishOptions+Private.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
@@ -22,4 +22,4 @@
   }
   return options;
 }
-@end 
+@end

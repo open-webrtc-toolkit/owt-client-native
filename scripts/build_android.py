@@ -1,5 +1,7 @@
 #!/usr/bin/python
-# Copyright (c) 2017 Intel Corporation. All Rights Reserved.
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
 
 '''Script to build WebRTC libs for Android.
 '''
