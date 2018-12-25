@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #ifndef OMS_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 #define OMS_CONFERENCE_OBJC_CONFERENCECLIENTOBSERVEROBJCIMPL_H_
 #include <unordered_map>

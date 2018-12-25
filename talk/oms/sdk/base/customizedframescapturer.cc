@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"

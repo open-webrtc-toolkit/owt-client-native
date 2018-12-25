@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2016 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/conference/objc/ConferenceSubscriptionObserverObjcImpl.h"
 #include "webrtc/rtc_base/checks.h"
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
@@ -174,7 +174,7 @@
   return constrains;
 }
 @end
-@implementation OMSConferenceSubscribeOptions 
+@implementation OMSConferenceSubscribeOptions
 - (instancetype)initWithAudio:(OMSConferenceAudioSubscriptionConstraints*)audio
                         video:
                             (OMSConferenceVideoSubscriptionConstraints*)video {

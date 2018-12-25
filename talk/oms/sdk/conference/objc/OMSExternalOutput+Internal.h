@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2017 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #import "talk/oms/sdk/include/objc/OMS/OMSExternalOutput.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/externaloutput.h"
 @interface OMSExternalAudioOutputOptions (Internal)

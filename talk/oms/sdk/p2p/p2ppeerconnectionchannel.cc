@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include <vector>
 #include <thread>
 #include "talk/oms/sdk/base/eventtrigger.h"
@@ -1271,7 +1271,7 @@ Json::Value P2PPeerConnectionChannel::UaInfo() {
   // Plan-B, and stream removable.
   Json::Value capabilities;
   capabilities[kUaContinualGatheringKey] = true;
-  capabilities[kUaUnifiedPlanKey] = false;
+  capabilities[kUaUnifiedPlanKey] = true;
   capabilities[kUaStreamRemovableKey] = true;
   ua[kUaSdkKey] = sdk;
   ua[kUaRuntimeKey] = runtime;

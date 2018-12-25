@@ -1,6 +1,6 @@
+// Copyright (C) <2018> Intel Corporation
 //
-//  Copyright (c) 2015 Intel Corporation. All rights reserved.
-//
+// SPDX-License-Identifier: Apache-2.0
 #import <UIKit/UIKit.h>
 #import "talk/oms/sdk/base/objc/OMSMediaFormat+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"

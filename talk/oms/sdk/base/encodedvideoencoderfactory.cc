@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/oms/sdk/base/encodedvideoencoderfactory.h"
 #include "webrtc/rtc_base/stringutils.h"

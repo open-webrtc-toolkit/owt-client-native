@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include <random>
 #include "talk/oms/sdk/include/cpp/oms/base/localcamerastreamparameters.h"
 namespace oms {

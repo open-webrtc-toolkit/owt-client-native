@@ -1,5 +1,7 @@
 #!/usr/bin/python
-# Copyright (c) 2017 Intel Corporation. All Rights Reserved.
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
 
 '''Script to build WebRTC libs for Android.
 '''
@@ -7,6 +9,7 @@ import os
 import subprocess
 import argparse
 import shutil
+import sys
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_PATH = os.path.join(HOME_PATH, 'out')
@@ -23,19 +26,19 @@ def gn_gen(arch, debug):
               ' rtc_use_h265=true'
     cmd = ['gn', 'gen', output_location, gn_args]
     if subprocess.call(cmd) :
-        sys.exit();
+        sys.exit(1)
 
 def ninja_build(arch, debug):
     print '\n> building libjingle_peerconnection_so for', arch, ('debug' if debug else 'release')
     output_location = get_location(arch, debug)
     cmd = ['ninja', '-C', output_location, 'libjingle_peerconnection_so']
     if subprocess.call(cmd) :
-        sys.exit();
+        sys.exit(1)
 
     print '\n> building libwebrtc for', arch, ('debug' if debug else 'release')
     cmd = ['ninja', '-C', output_location, 'libwebrtc']
     if subprocess.call(cmd) :
-        sys.exit();
+        sys.exit(1)
 
 def dist(arch, debug):
     print '\n> copying libs to distribution location'

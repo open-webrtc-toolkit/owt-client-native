@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #import "OMS/OMSAVFoundationVideoSource+Woogeen.h"
 #import "talk/oms/sdk/base/objc/OMSPeerConnectionFactory+Woogeen.h"
 #import "OMS/OMSAVFoundationVideoSource+Woogeen.h"

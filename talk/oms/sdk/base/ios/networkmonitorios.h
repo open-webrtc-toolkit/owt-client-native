@@ -1,6 +1,7 @@
-/*
- * Copyright (c) 2017 Intel Corporation. All rights reserved.
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef WOOGEEN_BASE_NETWORKMONITORIOS_H_
 #define WOOGEEN_BASE_NETWORKMONITORIOS_H_
 #include <SystemConfiguration/SystemConfiguration.h>

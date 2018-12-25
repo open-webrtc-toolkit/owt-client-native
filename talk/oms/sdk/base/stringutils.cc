@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/base/stringutils.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 namespace oms {

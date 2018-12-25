@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-# Copyright (c) 2017 Intel Corporation. All Rights Reserved.
+# Copyright (C) <2018> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
 
 """
 Prepare development environment.

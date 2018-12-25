@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/base/sysinfo.h"
 #import <UIKit/UIKit.h>
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"

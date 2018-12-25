@@ -1,6 +1,6 @@
-/*
-* Intel License.
-*/
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 //
 //C++ SDK specific video renderer implementation. This render will check if native buffer impl ptr is set or not.
 //If received buffer is i420 data, will create a new D3D device for rendering the I420 frame.

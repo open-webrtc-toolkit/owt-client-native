@@ -1,6 +1,6 @@
-/*
- * Intel License
- */
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 #include "talk/oms/sdk/include/cpp/oms/base/stream.h"
 #include "talk/oms/sdk/include/cpp/oms/conference/remotemixedstream.h"
 #include "talk/oms/sdk/conference/objc/ConferenceClientObserverObjcImpl.h"
