@@ -45,8 +45,9 @@ target_os = []
 
 ### Build
 #### Windows
-- Set environmental variable ````BOOST_ROOT```` to your boost source tree, and ````SSL_ROOT```` to the directory of your OpenSSL 1.1.0 binary.
-- Go to src/srcitps/ directory, and run: ```` python build-win.py --sdk --tests```` The built binary will be under src/dist directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure.
+- Set environmental variable ````BOOST_ROOT```` to your boost source tree.
+- Run `gclient sync`. It may take a long time to download large amount of data.
+- Go to src/srcitps/ directory, and run: `python build-win.py --sdk --tests --ssl_root /path/to/ssl --msdk_root /path/to/msdk --output_path /path/to/out`. The built binary will be under `output_path`, the documents for sdk will also be copied to this directory if docs has been generated. If not set `output_path`, the built binary will be under src/out directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure. `ssl_root` to the directory of your OpenSSL 1.1.0 binary. `msdk_root` to the directory of your Intel Media SDK for Windows, version 2018 R1 or higher.
 
 #### iOS
 - Run `gclient sync`. It may take a long time to download large amount of data.
