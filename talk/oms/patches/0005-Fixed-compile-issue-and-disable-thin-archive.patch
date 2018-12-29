@@ -1,0 +1,39 @@
+From 51237f25f2ec5141b7c6be7bb149031f27f3719f Mon Sep 17 00:00:00 2001
+From: Hua Chunbo <chunbo.hua@intel.com>
+Date: Fri, 28 Dec 2018 15:59:14 +0800
+Subject: [PATCH] Fixed compile issue and disable thin archive for Linux
+
+---
+ config/c++/c++.gni       | 2 +-
+ config/compiler/BUILD.gn | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config/c++/c++.gni b/config/c++/c++.gni
+index 1b94aaa..a27fbbb 100644
+--- a/config/c++/c++.gni
++++ b/config/c++/c++.gni
+@@ -12,7 +12,7 @@ declare_args() {
+   # is not supported.
+   use_custom_libcxx =
+       is_msan || is_fuchsia ||
+-      (is_linux &&
++      (is_linux && is_clang &&
+        (!is_chromeos || default_toolchain != "//build/toolchain/cros:target"))
+ 
+   # Use libc++ instead of stdlibc++ when using the host_cpu toolchain, even if
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 2ec751f..66c990c 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1698,7 +1698,7 @@ config("thin_archive") {
+   # Mac and iOS use the mac-specific "libtool" command, not ar, which doesn't
+   # have a "thin archive" mode (it does accept -T, but it means truncating
+   # archive names to 16 characters, which is not what we want).
+-  if ((is_posix && !is_nacl && !is_mac && !is_ios) || is_fuchsia) {
++  if ((is_posix && !is_nacl && !is_mac && !is_ios && !is_linux) || is_fuchsia) {
+     arflags = [ "-T" ]
+   }
+ }
+-- 
+2.7.4
+
