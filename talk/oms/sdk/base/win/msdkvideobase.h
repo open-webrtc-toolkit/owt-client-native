@@ -41,6 +41,8 @@ class MSDKFactory {
 
   static std::shared_ptr<D3DFrameAllocator> CreateFrameAllocator(IDirect3DDeviceManager9* d3d_manager);
   static std::shared_ptr<SysMemFrameAllocator> CreateFrameAllocator();
+  void MFETimeout(uint32_t timeout);
+  uint32_t MFETimeout();
  protected:
   MSDKFactory();
   bool Init();
@@ -52,6 +54,7 @@ class MSDKFactory {
   static MSDKFactory* singleton;
   static std::mutex get_singleton_mutex;
   MFXVideoSession* main_session;  
+  uint32_t mfe_timeout;
 };
 }  // namespace base
 }  // namespace oms

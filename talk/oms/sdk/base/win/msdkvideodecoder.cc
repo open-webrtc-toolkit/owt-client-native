@@ -51,7 +51,7 @@ MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
   m_pInputSurfaces = nullptr;
   m_video_param_extracted = false;
 #ifdef OMS_DEBUG_DEC
-  input = fopen("input.h265", "wb");
+  input = fopen("input.bin", "wb");
 #endif
 }
 
