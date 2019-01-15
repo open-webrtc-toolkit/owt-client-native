@@ -99,7 +99,7 @@ D3DFrameAllocator::~D3DFrameAllocator()
 mfxStatus D3DFrameAllocator::Init(mfxAllocatorParams *pParams)
 {
     D3DAllocatorParams *pd3dParams = 0;
-    pd3dParams = dynamic_cast<D3DAllocatorParams *>(pParams);
+    pd3dParams = static_cast<D3DAllocatorParams *>(pParams);
     if (!pd3dParams)
         return MFX_ERR_NOT_INITIALIZED;
 

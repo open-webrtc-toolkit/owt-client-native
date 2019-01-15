@@ -13,23 +13,23 @@ namespace base {
 std::mutex MSDKFactory::get_singleton_mutex;
 MSDKFactory* MSDKFactory::singleton = nullptr;
 
-static bool AreGuidsEqual(const mfxPluginUID* guid_first, const mfxPluginUID* guid_second) {
+static bool AreGuidsEqual(const mfxPluginUID* guid_first,
+                          const mfxPluginUID* guid_second) {
   for (size_t i = 0; i < sizeof(mfxPluginUID); i++) {
     if (guid_first->Data[i] != guid_second->Data[i])
-    return false;
+      return false;
   }
   return true;
 }
 
 static bool isValidPluginUID(const mfxPluginUID* uid) {
-  return (AreGuidsEqual(uid, &MFX_PLUGINID_HEVCD_HW)
-       || AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_HW)
-       || AreGuidsEqual(uid, &MFX_PLUGINID_VP8D_HW)
-       || AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_GACC));
+  return (AreGuidsEqual(uid, &MFX_PLUGINID_HEVCD_HW) ||
+          AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_HW) ||
+          AreGuidsEqual(uid, &MFX_PLUGINID_VP8D_HW) ||
+          AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_GACC));
 }
 
-MSDKFactory::MSDKFactory ()
-    : main_session(nullptr) {}  
+MSDKFactory::MSDKFactory() : main_session(nullptr), mfe_timeout(0) {}
 
 bool MSDKFactory::Init() {
   main_session = InternalCreateSession();
@@ -40,7 +40,14 @@ bool MSDKFactory::Init() {
   return true;
 }
 
-MSDKFactory::~MSDKFactory() {
+MSDKFactory::~MSDKFactory() {}
+
+void MSDKFactory::MFETimeout(uint32_t timeout) {
+  mfe_timeout = timeout < 100 ? timeout : 100;
+}
+
+uint32_t MSDKFactory::MFETimeout() {
+  return mfe_timeout;
 }
 
 MSDKFactory* MSDKFactory::Get() {
@@ -48,14 +55,14 @@ MSDKFactory* MSDKFactory::Get() {
 
   if (singleton == nullptr) {
     singleton = new MSDKFactory();
-    
+
     if (singleton && !singleton->Init()) {
       delete singleton;
       singleton = nullptr;
     }
   }
 
-  return singleton;  
+  return singleton;
 }
 
 MFXVideoSession* MSDKFactory::InternalCreateSession() {
@@ -105,9 +112,11 @@ void MSDKFactory::DestroySession(MFXVideoSession* session) {
   }
 }
 
-bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id) {
+bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
+                                    MFXVideoSession* session,
+                                    mfxPluginUID* plugin_id) {
   mfxStatus sts = MFX_ERR_NONE;
-  
+
   switch (codec_id) {
     case MFX_CODEC_HEVC:
       sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCD_HW, 1);
@@ -131,7 +140,9 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id, MFXVideoSession* session,
   return true;
 }
 
-bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id) {
+bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id,
+                                    MFXVideoSession* session,
+                                    mfxPluginUID* plugin_id) {
   mfxStatus sts = MFX_ERR_NONE;
   switch (codec_id) {
     case MFX_CODEC_HEVC:
@@ -149,19 +160,21 @@ bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id, MFXVideoSession* session,
   return true;
 }
 
-void MSDKFactory::UnloadMSDKPlugin(MFXVideoSession* session, mfxPluginUID* plugin_id) {
+void MSDKFactory::UnloadMSDKPlugin(MFXVideoSession* session,
+                                   mfxPluginUID* plugin_id) {
   if (isValidPluginUID(plugin_id)) {
     MFXVideoUSER_UnLoad(*session, plugin_id);
   }
 }
 
-std::shared_ptr<D3DFrameAllocator> MSDKFactory::CreateFrameAllocator(IDirect3DDeviceManager9* d3d_manager) {
+std::shared_ptr<D3DFrameAllocator> MSDKFactory::CreateFrameAllocator(
+    IDirect3DDeviceManager9* d3d_manager) {
   mfxStatus sts = MFX_ERR_NONE;
   D3DAllocatorParams param;
 
   param.pManager = d3d_manager;
   std::shared_ptr<D3DFrameAllocator> pAllocator =
-    std::make_shared<D3DFrameAllocator>();
+      std::make_shared<D3DFrameAllocator>();
   sts = pAllocator->Init(&param);
   if (sts != MFX_ERR_NONE) {
     return nullptr;
@@ -174,7 +187,7 @@ std::shared_ptr<SysMemFrameAllocator> MSDKFactory::CreateFrameAllocator() {
   mfxStatus sts = MFX_ERR_NONE;
 
   std::shared_ptr<SysMemFrameAllocator> pAllocator =
-    std::make_shared<SysMemFrameAllocator>();
+      std::make_shared<SysMemFrameAllocator>();
   sts = pAllocator->Init(nullptr);
   if (sts != MFX_ERR_NONE) {
     return nullptr;
