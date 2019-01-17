@@ -37,7 +37,8 @@ pipeline {
                     }
                     steps {
                         withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                            sh "${mcuScriptPath}/startmcu.sh"
+                            sh "${env.starMcuScriptPath} --package-url ${env.mcuPackageUrl} --package-name \
+                            mcu-all-bin-v{data}.tgz  --base-dir ${env.mcuServerBasePath}"
                         }
                     }
                 }
@@ -49,7 +50,7 @@ pipeline {
                     }
                     steps {
                         withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                            sh "${p2pScriptPath}/startP2PServer.sh"
+                            sh "${env.startP2PServerScriptPath} --server-path ${env.p2pServerPath}"
                         }
                     }
                 }
@@ -99,24 +100,8 @@ pipeline {
                 bat "%windowsP2PCasePath%/runCase.bat"
             }
         }
-        stage("Deploy") {
-            agent{
-                node {
-                label "$env.windowsServer"
-                }
-            }
-            steps {
-                echo "Deploying...."
-                withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                    sh "${mcuScriptPath}/killserver.sh"
-                }
-            }
-        }
     }
     post {
-        always {
-            echo "One way or another, I have finished"
-        }
         success {
             setBuildStatus("Build succeeded", "SUCCESS");
             echo "I succeeeded!"
