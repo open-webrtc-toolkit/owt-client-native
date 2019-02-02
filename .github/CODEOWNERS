@@ -1,0 +1,9 @@
+# See https://help.github.com/articles/about-code-owners/ for CODEOWNERS syntax.
+
+* @taste1981 @HuaChunbo @jianjunz
+jenkins/ @yanbin7
+talk/oms/sdk/base/test @yanbin7
+talk/oms/sdk/base/ios @jianjunz
+talk/oms/sdk/base/objc @jianjunz
+talk/oms/sdk/conference/objc @jianjunz
+talk/oms/sdk/p2p/objc @jianjunz
