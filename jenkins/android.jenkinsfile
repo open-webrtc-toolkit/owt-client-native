@@ -19,7 +19,7 @@ pipeline {
             agent{
                 node {
                     label "${env.androidBuldNativeServer}"
-                    customWorkspace "${env.omsClientNativePath}"
+                    customWorkspace "${env.owtClientNativePath}"
                 }
             }
             steps {
