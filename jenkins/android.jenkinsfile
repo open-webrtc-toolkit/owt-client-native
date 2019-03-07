@@ -1,7 +1,7 @@
-void setBuildStatus(String message, String state) {
+void setBuildStatus(String nativeUrl, String message, String state) {
     step([
         $class: "GitHubCommitStatusSetter",
-        reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/open-media-streamer/oms-client-native"],
+        reposSource: [$class: "ManuallyEnteredRepositorySource", url: nativeUrl],
         contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/android"],
         errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
         statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]]]
@@ -19,7 +19,7 @@ pipeline {
             agent{
                 node {
                     label "${env.androidBuldNativeServer}"
-                    customWorkspace "${env.omsClientNativePath}"
+                    customWorkspace "${env.owtClientNativePath}"
                 }
             }
             steps {
@@ -38,7 +38,7 @@ pipeline {
             echo "One way or another, I have finished"
         }
         success {
-            setBuildStatus("Build succeeded", "SUCCESS");
+            setBuildStatus("${env.nativeUrl}", "Build succeeded", "SUCCESS");
             echo "I succeeeded!"
             mail to: "$env.mailtoUser",
             subject: "Success Pipeline: ${currentBuild.fullDisplayName}",
@@ -51,7 +51,7 @@ pipeline {
             body: "Something is wrong with ${env.BUILD_URL}"
         }
         failure {
-            setBuildStatus("Build failed", "FAILURE");
+            setBuildStatus("${env.nativeUrl}", "Build failed", "FAILURE");
             echo "I failed :("
             mail to: "$env.mailtoUser",
             subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
