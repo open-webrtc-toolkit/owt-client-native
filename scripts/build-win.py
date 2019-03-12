@@ -4,10 +4,10 @@
 
 '''Script to build WebRTC libs on Windows.
 
-It builds OMS Windows SDK library which includes WebRTC lib, OMS base, p2p and conference
+It builds OWT Windows SDK library which includes WebRTC lib, OWT base, p2p and conference
 lib.
 
-Output lib is located in out/oms-debug(release).lib.
+Output lib is located in out/owt-debug(release).lib.
 '''
 
 import os
@@ -18,7 +18,7 @@ import shutil
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
-OUT_LIB = 'oms-%(scheme)s.lib'
+OUT_LIB = 'owt-%(scheme)s.lib'
 LIB_BLACK_LIST = ['video_capture']
 PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests',
                              'common_video_unittests', 'modules_tests',
@@ -86,8 +86,8 @@ def _getlibs(arch, scheme, ssl_root):
     '''Returns an array contains all .lib files' path
     '''
     result = []
-    oms_path = os.path.join(OUT_PATH, r'%s-%s\obj\talk\oms\oms.lib' % (scheme, arch))
-    result.append(oms_path)
+    owt_path = os.path.join(OUT_PATH, r'%s-%s\obj\talk\owt\owt.lib' % (scheme, arch))
+    result.append(owt_path)
     ssl_lib_path = os.path.join(ssl_root, 'lib')
     for root, dirs, files in os.walk(ssl_lib_path):
         for file in files:
@@ -127,7 +127,7 @@ def runtest(scheme):
 
 def gendocs():
     print('start ninja file generatio!')
-    cmd_path = os.path.join(HOME_PATH, r'talk\oms\docs\cpp')
+    cmd_path = os.path.join(HOME_PATH, r'talk\owt\docs\cpp')
     doc_path = os.path.join(cmd_path, r'html')
     if os.path.exists(doc_path):
         shutil.rmtree(doc_path)
@@ -140,8 +140,8 @@ def pack_sdk(scheme, output_path):
     print('start copy out files to %s!' % output_path)
     out_lib = OUT_LIB % {'scheme': scheme}
     src_lib_path = os.path.join(OUT_PATH, out_lib)
-    src_include_path = os.path.join(HOME_PATH, r'talk\oms\sdk\include\cpp')
-    src_doc_path = os.path.join(HOME_PATH, r'talk\oms\docs\cpp\html')
+    src_include_path = os.path.join(HOME_PATH, r'talk\owt\sdk\include\cpp')
+    src_doc_path = os.path.join(HOME_PATH, r'talk\owt\docs\cpp\html')
     dst_lib_path = os.path.join(output_path, 'libs')
     dst_include_path = os.path.join(output_path, 'include')
     dst_doc_path = os.path.join(output_path, 'docs')

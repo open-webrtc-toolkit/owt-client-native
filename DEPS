@@ -39,7 +39,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'deps_webrtc_git': 'https://github.com/open-media-streamer',
+  'deps_webrtc_git': 'https://github.com/open-webrtc-toolkit',
   'chromium_revision': 'ca3a5e1cbb792be549303987e0fc387092f7ee81',
   'boringssl_git': 'https://boringssl.googlesource.com',
   # Three lines of non-changing comments so that
@@ -199,7 +199,7 @@ deps = {
   'src/third_party/gflags/src':
     Var('chromium_git') + '/external/github.com/gflags/gflags' + '@' + '03bebcb065c83beff83d50ae025a55a4bf94dfca',
   'src/third_party/webrtc':
-    Var('deps_webrtc_git') + '/oms-deps-webrtc' + '@' + 'e2c05f7930672a9538a6edd2e1a333150c14a336',
+    Var('deps_webrtc_git') + '/owt-deps-webrtc' + '@' + 'e2c05f7930672a9538a6edd2e1a333150c14a336',
   'src/third_party/accessibility_test_framework': {
     'packages': [
         {
