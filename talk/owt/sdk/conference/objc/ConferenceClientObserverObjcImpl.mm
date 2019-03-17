@@ -87,7 +87,12 @@ void ConferenceClientObserverObjcImpl::OnMessageReceived(std::string& message,
 }
 void ConferenceClientObserverObjcImpl::OnParticipantJoined(
     std::shared_ptr<owt::conference::Participant> user) {
-  // TODO:
+  OWTConferenceParticipant* participant =
+      [[OWTConferenceParticipant alloc] initWithNativeParticipant:user];
+  if ([delegate_
+          respondsToSelector:@selector(conferenceClient:didAddParticipant:)]) {
+    [delegate_ conferenceClient:client_ didAddParticipant:participant];
+  }
 }
 void ConferenceClientObserverObjcImpl::OnServerDisconnected() {
   if ([delegate_

@@ -7,8 +7,8 @@
 RTC_EXPORT
 @interface OWTConferenceParticipant ()
 @property(nonatomic, readonly)
-    std::shared_ptr<const owt::conference::Participant>
+    std::shared_ptr<owt::conference::Participant>
         nativeParticipant;
 - (instancetype)initWithNativeParticipant:
-    (std::shared_ptr<const owt::conference::Participant>)participant;
+    (std::shared_ptr<owt::conference::Participant>)participant;
 @end
