@@ -26,20 +26,20 @@ import sdk_info
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 # The lib contains all target architectures and external libs(OpenSSL).
-OUT_LIB_NAME = 'liboms.a'
-OUT_FRAMEWORK_NAME = "OMS.framework"
+OUT_LIB_NAME = 'libowt.a'
+OUT_FRAMEWORK_NAME = "OWT.framework"
 OUT_FRAMEWORK_ROOT = os.path.join(OUT_PATH, OUT_FRAMEWORK_NAME)
 OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 # Parameters for each architectures, key is arch name, value is output path
 ARCH_PARAM_DICT = {'arm':'device-arm32', 'arm64':'device-arm64',
     'x86':'simulator-x86','x64':'simulator-x64'}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-HEADER_LIST = ['talk/oms/sdk/include/objc/OMS/*']
-FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'oms', 'sdk',
+HEADER_LIST = ['talk/owt/sdk/include/objc/OWT/*']
+FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
-FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'oms', 'sdk',
+FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'sdk',
     'supportingfiles', 'objc', 'module.modulemap')
-SDK_TARGETS = ['oms_sdk_base', 'oms_sdk_p2p', 'oms_sdk_conf', 'oms_sdk_objc', 'oms_deps']
+SDK_TARGETS = ['owt_sdk_base', 'owt_sdk_p2p', 'owt_sdk_conf', 'owt_sdk_objc', 'owt_deps']
 APP_TARGETS = ['AppRTCMobile']
 WEBRTC_FRAMEWORK_NAME = 'WebRTC.framework'
 # common_video_unittests and modules_unittests are not enabled because some failure cases.
@@ -89,7 +89,7 @@ def getexternalliblist(ssl_root):
   return libs
 
 def buildframework():
-  '''Create OMS.framework in out/'''
+  '''Create OWT.framework in out/'''
   if os.path.exists(OUT_FRAMEWORK_ROOT):
     shutil.rmtree(OUT_FRAMEWORK_ROOT)
   os.makedirs(OUT_FRAMEWORK_ROOT)
@@ -99,7 +99,7 @@ def buildframework():
   copyheaders(os.path.join(OUT_FRAMEWORK_ROOT, 'Headers'))
   shutil.copy(FRAMEWORK_INFO_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Info.plist'))
   shutil.copy(FRAMEWORK_MODULE_MAP_PATH, os.path.join(OUT_FRAMEWORK_ROOT, 'Modules', 'module.modulemap'))
-  shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'OMS'))
+  shutil.copy(os.path.join(OUT_PATH, OUT_LIB_NAME), os.path.join(OUT_FRAMEWORK_ROOT, 'OWT'))
 
 def buildwebrtcframework(arch_list, scheme):
   distutils.dir_util.copy_tree(
@@ -127,13 +127,13 @@ def dist(arch_list, scheme, ssl_root):
   argu = ['libtool', '-o', out_lib_path]
   for target_arch in arch_list:
     for sdk_target in SDK_TARGETS:
-      argu.append('%s/obj/talk/oms/lib%s.a'%(getoutputpath(target_arch, scheme), sdk_target))
+      argu.append('%s/obj/talk/owt/lib%s.a'%(getoutputpath(target_arch, scheme), sdk_target))
   # Add external libs.
   if ssl_root:
     argu.extend(getexternalliblist(ssl_root))
   subprocess.call(argu, cwd=HOME_PATH)
   if scheme == 'release':
-    subprocess.call(['strip', '-S', '-x', '%s/out/liboms.a'%HOME_PATH],
+    subprocess.call(['strip', '-S', '-x', '%s/out/libowt.a'%HOME_PATH],
         cwd=HOME_PATH)
   buildframework()
   os.remove(out_lib_path)

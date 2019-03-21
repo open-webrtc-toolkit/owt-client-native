@@ -18,7 +18,7 @@ def replaceFiles(dirPath):
 			f.truncate()
 			for line in lines:
 				orig = 'ics'
-				replace = 'oms'
+				replace = 'owt'
 				f.write(line.replace(orig, replace))
 			f.close();
 
