@@ -122,7 +122,7 @@
   OWTStreamSourceInfo* sourceInfo = [[OWTStreamSourceInfo alloc] init];
   sourceInfo.audio = OWTAudioSourceInfoMic;
   sourceInfo.video = OWTVideoSourceInfoCamera;
-  self = [super initWithMediaStream:stream source:sourceInfo];
+  self = [self initWithMediaStream:stream source:sourceInfo];
   return self;
 }
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes {
