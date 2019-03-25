@@ -122,13 +122,7 @@
   OWTStreamSourceInfo* sourceInfo = [[OWTStreamSourceInfo alloc] init];
   sourceInfo.audio = OWTAudioSourceInfoMic;
   sourceInfo.video = OWTVideoSourceInfoCamera;
-  self = [super initWithMediaStream:stream source:sourceInfo];
-  std::shared_ptr<owt::base::LocalStream> nativeStream =
-      std::make_shared<owt::base::LocalStream>(
-          stream.nativeMediaStream,
-          owt::base::StreamSourceInfo(owt::base::AudioSourceInfo::kMic,
-                                      owt::base::VideoSourceInfo::kCamera));
-  [self setNativeStream:nativeStream];
+  self = [self initWithMediaStream:stream source:sourceInfo];
   return self;
 }
 - (void)setAttributes:(NSDictionary<NSString*, NSString*>*)attributes {
