@@ -5,6 +5,9 @@
 #define OWT_CONFERENCE_OBJC_OWTCONFERENCEPARTICIPANT_H_
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCMacros.h>
+NS_ASSUME_NONNULL_BEGIN
+@protocol OWTConferenceParticipantDelegate;
+
 /// This class represents an attendee in a conference.
 RTC_EXPORT
 @interface OWTConferenceParticipant : NSObject
@@ -15,5 +18,15 @@ RTC_EXPORT
 @property(readonly, strong) NSString* role;
 /// The user ID of the participant. It can be integrated into existing account management system.
 @property(readonly, strong) NSString* userId;
+
+@property(nonatomic, weak) id<OWTConferenceParticipantDelegate> delegate;
 @end
+
+RTC_EXPORT
+@protocol OWTConferenceParticipantDelegate<NSObject>
+@optional
+/// Participant leave conference.
+- (void)participantDidLeave:(OWTConferenceParticipant*)participant;
+@end
+NS_ASSUME_NONNULL_END
 #endif  // OWT_CONFERENCE_OBJC_OWTCONFERENCEPARTICIPANT_H_

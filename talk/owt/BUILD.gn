@@ -335,6 +335,8 @@ if (is_ios) {
       "sdk/conference/objc/OWTConferenceSubscription+Private.h",
       "sdk/conference/objc/OWTConferenceSubscription.mm",
       "sdk/conference/objc/OWTRemoteMixedStream.mm",
+      "sdk/conference/objc/ParticipantObserverObjcImpl.h",
+      "sdk/conference/objc/ParticipantObserverObjcImpl.mm",
       "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h",
       "sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.mm",
       "sdk/conference/objc/public/OWTConferenceClient.h",
