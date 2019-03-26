@@ -487,7 +487,7 @@ retry:
     mfxU32 newBsDataSize = bs.MaxLength * 2;
     newPbsData = new mfxU8[newBsDataSize];
     if (bs.DataLength > 0) {
-      memcpy(newPbsData, bs.Data, bs.DataLength);
+      CopyMemory(newPbsData, bs.Data, bs.DataLength);
     }
     delete[] pbsData;
     pbsData = nullptr;
