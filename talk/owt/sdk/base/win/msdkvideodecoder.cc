@@ -50,6 +50,7 @@ MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
   MSDK_ZERO_MEMORY(m_mfxResponse);
   m_pInputSurfaces = nullptr;
   m_video_param_extracted = false;
+  m_decBsOffset = 0;
 #ifdef OWT_DEBUG_DEC
   input = fopen("input.bin", "wb");
 #endif
@@ -142,6 +143,18 @@ int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, in
       Bind(&MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
 
+int32_t MSDKVideoDecoder::Reset() {
+  m_pmfxDEC->Close();
+  m_pmfxDEC = nullptr;
+  delete m_pmfxDEC;
+
+  m_pmfxDEC = new MFXVideoDECODE(*m_mfxSession);
+  if (m_pmfxDEC == nullptr) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
 int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread() enter";
   CheckOnCodecThread();
@@ -232,7 +245,7 @@ int32_t MSDKVideoDecoder::Decode(
   mfxFrameSurface1 *pOutputSurface = nullptr;
   m_mfxVideoParams.IOPattern =
       MFX_IOPATTERN_OUT_VIDEO_MEMORY;
-  m_mfxVideoParams.AsyncDepth = 4;
+  m_mfxVideoParams.AsyncDepth = 1;
   ReadFromInputStream(&m_mfxBS, inputImage._buffer, inputImage._length);
 
 #ifdef OWT_DEBUG_DEC
@@ -244,6 +257,7 @@ int32_t MSDKVideoDecoder::Decode(
   }
   e_count++;
 #endif
+dec_header:
   if (inited_ && !m_video_param_extracted) {
     sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
     if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
@@ -312,17 +326,21 @@ int32_t MSDKVideoDecoder::Decode(
 
   // If we get video param changed, that means we need to continue with
   // decoding.
-  while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_SURFACE == sts) {
+  while (true) {
+more_surface:
     mfxU16 moreIdx =
         DecGetFreeSurface(m_pInputSurfaces, m_mfxResponse.NumFrameActual);
-    if (moreIdx != MSDK_INVALID_SURF_IDX) {
-      mfxFrameSurface1* moreFreeSurf = &m_pInputSurfaces[moreIdx];
-      sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
-                                        &syncp);
-    } else {
+    if (moreIdx == MSDK_INVALID_SURF_IDX) {
       MSDK_SLEEP(1);
       continue;
     }
+    mfxFrameSurface1* moreFreeSurf = &m_pInputSurfaces[moreIdx];
+
+retry:
+    m_decBsOffset = m_mfxBS.DataOffset;
+    sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
+                                      &syncp);
+
     if (sts == MFX_ERR_NONE && syncp != nullptr) {
       sts = m_mfxSession->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
@@ -359,6 +377,7 @@ int32_t MSDKVideoDecoder::Decode(
           webrtc::VideoFrame decoded_frame(buffer, inputImage._timeStamp, 0,
                                            webrtc::kVideoRotation_0);
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
+          decoded_frame.set_timestamp(inputImage.Timestamp());
           callback_->Decoded(decoded_frame);
         }
 
@@ -370,7 +389,20 @@ int32_t MSDKVideoDecoder::Decode(
       }
     } else if (MFX_ERR_MORE_DATA == sts) {
       return WEBRTC_VIDEO_CODEC_OK;
-    }
+    } else if (sts == MFX_WRN_DEVICE_BUSY) {
+      MSDK_SLEEP(1);
+      goto retry;
+    } else if (sts == MFX_ERR_MORE_SURFACE) {
+      goto more_surface;
+    } else if (sts == MFX_WRN_VIDEO_PARAM_CHANGED) {
+      goto retry;
+    } else if (sts != MFX_ERR_NONE) {
+      Reset();
+      m_mfxBS.DataLength += m_mfxBS.DataOffset - m_decBsOffset;
+      m_mfxBS.DataOffset = m_decBsOffset;
+      m_video_param_extracted = false;
+      goto dec_header;
+	}
   }
   return WEBRTC_VIDEO_CODEC_OK;
 }

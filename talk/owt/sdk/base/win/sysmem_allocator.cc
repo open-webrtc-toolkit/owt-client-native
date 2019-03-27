@@ -43,7 +43,7 @@ mfxStatus SysMemFrameAllocator::Init(mfxAllocatorParams *pParams) {
   // Check if any params passed from application
   if (pParams) {
     SysMemAllocatorParams *pSysMemParams = 0;
-    pSysMemParams = dynamic_cast<SysMemAllocatorParams *>(pParams);
+    pSysMemParams = static_cast<SysMemAllocatorParams *>(pParams);
     if (!pSysMemParams)
       return MFX_ERR_NOT_INITIALIZED;
 
