@@ -47,11 +47,11 @@ void WebrtcVideoRendererD3D9Impl::Resize(size_t width, size_t height) {
       {1.0f, 1.0f, 0.0f, 1.0f, 0.0f},
   };
 
-  void* buf_data;
+  void* buf_data = nullptr;
   if (m_vertex_buffer_->Lock(0, 0, &buf_data, 0) != D3D_OK)
     return;
 
-  memcpy(buf_data, &rect, sizeof(rect));
+  CopyMemory(buf_data, &rect, sizeof(rect));
   m_vertex_buffer_->Unlock();
 }
 

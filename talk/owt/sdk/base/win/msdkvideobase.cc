@@ -123,7 +123,7 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
       if (sts != MFX_ERR_NONE) {
         return false;
       }
-      memcpy(plugin_id, &MFX_PLUGINID_HEVCD_HW, 1);
+      *plugin_id = MFX_PLUGINID_HEVCD_HW;
       break;
     case MFX_CODEC_AVC:
       break;
@@ -132,7 +132,7 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
       if (sts != MFX_ERR_NONE) {
         return false;
       }
-      memcpy(plugin_id, &MFX_PLUGINID_VP8D_HW, 1);
+      *plugin_id = MFX_PLUGINID_VP8D_HW;
       break;
     default:
       break;
@@ -150,7 +150,7 @@ bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id,
       if (sts != MFX_ERR_NONE) {
         return false;
       }
-      memcpy(plugin_id, &MFX_PLUGINID_HEVCE_HW, 1);
+      *plugin_id = MFX_PLUGINID_HEVCE_HW;
       break;
     case MFX_CODEC_AVC:
       break;
