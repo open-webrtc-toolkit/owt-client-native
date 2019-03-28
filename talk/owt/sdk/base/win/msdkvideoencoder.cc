@@ -182,9 +182,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   MSDKConvertFrameRate(30, &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN,
                        &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
   m_mfxEncParams.mfx.EncodedOrder = 0;
-  m_mfxEncParams.mfx.LowPower = MFX_CODINGOPTION_ON;
   m_mfxEncParams.mfx.GopPicSize = 3000;
-  //m_mfxEncParams.mfx.GopRefDist = 1;
   m_mfxEncParams.mfx.GopOptFlag = 0;
   m_mfxEncParams.mfx.IdrInterval = 0;
   m_mfxEncParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
@@ -203,7 +201,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   m_mfxEncParams.mfx.FrameInfo.Width = MSDK_ALIGN16(codec_settings->width);
 
   m_mfxEncParams.AsyncDepth = 1;
-  m_mfxEncParams.mfx.NumRefFrame = 2;
+  m_mfxEncParams.mfx.NumRefFrame = 1;
 
   mfxExtCodingOption extendedCodingOptions;
   MSDK_ZERO_MEMORY(extendedCodingOptions);
@@ -258,16 +256,18 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     m_ExtHEVCParam.Header.BufferSz = sizeof(m_ExtHEVCParam);
 
     if ((!((m_mfxEncParams.mfx.FrameInfo.CropW & 15) ^ 8) ||
-        !((m_mfxEncParams.mfx.FrameInfo.CropH & 15) ^ 8))) {
+         !((m_mfxEncParams.mfx.FrameInfo.CropH & 15) ^ 8))) {
       m_ExtHEVCParam.PicWidthInLumaSamples = m_mfxEncParams.mfx.FrameInfo.CropW;
-      m_ExtHEVCParam.PicHeightInLumaSamples = m_mfxEncParams.mfx.FrameInfo.CropH;
+      m_ExtHEVCParam.PicHeightInLumaSamples =
+          m_mfxEncParams.mfx.FrameInfo.CropH;
       m_EncExtParams.push_back((mfxExtBuffer*)&m_ExtHEVCParam);
     }
   }
 
   if (!m_EncExtParams.empty()) {
-      m_mfxEncParams.ExtParam = &m_EncExtParams[0]; // vector is stored linearly in memory
-      m_mfxEncParams.NumExtParam = (mfxU16)m_EncExtParams.size();
+    m_mfxEncParams.ExtParam =
+        &m_EncExtParams[0];  // vector is stored linearly in memory
+    m_mfxEncParams.NumExtParam = (mfxU16)m_EncExtParams.size();
   }
 
   // Allocate frame for encoder
@@ -472,22 +472,22 @@ int MSDKVideoEncoder::Encode(
   // If the encoder does not prompt about need more data, we continue the same
   // process.
 
-  ctrl.FrameType = is_keyframe_required
-                       ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR
-                       : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
+  memset(&ctrl, 0, sizeof(ctrl));
+  if (is_keyframe_required) {
+    ctrl.FrameType = MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR;
+  }
 retry:
-  if (is_keyframe_required)
-    sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
-  else
-    sts = m_pmfxENC->EncodeFrameAsync(nullptr, pSurf, &bs, &sync);
+  sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
   if (MFX_WRN_DEVICE_BUSY == sts) {
     MSDK_SLEEP(1);
     goto retry;
   } else if (MFX_ERR_NOT_ENOUGH_BUFFER == sts) {
-    mfxU32 newBsDataSize = bs.MaxLength * 2;
+    m_pmfxENC->GetVideoParam(&param);
+    mfxU32 newBsDataSize = param.mfx.BufferSizeInKB * 1000;
     newPbsData = new mfxU8[newBsDataSize];
     if (bs.DataLength > 0) {
-      CopyMemory(newPbsData, bs.Data, bs.DataLength);
+      CopyMemory(newPbsData, bs.Data + bs.DataOffset, bs.DataLength);
+      bs.DataOffset = 0;
     }
     delete[] pbsData;
     pbsData = nullptr;
@@ -500,7 +500,7 @@ retry:
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
-  sts = m_mfxSession->SyncOperation(sync, MSDK_WAIT_INTERVAL);
+  sts = m_mfxSession->SyncOperation(sync, MSDK_ENC_WAIT_INTERVAL);
   if (MFX_ERR_NONE != sts) {
     if (pbsData != nullptr) {
       delete[] pbsData;

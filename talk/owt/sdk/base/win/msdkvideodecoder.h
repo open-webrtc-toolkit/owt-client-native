@@ -77,6 +77,7 @@ private:
     int32_t InitDecodeOnCodecThread();
     void CheckOnCodecThread();
     bool CreateD3DDevice();
+    int32_t Reset();
 
     // Type of video codec.
     webrtc::VideoCodecType codecType_;
@@ -96,6 +97,7 @@ private:
     mfxFrameSurface1*       m_pInputSurfaces;
     mfxPluginUID            m_pluginID;
     bool                    m_video_param_extracted;
+    uint32_t                m_decBsOffset;
     // End of MSDK variables
     IDirect3D9Ex*               m_pD3D9;
     IDirect3DDevice9Ex*         m_pD3DD9;
