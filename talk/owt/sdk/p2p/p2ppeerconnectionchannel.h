@@ -174,7 +174,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
   std::string remote_id_;
-  bool is_caller_;
   SessionState session_state_;
   // Indicates if negotiation needed event is triggered or received negotiation
   // request from remote side, but haven't send out offer.
