@@ -85,7 +85,6 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       signaling_sender_(sender),
       local_id_(local_id),
       remote_id_(remote_id),
-      is_caller_(true),
       session_state_(kSessionStateReady),
       negotiation_needed_(false),
       set_remote_sdp_task_(nullptr),
@@ -612,31 +611,15 @@ void P2PPeerConnectionChannel::OnSignalingChange(
 }
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
-  bool no_audio_source = true;
-  bool no_video_source = true;
   Json::Value stream_tracks;
   {
     rtc::CritScope cs(&remote_track_source_info_crit_);
     for (const auto& track : stream->GetAudioTracks()) {
       stream_tracks.append(track->id());
-      if (remote_track_source_info_.find(track->id()) !=
-          remote_track_source_info_.end()) {
-        no_audio_source = false;
-        break;
-      }
     }
     for (const auto& track : stream->GetVideoTracks()) {
       stream_tracks.append(track->id());
-      if (remote_track_source_info_.find(track->id()) !=
-          remote_track_source_info_.end()) {
-        no_video_source = false;
-        break;
-      }
     }
-  }
-  if (no_audio_source && no_video_source) {
-    RTC_LOG(LS_WARNING) << "No track source information specified for newly added stream.";
-    RTC_DCHECK(false);
   }
   std::shared_ptr<RemoteStream> remote_stream(
       new RemoteStream(stream, remote_id_));
@@ -687,16 +670,7 @@ void P2PPeerConnectionChannel::OnRenegotiationNeeded() {
   if (ended_)
     return;
   RTC_LOG(LS_INFO) << "On renegotiation needed.";
-  if (!is_caller_) {
-    if (session_state_ == kSessionStateConnecting ||
-        session_state_ == kSessionStateConnected) {
-      Json::Value json;
-      json[kMessageTypeKey] = kChatNegotiationNeeded;
-      SendSignalingMessage(json);
-    }
-    // If session is not connected, offer will be sent later. Nothing to do
-    // here.
-  } else if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
+  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
     CreateOffer();
   } else {
     negotiation_needed_ = true;
@@ -850,10 +824,6 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure(
 }
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
   PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess();
-  if (SignalingState() == PeerConnectionInterface::SignalingState::kHaveRemoteOffer ||
-    LocalDescription() == nullptr) {
-    is_caller_ = false;
-  }
 }
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
@@ -1177,7 +1147,6 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
       !pending_unpublish_streams_.empty()) {
     DrainPendingStreams();
   } else if (negotiation_needed_) {
-    RTC_DCHECK(is_caller_);
     CreateOffer();
   }
 }
