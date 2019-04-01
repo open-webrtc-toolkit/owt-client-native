@@ -174,6 +174,9 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   // Init the encoding params:
   MSDK_ZERO_MEMORY(m_mfxEncParams);
   m_mfxEncParams.mfx.CodecId = codec_id;
+  if (codec_id == MFX_CODEC_AVC) {
+    m_mfxEncParams.mfx.CodecLevel = MFX_PROFILE_AVC_CONSTRAINED_BASELINE;
+  }
   m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
   m_mfxEncParams.mfx.TargetKbps = codec_settings->maxBitrate;  // in-kbps
   m_mfxEncParams.mfx.MaxKbps = codec_settings->maxBitrate;
@@ -215,6 +218,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   extendedCodingOptions2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
   extendedCodingOptions2.Header.BufferSz = sizeof(extendedCodingOptions2);
   extendedCodingOptions2.RepeatPPS = MFX_CODINGOPTION_OFF;
+  extendedCodingOptions2.ExtBRC = MFX_CODINGOPTION_ON;
 
   m_EncExtParams.push_back((mfxExtBuffer*)&extendedCodingOptions);
   m_EncExtParams.push_back((mfxExtBuffer*)&extendedCodingOptions2);
