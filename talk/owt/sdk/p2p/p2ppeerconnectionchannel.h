@@ -103,12 +103,12 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
  protected:
   void CreateOffer() override;
   void CreateAnswer() override;
+  void OnNegotiationNeeded();
   // Received messages from remote client.
   void OnMessageUserAgent(Json::Value& ua);
   void OnMessageStop();
   void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
-  void OnMessageNegotiationNeeded();
   void OnMessageTrackSources(Json::Value& track_sources);
   void OnMessageStreamInfo(Json::Value& stream_info);
   void OnMessageTracksAdded(Json::Value& stream_tracks);
@@ -120,7 +120,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   virtual void OnRemoveStream(rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-  virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
       PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
