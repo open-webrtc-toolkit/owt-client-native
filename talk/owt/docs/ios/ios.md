@@ -1,4 +1,4 @@
-The Intel CS for WebRTC Client iOS SDK
+The Intel CS for WebRTC Client iOS SDK Documentation
 ==================================
 # 1 Introduction {#section1}
 The Intel CS for WebRTC Client SDK for iOS provides the tools for developing iOS native WebRTC applications using Objective-C APIs. This document describes all the APIs available in the SDK and how to use them.
@@ -31,7 +31,6 @@ Signaling channel is an implementation to transmit signaling data for creating a
 `OWTP2PClient` implements `OWTP2PSignalingChannelObserver`, and will be registered into `OWTP2PSignalingChannelProtocol`'s implementation, so you can invoke its methods to notify `OWTP2PClient` during your signaling channel implementation when a new message is coming or connection is lost.
 # 8 Known issues {#section8}
 Here is a list of known issues:
-- Subscribing streams with audio/video only option is not supported.
 - If you create multiple `OWTLocalStream`s from camera with different resolutions, previous streams will be black.
 # 9 Video codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is recommended since it has hardware support.
