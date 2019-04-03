@@ -174,9 +174,6 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   // Init the encoding params:
   MSDK_ZERO_MEMORY(m_mfxEncParams);
   m_mfxEncParams.mfx.CodecId = codec_id;
-  if (codec_id == MFX_CODEC_AVC) {
-    m_mfxEncParams.mfx.CodecLevel = MFX_PROFILE_AVC_CONSTRAINED_BASELINE;
-  }
   m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
   m_mfxEncParams.mfx.TargetKbps = codec_settings->maxBitrate;  // in-kbps
   m_mfxEncParams.mfx.MaxKbps = codec_settings->maxBitrate;
@@ -186,6 +183,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
                        &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
   m_mfxEncParams.mfx.EncodedOrder = 0;
   m_mfxEncParams.mfx.GopPicSize = 3000;
+  m_mfxEncParams.mfx.GopRefDist = 1;
   m_mfxEncParams.mfx.GopOptFlag = 0;
   m_mfxEncParams.mfx.IdrInterval = 0;
   m_mfxEncParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
@@ -204,7 +202,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   m_mfxEncParams.mfx.FrameInfo.Width = MSDK_ALIGN16(codec_settings->width);
 
   m_mfxEncParams.AsyncDepth = 1;
-  m_mfxEncParams.mfx.NumRefFrame = 1;
+  m_mfxEncParams.mfx.NumRefFrame = 2;
 
   mfxExtCodingOption extendedCodingOptions;
   MSDK_ZERO_MEMORY(extendedCodingOptions);
@@ -218,7 +216,6 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   extendedCodingOptions2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
   extendedCodingOptions2.Header.BufferSz = sizeof(extendedCodingOptions2);
   extendedCodingOptions2.RepeatPPS = MFX_CODINGOPTION_OFF;
-  extendedCodingOptions2.ExtBRC = MFX_CODINGOPTION_ON;
 
   m_EncExtParams.push_back((mfxExtBuffer*)&extendedCodingOptions);
   m_EncExtParams.push_back((mfxExtBuffer*)&extendedCodingOptions2);
