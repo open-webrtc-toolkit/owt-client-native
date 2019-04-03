@@ -200,11 +200,13 @@ void Stream::AddObserver(StreamObserver& observer) {
 }
 void Stream::RemoveObserver(StreamObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
-  observers_.erase(std::find_if(
+  auto it = std::find_if(
       observers_.begin(), observers_.end(),
       [&](std::reference_wrapper<StreamObserver> o) -> bool {
         return &observer == &(o.get());
-      }));
+      });
+  if (it != observers_.end())
+    observers_.erase(it);
 }
 void Stream::TriggerOnStreamEnded() {
   ended_ = true;
