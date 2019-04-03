@@ -49,5 +49,7 @@ Customized audio frames provider should implement {@link owt.base.AudioFrameGene
 Here is a list of known issues:
 - Conference recording from Windows SDK is not supported.
 - If you create multiple `LocalCameraStream`s with different resolutions, previous streams will be black.
+# 10 Privacy and security {#section10}
+SDK will send operation system's name and version, libwebrtc version and abilities, SDK name and version to conference server and P2P endpoints it tries to make connection. SDK does not store this information on disk.
 
 > Note: \* Other names and brands may be claimed as the property of others.</i>

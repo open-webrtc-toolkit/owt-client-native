@@ -38,4 +38,7 @@ Both VP8 and H.264 are supported. H.264 is recommended since it has hardware sup
 # 10 Video frame filter {#section10}
 Video frame filter allows app to modify captured video frames before sending to video sink or encoder.
 To enable video frame filter, please implement one or more filters and make video frames flow like this: RTCCameraVideoCapturer->filter(s)->RTCVideoSource->... An example of video frame filter can be found in conference sample.
+# 11 Privacy and security {#section11}
+SDK will send operation system's name and version, libwebrtc version and abilities, SDK name and version to conference server and P2P endpoints it tries to make connection. SDK does not store this information on disk.
+
 > Note: \* Other names and brands may be claimed as the property of others.
