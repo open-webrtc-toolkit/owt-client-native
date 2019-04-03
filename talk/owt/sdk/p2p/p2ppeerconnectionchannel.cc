@@ -188,7 +188,9 @@ void P2PPeerConnectionChannel::Publish(
   }
   RTC_LOG(LS_INFO) << "Session state: " << session_state_;
   if (on_success) {
-    publish_success_callbacks_[stream_label] = on_success;
+    // TODO: Here to directly call on_success on publication
+    // publish_success_callbacks_[stream_label] = on_success;
+    event_queue_->PostTask([on_success] { on_success(); });
   }
   if (on_failure) {
     std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
