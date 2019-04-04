@@ -1,15 +1,15 @@
-The Intel CS for WebRTC Client Windows SDK Documentation
+Open WebRTC Toolkit Client Windows SDK Documentation
 ===============================
 # 1 Introduction {#section1}
-The Intel CS for WebRTC Client SDK for Windows provides the tools for developing Windows native WebRTC
+Open WebRTC Toolkit Client SDK for Windows provides the tools for developing Windows native WebRTC
 applications using C++ APIs. This document describes all the APIs available in the SDK and how to use them.
-This SDK is interoperable with the Intel CS WebRTC Client SDK for JavaScript\*, iOS\* and Android\*.
+This SDK is interoperable with Open WebRTC Toolkit Client SDK for JavaScript\*, iOS\* and Android\*.
 Refer to the Release Notes for the latest information in the SDK release package, including features,
 bug fixes and known issues.
 # 2 Supported platforms {#section2}
-The Intel CS for WebRTC Client SDK for Windows supports Windows 7 and later versions.
+Open WebRTC Toolkit Client SDK for Windows supports Windows 7 and later versions.
 # 3 Getting started {#section3}
-Application on Intel CS for WebRTC Client SDK for Windows should be built with Microsoft Visual Studio\* 2015 or 2017. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platforms are x86 and x64.
+Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2015 or 2017. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platforms are x86 and x64.
 The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for both x86 and x64, along with their headers:
 - owt-debug.lib - this library includes all the WebRTC features for debug usages.
 - owt-release.lib - this library includes all the WebRTC features for release usages.
@@ -21,7 +21,7 @@ Socket.IO cpp client is an open source project hosted on [Github](https://github
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
 connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to SSL1.1.0h, so sioclient_tls.lib must be compiled using the same SSL version.
 # 5 NAT and firewall traversal {#section5}
-Intel CS for WebRTC Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
+Open WebRTC Toolkit Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 # 6 Customize signaling channel {#section6}
 Signaling channel is an implementation to transmit signaling data for creating a WebRTC session. Signaling channel
 for P2P sessions can be customized by implementing `P2PSignalingChannelInterface`. A default
