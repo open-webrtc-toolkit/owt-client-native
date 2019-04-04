@@ -114,7 +114,7 @@ void P2PClient::Publish(
     if (!that)
       return;
     std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id, stream));
-    on_success(publication);
+    that->event_queue_->PostTask([on_success, publication] {on_success(publication); });
   }, on_failure);
 }
 void P2PClient::Send(
