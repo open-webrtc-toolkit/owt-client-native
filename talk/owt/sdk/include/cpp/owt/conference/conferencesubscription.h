@@ -28,15 +28,15 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,
                            const std::string& stream_id);
     virtual ~ConferenceSubscription();
-    /// Pause current publication's audio or/and video basing on |track_kind| provided.
+    /// Pause current subscription's audio or/and video basing on |track_kind| provided.
     void Mute(TrackKind track_kind,
               std::function<void()> on_success,
               std::function<void(std::unique_ptr<Exception>)> on_failure);
-    /// Pause current publication's audio or/and video basing on |track_kind| provided.
+    /// Pause current subscription's audio or/and video basing on |track_kind| provided.
     void Unmute(TrackKind track_kind,
                 std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
-    /// Get conneciton stats of current publication
+    /// Get conneciton stats of current subscription
     void GetStats(
         std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
@@ -44,7 +44,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
         std::function<void(
             const std::vector<const webrtc::StatsReport*>& reports)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
-    /// Stop current publication.
+    /// Stop current subscription.
     void Stop();
     /// If the Subscription is stopped or not.
     bool Ended() { return ended_; }
