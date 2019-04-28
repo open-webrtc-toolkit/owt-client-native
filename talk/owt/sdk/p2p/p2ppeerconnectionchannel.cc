@@ -27,7 +27,6 @@ enum P2PPeerConnectionChannel::SessionState : int {
 // Signaling message type
 const string kMessageTypeKey = "type";
 const string kMessageDataKey = "data";
-const string kChatDenied = "chat-denied";
 const string kChatClosed = "chat-closed";
 const string kChatSignal = "chat-signal";
 const string kChatTrackSources = "chat-track-sources";
@@ -241,23 +240,6 @@ void P2PPeerConnectionChannel::Send(
     failure_callbacks_[id_value] = on_failure;
   }
 }
-void P2PPeerConnectionChannel::Deny(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (session_state_ != kSessionStatePending) {
-    if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Cannot deny connection in this state."));
-        on_failure(std::move(e));
-      });
-    }
-    return;
-  }
-  SendDeny(on_success, on_failure);
-  ChangeSessionState(kSessionStateReady);
-}
 void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
   RTC_LOG(LS_INFO) << "PeerConnectionChannel change session state : " << state;
   session_state_ = state;
@@ -400,8 +382,6 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     OnMessageDataReceived(id);
   } else if (message_type == kChatClosed) {
     OnMessageStop();
-  } else if (message_type == kChatDenied) {
-    OnMessageDeny();
   } else {
     RTC_LOG(LS_WARNING) << "Received unknown message type : " << message_type;
     return;
@@ -443,32 +423,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
                    nullptr);
   ChangeSessionState(kSessionStateReady);
   TriggerOnStopped();
-}
-void P2PPeerConnectionChannel::OnMessageDeny() {
-  RTC_LOG(LS_INFO) << "Remote user denied connection.";
-  {
-    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
-    for (std::unordered_map<
-             std::string,
-             std::function<void(std::unique_ptr<Exception>)>>::iterator it =
-             failure_callbacks_.begin();
-         it != failure_callbacks_.end(); it++) {
-      std::function<void(std::unique_ptr<Exception>)> failure_callback =
-          it->second;
-      event_queue_->PostTask([failure_callback] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "Deny message received."));
-        failure_callback(std::move(e));
-      });
-    }
-    failure_callbacks_.clear();
-  }
-  ChangeSessionState(kSessionStateReady);
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it = observers_.begin();
-       it != observers_.end(); ++it) {
-    (*it)->OnDenied(remote_id_);
-  }
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -1158,13 +1112,6 @@ void P2PPeerConnectionChannel::SendStop(
   RTC_LOG(LS_INFO) << "Send stop.";
   Json::Value json;
   json[kMessageTypeKey] = kChatClosed;
-  SendSignalingMessage(json, on_success, on_failure);
-}
-void P2PPeerConnectionChannel::SendDeny(
-    std::function<void()> on_success,
-    std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  Json::Value json;
-  json[kMessageTypeKey] = kChatDenied;
   SendSignalingMessage(json, on_success, on_failure);
 }
 void P2PPeerConnectionChannel::ClosePeerConnection() {

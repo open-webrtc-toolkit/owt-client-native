@@ -17,7 +17,6 @@ class P2PPeerConnectionChannelObserverObjcImpl
   P2PPeerConnectionChannelObserverObjcImpl(
       id<OWTP2PPeerConnectionChannelObserver> observer);
  protected:
-  void OnDenied(const std::string& remote_id) override;
   void OnStarted(const std::string& remote_id) override;
   void OnStopped(const std::string& remote_id) override;
   void OnData(const std::string& remote_id,

@@ -20,10 +20,6 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(
     const std::string& remote_id) {
   [_observer onStoppedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
-void P2PPeerConnectionChannelObserverObjcImpl::OnDenied(
-    const std::string& remote_id) {
-  [_observer onDeniedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
-}
 void P2PPeerConnectionChannelObserverObjcImpl::OnData(
     const std::string& remote_id,
     const std::string& message) {

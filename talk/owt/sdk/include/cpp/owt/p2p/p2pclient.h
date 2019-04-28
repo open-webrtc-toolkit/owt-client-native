@@ -45,12 +45,6 @@ class P2PClientObserver {
    */
   virtual void OnServerDisconnected(){};
   /**
-   @brief This function will be invoked when a remote user denied current user's
-   invitation.
-   @param remote_user_id Remote user’s ID
-   */
-  virtual void OnDenied(const std::string& remote_user_id){};
-  /**
    @brief This function will be invoked when a chat is stopped. (This event
    haven't been implemented yet)
    @param remote_user_id Remote user’s ID
@@ -180,8 +174,7 @@ class P2PClient final
    @brief Send a message to remote client
    @param target_id Remote user's ID.
    @param message The message to be sent.
-   @param on_success Success callback will be invoked if send deny event
-   successfully.
+   @param on_success Success callback will be invoked if message sent successfully.
    @param on_failure Failure callback will be invoked if one of the following
    cases happened.
    1. P2PClient is disconnected from the server.
@@ -224,8 +217,6 @@ class P2PClient final
   virtual void OnStarted(const std::string& remote_id);
   // Triggered when the WebRTC session is ended.
   virtual void OnStopped(const std::string& remote_id);
-  // Triggered when remote user denied the invitation.
-  virtual void OnDenied(const std::string& remote_id);
   // Triggered when remote user send data via data channel.
   // Currently, data is string.
   virtual void OnData(const std::string& remote_id,

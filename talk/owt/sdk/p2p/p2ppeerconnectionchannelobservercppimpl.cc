@@ -12,10 +12,6 @@ void P2PPeerConnectionChannelObserverCppImpl::OnStopped(
     const std::string& remote_id) {
   peer_client_.OnStopped(remote_id);
 }
-void P2PPeerConnectionChannelObserverCppImpl::OnDenied(
-    const std::string& remote_id) {
-  peer_client_.OnDenied(remote_id);
-}
 void P2PPeerConnectionChannelObserverCppImpl::OnData(
     const std::string& remote_id,
     const std::string& message) {

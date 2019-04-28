@@ -30,8 +30,6 @@ class P2PPeerConnectionChannelObserver {
   virtual void OnStarted(const std::string& remote_id) = 0;
   // Triggered when the WebRTC session is ended.
   virtual void OnStopped(const std::string& remote_id) = 0;
-  // Triggered when remote user denied the invitation.
-  virtual void OnDenied(const std::string& remote_id) = 0;
   // Triggered when remote user send data via data channel.
   // Currently, data is string.
   virtual void OnData(const std::string& remote_id,
@@ -70,9 +68,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Implementation of P2PSignalingReceiverInterface. Handle signaling message
   // received from remote side.
   void OnIncomingSignalingMessage(const std::string& message) override;
-  // Deny a remote client's invitation.
-  void Deny(std::function<void()> on_success,
-            std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Publish a local stream to remote user.
   void Publish(std::shared_ptr<LocalStream> stream,
                std::function<void()> on_success,
@@ -107,7 +102,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Received messages from remote client.
   void OnMessageUserAgent(Json::Value& ua);
   void OnMessageStop();
-  void OnMessageDeny();
   void OnMessageSignal(Json::Value& signal);
   void OnMessageTrackSources(Json::Value& track_sources);
   void OnMessageStreamInfo(Json::Value& stream_info);
@@ -149,8 +143,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void DrainPendingStreams();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void SendStop(std::function<void()> on_success,
-                std::function<void(std::unique_ptr<Exception>)> on_failure);
-  void SendDeny(std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
   void ClosePeerConnection();  // Stop session and clean up.
   // Returns true if |pointer| is not nullptr. Otherwise, return false and
