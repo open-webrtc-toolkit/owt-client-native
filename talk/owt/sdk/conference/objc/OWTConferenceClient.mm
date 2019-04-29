@@ -237,12 +237,16 @@ PlayPauseFailureCallback(FailureBlock on_failure,
       });
 }
 - (void)setDelegate:(id<OWTConferenceClientDelegate>)delegate {
+  __weak OWTConferenceClient *weakSelf = self;
   _observer = std::unique_ptr<
       owt::conference::ConferenceClientObserverObjcImpl,
       std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
       new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
-      [&self](owt::conference::ConferenceClientObserverObjcImpl* observer) {
-        self->_nativeConferenceClient->RemoveObserver(*observer);
+      [=](owt::conference::ConferenceClientObserverObjcImpl* observer) {
+        __strong OWTConferenceClient *strongSelf = weakSelf;
+        if (strongSelf != nil) {
+          strongSelf->_nativeConferenceClient->RemoveObserver(*observer);
+        }
       });
   _nativeConferenceClient->AddObserver(*_observer.get());
   _delegate = delegate;
