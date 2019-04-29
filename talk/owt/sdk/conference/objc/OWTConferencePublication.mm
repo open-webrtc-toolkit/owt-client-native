@@ -100,14 +100,22 @@
   return [NSString stringForStdString:_nativePublication->Id()];
 }
 -(void)setDelegate:(id<OWTConferencePublicationDelegate>)delegate{
-  _observer = std::unique_ptr<
-      owt::conference::ConferencePublicationObserverObjcImpl,
-      std::function<void(owt::conference::ConferencePublicationObserverObjcImpl*)>>(
-      new owt::conference::ConferencePublicationObserverObjcImpl(self, delegate),
-      [&self](owt::conference::ConferencePublicationObserverObjcImpl* observer) {
-        self->_nativePublication->RemoveObserver(*observer);
-      });
-  _nativePublication->AddObserver(*_observer.get());
+  if (delegate != nil) {
+    __weak OWTConferencePublication *weakSelf = self;
+    _observer = std::unique_ptr<
+                owt::conference::ConferencePublicationObserverObjcImpl,
+            std::function<void(owt::conference::ConferencePublicationObserverObjcImpl*)>>(
+                    new owt::conference::ConferencePublicationObserverObjcImpl(self, delegate),
+                            [=](owt::conference::ConferencePublicationObserverObjcImpl* observer) {
+                              __strong OWTConferencePublication *strongSelf = weakSelf;
+                              if (strongSelf) {
+                                strongSelf->_nativePublication->RemoveObserver(*observer);
+                              }
+                            });
+    _nativePublication->AddObserver(*_observer.get());
+  } else {
+    _observer.reset();
+  }
   _delegate = delegate;
 }
 @end
