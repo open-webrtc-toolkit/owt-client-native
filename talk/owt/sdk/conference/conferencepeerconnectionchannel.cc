@@ -909,7 +909,7 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
 void ConferencePeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                    nullptr);
 }
 bool ConferencePeerConnectionChannel::isMediaStreamEnded(
