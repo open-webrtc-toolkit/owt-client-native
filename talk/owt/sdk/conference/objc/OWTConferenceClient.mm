@@ -87,6 +87,7 @@
     return;
   }
   const std::string nativeToken = [token UTF8String];
+  __weak OWTConferenceClient *weakSelf = self;
   _nativeConferenceClient->Join(
       nativeToken,
       [=](std::shared_ptr<owt::conference::ConferenceInfo> info) {
@@ -95,7 +96,7 @@
               initWithNativeInfo:info]);
       },
       [=](std::unique_ptr<owt::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
+        [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 - (void)publish:(OWTLocalStream*)stream
