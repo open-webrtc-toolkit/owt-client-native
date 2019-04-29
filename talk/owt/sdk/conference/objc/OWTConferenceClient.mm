@@ -237,18 +237,22 @@ PlayPauseFailureCallback(FailureBlock on_failure,
       });
 }
 - (void)setDelegate:(id<OWTConferenceClientDelegate>)delegate {
-  __weak OWTConferenceClient *weakSelf = self;
-  _observer = std::unique_ptr<
-      owt::conference::ConferenceClientObserverObjcImpl,
-      std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
-      new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
-      [=](owt::conference::ConferenceClientObserverObjcImpl* observer) {
-        __strong OWTConferenceClient *strongSelf = weakSelf;
-        if (strongSelf != nil) {
-          strongSelf->_nativeConferenceClient->RemoveObserver(*observer);
-        }
-      });
-  _nativeConferenceClient->AddObserver(*_observer.get());
+  if (delegate != nil) {
+    __weak OWTConferenceClient *weakSelf = self;
+    _observer = std::unique_ptr<
+            owt::conference::ConferenceClientObserverObjcImpl,
+            std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
+                    new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
+                    [=](owt::conference::ConferenceClientObserverObjcImpl* observer) {
+                        __strong OWTConferenceClient *strongSelf = weakSelf;
+                        if (strongSelf != nil) {
+                          strongSelf->_nativeConferenceClient->RemoveObserver(*observer);
+                        }
+                    });
+    _nativeConferenceClient->AddObserver(*_observer.get());
+  } else {
+    _observer.reset();
+  }
   _delegate = delegate;
 }
 @end
