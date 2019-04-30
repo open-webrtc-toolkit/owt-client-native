@@ -87,6 +87,7 @@
     return;
   }
   const std::string nativeToken = [token UTF8String];
+  __weak OWTConferenceClient *weakSelf = self;
   _nativeConferenceClient->Join(
       nativeToken,
       [=](std::shared_ptr<owt::conference::ConferenceInfo> info) {
@@ -95,7 +96,7 @@
               initWithNativeInfo:info]);
       },
       [=](std::unique_ptr<owt::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
+        [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 - (void)publish:(OWTLocalStream*)stream
@@ -236,14 +237,22 @@ PlayPauseFailureCallback(FailureBlock on_failure,
       });
 }
 - (void)setDelegate:(id<OWTConferenceClientDelegate>)delegate {
-  _observer = std::unique_ptr<
-      owt::conference::ConferenceClientObserverObjcImpl,
-      std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
-      new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
-      [&self](owt::conference::ConferenceClientObserverObjcImpl* observer) {
-        self->_nativeConferenceClient->RemoveObserver(*observer);
-      });
-  _nativeConferenceClient->AddObserver(*_observer.get());
+  if (delegate != nil) {
+    __weak OWTConferenceClient *weakSelf = self;
+    _observer = std::unique_ptr<
+            owt::conference::ConferenceClientObserverObjcImpl,
+            std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
+                    new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
+                    [=](owt::conference::ConferenceClientObserverObjcImpl* observer) {
+                        __strong OWTConferenceClient *strongSelf = weakSelf;
+                        if (strongSelf != nil) {
+                          strongSelf->_nativeConferenceClient->RemoveObserver(*observer);
+                        }
+                    });
+    _nativeConferenceClient->AddObserver(*_observer.get());
+  } else {
+    _observer.reset();
+  }
   _delegate = delegate;
 }
 @end

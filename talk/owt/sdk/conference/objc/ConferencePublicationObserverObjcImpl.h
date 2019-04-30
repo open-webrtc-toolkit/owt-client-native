@@ -21,8 +21,8 @@ class ConferencePublicationObserverObjcImpl : public owt::base::PublicationObser
   /// Triggered when audio and/or video is unmuted.
   virtual void OnUnmute(owt::base::TrackKind track_kind) override;
  private:
-  OWTConferencePublication* publication_;
-  id<OWTConferencePublicationDelegate> delegate_;
+  __weak OWTConferencePublication* publication_;
+  __weak id<OWTConferencePublicationDelegate> delegate_;
 };
 }  // namespace conference
 }  // namespace owt

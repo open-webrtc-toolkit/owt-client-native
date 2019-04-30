@@ -31,8 +31,8 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
   void AddRemoteStreamToMap(const std::string& id, OWTRemoteStream* stream);
   void TriggerOnStreamRemoved(
       std::shared_ptr<owt::base::RemoteStream> stream);
-  OWTConferenceClient* client_;
-  id<OWTConferenceClientDelegate> delegate_;
+  __weak OWTConferenceClient* client_;
+  __weak id<OWTConferenceClientDelegate> delegate_;
   std::unordered_map<std::string, OWTRemoteStream*> remote_streams_;
   std::mutex remote_streams_mutex_;
   std::unordered_map<std::string, OWTLocalStream*> local_streams_;
