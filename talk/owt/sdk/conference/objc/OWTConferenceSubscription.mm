@@ -135,6 +135,7 @@
                                 if (strongSelf) {
                                   strongSelf->_nativeSubscription->RemoveObserver(*observer);
                                 }
+                                delete observer;
                             });
     _nativeSubscription->AddObserver(*_observer.get());
   } else {
