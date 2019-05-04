@@ -31,5 +31,9 @@ RTC_EXPORT
 - (void)streamDidEnd:(OWTRemoteStream*)stream;
 /// Triggered when a stream is updated.
 - (void)streamDidUpdate:(OWTRemoteStream*)stream;
+- (void)streamDidMute:(OWTRemoteStream*)stream
+                  trackKind:(OWTTrackKind)kind;
+- (void)streamDidUnmute:(OWTRemoteStream*)stream
+                    trackKind:(OWTTrackKind)kind;
 @end
 NS_ASSUME_NONNULL_END
