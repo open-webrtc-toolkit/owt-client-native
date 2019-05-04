@@ -13,6 +13,7 @@ class RemoteMixedStreamObserverObjcImpl : public RemoteMixedStreamObserver {
                                     id<OWTRemoteMixedStreamDelegate> delegate);
  protected:
   virtual void OnVideoLayoutChanged() override;
+  virtual void OnActiveInputChanged(std::string str) override;
  private:
   OWTRemoteMixedStream* stream_;
   id<OWTRemoteMixedStreamDelegate> delegate_;
