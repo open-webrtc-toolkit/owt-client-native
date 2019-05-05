@@ -300,8 +300,8 @@ void ConferenceClient::Join(
                                   "Failed to parse current user's info"));
                 on_failure(std::move(e));
               });
+              break;
             }
-            break;
           }
           for (auto it = users.begin(); it != users.end(); ++it) {
             TriggerOnUserJoined(*it, true);
