@@ -33,9 +33,9 @@ void RemoteMixedStream::OnVideoLayoutChanged() {
     (*its).get().OnVideoLayoutChanged();
   }
 }
-void RemoteMixedStream::OnActiveInputChanged(std::string str) {
+void RemoteMixedStream::OnActiveInputChanged(const std::string streamid) {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    (*its).get().OnActiveInputChanged(str);
+    (*its).get().OnActiveInputChanged(streamid);
   }
 }
 }
