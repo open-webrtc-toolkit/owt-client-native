@@ -10,6 +10,9 @@ RTC_EXPORT
   @brief Triggers when video layout is changed.
 */
 - (void)streamDidChangeVideoLayout:(OWTRemoteMixedStream*)stream;
+/**
+  @brief Triggers when active speaker is changed.
+*/
 - (void)streamDidChangeActiveInput:(NSString*)activeAudioInputStreamId;
 @end
 /// This class represent a mixed remote stream.
