@@ -18,13 +18,9 @@ class P2PPeerConnectionChannelObserverCppImpl
  public:
   explicit P2PPeerConnectionChannelObserverCppImpl(P2PClient& peer_client)
       : peer_client_(peer_client) {}
-  // Triggered when the WebRTC session is started.
-  virtual void OnStarted(const std::string& remote_id);
-  // Triggered when the WebRTC session is ended.
-  virtual void OnStopped(const std::string& remote_id);
   // Triggered when remote user send data via data channel.
   // Currently, data is string type.
-  virtual void OnData(const std::string& remote_id, const std::string& message);
+  virtual void OnMessageReceived(const std::string& remote_id, const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(std::shared_ptr<RemoteStream> stream);
  private:

@@ -422,7 +422,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                    nullptr);
   ChangeSessionState(kSessionStateReady);
-  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -643,13 +642,6 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
   switch (new_state) {
     case webrtc::PeerConnectionInterface::kIceConnectionConnected:
     case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
-      if (session_state_ == kSessionStateConnecting) {
-        for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-                 observers_.begin();
-             it != observers_.end(); it++) {
-          (*it)->OnStarted(remote_id_);
-        }
-      }
       ChangeSessionState(kSessionStateConnected);
       CheckWaitedList();
       // reset |last_disconnect_|.
@@ -671,7 +663,6 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-      TriggerOnStopped();
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -835,13 +826,6 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
   }
   return false;
 }
-void P2PPeerConnectionChannel::TriggerOnStopped() {
-  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-           observers_.begin();
-       it != observers_.end(); it++) {
-    (*it)->OnStopped(remote_id_);
-  }
-}
 void P2PPeerConnectionChannel::CleanLastPeerConnection() {
   if (set_remote_sdp_task_) {
     delete set_remote_sdp_task_;
@@ -919,7 +903,6 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
-      TriggerOnStopped();
       break;
     default:
       if (on_failure != nullptr) {
@@ -1172,7 +1155,7 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
-    (*it)->OnData(remote_id_, message);
+    (*it)->OnMessageReceived(remote_id_, message);
   }
 }
 void P2PPeerConnectionChannel::CreateDataChannel(const std::string& label) {

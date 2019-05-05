@@ -26,14 +26,10 @@ using namespace owt::base;
 // Usually, PeerClient should implement these methods and notify application.
 class P2PPeerConnectionChannelObserver {
  public:
-  // Triggered when the WebRTC session is started.
-  virtual void OnStarted(const std::string& remote_id) = 0;
-  // Triggered when the WebRTC session is ended.
-  virtual void OnStopped(const std::string& remote_id) = 0;
   // Triggered when remote user send data via data channel.
   // Currently, data is string.
-  virtual void OnData(const std::string& remote_id,
-                      const std::string& message) = 0;
+  virtual void OnMessageReceived(const std::string& remote_id,
+                                 const std::string& message) = 0;
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteStream> stream) = 0;
@@ -154,7 +150,6 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CreateDataChannel(const std::string& label);
   // Send all messages in pending message list.
   void DrainPendingMessages();
-  void TriggerOnStopped();
   // Cleans all variables associated with last peerconnection.
   void CleanLastPeerConnection();
   // Returns user agent info as JSON object.
