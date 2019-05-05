@@ -696,11 +696,11 @@ void ConferenceSocketSignalingChannel::OnReconnectionTicket(
     std::weak_ptr<ConferenceSocketSignalingChannel> weak_this =
         shared_from_this();
     std::thread([weak_this, delay]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
       auto that = weak_this.lock();
       if (!that) {
         return;
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
       that->RefreshReconnectionTicket();
     }).detach();
   }

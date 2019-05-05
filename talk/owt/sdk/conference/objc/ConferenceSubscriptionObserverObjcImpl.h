@@ -15,6 +15,7 @@ class ConferenceSubscriptionObserverObjcImpl
       OWTConferenceSubscription* subscription,
       id<OWTConferenceSubscriptionDelegate> delegate)
       : subscription_(subscription), delegate_(delegate) {}
+  virtual ~ConferenceSubscriptionObserverObjcImpl(){}
  protected:
   /// Triggered when publication is ended.
   virtual void OnEnded() override;

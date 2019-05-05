@@ -13,6 +13,7 @@ class ConferencePublicationObserverObjcImpl : public owt::base::PublicationObser
   ConferencePublicationObserverObjcImpl(OWTConferencePublication* publication,
                                 id<OWTConferencePublicationDelegate> delegate)
       : publication_(publication), delegate_(delegate) {}
+  virtual ~ConferencePublicationObserverObjcImpl(){}
  protected:
   /// Triggered when publication is ended.
   virtual void OnEnded() override;

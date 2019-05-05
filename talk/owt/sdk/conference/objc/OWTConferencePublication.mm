@@ -111,6 +111,7 @@
                               if (strongSelf) {
                                 strongSelf->_nativePublication->RemoveObserver(*observer);
                               }
+                              delete observer;
                             });
     _nativePublication->AddObserver(*_observer.get());
   } else {

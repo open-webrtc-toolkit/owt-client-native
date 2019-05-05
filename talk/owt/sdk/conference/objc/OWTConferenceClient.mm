@@ -248,6 +248,7 @@ PlayPauseFailureCallback(FailureBlock on_failure,
                         if (strongSelf != nil) {
                           strongSelf->_nativeConferenceClient->RemoveObserver(*observer);
                         }
+                        delete observer;
                     });
     _nativeConferenceClient->AddObserver(*_observer.get());
   } else {
