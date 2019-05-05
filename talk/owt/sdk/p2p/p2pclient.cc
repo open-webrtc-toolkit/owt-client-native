@@ -346,10 +346,6 @@ void P2PClient::OnStopped(const std::string& remote_id) {
   EventTrigger::OnEvent1(observers_, event_queue_,
                          &P2PClientObserver::OnChatStopped, remote_id);
 }
-void P2PClient::OnDenied(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, event_queue_,
-                         &P2PClientObserver::OnDenied, remote_id);
-}
 void P2PClient::OnData(const std::string& remote_id,
                         const std::string& message) {
   EventTrigger::OnEvent2(observers_, event_queue_,

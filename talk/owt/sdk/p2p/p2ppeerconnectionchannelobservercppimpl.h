@@ -22,8 +22,6 @@ class P2PPeerConnectionChannelObserverCppImpl
   virtual void OnStarted(const std::string& remote_id);
   // Triggered when the WebRTC session is ended.
   virtual void OnStopped(const std::string& remote_id);
-  // Triggered when remote user denied the invitation.
-  virtual void OnDenied(const std::string& remote_id);
   // Triggered when remote user send data via data channel.
   // Currently, data is string type.
   virtual void OnData(const std::string& remote_id, const std::string& message);
