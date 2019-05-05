@@ -10,12 +10,14 @@ namespace base {
 /// Observer that receives events from subscription.
 class SubscriptionObserver {
   public:
-    // Triggered when subscription is ended.
+    /// Triggered when subscription is ended.
     virtual void OnEnded() = 0;
-    // Triggered when audio and/or video is muted.
+    /// Triggered when audio and/or video is muted.
     virtual void OnMute(TrackKind track_kind) = 0;
-    // Triggered when audio and/or video is unmuted.
+    /// Triggered when audio and/or video is unmuted.
     virtual void OnUnmute(TrackKind track_kind) = 0;
+    /// Triggered when error happens with subscription.
+    virtual void OnError(std::unique_ptr<owt::base::Exception> error) = 0;
 };
 } // namespace base
 } // namespace owt

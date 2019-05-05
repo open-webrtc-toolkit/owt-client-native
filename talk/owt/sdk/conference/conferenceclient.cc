@@ -1417,21 +1417,13 @@ void ConferenceClient::TriggerOnStreamRemoved(sio::message::ptr stream_info) {
 void ConferenceClient::TriggerOnStreamError(
     std::shared_ptr<Stream> stream,
     std::shared_ptr<const Exception> exception) {
-// TODO: in 4.0 API this event is not supported.
-#if 0
-  for (auto observers_it = observers_.begin(); observers_it != observers_.end();
-       ++observers_it) {
-    auto& o = (*observers_it).get();
-    auto type = exception->Type();
-    auto message = exception->Message();
-    event_queue_->PostTask([&o, stream, type, message] {
-      std::unique_ptr<Exception> e(
-          new Exception(type, message));
-      o.OnStreamError(stream, std::move(e));
-    });
+  const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+  for (auto its = stream_update_observers_.begin();
+       its != stream_update_observers_.end(); ++its) {
+    (*its).get().OnStreamError(exception->Message());
   }
-#endif
 }
+
 void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   if (!(stream_info && stream_info->get_flag() == sio::message::flag_object &&
         stream_info->get_map()["id"] && stream_info->get_map()["event"] &&

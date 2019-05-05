@@ -7,7 +7,7 @@
 namespace owt {
 namespace conference {
 /** @cond */
-/// Observer provided to publication/subscription to report mute/unmute event.
+/// Observer provided to publication/subscription to report mute/unmute/error/removed event.
 class ConferenceStreamUpdateObserver {
 public:
   /**
@@ -16,6 +16,7 @@ public:
   virtual void OnStreamMuteOrUnmute(const std::string& stream_id,
     owt::base::TrackKind track_kind, bool muted) {};
   virtual void OnStreamRemoved(const std::string& stream_id) {};
+  virtual void OnStreamError(const std::string& error_msg){};
 };
 /** @endcond */
 }

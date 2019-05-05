@@ -18,6 +18,9 @@ RTC_EXPORT
 /// Publication is unmuted. Client continued sending audio and/or video data to remote endpoint.
 - (void)publicationDidUnmute:(OWTConferencePublication*)publication
                     trackKind:(OWTTrackKind)kind;
+/// Publication encountered ICE failure or sever reported failure and cannot be used any more.
+- (void)publicationDidError:(OWTConferencePublication*)publication
+                    errorInfo:(NSError*)error;
 @end
 /**
   @brief Publication represents a sender for publishing a stream.
