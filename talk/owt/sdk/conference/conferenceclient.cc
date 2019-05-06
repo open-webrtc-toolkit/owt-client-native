@@ -282,27 +282,9 @@ void ConferenceClient::Join(
           RTC_LOG(LS_WARNING) << "Room info doesn't contain valid users.";
         } else {
           auto users = room_info->get_map()["participants"]->get_vector();
-          // Get current user's ID and trigger |on_success|. Make sure
-          // |on_success| is triggered before any other events because
+          // Make sure |on_success| is triggered before any other events because
           // OnUserJoined and OnStreamAdded should be triggered after join a
           // conference.
-          for (auto user_it = users.begin(); user_it != users.end();
-               user_it++) {
-            Participant* user_raw;
-            if (ParseUser(*user_it, &user_raw)) {
-              std::shared_ptr<Participant> user(user_raw);
-              const std::lock_guard<std::mutex> lock(conference_info_mutex_);
-              current_conference_info_->participants_.push_back(user);
-            } else if (on_failure) {
-              event_queue_->PostTask([on_failure]() {
-                std::unique_ptr<Exception> e(
-                    new Exception(ExceptionType::kConferenceUnknown,
-                                  "Failed to parse current user's info"));
-                on_failure(std::move(e));
-              });
-              break;
-            }
-          }
           for (auto it = users.begin(); it != users.end(); ++it) {
             TriggerOnUserJoined(*it, true);
           }
