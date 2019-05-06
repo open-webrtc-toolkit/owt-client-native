@@ -14,12 +14,15 @@ RTC_EXPORT
 @optional
 /// Subscription is ended.
 - (void)subscriptionDidEnd:(OWTConferenceSubscription*)subscription;
-/// Publication is muted. Remote side stopped sending audio and/or video data.
+/// Subscription is muted. Remote side stopped sending audio and/or video data.
 - (void)subscriptionDidMute:(OWTConferenceSubscription*)subscription
                   trackKind:(OWTTrackKind)kind;
-/// Publication is unmuted. Remote side continued sending audio and/or video data.
+/// Subscription is unmuted. Remote side continued sending audio and/or video data.
 - (void)subscriptionDidUnmute:(OWTConferenceSubscription*)subscription
                     trackKind:(OWTTrackKind)kind;
+/// Subscription encountered an ICE failure or server failure, and cannot be used anymore.
+- (void)subscriptionDidError:(OWTConferenceSubscription*)subscription
+                    errorInfo:(NSError*)error;
 @end
 RTC_EXPORT
 @interface OWTConferenceSubscription : NSObject

@@ -55,13 +55,14 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     void RemoveObserver(PublicationObserver& observer) override;
   private:
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted) override;
-     std::string id_;
-     std::string stream_id_;
-     bool ended_;
-     mutable std::mutex observer_mutex_;
-     std::vector<std::reference_wrapper<PublicationObserver>> observers_;
-     std::weak_ptr<ConferenceClient> conference_client_;   // Weak ref to associated conference client
-     std::shared_ptr<rtc::TaskQueue> event_queue_;
+    void OnStreamError(const std::string& error_msg) override;
+    std::string id_;
+    std::string stream_id_;
+    bool ended_;
+    mutable std::mutex observer_mutex_;
+    std::vector<std::reference_wrapper<PublicationObserver>> observers_;
+    std::weak_ptr<ConferenceClient> conference_client_;   // Weak ref to associated conference client
+    std::shared_ptr<rtc::TaskQueue> event_queue_;
 };
 } // namespace conference
 } // namespace owt

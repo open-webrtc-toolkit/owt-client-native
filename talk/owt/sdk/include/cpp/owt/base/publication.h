@@ -17,6 +17,8 @@ class PublicationObserver {
   virtual void OnMute(TrackKind track_kind) = 0;
   /// Triggered when audio and/or video is unmuted.
   virtual void OnUnmute(TrackKind track_kind) = 0;
+  /// Triggered when an error occured on the publication.
+  virtual void OnError(std::unique_ptr<Exception> failure) = 0;
 };
 class Publication {
  public:

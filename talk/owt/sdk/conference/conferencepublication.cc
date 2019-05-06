@@ -68,7 +68,6 @@ void ConferencePublication::Unmute(
       that->Unmute(id_, track_kind, on_success, on_failure);
    }
 }
-
 void ConferencePublication::GetStats(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -132,6 +131,15 @@ void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
     }
   }
 }
+
+void ConferencePublication::OnStreamError(const std::string& error_msg) {
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    std::unique_ptr<Exception> e(new Exception(
+        ExceptionType::kConferenceUnknown, error_msg));
+    (*its).get().OnError(std::move(e));
+  }
+}
+
 void ConferencePublication::AddObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<PublicationObserver>>::iterator it =

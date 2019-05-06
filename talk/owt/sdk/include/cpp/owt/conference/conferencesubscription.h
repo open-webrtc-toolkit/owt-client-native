@@ -62,6 +62,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
   private:
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
     void OnStreamRemoved(const std::string& stream_id);
+    void OnStreamError(const std::string& error_msg);
     std::string id_;
     std::string stream_id_;
     bool ended_;
