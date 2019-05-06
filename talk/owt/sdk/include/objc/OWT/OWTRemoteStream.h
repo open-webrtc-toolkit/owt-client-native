@@ -31,8 +31,10 @@ RTC_EXPORT
 - (void)streamDidEnd:(OWTRemoteStream*)stream;
 /// Triggered when a stream is updated.
 - (void)streamDidUpdate:(OWTRemoteStream*)stream;
+/// Triggered when stream is muted.
 - (void)streamDidMute:(OWTRemoteStream*)stream
                   trackKind:(OWTTrackKind)kind;
+/// Triggered when stream is unmuted.
 - (void)streamDidUnmute:(OWTRemoteStream*)stream
                     trackKind:(OWTTrackKind)kind;
 @end

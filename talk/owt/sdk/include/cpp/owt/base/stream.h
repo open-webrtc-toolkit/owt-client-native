@@ -43,7 +43,9 @@ class StreamObserver {
   virtual void OnEnded() {};
   /// Triggered when the stream info is updated in conference mode.
   virtual void OnUpdated() {};
+  /// Triggered when the stream is muted
   virtual void OnMute(TrackKind track_kind) {};
+  /// Triggered when the stream is unmuted
   virtual void OnUnmute(TrackKind track_kind) {};
 };
 class WebrtcVideoRendererImpl;
