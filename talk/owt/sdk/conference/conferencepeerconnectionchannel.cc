@@ -872,6 +872,10 @@ void ConferencePeerConnectionChannel::OnStreamError(
   std::shared_ptr<const Exception> e(
       new Exception(ExceptionType::kConferenceUnknown, error_message));
   std::shared_ptr<Stream> error_stream;
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    RTC_LOG(LS_INFO) << "On stream error.";
+    (*its).get().OnStreamError(error_stream, e);
+  }
   if (published_stream_) {
     Unpublish(GetSessionId(), nullptr, nullptr);
     error_stream = published_stream_;
@@ -883,10 +887,6 @@ void ConferencePeerConnectionChannel::OnStreamError(
   if (error_stream == nullptr) {
     RTC_DCHECK(false);
     return;
-  }
-  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-    RTC_LOG(LS_INFO) << "On stream error.";
-    (*its).get().OnStreamError(error_stream, e);
   }
 }
 std::function<void()> ConferencePeerConnectionChannel::RunInEventQueue(
