@@ -14,6 +14,8 @@ class RemoteStreamObserverObjcImpl : public StreamObserver {
  protected:
   virtual void OnEnded() override;
   virtual void OnUpdated() override;
+  virtual void OnMute(owt::base::TrackKind track_kind) override;
+  virtual void OnUnmute(owt::base::TrackKind track_kind) override;
  private:
   OWTRemoteStream* stream_;
   id<OWTRemoteStreamDelegate> delegate_;

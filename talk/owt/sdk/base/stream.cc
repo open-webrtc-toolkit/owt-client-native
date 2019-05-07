@@ -219,6 +219,18 @@ void Stream::TriggerOnStreamUpdated() {
     (*its).get().OnUpdated();
   }
 }
+void Stream::TriggerOnStreamMute(TrackKind track_kind) {
+  ended_ = true;
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnMute(track_kind);
+  }
+}
+void Stream::TriggerOnStreamUnmute(TrackKind track_kind) {
+  ended_ = true;
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnUnmute(track_kind);
+  }
+}
 #if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
 LocalStream::LocalStream(MediaStreamInterface* media_stream,

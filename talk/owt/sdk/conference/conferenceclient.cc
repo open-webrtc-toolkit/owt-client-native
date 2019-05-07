@@ -140,6 +140,20 @@ void ConferenceInfo::TriggerOnStreamUpdated(const std::string& stream_id) {
     }
   }
 }
+void ConferenceInfo::TriggerOnStreamMuteOrUnmute(const std::string& stream_id, 
+          owt::base::TrackKind track_kind, bool muted) {
+  for (auto& it : remote_streams_) {
+    if (it->Id() == stream_id) {
+      if (muted) {
+        it->TriggerOnStreamMute(track_kind);
+      }
+      else {
+        it->TriggerOnStreamUnmute(track_kind);
+      }      
+      break;
+    }
+  }
+}
 enum ConferenceClient::StreamType : int {
   kStreamTypeCamera = 1,
   kStreamTypeScreen,
@@ -1476,6 +1490,7 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
          its != stream_update_observers_.end(); ++its) {
       (*its).get().OnStreamMuteOrUnmute(id, track_kind, muted);
     }
+    current_conference_info_->TriggerOnStreamMuteOrUnmute(id, track_kind, muted);
   } else if (event_field == ".") {
     // The value field contains an update to stream info
     auto value = event->get_map()["value"];

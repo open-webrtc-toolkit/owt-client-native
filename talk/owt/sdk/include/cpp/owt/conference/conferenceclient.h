@@ -129,6 +129,8 @@ class ConferenceInfo {
     void TriggerOnStreamEnded(const std::string& stream_id);
     // Trigger stream updated event.
     void TriggerOnStreamUpdated(const std::string& stream_id);
+    // Trigger stream mute/unmute events
+    void TriggerOnStreamMuteOrUnmute(const std::string& stream_id, owt::base::TrackKind track_kind, bool muted); 
   private:
     bool ParticipantPresent(const std::string& participant_id);
     bool RemoteStreamPresent(const std::string& stream_id);
