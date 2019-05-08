@@ -17,10 +17,8 @@ class P2PPeerConnectionChannelObserverObjcImpl
   P2PPeerConnectionChannelObserverObjcImpl(
       id<OWTP2PPeerConnectionChannelObserver> observer);
  protected:
-  void OnStarted(const std::string& remote_id) override;
-  void OnStopped(const std::string& remote_id) override;
-  void OnData(const std::string& remote_id,
-              const std::string& message) override;
+  void OnMessageReceived(const std::string& remote_id,
+                         const std::string& message) override;
   void OnStreamAdded(
       std::shared_ptr<owt::base::RemoteStream> stream) override;
   // Jianjun TODO: Remove OnStreamRemoved event

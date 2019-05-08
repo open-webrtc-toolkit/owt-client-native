@@ -21,8 +21,8 @@ class P2PSignalingChannelObserver {
    @param message Message received from signaling server.
    @param sender Sender's ID.
    */
-  virtual void OnMessage(const std::string& message,
-                         const std::string& sender) = 0;
+  virtual void OnSignalingMessage(const std::string& message,
+                                  const std::string& sender) = 0;
   /**
    @brief This function will be triggered when disconnected from signaling server.
    */

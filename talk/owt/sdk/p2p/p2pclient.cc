@@ -179,8 +179,8 @@ void P2PClient::GetConnectionStats(
 void P2PClient::SetLocalId(const std::string& local_id) {
   local_id_ = local_id;
 }
-void P2PClient::OnMessage(const std::string& message,
-                          const std::string& remote_id) {
+void P2PClient::OnSignalingMessage(const std::string& message,
+                                   const std::string& remote_id) {
   // First to check whether remote_id is in the allowed_remote_ids_ list.
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
       allowed_remote_ids_.end()) {
@@ -338,19 +338,11 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
       PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
-void P2PClient::OnStarted(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, event_queue_,
-                         &P2PClientObserver::OnChatStarted, remote_id);
-}
-void P2PClient::OnStopped(const std::string& remote_id) {
-  EventTrigger::OnEvent1(observers_, event_queue_,
-                         &P2PClientObserver::OnChatStopped, remote_id);
-}
-void P2PClient::OnData(const std::string& remote_id,
-                        const std::string& message) {
+void P2PClient::OnMessageReceived(const std::string& remote_id,
+                                  const std::string& message) {
   EventTrigger::OnEvent2(observers_, event_queue_,
-                         &P2PClientObserver::OnDataReceived, remote_id,
-                         message);
+                         &P2PClientObserver::OnMessageReceived,
+                         remote_id, message);
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
