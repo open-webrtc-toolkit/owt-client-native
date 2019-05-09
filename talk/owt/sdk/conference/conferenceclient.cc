@@ -1454,6 +1454,12 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
         std::static_pointer_cast<RemoteMixedStream>(stream);
     stream_ptr->OnVideoLayoutChanged();
     return;
+  } else if (type == kStreamTypeMix && event_field == "activeInput") {
+    auto value = event->get_map()["value"];
+    std::string activeAudioInputStreamId = value->get_string();
+    std::shared_ptr<RemoteMixedStream> stream_ptr = std::static_pointer_cast<RemoteMixedStream>(stream);
+    stream_ptr->OnActiveInputChanged(activeAudioInputStreamId);
+    return;
   } else if (event_field == "audio.status" || event_field == "video.status") {
     auto value = event->get_map()["value"];
     if (value == nullptr || value->get_flag() != sio::message::flag_string) {

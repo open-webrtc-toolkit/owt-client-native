@@ -13,5 +13,11 @@ void RemoteMixedStreamObserverObjcImpl::OnVideoLayoutChanged() {
     [delegate_ streamDidChangeVideoLayout:stream_];
   }
 }
+void RemoteMixedStreamObserverObjcImpl::OnActiveInputChanged(const std::string& stream_id) {
+  NSString* convertedString = [NSString stringWithUTF8String:stream_id.c_str()];
+  if ([delegate_ respondsToSelector:@selector(streamDidChangeActiveInput:)]) {
+    [delegate_ streamDidChangeActiveInput:convertedString];
+  }
+}
 }
 }
