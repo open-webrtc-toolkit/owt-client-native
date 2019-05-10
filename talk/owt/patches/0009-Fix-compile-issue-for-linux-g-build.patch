@@ -1,0 +1,35 @@
+From a8754c1667c3e88bd83f252d7bde0c884330aa58 Mon Sep 17 00:00:00 2001
+From: JinChengShi <jinchengx.shi@intel.com>
+Date: Thu, 9 May 2019 16:39:11 +0800
+Subject: [PATCH] Fix compile issue for linux g++ build
+
+---
+ config/compiler/BUILD.gn | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 66c990c37..19d591a0c 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1588,6 +1588,18 @@ config("chromium_code") {
+     ]
+   }
+ 
++  if (is_linux && !is_clang) {
++    cflags += [
++      # Ignore warnings about gcc optimization pragmas, see
++      # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
++      "-Wno-implicit-fallthrough",
++      "-Wno-sequence-point",
++      "-Wno-int-in-bool-context",
++      "-Wno-unused-result",
++      "-Wno-unused-but-set-variable",
++    ]
++  }
++
+   configs = [ ":default_warnings" ]
+ }
+ 
+-- 
+2.17.1
+
