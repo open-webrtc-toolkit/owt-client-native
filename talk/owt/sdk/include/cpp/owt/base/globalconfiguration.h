@@ -79,8 +79,11 @@ class GlobalConfiguration {
   static void SetCustomizedAudioInputEnabled(
       bool enabled,
       std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator) {
-    if (enabled)
-      audio_frame_generator_ = std::move(audio_frame_generator);
+      if (enabled) {
+          audio_frame_generator_ = std::move(audio_frame_generator);
+      } else {
+          audio_frame_generator_.reset(nullptr);
+      }
   }
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**

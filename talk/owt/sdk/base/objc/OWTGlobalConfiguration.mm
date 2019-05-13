@@ -11,6 +11,7 @@
   if (!enabled || audioFrameGenerator == nil) {
     owt::base::GlobalConfiguration::SetCustomizedAudioInputEnabled(false,
                                                                        nullptr);
+    return;
   }
   std::unique_ptr<owt::base::AudioFrameGeneratorInterface> generator(
       new owt::base::AudioFrameGeneratorObjcImpl(audioFrameGenerator));

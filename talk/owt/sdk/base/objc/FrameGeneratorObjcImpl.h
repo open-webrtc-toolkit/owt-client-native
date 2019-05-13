@@ -18,7 +18,7 @@ class AudioFrameGeneratorObjcImpl : public AudioFrameGeneratorInterface {
   virtual int GetSampleRate() override;
   virtual int GetChannelNumber() override;
  private:
-  id<RTCAudioFrameGeneratorProtocol> objc_generator_;
+  __weak id<RTCAudioFrameGeneratorProtocol> objc_generator_;
 };
 /// This class cast objc video frame generator to C++ one. Only I420 raw frame
 /// is supported.
