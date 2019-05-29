@@ -160,6 +160,7 @@
                 subscription) {
           OWTConferenceSubscription* sub = [[OWTConferenceSubscription alloc]
               initWithNativeSubscription:subscription];
+          [stream setNativeStream:nativeStream];
           if (onSuccess != nil) {
             onSuccess(sub);
           }
@@ -174,6 +175,7 @@
                 subscription) {
           OWTConferenceSubscription* sub = [[OWTConferenceSubscription alloc]
               initWithNativeSubscription:subscription];
+          [stream setNativeStream:nativeStream];
           if (onSuccess != nil) {
             onSuccess(sub);
           }

@@ -66,6 +66,12 @@
 }
 - (void)setNativeStream:(std::shared_ptr<owt::base::Stream>)stream {
   _nativeStream = stream;
+  if (_nativeStream->MediaStream() &&
+      _nativeStream->MediaStream() != _mediaStream.nativeMediaStream) {
+    _mediaStream = [[RTCMediaStream alloc]
+          initWithFactory:[RTCPeerConnectionFactory sharedInstance]
+        nativeMediaStream:stream->MediaStream()];
+  }
 }
 - (std::shared_ptr<owt::base::Stream>)nativeStream {
   return _nativeStream;
