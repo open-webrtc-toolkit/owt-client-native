@@ -13,5 +13,6 @@ public interface FilterCallback{
     * @param texture2d, indicates that the texture is GLES20.GL_TEXTURE_2D (true) or
     *        GL_TEXTURE_EXTERNAL_OES (false).
     */
+    1234
     void onComplete(int textureId, boolean isTexture2d);
 }

@@ -42,6 +42,7 @@ void Participant::AddObserver(ParticipantObserver& observer) {
   observers_.push_back(observer);
 }
 void Participant::RemoveObserver(ParticipantObserver& observer) {
+  1234
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   observers_.erase(
       std::find_if(observers_.begin(), observers_.end(),
