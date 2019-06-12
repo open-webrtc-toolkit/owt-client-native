@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script{
                     sh "gclient sync"
-                    sh "python ${env.androidBuildNativePath}"
+                    sh "python ${env.androidBuildNativeScriptPath} --log-dir ${env.androidCILogPath} --log-name ${env.androidNativeLogName} --source-path ${env.owtClientNativePath} --commit-id ${GIT_COMMIT}"
                     if ("${GIT_BRANCH}" == 'master') { 
                         sh "cp -r ${env.andoridWebrtcLibSrcPath}/* ${env.andoridLibWebrtcPath}"
                     }
@@ -36,6 +36,13 @@ pipeline {
     post {
         always {
             echo "One way or another, I have finished"
+            script {
+                sh "docker rmi ${env.CHECKS_IMAGE} -f"
+                docker.image("${env.CHECKS_IMAGE}").withRun("-it --network host", "--mode android-native --commit-id ${GIT_COMMIT} --owner open-webrtc-toolkit --repo owt-client-native --log-name ${env.androidNativeLogName}") {c ->
+                   sh "docker wait ${c.id}"
+                   sh "docker logs ${c.id}"
+                }
+            }
         }
         success {
             setBuildStatus("${env.nativeUrl}", "Build succeeded", "SUCCESS");
