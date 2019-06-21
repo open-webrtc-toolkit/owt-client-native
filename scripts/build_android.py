@@ -18,7 +18,7 @@ def get_location(arch, debug):
     return os.path.join(OUTPUT_PATH, ('debug' if debug else 'release') + arch)
 
 def gn_gen(arch, debug):
-    print '\n> generating args for', arch, ('debug' if debug else 'release')
+    print('\n> generating args for', arch, ('debug' if debug else 'release'))
     output_location = get_location(arch, debug)
     gn_args = '--args=target_os=\"android\" is_component_build=false rtc_include_tests=false '\
               'target_cpu=\"' + arch +\
@@ -29,19 +29,19 @@ def gn_gen(arch, debug):
         sys.exit(1)
 
 def ninja_build(arch, debug):
-    print '\n> building libjingle_peerconnection_so for', arch, ('debug' if debug else 'release')
+    print('\n> building libjingle_peerconnection_so for', arch, ('debug' if debug else 'release'))
     output_location = get_location(arch, debug)
     cmd = ['ninja', '-C', output_location, 'libjingle_peerconnection_so']
     if subprocess.call(cmd) :
         sys.exit(1)
 
-    print '\n> building libwebrtc for', arch, ('debug' if debug else 'release')
+    print('\n> building libwebrtc for', arch, ('debug' if debug else 'release'))
     cmd = ['ninja', '-C', output_location, 'libwebrtc']
     if subprocess.call(cmd) :
         sys.exit(1)
 
 def dist(arch, debug):
-    print '\n> copying libs to distribution location'
+    print('\n> copying libs to distribution location')
     output_location = get_location(arch, debug)
     jar_location = os.path.join(output_location, 'lib.java/third_party/webrtc/sdk/android/libwebrtc.jar')
     so_location = os.path.join(output_location, 'lib.unstripped/libjingle_peerconnection_so.so') if debug\
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         help = 'Distribution package location, /out by default.')
     options = parser.parse_args()
 
-    print '\n> args:', options
+    print('\n> args:', options)
     OUTPUT_PATH = options.output_path
     dist_path = os.path.join(OUTPUT_PATH, 'dist', ('debug' if options.debug else 'release'))
 
@@ -99,5 +99,5 @@ if __name__ == '__main__':
         ninja_build(arch, options.debug)
         dist(arch, options.debug)
 
-    print '\n> Done building. Find me here:', OUTPUT_PATH + '/dist'\
-          + ('/debug' if options.debug else '/release')
+    print('\n> Done building. Find me here:', OUTPUT_PATH + '/dist'\
+          + ('/debug' if options.debug else '/release'))
