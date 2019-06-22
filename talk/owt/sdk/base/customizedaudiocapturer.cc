@@ -18,6 +18,7 @@ CustomizedAudioCapturer::CustomizedAudioCapturer(
       recording_channel_number_(0),
       recording_(false),
       last_call_record_millis_(0),
+      last_thread_rec_end_time_(0),
       clock_(Clock::GetRealTimeClock()),
       need_sleep_ms_(0),
       real_sleep_ms_(0) {}
@@ -258,7 +259,11 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
     return false;
   }
   uint64_t current_time = clock_->CurrentNtpInMilliseconds();
+  uint64_t loop_cost_ms = 0;
   crit_sect_.Enter();
+  if (last_thread_rec_end_time_ > 0) {
+      loop_cost_ms = current_time - last_thread_rec_end_time_;
+  }
   if (last_call_record_millis_ == 0 ||
       (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
     if (frame_generator_->GenerateFramesForNext10Ms(
@@ -269,6 +274,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
       //RTC_DCHECK(false);
       SleepMs(1);
       RTC_LOG(LS_ERROR) << "Get audio frames failed.";
+      last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
       return true;
     }
     // Sample rate and channel number cannot be changed on the fly.
@@ -281,7 +287,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   }
   crit_sect_.Leave();
   int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
-  need_sleep_ms_ = 10 - cost_ms + need_sleep_ms_ - real_sleep_ms_;
+  need_sleep_ms_ = 10 - cost_ms + need_sleep_ms_ - real_sleep_ms_ - loop_cost_ms;
   if (need_sleep_ms_ > 0) {
     current_time = clock_->CurrentNtpInMilliseconds();
     SleepMs(need_sleep_ms_);
@@ -291,6 +297,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
                        "leads to large latency";
     real_sleep_ms_ = 0;
   }
+  last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
   return true;
 };
 }
