@@ -261,7 +261,7 @@ void ConferencePeerConnectionChannel::OnIceCandidatesRemoved(
   message->get_map()["id"] = sio::string_message::create(session_id_);
   sio::message::ptr remove_candidates_msg = sio::object_message::create();
   remove_candidates_msg->get_map()["type"] =
-      sio::string_message::create("remove-candidates");
+      sio::string_message::create("removed-candidates");
   sio::message::ptr removed_candidates = sio::array_message::create();
   for (auto candidate : candidates) {
     std::string candidate_string = candidate.ToString();
