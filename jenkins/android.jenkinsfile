@@ -19,16 +19,11 @@ pipeline {
             agent{
                 node {
                     label "${env.androidBuldNativeServer}"
-                    customWorkspace "${env.owtClientNativePath}"
                 }
             }
             steps {
                 script{
-                    sh "gclient sync"
-                    sh "python ${env.androidBuildNativePath}"
-                    if ("${GIT_BRANCH}" == 'master') { 
-                        sh "cp -r ${env.andoridWebrtcLibSrcPath}/* ${env.andoridLibWebrtcPath}"
-                    }
+                  sh "${env.androidBuildNativeScriptPath} --git-branch ${GIT_BRANCH} --git-change-id ${env.CHANGE_ID}  --owner open-webrtc-toolkit --repo owt-client-native --remote-libwebrtc-path ${env.andoridLibWebrtcPath} --android-native-image ${env.androidNativeImage}"
                 }
             }
         }
