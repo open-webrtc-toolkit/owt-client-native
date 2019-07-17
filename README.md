@@ -51,7 +51,7 @@ target_os = []
 
 #### Linux
 - Run `gclient sync`. It may take a long time to download large amount of data.
-- Go to src/srcitps/ directory, and run: `python build-linux.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --output_path /path/to/out`. The built binary will be under `output_path`, the documents for sdk will also be copied to this directory if docs has been generated. If not set `output_path`, the built binary will be under src/out directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure. `ssl_root` to the directory of your OpenSSL 1.1.0 binary. `gn_gen` to generate args.gn, you need to add `--gn_gen` at the first time build or when you changed `ssl_root` path.
+- Go to src/srcitps/ directory, and run: `python build_linux.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --output_path /path/to/out`. The built binary will be under `output_path`, the documents for sdk will also be copied to this directory if docs has been generated. If not set `output_path`, the built binary will be under src/out directory. Be noted the first time you run this would take a long time to pull chromium/webrtc dependencies and require a network accessible to Google's code/storage infrastructure. `ssl_root` to the directory of your OpenSSL 1.1.0 binary. `gn_gen` to generate args.gn, you need to add `--gn_gen` at the first time build or when you changed `ssl_root` path.
 
 #### iOS
 - Run `gclient sync`. It may take a long time to download large amount of data.
