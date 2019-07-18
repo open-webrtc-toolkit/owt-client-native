@@ -11,11 +11,14 @@
 #include "owt/base/localcamerastreamparameters.h"
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
+#if defined(OWT_CUSTOM_AVIO)
 #include "owt/base/videoencoderinterface.h"
 #include "owt/base/videorendererinterface.h"
+#endif
 namespace webrtc {
   class MediaStreamInterface;
   class VideoTrackSourceInterface;
+  class MediaConstraints;
 }
 namespace owt {
 namespace conference {
@@ -28,9 +31,11 @@ namespace p2p {
 }
 namespace base {
 class MediaConstraintsImpl;
+#if defined(OWT_CUSTOM_AVIO)
 class CustomizedFramesCapturer;
 class BasicDesktopCapturer;
 class VideoFrameGeneratorInterface;
+#endif
 #if defined(WEBRTC_MAC)
 class ObjcVideoCapturerInterface;
 #endif
@@ -40,13 +45,13 @@ class StreamObserver {
  public:
   /// Triggered when a stream is ended, or the stream is no longer available in
   /// conference mode.
-  virtual void OnEnded() {};
+  virtual void OnEnded() {}
   /// Triggered when the stream info is updated in conference mode.
-  virtual void OnUpdated() {};
+  virtual void OnUpdated() {}
   /// Triggered when the stream is muted
-  virtual void OnMute(TrackKind track_kind) {};
+  virtual void OnMute(TrackKind track_kind) {}
   /// Triggered when the stream is unmuted
-  virtual void OnUnmute(TrackKind track_kind) {};
+  virtual void OnUnmute(TrackKind track_kind) {}
 };
 class WebrtcVideoRendererImpl;
 #if defined(WEBRTC_WIN)
@@ -72,10 +77,12 @@ class Stream {
   virtual void EnableAudio();
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
+#if defined(OWT_CUSTOM_AVIO)
   /// Attach the stream to a renderer to receive ARGB/I420 frames for local or remote stream.
   /// Be noted if you turned hardware acceleration on, calling this API on remote stream
   /// will have no effect.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+#endif
   /**
     @brief Returns a user-defined attribute map.
     @details These attributes are defined by publisher. P2P mode always return
@@ -97,8 +104,10 @@ class Stream {
   /// Both I420 frame and native surface is supported.
   virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
 #endif
+#if defined(OWT_CUSTOM_AVIO)
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
+#endif
   /// Register an observer on the stream.
   void AddObserver(StreamObserver& observer);
   /// De-Register an observer on the stream.
@@ -191,6 +200,7 @@ class LocalStream : public Stream {
       const bool is_audio_enabled,
       webrtc::VideoTrackSourceInterface* video_source,
       int& error_code);
+#if defined(OWT_CUSTOM_AVIO)
   /**
     @brief Initialize a LocalCustomizedStream with parameters and frame generator.
     @details The input of the video stream MUST be YUV frame if initializing with frame
@@ -216,7 +226,6 @@ class LocalStream : public Stream {
   static std::shared_ptr<LocalStream> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
       VideoEncoderInterface* encoder);
-#if defined(WEBRTC_WIN)
   /**
     @brief Initialize a local screen stream with parameters.
     @param parameters Parameters for creating the stream. The stream will
@@ -235,21 +244,23 @@ class LocalStream : public Stream {
      explicit LocalStream(const bool is_audio_enabled,
          webrtc::VideoTrackSourceInterface* video_source,
          int& error_code);
+#if defined(OWT_CUSTOM_AVIO)
      explicit LocalStream(
          std::shared_ptr<LocalCustomizedStreamParameters> parameters,
          std::unique_ptr<VideoFrameGeneratorInterface> framer);
      explicit LocalStream(
          std::shared_ptr<LocalCustomizedStreamParameters> parameters,
          VideoEncoderInterface* encoder);
-#if defined(WEBRTC_WIN)
      explicit LocalStream(
          std::shared_ptr<LocalDesktopStreamParameters> parameters,
          std::unique_ptr<LocalScreenStreamObserver> observer
      );
 #endif
-    MediaConstraintsImpl* media_constraints_;
+    webrtc::MediaConstraints* media_constraints_;
 private:
+#if defined(OWT_CUSTOM_AVIO)
     bool encoded_ = false;
+#endif
 #if defined(WEBRTC_MAC)
     std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
 #endif
@@ -296,7 +307,7 @@ class RemoteStream : public Stream {
     publication_settings_ = publication_settings;
   }
   /** @endcond */
-  void Stop() {};
+  void Stop() {}
  protected:
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);

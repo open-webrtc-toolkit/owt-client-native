@@ -4,7 +4,7 @@
 #import "talk/owt/sdk/include/objc/OWT/OWTConferenceParticipant.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 /// This class represent an attendee in a conference.
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @interface OWTConferenceParticipant ()
 @property(nonatomic, readonly)
     std::shared_ptr<owt::conference::Participant>

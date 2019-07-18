@@ -2,25 +2,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include "webrtc/rtc_base/helpers.h"
-#include "webrtc/media/base/videocapturer.h"
-#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
+#include "webrtc/api/video/video_source_interface.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/sdk/media_constraints.h"
+#if defined(OWT_CUSTOM_AVIO)
 #include "talk/owt/sdk/base/customizedframescapturer.h"
-#if defined(WEBRTC_WIN)
-#include "talk/owt/sdk/base/desktopcapturer.h"
+#include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
+#include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 #endif
-#include "talk/owt/sdk/base/mediaconstraintsimpl.h"
+#if defined(WEBRTC_WIN)
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "talk/owt/sdk/base/desktopcapturer.h"
+#include "talk/owt/sdk/base/win/videorendererwin.h"
+#endif
 #if defined(WEBRTC_IOS)
 #include "talk/owt/sdk/base/objc/ObjcVideoCapturerInterface.h"
 #endif
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
-#if defined(WEBRTC_WIN)
-#include "talk/owt/sdk/base/win/videorendererwin.h"
-#endif
 #include "talk/owt/sdk/include/cpp/owt/base/deviceutils.h"
-#include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 using namespace rtc;
 namespace owt {
@@ -60,7 +59,9 @@ MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
 }
 Stream::~Stream() {
+#if defined(OWT_CUSTOM_AVIO)
   DetachVideoRenderer();
+#endif
   if (media_stream_)
     media_stream_->Release();
 }
@@ -109,6 +110,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
+#if defined(OWT_CUSTOM_AVIO)
 void Stream::AttachVideoRenderer(VideoRendererInterface& renderer){
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
@@ -130,6 +132,7 @@ void Stream::AttachVideoRenderer(VideoRendererInterface& renderer){
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
+#endif
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
@@ -154,6 +157,7 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
+#if defined(OWT_CUSTOM_AVIO)
 void Stream::DetachVideoRenderer() {
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
@@ -181,6 +185,7 @@ void Stream::DetachVideoRenderer() {
   }
 #endif
 }
+#endif
 StreamSourceInfo Stream::Source() const {
   return source_;
 }
@@ -232,7 +237,7 @@ void Stream::TriggerOnStreamUnmute(TrackKind track_kind) {
   }
 }
 #if !defined(WEBRTC_WIN)
-LocalStream::LocalStream() : media_constraints_(new MediaConstraintsImpl) {}
+LocalStream::LocalStream() : media_constraints_(new webrtc::MediaConstraints) {}
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
     : Stream(media_stream, source), media_constraints_(nullptr) {}
@@ -287,7 +292,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
         new LocalStream(parameters, std::move(observer)));
     return stream;
 }
-#endif
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
@@ -302,9 +306,10 @@ std::shared_ptr<LocalStream> LocalStream::Create(
         new LocalStream(parameters, encoder));
     return stream;
 }
+#endif
 LocalStream::LocalStream(
     const LocalCameraStreamParameters& parameters,
-    int& error_code) : media_constraints_(new MediaConstraintsImpl) {
+    int& error_code) : media_constraints_(new webrtc::MediaConstraints) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
     RTC_LOG(LS_ERROR)
         << "Cannot create a LocalCameraStream without audio and video.";
@@ -393,7 +398,7 @@ LocalStream::LocalStream(
 LocalStream::LocalStream(
       const bool is_audio_enabled,
       webrtc::VideoTrackSourceInterface* video_source,
-      int& error_code) : media_constraints_(new MediaConstraintsImpl) {
+      int& error_code) : media_constraints_(new webrtc::MediaConstraints) {
   RTC_CHECK(video_source);
   scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
       PeerConnectionDependencyFactory::Get();
@@ -417,7 +422,9 @@ LocalStream::LocalStream(
 }
 void LocalStream::Close() {
   RTC_CHECK(media_stream_);
+#if defined(OWT_CUSTOM_AVIO)
   DetachVideoRenderer();
+#endif
   for (auto const& audio_track : media_stream_->GetAudioTracks())
     media_stream_->RemoveTrack(audio_track);
   for (auto const& video_track : media_stream_->GetVideoTracks())
@@ -465,7 +472,6 @@ LocalStream::LocalStream(
   media_stream_->AddRef();
   source_.video = VideoSourceInfo::kScreenCast;
 }
-#endif
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer)
@@ -538,6 +544,7 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
+#endif
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {

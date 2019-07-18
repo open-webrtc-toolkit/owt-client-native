@@ -4,8 +4,8 @@
 #ifndef OWT_BASE_GLOBALCONFIGURATION_H_
 #define OWT_BASE_GLOBALCONFIGURATION_H_
 #include <memory>
+#if defined(OWT_CUSTOM_AVIO)
 #include "owt/base/framegeneratorinterface.h"
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "owt/base/videodecoderinterface.h"
 #endif
 #if defined(WEBRTC_WIN)
@@ -56,6 +56,7 @@ class GlobalConfiguration {
   }
 #endif
   /** @cond */
+#if defined(OWT_CUSTOM_AVIO)
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
    please be noted at present only vp8 and h.264 encoded frame input is supported.
@@ -85,7 +86,6 @@ class GlobalConfiguration {
           audio_frame_generator_.reset(nullptr);
       }
   }
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function sets the customized video decoder to decode the encoded images.
    @param Customized video decoder
@@ -140,6 +140,7 @@ class GlobalConfiguration {
   }
   static bool hardware_acceleration_enabled_;
 #endif
+#if defined(OWT_CUSTOM_AVIO)
   /**
    @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.
@@ -154,6 +155,7 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
+#endif
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.
@@ -182,6 +184,7 @@ class GlobalConfiguration {
   static bool GetNSEnabled() {
     return audio_processing_settings_.NSEnabled ? true : false;
   }
+#if defined(OWT_CUSTOM_AVIO)
   /**
    @brief This function returns audio frame generator.
    */
@@ -195,7 +198,6 @@ class GlobalConfiguration {
    */
   static bool encoded_frame_;
   static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function returns flag indicating whether customized video decoder is enabled or not
    @return Boolean flag indicating whether customized video decoder is enabled or not

@@ -4,7 +4,7 @@
 #import "talk/owt/sdk/include/objc/OWT/OWTConferenceInfo.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 NS_ASSUME_NONNULL_BEGIN
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @interface OWTConferenceInfo ()
 @property(nonatomic, readonly) std::shared_ptr<const owt::conference::ConferenceInfo> nativeInfo;
 - (instancetype)initWithNativeInfo:

@@ -5,7 +5,7 @@
 #include "webrtc/rtc_base/checks.h"
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"
 #import "talk/owt/sdk/conference/objc/OWTConferencePublication+Private.h"
-#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
+#import "webrtc/sdk/objc/api/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import <OWT/OWTErrors.h>
 #import <OWT/OWTConferenceErrors.h>

@@ -5,7 +5,7 @@
 #include "talk/owt/sdk/include/cpp/owt/conference/conferencepublication.h"
 #import "OWT/OWTConferencePublication.h"
 NS_ASSUME_NONNULL_BEGIN
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @interface OWTConferencePublication ()
 - (instancetype)initWithNativePublication:
     (std::shared_ptr<owt::conference::ConferencePublication>)

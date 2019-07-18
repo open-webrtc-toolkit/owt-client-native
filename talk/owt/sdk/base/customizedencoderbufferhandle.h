@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
 #define OWT_BASE_CUSTOMIZEDENCODER_BUFFER_HANDLE_H
-#include "rtc_base/atomicops.h"
-#include "rtc_base/refcount.h"
+#include "rtc_base/atomic_ops.h"
+#include "rtc_base/ref_count.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videoencoderinterface.h"
 namespace owt {

@@ -5,7 +5,7 @@
 #import <WebRTC/RTCMacros.h>
 NS_ASSUME_NONNULL_BEGIN
 @class OWTP2PPublication;
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @protocol OWTP2PPublicationDelegate<NSObject>
 @optional
 /// Publication is ended.
@@ -15,7 +15,7 @@ RTC_EXPORT
   @brief Publication represents a sender for publishing a stream.
   @details It handles the actions on a LocalStream published to a remote endpoint.
 */
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @interface OWTP2PPublication : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 /// Stop certain publication. Once a subscription is stopped, it cannot be recovered.

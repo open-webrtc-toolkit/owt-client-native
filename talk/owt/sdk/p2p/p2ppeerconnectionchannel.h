@@ -8,15 +8,15 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <chrono>
-#include "talk/owt/sdk/base/mediaconstraintsimpl.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/base/exception.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h"
-#include "webrtc/rtc_base/json.h"
-#include "webrtc/rtc_base/messagehandler.h"
+#include "webrtc/sdk/media_constraints.h"
+#include "webrtc/rtc_base/strings/json.h"
+#include "webrtc/rtc_base/message_handler.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/thread_annotations.h"
 namespace owt {

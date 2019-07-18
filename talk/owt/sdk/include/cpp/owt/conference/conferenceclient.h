@@ -54,7 +54,7 @@ class ParticipantObserver {
     /**
       @brief Participant leave event callback.
     */
-    virtual void OnLeft() {};
+    virtual void OnLeft() {}
 };
 /// Participant represents one conference client in a conference room.
 class Participant {
@@ -144,7 +144,7 @@ class ConferenceInfo {
 /** @cond */
 class ConferenceSocketSignalingChannelObserver {
  public:
-  virtual ~ConferenceSocketSignalingChannelObserver(){};
+  virtual ~ConferenceSocketSignalingChannelObserver(){}
   virtual void OnUserJoined(std::shared_ptr<sio::message> user) = 0;
   virtual void OnUserLeft(std::shared_ptr<sio::message> user) = 0;
   virtual void OnStreamAdded(std::shared_ptr<sio::message> stream) = 0;
@@ -164,7 +164,7 @@ class ConferenceSocketSignalingChannelObserver {
 // application.
 class ConferencePeerConnectionChannelObserver {
  public:
-  virtual ~ConferencePeerConnectionChannelObserver(){};
+  virtual ~ConferencePeerConnectionChannelObserver(){}
   // Triggered when an unrecoverable error happened. Error may reported by MCU
   // or detected by client. Currently, only errors from MCU are handled.
   virtual void OnStreamError(
@@ -180,13 +180,13 @@ class ConferenceClientObserver {
     @param stream The stream which is added.
   */
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteStream> stream){};
+      std::shared_ptr<RemoteStream> stream){}
   /**
     @brief Triggers when a mixed stream is added.
     @param stream The stream which is added.
   */
   virtual void OnStreamAdded(
-      std::shared_ptr<RemoteMixedStream> stream){};
+      std::shared_ptr<RemoteMixedStream> stream){}
   /**
     @brief Triggers when a message is received.
     @param message Message received.
@@ -196,16 +196,16 @@ class ConferenceClientObserver {
   */
   virtual void OnMessageReceived(std::string& message,
                                  std::string& sender_id,
-                                 std::string& to){};
+                                 std::string& to){}
   /**
     @brief Triggers when a participant joined conference.
     @param user The user joined.
   */
-  virtual void OnParticipantJoined(std::shared_ptr<Participant>){};
+  virtual void OnParticipantJoined(std::shared_ptr<Participant>){}
   /**
     @brief Triggers when server is disconnected.
   */
-  virtual void OnServerDisconnected(){};
+  virtual void OnServerDisconnected(){}
 };
 
 /// An asynchronous class for app to communicate with a conference in MCU.

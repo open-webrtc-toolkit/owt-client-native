@@ -16,7 +16,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @protocol OWTConferenceClientDelegate;
 /// An asynchronous class for app to communicate with a conference in MCU
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @interface OWTConferenceClient : NSObject
 /**
   @brief Initialize a OWTConferenceClient with configuration
@@ -73,7 +73,7 @@ RTC_EXPORT
 @property(nonatomic, weak) id<OWTConferenceClientDelegate> delegate;
 @end
 /// Delegate for OWTConferenceClient.
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @protocol OWTConferenceClientDelegate<NSObject>
 @optional
 /**
