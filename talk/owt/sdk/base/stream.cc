@@ -463,6 +463,7 @@ LocalStream::LocalStream(
   }
   media_stream_ = stream;
   media_stream_->AddRef();
+  source_.video = VideoSourceInfo::kScreenCast;
 }
 #endif
 LocalStream::LocalStream(
