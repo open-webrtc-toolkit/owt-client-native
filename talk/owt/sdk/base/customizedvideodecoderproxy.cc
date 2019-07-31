@@ -22,7 +22,11 @@ int32_t CustomizedVideoDecoderProxy::InitDecode(const webrtc::VideoCodec* codec_
   if (external_decoder_) {
     if (codec_type_ == kVideoCodecH264 && external_decoder_->InitDecodeContext(VideoCodec::kH264)) {
       return WEBRTC_VIDEO_CODEC_OK;
+    } else if (codec_type_ == kVideoCodecH265 && external_decoder_->InitDecodeContext(VideoCodec::kH265)) {
+      return WEBRTC_VIDEO_CODEC_OK;
     } else if (codec_type_ == kVideoCodecVP8 && external_decoder_->InitDecodeContext(VideoCodec::kVp8)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+    } else if (codec_type_ == kVideoCodecVP9 && external_decoder_->InitDecodeContext(VideoCodec::kVp9)) {
       return WEBRTC_VIDEO_CODEC_OK;
     }
     return WEBRTC_VIDEO_CODEC_ERROR;
