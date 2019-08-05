@@ -36,9 +36,13 @@ pipeline {
                         }
                     }
                     steps {
-                        withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                            sh "${env.starMcuScriptPath} --package-url ${env.mcuPackageUrl} --package-name \
-                            mcu-all-bin-v{data}.tgz  --base-dir ${env.mcuServerBasePath} --git-branch ${GIT_BRANCH}"
+                        script{
+                            withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                                sh "python ${env.startServerScriptPath} --package-url ${env.mcuPackageBaseDir} --package-name \
+                                ${env.mcuPackageName}  --base-dir ${env.mcuServerBasePath} --git-branch ${GIT_BRANCH} \
+                                --owner open-webrtc-toolkit --repo owt-client-android --commit-id ${GIT_COMMIT} \
+                                --github-script ${env.serverGithubScriptPath} --mode mcu --workspace ${WORKSPACE}"
+                            }
                         }
                     }
                 }
@@ -48,9 +52,13 @@ pipeline {
                             label "$env.iosServer"
                         }
                     }
-                    steps {
-                        withEnv(["JENKINS_NODE_COOKIE=dontkill"]) {
-                            sh "${env.startP2PServerScriptPath} --server-path ${env.p2pServerPath}"
+                    steps{
+                        script{
+                            withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
+                                sh "python ${env.startServerScriptPath} --p2p-server-path ${env.p2pServerPath} \
+                                --owner open-webrtc-toolkit --repo owt-client-android --commit-id ${GIT_COMMIT} \
+                                --git-branch ${GIT_BRANCH} --github-script ${env.serverGithubScriptPath} --mode p2p --workspace ${WORKSPACE}"
+                            }
                         }
                     }
                 }
@@ -102,6 +110,12 @@ pipeline {
         }
     }
     post {
+        always {
+            script {
+                echo "I have finished"
+                sh "curl -H \"Content-Type: application/json\" -X POST --data '{\"commit_id\":\"'$GIT_COMMIT'\",\"job_path\":\"'${env.iosNativeJobName}'\",\"job_name\":\"'$JOB_BASE_NAME'\",\"build_num\":\"'$BUILD_NUMBER'\",\"os_version\":\"'${env.iosVersion}'\"}' '${env.checkServerUrl}'/runClient/IOS_BUILD_NATIVE_STEPS"
+            }
+        }
         success {
             setBuildStatus("${env.nativeUrl}", "Build succeeded", "SUCCESS");
             echo "I succeeeded!"
