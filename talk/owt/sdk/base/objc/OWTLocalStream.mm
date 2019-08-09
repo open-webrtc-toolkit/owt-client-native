@@ -13,7 +13,7 @@
 #import "talk/owt/sdk/include/objc/OWT/OWTErrors.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTMediaFormat.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
-#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/api/peerconnection/RTCMediaStream+Private.h"
 #include "webrtc/rtc_base/helpers.h"
 @interface OWTLocalStream ()
 - (NSString*)createRandomUuid;

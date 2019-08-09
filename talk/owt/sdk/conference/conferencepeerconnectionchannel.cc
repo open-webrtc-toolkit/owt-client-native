@@ -128,8 +128,11 @@ void ConferencePeerConnectionChannel::DoIceRestart() {
   RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable);
+  // TODO: moving to offer answer options.
+  /*
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kIceRestart, true);
+  */
   this->CreateOffer();
 }
 void ConferencePeerConnectionChannel::CreateAnswer() {

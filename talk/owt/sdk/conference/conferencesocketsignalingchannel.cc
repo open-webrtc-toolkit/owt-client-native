@@ -15,8 +15,8 @@
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/json.h"
-#include "webrtc/rtc_base/timeutils.h"
+#include "webrtc/rtc_base/strings/json.h"
+#include "webrtc/rtc_base/time_utils.h"
 using namespace rtc;
 namespace owt {
 namespace conference {

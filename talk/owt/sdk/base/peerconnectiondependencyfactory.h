@@ -4,8 +4,9 @@
 #ifndef OWT_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #define OWT_BASE_PEERCONNECTIONDEPENDENCYFACTORY_H_
 #include <mutex>
-#include "webrtc/api/peerconnectioninterface.h"
-#include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/peer_connection_interface.h"
+#include "webrtc/api/media_stream_interface.h"
+#include "webrtc/sdk/media_constraints.h"
 #include "webrtc/rtc_base/bind.h"
 namespace owt {
 namespace base {
@@ -16,7 +17,7 @@ using webrtc::AudioSourceInterface;
 using webrtc::VideoTrackInterface;
 using webrtc::VideoTrackSourceInterface;
 using webrtc::PeerConnectionFactoryInterface;
-using webrtc::MediaConstraintsInterface;
+using webrtc::MediaConstraints;
 using rtc::scoped_refptr;
 using rtc::Thread;
 using rtc::Bind;
@@ -47,9 +48,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   rtc::scoped_refptr<VideoTrackInterface> CreateLocalVideoTrack(
       const std::string& id,
       webrtc::VideoTrackSourceInterface* video_source);
-  rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
-      std::unique_ptr<cricket::VideoCapturer> capturer,
-      const MediaConstraintsInterface* constraints);
   rtc::scoped_refptr<AudioSourceInterface> CreateAudioSource(
       const cricket::AudioOptions& options);
   rtc::NetworkMonitorInterface* NetworkMonitor();
@@ -71,18 +69,26 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
       webrtc::PeerConnectionObserver* observer);
   void CreateNetworkMonitorOnCurrentThread();
+#if defined(OWT_CUSTOM_AVIO)
   rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
+#endif
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>
       dependency_factory_;  // Get() always return this instance.
-  Thread*
-      pc_thread_;  // This thread performs all operations on pcfactory and pc.
-  Thread* callback_thread_;  // This thread performs all callbacks.
+  // This thread performs all operations on pcfactory and pc.
+  std::unique_ptr<Thread> pc_thread_;
+  // This thread performs all callbacks.
+  std::unique_ptr<Thread> callback_thread_;
+  std::unique_ptr<rtc::Thread> worker_thread;
+  std::unique_ptr<rtc::Thread> signaling_thread;
+  std::unique_ptr<rtc::Thread> network_thread;
 #if defined(WEBRTC_WIN)
   bool render_hardware_acceleration_enabled_;  // Enabling HW acceleration for
                                                // VP8, H.264 & HEVC enc/dec
 #endif
+#if defined(OWT_CUSTOM_AVIO)
   bool encoded_frame_;
+#endif
   static std::mutex get_pc_dependency_factory_mutex_;
 #if defined(WEBRTC_IOS)
   rtc::NetworkMonitorInterface* network_monitor_;

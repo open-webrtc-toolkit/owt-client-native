@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <vector>
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/thread.h"
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include "talk/owt/sdk/base/sdputils.h"
 using namespace rtc;
@@ -19,8 +20,6 @@ PeerConnectionChannel::~PeerConnectionChannel() {
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
   }
-  if (pc_thread_ != nullptr)
-    delete pc_thread_;
 }
 bool PeerConnectionChannel::InitializePeerConnection() {
   RTC_LOG(LS_INFO) << "Initialize PeerConnection.";
@@ -40,7 +39,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
     return false;
   }
   if (pc_thread_ == nullptr) {
-    pc_thread_ = new rtc::Thread();
+    pc_thread_ = rtc::Thread::CreateWithSocketServer();
     pc_thread_->Start();
   }
   RTC_CHECK(peer_connection_);

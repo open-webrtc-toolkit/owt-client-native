@@ -4,9 +4,8 @@
 #include "talk/owt/sdk/include/cpp/owt/base/deviceutils.h"
 #include "webrtc/rtc_base/arraysize.h"
 #include "webrtc/rtc_base/logging.h"
-#include "webrtc/media/base/videocapturer.h"
+#include "webrtc/api/video/video_source_interface.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 using namespace rtc;
 namespace owt {
 namespace base {

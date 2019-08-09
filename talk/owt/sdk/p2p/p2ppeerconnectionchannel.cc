@@ -8,6 +8,8 @@
 #include "talk/owt/sdk/base/sysinfo.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/api/task_queue/default_task_queue_factory.h"
+
 using namespace rtc;
 namespace owt {
 namespace p2p {
@@ -95,26 +97,31 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
       remote_side_supports_continual_ice_gathering_(true),
-      event_queue_(event_queue),
       ua_sent_(false),
       stop_send_needed_(true),
       remote_side_offline_(false),
       ended_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
+  if (event_queue) {
+    event_queue_ = event_queue;
+  } else {
+    auto task_queue_factory_ = webrtc::CreateDefaultTaskQueueFactory();
+    event_queue_ =
+        std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
+            "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
+  }
 }
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration,
     const std::string& local_id,
     const std::string& remote_id,
     P2PSignalingSenderInterface* sender)
-    : P2PPeerConnectionChannel(
-          configuration,
-          local_id,
-          remote_id,
-          sender,
-          std::shared_ptr<rtc::TaskQueue>(
-              new rtc::TaskQueue("PeerConnectionChannelEventQueue"))) {}
+    : P2PPeerConnectionChannel(configuration,
+                               local_id,
+                               remote_id,
+                               sender,
+                               nullptr) {}
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
   if (set_remote_sdp_task_)
     delete set_remote_sdp_task_;

@@ -8,10 +8,10 @@ namespace base {
 // Enable hardware acceleration by default is on.
 bool GlobalConfiguration::hardware_acceleration_enabled_ = true;
 #endif
+#if defined(OWT_CUSTOM_AVIO)
 bool GlobalConfiguration::encoded_frame_ = false;
 std::unique_ptr<AudioFrameGeneratorInterface>
     GlobalConfiguration::audio_frame_generator_ = nullptr;
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 std::unique_ptr<VideoDecoderInterface>
     GlobalConfiguration::video_decoder_ = nullptr;
 #endif

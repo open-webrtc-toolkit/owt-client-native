@@ -45,18 +45,18 @@ class P2PClientObserver {
    @param message Message received
    */
   virtual void OnMessageReceived(const std::string& remote_user_id,
-                                 const std::string message){};
+                                 const std::string message){}
   /**
    @brief This function will be invoked when a remote stream is available.
    @param stream The remote stream added.
    */
   virtual void OnStreamAdded(
-      std::shared_ptr<owt::base::RemoteStream> stream){};
+      std::shared_ptr<owt::base::RemoteStream> stream){}
   /**
    @brief This function will be invoked when client is disconnected from
    signaling server.
    */
-  virtual void OnServerDisconnected(){};
+  virtual void OnServerDisconnected(){}
 };
 /// An async client for P2P WebRTC sessions
 class P2PClient final
@@ -216,6 +216,7 @@ class P2PClient final
       const std::string& target_id);
   bool IsPeerConnectionChannelCreated(const std::string& target_id);
   owt::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
+  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;

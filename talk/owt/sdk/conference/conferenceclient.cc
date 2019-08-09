@@ -9,9 +9,10 @@
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
-#include "webrtc/api/statstypes.h"
+#include "webrtc/api/task_queue/default_task_queue_factory.h"
+#include "webrtc/api/stats_types.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
-#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 using namespace rtc;
@@ -168,9 +169,14 @@ std::shared_ptr<ConferenceClient> ConferenceClient::Create(
 ConferenceClient::ConferenceClient(
     const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
-      event_queue_(new rtc::TaskQueue("ConferenceClientEventQueue")),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
-      signaling_channel_connected_(false) {}
+      signaling_channel_connected_(false) {
+  auto task_queue_factory_ = webrtc::CreateDefaultTaskQueueFactory();
+  event_queue_ =
+      std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
+          "ConferenceClientEventQueue",
+          webrtc::TaskQueueFactory::Priority::NORMAL));
+}
 ConferenceClient::~ConferenceClient() {
   signaling_channel_->RemoveObserver(*this);
 }
