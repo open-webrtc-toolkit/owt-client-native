@@ -83,7 +83,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
                                                // VP8, H.264 & HEVC enc/dec
 #endif
   bool encoded_frame_;
-  static std::mutex get_pc_dependency_factory_mutex_;
 #if defined(WEBRTC_IOS)
   rtc::NetworkMonitorInterface* network_monitor_;
 #endif
