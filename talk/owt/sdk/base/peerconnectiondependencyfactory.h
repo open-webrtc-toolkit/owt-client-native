@@ -69,9 +69,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
       webrtc::PeerConnectionObserver* observer);
   void CreateNetworkMonitorOnCurrentThread();
-#if defined(OWT_CUSTOM_AVIO)
   rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
-#endif
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>
       dependency_factory_;  // Get() always return this instance.
@@ -86,9 +84,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   bool render_hardware_acceleration_enabled_;  // Enabling HW acceleration for
                                                // VP8, H.264 & HEVC enc/dec
 #endif
-#if defined(OWT_CUSTOM_AVIO)
   bool encoded_frame_;
-#endif
   static std::mutex get_pc_dependency_factory_mutex_;
 #if defined(WEBRTC_IOS)
   rtc::NetworkMonitorInterface* network_monitor_;
