@@ -46,10 +46,15 @@ static_library("owt_deps") {
     "//third_party/webrtc/rtc_base:rtc_json",
     "//third_party/webrtc/api:libjingle_peerconnection_api",
     "//third_party/webrtc/api:create_peerconnection_factory",
-    "//third_party/webrtc/sdk:native_api",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
   ]
+  
+  if (is_ios || is_android) {
+    deps += [
+      "//third_party/webrtc/sdk:native_api",
+    ]
+  }
   complete_static_lib = true
 }
 if (!is_ios) {
@@ -68,6 +73,8 @@ if (!is_ios) {
 }
 static_library("owt_sdk_base") {
   sources = [
+    "sdk/base/cameravideocapturer.cc",
+    "sdk/base/cameravideocapturer.h",
     "sdk/base/deviceutils.cc",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",
@@ -91,6 +98,8 @@ static_library("owt_sdk_base") {
     "sdk/base/stringutils.h",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",
+    "sdk/base/vcmcapturer.cc",
+    "sdk/base/vcmcapturer.h",
     "sdk/include/cpp/owt/base/clientconfiguration.h",
     "sdk/include/cpp/owt/base/connectionstats.h",
     "sdk/include/cpp/owt/base/deviceutils.h",
@@ -104,6 +113,8 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/customizedframescapturer.cc",
       "sdk/base/customizedframescapturer.h",
+      "sdk/base/customizedvideosource.cc",
+      "sdk/base/customizedvideosource.h",
       "sdk/base/customizedvideoencoderproxy.cc",
       "sdk/base/customizedvideoencoderproxy.h",
       "sdk/base/encodedvideoencoderfactory.cc",
@@ -188,7 +199,6 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
       "sdk/base/windowcapturer.cc",
-      "sdk/base/windowcapturer.h",
     ]
   }
 

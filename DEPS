@@ -144,6 +144,11 @@ deps = {
     'url': Var('chromium_git') + '/external/github.com/google/compact_enc_det.git' + '@' + 'ba412eaaacd3186085babcd901679a48863c7dd5',
     'condition': 'checkout_android',
   },
+  # Used by boringssl.
+  'src/third_party/nasm': {
+      'url': Var('chromium_git') + '/chromium/deps/nasm.git' + '@' +
+      'c8b248039ec1f75a7c5733bbe76d7fa416ce097a'
+  },
   'src/third_party/colorama/src':
     Var('chromium_git') + '/external/colorama.git' + '@' + '799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
   'src/third_party/depot_tools':
@@ -1370,12 +1375,12 @@ hooks = [
                '--bucket', 'chromium-webrtc-resources',
                'src/third_party/webrtc/resources'],
   },
-  #{
-    # Prepare environment for WooGeen development.
-  #  'pattern': '.',
-  #  'action': ['python',
-  #             'src/scripts/prepare_dev.py'],
-  #},
+  {
+    # Prepare environment for OWT development.
+    'pattern': '.',
+    'action': ['python',
+               'src/scripts/prepare_dev.py'],
+  },
 ]
 
 recursedeps = []

@@ -2,10 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include <iostream>
-#if defined(OWT_CUSTOM_AVIO)
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/owt/sdk/base/encodedvideoencoderfactory.h"
-#endif
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_encoder_factory.h"
@@ -55,9 +53,7 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
 #if defined(WEBRTC_IOS)
   network_monitor_ = nullptr;
 #endif
-#if defined(OWT_CUSTOM_AVIO)
   encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
-#endif
   pc_thread_->Start();
 }
 PeerConnectionDependencyFactory::~PeerConnectionDependencyFactory() {}
@@ -110,16 +106,14 @@ void PeerConnectionDependencyFactory::
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
       << "Failed to start threads";
-#if defined(WEBRTC_IOS)
+
   // Use webrtc::VideoEn(De)coderFactory on iOS.
   std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
   std::unique_ptr<webrtc::VideoDecoderFactory> decoder_factory;
+#if defined(WEBRTC_IOS)
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
-#elif defined(OWT_CUSTOM_AVIO)
-  std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
-  std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
-#if defined(WEBRTC_WIN)
+#elif defined(WEBRTC_WIN)
   if (render_hardware_acceleration_enabled_) {
     if (!encoded_frame_) {
       encoder_factory.reset(new MSDKVideoEncoderFactory());
@@ -128,7 +122,6 @@ void PeerConnectionDependencyFactory::
       decoder_factory.reset(new MSDKVideoDecoderFactory());
     }
   }
-#endif
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
@@ -141,7 +134,7 @@ void PeerConnectionDependencyFactory::
 #error "Unsupported platform."
 #endif
   rtc::scoped_refptr<AudioDeviceModule> adm;
-#if defined(OWT_CUSTOM_AVIO)
+
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
@@ -153,7 +146,7 @@ void PeerConnectionDependencyFactory::
                     CreateCustomizedAudioDeviceModuleOnCurrentThread,
                     this));
   }
-#endif
+
 #if defined(WEBRTC_IOS)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
@@ -163,11 +156,11 @@ void PeerConnectionDependencyFactory::
       nullptr);  // Decoder factory
 #elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      network_thread, worker_thread, signaling_thread, adm,
+      network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
-      encoder_factory.release(),   // Encoder factory
-      decoder_factory.release());  // Decoder factory
+      std::move(encoder_factory),
+      std::move(decoder_factory), nullptr, nullptr);
 #else
 #error "Unsupported platform."
 #endif
@@ -287,12 +280,12 @@ void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
   }
 #endif
 }
-#if defined(OWT_CUSTOM_AVIO)
+
 scoped_refptr<webrtc::AudioDeviceModule>
 PeerConnectionDependencyFactory::CreateCustomizedAudioDeviceModuleOnCurrentThread() {
   return CustomizedAudioDeviceModule::Create(
      GlobalConfiguration::GetAudioFrameGenerator());
 }
-#endif
+
 }
 }

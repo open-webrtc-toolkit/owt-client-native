@@ -5,24 +5,28 @@
 #define OWT_BASE_ENCODEDVIDEOENCODER_H_
 #include <vector>
 #include "webrtc/api/video_codecs/video_encoder.h"
+#include "webrtc/media/base/codec.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videoencoderinterface.h"
+
 namespace owt {
 namespace base {
 class CustomizedVideoEncoderProxy : public webrtc::VideoEncoder {
  public:
-  CustomizedVideoEncoderProxy(webrtc::VideoCodecType type);
+  static std::unique_ptr<CustomizedVideoEncoderProxy> Create();
+  CustomizedVideoEncoderProxy();
   virtual ~CustomizedVideoEncoderProxy();
   int InitEncode(const webrtc::VideoCodec* codec_settings,
                  int number_of_cores,
                  size_t max_payload_size) override;
-  int Encode(const webrtc::VideoFrame& input_image,
-             const webrtc::CodecSpecificInfo* codec_specific_info,
-             const std::vector<webrtc::FrameType>* frame_types) override;
+  int32_t Encode(const webrtc::VideoFrame& input_image,
+             const std::vector<webrtc::VideoFrameType>* frame_types) override;
   int RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* callback) override;
-  int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-  int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
-  bool SupportsNativeHandle() const override;
+  void SetRates(const RateControlParameters& parameters) override;
+  void OnPacketLossRateUpdate(float packet_loss_rate) override;
+  void OnRttUpdate(int64_t rtt_ms) override;
+  void OnLossNotification(const LossNotification& loss_notification) override;
+  EncoderInfo GetEncoderInfo() const override;
   int Release() override;
  private:
   // Search for H.264 start codes.

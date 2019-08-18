@@ -37,7 +37,7 @@ namespace base {
 
 struct mfxAllocatorParams
 {
-    virtual ~mfxAllocatorParams(){};
+    virtual ~mfxAllocatorParams(){}
 };
 
 // this class implements methods declared in mfxFrameAllocator structure
@@ -189,7 +189,7 @@ protected:
     public:
         safe_array(T *ptr = 0):m_ptr(ptr)
         { // construct from object pointer
-        };
+        }
         ~safe_array()
         {
             reset(0);

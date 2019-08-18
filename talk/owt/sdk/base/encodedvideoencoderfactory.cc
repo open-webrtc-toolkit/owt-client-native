@@ -1,94 +1,75 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
+#include "absl/strings/match.h"
+#include "modules/video_coding/codecs/h264/include/h264.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/h264/profile_level_id.h"
+#include "webrtc/rtc_base/string_utils.h"
 #include "talk/owt/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/owt/sdk/base/encodedvideoencoderfactory.h"
-#include "webrtc/rtc_base/stringutils.h"
-#include "webrtc/common_video/h264/profile_level_id.h"
-#include "webrtc/common_types.h"
-EncodedVideoEncoderFactory::EncodedVideoEncoderFactory() {
-    supported_codecs_.clear();
-    supported_codecs_.push_back(cricket::VideoCodec("VP8"));
-    supported_codecs_.push_back(cricket::VideoCodec("VP9"));
+
+namespace owt {
+namespace base {
+
+EncodedVideoEncoderFactory::EncodedVideoEncoderFactory() {}
+
+std::unique_ptr<webrtc::VideoEncoder>
+EncodedVideoEncoderFactory::CreateVideoEncoder(
+    const webrtc::SdpVideoFormat& format) {
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
+    return webrtc::VP8Encoder::Create();
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
+    return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+    return CustomizedVideoEncoderProxy::Create();
+    // return webrtc::H264Encoder::Create(cricket::VideoCodec(format));
 #ifndef DISABLE_H265
-    cricket::VideoCodec main10_high(cricket::kH265CodecName);
-    main10_high.SetParam(cricket::kH265FmtpProfileSpace, "0");
-    main10_high.SetParam(cricket::kH265FmtpProfileId, "1");
-    main10_high.SetParam(cricket::kH265FmtpTierFlag, "0");
-    main10_high.SetParam(cricket::kH265FmtpLevelId, "120");
-    supported_codecs_.push_back(main10_high);
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH265Codecname))
+    return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
 #endif
-    const webrtc::H264::Level level = webrtc::H264::kLevel3_1;
-    cricket::VideoCodec constrained_baseline(cricket::kH264CodecName);
-    const webrtc::H264::ProfileLevelId constrained_baseline_profile(
-        webrtc::H264::kProfileConstrainedBaseline, level);
-    constrained_baseline.SetParam(
-        cricket::kH264FmtpProfileLevelId,
-        *webrtc::H264::ProfileLevelIdToString(constrained_baseline_profile));
-    constrained_baseline.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-    constrained_baseline.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-    supported_codecs_.push_back(constrained_baseline);
-
-  cricket::VideoCodec baseline(cricket::kH264CodecName);
-    const webrtc::H264::ProfileLevelId baseline_profile(
-        webrtc::H264::kProfileBaseline, level);
-    baseline.SetParam(cricket::kH264FmtpProfileLevelId,
-                      *webrtc::H264::ProfileLevelIdToString(baseline_profile));
-    baseline.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-    baseline.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-    supported_codecs_.push_back(baseline);
-
-    cricket::VideoCodec constrained_high(cricket::kH264CodecName);
-    const webrtc::H264::ProfileLevelId constrained_high_profile(
-        webrtc::H264::kProfileConstrainedHigh, level);
-    constrained_high.SetParam(
-        cricket::kH264FmtpProfileLevelId,
-        *webrtc::H264::ProfileLevelIdToString(constrained_high_profile));
-    constrained_high.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-    constrained_high.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-    supported_codecs_.push_back(constrained_high);
-
-     cricket::VideoCodec high(cricket::kH264CodecName);
-     const webrtc::H264::ProfileLevelId high_profile(
-          webrtc::H264::kProfileHigh, level);
-     high.SetParam(
-          cricket::kH264FmtpProfileLevelId,
-          *webrtc::H264::ProfileLevelIdToString(high_profile));
-     high.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-     high.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-     supported_codecs_.push_back(high);
 }
 
-EncodedVideoEncoderFactory::~EncodedVideoEncoderFactory() {}
-webrtc::VideoEncoder* EncodedVideoEncoderFactory::CreateVideoEncoder(
-    const cricket::VideoCodec& codec) {
-  if (supported_codecs_.empty()) {
-    return nullptr;
-  }
-  webrtc::VideoCodecType codec_type;
-  if (FindMatchingCodec(supported_codecs_, codec)) {
-    if (!_stricmp(codec.name.c_str(), "H264"))
-      codec_type = webrtc::kVideoCodecH264;
-    else if(!_stricmp(codec.name.c_str(), "VP8"))
-      codec_type = webrtc::kVideoCodecVP8;
-    else if (!_stricmp(codec.name.c_str(), "VP9"))
-        codec_type = webrtc::kVideoCodecVP9;
+std::vector<webrtc::SdpVideoFormat>
+EncodedVideoEncoderFactory::GetSupportedFormats() const {
+  std::vector<webrtc::SdpVideoFormat> supported_codecs;
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
+    supported_codecs.push_back(format);
+  // TODO: We should combine the codec profiles that hardware H.264 encoder
+  // supports with those provided by built-in H.264 encoder
+  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedH264Codecs())
+    supported_codecs.push_back(format);
 #ifndef DISABLE_H265
-    else if (!_stricmp(codec.name.c_str(), "H265"))
-        codec_type = webrtc::kVideoCodecH265;
-#endif
-    else {
-      return nullptr;
-    }
-    return new owt::base::CustomizedVideoEncoderProxy(codec_type);
+  for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {
+    supported_codecs.push_back(format);
   }
-  return nullptr;
+#endif
 }
-const std::vector<cricket::VideoCodec>&
-EncodedVideoEncoderFactory::supported_codecs() const {
-  return supported_codecs_;
+
+webrtc::VideoEncoderFactory::CodecInfo
+EncodedVideoEncoderFactory::QueryVideoEncoder(
+    const webrtc::SdpVideoFormat& format) const {
+  // TODO(johny): Basically we need to return different CodecInfo for different
+  // codec/profile combinations.
+  webrtc::VideoEncoderFactory::CodecInfo info;
+  info.is_hardware_accelerated = false;
+  info.has_internal_source = false;
+  return info;
 }
-void EncodedVideoEncoderFactory::DestroyVideoEncoder(
-    webrtc::VideoEncoder* encoder) {
-  delete encoder;
+
+#ifndef DISABLE_H265
+std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs() {
+  return {webrtc::SdpVideoFormat(cricket::kH265CodecName,
+                                 {{cricket::kH265FmtpProfileSpace, "0"},
+                                  {cricket::kH265FmtpProfileId, "1"},
+                                  {cricket::kH265FmtpTierFlag, "0"},
+                                  {cricket::kH265FmtpLevelId, "120"}})};
 }
+#endif
+
+} // namespace base
+} // namespace owt
