@@ -31,5 +31,14 @@ std::vector<webrtc::SdpVideoFormat> CodecUtils::SupportedH264Codecs() {
                        "0")};
 }  
 
+#ifndef DISABLE_H265
+std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
+  return {webrtc::SdpVideoFormat(cricket::kH265CodecName,
+                                 {{cricket::kH265FmtpProfileSpace, "0"},
+                                  {cricket::kH265FmtpProfileId, "1"},
+                                  {cricket::kH265FmtpTierFlag, "0"},
+                                  {cricket::kH265FmtpLevelId, "120"}})};
+}
+#endif
 }  // namespace base
 }  // namespace owt

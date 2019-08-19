@@ -162,7 +162,7 @@ static_library("owt_sdk_base") {
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   defines += [ "USE_BUILTIN_SW_CODECS" ]
   if (!rtc_use_h265) {
-    defines += [ "RTC_DISABLE_H265" ]
+    defines += [ "DISABLE_H265" ]
   }
   if (is_win || is_linux) {
     # Custom audio/video input and output.
