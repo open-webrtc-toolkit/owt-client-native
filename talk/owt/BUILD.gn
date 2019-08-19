@@ -75,6 +75,8 @@ static_library("owt_sdk_base") {
   sources = [
     "sdk/base/cameravideocapturer.cc",
     "sdk/base/cameravideocapturer.h",
+    "sdk/base/codecutils.cc",
+    "sdk/base/codecutils.h",
     "sdk/base/deviceutils.cc",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",

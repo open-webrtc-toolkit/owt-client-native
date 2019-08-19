@@ -8,6 +8,7 @@
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
 
@@ -38,7 +39,7 @@ MSDKVideoEncoderFactory::GetSupportedFormats() const {
     supported_codecs.push_back(format);
   // TODO: We should combine the codec profiles that hardware H.264 encoder
   // supports with those provided by built-in H.264 encoder
-  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedH264Codecs())
+  for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
 #ifndef DISABLE_H265
   for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {

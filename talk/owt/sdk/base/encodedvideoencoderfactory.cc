@@ -9,6 +9,7 @@
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
 #include "webrtc/rtc_base/string_utils.h"
+#include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/customizedvideoencoderproxy.h"
 #include "talk/owt/sdk/base/encodedvideoencoderfactory.h"
 
@@ -31,6 +32,7 @@ EncodedVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265Codecname))
     return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
 #endif
+  return nullptr;
 }
 
 std::vector<webrtc::SdpVideoFormat>
@@ -41,13 +43,14 @@ EncodedVideoEncoderFactory::GetSupportedFormats() const {
     supported_codecs.push_back(format);
   // TODO: We should combine the codec profiles that hardware H.264 encoder
   // supports with those provided by built-in H.264 encoder
-  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedH264Codecs())
+  for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
 #ifndef DISABLE_H265
   for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
 #endif
+  return supported_codecs;
 }
 
 webrtc::VideoEncoderFactory::CodecInfo

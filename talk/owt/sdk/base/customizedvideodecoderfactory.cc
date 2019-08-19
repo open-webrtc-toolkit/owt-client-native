@@ -8,6 +8,7 @@
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "owt/base/globalconfiguration.h"
+#include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/customizedvideodecoderfactory.h"
 #include "talk/owt/sdk/base/customizedvideodecoderproxy.h"
 
@@ -41,7 +42,7 @@ std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs() {
   supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
-  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedH264Codecs())
+  for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
 #ifndef DISABLE_H265
   for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {

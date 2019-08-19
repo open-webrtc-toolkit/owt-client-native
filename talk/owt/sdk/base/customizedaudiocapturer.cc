@@ -301,6 +301,6 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   }
   last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
   return true;
-};
+}
 }
 }

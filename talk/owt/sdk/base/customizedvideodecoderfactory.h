@@ -24,7 +24,7 @@ class CustomizedVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   // WebRtcVideoDecoderFactory implementation.
   std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
       const webrtc::SdpVideoFormat& format) override;
-  std::vector<SdpVideoFormat> GetSupportedFormats() const;
+  std::vector<SdpVideoFormat> GetSupportedFormats() const override;
  private:
   std::unique_ptr<owt::base::VideoDecoderInterface> external_decoder_;
 };
