@@ -27,16 +27,6 @@ CustomizedVideoDecoderFactory::CreateVideoDecoder(
   return CustomizedVideoDecoderProxy::Create(external_decoder_->Copy());
 }
 
-#ifndef DISABLE_H265
-std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs() {
-  return {webrtc::SdpVideoFormat(cricket::kH265CodecName,
-                                 {{cricket::kH265FmtpProfileSpace, "0"},
-                                  {cricket::kH265FmtpProfileId, "1"},
-                                  {cricket::kH265FmtpTierFlag, "0"},
-                                  {cricket::kH265FmtpLevelId, "120"}})};
-}
-#endif
-
  std::vector<SdpVideoFormat>CustomizedVideoDecoderFactory::GetSupportedFormats() const {
   std::vector<SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
@@ -45,7 +35,7 @@ std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs() {
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
 #ifndef DISABLE_H265
-  for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {
+  for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
 #endif

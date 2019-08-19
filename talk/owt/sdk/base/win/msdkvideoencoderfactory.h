@@ -21,11 +21,6 @@ class MSDKVideoEncoderFactory : public webrtc::VideoEncoderFactory {
 
   webrtc::VideoEncoderFactory::CodecInfo QueryVideoEncoder(
       const webrtc::SdpVideoFormat& format) const override;
-
- private:
-#ifndef DISABLE_H265
-  std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs();
-#endif
 };
 }  // namespace base
 }  // namespace owt

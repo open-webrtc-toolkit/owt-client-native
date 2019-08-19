@@ -45,10 +45,10 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     return webrtc::VP9Decoder::Create();
 #ifndef DISABLE_H265
-    } else if (*it == type && type == webrtc::kVideoCodecH265) {
-    return new MSDKVideoDecoder::Create(cricket::VideoCodec(fomrat));
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+    return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
 #endif
-    }
+  }
 
   return nullptr;
 }
@@ -62,7 +62,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
 #ifndef DISABLE_H265
-  for (const webrtc::SdpVideoFormat& format : GetSupportedH265Codecs()) {
+  for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
 #endif
