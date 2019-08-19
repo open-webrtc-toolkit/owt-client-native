@@ -320,7 +320,7 @@ int32_t CustomizedVideoEncoderProxy::NextNaluPosition(uint8_t* buffer,
 webrtc::VideoEncoder::EncoderInfo CustomizedVideoEncoderProxy::GetEncoderInfo()
     const {
   EncoderInfo info;
-  info.supports_native_handle = false;
+  info.supports_native_handle = true;
   info.is_hardware_accelerated = false;
   info.has_internal_source = false;
   info.implementation_name = "CustomizedEncoder";
