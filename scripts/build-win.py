@@ -30,13 +30,15 @@ PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests'
 NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 GN_ARGS = [
-    'rtc_use_h264=true',
-    'ffmpeg_branding="Chrome"',
-    'rtc_use_h265=true',
+    'is_clang=false',
+    'rtc_use_h264=false',
+    'rtc_use_h265=false',
     'is_component_build=false',
     'use_lld=false',
-    'rtc_include_tests=true',
-    'woogeen_include_tests=true',
+    'rtc_include_tests=false',
+    'woogeen_include_tests=false',
+    'rtc_build_examples=false',
+    'treat_warnings_as_errors=false',
 ]
 
 

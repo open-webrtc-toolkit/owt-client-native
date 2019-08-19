@@ -31,9 +31,7 @@ MSDKVideoEncoder::MSDKVideoEncoder()
       bitrate_(0),
       width_(0),
       height_(0),
-      framerate_(0),
       encoder_thread_(rtc::Thread::Create()),
-      m_memType_(MSDK_SYSTEM_MEMORY),
       inited_(false) {
   m_pmfxENC = nullptr;
   m_pEncSurfaces = nullptr;

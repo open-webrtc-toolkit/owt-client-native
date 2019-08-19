@@ -48,6 +48,7 @@ int DeviceUtils::GetVideoCaptureDeviceIndex(const std::string& id) {
       }
     }
   }
+  return -1;
 }
 
 std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(

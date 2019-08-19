@@ -4,10 +4,8 @@
 #ifndef OWT_BASE_GLOBALCONFIGURATION_H_
 #define OWT_BASE_GLOBALCONFIGURATION_H_
 #include <memory>
-#if defined(OWT_CUSTOM_AVIO)
 #include "owt/base/framegeneratorinterface.h"
 #include "owt/base/videodecoderinterface.h"
-#endif
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
@@ -56,7 +54,6 @@ class GlobalConfiguration {
   }
 #endif
   /** @cond */
-#if defined(OWT_CUSTOM_AVIO)
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
    please be noted at present only vp8 and h.264 encoded frame input is supported.
@@ -94,7 +91,6 @@ class GlobalConfiguration {
       std::unique_ptr<VideoDecoderInterface> external_video_decoder) {
     video_decoder_ = std::move(external_video_decoder);
   }
-#endif
   /**
   @breif This function disables/enables auto echo cancellation.
   @details When it is enabled, SDK will turn on AEC functionality.
@@ -140,7 +136,7 @@ class GlobalConfiguration {
   }
   static bool hardware_acceleration_enabled_;
 #endif
-#if defined(OWT_CUSTOM_AVIO)
+
   /**
    @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.
@@ -155,7 +151,7 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
-#endif
+
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.
@@ -184,7 +180,7 @@ class GlobalConfiguration {
   static bool GetNSEnabled() {
     return audio_processing_settings_.NSEnabled ? true : false;
   }
-#if defined(OWT_CUSTOM_AVIO)
+
   /**
    @brief This function returns audio frame generator.
    */
@@ -216,7 +212,7 @@ class GlobalConfiguration {
    * Customized video decoder. Default is nullptr.
    */
   static std::unique_ptr<VideoDecoderInterface> video_decoder_;
-#endif
+
   static AudioProcessingSettings audio_processing_settings_;
 };
 }

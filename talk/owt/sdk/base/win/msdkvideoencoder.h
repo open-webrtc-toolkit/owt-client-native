@@ -60,7 +60,6 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   int32_t bitrate_;  // Bitrate in bits per second.
   int32_t width_;
   int32_t height_;
-  int32_t framerate_;
   webrtc::VideoCodecType codecType_;
 
   MFXVideoSession* m_mfxSession;
@@ -72,10 +71,8 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   std::vector<mfxExtBuffer*> m_EncExtParams;
   mfxFrameAllocResponse m_EncResponse;
   mfxFrameSurface1* m_pEncSurfaces;  // frames array for encoder
-  mfxBitstream m_mfxBS;              // contains encoded data
   mfxU32 m_nFramesProcessed;
   std::unique_ptr<rtc::Thread> encoder_thread_;
-  MemType m_memType_;
   bool inited_;
 #ifdef OWT_DEBUG_MSDK_ENC
   FILE* output;

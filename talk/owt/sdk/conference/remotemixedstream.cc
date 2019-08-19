@@ -39,4 +39,4 @@ void RemoteMixedStream::OnActiveInputChanged(const std::string& stream_id) {
   }
 }
 }
-};
+}
