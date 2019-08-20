@@ -29,9 +29,9 @@ P2PClient::P2PClient(
     : signaling_channel_(signaling_channel), configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(*this);
-  task_queue_factory_ = webrtc::CreateDefaultTaskQueueFactory();
+  auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
   event_queue_ =
-      std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
+      std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
           "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
 }
 void P2PClient::Connect(
