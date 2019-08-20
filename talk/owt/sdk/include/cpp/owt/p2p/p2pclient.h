@@ -216,7 +216,6 @@ class P2PClient final
       const std::string& target_id);
   bool IsPeerConnectionChannelCreated(const std::string& target_id);
   owt::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
-  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
