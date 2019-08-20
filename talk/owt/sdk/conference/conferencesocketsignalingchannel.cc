@@ -20,7 +20,7 @@
 using namespace rtc;
 namespace owt {
 namespace conference {
-#define SIGNALING_PROTOCOL_VERSION "1.0"
+#define SIGNALING_PROTOCOL_VERSION "1.1"
 const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message

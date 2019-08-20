@@ -273,8 +273,8 @@ void ConferencePeerConnectionChannel::OnIceCandidatesRemoved(
     current_candidate->get_map()["candidate"] =
         sio::string_message::create(candidate_string);
     // jianlin: Native stack does not pop sdpMid & sdpMLineIndex to observer.
-    // Maybe need to create a hash table to map candidate id to sdpMid/sdpMlineIndex
-    // in OnIceCandidate().
+    // Maybe need to create a hash table to map candidate id to
+    // sdpMid/sdpMlineIndex in OnIceCandidate().
     removed_candidates->get_vector().push_back(current_candidate);
   }
   remove_candidates_msg->get_map()["candidates"] = removed_candidates;
@@ -447,55 +447,92 @@ void ConferencePeerConnectionChannel::Publish(
 }
 static bool SubOptionAllowed(
     const SubscribeOptions& subscribe_options,
+    const std::vector<PublicationSettings>& publication_settings,
     const SubscriptionCapabilities& subscription_caps) {
   // TODO: Audio sub constraints are currently not checked as spec only
   // specifies codec, though signaling allows specifying sampleRate and channel
   // num.
-  bool result = true;
+
+  // If rid is specified, search in publication_settings for rid;
+  if (subscribe_options.video.rid != "") {
+    for (auto setting : publication_settings) {
+      if (setting.video.rid == subscribe_options.video.rid)
+        return true;
+    }
+    return false;
+  }
+
+  bool res_supported = (subscribe_options.video.resolution.width == 0 &&
+                        subscribe_options.video.resolution.height == 0);
+  bool frame_rate_supported = (subscribe_options.video.frameRate == 0);
+  bool keyframe_interval_supported =
+      (subscribe_options.video.keyFrameInterval == 0);
+  bool bitrate_multiplier_supported =
+      (subscribe_options.video.bitrateMultiplier == 0);
+
+  // If rid is not used, check in publication_settings and capabilities.
+  for (auto setting : publication_settings) {
+    if (subscribe_options.video.resolution.width != 0 &&
+        subscribe_options.video.resolution.height != 0 &&
+        setting.video.resolution.width ==
+            subscribe_options.video.resolution.width &&
+        setting.video.resolution.height ==
+            subscribe_options.video.resolution.height) {
+      res_supported = true;
+    }
+
+    if (subscribe_options.video.frameRate != 0 &&
+            setting.video.frame_rate == subscribe_options.video.frameRate) {
+      frame_rate_supported = true;
+    }
+
+    if (subscribe_options.video.keyFrameInterval != 0 &&
+        setting.video.keyframe_interval ==
+            subscribe_options.video.keyFrameInterval)
+          keyframe_interval_supported = true;
+  }
+
   if (subscribe_options.video.resolution.width != 0 &&
       subscribe_options.video.resolution.height != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.resolutions.begin(),
                      subscription_caps.video.resolutions.end(),
                      [&](const Resolution& format) {
                        return format == subscribe_options.video.resolution;
                      }) != subscription_caps.video.resolutions.end()) {
-      result = true;
+      res_supported = true;
     }
   }
   if (subscribe_options.video.frameRate != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.frame_rates.begin(),
                      subscription_caps.video.frame_rates.end(),
                      [&](const double& format) {
                        return format == subscribe_options.video.frameRate;
                      }) != subscription_caps.video.frame_rates.end()) {
-      result = true;
+      frame_rate_supported = true;
     }
   }
   if (subscribe_options.video.keyFrameInterval != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.keyframe_intervals.begin(),
                      subscription_caps.video.keyframe_intervals.end(),
                      [&](const unsigned long& format) {
                        return format ==
                               subscribe_options.video.keyFrameInterval;
                      }) != subscription_caps.video.keyframe_intervals.end()) {
-      result = true;
+      keyframe_interval_supported = true;
     }
   }
   if (subscribe_options.video.bitrateMultiplier != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.bitrate_multipliers.begin(),
                      subscription_caps.video.bitrate_multipliers.end(),
                      [&](const double& format) {
                        return format ==
                               subscribe_options.video.bitrateMultiplier;
                      }) != subscription_caps.video.bitrate_multipliers.end()) {
-      result = true;
+      bitrate_multiplier_supported = true;
     }
   }
-  return result;
+  return (res_supported && frame_rate_supported &&
+      keyframe_interval_supported && bitrate_multiplier_supported);
 }
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
@@ -505,7 +542,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   RTC_LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                    << stream->has_audio_ << ", has video? "
                    << stream->has_video_;
-  if (!SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+  if (!SubOptionAllowed(subscribe_options, stream->Settings(), stream->Capabilities())) {
     RTC_LOG(LS_ERROR)
         << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
@@ -579,6 +616,10 @@ void ConferencePeerConnectionChannel::Subscribe(
           sio::int_message::create(subscribe_options.video.frameRate);
     }
     video_options->get_map()["parameters"] = video_spec;
+    if (subscribe_options.video.rid != "") {
+      video_options->get_map()["simulcastRid"] =
+          sio::string_message::create(subscribe_options.video.rid);
+    }
     media_options->get_map()["video"] = video_options;
   } else {
     media_options->get_map()["video"] = sio::bool_message::create(false);
