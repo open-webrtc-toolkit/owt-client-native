@@ -392,9 +392,21 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
     }
     scoped_refptr<VideoTrackSourceInterface> source = capturer_->source();
 #endif
+    if (!source) {
+      RTC_LOG(LS_ERROR)
+          << "Failed to create video source. Please check device availability.";
+      error_code = static_cast<int>(ExceptionType::kLocalNotSupported);
+      return;
+    }
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
         pcd_factory->CreateLocalVideoTrack(video_track_id, source);
+    if (!video_track) {
+      RTC_LOG(LS_ERROR)
+          << "Failed to create video track. Please check device availability.";
+      error_code = static_cast<int>(ExceptionType::kLocalNotSupported);
+      return;
+    }
     stream->AddTrack(video_track);
   }
   source_.video = VideoSourceInfo::kCamera;
