@@ -1,11 +1,11 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+#include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include <vector>
+#include "talk/owt/sdk/base/sdputils.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/thread.h"
-#include "talk/owt/sdk/base/peerconnectionchannel.h"
-#include "talk/owt/sdk/base/sdputils.h"
 using namespace rtc;
 namespace owt {
 namespace base {
@@ -14,8 +14,7 @@ PeerConnectionChannel::PeerConnectionChannel(
     : pc_thread_(nullptr),
       configuration_(configuration),
       factory_(nullptr),
-      peer_connection_(nullptr) {
-}
+      peer_connection_(nullptr) {}
 PeerConnectionChannel::~PeerConnectionChannel() {
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
@@ -31,8 +30,8 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   offer_answer_options_.offer_to_receive_video = true;
   configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-  peer_connection_ = (factory_->CreatePeerConnection(configuration_, this))
-                         .get();
+  peer_connection_ =
+      (factory_->CreatePeerConnection(configuration_, this)).get();
   if (!peer_connection_.get()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize PeerConnection.";
     RTC_DCHECK(false);
@@ -44,7 +43,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   }
   RTC_CHECK(peer_connection_);
   RTC_CHECK(pc_thread_);
-  rtc::NetworkMonitorInterface* network_monitor=factory_->NetworkMonitor();
+  rtc::NetworkMonitorInterface* network_monitor = factory_->NetworkMonitor();
   if (network_monitor) {
     network_monitor->SignalNetworksChanged.connect(
         this, &PeerConnectionChannel::OnNetworksChanged);
@@ -70,14 +69,16 @@ void PeerConnectionChannel::ApplyBitrateSettings() {
         // should move here instead of modifying SDP.
         if (sender_track->kind() ==
             webrtc::MediaStreamTrackInterface::kAudioKind) {
-          if (configuration_.audio.size() > 0 && configuration_.audio[0].max_bitrate > 0) {
+          if (configuration_.audio.size() > 0 &&
+              configuration_.audio[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
                 absl::optional<int>(configuration_.audio[0].max_bitrate * 1024);
             sender->SetParameters(rtp_parameters);
           }
         } else if (sender_track->kind() ==
                    webrtc::MediaStreamTrackInterface::kVideoKind) {
-          if (configuration_.video.size() > 0 && configuration_.video[0].max_bitrate > 0) {
+          if (configuration_.video.size() > 0 &&
+              configuration_.video[0].max_bitrate > 0) {
             rtp_parameters.encodings[idx].max_bitrate_bps =
                 absl::optional<int>(configuration_.video[0].max_bitrate * 1024);
             sender->SetParameters(rtp_parameters);
@@ -116,9 +117,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateOffer(
-          param->data(),
-          offer_answer_options_);
+      peer_connection_->CreateOffer(param->data(), offer_answer_options_);
       delete param;
       break;
     }
@@ -128,9 +127,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateAnswer(
-          param->data(),
-          offer_answer_options_);
+      peer_connection_->CreateAnswer(param->data(), offer_answer_options_);
       delete param;
       break;
     }
@@ -159,14 +156,12 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       for (auto& audio_enc_param : configuration_.audio) {
         audio_codecs.push_back(audio_enc_param.codec.name);
       }
-      sdp_string = SdpUtils::SetPreferAudioCodecs(
-          sdp_string, audio_codecs);
+      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
       std::vector<VideoCodec> video_codecs;
       for (auto& video_enc_param : configuration_.video) {
         video_codecs.push_back(video_enc_param.codec.name);
       }
-      sdp_string = SdpUtils::SetPreferVideoCodecs(
-          sdp_string, video_codecs);
+      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
       webrtc::SessionDescriptionInterface* new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       peer_connection_->SetLocalDescription(param->observer, new_desc);
@@ -202,11 +197,43 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
               msg->pdata);
       MediaStreamInterface* stream = param->data();
-      for (const auto track : stream->GetAudioTracks()) {
-        peer_connection_->AddTrack(track, {stream->id()});
-      }
+
       for (const auto track : stream->GetVideoTracks()) {
-        peer_connection_->AddTrack(track, {stream->id()});
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.direction =
+            webrtc::RtpTransceiverDirection::kSendOnly;
+        if (configuration_.video[0].rtp_encoding_parameters.size() != 0) {
+          for (auto encoding :
+               configuration_.video[0].rtp_encoding_parameters) {
+            webrtc::RtpEncodingParameters param;
+            param.rid = encoding.rid;
+            if (encoding.max_bitrate_bps != 0)
+              param.max_bitrate_bps = encoding.max_bitrate_bps;
+            if (encoding.max_framerate != 0)
+              param.max_framerate = encoding.max_framerate;
+            if (param.scale_resolution_down_by > 0)
+              param.scale_resolution_down_by =
+                encoding.scale_resolution_down_by;
+            param.active = encoding.active;
+            transceiver_init.send_encodings.push_back(param);
+          }
+        }
+        auto transceiver = peer_connection_->AddTransceiver(
+            cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
+
+        if (transceiver.ok()) {
+          transceiver.MoveValue()->sender()->SetTrack(track);
+        }
+      }
+      for (const auto track : stream->GetAudioTracks()) {
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+        auto transceiver = peer_connection_->AddTransceiver(
+            cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
+
+        if (transceiver.ok()) {
+          transceiver.MoveValue()->sender()->SetTrack(track);
+        }
       }
       delete param;
       break;
@@ -303,10 +330,10 @@ void PeerConnectionChannel::OnIceConnectionChange(
     PeerConnectionInterface::IceConnectionState new_state) {}
 void PeerConnectionChannel::OnIceGatheringChange(
     PeerConnectionInterface::IceGatheringState new_state) {}
-void PeerConnectionChannel::OnNetworksChanged(){
+void PeerConnectionChannel::OnNetworksChanged() {
   RTC_LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
 }
 PeerConnectionChannelConfiguration::PeerConnectionChannelConfiguration()
     : RTCConfiguration() {}
-}
-}
+}  // namespace base
+}  // namespace owt
