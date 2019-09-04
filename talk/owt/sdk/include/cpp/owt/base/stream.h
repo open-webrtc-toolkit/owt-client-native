@@ -13,6 +13,7 @@
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
 #include "owt/base/videorendererinterface.h"
+#include "owt/base/audioplayerinterface.h"
 namespace webrtc {
 class MediaStreamInterface;
 class VideoTrackSourceInterface;
@@ -50,6 +51,7 @@ class StreamObserver {
   virtual void OnUnmute(TrackKind track_kind) {}
 };
 class WebrtcVideoRendererImpl;
+class WebrtcAudioRendererImpl;
 #if defined(WEBRTC_WIN)
 class WebrtcVideoRendererD3D9Impl;
 #endif
@@ -77,6 +79,9 @@ class Stream {
   /// remote stream. Be noted if you turned hardware acceleration on, calling
   /// this API on remote stream will have no effect.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+  /// Attach the stream to an audio player that receives PCM data besides sending to
+  /// audio output device.
+  virtual void AttachAudioPlayer(AudioPlayerInterface& player);
   /**
     @brief Returns a user-defined attribute map.
     @details These attributes are defined by publisher. P2P mode always return
@@ -100,6 +105,8 @@ class Stream {
 #endif
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
+  /// Detach the stream from the audio player.
+  virtual void DetachAudioPlayer();
   /// Register an observer on the stream.
   void AddObserver(StreamObserver& observer);
   /// De-Register an observer on the stream.
@@ -118,6 +125,7 @@ class Stream {
   MediaStreamInterface* media_stream_;
   std::unordered_map<std::string, std::string> attributes_;
   WebrtcVideoRendererImpl* renderer_impl_;
+  WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
   WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
 #endif

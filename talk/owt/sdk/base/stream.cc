@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "modules/video_capture/video_capture.h"
 #include "pc/video_track_source.h"
+#include "talk/owt/sdk/base/vcmcapturer.h"
 #include "webrtc/api/video/video_source_interface.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/rtc_base/helpers.h"
 #include "webrtc/sdk/media_constraints.h"
-#include "talk/owt/sdk/base/vcmcapturer.h"
 
 #include "talk/owt/sdk/base/customizedframescapturer.h"
+#include "talk/owt/sdk/base/webrtcaudiorendererimpl.h"
 #include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 
@@ -21,10 +22,10 @@
 #if defined(WEBRTC_IOS)
 #include "talk/owt/sdk/base/objc/ObjcVideoCapturerInterface.h"
 #endif
+#include "talk/owt/sdk/base/customizedvideosource.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/owt/sdk/include/cpp/owt/base/deviceutils.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
-#include "talk/owt/sdk/base/customizedvideosource.h"
 
 using namespace rtc;
 namespace owt {
@@ -57,8 +58,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
   }
 
  protected:
-  explicit CapturerTrackSource(
-      std::unique_ptr<owt::base::VcmCapturer> capturer)
+  explicit CapturerTrackSource(std::unique_ptr<owt::base::VcmCapturer> capturer)
       : VideoTrackSource(/*remote=*/false), capturer_(std::move(capturer)) {}
 
  private:
@@ -72,6 +72,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
 Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
@@ -79,25 +80,27 @@ Stream::Stream()
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
       id_(id) {}
 #else
 Stream::Stream()
-    : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_("") {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr), source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
 }
 Stream::~Stream() {
   DetachVideoRenderer();
+  DetachAudioPlayer();
   if (media_stream_)
     media_stream_->Release();
 }
@@ -170,6 +173,31 @@ void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
+void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
+  if (media_stream_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
+    return;
+  }
+  auto audio_tracks = media_stream_->GetAudioTracks();
+  if (audio_tracks.size() == 0) {
+    RTC_LOG(LS_ERROR) << "Attach failed because of no audio tracks.";
+    return;
+  } else if (audio_tracks.size() > 1) {
+    RTC_LOG(LS_WARNING)
+        << "There are more than one audio tracks, the first one "
+           "will be attachecd to renderer.";
+  }
+  WebrtcAudioRendererImpl* old_renderer =
+      audio_renderer_impl_ ? audio_renderer_impl_ : nullptr;
+  audio_renderer_impl_ = new WebrtcAudioRendererImpl(player);
+  audio_tracks[0]->RemoveSink(old_renderer);
+  audio_tracks[0]->AddSink(audio_renderer_impl_);
+  if (old_renderer)
+    delete old_renderer;
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+
+
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
@@ -221,6 +249,21 @@ void Stream::DetachVideoRenderer() {
     d3d9_renderer_impl_ = nullptr;
   }
 #endif
+}
+
+void Stream::DetachAudioPlayer() {
+  if (media_stream_ == nullptr)
+    return;
+
+  auto audio_tracks = media_stream_->GetAudioTracks();
+  if (audio_tracks.size() == 0)
+    return;
+
+  if (audio_renderer_impl_ != nullptr) {
+    audio_tracks[0]->RemoveSink(audio_renderer_impl_);
+    delete audio_renderer_impl_;
+    audio_renderer_impl_ = nullptr;
+  }
 }
 
 StreamSourceInfo Stream::Source() const {
