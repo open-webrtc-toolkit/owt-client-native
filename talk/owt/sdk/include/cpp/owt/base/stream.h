@@ -75,13 +75,6 @@ class Stream {
   virtual void EnableAudio();
   /// Enable all video tracks of the stream.
   virtual void EnableVideo();
-  /// Attach the stream to a renderer to receive ARGB/I420 frames for local or
-  /// remote stream. Be noted if you turned hardware acceleration on, calling
-  /// this API on remote stream will have no effect.
-  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
-  /// Attach the stream to an audio player that receives PCM data besides sending to
-  /// audio output device.
-  virtual void AttachAudioPlayer(AudioPlayerInterface& player);
   /**
     @brief Returns a user-defined attribute map.
     @details These attributes are defined by publisher. P2P mode always return
@@ -98,10 +91,17 @@ class Stream {
     from mixed stream, it will be set as kMixed.
   */
   virtual StreamSourceInfo Source() const;
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  /// Attach the stream to a renderer to receive ARGB/I420 frames for local or
+  /// remote stream. Be noted if you turned hardware acceleration on, calling
+  /// this API on remote stream will have no effect.
+  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
   virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
+  /// Attach the stream to an audio player that receives PCM data besides sending to
+  /// audio output device.
+  virtual void AttachAudioPlayer(AudioPlayerInterface& player);
 #endif
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();
