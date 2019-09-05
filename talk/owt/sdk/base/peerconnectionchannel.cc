@@ -202,7 +202,8 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         webrtc::RtpTransceiverInit transceiver_init;
         transceiver_init.direction =
             webrtc::RtpTransceiverDirection::kSendOnly;
-        if (configuration_.video[0].rtp_encoding_parameters.size() != 0) {
+        if (configuration_.video.size() > 0 &&
+            configuration_.video[0].rtp_encoding_parameters.size() != 0) {
           for (auto encoding :
                configuration_.video[0].rtp_encoding_parameters) {
             webrtc::RtpEncodingParameters param;
