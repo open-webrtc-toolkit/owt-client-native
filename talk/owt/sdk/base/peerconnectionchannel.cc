@@ -200,6 +200,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
 
       for (const auto track : stream->GetVideoTracks()) {
         webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(stream->id());
         transceiver_init.direction =
             webrtc::RtpTransceiverDirection::kSendOnly;
         if (configuration_.video.size() > 0 &&
@@ -228,6 +229,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       }
       for (const auto track : stream->GetAudioTracks()) {
         webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(stream->id());
         transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
         auto transceiver = peer_connection_->AddTransceiver(
             cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
