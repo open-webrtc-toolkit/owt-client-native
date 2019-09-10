@@ -197,7 +197,17 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
               msg->pdata);
       MediaStreamInterface* stream = param->data();
+      for (const auto track : stream->GetAudioTracks()) {
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(stream->id());
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+        auto transceiver = peer_connection_->AddTransceiver(
+            cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
 
+        if (transceiver.ok()) {
+          transceiver.MoveValue()->sender()->SetTrack(track);
+        }
+      }
       for (const auto track : stream->GetVideoTracks()) {
         webrtc::RtpTransceiverInit transceiver_init;
         transceiver_init.stream_ids.push_back(stream->id());
@@ -222,17 +232,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         }
         auto transceiver = peer_connection_->AddTransceiver(
             cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
-
-        if (transceiver.ok()) {
-          transceiver.MoveValue()->sender()->SetTrack(track);
-        }
-      }
-      for (const auto track : stream->GetAudioTracks()) {
-        webrtc::RtpTransceiverInit transceiver_init;
-        transceiver_init.stream_ids.push_back(stream->id());
-        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
-        auto transceiver = peer_connection_->AddTransceiver(
-            cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
 
         if (transceiver.ok()) {
           transceiver.MoveValue()->sender()->SetTrack(track);
