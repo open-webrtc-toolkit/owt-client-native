@@ -49,6 +49,7 @@ def gngen(arch, ssl_root, msdk_root, scheme):
         gn_args.append('is_debug=false')
     else:
         gn_args.append('is_debug=true')
+        gn_args.append('enable_iterator_debugging=true')
     if ssl_root:
         gn_args.append('woogeen_use_openssl=true')
         gn_args.append('woogeen_openssl_header_root="%s"' % (ssl_root + r'\\include'))
