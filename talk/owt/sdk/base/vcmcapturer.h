@@ -15,13 +15,12 @@
 
 #include "api/scoped_refptr.h"
 #include "modules/video_capture/video_capture.h"
+#include "webrtc/rtc_base/thread.h"
 #include "talk/owt/sdk/base/cameravideocapturer.h"
 
 // This file is borrowed from webrtc project.
-
 namespace owt {
 namespace base {
-
 class VcmCapturer : public CameraVideoCapturer,
                     public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
@@ -40,9 +39,14 @@ class VcmCapturer : public CameraVideoCapturer,
             size_t target_fps,
             size_t capture_device_index);
   void Destroy();
-
+  rtc::scoped_refptr<webrtc::VideoCaptureModule> CreateDeviceOnVCMThread(
+      const char* unique_device_utf8);
+  int32_t StartCaptureOnVCMThread(webrtc::VideoCaptureCapability);
+  int32_t StopCaptureOnVCMThread();
+  void ReleaseOnVCMThread();
   rtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
   webrtc::VideoCaptureCapability capability_;
+  std::unique_ptr<rtc::Thread> vcm_thread_;
 };
 
 }  // namespace base

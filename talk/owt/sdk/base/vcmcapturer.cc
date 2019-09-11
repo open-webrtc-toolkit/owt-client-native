@@ -14,14 +14,19 @@
 #include <memory>
 
 #include "modules/video_capture/video_capture_factory.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
 
 // This file is borrowed from webrtc project.
 namespace owt {
 namespace base {
 
-VcmCapturer::VcmCapturer() : vcm_(nullptr) {}
+VcmCapturer::VcmCapturer()
+    : vcm_(nullptr),
+      vcm_thread_(rtc::Thread::CreateWithSocketServer()) {
+  vcm_thread_->Start();
+}
 
 bool VcmCapturer::Init(size_t width,
                        size_t height,
@@ -39,7 +44,10 @@ bool VcmCapturer::Init(size_t width,
     return false;
   }
 
-  vcm_ = webrtc::VideoCaptureFactory::Create(unique_name);
+  vcm_ = vcm_thread_->Invoke<rtc::scoped_refptr<webrtc::VideoCaptureModule>>(
+      RTC_FROM_HERE,
+      Bind(&VcmCapturer::CreateDeviceOnVCMThread, this,
+                          unique_name));
   if (!vcm_) {
     return false;
   }
@@ -52,14 +60,32 @@ bool VcmCapturer::Init(size_t width,
   capability_.maxFPS = static_cast<int32_t>(target_fps);
   capability_.videoType = webrtc::VideoType::kI420;
 
-  if (vcm_->StartCapture(capability_) != 0) {
+  if (vcm_thread_->Invoke<int32_t>(
+      RTC_FROM_HERE,
+      Bind(&VcmCapturer::StartCaptureOnVCMThread, this, capability_)) != 0) {
     Destroy();
     return false;
   }
 
-  RTC_CHECK(vcm_->CaptureStarted());
-
   return true;
+}
+rtc::scoped_refptr<webrtc::VideoCaptureModule>
+VcmCapturer::CreateDeviceOnVCMThread(
+    const char* unique_device_utf8) {
+  return webrtc::VideoCaptureFactory::Create(unique_device_utf8);
+}
+
+int32_t VcmCapturer::StartCaptureOnVCMThread(
+    webrtc::VideoCaptureCapability capability) {
+  return vcm_->StartCapture(capability);
+}
+
+int32_t VcmCapturer::StopCaptureOnVCMThread() {
+  return vcm_->StopCapture();
+}
+
+void VcmCapturer::ReleaseOnVCMThread() {
+  vcm_ = nullptr;
 }
 
 VcmCapturer* VcmCapturer::Create(size_t width,
@@ -80,14 +106,17 @@ void VcmCapturer::Destroy() {
   if (!vcm_)
     return;
 
-  vcm_->StopCapture();
+  vcm_thread_->Invoke<int32_t>(RTC_FROM_HERE,
+                            Bind(&VcmCapturer::StopCaptureOnVCMThread, this));
   vcm_->DeRegisterCaptureDataCallback();
   // Release reference to VCM.
-  vcm_ = nullptr;
+  vcm_thread_->Invoke<void>(RTC_FROM_HERE,
+                            Bind(&VcmCapturer::ReleaseOnVCMThread, this));
 }
 
 VcmCapturer::~VcmCapturer() {
   Destroy();
+  vcm_thread_->Stop();
 }
 
 void VcmCapturer::OnFrame(const webrtc::VideoFrame& frame) {
