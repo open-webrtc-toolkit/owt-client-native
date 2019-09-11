@@ -140,10 +140,10 @@ void PeerConnectionDependencyFactory::
 #endif
   rtc::scoped_refptr<AudioDeviceModule> adm;
 
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     // Create ADM on worker thred as RegisterAudioCallback is invoked there.
     adm = worker_thread->Invoke<rtc::scoped_refptr<AudioDeviceModule>>(
