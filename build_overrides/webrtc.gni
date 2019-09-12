@@ -20,6 +20,6 @@ rtc_include_tests = false
 # By default enable internal codecs.
 rtc_use_builtin_sw_codecs = true
 
-if (woogeen_include_tests) {
+if (owt_include_tests) {
   rtc_include_tests = true
 }

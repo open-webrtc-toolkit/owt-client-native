@@ -6,16 +6,16 @@
 
 declare_args() {
   # Use external OpenSSL instead of BoringSSL.
-  woogeen_use_openssl = false
+  owt_use_openssl = false
 
   # External OpenSSL header path
-  woogeen_openssl_header_root = ""
+  owt_openssl_header_root = ""
 
   # External OpenSSL lib path
-  woogeen_openssl_lib_root = ""
+  owt_openssl_lib_root = ""
 }
 
-if (woogeen_use_openssl) {
-  rtc_ssl_root = woogeen_openssl_header_root
-  rtc_build_ssl = !woogeen_use_openssl
+if (owt_use_openssl) {
+  rtc_ssl_root = owt_openssl_header_root
+  rtc_build_ssl = !owt_use_openssl
 }

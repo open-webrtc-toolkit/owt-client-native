@@ -36,7 +36,7 @@ GN_ARGS = [
     'is_component_build=false',
     'use_lld=false',
     'rtc_include_tests=false',
-    'woogeen_include_tests=false',
+    'owt_include_tests=false',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
 ]
@@ -51,9 +51,9 @@ def gngen(arch, ssl_root, msdk_root, scheme):
         gn_args.append('is_debug=true')
         gn_args.append('enable_iterator_debugging=true')
     if ssl_root:
-        gn_args.append('woogeen_use_openssl=true')
-        gn_args.append('woogeen_openssl_header_root="%s"' % (ssl_root + r'\\include'))
-        gn_args.append('woogeen_openssl_lib_root="%s"' % (ssl_root + r'\\lib'))
+        gn_args.append('owt_use_openssl=true')
+        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\\include'))
+        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\\lib'))
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'\\lib\\win32'
@@ -61,8 +61,8 @@ def gngen(arch, ssl_root, msdk_root, scheme):
             msdk_lib = msdk_root + r'\\lib\\x64'
         else:
             return False
-        gn_args.append('woogeen_msdk_header_root="%s"' % (msdk_root + r'\\include'))
-        gn_args.append('woogeen_msdk_lib_root="%s"' % msdk_lib)
+        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'\\include'))
+        gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('Please set the path of msdk_root.')
         return False
