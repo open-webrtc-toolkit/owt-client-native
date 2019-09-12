@@ -10,6 +10,8 @@
 #include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "webrtc/api/create_peerconnection_factory.h"
+#include "webrtc/api/video_codecs/builtin_video_decoder_factory.h"
+#include "webrtc/api/video_codecs/builtin_video_encoder_factory.h"
 #include "webrtc/media/base/media_channel.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/rtc_base/bind.h"
@@ -119,21 +121,39 @@ void PeerConnectionDependencyFactory::
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
 #elif defined(WEBRTC_WIN)
-  if (render_hardware_acceleration_enabled_) {
-    if (!encoded_frame_) {
-      encoder_factory.reset(new MSDKVideoEncoderFactory());
-    }
-    if (!GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
-      decoder_factory.reset(new MSDKVideoDecoderFactory());
-    }
+  // Configure codec factories. MSDK factory will internally use built-in codecs
+  // if hardware acceleration is not in place. For H.265/H.264, if hardware acceleration
+  // is turned off at application level, negotiation will fail.
+  if (encoded_frame_) {
+    encoder_factory.reset(new EncodedVideoEncoderFactory());
+  } else if (render_hardware_acceleration_enabled_) {
+    encoder_factory.reset(new MSDKVideoEncoderFactory());
+  } else {
+    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
   }
+
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
+  } else if (render_hardware_acceleration_enabled_) {
+    decoder_factory.reset(new MSDKVideoDecoderFactory());
+  } else {
+    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
   }
-  // Encoded video frame enabled
+
+#elif defined(WEBRTC_LINUX)
+  // MSDK support for Linux is not in place. Use default.
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
+  } else {
+    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
+  }
+
+  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+    decoder_factory.reset(new CustomizedVideoDecoderFactory(
+        GlobalConfiguration::GetCustomizedVideoDecoder()));
+  } else {
+    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
   }
 #else
 #error "Unsupported platform."
@@ -154,24 +174,15 @@ void PeerConnectionDependencyFactory::
   }
 #endif
 
-#if defined(WEBRTC_IOS)
-  pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
-      webrtc::CreateBuiltinAudioEncoderFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
-      std::move(decoder_factory), nullptr,
-      nullptr);  // Decoder factory
-#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
       std::move(decoder_factory), nullptr, nullptr);
-#else
-#error "Unsupported platform."
-#endif
+
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
+
 scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
