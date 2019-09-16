@@ -39,18 +39,15 @@ if (is_android) {
 static_library("owt_deps") {
   deps = [
     "//third_party/jsoncpp",
-    "//third_party/libyuv:libyuv",
-    "//third_party/webrtc/rtc_base:rtc_json",
-    "//third_party/webrtc/api:libjingle_peerconnection_api",
     "//third_party/webrtc/api:create_peerconnection_factory",
-    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
+    "//third_party/webrtc/api:libjingle_peerconnection_api",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
+    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
+    "//third_party/webrtc/rtc_base:rtc_json",
   ]
-  
+
   if (is_ios || is_android) {
-    deps += [
-      "//third_party/webrtc/sdk:native_api",
-    ]
+    deps += [ "//third_party/webrtc/sdk:native_api" ]
   }
   complete_static_lib = true
 }
@@ -99,6 +96,9 @@ static_library("owt_sdk_base") {
     "sdk/base/sysinfo.h",
     "sdk/base/vcmcapturer.cc",
     "sdk/base/vcmcapturer.h",
+    "sdk/base/webrtcaudiorendererimpl.cc",
+    "sdk/base/webrtcaudiorendererimpl.h",
+    "sdk/include/cpp/owt/base/audioplayerinterface.h",
     "sdk/include/cpp/owt/base/clientconfiguration.h",
     "sdk/include/cpp/owt/base/connectionstats.h",
     "sdk/include/cpp/owt/base/deviceutils.h",
@@ -107,23 +107,20 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/localcamerastreamparameters.h",
     "sdk/include/cpp/owt/base/logging.h",
     "sdk/include/cpp/owt/base/stream.h",
-    "sdk/base/webrtcvideorendererimpl.cc",
-    "sdk/base/webrtcvideorendererimpl.h",
-    "sdk/base/webrtcaudiorendererimpl.cc",
-    "sdk/base/webrtcaudiorendererimpl.h",
-    "sdk/include/cpp/owt/base/audioplayerinterface.h",
     "sdk/include/cpp/owt/base/videorendererinterface.h",
   ]
   if (is_win || is_linux) {
     sources += [
       "sdk/base/customizedframescapturer.cc",
       "sdk/base/customizedframescapturer.h",
-      "sdk/base/customizedvideosource.cc",
-      "sdk/base/customizedvideosource.h",
       "sdk/base/customizedvideoencoderproxy.cc",
       "sdk/base/customizedvideoencoderproxy.h",
+      "sdk/base/customizedvideosource.cc",
+      "sdk/base/customizedvideosource.h",
       "sdk/base/encodedvideoencoderfactory.cc",
       "sdk/base/encodedvideoencoderfactory.h",
+      "sdk/base/webrtcvideorendererimpl.cc",
+      "sdk/base/webrtcvideorendererimpl.h",
       "sdk/include/cpp/owt/base/videodecoderinterface.h",
     ]
   }
