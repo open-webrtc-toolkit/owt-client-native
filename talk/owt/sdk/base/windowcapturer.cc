@@ -63,30 +63,31 @@ void BasicWindowCapturer::WindowCaptureThreadFunc(void* pThis) {
 }
 
 bool BasicWindowCapturer::CaptureThreadProcess() {
-  if (!capture_started_) {
+  while (!capture_started_) {
     webrtc::SleepMs(10);
-    return true;
   }
-  uint64_t current_time = clock_->CurrentNtpInMilliseconds();
-  lock_.Enter();
-  if (last_call_record_millis_ == 0 ||
-      (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
-    if (source_specified_ && window_capturer_) {
-      last_call_record_millis_ = current_time;
-      window_capturer_->CaptureFrame();
+  while (capture_started_) {
+    uint64_t current_time = clock_->CurrentNtpInMilliseconds();
+    lock_.Enter();
+    if (last_call_record_millis_ == 0 ||
+        (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
+      if (source_specified_ && window_capturer_) {
+        last_call_record_millis_ = current_time;
+        window_capturer_->CaptureFrame();
+      }
     }
-  }
-  lock_.Leave();
-  int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
-  need_sleep_ms_ = 33 - cost_ms;
-  if (need_sleep_ms_ > 0) {
-    current_time = clock_->CurrentNtpInMilliseconds();
-    webrtc::SleepMs(need_sleep_ms_);
-    real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
-  } else {
-    RTC_LOG(LS_WARNING)
-        << "Cost too much time on window frame capture. This may "
+    lock_.Leave();
+    int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
+    need_sleep_ms_ = 33 - cost_ms;
+    if (need_sleep_ms_ > 0) {
+      current_time = clock_->CurrentNtpInMilliseconds();
+      webrtc::SleepMs(need_sleep_ms_);
+      real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
+    } else {
+      RTC_LOG(LS_WARNING)
+          << "Cost too much time on window frame capture. This may "
            "leads to large latency";
+    }
   }
   return true;
 }
