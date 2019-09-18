@@ -1,0 +1,227 @@
+From 5c2fc0646279c678d73cbbbd59726438eb258e10 Mon Sep 17 00:00:00 2001
+From: Raul Tambre <raul@tambre.ee>
+Date: Sat, 29 Dec 2018 00:57:12 +0000
+Subject: [PATCH] Add Visual Studio 2019 and Preview edition support
+
+Made the code for finding the Visual Studio installation directory more generic.
+And removed unnecessary PGO code in the toolchain script.
+
+Bug: 907300
+Change-Id: Ia4da74ab5658d916b37abc6a0a0ef08fb0ef3e60
+Reviewed-on: https://chromium-review.googlesource.com/c/1390037
+Reviewed-by: Nico Weber <thakis@chromium.org>
+Reviewed-by: Bruce Dawson <brucedawson@chromium.org>
+Commit-Queue: Bruce Dawson <brucedawson@chromium.org>
+Cr-Original-Commit-Position: refs/heads/master@{#619217}
+Cr-Mirrored-From: https://chromium.googlesource.com/chromium/src
+Cr-Mirrored-Commit: 1bb5c1a9aa2ae33af3249c2ca1e0d3896977907d
+---
+ vs_toolchain.py | 164 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 89 insertions(+), 75 deletions(-)
+
+diff --git a/vs_toolchain.py b/vs_toolchain.py
+index 83847f456..632d8081f 100755
+--- a/vs_toolchain.py
++++ b/vs_toolchain.py
+@@ -128,27 +128,33 @@ def DetectVisualStudioPath():
+   version_as_year = GetVisualStudioVersion()
+   year_to_version = {
+       '2017': '15.0',
++      '2019': '16.0',
+   }
+   if version_as_year not in year_to_version:
+     raise Exception(('Visual Studio version %s (from GYP_MSVS_VERSION)'
+                      ' not supported. Supported versions are: %s') % (
+                        version_as_year, ', '.join(year_to_version.keys())))
+-  version = year_to_version[version_as_year]
+-  if version_as_year == '2017':
+-    # The VC++ 2017 install location needs to be located using COM instead of
+-    # the registry. For details see:
+-    # https://blogs.msdn.microsoft.com/heaths/2016/09/15/changes-to-visual-studio-15-setup/
+-    # For now we use a hardcoded default with an environment variable override.
+-    for path in (
+-        os.environ.get('vs2017_install'),
+-        os.path.expandvars('%ProgramFiles(x86)%'
+-                           '/Microsoft Visual Studio/2017/Enterprise'),
+-        os.path.expandvars('%ProgramFiles(x86)%'
+-                           '/Microsoft Visual Studio/2017/Professional'),
+-        os.path.expandvars('%ProgramFiles(x86)%'
+-                           '/Microsoft Visual Studio/2017/Community')):
+-      if path and os.path.exists(path):
+-        return path
++
++  # The VC++ >=2017 install location needs to be located using COM instead of
++  # the registry. For details see:
++  # https://blogs.msdn.microsoft.com/heaths/2016/09/15/changes-to-visual-studio-15-setup/
++  # For now we use a hardcoded default with an environment variable override.
++  for path in (
++      os.environ.get('vs%s_install' % version_as_year),
++      os.path.expandvars('%ProgramFiles(x86)%' +
++                         '/Microsoft Visual Studio/%s/Enterprise' %
++                         version_as_year),
++      os.path.expandvars('%ProgramFiles(x86)%' +
++                         '/Microsoft Visual Studio/%s/Professional' %
++                         version_as_year),
++      os.path.expandvars('%ProgramFiles(x86)%' +
++                         '/Microsoft Visual Studio/%s/Community' %
++                         version_as_year),
++      os.path.expandvars('%ProgramFiles(x86)%' +
++                         '/Microsoft Visual Studio/%s/Preview' %
++                         version_as_year)):
++    if path and os.path.exists(path):
++      return path
+ 
+   raise Exception(('Visual Studio Version %s (from GYP_MSVS_VERSION)'
+                    ' not found.') % (version_as_year))
+@@ -193,27 +199,70 @@ def _CopyUCRTRuntime(target_dir, source_dir, target_cpu, dll_pattern, suffix):
+       os.environ.get('WINDOWSSDKDIR',
+                      os.path.expandvars('%ProgramFiles(x86)%'
+                                         '\\Windows Kits\\10')))
+-  ucrt_dll_dirs = os.path.join(win_sdk_dir, 'Redist', 'ucrt', 'DLLs',
+-                               target_cpu)
+-  ucrt_files = glob.glob(os.path.join(ucrt_dll_dirs, 'api-ms-win-*.dll'))
+-  assert len(ucrt_files) > 0
+-  for ucrt_src_file in ucrt_files:
+-    file_part = os.path.basename(ucrt_src_file)
+-    ucrt_dst_file = os.path.join(target_dir, file_part)
+-    _CopyRuntimeImpl(ucrt_dst_file, ucrt_src_file, False)
+-  _CopyRuntimeImpl(os.path.join(target_dir, 'ucrtbase' + suffix),
+-                    os.path.join(source_dir, 'ucrtbase' + suffix))
+-
+-
+-def FindVCToolsRoot():
+-  """In VS2017 the PGO runtime dependencies are located in
+-  {toolchain_root}/VC/Tools/MSVC/{x.y.z}/bin/Host{target_cpu}/{target_cpu}/, the
+-  {version_number} part is likely to change in case of a minor update of the
+-  toolchain so we don't hardcode this value here (except for the major number).
+-
+-  This returns the '{toolchain_root}/VC/Tools/MSVC/{x.y.z}/bin/' path.
+-
+-  This function should only be called when using VS2017.
++  # ARM64 doesn't have a redist for the ucrt DLLs because they are always
++  # present in the OS.
++  if target_cpu != 'arm64':
++    # Starting with the 10.0.17763 SDK the ucrt files are in a version-named
++    # directory - this handles both cases.
++    redist_dir = os.path.join(win_sdk_dir, 'Redist')
++    version_dirs = glob.glob(os.path.join(redist_dir, '10.*'))
++    if len(version_dirs) > 0:
++      version_dirs.sort(reverse=True)
++      redist_dir = version_dirs[0]
++    ucrt_dll_dirs = os.path.join(redist_dir, 'ucrt', 'DLLs', target_cpu)
++    ucrt_files = glob.glob(os.path.join(ucrt_dll_dirs, 'api-ms-win-*.dll'))
++    assert len(ucrt_files) > 0
++    for ucrt_src_file in ucrt_files:
++      file_part = os.path.basename(ucrt_src_file)
++      ucrt_dst_file = os.path.join(target_dir, file_part)
++      _CopyRuntimeImpl(ucrt_dst_file, ucrt_src_file, False)
++  # We must copy ucrtbase.dll for x64/x86, and ucrtbased.dll for all CPU types.
++  if target_cpu != 'arm64' or not suffix.startswith('.'):
++    if not suffix.startswith('.'):
++      # ucrtbased.dll is located at {win_sdk_dir}/bin/{a.b.c.d}/{target_cpu}/
++      # ucrt/.
++      sdk_redist_root = os.path.join(win_sdk_dir, 'bin')
++      sdk_bin_sub_dirs = os.listdir(sdk_redist_root)
++      # Select the most recent SDK if there are multiple versions installed.
++      sdk_bin_sub_dirs.sort(reverse=True)
++      for directory in sdk_bin_sub_dirs:
++        sdk_redist_root_version = os.path.join(sdk_redist_root, directory)
++        if not os.path.isdir(sdk_redist_root_version):
++          continue
++        if re.match('10\.\d+\.\d+\.\d+', directory):
++          source_dir = os.path.join(sdk_redist_root_version, target_cpu, 'ucrt')
++          break
++    _CopyRuntimeImpl(os.path.join(target_dir, 'ucrtbase' + suffix),
++                     os.path.join(source_dir, 'ucrtbase' + suffix))
++
++
++def FindVCComponentRoot(component):
++  """Find the most recent Tools or Redist or other directory in an MSVC install.
++  Typical results are {toolchain_root}/VC/{component}/MSVC/{x.y.z}. The {x.y.z}
++  version number part changes frequently so the highest version number found is
++  used.
++  """
++  assert GetVisualStudioVersion() in ['2017', '2019']
++  SetEnvironmentAndGetRuntimeDllDirs()
++  assert ('GYP_MSVS_OVERRIDE_PATH' in os.environ)
++  vc_component_msvc_root = os.path.join(os.environ['GYP_MSVS_OVERRIDE_PATH'],
++      'VC', component, 'MSVC')
++  vc_component_msvc_contents = os.listdir(vc_component_msvc_root)
++  # Select the most recent toolchain if there are several.
++  vc_component_msvc_contents.sort(reverse=True)
++  for directory in vc_component_msvc_contents:
++    if not os.path.isdir(os.path.join(vc_component_msvc_root, directory)):
++      continue
++    if re.match('14\.\d+\.\d+', directory):
++      return os.path.join(vc_component_msvc_root, directory)
++  raise Exception('Unable to find the VC %s directory.' % component)
++
++
++def FindVCRedistRoot():
++  """In >=VS2017, Redist binaries are located in
++  {toolchain_root}/VC/Redist/MSVC/{x.y.z}/{target_cpu}/.
++
++  This returns the '{toolchain_root}/VC/Redist/MSVC/{x.y.z}/' path.
+   """
+   assert GetVisualStudioVersion() == '2017'
+   SetEnvironmentAndGetRuntimeDllDirs()
+@@ -228,43 +277,11 @@ def FindVCToolsRoot():
+   raise Exception('Unable to find the VC tools directory.')
+ 
+ 
+-def _CopyPGORuntime(target_dir, target_cpu):
+-  """Copy the runtime dependencies required during a PGO build.
+-  """
+-  env_version = GetVisualStudioVersion()
+-  # These dependencies will be in a different location depending on the version
+-  # of the toolchain.
+-  if env_version == '2017':
+-    pgo_runtime_root = FindVCToolsRoot()
+-    assert pgo_runtime_root
+-    # There's no version of pgosweep.exe in HostX64/x86, so we use the copy
+-    # from HostX86/x86.
+-    pgo_x86_runtime_dir = os.path.join(pgo_runtime_root, 'HostX86', 'x86')
+-    pgo_x64_runtime_dir = os.path.join(pgo_runtime_root, 'HostX64', 'x64')
+-  else:
+-    raise Exception('Unexpected toolchain version: %s.' % env_version)
+-
+-  # We need to copy 2 runtime dependencies used during the profiling step:
+-  #     - pgort140.dll: runtime library required to run the instrumented image.
+-  #     - pgosweep.exe: executable used to collect the profiling data
+-  pgo_runtimes = ['pgort140.dll', 'pgosweep.exe']
+-  for runtime in pgo_runtimes:
+-    if target_cpu == 'x86':
+-      source = os.path.join(pgo_x86_runtime_dir, runtime)
+-    elif target_cpu == 'x64':
+-      source = os.path.join(pgo_x64_runtime_dir, runtime)
+-    else:
+-      raise NotImplementedError("Unexpected target_cpu value: " + target_cpu)
+-    if not os.path.exists(source):
+-      raise Exception('Unable to find %s.' % source)
+-    _CopyRuntimeImpl(os.path.join(target_dir, runtime), source)
+-
+-
+ def _CopyRuntime(target_dir, source_dir, target_cpu, debug):
+   """Copy the VS runtime DLLs, only if the target doesn't exist, but the target
+-  directory does exist. Handles VS 2015 and VS 2017."""
+-  suffix = "d.dll" if debug else ".dll"
+-  # VS 2017 uses the same CRT DLLs as VS 2015.
++  directory does exist. Handles VS 2015, 2017 and 2019."""
++  suffix = 'd.dll' if debug else '.dll'
++  # VS 2015, 2017 and 2019 use the same CRT DLLs.
+   _CopyUCRTRuntime(target_dir, source_dir, target_cpu, '%s140' + suffix,
+                     suffix)
+ 
+@@ -287,9 +304,6 @@ def CopyDlls(target_dir, configuration, target_cpu):
+   _CopyRuntime(target_dir, runtime_dir, target_cpu, debug=False)
+   if configuration == 'Debug':
+     _CopyRuntime(target_dir, runtime_dir, target_cpu, debug=True)
+-  else:
+-    _CopyPGORuntime(target_dir, target_cpu)
+-
+   _CopyDebugger(target_dir, target_cpu)
+ 
+ 
+-- 
+2.21.0.windows.1
+
