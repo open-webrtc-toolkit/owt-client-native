@@ -200,6 +200,8 @@ class P2PClient final
   virtual void OnSignalingMessage(const std::string& message, const std::string& sender);
   virtual void OnServerDisconnected();
   // Handle events from P2PPeerConnectionChannel
+  // Triggered when the WebRTC session is ended.
+  virtual void OnStopped(const std::string& remote_id);
   // Triggered when remote user send data via data channel.
   // Currently, data is string.
   virtual void OnMessageReceived(const std::string& remote_id,
@@ -222,6 +224,9 @@ class P2PClient final
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;
+  std::mutex pc_channels_mutex_;
+  std::vector<std::shared_ptr<P2PPeerConnectionChannel>> removed_pc_channels_;
+  std::mutex removed_pc_channels_mutex_;
   std::string local_id_;
   std::vector<std::reference_wrapper<P2PClientObserver>> observers_;
   P2PClientConfiguration configuration_;
