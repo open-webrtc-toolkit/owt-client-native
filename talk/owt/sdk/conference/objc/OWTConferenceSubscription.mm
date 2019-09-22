@@ -180,6 +180,7 @@
   constrains->frameRate = _frameRate;
   constrains->bitrateMultiplier = _bitrateMultiplier;
   constrains->keyFrameInterval = _keyFrameInterval;
+  constrains->rid = [NSString stdStringForString:_rid];
   return constrains;
 }
 @end

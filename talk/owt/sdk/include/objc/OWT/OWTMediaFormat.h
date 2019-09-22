@@ -84,6 +84,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) CGFloat frameRate;
 @property(nonatomic, assign) NSUInteger bitrate;
 @property(nonatomic, assign) NSUInteger keyframeInterval;
+@property(nonatomic, strong) NSString* rid;
 @end
 /// The settings of a publication.
 RTC_OBJC_EXPORT
