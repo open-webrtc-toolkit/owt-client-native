@@ -11,10 +11,8 @@ bool GlobalConfiguration::hardware_acceleration_enabled_ = true;
 bool GlobalConfiguration::encoded_frame_ = false;
 std::unique_ptr<AudioFrameGeneratorInterface>
     GlobalConfiguration::audio_frame_generator_ = nullptr;
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 std::unique_ptr<VideoDecoderInterface>
     GlobalConfiguration::video_decoder_ = nullptr;
-#endif
 #if defined(WEBRTC_IOS)
 AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
     true, true, true, false};

@@ -1,10 +1,12 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #include "talk/owt/sdk/base/customizedaudiocapturer.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/sleep.h"
+
 using namespace rtc;
 namespace owt {
 namespace base {
@@ -131,9 +133,8 @@ bool CustomizedAudioCapturer::Playing() const {
 int32_t CustomizedAudioCapturer::StartRecording() {
   recording_ = true;
   const char* thread_name = "webrtc_audio_module_capture_thread";
-  thread_rec_.reset(new rtc::PlatformThread(RecThreadFunc, this, thread_name));
+  thread_rec_.reset(new rtc::PlatformThread(RecThreadFunc, this, thread_name, rtc::kRealtimePriority));
   thread_rec_->Start();
-  thread_rec_->SetPriority(rtc::kRealtimePriority);
   return 0;
 }
 int32_t CustomizedAudioCapturer::StopRecording() {
@@ -251,8 +252,9 @@ void CustomizedAudioCapturer::AttachAudioBuffer(
 bool CustomizedAudioCapturer::PlayThreadFunc(void* pThis) {
   return false;
 }
-bool CustomizedAudioCapturer::RecThreadFunc(void* pThis) {
-  return (static_cast<CustomizedAudioCapturer*>(pThis)->RecThreadProcess());
+
+void CustomizedAudioCapturer::RecThreadFunc(void* pThis) {
+  static_cast<CustomizedAudioCapturer*>(pThis)->RecThreadProcess();
 }
 bool CustomizedAudioCapturer::RecThreadProcess() {
   if (!recording_) {
@@ -299,6 +301,6 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   }
   last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
   return true;
-};
+}
 }
 }

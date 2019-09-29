@@ -74,7 +74,7 @@ class VideoRenderWindow {
 class VideoRendererInterface {
  public:
   /// Passes video buffer to renderer.
-  virtual void RenderFrame(std::unique_ptr<VideoBuffer> buffer) = 0;
+  virtual void RenderFrame(std::unique_ptr<VideoBuffer> buffer) {}
   virtual ~VideoRendererInterface() {}
   /// Render type that indicates the VideoBufferType the renderer would receive.
   virtual VideoRendererType Type() = 0;

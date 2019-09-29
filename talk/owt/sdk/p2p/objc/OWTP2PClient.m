@@ -49,14 +49,14 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   _peerClientState = kConnecting;
   [_signalingChannel connect:token
       onSuccess:^(NSString* myId) {
-        _peerClientState = kConnected;
-        _localId = myId;
+        self->_peerClientState = kConnected;
+        self->_localId = myId;
         if (onSuccess) {
           onSuccess(myId);
         }
       }
       onFailure:^(NSError* err) {
-        _peerClientState = kDisconnected;
+        self->_peerClientState = kDisconnected;
         if (onFailure) {
           onFailure(err);
         }

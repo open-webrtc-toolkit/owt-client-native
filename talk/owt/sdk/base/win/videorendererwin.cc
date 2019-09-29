@@ -6,7 +6,7 @@
 #include "talk/owt/sdk/base/win/videorendererwin.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/media/base/videocommon.h"
+//#include "webrtc/media/base/videocommon.h"
 //#include "webrtc/typedefs.h"
 #include "rtc_base/logging.h"
 

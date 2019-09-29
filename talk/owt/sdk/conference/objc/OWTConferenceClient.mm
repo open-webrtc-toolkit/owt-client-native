@@ -23,7 +23,7 @@
 #import "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #import "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
-#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/api/peerconnection/RTCIceServer+Private.h"
 @implementation OWTConferenceClient {
   std::shared_ptr<owt::conference::ConferenceClient> _nativeConferenceClient;
   std::unique_ptr<
