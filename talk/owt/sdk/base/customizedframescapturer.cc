@@ -26,8 +26,8 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       public rtc::MessageHandler {
  public:
   explicit CustomizedFramesThread(CustomizedFramesCapturer* capturer, int fps)
-      : capturer_(capturer),
-        rtc::Thread(SocketServer::CreateDefault()) {
+      : rtc::Thread(SocketServer::CreateDefault()),
+        capturer_(capturer) {
     finished_ = false;
     waiting_time_ms = 1000 / fps;
   }
