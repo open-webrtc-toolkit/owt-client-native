@@ -1,0 +1,39 @@
+From b417535576392743c3120342a1155acd7c9f21f2 Mon Sep 17 00:00:00 2001
+From: Rohit Rao <rohitrao@chromium.org>
+Date: Tue, 18 Jun 2019 01:08:19 +0000
+Subject: [PATCH] [ios] Adds CFBundleShortVersionString to the plist for
+ unittests.
+
+Xcode11 now requires this plist key to be present for all apps.
+
+BUG=None
+
+Change-Id: I9d88f9da68e096d5f852a6f644a23ac3db1bd132
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/1663358
+Commit-Queue: Rohit Rao <rohitrao@chromium.org>
+Commit-Queue: Justin Cohen <justincohen@chromium.org>
+Reviewed-by: John Budorick <jbudorick@chromium.org>
+Reviewed-by: Justin Cohen <justincohen@chromium.org>
+Cr-Original-Commit-Position: refs/heads/master@{#669925}
+Cr-Mirrored-From: https://chromium.googlesource.com/chromium/src
+Cr-Mirrored-Commit: 0ae0548259046f1c0482cfe5a6daf22ad6cacb28
+---
+ gtest_ios/unittest-Info.plist | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/gtest_ios/unittest-Info.plist b/gtest_ios/unittest-Info.plist
+index 9fd15934..e8972661 100644
+--- a/gtest_ios/unittest-Info.plist
++++ b/gtest_ios/unittest-Info.plist
+@@ -18,6 +18,8 @@
+ 	<string>${PRODUCT_NAME}</string>
+ 	<key>CFBundlePackageType</key>
+ 	<string>APPL</string>
++	<key>CFBundleShortVersionString</key>
++	<string>1.0</string>
+ 	<key>CFBundleSignature</key>
+ 	<string>????</string>
+ 	<key>CFBundleVersion</key>
+-- 
+2.21.0 (Apple Git-122)
+
