@@ -13,7 +13,7 @@ namespace base{
 struct ClientConfiguration {
   enum class CandidateNetworkPolicy : int { kAll = 1, kLowCost };
   ClientConfiguration()
-       : candidate_network_policy(CandidateNetworkPolicy::kAll) {};
+       : candidate_network_policy(CandidateNetworkPolicy::kAll) {}
   /// List of ICE servers
   std::vector<IceServer> ice_servers;
   /**

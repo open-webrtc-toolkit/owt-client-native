@@ -1,13 +1,15 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include "talk/owt/sdk/base/customizedaudiocapturer.h"
-#include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
-#include "webrtc/rtc_base/refcountedobject.h"
-#include "webrtc/rtc_base/timeutils.h"
+
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/rtc_base/ref_counted_object.h"
+#include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
+#include "talk/owt/sdk/base/customizedaudiocapturer.h"
+#include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
+
 #define CHECK_INITIALIZED() \
   {                         \
     if (!_initialized) {    \
@@ -53,10 +55,11 @@ rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
 //  CustomizedAudioDeviceModule - ctor
 // ----------------------------------------------------------------------------
 CustomizedAudioDeviceModule::CustomizedAudioDeviceModule()
-    : _ptrAudioDevice(NULL),
+    : task_queue_factory_(webrtc::CreateDefaultTaskQueueFactory()),
+      _ptrAudioDevice(nullptr),
+      _ptrAudioDeviceBuffer(new webrtc::AudioDeviceBuffer(task_queue_factory_.get())),
       _lastProcessTime(rtc::TimeMillis()),
-      _initialized(false),
-      _lastError(kAdmErrNone) {
+      _initialized(false){
   CreateOutputAdm();
 }
 // ----------------------------------------------------------------------------
@@ -77,7 +80,7 @@ int32_t CustomizedAudioDeviceModule::CreateCustomizedAudioDevice(
 //  number of channels in this function call.
 // ----------------------------------------------------------------------------
 int32_t CustomizedAudioDeviceModule::AttachAudioBuffer() {
-  _ptrAudioDevice->AttachAudioBuffer(&_audioDeviceBuffer);
+  _ptrAudioDevice->AttachAudioBuffer(_ptrAudioDeviceBuffer);
   return 0;
 }
 // ----------------------------------------------------------------------------
@@ -309,7 +312,7 @@ int32_t CustomizedAudioDeviceModule::SetStereoRecording(bool enable) {
   if (enable) {
     nChannels = 2;
   }
-  _audioDeviceBuffer.SetRecordingChannels(nChannels);
+  _ptrAudioDeviceBuffer->SetRecordingChannels(nChannels);
   return 0;
 }
 // ----------------------------------------------------------------------------
@@ -425,7 +428,6 @@ int32_t CustomizedAudioDeviceModule::RecordingDeviceName(
     char guid[kAdmMaxGuidSize]) {
   CHECK_INITIALIZED();
   if (name == NULL) {
-    _lastError = kAdmErrArgument;
     return -1;
   }
   if (_ptrAudioDevice->RecordingDeviceName(index, name, guid) == -1) {
@@ -508,7 +510,7 @@ bool CustomizedAudioDeviceModule::Playing() const {
 // ----------------------------------------------------------------------------
 int32_t CustomizedAudioDeviceModule::StartRecording() {
   CHECK_INITIALIZED();
-  _audioDeviceBuffer.StartRecording();
+  _ptrAudioDeviceBuffer->StartRecording();
   return (_ptrAudioDevice->StartRecording());
 }
 // ----------------------------------------------------------------------------
@@ -516,7 +518,7 @@ int32_t CustomizedAudioDeviceModule::StartRecording() {
 // ----------------------------------------------------------------------------
 int32_t CustomizedAudioDeviceModule::StopRecording() {
   CHECK_INITIALIZED();
-  _audioDeviceBuffer.StopRecording();
+  _ptrAudioDeviceBuffer->StopRecording();
   return (_ptrAudioDevice->StopRecording());
 }
 // ----------------------------------------------------------------------------
@@ -532,7 +534,7 @@ bool CustomizedAudioDeviceModule::Recording() const {
 int32_t CustomizedAudioDeviceModule::RegisterAudioCallback(
     AudioTransport* audioCallback) {
   rtc::CritScope cs(&_critSectAudioCb);
-  _audioDeviceBuffer.RegisterAudioCallback(audioCallback);
+  _ptrAudioDeviceBuffer->RegisterAudioCallback(audioCallback);
   return _outputAdm->RegisterAudioCallback(audioCallback);
 }
 // ----------------------------------------------------------------------------
@@ -578,7 +580,7 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
 void CustomizedAudioDeviceModule::CreateOutputAdm(){
   if(_outputAdm==nullptr){
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
-        0, AudioDeviceModule::kPlatformDefaultAudio);
+        AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
   }
 }
 }

@@ -10,7 +10,7 @@
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
-#include "webrtc/rtc_base/scoped_ref_ptr.h"
+#include "webrtc/api/scoped_refptr.h"
 
 using namespace rtc;
 
@@ -36,12 +36,11 @@ int32_t MSDKVideoDecoder::Release() {
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-MSDKVideoDecoder::MSDKVideoDecoder(webrtc::VideoCodecType type)
-    : codecType_(type),
-      inited_(false),
+MSDKVideoDecoder::MSDKVideoDecoder()
+    : inited_(false),
       width_(0),
       height_(0),
-      decoder_thread_(new rtc::Thread()) {
+      decoder_thread_(new rtc::Thread(rtc::SocketServer::CreateDefault())) {
   decoder_thread_->SetName("MSDKVideoDecoderThread", nullptr);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
@@ -131,8 +130,7 @@ int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, in
     RTC_LOG(LS_ERROR) << "NULL codec settings";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  RTC_CHECK(codecSettings->codecType == codecType_) << "Unsupported codec type" 
-      << codecSettings->codecType << " for " << codecType_;
+  codecType_ = codecSettings->codecType;
   timestamps_.clear();
   ntp_time_ms_.clear();
 
@@ -183,8 +181,10 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     }
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
       codec_id = MFX_CODEC_VP8;
+#ifndef DISABLE_H265
     } else if (codec_.codecType == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
+#endif
     }
     if (!factory->LoadDecoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -230,8 +230,8 @@ int e_count = 0;
 #endif
 
 int32_t MSDKVideoDecoder::Decode(
-    const webrtc::EncodedImage& inputImage, bool missingFrames,
-    const webrtc::CodecSpecificInfo* codecSpecificInfo,
+    const webrtc::EncodedImage& inputImage,
+    bool missingFrames,
     int64_t renderTimeMs) {
   // The decoding process involves following steps:
   // 1. Create the input sample with inputImage
@@ -246,7 +246,7 @@ int32_t MSDKVideoDecoder::Decode(
   m_mfxVideoParams.IOPattern =
       MFX_IOPATTERN_OUT_VIDEO_MEMORY;
   m_mfxVideoParams.AsyncDepth = 1;
-  ReadFromInputStream(&m_mfxBS, inputImage._buffer, inputImage._length);
+  ReadFromInputStream(&m_mfxBS, inputImage.data(), inputImage.size());
 
 #ifdef OWT_DEBUG_DEC
   if (e_count < 300 && input != nullptr) {
@@ -374,7 +374,7 @@ retry:
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
                   (void*)d3d_context, width_, height_);
-          webrtc::VideoFrame decoded_frame(buffer, inputImage._timeStamp, 0,
+          webrtc::VideoFrame decoded_frame(buffer, inputImage.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
           decoded_frame.set_timestamp(inputImage.Timestamp());
@@ -419,7 +419,7 @@ mfxStatus MSDKVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 
   return MFX_ERR_NONE;
 }
 
-void MSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream, uint8_t *data, size_t len) {
+void MSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream, const uint8_t *data, size_t len) {
   if (m_mfxBS.MaxLength < len){
       // Remaining BS size is not enough to hold current image, we enlarge it the gap*2.
       mfxU32 newSize = static_cast<mfxU32>(m_mfxBS.MaxLength > len ? m_mfxBS.MaxLength * 2 : len * 2);
@@ -478,5 +478,15 @@ void MSDKVideoDecoder::OnMessage(rtc::Message* msg) {
       break;
   }
 }
+
+std::unique_ptr<MSDKVideoDecoder> MSDKVideoDecoder::Create(
+    cricket::VideoCodec format) {
+  return absl::make_unique<MSDKVideoDecoder>();
+}
+
+const char* MSDKVideoDecoder::ImplementationName() const {
+  return "IntelMediaSDK";
+}
+
 }  // namespace base
 }  // namespace owt

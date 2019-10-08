@@ -20,6 +20,8 @@ class DeviceUtils {
    */
   static std::vector<Resolution> VideoCapturerSupportedResolutions(
       const std::string& id);
+  /// Get the camera device index by its device id.
+  static int GetVideoCaptureDeviceIndex(const std::string& id);
 };
 }
 }

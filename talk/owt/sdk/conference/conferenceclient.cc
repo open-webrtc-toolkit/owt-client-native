@@ -1,19 +1,20 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+#include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include <algorithm>
 #include <string>
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/stringutils.h"
 #include "talk/owt/sdk/conference/conferencepeerconnectionchannel.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
-#include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
-#include "webrtc/api/statstypes.h"
-#include "webrtc/rtc_base/third_party/base64/base64.h"
-#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/api/stats_types.h"
+#include "webrtc/api/task_queue/default_task_queue_factory.h"
+#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "webrtc/rtc_base/third_party/base64/base64.h"
 using namespace rtc;
 namespace owt {
 namespace conference {
@@ -140,16 +141,17 @@ void ConferenceInfo::TriggerOnStreamUpdated(const std::string& stream_id) {
     }
   }
 }
-void ConferenceInfo::TriggerOnStreamMuteOrUnmute(const std::string& stream_id, 
-          owt::base::TrackKind track_kind, bool muted) {
+void ConferenceInfo::TriggerOnStreamMuteOrUnmute(
+    const std::string& stream_id,
+    owt::base::TrackKind track_kind,
+    bool muted) {
   for (auto& it : remote_streams_) {
     if (it->Id() == stream_id) {
       if (muted) {
         it->TriggerOnStreamMute(track_kind);
-      }
-      else {
+      } else {
         it->TriggerOnStreamUnmute(track_kind);
-      }      
+      }
       break;
     }
   }
@@ -168,9 +170,14 @@ std::shared_ptr<ConferenceClient> ConferenceClient::Create(
 ConferenceClient::ConferenceClient(
     const ConferenceClientConfiguration& configuration)
     : configuration_(configuration),
-      event_queue_(new rtc::TaskQueue("ConferenceClientEventQueue")),
       signaling_channel_(new ConferenceSocketSignalingChannel()),
-      signaling_channel_connected_(false) {}
+      signaling_channel_connected_(false) {
+  auto task_queue_factory_ = webrtc::CreateDefaultTaskQueueFactory();
+  event_queue_ =
+      std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
+          "ConferenceClientEventQueue",
+          webrtc::TaskQueueFactory::Priority::NORMAL));
+}
 ConferenceClient::~ConferenceClient() {
   signaling_channel_->RemoveObserver(*this);
 }
@@ -973,7 +980,8 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     attributes = AttributesFromStreamInfo(pub_info);
   }
   SubscriptionCapabilities subscription_capabilities;
-  PublicationSettings publication_settings;
+  std::vector<PublicationSettings> publication_settings_list;
+  PublicationSettings pub_setting_template;
   auto audio_info = media_info->get_map()["audio"];
   if (audio_info == nullptr ||
       audio_info->get_flag() != sio::message::flag_object) {
@@ -1010,7 +1018,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       channel_num = audio_format_obj->get_int();
     AudioCodecParameters audio_codec_param(
         MediaUtils::GetAudioCodecFromString(codec), channel_num, sample_rate);
-    publication_settings.audio.codec = audio_codec_param;
+    pub_setting_template.audio.codec = audio_codec_param;
     subscription_capabilities.audio.codecs.push_back(audio_codec_param);
     // Optional audio capabilities
     auto audio_format_obj_optional = audio_info->get_map()["optional"];
@@ -1061,142 +1069,155 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
         video_source_obj->get_flag() == sio::message::flag_string) {
       video_source = video_source_obj->get_string();
     }
-    auto video_format_obj = video_info->get_map()["format"];
-    if (video_format_obj == nullptr ||
-        video_format_obj->get_flag() != sio::message::flag_object) {
-      RTC_LOG(LS_ERROR) << "Invalid video format info.";
+    // 1.1 protocol: original: [format/parameters/simulcastRid/]
+    auto video_original_obj = video_info->get_map()["original"];
+    if (video_original_obj == nullptr ||
+        video_original_obj->get_flag() != sio::message::flag_array) {
+      RTC_LOG(LS_ERROR) << "Invalid video original info";
       return;
-    } else {
-      has_video = true;
-      VideoSubscriptionCapabilities video_subscription_capabilities;
-      // Parse the video publication settings.
-      std::string codec_name =
-          video_format_obj->get_map()["codec"]->get_string();
-      std::string profile_name("");
-      auto profile_name_obj = video_format_obj->get_map()["profile"];
-      if (profile_name_obj != nullptr &&
-          profile_name_obj->get_flag() == sio::message::flag_string) {
-        profile_name = profile_name_obj->get_string();
-      }
-      VideoPublicationSettings video_publication_settings;
-      VideoCodecParameters video_codec_parameters(
-          MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
-      video_publication_settings.codec = video_codec_parameters;
-      video_subscription_capabilities.codecs.push_back(video_codec_parameters);
-      auto video_params_obj = video_info->get_map()["parameters"];
-      if (video_params_obj != nullptr &&
-          video_params_obj->get_flag() == sio::message::flag_object) {
-        auto main_resolution = video_params_obj->get_map()["resolution"];
-        if (main_resolution != nullptr &&
-            main_resolution->get_flag() == sio::message::flag_object) {
-          Resolution resolution =
-              Resolution(main_resolution->get_map()["width"]->get_int(),
-                         main_resolution->get_map()["height"]->get_int());
-          video_publication_settings.resolution = resolution;
-          video_subscription_capabilities.resolutions.push_back(resolution);
-        }
-        double frame_rate_num = 0, bitrate_num = 0, keyframe_interval_num = 0;
-        auto main_frame_rate = video_params_obj->get_map()["framerate"];
-        if (main_frame_rate != nullptr) {
-          frame_rate_num = main_frame_rate->get_int();
-          video_publication_settings.frame_rate = frame_rate_num;
-          video_subscription_capabilities.frame_rates.push_back(frame_rate_num);
-        }
-        auto main_bitrate = video_params_obj->get_map()["bitrate"];
-        if (main_bitrate != nullptr) {
-          bitrate_num = main_bitrate->get_int();
-          video_publication_settings.bitrate = bitrate_num;
-        }
-        auto main_keyframe_interval =
-            video_params_obj->get_map()["keyFrameInterval"];
-        if (main_keyframe_interval != nullptr) {
-          keyframe_interval_num = main_keyframe_interval->get_int();
-          video_publication_settings.keyframe_interval = keyframe_interval_num;
-          video_subscription_capabilities.keyframe_intervals.push_back(
-              keyframe_interval_num);
-        }
-      }
-      publication_settings.video = video_publication_settings;
-      // Parse the video subscription capabilities.
-      auto optional_video_obj = video_info->get_map()["optional"];
-      if (optional_video_obj != nullptr &&
-          optional_video_obj->get_flag() == sio::message::flag_object) {
-        auto optional_video_format_obj =
-            optional_video_obj->get_map()["format"];
-        if (optional_video_format_obj != nullptr &&
-            optional_video_format_obj->get_flag() == sio::message::flag_array) {
-          auto formats = optional_video_format_obj->get_vector();
-          for (auto it = formats.begin(); it != formats.end(); ++it) {
-            std::string optional_codec_name =
-                (*it)->get_map()["codec"]->get_string();
-            std::string optional_profile_name("");
-            auto optional_profile_name_obj = (*it)->get_map()["profile"];
-            if (optional_profile_name_obj != nullptr &&
-                optional_profile_name_obj->get_flag() ==
-                    sio::message::flag_string) {
-              optional_profile_name = optional_profile_name_obj->get_string();
-            }
-            video_subscription_capabilities.codecs.push_back(
-                VideoCodecParameters(
-                    MediaUtils::GetVideoCodecFromString(optional_codec_name),
-                    optional_profile_name));
-          }
-        }
-        auto optional_video_params_obj =
-            optional_video_obj->get_map()["parameters"];
-        if (optional_video_params_obj != nullptr &&
-            optional_video_params_obj->get_flag() ==
-                sio::message::flag_object) {
-          auto resolution_obj =
-              optional_video_params_obj->get_map()["resolution"];
-          if (resolution_obj != nullptr &&
-              resolution_obj->get_flag() == sio::message::flag_array) {
-            auto resolutions = resolution_obj->get_vector();
-            for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
-              Resolution resolution =
-                  Resolution((*it)->get_map()["width"]->get_int(),
-                             (*it)->get_map()["height"]->get_int());
-              video_subscription_capabilities.resolutions.push_back(resolution);
-            }
-          }
-          auto framerate_obj =
-              optional_video_params_obj->get_map()["framerate"];
-          if (framerate_obj != nullptr &&
-              framerate_obj->get_flag() == sio::message::flag_array) {
-            auto framerates = framerate_obj->get_vector();
-            for (auto it = framerates.begin(); it != framerates.end(); ++it) {
-              double frame_rate = (*it)->get_int();
-              video_subscription_capabilities.frame_rates.push_back(frame_rate);
-            }
-          }
-          auto bitrate_obj = optional_video_params_obj->get_map()["bitrate"];
-          if (bitrate_obj != nullptr &&
-              bitrate_obj->get_flag() == sio::message::flag_array) {
-            auto bitrates = bitrate_obj->get_vector();
-            for (auto it = bitrates.begin(); it != bitrates.end(); ++it) {
-              std::string bitrate_mul = (*it)->get_string();
-              // The bitrate multiplier is in the form of "x1.0" and we need to
-              // strip the "x" here.
-              video_subscription_capabilities.bitrate_multipliers.push_back(
-                  std::stod(bitrate_mul.substr(1)));
-            }
-          }
-          auto keyframe_interval_obj =
-              optional_video_params_obj->get_map()["keyFrameInterval"];
-          if (keyframe_interval_obj != nullptr &&
-              keyframe_interval_obj->get_flag() == sio::message::flag_array) {
-            auto keyframe_intervals = keyframe_interval_obj->get_vector();
-            for (auto it = keyframe_intervals.begin();
-                 it != keyframe_intervals.end(); ++it) {
-              double keyframe_interval = (*it)->get_int();
-              video_subscription_capabilities.keyframe_intervals.push_back(
-                  keyframe_interval);
-            }
-          }
-        }
-        subscription_capabilities.video = video_subscription_capabilities;
-      }
     }
+
+    auto originals = video_original_obj->get_vector();
+    for (auto it = originals.begin(); it != originals.end(); ++it) {
+      auto video_format_obj = (*it)->get_map()["format"];
+      if (video_format_obj == nullptr ||
+          video_format_obj->get_flag() != sio::message::flag_object) {
+        RTC_LOG(LS_ERROR) << "Invalid video format info.";
+        return;
+      } else {
+        has_video = true;
+        // Parse the video publication settings.
+        std::string codec_name =
+            video_format_obj->get_map()["codec"]->get_string();
+        std::string profile_name("");
+        auto profile_name_obj = video_format_obj->get_map()["profile"];
+        if (profile_name_obj != nullptr &&
+            profile_name_obj->get_flag() == sio::message::flag_string) {
+          profile_name = profile_name_obj->get_string();
+        }
+        VideoPublicationSettings video_publication_settings;
+        VideoCodecParameters video_codec_parameters(
+            MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
+        video_publication_settings.codec = video_codec_parameters;
+        auto video_params_obj = (*it)->get_map()["parameters"];
+        if (video_params_obj != nullptr &&
+            video_params_obj->get_flag() == sio::message::flag_object) {
+          auto main_resolution = video_params_obj->get_map()["resolution"];
+          if (main_resolution != nullptr &&
+              main_resolution->get_flag() == sio::message::flag_object) {
+            Resolution resolution =
+                Resolution(main_resolution->get_map()["width"]->get_int(),
+                           main_resolution->get_map()["height"]->get_int());
+            video_publication_settings.resolution = resolution;
+          }
+          double frame_rate_num = 0, bitrate_num = 0, keyframe_interval_num = 0;
+          auto main_frame_rate = video_params_obj->get_map()["framerate"];
+          if (main_frame_rate != nullptr) {
+            frame_rate_num = main_frame_rate->get_int();
+            video_publication_settings.frame_rate = frame_rate_num;
+          }
+          auto main_bitrate = video_params_obj->get_map()["bitrate"];
+          if (main_bitrate != nullptr) {
+            bitrate_num = main_bitrate->get_int();
+            video_publication_settings.bitrate = bitrate_num;
+          }
+          auto main_keyframe_interval =
+              video_params_obj->get_map()["keyFrameInterval"];
+          if (main_keyframe_interval != nullptr) {
+            keyframe_interval_num = main_keyframe_interval->get_int();
+            video_publication_settings.keyframe_interval =
+                keyframe_interval_num;
+          }
+        }
+        auto rid_obj = (*it)->get_map()["simulcastRid"];
+        if (rid_obj != nullptr &&
+            rid_obj->get_flag() == sio::message::flag_string) {
+          video_publication_settings.rid = rid_obj->get_string();
+        }
+        pub_setting_template.video = video_publication_settings;
+        publication_settings_list.push_back(pub_setting_template);
+       }
+    }
+    // Parse the video subscription capabilities.
+    auto optional_video_obj = video_info->get_map()["optional"];
+    if (optional_video_obj != nullptr &&
+        optional_video_obj->get_flag() == sio::message::flag_object) {
+      VideoSubscriptionCapabilities video_subscription_capabilities;
+      auto optional_video_format_obj =
+          optional_video_obj->get_map()["format"];
+      if (optional_video_format_obj != nullptr &&
+          optional_video_format_obj->get_flag() == sio::message::flag_array) {
+        auto formats = optional_video_format_obj->get_vector();
+        for (auto it = formats.begin(); it != formats.end(); ++it) {
+          std::string optional_codec_name =
+              (*it)->get_map()["codec"]->get_string();
+          std::string optional_profile_name("");
+          auto optional_profile_name_obj = (*it)->get_map()["profile"];
+          if (optional_profile_name_obj != nullptr &&
+              optional_profile_name_obj->get_flag() ==
+                  sio::message::flag_string) {
+            optional_profile_name = optional_profile_name_obj->get_string();
+          }
+          video_subscription_capabilities.codecs.push_back(
+              VideoCodecParameters(
+                  MediaUtils::GetVideoCodecFromString(optional_codec_name),
+                  optional_profile_name));
+        }
+      }
+      auto optional_video_params_obj =
+          optional_video_obj->get_map()["parameters"];
+      if (optional_video_params_obj != nullptr &&
+          optional_video_params_obj->get_flag() ==
+              sio::message::flag_object) {
+        auto resolution_obj =
+            optional_video_params_obj->get_map()["resolution"];
+        if (resolution_obj != nullptr &&
+            resolution_obj->get_flag() == sio::message::flag_array) {
+          auto resolutions = resolution_obj->get_vector();
+          for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
+            Resolution resolution =
+                Resolution((*it)->get_map()["width"]->get_int(),
+                           (*it)->get_map()["height"]->get_int());
+            video_subscription_capabilities.resolutions.push_back(resolution);
+          }
+        }
+        auto framerate_obj =
+            optional_video_params_obj->get_map()["framerate"];
+        if (framerate_obj != nullptr &&
+            framerate_obj->get_flag() == sio::message::flag_array) {
+          auto framerates = framerate_obj->get_vector();
+          for (auto it = framerates.begin(); it != framerates.end(); ++it) {
+            double frame_rate = (*it)->get_int();
+            video_subscription_capabilities.frame_rates.push_back(frame_rate);
+          }
+        }
+        auto bitrate_obj = optional_video_params_obj->get_map()["bitrate"];
+        if (bitrate_obj != nullptr &&
+            bitrate_obj->get_flag() == sio::message::flag_array) {
+          auto bitrates = bitrate_obj->get_vector();
+          for (auto it = bitrates.begin(); it != bitrates.end(); ++it) {
+            std::string bitrate_mul = (*it)->get_string();
+            // The bitrate multiplier is in the form of "x1.0" and we need to
+            // strip the "x" here.
+            video_subscription_capabilities.bitrate_multipliers.push_back(
+                std::stod(bitrate_mul.substr(1)));
+          }
+        }
+        auto keyframe_interval_obj =
+            optional_video_params_obj->get_map()["keyFrameInterval"];
+        if (keyframe_interval_obj != nullptr &&
+            keyframe_interval_obj->get_flag() == sio::message::flag_array) {
+          auto keyframe_intervals = keyframe_interval_obj->get_vector();
+          for (auto it = keyframe_intervals.begin();
+               it != keyframe_intervals.end(); ++it) {
+            double keyframe_interval = (*it)->get_int();
+            video_subscription_capabilities.keyframe_intervals.push_back(
+                keyframe_interval);
+          }
+        }
+      }
+      subscription_capabilities.video = video_subscription_capabilities;
+      }
   }
   // Now that all information needed for PublicationSettings and
   // SubscriptionCapabilities have been gathered, we construct remote streams.
@@ -1214,7 +1235,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     }
     if (video_source != "screen-cast") {
       auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
+          id, owner_id, subscription_capabilities, publication_settings_list);
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
       remote_stream->Attributes(attributes);
@@ -1235,7 +1256,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       }
     } else {
       auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
+          id, owner_id, subscription_capabilities, publication_settings_list);
       RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
@@ -1260,7 +1281,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     std::string remote_id("mcu");  // Not used.
     owner_id = "mcu";
     auto remote_stream = std::make_shared<RemoteMixedStream>(
-        id, owner_id, view, subscription_capabilities, publication_settings);
+        id, owner_id, view, subscription_capabilities, publication_settings_list);
     RTC_LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
     remote_stream->has_audio_ = has_audio;
     remote_stream->has_video_ = has_video;
@@ -1457,7 +1478,8 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
   } else if (type == kStreamTypeMix && event_field == "activeInput") {
     auto value = event->get_map()["value"];
     std::string activeAudioInputStreamId = value->get_string();
-    std::shared_ptr<RemoteMixedStream> stream_ptr = std::static_pointer_cast<RemoteMixedStream>(stream);
+    std::shared_ptr<RemoteMixedStream> stream_ptr =
+        std::static_pointer_cast<RemoteMixedStream>(stream);
     stream_ptr->OnActiveInputChanged(activeAudioInputStreamId);
     return;
   } else if (event_field == "audio.status" || event_field == "video.status") {
@@ -1478,7 +1500,8 @@ void ConferenceClient::TriggerOnStreamUpdated(sio::message::ptr stream_info) {
          its != stream_update_observers_.end(); ++its) {
       (*its).get().OnStreamMuteOrUnmute(id, track_kind, muted);
     }
-    current_conference_info_->TriggerOnStreamMuteOrUnmute(id, track_kind, muted);
+    current_conference_info_->TriggerOnStreamMuteOrUnmute(id, track_kind,
+                                                          muted);
   } else if (event_field == ".") {
     // The value field contains an update to stream info
     auto value = event->get_map()["value"];

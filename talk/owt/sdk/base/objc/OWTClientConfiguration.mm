@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import "talk/owt/sdk/base/objc/OWTClientConfiguration+Private.h"
-#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/api/peerconnection/RTCIceServer+Private.h"
 @implementation OWTClientConfiguration
 - (instancetype)init {
   if (self = [super init]) {
