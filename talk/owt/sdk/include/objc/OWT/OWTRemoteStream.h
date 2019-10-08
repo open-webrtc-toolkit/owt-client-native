@@ -6,7 +6,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @protocol OWTRemoteStreamDelegate;
 /// This class represents a remote stream.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTRemoteStream : OWTStream
 /**
   Get the stream owner's ID.
@@ -18,13 +18,13 @@ RTC_OBJC_EXPORT
 */
 @property(nonatomic, strong, readonly) NSString* streamId;
 
-@property(nonatomic, strong, readonly) NSArray<OWTPublicationSettings*>* settings;
+@property(nonatomic, strong, readonly) OWTPublicationSettings* settings;
 /// Original settings for publishing this stream.
 @property(nonatomic, strong, readonly) OWTSubscriptionCapabilities* capabilities;
 /// Capabilities remote endpoint provides for subscription.
 @property(nonatomic, weak, readwrite) id<OWTRemoteStreamDelegate> delegate;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTRemoteStreamDelegate<NSObject>
 /// Triggered when a stream is ended, or the stream is no longer available in
 /// conference.

@@ -5,7 +5,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @class OWTClientConfiguration;
 /// Base class for configurations for conference and P2P client.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTClientConfiguration : NSObject
 /// Configuration for WebRTC connections.
 @property(nonatomic, strong) RTCConfiguration* rtcConfiguration;

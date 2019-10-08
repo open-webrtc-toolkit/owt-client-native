@@ -1,8 +1,8 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import "webrtc/sdk/objc/api/peerconnection/RTCMediaStream+Private.h"
-#import "webrtc/sdk/objc/api/peerconnection/RTCMediaConstraints+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaConstraints+Private.h"
 #import "talk/owt/sdk/base/objc/OWTPeerConnectionDependencyFactory.h"
 #import "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #import "talk/owt/sdk/include/objc/OWT/RTCPeerConnectionFactory+OWT.h"

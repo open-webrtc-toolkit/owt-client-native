@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol OWTP2PClientDelegate;
 @class OWTP2PPublication;
 /// An async client for P2P WebRTC sessions
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTP2PClient : NSObject<OWTP2PPeerConnectionChannelObserver,
                                    OWTP2PSignalingSenderProtocol,
                                    OWTP2PSignalingChannelDelegate>
@@ -103,7 +103,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, strong) NSMutableArray<NSString*>* allowedRemoteIds;
 @end
 /// Delegate for OWTConferenceClient.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTP2PClientDelegate<NSObject>
 @optional
 /**

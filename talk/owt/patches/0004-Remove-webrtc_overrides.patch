@@ -1,27 +1,26 @@
-From bbba703fa21efec46c6e1224193c7dbc86e64c54 Mon Sep 17 00:00:00 2001
+From 5933826af9c091abec6cbdcf6d722bfc599bc15c Mon Sep 17 00:00:00 2001
 From: Qiu Jianlin <jianlin.qiu@intel.com>
-Date: Sat, 17 Aug 2019 12:30:58 -0700
+Date: Thu, 25 Oct 2018 10:26:25 +0800
 Subject: [PATCH] Remove webrtc_overrides
 
 ---
- webrtc_overrides/BUILD.gn                     | 125 ----------
+ webrtc_overrides/BUILD.gn                     | 157 -----------
  webrtc_overrides/DEPS                         |   7 -
  webrtc_overrides/OWNERS                       |   5 -
  webrtc_overrides/README.chromium              |  20 --
- webrtc_overrides/field_trial.cc               |  15 --
- webrtc_overrides/init_webrtc.cc               |  45 ----
+ webrtc_overrides/field_trial.cc               |  15 -
+ webrtc_overrides/init_webrtc.cc               |  96 -------
  webrtc_overrides/init_webrtc.h                |  13 -
- webrtc_overrides/metrics.cc                   |  57 -----
- .../rtc_base/diagnostic_logging.h             | 125 ----------
- webrtc_overrides/rtc_base/event.cc            |  40 ---
- webrtc_overrides/rtc_base/event.h             |  47 ----
+ .../rtc_base/diagnostic_logging.h             | 150 ----------
+ webrtc_overrides/rtc_base/event.cc            |  38 ---
+ webrtc_overrides/rtc_base/event.h             |  41 ---
  webrtc_overrides/rtc_base/gtest_prod_util.h   |  10 -
- webrtc_overrides/rtc_base/logging.cc          | 230 ------------------
- webrtc_overrides/rtc_base/logging.h           | 119 ---------
- webrtc_overrides/task_queue_factory.cc        | 144 -----------
- webrtc_overrides/task_queue_factory.h         |  21 --
- webrtc_overrides/task_queue_impl.cc           |  18 --
- 17 files changed, 1041 deletions(-)
+ webrtc_overrides/rtc_base/logging.cc          | 256 ------------------
+ webrtc_overrides/rtc_base/logging.h           | 119 --------
+ webrtc_overrides/rtc_base/task_queue.cc       | 233 ----------------
+ webrtc_overrides/rtc_base/win32socketinit.cc  |  22 --
+ webrtc_overrides/runtime_enabled_features.cc  |  26 --
+ 16 files changed, 1208 deletions(-)
  delete mode 100644 webrtc_overrides/BUILD.gn
  delete mode 100644 webrtc_overrides/DEPS
  delete mode 100644 webrtc_overrides/OWNERS
@@ -29,23 +28,22 @@ Subject: [PATCH] Remove webrtc_overrides
  delete mode 100644 webrtc_overrides/field_trial.cc
  delete mode 100644 webrtc_overrides/init_webrtc.cc
  delete mode 100644 webrtc_overrides/init_webrtc.h
- delete mode 100644 webrtc_overrides/metrics.cc
  delete mode 100644 webrtc_overrides/rtc_base/diagnostic_logging.h
  delete mode 100644 webrtc_overrides/rtc_base/event.cc
  delete mode 100644 webrtc_overrides/rtc_base/event.h
  delete mode 100644 webrtc_overrides/rtc_base/gtest_prod_util.h
  delete mode 100644 webrtc_overrides/rtc_base/logging.cc
  delete mode 100644 webrtc_overrides/rtc_base/logging.h
- delete mode 100644 webrtc_overrides/task_queue_factory.cc
- delete mode 100644 webrtc_overrides/task_queue_factory.h
- delete mode 100644 webrtc_overrides/task_queue_impl.cc
+ delete mode 100644 webrtc_overrides/rtc_base/task_queue.cc
+ delete mode 100644 webrtc_overrides/rtc_base/win32socketinit.cc
+ delete mode 100644 webrtc_overrides/runtime_enabled_features.cc
 
 diff --git a/webrtc_overrides/BUILD.gn b/webrtc_overrides/BUILD.gn
 deleted file mode 100644
-index 61048ce87ba..00000000000
+index 6b2db1922e9..00000000000
 --- a/webrtc_overrides/BUILD.gn
 +++ /dev/null
-@@ -1,125 +0,0 @@
+@@ -1,157 +0,0 @@
 -# Copyright 2017 The Chromium Authors. All rights reserved.
 -# Use of this source code is governed by a BSD-style license that can be
 -# found in the LICENSE file.
@@ -58,34 +56,92 @@ index 61048ce87ba..00000000000
 -  ]
 -}
 -
--source_set("webrtc") {
+-config("jingle_unexported_configs") {
+-  include_dirs = [
+-    "../../third_party/webrtc_overrides",
+-    "../../testing/gtest/include",
+-    "../../third_party/libyuv/include",
+-    "../../third_party/usrsctp/usrsctplib",
+-    "../../third_party/webrtc",
+-  ]
+-}
+-
+-config("jingle_public_configs") {
+-  include_dirs = [
+-    "../../third_party/webrtc_overrides",
+-    "../../testing/gtest/include",
+-    "../../third_party/webrtc",
+-  ]
+-}
+-
+-group("jingle_deps") {
 -  public_deps = [
+-    "//third_party/expat",
+-  ]
+-  deps = [
+-    "//base",
+-    "//crypto:platform",
+-    "//net",
+-  ]
+-}
+-
+-static_library("webrtc") {
+-  # TODO(jschuh): crbug.com/167187 fix size_t to int truncations.
+-  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
+-
+-  public_deps = [
+-    ":jingle_deps",
+-
 -    # TODO(kjellander): Start cleaning up this target as soon as
 -    # https://codereview.chromium.org/2022833002/ is landed. The target should
 -    # be removed entirely if possible.
+-    "//third_party/libjingle_xmpp:rtc_task_runner",
 -    "//third_party/webrtc/rtc_base:rtc_base_approved",
 -  ]
 -  deps = [
 -    "//third_party/webrtc/p2p:rtc_p2p",
 -  ]
 -
--  # When Chromium is built for NACL or Chromecast, WebRTC provides a
--  # field_trial implementation so there is no need to depend on
--  # ":field_trial".
--  # This configuration happens here:
--  # https://cs.chromium.org/chromium/src/third_party/webrtc/webrtc.gni?l=44-51&rcl=95c56eebe0a2b31ad5752138d15b431124e17d36
--  if (!is_chromecast && !is_nacl) {
--    # When Chromium doesn't build for NaCL or Chromecast, WebRTC doesn't
--    # provide an implementation for field_trial and a custom one (that uses
--    # base/metrics/field_trial.h is provided).
+-  if (is_win) {
+-    cflags = [ "/wd4005" ]
+-  }
+-
+-  if (is_nacl) {
+-    # For NACL, we have to add a default implementation for field_trial and
+-    # runtime_enabled_features.
 -    deps += [
--      ":field_trial",
+-      "//native_client_sdk/src/libraries/nacl_io",
+-      "//third_party/webrtc/system_wrappers:field_trial_default",
+-      "//third_party/webrtc/system_wrappers:runtime_enabled_features_default",
+-    ]
+-  } else if (is_chromecast) {
+-    # Cast builds use the default implementation for field_trial and
+-    # runtime_enabled_features.
+-    deps += [
+-      "//third_party/webrtc/system_wrappers:field_trial_default",
+-      "//third_party/webrtc/system_wrappers:runtime_enabled_features_default",
+-    ]
+-  } else {
+-    # Otherwise, we just add the field_trial which redirects to base and
+-    # runtime_enabled_features which redirects to content/public/common.
+-    sources = [
+-      "field_trial.cc",
+-      "runtime_enabled_features.cc",
+-    ]
+-    deps += [
 -      "//base",
+-      "//third_party/webrtc/system_wrappers:runtime_enabled_features_api",
 -    ]
 -  }
 -
--  configs += [ "//third_party/webrtc:common_config" ]
--  public_configs = [ "//third_party/webrtc:common_inherited_config" ]
+-  configs += [
+-    ":jingle_unexported_configs",
+-    "//third_party/webrtc:common_config",
+-  ]
+-  public_configs = [
+-    ":jingle_public_configs",
+-    "//third_party/webrtc:common_inherited_config",
+-  ]
 -}
 -
 -static_library("init_webrtc") {
@@ -93,22 +149,18 @@ index 61048ce87ba..00000000000
 -    "init_webrtc.cc",
 -    "init_webrtc.h",
 -  ]
--  configs += [ "//third_party/webrtc:common_config" ]
+-  configs += [
+-    ":jingle_unexported_configs",
+-    "//third_party/webrtc:common_config",
+-  ]
 -  public_configs = [
+-    ":jingle_public_configs",
 -    "//third_party/webrtc:common_inherited_config",
--
--    # TODO(mbonadei): Abseil config propagation is needed because
--    # WebRTC's BUILD.gn files don't use `public_deps`, there are
--    # good reasons for this, but they may disappear in the future.
--    # In that case it is ok to remove these two lines.
--    "//third_party/abseil-cpp:absl_include_config",
--    "//third_party/abseil-cpp:absl_define_config",
 -  ]
 -  public_deps = [
 -    ":libjingle_webrtc_common",
 -  ]
 -  deps = [
--    ":metrics",
 -    ":task_queue_impl",
 -    "//base",
 -    "//third_party/webrtc/rtc_base",
@@ -116,59 +168,37 @@ index 61048ce87ba..00000000000
 -  ]
 -}
 -
--static_library("metrics") {
--  sources = [
--    "metrics.cc",
--  ]
--  deps = [
--    "//base",
--  ]
--}
--
--static_library("field_trial") {
--  sources = [
--    "field_trial.cc",
--  ]
--  deps = [
--    "//base",
--  ]
--}
--
 -source_set("libjingle_webrtc_common") {
--  configs += [ "//third_party/webrtc:common_config" ]
--  public_configs = [ "//third_party/webrtc:common_inherited_config" ]
+-  configs += [
+-    ":jingle_unexported_configs",
+-    "//third_party/webrtc:common_config",
+-  ]
+-  public_configs = [
+-    ":jingle_public_configs",
+-    "//third_party/webrtc:common_inherited_config",
+-  ]
 -
 -  deps = [
 -    ":webrtc",
+-    "//third_party/libsrtp",
+-    "//third_party/usrsctp",
 -    "//third_party/webrtc/media:rtc_media",
 -    "//third_party/webrtc/media:rtc_media_base",
+-    "//third_party/webrtc/modules/video_capture",
 -    "//third_party/webrtc/pc:libjingle_peerconnection",
 -    "//third_party/webrtc/pc:rtc_pc",
 -    "//third_party/webrtc/system_wrappers",
 -  ]
 -}
 -
--# TODO(bugs.webrtc.org/10284): Remove when TaskQueue factory is propagated
--# explicetely to all components that needs it.
 -source_set("task_queue_impl") {
 -  sources = [
--    "task_queue_impl.cc",
--  ]
--  configs += [ "//third_party/webrtc:library_impl_config" ]
--  deps = [
--    ":task_queue_factory",
--    "//third_party/webrtc/api/task_queue",
--  ]
--}
--
--source_set("task_queue_factory") {
--  sources = [
--    "task_queue_factory.cc",
--    "task_queue_factory.h",
+-    "rtc_base/task_queue.cc",
 -  ]
 -  deps = [
 -    "//base",
--    "//third_party/webrtc/api/task_queue",
+-    "//third_party/webrtc/rtc_base:refcount",
+-    "//third_party/webrtc/rtc_base:rtc_task_queue_api",
 -  ]
 -}
 diff --git a/webrtc_overrides/DEPS b/webrtc_overrides/DEPS
@@ -244,10 +274,10 @@ index 878e6cc576b..00000000000
 -}  // namespace webrtc
 diff --git a/webrtc_overrides/init_webrtc.cc b/webrtc_overrides/init_webrtc.cc
 deleted file mode 100644
-index db086b6f758..00000000000
+index b26b7c5ac0d..00000000000
 --- a/webrtc_overrides/init_webrtc.cc
 +++ /dev/null
-@@ -1,45 +0,0 @@
+@@ -1,96 +0,0 @@
 -// Copyright 2013 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -258,6 +288,8 @@ index db086b6f758..00000000000
 -#include "base/files/file_path.h"
 -#include "base/files/file_util.h"
 -#include "base/logging.h"
+-#include "base/metrics/histogram.h"
+-#include "base/metrics/sparse_histogram.h"
 -#include "base/native_library.h"
 -#include "base/path_service.h"
 -#include "base/trace_event/trace_event.h"
@@ -278,52 +310,10 @@ index db086b6f758..00000000000
 -                   const unsigned char* arg_types,
 -                   const unsigned long long* arg_values,
 -                   unsigned char flags) {
--  base::trace_event::TraceArguments args(num_args, arg_names, arg_types,
--                                         arg_values);
--  TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_group_enabled, name,
--                                  trace_event_internal::kGlobalScope, id, &args,
--                                  flags);
+-  TRACE_EVENT_API_ADD_TRACE_EVENT(
+-      phase, category_group_enabled, name, trace_event_internal::kGlobalScope,
+-      id, num_args, arg_names, arg_types, arg_values, NULL, flags);
 -}
--
--bool InitializeWebRtcModule() {
--  // Workaround for crbug.com/176522
--  // On Linux, we can't fetch the number of cores after the sandbox has been
--  // initialized, so we call DetectNumberOfCores() here, to cache the value.
--  webrtc::CpuInfo::DetectNumberOfCores();
--  webrtc::SetupEventTracer(&GetCategoryGroupEnabled, &AddTraceEvent);
--  return true;
--}
-diff --git a/webrtc_overrides/init_webrtc.h b/webrtc_overrides/init_webrtc.h
-deleted file mode 100644
-index f5e6efbd38e..00000000000
---- a/webrtc_overrides/init_webrtc.h
-+++ /dev/null
-@@ -1,13 +0,0 @@
--// Copyright 2013 The Chromium Authors. All rights reserved.
--// Use of this source code is governed by a BSD-style license that can be
--// found in the LICENSE file.
--
--#ifndef THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
--#define THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
--
--// Initialize WebRTC. Call this explicitly to initialize WebRTC module
--// (before initializing the sandbox in Chrome) and hook up Chrome+WebRTC
--// integration such as common logging and tracing.
--bool InitializeWebRtcModule();
--
--#endif // THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
-diff --git a/webrtc_overrides/metrics.cc b/webrtc_overrides/metrics.cc
-deleted file mode 100644
-index 2284046bc60..00000000000
---- a/webrtc_overrides/metrics.cc
-+++ /dev/null
-@@ -1,57 +0,0 @@
--// Copyright 2018 The Chromium Authors. All rights reserved.
--// Use of this source code is governed by a BSD-style license that can be
--// found in the LICENSE file.
--
--#include "base/metrics/histogram.h"
--#include "base/metrics/sparse_histogram.h"
 -
 -namespace webrtc {
 -
@@ -375,12 +365,40 @@ index 2284046bc60..00000000000
 -}
 -}  // namespace metrics
 -}  // namespace webrtc
+-
+-bool InitializeWebRtcModule() {
+-  // Workaround for crbug.com/176522
+-  // On Linux, we can't fetch the number of cores after the sandbox has been
+-  // initialized, so we call DetectNumberOfCores() here, to cache the value.
+-  webrtc::CpuInfo::DetectNumberOfCores();
+-  webrtc::SetupEventTracer(&GetCategoryGroupEnabled, &AddTraceEvent);
+-  return true;
+-}
+diff --git a/webrtc_overrides/init_webrtc.h b/webrtc_overrides/init_webrtc.h
+deleted file mode 100644
+index f5e6efbd38e..00000000000
+--- a/webrtc_overrides/init_webrtc.h
++++ /dev/null
+@@ -1,13 +0,0 @@
+-// Copyright 2013 The Chromium Authors. All rights reserved.
+-// Use of this source code is governed by a BSD-style license that can be
+-// found in the LICENSE file.
+-
+-#ifndef THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
+-#define THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
+-
+-// Initialize WebRTC. Call this explicitly to initialize WebRTC module
+-// (before initializing the sandbox in Chrome) and hook up Chrome+WebRTC
+-// integration such as common logging and tracing.
+-bool InitializeWebRtcModule();
+-
+-#endif // THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
 diff --git a/webrtc_overrides/rtc_base/diagnostic_logging.h b/webrtc_overrides/rtc_base/diagnostic_logging.h
 deleted file mode 100644
-index e8d31254cae..00000000000
+index 0838024a513..00000000000
 --- a/webrtc_overrides/rtc_base/diagnostic_logging.h
 +++ /dev/null
-@@ -1,125 +0,0 @@
+@@ -1,150 +0,0 @@
 -// Copyright 2015 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -391,10 +409,37 @@ index e8d31254cae..00000000000
 -#include <sstream>
 -#include <string>
 -
--#include "third_party/webrtc/api/scoped_refptr.h"
 -#include "third_party/webrtc/rtc_base/checks.h"
+-#include "third_party/webrtc/rtc_base/scoped_ref_ptr.h"
 -
 -namespace rtc {
+-
+-///////////////////////////////////////////////////////////////////////////////
+-// ConstantLabel can be used to easily generate string names from constant
+-// values.  This can be useful for logging descriptive names of error messages.
+-// Usage:
+-//   const ConstantLabel LIBRARY_ERRORS[] = {
+-//     KLABEL(SOME_ERROR),
+-//     KLABEL(SOME_OTHER_ERROR),
+-//     ...
+-//     LASTLABEL
+-//   }
+-//
+-//   int err = LibraryFunc();
+-//   LOG(LS_ERROR) << "LibraryFunc returned: "
+-//                 << ErrorName(err, LIBRARY_ERRORS);
+-
+-struct ConstantLabel {
+-  int value;
+-  const char* label;
+-};
+-#define KLABEL(x) \
+-  { x, #x }
+-#define LASTLABEL \
+-  { 0, 0 }
+-
+-const char* FindLabel(int value, const ConstantLabel entries[]);
+-std::string ErrorName(int err, const ConstantLabel* err_table);
 -
 -//////////////////////////////////////////////////////////////////////
 -// Note that the non-standard LoggingSeverity aliases exist because they are
@@ -407,7 +452,6 @@ index e8d31254cae..00000000000
 -//   in debug builds.
 -//  LS_WARNING: Something that may warrant investigation.
 -//  LS_ERROR: Something that should not have occurred.
--//  LS_NONE: Set this as minimum severity to disable logging.
 -// Note that LoggingSeverity is mapped over to chromiums verbosity levels where
 -// anything lower than or equal to the current verbosity level is written to
 -// file which is the opposite of logging severity in libjingle where higher
@@ -417,7 +461,6 @@ index e8d31254cae..00000000000
 -// TODO(tommi): To keep things simple, we should just use the same values for
 -// these constants as Chrome does.
 -enum LoggingSeverity {
--  LS_NONE = 0,
 -  LS_ERROR = 1,
 -  LS_WARNING = 2,
 -  LS_INFO = 3,
@@ -508,10 +551,10 @@ index e8d31254cae..00000000000
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_WEBRTC_RTC_BASE_DIAGNOSTIC_LOGGING_H_
 diff --git a/webrtc_overrides/rtc_base/event.cc b/webrtc_overrides/rtc_base/event.cc
 deleted file mode 100644
-index f81232c0acb..00000000000
+index 165d3124f51..00000000000
 --- a/webrtc_overrides/rtc_base/event.cc
 +++ /dev/null
-@@ -1,40 +0,0 @@
+@@ -1,38 +0,0 @@
 -// Copyright 2017 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -523,8 +566,6 @@ index f81232c0acb..00000000000
 -namespace rtc {
 -
 -using base::WaitableEvent;
--
--Event::Event() : Event(false, false) {}
 -
 -Event::Event(bool manual_reset, bool initially_signaled)
 -    : event_(manual_reset ? WaitableEvent::ResetPolicy::MANUAL
@@ -542,22 +583,22 @@ index f81232c0acb..00000000000
 -  event_.Reset();
 -}
 -
--bool Event::Wait(int give_up_after_ms) {
--  if (give_up_after_ms == kForever) {
+-bool Event::Wait(int milliseconds) {
+-  if (milliseconds == kForever) {
 -    event_.Wait();
 -    return true;
 -  }
 -
--  return event_.TimedWait(base::TimeDelta::FromMilliseconds(give_up_after_ms));
+-  return event_.TimedWait(base::TimeDelta::FromMilliseconds(milliseconds));
 -}
 -
 -}  // namespace rtc
 diff --git a/webrtc_overrides/rtc_base/event.h b/webrtc_overrides/rtc_base/event.h
 deleted file mode 100644
-index 47a34cdac76..00000000000
+index 256b353ff27..00000000000
 --- a/webrtc_overrides/rtc_base/event.h
 +++ /dev/null
-@@ -1,47 +0,0 @@
+@@ -1,41 +0,0 @@
 -// Copyright 2017 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -576,7 +617,6 @@ index 47a34cdac76..00000000000
 - public:
 -  static const int kForever = -1;
 -
--  Event();
 -  Event(bool manual_reset, bool initially_signaled);
 -  ~Event();
 -
@@ -584,23 +624,18 @@ index 47a34cdac76..00000000000
 -  void Reset();
 -
 -  // Wait for the event to become signaled, for the specified number of
--  // milliseconds.  To wait indefinetly, pass kForever.
--  bool Wait(int give_up_after_ms);
--  bool Wait(int give_up_after_ms, int /*warn_after_ms*/) {
--    return Wait(give_up_after_ms);
--  }
+-  // |milliseconds|.  To wait indefinetly, pass kForever.
+-  bool Wait(int milliseconds);
 -
 - private:
 -  base::WaitableEvent event_;
--  DISALLOW_COPY_AND_ASSIGN(Event);
+-  DISALLOW_IMPLICIT_CONSTRUCTORS(Event);
 -};
 -
--// Pull ScopedAllowBaseSyncPrimitives(ForTesting) into the rtc namespace.
+-// Pull ScopedAllowBaseSyncPrimitives into the rtc namespace.
 -// Managing what types in WebRTC are allowed to use
 -// ScopedAllowBaseSyncPrimitives, is done via thread_restrictions.h.
--using ScopedAllowBaseSyncPrimitives = base::ScopedAllowBaseSyncPrimitives;
--using ScopedAllowBaseSyncPrimitivesForTesting =
--    base::ScopedAllowBaseSyncPrimitivesForTesting;
+-using base::ScopedAllowBaseSyncPrimitives;
 -
 -}  // namespace rtc
 -
@@ -623,10 +658,10 @@ index d57937aa63b..00000000000
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_RTC_BASE_GTEST_PROD_UTIL_H_
 diff --git a/webrtc_overrides/rtc_base/logging.cc b/webrtc_overrides/rtc_base/logging.cc
 deleted file mode 100644
-index d10fd254db1..00000000000
+index fac4004cbf7..00000000000
 --- a/webrtc_overrides/rtc_base/logging.cc
 +++ /dev/null
-@@ -1,230 +0,0 @@
+@@ -1,256 +0,0 @@
 -// Copyright 2015 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -647,7 +682,7 @@ index d10fd254db1..00000000000
 -#include "base/logging.h"
 -#include "base/strings/string_util.h"
 -#include "base/threading/platform_thread.h"
--#include "third_party/webrtc/rtc_base/string_utils.h"
+-#include "third_party/webrtc/rtc_base/stringutils.h"
 -
 -// This needs to be included after base/logging.h.
 -#include "third_party/webrtc_overrides/rtc_base/diagnostic_logging.h"
@@ -685,6 +720,32 @@ index d10fd254db1..00000000000
 -              "Atomic32 not same size as PlatformThreadId");
 -base::subtle::Atomic32 g_init_logging_delegate_thread_id = 0;
 -#endif
+-
+-/////////////////////////////////////////////////////////////////////////////
+-// Constant Labels
+-/////////////////////////////////////////////////////////////////////////////
+-
+-const char* FindLabel(int value, const ConstantLabel entries[]) {
+-  for (int i = 0; entries[i].label; ++i) {
+-    if (value == entries[i].value)
+-      return entries[i].label;
+-  }
+-  return 0;
+-}
+-
+-std::string ErrorName(int err, const ConstantLabel* err_table) {
+-  if (err == 0)
+-    return "No error";
+-
+-  if (err_table != 0) {
+-    if (const char* value = FindLabel(err, err_table))
+-      return value;
+-  }
+-
+-  char buffer[16];
+-  base::snprintf(buffer, sizeof(buffer), "0x%08x", err);
+-  return buffer;
+-}
 -
 -/////////////////////////////////////////////////////////////////////////////
 -// Log helper functions
@@ -982,124 +1043,59 @@ index 85622bc05da..00000000000
 -#endif  // LOGGING_INSIDE_WEBRTC
 -
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_WEBRTC_RTC_BASE_LOGGING_H_
-diff --git a/webrtc_overrides/task_queue_factory.cc b/webrtc_overrides/task_queue_factory.cc
+diff --git a/webrtc_overrides/rtc_base/task_queue.cc b/webrtc_overrides/rtc_base/task_queue.cc
 deleted file mode 100644
-index 3be3b27635a..00000000000
---- a/webrtc_overrides/task_queue_factory.cc
+index c569be8aff2..00000000000
+--- a/webrtc_overrides/rtc_base/task_queue.cc
 +++ /dev/null
-@@ -1,144 +0,0 @@
--// Copyright 2019 The Chromium Authors. All rights reserved.
--// Use of this source code is governed by a BSD-style license that can be
--// found in the LICENSE file.
+@@ -1,233 +0,0 @@
+-/*
+- *  Copyright 2016 The WebRTC Project Authors. All rights reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
 -
--#include "third_party/webrtc_overrides/task_queue_factory.h"
+-#include "third_party/webrtc/rtc_base/task_queue.h"
 -
 -#include "base/bind.h"
+-#include "base/lazy_instance.h"
 -#include "base/memory/ref_counted.h"
--#include "base/memory/scoped_refptr.h"
 -#include "base/synchronization/waitable_event.h"
 -#include "base/task/post_task.h"
--#include "base/task/task_traits.h"
+-#include "base/threading/thread_local.h"
 -#include "build/build_config.h"
--#include "third_party/webrtc/api/task_queue/task_queue_base.h"
--#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
+-#include "third_party/webrtc/rtc_base/refcount.h"
+-#include "third_party/webrtc/rtc_base/refcountedobject.h"
 -
+-using base::WaitableEvent;
+-
+-namespace rtc {
 -namespace {
 -
--class WebrtcTaskQueue final : public webrtc::TaskQueueBase {
-- public:
--  explicit WebrtcTaskQueue(const base::TaskTraits& traits)
--      : task_runner_(base::CreateSequencedTaskRunnerWithTraits(traits)),
--        is_active_(new base::RefCountedData<bool>(true)) {
--    DCHECK(task_runner_);
--  }
+-// A lazily created thread local storage for quick access to a TaskQueue.
+-base::LazyInstance<base::ThreadLocalPointer<TaskQueue>>::Leaky lazy_tls_ptr =
+-    LAZY_INSTANCE_INITIALIZER;
 -
--  void Delete() override;
--  void PostTask(std::unique_ptr<webrtc::QueuedTask> task) override;
--  void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
--                       uint32_t milliseconds) override;
--
-- private:
--  ~WebrtcTaskQueue() override = default;
--
--  static void RunTask(WebrtcTaskQueue* task_queue,
--                      scoped_refptr<base::RefCountedData<bool>> is_active,
--                      std::unique_ptr<webrtc::QueuedTask> task);
--
--  const scoped_refptr<base::SequencedTaskRunner> task_runner_;
--  // Value of |is_active_| is checked and set on |task_runner_|.
--  const scoped_refptr<base::RefCountedData<bool>> is_active_;
--};
--
--void Deactivate(scoped_refptr<base::RefCountedData<bool>> is_active,
--                base::WaitableEvent* event) {
--  is_active->data = false;
--  event->Signal();
--}
--
--void WebrtcTaskQueue::Delete() {
--  DCHECK(!IsCurrent());
--  base::WaitableEvent event(base::WaitableEvent::ResetPolicy::MANUAL,
--                            base::WaitableEvent::InitialState::NOT_SIGNALED);
--  task_runner_->PostTask(FROM_HERE,
--                         base::BindOnce(&Deactivate, is_active_, &event));
--  event.Wait();
--  delete this;
--}
--
--void WebrtcTaskQueue::RunTask(
--    WebrtcTaskQueue* task_queue,
--    scoped_refptr<base::RefCountedData<bool>> is_active,
--    std::unique_ptr<webrtc::QueuedTask> task) {
--  if (!is_active->data)
--    return;
--
--  CurrentTaskQueueSetter set_current(task_queue);
--  webrtc::QueuedTask* task_ptr = task.release();
--  if (task_ptr->Run()) {
--    // Delete task_ptr before CurrentTaskQueueSetter clears state that this code
--    // is running on the task queue.
--    delete task_ptr;
--  }
--}
--
--void WebrtcTaskQueue::PostTask(std::unique_ptr<webrtc::QueuedTask> task) {
--  // Posted Task might outlive this, but access to this is guarded by
--  // ref-counted |is_active_| flag.
--  task_runner_->PostTask(
--      FROM_HERE,
--      base::BindOnce(&WebrtcTaskQueue::RunTask, base::Unretained(this),
--                     is_active_, std::move(task)));
--}
--
--void WebrtcTaskQueue::PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
--                                      uint32_t milliseconds) {
--  // Posted Task might outlive this, but access to this is guarded by
--  // ref-counted |is_active_| flag.
--  task_runner_->PostDelayedTask(
--      FROM_HERE,
--      base::BindOnce(&WebrtcTaskQueue::RunTask, base::Unretained(this),
--                     is_active_, std::move(task)),
--      base::TimeDelta::FromMilliseconds(milliseconds));
--}
--
--base::TaskTraits TaskQueuePriority2Traits(
--    webrtc::TaskQueueFactory::Priority priority) {
+-base::TaskTraits TaskQueuePriority2Traits(TaskQueue::Priority priority) {
 -  // The content/renderer/media/webrtc/rtc_video_encoder.* code
 -  // employs a PostTask/Wait pattern that uses TQ in a way that makes it
 -  // blocking and synchronous, which is why we allow WithBaseSyncPrimitives()
 -  // for OS_ANDROID.
 -  switch (priority) {
--    case webrtc::TaskQueueFactory::Priority::HIGH:
+-    case TaskQueue::Priority::HIGH:
 -#if defined(OS_ANDROID)
 -      return {base::WithBaseSyncPrimitives(), base::TaskPriority::HIGHEST};
 -#else
 -      return {base::TaskPriority::HIGHEST};
 -#endif
 -      break;
--    case webrtc::TaskQueueFactory::Priority::LOW:
+-    case TaskQueue::Priority::LOW:
 -      return {base::MayBlock(), base::TaskPriority::BEST_EFFORT};
--    case webrtc::TaskQueueFactory::Priority::NORMAL:
+-    case TaskQueue::Priority::NORMAL:
 -    default:
 -#if defined(OS_ANDROID)
 -      return {base::WithBaseSyncPrimitives()};
@@ -1109,80 +1105,243 @@ index 3be3b27635a..00000000000
 -  }
 -}
 -
--class WebrtcTaskQueueFactory final : public webrtc::TaskQueueFactory {
-- public:
--  WebrtcTaskQueueFactory() = default;
--
--  std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
--  CreateTaskQueue(absl::string_view /*name*/,
--                  Priority priority) const override {
--    return std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>(
--        new WebrtcTaskQueue(TaskQueuePriority2Traits(priority)));
--  }
--};
--
 -}  // namespace
 -
--std::unique_ptr<webrtc::TaskQueueFactory> CreateWebRtcTaskQueueFactory() {
--  return std::make_unique<WebrtcTaskQueueFactory>();
+-bool TaskQueue::IsCurrent() const {
+-  return Current() == this;
 -}
 -
--std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
--CreateWebRtcTaskQueue(webrtc::TaskQueueFactory::Priority priority) {
--  return std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>(
--      new WebrtcTaskQueue(TaskQueuePriority2Traits(priority)));
+-class TaskQueue::Impl : public RefCountInterface {
+- public:
+-  Impl(const char* queue_name,
+-       TaskQueue* queue,
+-       const base::TaskTraits& traits);
+-  ~Impl() override;
+-
+-  // To maintain functional compatibility with WebRTC's TaskQueue, we flush
+-  // and deactivate the task queue here, synchronously.
+-  // This has some drawbacks and will likely change in the future, but for now
+-  // is necessary.
+-  void Stop();
+-
+-  void PostTask(std::unique_ptr<QueuedTask> task);
+-  void PostDelayedTask(std::unique_ptr<QueuedTask> task, uint32_t milliseconds);
+-  void PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                        std::unique_ptr<QueuedTask> reply,
+-                        TaskQueue* reply_queue);
+-  void PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                        std::unique_ptr<QueuedTask> reply);
+-
+- private:
+-  void RunTask(std::unique_ptr<QueuedTask> task);
+-  void Deactivate(WaitableEvent* event);
+-
+-  class PostAndReplyTask : public QueuedTask {
+-   public:
+-    PostAndReplyTask(std::unique_ptr<QueuedTask> task,
+-                     ::scoped_refptr<TaskQueue::Impl> target_queue,
+-                     std::unique_ptr<QueuedTask> reply,
+-                     ::scoped_refptr<TaskQueue::Impl> reply_queue)
+-        : task_(std::move(task)),
+-          target_queue_(std::move(target_queue)),
+-          reply_(std::move(reply)),
+-          reply_queue_(std::move(reply_queue)) {}
+-
+-    ~PostAndReplyTask() override {}
+-
+-   private:
+-    bool Run() override {
+-      if (task_) {
+-        target_queue_->RunTask(std::move(task_));
+-        std::unique_ptr<QueuedTask> t = std::unique_ptr<QueuedTask>(this);
+-        reply_queue_->PostTask(std::move(t));
+-        return false;  // Don't delete, ownership lies with reply_queue_.
+-      }
+-
+-      reply_queue_->RunTask(std::move(reply_));
+-
+-      return true;  // OK to delete.
+-    }
+-
+-    std::unique_ptr<QueuedTask> task_;
+-    ::scoped_refptr<TaskQueue::Impl> target_queue_;
+-    std::unique_ptr<QueuedTask> reply_;
+-    ::scoped_refptr<TaskQueue::Impl> reply_queue_;
+-  };
+-
+-  TaskQueue* const queue_;
+-  const ::scoped_refptr<base::SequencedTaskRunner> task_runner_;
+-  bool is_active_ = true;  // Checked and set on |task_runner_|.
+-};
+-
+-// TaskQueue::Impl.
+-
+-TaskQueue::Impl::Impl(const char* queue_name,
+-                      TaskQueue* queue,
+-                      const base::TaskTraits& traits)
+-    : queue_(queue),
+-      task_runner_(base::CreateSequencedTaskRunnerWithTraits(traits)) {
+-  DCHECK(task_runner_);
 -}
-diff --git a/webrtc_overrides/task_queue_factory.h b/webrtc_overrides/task_queue_factory.h
+-
+-TaskQueue::Impl::~Impl() {}
+-
+-void TaskQueue::Impl::Stop() {
+-  WaitableEvent event(WaitableEvent::ResetPolicy::MANUAL,
+-                      WaitableEvent::InitialState::NOT_SIGNALED);
+-  task_runner_->PostTask(
+-      FROM_HERE, base::BindOnce(&TaskQueue::Impl::Deactivate,
+-                                rtc::scoped_refptr<Impl>(this), &event));
+-  event.Wait();
+-}
+-
+-void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
+-  task_runner_->PostTask(
+-      FROM_HERE,
+-      base::BindOnce(&TaskQueue::Impl::RunTask, rtc::scoped_refptr<Impl>(this),
+-                     std::move(task)));
+-}
+-
+-void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
+-                                      uint32_t milliseconds) {
+-  task_runner_->PostDelayedTask(
+-      FROM_HERE,
+-      base::BindOnce(&TaskQueue::Impl::RunTask, rtc::scoped_refptr<Impl>(this),
+-                     std::move(task)),
+-      base::TimeDelta::FromMilliseconds(milliseconds));
+-}
+-
+-void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                                       std::unique_ptr<QueuedTask> reply,
+-                                       TaskQueue* reply_queue) {
+-  std::unique_ptr<QueuedTask> t =
+-      std::unique_ptr<QueuedTask>(new PostAndReplyTask(
+-          std::move(task), this, std::move(reply), reply_queue->impl_.get()));
+-  PostTask(std::move(t));
+-}
+-
+-void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                                       std::unique_ptr<QueuedTask> reply) {
+-  PostTaskAndReply(std::move(task), std::move(reply), queue_);
+-}
+-
+-void TaskQueue::Impl::RunTask(std::unique_ptr<QueuedTask> task) {
+-  if (!is_active_)
+-    return;
+-
+-  auto* prev = lazy_tls_ptr.Pointer()->Get();
+-  lazy_tls_ptr.Pointer()->Set(queue_);
+-  if (!task->Run())
+-    task.release();
+-  lazy_tls_ptr.Pointer()->Set(prev);
+-}
+-
+-void TaskQueue::Impl::Deactivate(WaitableEvent* event) {
+-  is_active_ = false;
+-  event->Signal();
+-}
+-
+-// TaskQueue.
+-
+-TaskQueue::TaskQueue(const char* queue_name,
+-                     Priority priority /*= Priority::NORMAL*/)
+-    : impl_(new RefCountedObject<Impl>(queue_name,
+-                                       this,
+-                                       TaskQueuePriority2Traits(priority))) {
+-  DCHECK(queue_name);
+-}
+-
+-TaskQueue::~TaskQueue() {
+-  DCHECK(!IsCurrent());
+-  impl_->Stop();
+-}
+-
+-// static
+-TaskQueue* TaskQueue::Current() {
+-  return lazy_tls_ptr.Pointer()->Get();
+-}
+-
+-void TaskQueue::PostTask(std::unique_ptr<QueuedTask> task) {
+-  impl_->PostTask(std::move(task));
+-}
+-
+-void TaskQueue::PostDelayedTask(std::unique_ptr<QueuedTask> task,
+-                                uint32_t milliseconds) {
+-  impl_->PostDelayedTask(std::move(task), milliseconds);
+-}
+-
+-void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                                 std::unique_ptr<QueuedTask> reply,
+-                                 TaskQueue* reply_queue) {
+-  impl_->PostTaskAndReply(std::move(task), std::move(reply), reply_queue);
+-}
+-
+-void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
+-                                 std::unique_ptr<QueuedTask> reply) {
+-  impl_->PostTaskAndReply(std::move(task), std::move(reply));
+-}
+-
+-}  // namespace rtc
+diff --git a/webrtc_overrides/rtc_base/win32socketinit.cc b/webrtc_overrides/rtc_base/win32socketinit.cc
 deleted file mode 100644
-index 20130868ef9..00000000000
---- a/webrtc_overrides/task_queue_factory.h
+index 6cd6f6ee334..00000000000
+--- a/webrtc_overrides/rtc_base/win32socketinit.cc
 +++ /dev/null
-@@ -1,21 +0,0 @@
--// Copyright 2019 The Chromium Authors. All rights reserved.
+@@ -1,22 +0,0 @@
+-// Copyright 2015 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
 -
--#ifndef THIRD_PARTY_WEBRTC_OVERRIDES_TASK_QUEUE_FACTORY_H_
--#define THIRD_PARTY_WEBRTC_OVERRIDES_TASK_QUEUE_FACTORY_H_
+-// Redirect WebRTC's winsock initialization activity into Chromium's
+-// singleton object that managest precisely that for the browser.
 -
--#include <memory>
+-#include "third_party/webrtc/rtc_base/win32socketinit.h"
 -
--#include "base/task/task_traits.h"
--#include "third_party/webrtc/api/task_queue/task_queue_base.h"
--#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
+-#include "net/base/winsock_init.h"
 -
--// Creates factory for webrtc::TaskQueueBase backed by base::SequencedTaskRunner
--// Tested by /content/renderer/media/webrtc/task_queue_factory_unittest.cc
--std::unique_ptr<webrtc::TaskQueueFactory> CreateWebRtcTaskQueueFactory();
+-#if !defined(WEBRTC_WIN)
+-#error "Only compile this on Windows"
+-#endif
 -
--std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
--CreateWebRtcTaskQueue(webrtc::TaskQueueFactory::Priority priority);
+-namespace rtc {
 -
--#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_TASK_QUEUE_FACTORY_H_
-diff --git a/webrtc_overrides/task_queue_impl.cc b/webrtc_overrides/task_queue_impl.cc
+-void EnsureWinsockInit() {
+-  net::EnsureWinsockInit();
+-}
+-
+-}  // namespace rtc
+diff --git a/webrtc_overrides/runtime_enabled_features.cc b/webrtc_overrides/runtime_enabled_features.cc
 deleted file mode 100644
-index 0d9b158f566..00000000000
---- a/webrtc_overrides/task_queue_impl.cc
+index bbb5deba5b5..00000000000
+--- a/webrtc_overrides/runtime_enabled_features.cc
 +++ /dev/null
-@@ -1,18 +0,0 @@
--// Copyright 2019 The Chromium Authors. All rights reserved.
+@@ -1,26 +0,0 @@
+-// Copyright 2018 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
+-//
+-// Define webrtc::runtime_features::IsFeatureEnabled to provide webrtc with a
+-// chromium runtime flags access.
 -
--#include <memory>
--
--#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
--#include "third_party/webrtc_overrides/task_queue_factory.h"
+-#include "base/feature_list.h"
+-#include "third_party/webrtc/system_wrappers/include/runtime_enabled_features.h"
 -
 -namespace webrtc {
 -
--// Temporary link-time injection for the webrtc TaskQueueFactory implementation.
--// This will not be needed once bugs.webrtc.org/10284 is resolved.
--std::unique_ptr<TaskQueueFactory> CreateDefaultTaskQueueFactory() {
--  return CreateWebRtcTaskQueueFactory();
+-namespace runtime_enabled_features {
+-
+-const base::Feature kWebRtcDualStreamMode{"WebRTC-DualStreamMode",
+-                                          base::FEATURE_DISABLED_BY_DEFAULT};
+-
+-bool IsFeatureEnabled(std::string feature_name) {
+-  if (feature_name == kDualStreamModeFeatureName)
+-    return base::FeatureList::IsEnabled(kWebRtcDualStreamMode);
+-  return false;
 -}
+-
+-}  // namespace runtime_enabled_features
 -
 -}  // namespace webrtc
 -- 
-2.21.0.windows.1
+2.18.0.windows.1
 

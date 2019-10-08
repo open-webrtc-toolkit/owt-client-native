@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "talk/owt/sdk/base/objc/CameraVideoCapturer.h"
 #include "third_party/webrtc/rtc_base/logging.h"
-#import "third_party/webrtc/sdk/objc/api/peerconnection/RTCVideoSource+Private.h"
+#import "third_party/webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoSource+Private.h"
 #import "third_party/webrtc/sdk/objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h"
 #import "talk/owt/sdk/include/objc/OWT/RTCPeerConnectionFactory+OWT.h"
 namespace owt {

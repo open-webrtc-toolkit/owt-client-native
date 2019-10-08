@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class OWTStreamSourceInfo;
 @class RTCMediaStream;
 /// Base class of all streams in the SDK
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTStream : NSObject
 // Writable because mediaStream is subscribed after OWTRemoteStream is created in conference mode.
 @property(nonatomic, strong, readwrite) RTCMediaStream* mediaStream;

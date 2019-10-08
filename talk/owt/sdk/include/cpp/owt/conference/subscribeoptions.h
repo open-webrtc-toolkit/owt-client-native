@@ -1,7 +1,6 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-
 #ifndef OWT_CONFERENCE_SUBSCRIBEOPTIONS_H_
 #define OWT_CONFERENCE_SUBSCRIBEOPTIONS_H_
 #include "owt/base/commontypes.h"
@@ -23,22 +22,19 @@ struct VideoSubscriptionConstraints {
   /**
    @brief Construct VideoSubscriptionConstraints with default values.
    @details By default the publication settings of stream is used.
-   if rid is specified, other fields will be ignored.
   */
   explicit VideoSubscriptionConstraints()
       : disabled(false),
         resolution(0, 0),
         frameRate(0),
         bitrateMultiplier(0),
-        keyFrameInterval(0),
-        rid("") {}
+        keyFrameInterval(0) {}
   bool disabled;
   std::vector<owt::base::VideoCodecParameters> codecs;
   owt::base::Resolution resolution;
   double frameRate;
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
-  std::string rid;
 };
 /// Subscribe options
 struct SubscribeOptions {

@@ -66,7 +66,7 @@ public:
     virtual IDirect3DDeviceManager9* GetDeviceManager()
     {
         return m_manager;
-    }
+    };
 
     virtual mfxStatus LockFrame(mfxMemId mid, mfxFrameData *ptr);
     virtual mfxStatus UnlockFrame(mfxMemId mid, mfxFrameData *ptr);

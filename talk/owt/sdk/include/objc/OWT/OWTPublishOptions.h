@@ -6,7 +6,7 @@
 #import <OWT/OWTMediaFormat.h>
 NS_ASSUME_NONNULL_BEGIN
 /// PublishOptions defines options for publishing a OWTLocalStream.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTPublishOptions : NSObject
 @property(nonatomic, strong) NSArray<OWTAudioEncodingParameters*>* audio;
 @property(nonatomic, strong) NSArray<OWTVideoEncodingParameters*>* video;

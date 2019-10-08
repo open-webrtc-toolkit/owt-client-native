@@ -6,7 +6,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @class OWTStreamConstraints;
 /// This class represent a local stream.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTLocalStream : OWTStream
 /**
   Create an OWTLocalStream from given RTCMediaStream.

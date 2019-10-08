@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol OWTConferenceParticipantDelegate;
 
 /// This class represents an attendee in a conference.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceParticipant : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 /// The ID of the participant. It varies when a single user join different conferences.
@@ -22,7 +22,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, weak) id<OWTConferenceParticipantDelegate> delegate;
 @end
 
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTConferenceParticipantDelegate<NSObject>
 @optional
 /// Participant leave conference.

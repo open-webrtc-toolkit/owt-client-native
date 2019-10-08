@@ -14,7 +14,7 @@ class ConferenceClientObserverObjcImpl : public ConferenceClientObserver {
  public:
   ConferenceClientObserverObjcImpl(OWTConferenceClient* conferenceClient,
                                    id<OWTConferenceClientDelegate> delegate);
-  virtual ~ConferenceClientObserverObjcImpl(){}
+  virtual ~ConferenceClientObserverObjcImpl(){};
   id<OWTConferenceClientDelegate> ObjcObserver() const { return delegate_; }
  protected:
   virtual void OnStreamAdded(

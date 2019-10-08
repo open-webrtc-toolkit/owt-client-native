@@ -9,7 +9,7 @@
  This configuration is used while creating OWTP2PClient. Changing this
  configuration does NOT impact existing OWTP2PClients.
  */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTP2PClientConfiguration : OWTClientConfiguration
 @property(nonatomic, strong) NSArray<OWTAudioEncodingParameters*>* audio;
 @property(nonatomic, strong) NSArray<OWTVideoEncodingParameters*>* video;

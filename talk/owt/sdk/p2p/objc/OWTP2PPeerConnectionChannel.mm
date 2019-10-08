@@ -13,8 +13,8 @@
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"
 #import "talk/owt/sdk/base/objc/OWTStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
-#import "webrtc/sdk/objc/api/peerconnection/RTCIceServer+Private.h"
-#import "webrtc/sdk/objc/api/peerconnection/RTCLegacyStatsReport+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
 #import <WebRTC/RTCLogging.h>
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 @implementation OWTP2PPeerConnectionChannel {

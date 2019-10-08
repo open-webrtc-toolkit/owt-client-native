@@ -157,7 +157,7 @@ struct IceCandidateReport {
         protocol(protocol),
         candidate_type(candidate_type),
         priority(priority) {}
-  virtual ~IceCandidateReport() {}
+  virtual ~IceCandidateReport() {};
   /// The ID of this report
   std::string id;
   /// The IP address of the candidate

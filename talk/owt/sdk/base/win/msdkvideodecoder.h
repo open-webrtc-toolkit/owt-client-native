@@ -7,12 +7,17 @@
 #include <utility>
 #include <vector>
 
+#include "webrtc/api/mediastreaminterface.h"
+#include "webrtc/api/test/fakeconstraints.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
+#include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/thread.h"
 
+// For decoder and encoder factory
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 
@@ -21,13 +26,14 @@
 #undef FOURCC
 #endif
 #include "third_party/libyuv/include/libyuv.h"
-#include "webrtc/media/base/codec.h"
+
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include <atlbase.h>
 #include <codecapi.h>
 #include <combaseapi.h>
 #include <d3d9.h>
 #include <dxva2api.h>
+
 #include "msdkvideobase.h"
 #include "base_allocator.h"
 
@@ -49,16 +55,15 @@ public:
         kStopped,
         kFlushing,
     };
-    explicit MSDKVideoDecoder();
+    MSDKVideoDecoder(webrtc::VideoCodecType codecType);
     virtual ~MSDKVideoDecoder();
-
-    static std::unique_ptr<MSDKVideoDecoder> Create(cricket::VideoCodec format);
 
     int32_t InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores)
         override;
 
     int32_t Decode(
         const webrtc::EncodedImage& inputImage, bool missingFrames,
+        const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
         int64_t renderTimeMs = -1) override;
 
     int32_t RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* callback)
@@ -66,7 +71,6 @@ public:
 
     int32_t Release() override;
 
-    const char* ImplementationName() const override;
     // rtc::MessageHandler implementation.
     void OnMessage(rtc::Message* msg) override;
 private:
@@ -79,7 +83,7 @@ private:
     webrtc::VideoCodecType codecType_;
     mfxStatus ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize);
     void WipeMfxBitstream(mfxBitstream* pBitstream);
-    void ReadFromInputStream(mfxBitstream* pBitstream, const uint8_t *data, size_t len);
+    void ReadFromInputStream(mfxBitstream* pBitstream, uint8_t *data, size_t len);
     mfxU16 DecGetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
     mfxU16 DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
 
@@ -99,7 +103,7 @@ private:
     IDirect3DDevice9Ex*         m_pD3DD9;
     IDirect3DDeviceManager9*    d3d_manager;
     D3DPRESENT_PARAMETERS       present_params;
-    UINT                        m_resetToken;
+    UINT                        m_resetToken;;
 
     rtc::CriticalSection critical_section_;
     bool inited_;

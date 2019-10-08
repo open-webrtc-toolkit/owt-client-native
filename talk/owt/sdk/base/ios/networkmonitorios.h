@@ -7,7 +7,6 @@
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <memory>
 #include <mutex>
-#include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/network.h"
 #include "webrtc/rtc_base/thread.h"
 namespace owt {
@@ -38,7 +37,7 @@ class NetworkMonitorIos : public rtc::NetworkMonitorBase {
 };
 class NetworkMonitorFactoryIos : public rtc::NetworkMonitorFactory {
  public:
-  NetworkMonitorFactoryIos(){}
+  NetworkMonitorFactoryIos(){};
   rtc::NetworkMonitorInterface* CreateNetworkMonitor() override;
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(NetworkMonitorFactoryIos);

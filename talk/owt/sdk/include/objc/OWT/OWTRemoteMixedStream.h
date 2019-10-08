@@ -4,7 +4,7 @@
 #import "OWT/OWTRemoteStream.h"
 NS_ASSUME_NONNULL_BEGIN
 @class OWTRemoteMixedStream;
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTRemoteMixedStreamDelegate<OWTRemoteStreamDelegate>
 /**
   @brief Triggers when video layout is changed.
@@ -16,7 +16,7 @@ RTC_OBJC_EXPORT
 - (void)streamDidChangeActiveInput:(NSString*)activeAudioInputStreamId;
 @end
 /// This class represent a mixed remote stream.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTRemoteMixedStream : OWTRemoteStream
 /**
   @brief A property of mixed streams which distinguishes them from other mixed

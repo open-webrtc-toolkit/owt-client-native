@@ -12,7 +12,7 @@ RemoteMixedStream::RemoteMixedStream(
     const std::string& from,
     const std::string& viewport,
     const owt::base::SubscriptionCapabilities& subscription_capabilities,
-    const std::vector<owt::base::PublicationSettings>& publication_settings)
+    const owt::base::PublicationSettings& publication_settings)
     : RemoteStream(id, from, subscription_capabilities, publication_settings),
       viewport_(viewport) {}
 void RemoteMixedStream::AddObserver(RemoteMixedStreamObserver& observer){
@@ -39,4 +39,4 @@ void RemoteMixedStream::OnActiveInputChanged(const std::string& stream_id) {
   }
 }
 }
-}
+};

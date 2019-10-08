@@ -5,28 +5,25 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 #define OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 
-#include <vector>
-
-#include "webrtc/api/video_codecs/sdp_video_format.h"
-#include "webrtc/api/video_codecs/video_decoder.h"
-#include "webrtc/api/video_codecs/video_decoder_factory.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 
 namespace owt {
 namespace base {
 // Declaration of MSDK based decoder factory.
-class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
- public:
-  MSDKVideoDecoderFactory();
-  virtual ~MSDKVideoDecoderFactory();
+class MSDKVideoDecoderFactory
+    : public cricket::WebRtcVideoDecoderFactory {
+public:
+ MSDKVideoDecoderFactory();
+ virtual ~MSDKVideoDecoderFactory();
 
-  // VideoDecoderFactory implementation
-  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
+ // WebRtcVideoDecoderFactory implementation.
+ webrtc::VideoDecoder* CreateVideoDecoder(webrtc::VideoCodecType type) override;
 
-  std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
-      const webrtc::SdpVideoFormat& format) override;
- private:
-  std::vector<webrtc::VideoCodecType> supported_codec_types_;
+ void DestroyVideoDecoder(webrtc::VideoDecoder* decoder) override;
+
+private:
+ std::vector<webrtc::VideoCodecType> supported_codec_types_;
 };
-}  // namespace base
+}
 }  // namespace owt
 #endif  // OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_

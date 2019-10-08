@@ -45,7 +45,7 @@ typedef NS_OPTIONS(NSInteger, OWTTrackKind) {
   OWTTrackKindVideo = 1 << 1,
 };
 /// Codec parameters for an audio track.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTAudioCodecParameters : NSObject
 /**
  @brief Name of a codec.
@@ -58,7 +58,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) NSUInteger clockRate;
 @end
 /// Codec parameters for a video track.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTVideoCodecParameters : NSObject
 /**
  @brief Name of a codec.
@@ -72,12 +72,12 @@ RTC_OBJC_EXPORT
 @property(nonatomic, strong) NSString* profile;
 @end
 /// The audio settings of a publication.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTAudioPublicationSettings : NSObject
 @property(nonatomic, strong) OWTAudioCodecParameters* codec;
 @end
 /// The video settings of a publication.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTVideoPublicationSettings : NSObject
 @property(nonatomic, strong) OWTVideoCodecParameters* codec;
 @property(nonatomic, assign) CGSize resolution;
@@ -86,18 +86,18 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) NSUInteger keyframeInterval;
 @end
 /// The settings of a publication.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTPublicationSettings : NSObject
 @property(nonatomic, strong) OWTAudioPublicationSettings* audio;
 @property(nonatomic, strong) OWTVideoPublicationSettings* video;
 @end
 /// Represents the audio capability for subscription.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTAudioSubscriptionCapabilities : NSObject
 @property(nonatomic, strong) NSArray<OWTAudioCodecParameters*>* codecs;
 @end
 /// Represents the video capability for subscription.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTVideoSubscriptionCapabilities : NSObject
 @property(nonatomic, strong) NSArray<OWTVideoCodecParameters*>* codecs;
 @property(nonatomic, strong) NSArray<NSValue*>* resolutions;
@@ -106,18 +106,18 @@ RTC_OBJC_EXPORT
 @property(nonatomic, strong) NSArray<NSNumber*>* keyframeIntervals;
 @end
 /// Represents the capability for subscription.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTSubscriptionCapabilities : NSObject
 @property(nonatomic, strong) OWTAudioSubscriptionCapabilities* audio;
 @property(nonatomic, strong) OWTVideoSubscriptionCapabilities* video;
 @end
 /// Information of a stream's source.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTStreamSourceInfo : NSObject
 @property(nonatomic, assign) OWTAudioSourceInfo audio;
 @property(nonatomic, assign) OWTVideoSourceInfo video;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Constraints for creating a video MediaStreamTrack.
 @interface OWTVideoTrackConstraints : NSObject
 @property(nonatomic, assign) double frameRate;
@@ -125,7 +125,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) AVCaptureDevicePosition devicePosition;
 @end
 /// Constraints for creating a MediaStream from screen mic and camera.
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTStreamConstraints : NSObject
 /**
   @brief Indicate whether audio track is enabled.
@@ -136,14 +136,14 @@ RTC_OBJC_EXPORT
 /// Constraints for video track.
 @property(nonatomic, strong, nullable) OWTVideoTrackConstraints* video;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Encoding parameters for sending an audio track.
 @interface OWTAudioEncodingParameters : NSObject
 @property(nonatomic, strong) OWTAudioCodecParameters* codec;
 /// Max bitrate expressed in bps.
 @property(nonatomic, assign) NSUInteger maxBitrate;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Encoding parameters for sending a video track.
 @interface OWTVideoEncodingParameters : NSObject
 @property(nonatomic, strong) OWTVideoCodecParameters* codec;

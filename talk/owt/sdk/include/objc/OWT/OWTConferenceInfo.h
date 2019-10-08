@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
   @brief Information about the conference.
   @details This information contains current details of the conference.
 */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceInfo : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 /// Conference ID

@@ -10,7 +10,7 @@
   This configuration is used while creating OWTConferenceClient. Changing this
   configuration does NOT impact OWTConferenceClient already created.
 */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceClientConfiguration : OWTClientConfiguration
 @end
 #endif  // OWT_CONFERENCE_OBJC_OWTCONFERENCECLIENTCONFIGURATION_H_
