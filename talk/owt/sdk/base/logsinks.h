@@ -12,8 +12,8 @@
 #define OWT_BASE_LOGSINKS_H_
 #include <memory>
 #include <string>
-#include "webrtc/rtc_base/constructormagic.h"
-#include "webrtc/rtc_base/filerotatingstream.h"
+#include "webrtc/rtc_base/constructor_magic.h"
+#include "webrtc/rtc_base/file_rotating_stream.h"
 #include "webrtc/rtc_base/logging.h"
 namespace owt {
 namespace base {

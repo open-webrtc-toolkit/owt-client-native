@@ -1,15 +1,18 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_CUSTOMIZEDAUDIOCAPTURER_H_
 #define OWT_BASE_CUSTOMIZEDAUDIOCAPTURER_H_
+
 #include <memory>
-#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/platform_thread.h"
-#include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
+
 namespace owt {
 namespace base {
 using namespace webrtc;
@@ -97,10 +100,9 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   int32_t PlayoutDelay(uint16_t& delayMS) const override;
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
  private:
-  static bool RecThreadFunc(void*);
+  static void RecThreadFunc(void*);
   static bool PlayThreadFunc(void*);
   bool RecThreadProcess();
-  bool PlayThreadProcess();
   std::unique_ptr<AudioFrameGeneratorInterface> frame_generator_;
   AudioDeviceBuffer* audio_buffer_;
   std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
