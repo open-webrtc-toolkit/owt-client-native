@@ -14,9 +14,9 @@ public:
   @brief Triggers when audio or video status switched between active/inactive.
   */
   virtual void OnStreamMuteOrUnmute(const std::string& stream_id,
-    owt::base::TrackKind track_kind, bool muted) {}
-  virtual void OnStreamRemoved(const std::string& stream_id) {}
-  virtual void OnStreamError(const std::string& error_msg){}
+    owt::base::TrackKind track_kind, bool muted) {};
+  virtual void OnStreamRemoved(const std::string& stream_id) {};
+  virtual void OnStreamError(const std::string& error_msg){};
 };
 /** @endcond */
 }

@@ -22,19 +22,12 @@
   auto remoteStream = [self nativeRemoteStream];
   return [NSString stringForStdString:remoteStream->Origin()];
 }
-- (NSArray<OWTPublicationSettings*>*)settings {
-  auto nativeSettings = std::static_pointer_cast<
+- (OWTPublicationSettings*)settings {
+  return [[OWTPublicationSettings alloc]
+      initWithNativePublicationSettings:std::static_pointer_cast<
                                             owt::base::RemoteStream>(
                                             [super nativeStream])
-                                            ->Settings();
-  NSMutableArray<OWTPublicationSettings*>* settingsArray =
-      [NSMutableArray arrayWithCapacity:nativeSettings.size()];
-  for (auto& s : nativeSettings) {
-    OWTPublicationSettings* p =
-      [[OWTPublicationSettings alloc] initWithNativePublicationSettings:s];
-    [settingsArray addObject:p];
-  }
-  return settingsArray;
+                                            ->Settings()];
 }
 -(OWTSubscriptionCapabilities*)capabilities{
   return [[OWTSubscriptionCapabilities alloc]

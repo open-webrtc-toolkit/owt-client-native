@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
  @details Sample rate and channel numbers cannot be changed once the generator is
  created. Currently, only 16 bit little-endian PCM is supported.
 */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol RTCAudioFrameGeneratorProtocol<NSObject>
 /**
  @brief Generate frames for next 10ms.
@@ -33,7 +33,7 @@ RTC_OBJC_EXPORT
  protocol. Height, width and frame rate cannot be changed once generator is
  created.
  */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol RTCVideoFrameGeneratorProtocol<NSObject>
 /**
  @brief Generate next video frame

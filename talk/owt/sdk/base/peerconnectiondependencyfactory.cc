@@ -2,22 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include <iostream>
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
-#endif
 #include "talk/owt/sdk/base/encodedvideoencoderfactory.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "webrtc/api/create_peerconnection_factory.h"
-#include "webrtc/api/video_codecs/builtin_video_decoder_factory.h"
-#include "webrtc/api/video_codecs/builtin_video_encoder_factory.h"
-#include "webrtc/media/base/media_channel.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/ssl_adapter.h"
+#include "webrtc/rtc_base/ssladapter.h"
 #include "webrtc/rtc_base/thread.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
+#include "webrtc/media/base/mediachannel.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/system_wrappers/include/field_trial_default.h"
 #if defined(WEBRTC_WIN)
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
@@ -35,6 +32,7 @@ namespace owt {
 namespace base {
 void PeerConnectionThread::Run() {
   ProcessMessages(kForever);
+  SetAllowBlockingCalls(true);
 }
 PeerConnectionThread::~PeerConnectionThread() {
   RTC_LOG(LS_INFO) << "Quit a PeerConnectionThread.";
@@ -44,14 +42,14 @@ rtc::scoped_refptr<PeerConnectionDependencyFactory>
     PeerConnectionDependencyFactory::dependency_factory_;
 std::once_flag get_pcdf_once;
 PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
-    : pc_thread_(rtc::Thread::CreateWithSocketServer()),
-      callback_thread_(rtc::Thread::CreateWithSocketServer()),
+    : pc_thread_(new PeerConnectionThread),
+      callback_thread_(new PeerConnectionThread),
       field_trial_("WebRTC-H264HighProfile/Enabled/") {
 #if defined(WEBRTC_WIN)
   if (GlobalConfiguration::GetVideoHardwareAccelerationEnabled()) {
     render_hardware_acceleration_enabled_ = true;
-  } else {
-    render_hardware_acceleration_enabled_ = false;
+    } else {
+        render_hardware_acceleration_enabled_ = false;
   }
 #endif
 #if defined(WEBRTC_IOS)
@@ -90,8 +88,8 @@ PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
 void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
-  if (GlobalConfiguration::GetAECEnabled() &&
-      GlobalConfiguration::GetAEC3Enabled()) {
+  if (GlobalConfiguration::GetAECEnabled()
+      && GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
   }
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
@@ -100,93 +98,82 @@ void PeerConnectionDependencyFactory::
     RTC_NOTREACHED();
     return;
   }
-  worker_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+  rtc::Thread* worker_thread = new rtc::Thread();
   worker_thread->SetName("worker_thread", nullptr);
-  signaling_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+  rtc::Thread* signaling_thread = new rtc::Thread();
   signaling_thread->SetName("signaling_thread", nullptr);
-  network_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+  rtc::Thread* network_thread = new rtc::Thread();
   network_thread->SetName("network_thread", nullptr);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
       << "Failed to start threads";
-
-  // Use webrtc::VideoEn(De)coderFactory on iOS.
-  std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
-  std::unique_ptr<webrtc::VideoDecoderFactory> decoder_factory;
 #if defined(WEBRTC_IOS)
+  // Use webrtc::VideoEn(De)coderFactory on iOS.
+  std::unique_ptr<VideoEncoderFactory> encoder_factory;
+  std::unique_ptr<VideoDecoderFactory> decoder_factory;
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
-#elif defined(WEBRTC_WIN)
-  // Configure codec factories. MSDK factory will internally use built-in codecs
-  // if hardware acceleration is not in place. For H.265/H.264, if hardware acceleration
-  // is turned off at application level, negotiation will fail.
-  if (encoded_frame_) {
-    encoder_factory.reset(new EncodedVideoEncoderFactory());
-  } else if (render_hardware_acceleration_enabled_) {
-    encoder_factory.reset(new MSDKVideoEncoderFactory());
-  } else {
-    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
+  std::unique_ptr<cricket::WebRtcVideoDecoderFactory> decoder_factory;
+#if defined(WEBRTC_WIN)
+  if (render_hardware_acceleration_enabled_) {
+    if (!encoded_frame_) {
+      encoder_factory.reset(new MSDKVideoEncoderFactory());
+    }
+    if (!GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
+      decoder_factory.reset(new MSDKVideoDecoderFactory());
+    }
   }
-
+#endif
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
-  } else if (render_hardware_acceleration_enabled_) {
-    decoder_factory.reset(new MSDKVideoDecoderFactory());
-  } else {
-    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
   }
-
-#elif defined(WEBRTC_LINUX)
-  // MSDK support for Linux is not in place. Use default.
+  // Encoded video frame enabled
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
-  } else {
-    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
-  }
-
-  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
-    decoder_factory.reset(new CustomizedVideoDecoderFactory(
-        GlobalConfiguration::GetCustomizedVideoDecoder()));
-  } else {
-    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
   }
 #else
 #error "Unsupported platform."
 #endif
-  rtc::scoped_refptr<AudioDeviceModule> adm;
-
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
+  rtc::scoped_refptr<AudioDeviceModule> adm;
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     // Create ADM on worker thred as RegisterAudioCallback is invoked there.
     adm = worker_thread->Invoke<rtc::scoped_refptr<AudioDeviceModule>>(
-        RTC_FROM_HERE,
-        Bind(&PeerConnectionDependencyFactory::
-                 CreateCustomizedAudioDeviceModuleOnCurrentThread,
-             this));
+               RTC_FROM_HERE,
+               Bind(&PeerConnectionDependencyFactory::
+                    CreateCustomizedAudioDeviceModuleOnCurrentThread,
+                    this));
   }
-#endif
-
+#if defined(WEBRTC_IOS)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
+      network_thread, worker_thread, signaling_thread, adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
-      std::move(decoder_factory), nullptr, nullptr);
-
+      std::move(decoder_factory), nullptr,
+      nullptr);  // Decoder factory
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  pc_factory_ = webrtc::CreatePeerConnectionFactory(
+      network_thread, worker_thread, signaling_thread, adm,
+      webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateBuiltinAudioDecoderFactory(),
+      encoder_factory.release(),   // Encoder factory
+      decoder_factory.release());  // Decoder factory
+#else
+#error "Unsupported platform."
+#endif
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
-
 scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
-  return (pc_factory_->CreatePeerConnection(config, nullptr, nullptr, observer))
+  return (pc_factory_->CreatePeerConnection(config, nullptr,
+                                            nullptr, observer))
       .get();
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
@@ -209,14 +196,28 @@ PeerConnectionDependencyFactory::CreateLocalMediaStream(
       Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream,
            pc_factory_.get(), label));
 }
+scoped_refptr<webrtc::VideoTrackSourceInterface>
+PeerConnectionDependencyFactory::CreateVideoSource(
+    std::unique_ptr<cricket::VideoCapturer> capturer,
+    const MediaConstraintsInterface* constraints) {
+  return pc_thread_
+      ->Invoke<scoped_refptr<webrtc::VideoTrackSourceInterface>>(
+          RTC_FROM_HERE,
+          Bind((rtc::scoped_refptr<VideoTrackSourceInterface>(
+                   PeerConnectionFactoryInterface::*)(
+                   cricket::VideoCapturer*,
+                   const MediaConstraintsInterface*)) &
+                   PeerConnectionFactoryInterface::CreateVideoSource,
+               pc_factory_.get(), capturer.release(), constraints))
+      .get();
+}
 scoped_refptr<VideoTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalVideoTrack(
     const std::string& id,
     webrtc::VideoTrackSourceInterface* video_source) {
-  return pc_thread_
-      ->Invoke<scoped_refptr<VideoTrackInterface>>(
-          RTC_FROM_HERE, Bind(&PeerConnectionFactoryInterface::CreateVideoTrack,
-                              pc_factory_.get(), id, video_source))
+  return pc_thread_->Invoke<scoped_refptr<VideoTrackInterface>>(RTC_FROM_HERE,
+                       Bind(&PeerConnectionFactoryInterface::CreateVideoTrack,
+                            pc_factory_.get(), id, video_source))
       .get();
 }
 scoped_refptr<AudioTrackInterface>
@@ -227,10 +228,8 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
   ns_enabled = GlobalConfiguration::GetNSEnabled();
   if (!aec_enabled || !agc_enabled || !ns_enabled) {
     cricket::AudioOptions options;
-    options.echo_cancellation =
-        absl::optional<bool>(aec_enabled ? true : false);
-    options.auto_gain_control =
-        absl::optional<bool>(agc_enabled ? true : false);
+    options.echo_cancellation = absl::optional<bool>(aec_enabled ? true : false);
+    options.auto_gain_control = absl::optional<bool>(agc_enabled ? true : false);
     options.noise_suppression = absl::optional<bool>(ns_enabled ? true : false);
     options.residual_echo_detector =
         absl::optional<bool>(aec_enabled ? true : false);
@@ -278,8 +277,7 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface>
 PeerConnectionDependencyFactory::PeerConnectionFactory() const {
   return pc_factory_;
 }
-rtc::NetworkMonitorInterface*
-PeerConnectionDependencyFactory::NetworkMonitor() {
+rtc::NetworkMonitorInterface* PeerConnectionDependencyFactory::NetworkMonitor(){
 #if defined(WEBRTC_IOS)
   pc_thread_->Invoke<void>(
       RTC_FROM_HERE,
@@ -294,19 +292,15 @@ PeerConnectionDependencyFactory::NetworkMonitor() {
 void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
 #if defined(WEBRTC_IOS)
   if (!network_monitor_) {
-    network_monitor_ = new NetworkMonitorIos();
-    network_monitor_->Start();
+     network_monitor_ = new NetworkMonitorIos();
+     network_monitor_->Start();
   }
 #endif
 }
-
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-scoped_refptr<webrtc::AudioDeviceModule> PeerConnectionDependencyFactory::
-    CreateCustomizedAudioDeviceModuleOnCurrentThread() {
+scoped_refptr<webrtc::AudioDeviceModule>
+PeerConnectionDependencyFactory::CreateCustomizedAudioDeviceModuleOnCurrentThread() {
   return CustomizedAudioDeviceModule::Create(
-      GlobalConfiguration::GetAudioFrameGenerator());
+     GlobalConfiguration::GetAudioFrameGenerator());
 }
-#endif
-
-}  // namespace base
-}  // namespace owt
+}
+}

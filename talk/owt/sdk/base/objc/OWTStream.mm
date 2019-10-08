@@ -4,7 +4,7 @@
 #import <Foundation/Foundation.h>
 #import <WebRTC/RTCVideoTrack.h>
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
-#import "webrtc/sdk/objc/api/peerconnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCMediaStream+Private.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTStream.h"
 #import "talk/owt/sdk/include/objc/OWT/RTCPeerConnectionFactory+OWT.h"
 #import "talk/owt/sdk/base/objc/OWTStream+Private.h"
@@ -74,7 +74,6 @@
   }
 }
 - (std::shared_ptr<owt::base::Stream>)nativeStream {
-  RTC_CHECK(_nativeStream);
   return _nativeStream;
 }
 @end

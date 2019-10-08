@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class RTCLegacyStatsReport;
 @class OWTConferenceSubscription;
 @class OWTConferenceSubscriptionUpdateOptions;
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTConferenceSubscriptionDelegate <NSObject>
 @optional
 /// Subscription is ended.
@@ -24,7 +24,7 @@ RTC_OBJC_EXPORT
 - (void)subscriptionDidError:(OWTConferenceSubscription*)subscription
                     errorInfo:(NSError*)error;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceSubscription : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 /// Stop certain subscription. Once a subscription is stopped, it cannot be recovered.
@@ -48,13 +48,13 @@ RTC_OBJC_EXPORT
 @property(nonatomic, weak) id<OWTConferenceSubscriptionDelegate> delegate;
 @end
 
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Constraints for subscribing a remote stream.
 @interface OWTConferenceAudioSubscriptionConstraints : NSObject
 @property(nonatomic, assign) BOOL disabled;
 @property(nonatomic, strong) NSArray<OWTAudioCodecParameters*>* codecs;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Constraints for subscribing a remote stream.
 @interface OWTConferenceVideoSubscriptionConstraints : NSObject
 @property(nonatomic, assign) BOOL disabled;
@@ -64,14 +64,14 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
 @property(nonatomic, strong) NSArray<OWTVideoCodecParameters*>* codecs;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceSubscribeOptions : NSObject
 - (instancetype)initWithAudio:(OWTConferenceAudioSubscriptionConstraints*)audio
                         video:(OWTConferenceVideoSubscriptionConstraints*)video;
 @property(nonatomic, strong) OWTConferenceAudioSubscriptionConstraints* audio;
 @property(nonatomic, strong) OWTConferenceVideoSubscriptionConstraints* video;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 /// Constraints for updating a subscription.
 @interface OWTConferenceVideoSubscriptionUpdateConstraints : NSObject
 @property(nonatomic, assign) CGSize resolution;
@@ -79,7 +79,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) double bitrateMultiplier;
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
 @end
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferenceSubscriptionUpdateOptions : NSObject
 @property(nonatomic, strong)
     OWTConferenceVideoSubscriptionUpdateConstraints* video;

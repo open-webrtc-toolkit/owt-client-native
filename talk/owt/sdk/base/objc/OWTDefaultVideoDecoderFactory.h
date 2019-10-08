@@ -2,6 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <WebRTC/RTCVideoCodecFactory.h>
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTDefaultVideoDecoderFactory : RTCDefaultVideoDecoderFactory
 @end

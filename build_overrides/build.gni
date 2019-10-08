@@ -47,7 +47,6 @@ linux_use_bundled_binutils_override = true
 
 # Building with WooGeen client SDK.
 build_with_woogeen = true
-build_with_owt = true
 
 declare_args() {
   # Android 32-bit non-component, non-clang builds cannot have symbol_level=2

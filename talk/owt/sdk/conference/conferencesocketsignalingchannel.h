@@ -98,7 +98,7 @@ class ConferenceSocketSignalingChannel
           name(name),
           message(message),
           ack(ack),
-          on_failure(on_failure){}
+          on_failure(on_failure){};
     const int id;
     const std::string name;
     const sio::message::list message;

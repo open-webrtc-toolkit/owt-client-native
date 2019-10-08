@@ -15,12 +15,12 @@
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/strings/json.h"
-#include "webrtc/rtc_base/time_utils.h"
+#include "webrtc/rtc_base/json.h"
+#include "webrtc/rtc_base/timeutils.h"
 using namespace rtc;
 namespace owt {
 namespace conference {
-#define SIGNALING_PROTOCOL_VERSION "1.1"
+#define SIGNALING_PROTOCOL_VERSION "1.0"
 const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message

@@ -3,11 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <algorithm>
 #include <future>
-#include "webrtc/api/task_queue/default_task_queue_factory.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
-#include "webrtc/rtc_base/strings/json.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/json.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/owt/sdk/base/eventtrigger.h"
@@ -26,13 +25,11 @@ enum IcsP2PError : int {
 P2PClient::P2PClient(
     P2PClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
-    : signaling_channel_(signaling_channel), configuration_(configuration) {
+    : event_queue_(new rtc::TaskQueue("P2PClientEventQueue")),
+      signaling_channel_(signaling_channel),
+      configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(*this);
-  auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  event_queue_ =
-      std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
-          "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
 }
 void P2PClient::Connect(
     const std::string& host,

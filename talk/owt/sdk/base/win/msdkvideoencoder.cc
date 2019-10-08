@@ -26,12 +26,23 @@ using namespace rtc;
 namespace owt {
 namespace base {
 
+void MSDKEncoderThread::Run() {
+  ProcessMessages(kForever);
+  SetAllowBlockingCalls(true);
+}
+
+MSDKEncoderThread::~MSDKEncoderThread() {
+  Stop();
+}
+
 MSDKVideoEncoder::MSDKVideoEncoder()
     : callback_(nullptr),
       bitrate_(0),
       width_(0),
       height_(0),
-      encoder_thread_(rtc::Thread::Create()),
+      framerate_(0),
+      encoder_thread_(new MSDKEncoderThread()),
+      m_memType_(MSDK_SYSTEM_MEMORY),
       inited_(false) {
   m_pmfxENC = nullptr;
   m_pEncSurfaces = nullptr;
@@ -119,7 +130,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:"
                     << codec_settings->maxBitrate
                     << "framerate:" << codec_settings->maxFramerate
-                    << "targetBitRate:" << codec_settings->maxBitrate;
+                    << "targetBitRate:" << codec_settings->targetBitrate;
   uint32_t codec_id = MFX_CODEC_AVC;
   // If already inited, what we need to do is to reset the encoder,
   // instead of setting it all over again.
@@ -135,11 +146,10 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     if (!m_mfxSession) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-#ifndef DISABLE_H265
     if (codecType_ == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
     }
-#endif
+
     if (!factory->LoadEncoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -353,7 +363,8 @@ mfxU16 MSDKVideoEncoder::MSDKGetFreeSurfaceIndex(
 
 int MSDKVideoEncoder::Encode(
     const webrtc::VideoFrame& input_image,
-    const std::vector<webrtc::VideoFrameType>* frame_types) {
+    const webrtc::CodecSpecificInfo* codec_specific_info,
+    const std::vector<webrtc::FrameType>* frame_types) {
   // Delegate the encoding task to encoder thread.
   mfxStatus sts = MFX_ERR_NONE;
   mfxFrameSurface1* pSurf = NULL;  // dispatching pointer
@@ -432,7 +443,7 @@ int MSDKVideoEncoder::Encode(
   bool is_keyframe_required = false;
   if (frame_types) {
     for (auto frame_type : *frame_types) {
-      if (frame_type == webrtc::VideoFrameType::kVideoFrameKey ||
+      if (frame_type == webrtc::kVideoFrameKey ||
           m_nFramesProcessed % 30 == 0) {
         is_keyframe_required = true;
         break;
@@ -517,13 +528,15 @@ retry:
   webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size,
                                     encoded_data_size);
 
+  // For current MSDK, AUD and SEI can be removed so we don't explicitly remove
+  // them.
   encodedFrame._encodedHeight = input_image.height();
   encodedFrame._encodedWidth = input_image.width();
   encodedFrame._completeFrame = true;
   encodedFrame.capture_time_ms_ = input_image.render_time_ms();
-  encodedFrame.SetTimestamp(input_image.timestamp());
+  encodedFrame._timeStamp = input_image.timestamp();
   encodedFrame._frameType =
-      is_keyframe_required ? webrtc::VideoFrameType::kVideoFrameKey : webrtc::VideoFrameType::kVideoFrameDelta;
+      is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
 
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
@@ -560,6 +573,8 @@ retry:
     header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
     header.fragmentationLength[i] =
         scPositions[i + 1] - header.fragmentationOffset[i];
+    header.fragmentationPlType[i] = 0;
+    header.fragmentationTimeDiff[i] = 0;
   }
   const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
@@ -583,56 +598,206 @@ retry:
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+// This version of encode implementation is reserved here in case we have
+// further demand to encode the same thread. For MSDK, it's not mandatory to
+// encode in same thread...And it's not good practice to allow blocking call on
+// worker thread.
+int MSDKVideoEncoder::EncodeOnEncoderThread(
+    const webrtc::VideoFrame& input_image,
+    const webrtc::CodecSpecificInfo* codec_specific_info,
+    const std::vector<webrtc::FrameType>* frame_types) {
+  mfxStatus sts = MFX_ERR_NONE;
+  mfxFrameSurface1* pSurf = NULL;  // dispatching pointer
+  mfxU16 nEncSurfIdx = 0;
+  nEncSurfIdx =
+      MSDKGetFreeSurface(m_pEncSurfaces, m_EncResponse.NumFrameActual);
+  if (MSDK_INVALID_SURF_IDX == nEncSurfIdx) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  pSurf = &m_pEncSurfaces[nEncSurfIdx];
+
+  // Load the image onto surface. Check the frame info first to format.
+  mfxFrameInfo& pInfo = pSurf->Info;
+  mfxFrameData& pData = pSurf->Data;
+  pData.FrameOrder = m_nFramesProcessed;
+
+  if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  mfxU16 w, h, pitch;
+  mfxU8* ptr;
+  if (pInfo.CropH > 0 && pInfo.CropW > 0) {
+    w = pInfo.CropW;
+    h = pInfo.CropH;
+  } else {
+    w = pInfo.Width;
+    h = pInfo.Height;
+  }
+
+  pitch = pData.Pitch;
+  ptr = pData.Y + pInfo.CropX + pInfo.CropY * pData.Pitch;
+
+  if (MFX_FOURCC_NV12 == pInfo.FourCC) {
+    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
+        input_image.video_frame_buffer()->ToI420());
+#ifdef OWT_DEBUG_MSDK_ENC
+    if (input != nullptr && count < 30) {
+      fwrite((void*)(buffer->DataY()), w * h, 1, input);
+      fwrite((void*)(buffer->DataU()), w * h / 4, 1, input);
+      fwrite((void*)(buffer->DataV()), w * h / 4, 1, input);
+    }
+#endif
+    libyuv::I420ToNV12(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+                       buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
+                       pData.Y, pitch, pData.UV, pitch, w, h);
+#ifdef OWT_DEBUG_MSDK_ENC
+    if (count == 30) {
+      fclose(input);
+      input = nullptr;
+    }
+#endif
+  } else if (MFX_FOURCC_YV12 == pInfo.FourCC) {
+    // Do not support it.
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  // Prepare done. Start encode.
+  mfxEncodeCtrl ctrl;
+  memset((void*)&ctrl, 0, sizeof(ctrl));
+  bool is_keyframe_required = false;
+  if (frame_types) {
+    for (auto frame_type : *frame_types) {
+      if (frame_type == webrtc::kVideoFrameKey) {
+        is_keyframe_required = true;
+        break;
+      }
+    }
+  }
+  mfxBitstream bs;
+  mfxSyncPoint sync;
+  // Allocate enough buffer for output stream.
+  mfxVideoParam param;
+  MSDK_ZERO_MEMORY(param);
+  sts = m_pmfxENC->GetVideoParam(&param);
+  if (MFX_ERR_NONE != sts) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  MSDK_ZERO_MEMORY(bs);
+  mfxU32 bsDataSize = param.mfx.BufferSizeInKB * 1000;
+  mfxU8* pbsData = new mfxU8[bsDataSize];
+  if (pbsData == nullptr) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  memset((void*)pbsData, 0, bsDataSize);
+  bs.Data = pbsData;
+  bs.MaxLength = bsDataSize;
+
+  ctrl.FrameType = is_keyframe_required
+                       ? MFX_FRAMETYPE_I | MFX_FRAMETYPE_REF | MFX_FRAMETYPE_IDR
+                       : MFX_FRAMETYPE_P | MFX_FRAMETYPE_REF;
+  sts = m_pmfxENC->EncodeFrameAsync(&ctrl, pSurf, &bs, &sync);
+  if (MFX_ERR_NONE != sts) {
+    m_nFramesProcessed++;
+    delete[] pbsData;
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  sts = m_mfxSession->SyncOperation(sync, MSDK_ENC_WAIT_INTERVAL);
+  if (MFX_ERR_NONE != sts) {
+    // Get the output buffer from bs.
+    m_nFramesProcessed++;
+    delete[] pbsData;
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data);
+  int encoded_data_size = bs.DataLength;
+  webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size,
+                                    encoded_data_size);
+#ifdef OWT_DEBUG_MSDK_ENC
+  count++;
+  if (output != nullptr && count < 30) {
+    fwrite((void*)(encoded_data), encoded_data_size, 1, output);
+  } else if (count == 30) {
+    fclose(output);
+    output = nullptr;
+  }
+#endif
+
+  encodedFrame._encodedHeight = input_image.height();
+  encodedFrame._encodedWidth = input_image.width();
+  encodedFrame._completeFrame = true;
+  encodedFrame.capture_time_ms_ = input_image.render_time_ms();
+  encodedFrame._timeStamp = input_image.timestamp();
+  encodedFrame._frameType =
+      is_keyframe_required ? webrtc::kVideoFrameKey : webrtc::kVideoFrameDelta;
+
+  webrtc::CodecSpecificInfo info;
+  memset(&info, 0, sizeof(info));
+  info.codecType = codecType_;
+  webrtc::RTPFragmentationHeader header;
+  memset(&header, 0, sizeof(header));
+
+  int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
+  int32_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
+  int32_t scPositionsLength = 0;
+  int32_t scPosition = 0;
+  uint8_t start_code_length = 0;
+  while (scPositionsLength < MAX_NALUS_PERFRAME) {
+    int32_t naluPosition =
+        NextNaluPosition(encoded_data + scPosition,
+                         encoded_data_size - scPosition, &start_code_length);
+    if (naluPosition < 0) {
+      break;
+    }
+    scPosition += naluPosition;
+    scPositions[scPositionsLength++] = scPosition;
+    scPosition += start_code_length;
+    scLengths[scPositionsLength - 1] = start_code_length;
+  }
+  if (scPositionsLength == 0) {
+    RTC_LOG(LS_ERROR) << "Start code is not found for codec!";
+    delete[] pbsData;
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  scPositions[scPositionsLength] = encoded_data_size;
+  header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
+  for (int i = 0; i < scPositionsLength; i++) {
+    header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
+    header.fragmentationLength[i] =
+        scPositions[i + 1] - header.fragmentationOffset[i];
+    header.fragmentationPlType[i] = 0;
+    header.fragmentationTimeDiff[i] = 0;
+  }
+
+  const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
+  if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
+    RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: "
+                      << result.error;
+    delete[] pbsData;
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  delete[] pbsData;
+  m_nFramesProcessed++;
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
 int MSDKVideoEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void MSDKVideoEncoder::SetRates(const RateControlParameters& parameters) {
-  if (!inited_) {
-    RTC_LOG(LS_WARNING) << "SetRates() while not initialized";
-    return;
-  }
-
-  if (parameters.framerate_fps < 1.0) {
-    RTC_LOG(LS_WARNING) << "Unsupported framerate (must be >= 1.0";
-    return;
-  }
+int MSDKVideoEncoder::SetChannelParameters(uint32_t packet_loss, int64_t rtt) {
+  // Encoder doesn't know anything about packet loss or rtt so just return.
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void MSDKVideoEncoder::OnPacketLossRateUpdate(float packet_loss_rate) {
-  // Currently not handled.
-  return;
-}
-
-void MSDKVideoEncoder::OnRttUpdate(int64_t rtt_ms) {
-  // Currently not handled.
-  return;
-}
-
-void MSDKVideoEncoder::OnLossNotification(
-    const LossNotification& loss_notification) {
-  // Currently not handled.
-}
-
-webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
-  EncoderInfo info;
-  info.supports_native_handle = false;
-  info.is_hardware_accelerated = true;
-  info.has_internal_source = false;
-  info.implementation_name = "IntelMediaSDK";
-  // Disable frame-dropper for MSDK.
-  info.has_trusted_rate_controller = true;
-  // TODO(johny): Enable temporal scalability support here and turn the
-  // scaling_settings on.
-  info.scaling_settings = VideoEncoder::ScalingSettings::kOff;
-  return info;
+int MSDKVideoEncoder::SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) {
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int MSDKVideoEncoder::Release() {
   callback_ = nullptr;
-  inited_ = false;
   // Need to reset to that the session is invalidated and won't use the
   // callback anymore.
   return WEBRTC_VIDEO_CODEC_OK;
@@ -673,11 +838,5 @@ int32_t MSDKVideoEncoder::NextNaluPosition(uint8_t* buffer,
   }
   return -1;
 }
-
-std::unique_ptr<MSDKVideoEncoder> MSDKVideoEncoder::Create(
-  cricket::VideoCodec format) {
-  return absl::make_unique<MSDKVideoEncoder>();
-}
-
 }  // namespace base
 }  // namespace owt

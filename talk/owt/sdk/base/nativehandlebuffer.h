@@ -5,8 +5,7 @@
 #define OWT_NATIVE_HANDLE_BUFFER_H_
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/checks.h"
-#include "webrtc/api/scoped_refptr.h"
-
+#include "rtc_base/scoped_ref_ptr.h"
 namespace owt {
 namespace base {
 using namespace webrtc;

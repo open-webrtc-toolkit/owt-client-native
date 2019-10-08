@@ -7,7 +7,7 @@
 #import <OWT/OWTMediaFormat.h>
 NS_ASSUME_NONNULL_BEGIN
 @class OWTConferencePublication;
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @protocol OWTConferencePublicationDelegate <NSObject>
 @optional
 /// Publication is ended.
@@ -26,7 +26,7 @@ RTC_OBJC_EXPORT
   @brief Publication represents a sender for publishing a stream.
   @details It handles the actions on a LocalStream published to a conference.
 */
-RTC_OBJC_EXPORT
+RTC_EXPORT
 @interface OWTConferencePublication : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 /// Stop certain publication. Once a subscription is stopped, it cannot be recovered.

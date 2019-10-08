@@ -3,16 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_CUSTOMIZEDAUDIODEVICEMODULE_H_
 #define OWT_BASE_CUSTOMIZEDAUDIODEVICEMODULE_H_
-
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 #include <memory>
-#include "webrtc/api/task_queue/default_task_queue_factory.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/rtc_base/critical_section.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
-
 namespace owt {
 namespace base {
 using namespace webrtc;
@@ -119,11 +116,11 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
   rtc::CriticalSection _critSect;
   rtc::CriticalSection _critSectEventCb;
   rtc::CriticalSection _critSectAudioCb;
-  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   AudioDeviceGeneric* _ptrAudioDevice;
-  AudioDeviceBuffer* _ptrAudioDeviceBuffer;
+  AudioDeviceBuffer _audioDeviceBuffer;
   int64_t _lastProcessTime;
   bool _initialized;
+  mutable ErrorCode _lastError;
   // Default internal adm for playout.
   rtc::scoped_refptr<webrtc::AudioDeviceModule> _outputAdm;
 };

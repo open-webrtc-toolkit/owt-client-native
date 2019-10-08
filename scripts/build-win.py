@@ -30,15 +30,13 @@ PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests'
 NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 GN_ARGS = [
-    'is_clang=false',
-    'rtc_use_h264=false',
-    'rtc_use_h265=false',
+    'rtc_use_h264=true',
+    'ffmpeg_branding="Chrome"',
+    'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
-    'rtc_include_tests=false',
-    'woogeen_include_tests=false',
-    'rtc_build_examples=false',
-    'treat_warnings_as_errors=false',
+    'rtc_include_tests=true',
+    'woogeen_include_tests=true',
 ]
 
 
@@ -49,7 +47,6 @@ def gngen(arch, ssl_root, msdk_root, scheme):
         gn_args.append('is_debug=false')
     else:
         gn_args.append('is_debug=true')
-        gn_args.append('enable_iterator_debugging=true')
     if ssl_root:
         gn_args.append('woogeen_use_openssl=true')
         gn_args.append('woogeen_openssl_header_root="%s"' % (ssl_root + r'\\include'))
