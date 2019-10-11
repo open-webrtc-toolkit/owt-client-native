@@ -24,7 +24,7 @@ index df1e9b2..6335dc9 100644
 -  public_deps = [
 -    "//third_party/boringssl:boringssl",
 -  ]
-+  if (woogeen_use_openssl) {
++  if (owt_use_openssl) {
 +    configs += [ "//build_overrides/ssl:external_openssl" ]
 +  } else {
 +    public_deps = [

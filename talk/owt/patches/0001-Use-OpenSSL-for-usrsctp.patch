@@ -24,7 +24,7 @@ index 94f26786e1d..98a680dd401 100644
 -  deps = [
 -    "//third_party/boringssl",
 -  ]
-+  if (woogeen_use_openssl) {
++  if (owt_use_openssl) {
 +     configs += [ "//build_overrides/ssl:external_openssl" ]
 +  } else {
 +    deps = [
