@@ -716,7 +716,7 @@ void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
         }
         std::string state = ack.at(0)->get_string();
         std::string message = ack.at(1)->get_string();
-        if (state != "success") {
+        if (state != "success" && state != "ok") {
           RTC_LOG(LS_WARNING) << "Refresh reconnection ticket failed. Error: "
                           << message;
           return;
