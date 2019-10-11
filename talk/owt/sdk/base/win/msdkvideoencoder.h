@@ -15,7 +15,6 @@
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
 
-
 namespace owt {
 namespace base {
 enum MemType {
