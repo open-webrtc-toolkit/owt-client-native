@@ -47,6 +47,7 @@ MSDKVideoDecoder::MSDKVideoDecoder()
   m_pmfxDEC = nullptr;
   MSDK_ZERO_MEMORY(m_mfxVideoParams);
   MSDK_ZERO_MEMORY(m_mfxResponse);
+  MSDK_ZERO_MEMORY(m_mfxBS);
   m_pInputSurfaces = nullptr;
   m_video_param_extracted = false;
   m_decBsOffset = 0;
@@ -82,6 +83,8 @@ bool MSDKVideoDecoder::CreateD3DDevice() {
   RECT r;
   GetClientRect((HWND)video_window, &r);
 
+  mfxU32 nAdapter = D3DADAPTER_DEFAULT;
+  nAdapter = MSDKFactory::MSDKAdapter::GetNumber(*m_mfxSession);
   present_params.BackBufferWidth = r.right - r.left;
   present_params.BackBufferHeight = r.bottom - r.top;
   present_params.BackBufferFormat = D3DFMT_X8R8G8B8; //Only apply this if we're rendering full screen
@@ -93,7 +96,7 @@ bool MSDKVideoDecoder::CreateD3DDevice() {
   present_params.Windowed = TRUE;
   present_params.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
   hr = m_pD3D9->CreateDeviceEx(
-        D3DADAPTER_DEFAULT,
+        nAdapter,
         D3DDEVTYPE_HAL,
         (HWND)video_window,
         D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
@@ -250,7 +253,7 @@ int32_t MSDKVideoDecoder::Decode(
 
 #ifdef OWT_DEBUG_DEC
   if (e_count < 300 && input != nullptr) {
-    fwrite((void*)inputImage._buffer, inputImage._length, 1, input);
+    fwrite((void*)inputImage.data(), inputImage.size(), 1, input);
   } else if (e_count == 30 && input != nullptr) {
     fclose(input);
     input = nullptr;
