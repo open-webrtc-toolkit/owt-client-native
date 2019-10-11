@@ -4,16 +4,16 @@
 
 import("ssl.gni")
 
-if (woogeen_use_openssl) {
+if (owt_use_openssl) {
   config("external_openssl") {
     assert(
-        woogeen_openssl_header_root != "",
-        "You must specify woogeen_openssl_header_root when woogeen_use_openssl==true.")
+        owt_openssl_header_root != "",
+        "You must specify owt_openssl_header_root when owt_use_openssl==true.")
     assert(
-        woogeen_openssl_lib_root != "",
-        "You must specify woogeen_openssl_lib_root when woogeen_use_openssl==true.")
-    include_dirs = [ woogeen_openssl_header_root ]
-    lib_dirs = [ woogeen_openssl_lib_root ]
+        owt_openssl_lib_root != "",
+        "You must specify owt_openssl_lib_root when owt_use_openssl==true.")
+    include_dirs = [ owt_openssl_header_root ]
+    lib_dirs = [ owt_openssl_lib_root ]
     if (is_ios) {
       libs = [
         "crypto",
