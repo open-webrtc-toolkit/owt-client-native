@@ -34,8 +34,6 @@
 namespace owt {
 namespace base {
 
-//#define OWT_DEBUG_DEC
-
 //
 // MSDK Video Decoder declaration.
 //
