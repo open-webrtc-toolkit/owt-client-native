@@ -54,6 +54,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) BOOL disabled;
 @property(nonatomic, strong) NSArray<OWTAudioCodecParameters*>* codecs;
 @end
+
 RTC_OBJC_EXPORT
 /// Constraints for subscribing a remote stream.
 @interface OWTConferenceVideoSubscriptionConstraints : NSObject
@@ -63,7 +64,10 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) double bitrateMultiplier;
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
 @property(nonatomic, strong) NSArray<OWTVideoCodecParameters*>* codecs;
+/// Restriction identifier to identify the RTP Streams within an RTP session. When rid is specified, other constraints will be ignored.
+@property(nonatomic, strong) NSString* rid;
 @end
+
 RTC_OBJC_EXPORT
 @interface OWTConferenceSubscribeOptions : NSObject
 - (instancetype)initWithAudio:(OWTConferenceAudioSubscriptionConstraints*)audio

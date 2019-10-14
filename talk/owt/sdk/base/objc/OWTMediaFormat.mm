@@ -109,7 +109,7 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
 }
 @end
 @implementation OWTVideoPublicationSettings
-@dynamic codec, resolution, frameRate, bitrate, keyframeInterval;
+@dynamic codec, resolution, frameRate, bitrate, keyframeInterval, rid;
 - (instancetype)initWithNativeVideoPublicationSettings:
     (const owt::base::VideoPublicationSettings &)nativeSettings {
   if (self = [super init]) {
@@ -134,7 +134,11 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
 -(NSUInteger)keyframeInterval{
   return _nativeSettings.keyframe_interval;
 }
+- (NSString*)rid {
+  return [NSString stringForStdString:_nativeSettings.rid];
+}
 @end
+
 @implementation OWTAudioSubscriptionCapabilities
 @dynamic codecs;
 - (instancetype)initWithNativeAudioSubscriptionCapabilities:
