@@ -1,0 +1,26 @@
+From 4e3b99e7e442ee4c916e5335f3c2bcca029f475a Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Mon, 16 Sep 2019 09:50:47 +0800
+Subject: [PATCH] Export WebRTC symbols on iOS.
+
+OWT needs WebRTC symbols.
+---
+ config/BUILDCONFIG.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
+index 7063da0f2..ff12be976 100644
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -450,7 +450,7 @@ if (is_win) {
+ }
+ 
+ if (is_posix) {
+-  if (current_os != "aix") {
++  if (current_os != "aix" && !is_ios) {
+     default_compiler_configs +=
+         [ "//build/config/gcc:symbol_visibility_hidden" ]
+   }
+-- 
+2.20.1 (Apple Git-117)
+
