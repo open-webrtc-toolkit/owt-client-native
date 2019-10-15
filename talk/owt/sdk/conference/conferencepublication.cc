@@ -132,6 +132,12 @@ void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
   }
 }
 
+void ConferencePublication::OnStreamRemoved(const std::string& stream_id) {
+  if (ended_ || stream_id != id_)
+    return;
+  Stop();
+}
+
 void ConferencePublication::OnStreamError(const std::string& error_msg) {
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     std::unique_ptr<Exception> e(new Exception(
