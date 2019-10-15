@@ -55,6 +55,7 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     void RemoveObserver(PublicationObserver& observer) override;
   private:
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted) override;
+    void OnStreamRemoved(const std::string& stream_id) override;
     void OnStreamError(const std::string& error_msg) override;
     std::string id_;
     std::string stream_id_;
