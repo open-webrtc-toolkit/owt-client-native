@@ -18,7 +18,7 @@ RTC_OBJC_EXPORT
 */
 @property(nonatomic, strong, readonly) NSString* streamId;
 
-@property(nonatomic, strong, readonly) NSArray<OWTPublicationSettings*>* settings;
+@property(nonatomic, strong, readonly) OWTPublicationSettings* settings;
 /// Original settings for publishing this stream.
 @property(nonatomic, strong, readonly) OWTSubscriptionCapabilities* capabilities;
 /// Capabilities remote endpoint provides for subscription.

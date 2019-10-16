@@ -603,7 +603,7 @@ RemoteStream::RemoteStream(
     const std::string& id,
     const std::string& from,
     const owt::base::SubscriptionCapabilities& subscription_capabilities,
-    const std::vector<owt::base::PublicationSettings>& publication_settings)
+    const owt::base::PublicationSettings& publication_settings)
     : Stream(id),
       origin_(from),
       subscription_capabilities_(subscription_capabilities),
