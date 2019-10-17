@@ -160,6 +160,8 @@ static_library("owt_sdk_base") {
   defines += [ "USE_BUILTIN_SW_CODECS" ]
   if (!rtc_use_h265) {
     defines += [ "DISABLE_H265" ]
+  } else {
+    defines += [ "OWT_USE_H265" ]
   }
   if (is_win || is_linux) {
     # Custom audio/video input and output.
