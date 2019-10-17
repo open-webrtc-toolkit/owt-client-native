@@ -145,7 +145,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     }
 
     // Create frame allocator, let the allocator create the param of its own
-    m_pMFXAllocator = m_pMFXAllocator = MSDKFactory::CreateFrameAllocator();
+    m_pMFXAllocator = MSDKFactory::CreateFrameAllocator();
     if (nullptr == m_pMFXAllocator) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -163,6 +163,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
 
   // Init the encoding params:
   MSDK_ZERO_MEMORY(m_mfxEncParams);
+  m_EncExtParams.clear();
   m_mfxEncParams.mfx.CodecId = codec_id;
   m_mfxEncParams.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
   m_mfxEncParams.mfx.TargetKbps = codec_settings->maxBitrate;  // in-kbps
@@ -631,7 +632,26 @@ webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
 }
 
 int MSDKVideoEncoder::Release() {
-  callback_ = nullptr;
+  if (m_pmfxENC != nullptr) {
+    m_pmfxENC->Close();
+    delete m_pmfxENC;
+    m_pmfxENC = nullptr;
+  }
+  MSDK_SAFE_DELETE_ARRAY(m_pEncSurfaces);
+  m_pEncSurfaces = nullptr;
+
+  if (m_mfxSession) {
+    MSDKFactory* factory = MSDKFactory::Get();
+    if (factory) {
+      factory->UnloadMSDKPlugin(m_mfxSession, &m_pluginID);
+      factory->DestroySession(m_mfxSession);
+    }
+    m_mfxSession = nullptr;
+  }
+  if (m_pMFXAllocator)
+    m_pMFXAllocator->Close();
+  m_pMFXAllocator.reset();
+
   inited_ = false;
   // Need to reset to that the session is invalidated and won't use the
   // callback anymore.
