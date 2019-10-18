@@ -21,7 +21,7 @@ class RemoteMixedStream : public owt::base::RemoteStream {
                     const std::string& from,
                     const std::string& viewport,
                     const owt::base::SubscriptionCapabilities& subscription_capabilities,
-                    const std::vector<owt::base::PublicationSettings>& publication_settings);
+                    const owt::base::PublicationSettings& publication_settings);
   /** @endcond **/
   /// Add an observer for conferenc client.
   void AddObserver(RemoteMixedStreamObserver& observer);

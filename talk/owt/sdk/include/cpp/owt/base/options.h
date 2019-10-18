@@ -41,8 +41,8 @@ struct VideoPublicationSettings {
   std::string rid;
 };
 struct PublicationSettings {
-  AudioPublicationSettings audio;
-  VideoPublicationSettings video;
+  std::vector<AudioPublicationSettings> audio;
+  std::vector<VideoPublicationSettings> video;
 };
 /**
  @brief Publish options describing encoding settings.

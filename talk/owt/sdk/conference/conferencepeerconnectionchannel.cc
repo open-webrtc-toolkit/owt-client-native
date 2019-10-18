@@ -447,23 +447,23 @@ void ConferencePeerConnectionChannel::Publish(
 }
 static bool SubOptionAllowed(
     const SubscribeOptions& subscribe_options,
-    const std::vector<PublicationSettings>& publication_settings,
+    const PublicationSettings& publication_settings,
     const SubscriptionCapabilities& subscription_caps) {
-  // TODO: Audio sub constraints are currently not checked as spec only
-  // specifies codec, though signaling allows specifying sampleRate and channel
-  // num.
+  // TODO: Audio subscribe constraints are currently not checked as spec only
+  // specifies codec, though signaling allows specifying sample rate and channel
+  // number.
 
   // If rid is specified, search in publication_settings for rid;
   if (subscribe_options.video.rid != "") {
-    for (auto setting : publication_settings) {
-      if (setting.video.rid == subscribe_options.video.rid)
+    for (auto video_setting : publication_settings.video) {
+      if (video_setting.rid == subscribe_options.video.rid)
         return true;
     }
     return false;
   }
 
-  bool res_supported = (subscribe_options.video.resolution.width == 0 &&
-                        subscribe_options.video.resolution.height == 0);
+  bool resolution_supported = (subscribe_options.video.resolution.width == 0 &&
+                               subscribe_options.video.resolution.height == 0);
   bool frame_rate_supported = (subscribe_options.video.frameRate == 0);
   bool keyframe_interval_supported =
       (subscribe_options.video.keyFrameInterval == 0);
@@ -471,23 +471,23 @@ static bool SubOptionAllowed(
       (subscribe_options.video.bitrateMultiplier == 0);
 
   // If rid is not used, check in publication_settings and capabilities.
-  for (auto setting : publication_settings) {
+  for (auto video_setting : publication_settings.video) {
     if (subscribe_options.video.resolution.width != 0 &&
         subscribe_options.video.resolution.height != 0 &&
-        setting.video.resolution.width ==
+        video_setting.resolution.width ==
             subscribe_options.video.resolution.width &&
-        setting.video.resolution.height ==
+        video_setting.resolution.height ==
             subscribe_options.video.resolution.height) {
-      res_supported = true;
+      resolution_supported = true;
     }
 
     if (subscribe_options.video.frameRate != 0 &&
-            setting.video.frame_rate == subscribe_options.video.frameRate) {
+            video_setting.frame_rate == subscribe_options.video.frameRate) {
       frame_rate_supported = true;
     }
 
     if (subscribe_options.video.keyFrameInterval != 0 &&
-        setting.video.keyframe_interval ==
+        video_setting.keyframe_interval ==
             subscribe_options.video.keyFrameInterval)
           keyframe_interval_supported = true;
   }
@@ -499,7 +499,7 @@ static bool SubOptionAllowed(
                      [&](const Resolution& format) {
                        return format == subscribe_options.video.resolution;
                      }) != subscription_caps.video.resolutions.end()) {
-      res_supported = true;
+      resolution_supported = true;
     }
   }
   if (subscribe_options.video.frameRate != 0) {
@@ -531,7 +531,7 @@ static bool SubOptionAllowed(
       bitrate_multiplier_supported = true;
     }
   }
-  return (res_supported && frame_rate_supported &&
+  return (resolution_supported && frame_rate_supported &&
       keyframe_interval_supported && bitrate_multiplier_supported);
 }
 void ConferencePeerConnectionChannel::Subscribe(

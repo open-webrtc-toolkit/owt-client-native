@@ -89,8 +89,8 @@ RTC_OBJC_EXPORT
 /// The settings of a publication.
 RTC_OBJC_EXPORT
 @interface OWTPublicationSettings : NSObject
-@property(nonatomic, strong) OWTAudioPublicationSettings* audio;
-@property(nonatomic, strong) OWTVideoPublicationSettings* video;
+@property(nonatomic, strong) NSArray<OWTAudioPublicationSettings*>* audio;
+@property(nonatomic, strong) NSArray<OWTVideoPublicationSettings*>* video;
 @end
 /// Represents the audio capability for subscription.
 RTC_OBJC_EXPORT

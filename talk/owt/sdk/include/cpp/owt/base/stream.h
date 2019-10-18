@@ -283,7 +283,7 @@ class RemoteStream : public Stream {
       const std::string& id,
       const std::string& from,
       const owt::base::SubscriptionCapabilities& subscription_capabilities,
-      const std::vector<owt::base::PublicationSettings>& publication_settings);
+      const owt::base::PublicationSettings& publication_settings);
   explicit RemoteStream(MediaStreamInterface* media_stream,
                         const std::string& from);
   virtual void Attributes(
@@ -298,16 +298,16 @@ class RemoteStream : public Stream {
   /// Get the subscription capabilities on the stream.
   SubscriptionCapabilities Capabilities() { return subscription_capabilities_; }
   /// Get the publication settings of the stream.
-  std::vector<PublicationSettings> Settings() { return publication_settings_; }
+  PublicationSettings Settings() { return publication_settings_; }
   /// Stop the remote stream.
   /** @cond */
   /// Setter for subscription capabilities
   void Capabilities(
-      owt::base::SubscriptionCapabilities subscription_capabilities) {
+      const owt::base::SubscriptionCapabilities& subscription_capabilities) {
     subscription_capabilities_ = subscription_capabilities;
   }
   /// Setter for publication settings
-  void Settings(std::vector<PublicationSettings> publication_settings) {
+  void Settings(const PublicationSettings& publication_settings) {
     publication_settings_ = publication_settings;
   }
   /** @endcond */
@@ -322,7 +322,7 @@ class RemoteStream : public Stream {
   bool has_audio_ = true;
   bool has_video_ = true;
   owt::base::SubscriptionCapabilities subscription_capabilities_;
-  std::vector<owt::base::PublicationSettings> publication_settings_;
+  owt::base::PublicationSettings publication_settings_;
 };
 }  // namespace base
 }  // namespace owt

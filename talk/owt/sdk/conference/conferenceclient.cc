@@ -980,8 +980,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     attributes = AttributesFromStreamInfo(pub_info);
   }
   SubscriptionCapabilities subscription_capabilities;
-  std::vector<PublicationSettings> publication_settings_list;
-  PublicationSettings pub_setting_template;
+  PublicationSettings publication_settings;
   auto audio_info = media_info->get_map()["audio"];
   if (audio_info == nullptr ||
       audio_info->get_flag() != sio::message::flag_object) {
@@ -999,7 +998,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       RTC_LOG(LS_ERROR) << "Invalid audio format info in media info";
       return;
     }
-    // Main audio capability
+    // Main audio capability.
     std::string codec;
     unsigned long sample_rate = 0, channel_num = 0;
     auto sample_rate_obj = audio_format_obj->get_map()["sampleRate"];
@@ -1018,19 +1017,21 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       channel_num = audio_format_obj->get_int();
     AudioCodecParameters audio_codec_param(
         MediaUtils::GetAudioCodecFromString(codec), channel_num, sample_rate);
-    pub_setting_template.audio.codec = audio_codec_param;
+    AudioPublicationSettings audio_publication_settings;
+    audio_publication_settings.codec = audio_codec_param;
+    publication_settings.audio.push_back(audio_publication_settings);
     subscription_capabilities.audio.codecs.push_back(audio_codec_param);
-    // Optional audio capabilities
+    // Optional audio capabilities.
     auto audio_format_obj_optional = audio_info->get_map()["optional"];
     if (audio_format_obj_optional == nullptr ||
         audio_format_obj_optional->get_flag() != sio::message::flag_object) {
-      RTC_LOG(LS_INFO) << "No optional audio info available";
+      RTC_LOG(LS_INFO) << "No optional audio info available.";
     } else {
       auto audio_format_optional =
           audio_format_obj_optional->get_map()["format"];
       if (audio_format_optional == nullptr ||
           audio_format_optional->get_flag() != sio::message::flag_array) {
-        RTC_LOG(LS_INFO) << "Invalid optional audio info";
+        RTC_LOG(LS_INFO) << "Invalid optional audio info.";
       } else {
         auto formats = audio_format_optional->get_vector();
         for (auto it = formats.begin(); it != formats.end(); ++it) {
@@ -1040,7 +1041,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
           auto optional_channel_num_obj = (*it)->get_map()["channelNum"];
           if (optional_codec_obj == nullptr ||
               optional_codec_obj->get_flag() != sio::message::flag_string) {
-            RTC_LOG(LS_ERROR) << "codec name in optional audio info invalid.";
+            RTC_LOG(LS_ERROR) << "Codec name in optional audio info invalid.";
             return;
           }
           codec = optional_codec_obj->get_string();
@@ -1134,8 +1135,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
             rid_obj->get_flag() == sio::message::flag_string) {
           video_publication_settings.rid = rid_obj->get_string();
         }
-        pub_setting_template.video = video_publication_settings;
-        publication_settings_list.push_back(pub_setting_template);
+        publication_settings.video.push_back(video_publication_settings);
        }
     }
     // Parse the video subscription capabilities.
@@ -1235,7 +1235,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     }
     if (video_source != "screen-cast") {
       auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings_list);
+          id, owner_id, subscription_capabilities, publication_settings);
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = has_video;
       remote_stream->Attributes(attributes);
@@ -1256,7 +1256,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       }
     } else {
       auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings_list);
+          id, owner_id, subscription_capabilities, publication_settings);
       RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
       remote_stream->has_audio_ = has_audio;
       remote_stream->has_video_ = true;
@@ -1281,7 +1281,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     std::string remote_id("mcu");  // Not used.
     owner_id = "mcu";
     auto remote_stream = std::make_shared<RemoteMixedStream>(
-        id, owner_id, view, subscription_capabilities, publication_settings_list);
+        id, owner_id, view, subscription_capabilities, publication_settings);
     RTC_LOG(LS_INFO) << "OnStreamAdded: mixed stream.";
     remote_stream->has_audio_ = has_audio;
     remote_stream->has_video_ = has_video;
