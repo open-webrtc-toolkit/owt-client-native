@@ -24,10 +24,8 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   RTC_LOG(LS_INFO) << "Initialize PeerConnection.";
   if (factory_.get() == nullptr)
     factory_ = PeerConnectionDependencyFactory::Get();
-  offer_answer_options_ =
-      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
-  offer_answer_options_.offer_to_receive_audio = true;
-  offer_answer_options_.offer_to_receive_video = true;
+  audio_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
+  video_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
   configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   peer_connection_ =
@@ -117,7 +115,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateOffer(param->data(), offer_answer_options_);
+      peer_connection_->CreateOffer(
+          param->data(),
+          webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
       delete param;
       break;
     }
@@ -127,7 +127,9 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<
               scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
               msg->pdata);
-      peer_connection_->CreateAnswer(param->data(), offer_answer_options_);
+      peer_connection_->CreateAnswer(
+          param->data(),
+          webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
       delete param;
       break;
     }
@@ -200,7 +202,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       for (const auto track : stream->GetAudioTracks()) {
         webrtc::RtpTransceiverInit transceiver_init;
         transceiver_init.stream_ids.push_back(stream->id());
-        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+        transceiver_init.direction = audio_transceiver_direction_;
         auto transceiver = peer_connection_->AddTransceiver(
             cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
 
@@ -211,8 +213,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       for (const auto track : stream->GetVideoTracks()) {
         webrtc::RtpTransceiverInit transceiver_init;
         transceiver_init.stream_ids.push_back(stream->id());
-        transceiver_init.direction =
-            webrtc::RtpTransceiverDirection::kSendOnly;
+        transceiver_init.direction = video_transceiver_direction_;
         if (configuration_.video.size() > 0 &&
             configuration_.video[0].rtp_encoding_parameters.size() != 0) {
           for (auto encoding :

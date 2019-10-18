@@ -405,8 +405,8 @@ void ConferencePeerConnectionChannel::Publish(
   }
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
-  offer_answer_options_.offer_to_receive_audio = false;
-  offer_answer_options_.offer_to_receive_video = false;
+  audio_transceiver_direction_=webrtc::RtpTransceiverDirection::kSendOnly;
+  video_transceiver_direction_=webrtc::RtpTransceiverDirection::kSendOnly;
   sio::message::ptr options = sio::object_message::create();
   // attributes
   sio::message::ptr attributes_ptr = sio::object_message::create();
@@ -625,10 +625,14 @@ void ConferencePeerConnectionChannel::Subscribe(
     media_options->get_map()["video"] = sio::bool_message::create(false);
   }
   sio_options->get_map()["media"] = media_options;
-  offer_answer_options_.offer_to_receive_audio =
-      stream->has_audio_ && !subscribe_options.audio.disabled;
-  offer_answer_options_.offer_to_receive_video =
-      stream->has_video_ && !subscribe_options.video.disabled;
+  audio_transceiver_direction_ =
+      (stream->has_audio_ && !subscribe_options.audio.disabled)
+          ? webrtc::RtpTransceiverDirection::kRecvOnly
+          : webrtc::RtpTransceiverDirection::kInactive;
+  video_transceiver_direction_ =
+      (stream->has_video_ && !subscribe_options.video.disabled)
+          ? webrtc::RtpTransceiverDirection::kRecvOnly
+          : webrtc::RtpTransceiverDirection::kInactive;
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id) {
