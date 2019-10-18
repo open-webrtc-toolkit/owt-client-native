@@ -133,7 +133,10 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // the future.
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   webrtc::MediaConstraints media_constraints_;
-  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions offer_answer_options_;
+  // Direction of audio and video transceivers. In conference mode, there are at
+  // most 1 audio transceiver and 1 video transceiver.
+  webrtc::RtpTransceiverDirection audio_transceiver_direction_;
+  webrtc::RtpTransceiverDirection video_transceiver_direction_;
  private:
   // DataChannelObserver
   virtual void OnStateChange() override { OnDataChannelStateChange(); }
