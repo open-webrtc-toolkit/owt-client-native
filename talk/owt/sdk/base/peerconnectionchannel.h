@@ -75,6 +75,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
+  virtual void ClosePc();
   // Message looper event
   virtual void OnMessage(rtc::Message* msg) override;
   // PeerConnectionObserver

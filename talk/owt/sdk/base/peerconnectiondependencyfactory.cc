@@ -58,6 +58,7 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
   network_monitor_ = nullptr;
 #endif
   encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
+  pc_thread_->SetName("peerconnection_dependency_factory_thread", nullptr);
   pc_thread_->Start();
 }
 PeerConnectionDependencyFactory::~PeerConnectionDependencyFactory() {}
@@ -178,7 +179,7 @@ void PeerConnectionDependencyFactory::
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
       std::move(decoder_factory), nullptr, nullptr);
-
+  pc_factory_->AddRef();
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
 

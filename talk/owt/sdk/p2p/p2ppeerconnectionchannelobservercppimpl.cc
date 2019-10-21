@@ -13,5 +13,9 @@ void P2PPeerConnectionChannelObserverCppImpl::OnStreamAdded(
     std::shared_ptr<RemoteStream> stream) {
   peer_client_.OnStreamAdded(stream);
 }
+void P2PPeerConnectionChannelObserverCppImpl::OnStopped(
+    const std::string& remote_id) {
+  peer_client_.OnStopped(remote_id);
+}
 }
 }

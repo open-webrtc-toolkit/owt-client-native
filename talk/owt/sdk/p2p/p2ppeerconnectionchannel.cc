@@ -426,9 +426,9 @@ void P2PPeerConnectionChannel::OnMessageStop() {
     }
     failure_callbacks_.clear();
   }
-  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                   nullptr);
+  ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
+  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -670,6 +670,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
+      TriggerOnStopped();
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -833,6 +834,14 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
   }
   return false;
 }
+
+void P2PPeerConnectionChannel::TriggerOnStopped() {
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
+       observers_.begin(); it != observers_.end(); it++) {
+    (*it)->OnStopped(remote_id_);
+  }
+}
+
 void P2PPeerConnectionChannel::CleanLastPeerConnection() {
   if (set_remote_sdp_task_) {
     delete set_remote_sdp_task_;
@@ -895,8 +904,7 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                       nullptr);
+      ClosePeerConnection();
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
@@ -910,6 +918,7 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     default:
       if (on_failure != nullptr) {
@@ -953,7 +962,6 @@ void P2PPeerConnectionChannel::GetConnectionStats(
     }
     return;
   }
-  RTC_LOG(LS_INFO) << "Get connection stats";
   rtc::scoped_refptr<FunctionalStatsObserver> observer =
       FunctionalStatsObserver::Create(std::move(on_success));
   GetStatsMessage* stats_message = new GetStatsMessage(
@@ -1107,8 +1115,7 @@ void P2PPeerConnectionChannel::SendStop(
 void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                   nullptr);
+  PeerConnectionChannel::ClosePc();
   ChangeSessionState(kSessionStateReady);
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {

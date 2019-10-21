@@ -37,6 +37,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   }
   if (pc_thread_ == nullptr) {
     pc_thread_ = rtc::Thread::CreateWithSocketServer();
+    pc_thread_->SetName("pc_thread", nullptr);
     pc_thread_->Start();
   }
   RTC_CHECK(peer_connection_);
@@ -96,6 +97,9 @@ PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
     const {
   RTC_CHECK(peer_connection_);
   return peer_connection_->signaling_state();
+}
+void PeerConnectionChannel::ClosePc(){
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
 }
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
   RTC_CHECK(peer_connection_);

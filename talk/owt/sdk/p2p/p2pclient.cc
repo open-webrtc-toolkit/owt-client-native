@@ -159,6 +159,7 @@ void P2PClient::Stop(
   }
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
+  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   pc_channels_.erase(target_id);
 }
 void P2PClient::GetConnectionStats(
@@ -204,12 +205,15 @@ void P2PClient::OnSignalingMessage(const std::string& message,
           pcc->GetLatestPublishSuccessCallback();
       std::function<void(std::unique_ptr<Exception>)> failure_callback =
           pcc->GetLatestPublishFailureCallback();
-      pc_channels_.erase(remote_id);
-	    auto new_pcc = GetPeerConnectionChannel(remote_id);
-	    new_pcc->OnIncomingSignalingMessage(message);
-	    new_pcc->Publish(stream, success_callback, failure_callback);
-	    return;
-	  }
+      {
+        const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+        pc_channels_.erase(remote_id);
+      }
+      auto new_pcc = GetPeerConnectionChannel(remote_id);
+      new_pcc->OnIncomingSignalingMessage(message);
+      new_pcc->Publish(stream, success_callback, failure_callback);
+      return;
+    }
   } else if (message.find("\"type\":\"chat-closed\"") != std::string::npos) {
     int code = 0;
     std::string error = "";
@@ -227,7 +231,10 @@ void P2PClient::OnSignalingMessage(const std::string& message,
             pcc->GetLatestPublishSuccessCallback();
         std::function<void(std::unique_ptr<Exception>)> failure_callback =
             pcc->GetLatestPublishFailureCallback();
-        pc_channels_.erase(remote_id);
+        {
+          const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+          pc_channels_.erase(remote_id);
+        }
         auto new_pcc = GetPeerConnectionChannel(remote_id);
         new_pcc->Publish(stream, success_callback, failure_callback);
         return;
@@ -278,12 +285,14 @@ void P2PClient::Unpublish(
   pcc->Unpublish(stream, on_success, on_failure);
 }
 bool P2PClient::IsPeerConnectionChannelCreated(const std::string& target_id) {
+  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   if (pc_channels_.find(target_id) == pc_channels_.end())
     return false;
   return true;
 }
 std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     const std::string& target_id) {
+  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   auto pcc_it = pc_channels_.find(target_id);
   // if the channel has already been abandoned
   if (pcc_it != pc_channels_.end() && pcc_it->second->IsAbandoned()) {
@@ -305,6 +314,7 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     auto pcc_pair =
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
             target_id, pcc);
+    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
     pc_channels_.insert(pcc_pair);
     return pcc;
   } else {
@@ -346,6 +356,14 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
   EventTrigger::OnEvent2(observers_, event_queue_,
                          &P2PClientObserver::OnMessageReceived,
                          remote_id, message);
+}
+void P2PClient::OnStopped(const std::string& remote_id) {
+  {
+    const std::lock_guard<std::mutex> lock(removed_pc_channels_mutex_);
+    removed_pc_channels_.push_back(pc_channels_[remote_id]);
+  }
+  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+  pc_channels_.erase(remote_id);
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
