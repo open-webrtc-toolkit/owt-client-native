@@ -88,6 +88,19 @@ void PeerConnectionChannel::ApplyBitrateSettings() {
   }
   return;
 }
+
+void PeerConnectionChannel::AddTransceiver(
+    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+    const webrtc::RtpTransceiverInit& init) {
+  peer_connection_->AddTransceiver(track, init);
+}
+
+void PeerConnectionChannel::AddTransceiver(
+    cricket::MediaType media_type,
+    const webrtc::RtpTransceiverInit& init) {
+  peer_connection_->AddTransceiver(media_type, init);
+}
+
 const webrtc::SessionDescriptionInterface*
 PeerConnectionChannel::LocalDescription() {
   RTC_CHECK(peer_connection_);
@@ -195,53 +208,6 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::TypedMessageData<webrtc::IceCandidateInterface*>*>(
               msg->pdata);
       peer_connection_->AddIceCandidate(param->data());
-      delete param;
-      break;
-    }
-    case kMessageTypeAddStream: {
-      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-          static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
-              msg->pdata);
-      MediaStreamInterface* stream = param->data();
-      for (const auto track : stream->GetAudioTracks()) {
-        webrtc::RtpTransceiverInit transceiver_init;
-        transceiver_init.stream_ids.push_back(stream->id());
-        transceiver_init.direction = audio_transceiver_direction_;
-        auto transceiver = peer_connection_->AddTransceiver(
-            cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
-
-        if (transceiver.ok()) {
-          transceiver.MoveValue()->sender()->SetTrack(track);
-        }
-      }
-      for (const auto track : stream->GetVideoTracks()) {
-        webrtc::RtpTransceiverInit transceiver_init;
-        transceiver_init.stream_ids.push_back(stream->id());
-        transceiver_init.direction = video_transceiver_direction_;
-        if (configuration_.video.size() > 0 &&
-            configuration_.video[0].rtp_encoding_parameters.size() != 0) {
-          for (auto encoding :
-               configuration_.video[0].rtp_encoding_parameters) {
-            webrtc::RtpEncodingParameters param;
-            param.rid = encoding.rid;
-            if (encoding.max_bitrate_bps != 0)
-              param.max_bitrate_bps = encoding.max_bitrate_bps;
-            if (encoding.max_framerate != 0)
-              param.max_framerate = encoding.max_framerate;
-            if (param.scale_resolution_down_by > 0)
-              param.scale_resolution_down_by =
-                encoding.scale_resolution_down_by;
-            param.active = encoding.active;
-            transceiver_init.send_encodings.push_back(param);
-          }
-        }
-        auto transceiver = peer_connection_->AddTransceiver(
-            cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
-
-        if (transceiver.ok()) {
-          transceiver.MoveValue()->sender()->SetTrack(track);
-        }
-      }
       delete param;
       break;
     }

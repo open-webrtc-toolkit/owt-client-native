@@ -1047,18 +1047,32 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       Json::Value stream_tracks;
       Json::Value stream_sources;
       for (const auto& track : media_stream->GetAudioTracks()) {
+        // Signaling.
         stream_tracks.append(track->id());
         stream_sources[kStreamAudioSourceKey] = audio_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = audio_track_source;
         track_sources.append(track_info);
+
+        // RTP transceiver.
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(media_stream->id());
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        AddTransceiver(track, transceiver_init);
       }
       for (const auto& track : media_stream->GetVideoTracks()) {
+        // Signaling.
         stream_tracks.append(track->id());
         stream_sources[kStreamVideoSourceKey] = video_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = video_track_source;
         track_sources.append(track_info);
+
+        // RTP transceiver.
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(media_stream->id());
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        AddTransceiver(track, transceiver_init);
       }
       // The second signaling message of track sources to remote peer.
       Json::Value json_track_sources;
@@ -1074,11 +1088,6 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       stream_info[kStreamSourceKey] = stream_sources;
       json_stream_info[kMessageDataKey] = stream_info;
       SendSignalingMessage(json_stream_info);
-      // Add media stream to the peerconnection.
-      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-          new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
-      RTC_LOG(LS_INFO) << "Post add stream";
-      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
       negotiation_needed = true;
     }
     pending_publish_streams_.clear();
