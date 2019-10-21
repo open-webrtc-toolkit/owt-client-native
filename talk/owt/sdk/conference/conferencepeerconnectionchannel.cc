@@ -393,7 +393,7 @@ void ConferencePeerConnectionChannel::Publish(
       (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
     RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
   }
-  if (isMediaStreamEnded(stream->MediaStream())) {
+  if (IsMediaStreamEnded(stream->MediaStream())) {
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<Exception> e(new Exception(
@@ -988,7 +988,7 @@ void ConferencePeerConnectionChannel::ClosePeerConnection() {
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                    nullptr);
 }
-bool ConferencePeerConnectionChannel::isMediaStreamEnded(
+bool ConferencePeerConnectionChannel::IsMediaStreamEnded(
     MediaStreamInterface* stream) const {
   RTC_CHECK(stream);
   for (auto track : stream->GetAudioTracks()) {
