@@ -76,6 +76,11 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
   virtual void ClosePc();
+  virtual void AddTransceiver(
+      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+      const webrtc::RtpTransceiverInit& init);
+  virtual void AddTransceiver(cricket::MediaType media_type,
+                              const webrtc::RtpTransceiverInit& init);
   // Message looper event
   virtual void OnMessage(rtc::Message* msg) override;
   // PeerConnectionObserver
@@ -119,7 +124,6 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     kMessageTypeSetLocalDescription,
     kMessageTypeSetRemoteDescription,
     kMessageTypeSetRemoteIceCandidate,
-    kMessageTypeAddStream,
     kMessageTypeRemoveStream,
     kMessageTypeAddTransceiver,
     kMessageTypeClosePeerConnection,

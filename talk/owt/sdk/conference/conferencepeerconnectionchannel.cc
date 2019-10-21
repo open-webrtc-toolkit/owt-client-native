@@ -625,14 +625,16 @@ void ConferencePeerConnectionChannel::Subscribe(
     media_options->get_map()["video"] = sio::bool_message::create(false);
   }
   sio_options->get_map()["media"] = media_options;
-  audio_transceiver_direction_ =
-      (stream->has_audio_ && !subscribe_options.audio.disabled)
-          ? webrtc::RtpTransceiverDirection::kRecvOnly
-          : webrtc::RtpTransceiverDirection::kInactive;
-  video_transceiver_direction_ =
-      (stream->has_video_ && !subscribe_options.video.disabled)
-          ? webrtc::RtpTransceiverDirection::kRecvOnly
-          : webrtc::RtpTransceiverDirection::kInactive;
+  if (stream->has_audio_ && !subscribe_options.audio.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
+  }
+  if (stream->has_video_ && !subscribe_options.video.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
+  }
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id) {
@@ -904,10 +906,36 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
       options, stream->MediaStream()->id(), "",
       [stream, this](std::string session_id) {
         SetSessionId(session_id);
-        rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-            new rtc::ScopedRefMessageData<MediaStreamInterface>(
-                stream->MediaStream());
-        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
+        for (const auto track : stream->MediaStream()->GetAudioTracks()) {
+          webrtc::RtpTransceiverInit transceiver_init;
+          transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
+          transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+          AddTransceiver(track, transceiver_init);
+        }
+        for (const auto track : stream->MediaStream()->GetVideoTracks()) {
+          webrtc::RtpTransceiverInit transceiver_init;
+          transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
+          transceiver_init.direction =
+              webrtc::RtpTransceiverDirection::kSendOnly;
+          if (configuration_.video.size() > 0 &&
+              configuration_.video[0].rtp_encoding_parameters.size() != 0) {
+            for (auto encoding :
+                 configuration_.video[0].rtp_encoding_parameters) {
+              webrtc::RtpEncodingParameters param;
+              param.rid = encoding.rid;
+              if (encoding.max_bitrate_bps != 0)
+                param.max_bitrate_bps = encoding.max_bitrate_bps;
+              if (encoding.max_framerate != 0)
+                param.max_framerate = encoding.max_framerate;
+              if (param.scale_resolution_down_by > 0)
+                param.scale_resolution_down_by =
+                    encoding.scale_resolution_down_by;
+              param.active = encoding.active;
+              transceiver_init.send_encodings.push_back(param);
+            }
+          }
+          AddTransceiver(track, transceiver_init);
+        }
         CreateOffer();
       },
       on_failure);
