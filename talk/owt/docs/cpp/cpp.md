@@ -9,8 +9,8 @@ bug fixes and known issues.
 # 2 Supported platforms {#section2}
 Open WebRTC Toolkit Client SDK for Windows supports Windows 7 and later versions.
 # 3 Getting started {#section3}
-Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2015 or 2017. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platforms are x86 and x64.
-The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for both x86 and x64, along with their headers:
+Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2017 or 2019. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x64.
+The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for only x64, along with their headers:
 - owt-debug.lib - this library includes all the WebRTC features for debug usages.
 - owt-release.lib - this library includes all the WebRTC features for release usages.
 owt-debug.lib|owt-release references libraries in Windows SDK for DXVA support. Your application must statically link
@@ -19,7 +19,7 @@ channel implementation, you can optionally link sioclient.lib or sioclient_tls.l
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp).
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
-connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to SSL1.1.0h, so sioclient_tls.lib must be compiled using the same SSL version.
+connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to SSL1.1.0l, so sioclient_tls.lib must be compiled using the same SSL version.
 # 5 NAT and firewall traversal {#section5}
 Open WebRTC Toolkit Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 # 6 Customize signaling channel {#section6}
@@ -30,12 +30,12 @@ for P2P sessions can be customized by implementing `P2PSignalingChannelInterface
 can invoke its methods to notify `PeerClient` during your customized signaling channel implementation when a new
 message is coming or connection is lost.
 # 7 Video codecs {#section7}
-For the decoder, if hardware acceleration is not enabled, only VP8/VP9/H264 is supported. If hardware acceleration is enabled, VP8,
+For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
 VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
 Most of the 5th/6th/7th/8th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
 Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
-Hardware acceleration for decoding of VP8/H.264/HEVC, and encoding of H.264/HEVC, is enabled via {@link owt.base.GlobalConfiguration GlobalConfiguration} API,
-by providing valid rendering target to the SetCodecHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
+You can turn off video encoding/decoding hardware acceleration via {@link owt.base.GlobalConfiguration GlobalConfiguration} API,
+by passing "false" to SetVideoHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 # 8 Publish streams with customized frames {#section8}
 Customized video frames can be I420 frame from yuv file, or encoded H.264/VP8/VP9/HEVC frames.
 For raw YUV frame input, the customized video frame provider needs to implement its own frame generator extending from
