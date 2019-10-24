@@ -38,15 +38,10 @@ if (is_android) {
 }
 static_library("owt_deps") {
   deps = [
-    "//third_party/jsoncpp",
-    "//third_party/webrtc/api:create_peerconnection_factory",
-    "//third_party/webrtc/api:libjingle_peerconnection_api",
-    "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
-    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
     "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
-  if (is_ios || is_android) {
+  if (is_android) {
     deps += [ "//third_party/webrtc/sdk:native_api" ]
   }
   complete_static_lib = true
