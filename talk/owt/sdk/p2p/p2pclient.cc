@@ -314,7 +314,6 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     auto pcc_pair =
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
             target_id, pcc);
-    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
     pc_channels_.insert(pcc_pair);
     return pcc;
   } else {
