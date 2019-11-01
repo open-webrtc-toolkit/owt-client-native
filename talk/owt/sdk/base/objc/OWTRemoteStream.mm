@@ -22,13 +22,15 @@
   auto remoteStream = [self nativeRemoteStream];
   return [NSString stringForStdString:remoteStream->Origin()];
 }
+
 - (OWTPublicationSettings*)settings {
+  auto nativeSettings =
+      std::static_pointer_cast<owt::base::RemoteStream>([super nativeStream])
+          ->Settings();
   return [[OWTPublicationSettings alloc]
-      initWithNativePublicationSettings:std::static_pointer_cast<
-                                            owt::base::RemoteStream>(
-                                            [super nativeStream])
-                                            ->Settings()];
+      initWithNativePublicationSettings:nativeSettings];
 }
+
 -(OWTSubscriptionCapabilities*)capabilities{
   return [[OWTSubscriptionCapabilities alloc]
       initWithNativeSubscriptionCapabilities:std::static_pointer_cast<

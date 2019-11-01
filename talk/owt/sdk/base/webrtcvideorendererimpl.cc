@@ -14,7 +14,7 @@
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #endif
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/media/base/videocommon.h"
+
 namespace owt {
 namespace base {
 void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {

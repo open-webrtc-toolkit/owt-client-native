@@ -8,15 +8,15 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <chrono>
-#include "talk/owt/sdk/base/mediaconstraintsimpl.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/base/exception.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h"
-#include "webrtc/rtc_base/json.h"
-#include "webrtc/rtc_base/messagehandler.h"
+#include "webrtc/sdk/media_constraints.h"
+#include "webrtc/rtc_base/strings/json.h"
+#include "webrtc/rtc_base/message_handler.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/thread_annotations.h"
 namespace owt {
@@ -33,6 +33,8 @@ class P2PPeerConnectionChannelObserver {
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteStream> stream) = 0;
+  // Triggered when the WebRTC session is ended.
+  virtual void OnStopped(const std::string& remote_id) = 0;
 };
 // An instance of P2PPeerConnectionChannel manages a session for a specified
 // remote client.
@@ -137,6 +139,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       std::function<void(std::unique_ptr<Exception>)> failure = nullptr);
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
+  void TriggerOnStopped();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void SendStop(std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);

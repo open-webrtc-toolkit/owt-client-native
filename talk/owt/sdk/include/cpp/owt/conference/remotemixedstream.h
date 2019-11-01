@@ -10,8 +10,8 @@ namespace conference {
 /// Observer class for remote mixed stream.
 class RemoteMixedStreamObserver : public owt::base::StreamObserver {
  public:
-  virtual void OnVideoLayoutChanged(){};
-  virtual void OnActiveInputChanged(const std::string& stream_id){};
+  virtual void OnVideoLayoutChanged(){}
+  virtual void OnActiveInputChanged(const std::string& stream_id){}
 };
 /// This class represent a mixed remote stream.
 class RemoteMixedStream : public owt::base::RemoteStream {

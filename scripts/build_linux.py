@@ -36,7 +36,7 @@ GN_ARGS = [
     'is_component_build=false',
     'use_lld=false',
     'rtc_include_tests=false',
-    'woogeen_include_tests=false',
+    'owt_include_tests=false',
     'use_sysroot=false',
     'is_clang=false'
 ]
@@ -53,9 +53,9 @@ def gngen(arch, ssl_root, scheme):
     else:
         gn_args.append('is_debug=true')
     if ssl_root:
-        gn_args.append('woogeen_use_openssl=true')
-        gn_args.append('woogeen_openssl_header_root="%s"' % (ssl_root + r'/include'))
-        gn_args.append('woogeen_openssl_lib_root="%s"' % (ssl_root + r'/lib'))
+        gn_args.append('owt_use_openssl=true')
+        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'/include'))
+        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'/lib'))
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
     cmd = 'gn gen ' + out + ' ' + flattened_args

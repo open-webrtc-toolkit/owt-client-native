@@ -128,8 +128,11 @@ void ConferencePeerConnectionChannel::DoIceRestart() {
   RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable);
+  // TODO: moving to offer answer options.
+  /*
   media_constraints_.SetMandatory(
       webrtc::MediaConstraintsInterface::kIceRestart, true);
+  */
   this->CreateOffer();
 }
 void ConferencePeerConnectionChannel::CreateAnswer() {
@@ -270,8 +273,8 @@ void ConferencePeerConnectionChannel::OnIceCandidatesRemoved(
     current_candidate->get_map()["candidate"] =
         sio::string_message::create(candidate_string);
     // jianlin: Native stack does not pop sdpMid & sdpMLineIndex to observer.
-    // Maybe need to create a hash table to map candidate id to sdpMid/sdpMlineIndex
-    // in OnIceCandidate().
+    // Maybe need to create a hash table to map candidate id to
+    // sdpMid/sdpMlineIndex in OnIceCandidate().
     removed_candidates->get_vector().push_back(current_candidate);
   }
   remove_candidates_msg->get_map()["candidates"] = removed_candidates;
@@ -390,7 +393,7 @@ void ConferencePeerConnectionChannel::Publish(
       (!CheckNullPointer((uintptr_t)stream->MediaStream(), on_failure))) {
     RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
   }
-  if (isMediaStreamEnded(stream->MediaStream())) {
+  if (IsMediaStreamEnded(stream->MediaStream())) {
     if (on_failure != nullptr) {
       event_queue_->PostTask([on_failure]() {
         std::unique_ptr<Exception> e(new Exception(
@@ -402,8 +405,8 @@ void ConferencePeerConnectionChannel::Publish(
   }
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
-  offer_answer_options_.offer_to_receive_audio = false;
-  offer_answer_options_.offer_to_receive_video = false;
+  audio_transceiver_direction_=webrtc::RtpTransceiverDirection::kSendOnly;
+  video_transceiver_direction_=webrtc::RtpTransceiverDirection::kSendOnly;
   sio::message::ptr options = sio::object_message::create();
   // attributes
   sio::message::ptr attributes_ptr = sio::object_message::create();
@@ -444,55 +447,92 @@ void ConferencePeerConnectionChannel::Publish(
 }
 static bool SubOptionAllowed(
     const SubscribeOptions& subscribe_options,
+    const PublicationSettings& publication_settings,
     const SubscriptionCapabilities& subscription_caps) {
-  // TODO: Audio sub constraints are currently not checked as spec only
-  // specifies codec, though signaling allows specifying sampleRate and channel
-  // num.
-  bool result = true;
+  // TODO: Audio subscribe constraints are currently not checked as spec only
+  // specifies codec, though signaling allows specifying sample rate and channel
+  // number.
+
+  // If rid is specified, search in publication_settings for rid;
+  if (subscribe_options.video.rid != "") {
+    for (auto video_setting : publication_settings.video) {
+      if (video_setting.rid == subscribe_options.video.rid)
+        return true;
+    }
+    return false;
+  }
+
+  bool resolution_supported = (subscribe_options.video.resolution.width == 0 &&
+                               subscribe_options.video.resolution.height == 0);
+  bool frame_rate_supported = (subscribe_options.video.frameRate == 0);
+  bool keyframe_interval_supported =
+      (subscribe_options.video.keyFrameInterval == 0);
+  bool bitrate_multiplier_supported =
+      (subscribe_options.video.bitrateMultiplier == 0);
+
+  // If rid is not used, check in publication_settings and capabilities.
+  for (auto video_setting : publication_settings.video) {
+    if (subscribe_options.video.resolution.width != 0 &&
+        subscribe_options.video.resolution.height != 0 &&
+        video_setting.resolution.width ==
+            subscribe_options.video.resolution.width &&
+        video_setting.resolution.height ==
+            subscribe_options.video.resolution.height) {
+      resolution_supported = true;
+    }
+
+    if (subscribe_options.video.frameRate != 0 &&
+            video_setting.frame_rate == subscribe_options.video.frameRate) {
+      frame_rate_supported = true;
+    }
+
+    if (subscribe_options.video.keyFrameInterval != 0 &&
+        video_setting.keyframe_interval ==
+            subscribe_options.video.keyFrameInterval)
+          keyframe_interval_supported = true;
+  }
+
   if (subscribe_options.video.resolution.width != 0 &&
       subscribe_options.video.resolution.height != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.resolutions.begin(),
                      subscription_caps.video.resolutions.end(),
                      [&](const Resolution& format) {
                        return format == subscribe_options.video.resolution;
                      }) != subscription_caps.video.resolutions.end()) {
-      result = true;
+      resolution_supported = true;
     }
   }
   if (subscribe_options.video.frameRate != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.frame_rates.begin(),
                      subscription_caps.video.frame_rates.end(),
                      [&](const double& format) {
                        return format == subscribe_options.video.frameRate;
                      }) != subscription_caps.video.frame_rates.end()) {
-      result = true;
+      frame_rate_supported = true;
     }
   }
   if (subscribe_options.video.keyFrameInterval != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.keyframe_intervals.begin(),
                      subscription_caps.video.keyframe_intervals.end(),
                      [&](const unsigned long& format) {
                        return format ==
                               subscribe_options.video.keyFrameInterval;
                      }) != subscription_caps.video.keyframe_intervals.end()) {
-      result = true;
+      keyframe_interval_supported = true;
     }
   }
   if (subscribe_options.video.bitrateMultiplier != 0) {
-    result = false;
     if (std::find_if(subscription_caps.video.bitrate_multipliers.begin(),
                      subscription_caps.video.bitrate_multipliers.end(),
                      [&](const double& format) {
                        return format ==
                               subscribe_options.video.bitrateMultiplier;
                      }) != subscription_caps.video.bitrate_multipliers.end()) {
-      result = true;
+      bitrate_multiplier_supported = true;
     }
   }
-  return result;
+  return (resolution_supported && frame_rate_supported &&
+      keyframe_interval_supported && bitrate_multiplier_supported);
 }
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
@@ -502,7 +542,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   RTC_LOG(LS_INFO) << "Subscribe a remote stream. It has audio? "
                    << stream->has_audio_ << ", has video? "
                    << stream->has_video_;
-  if (!SubOptionAllowed(subscribe_options, stream->Capabilities())) {
+  if (!SubOptionAllowed(subscribe_options, stream->Settings(), stream->Capabilities())) {
     RTC_LOG(LS_ERROR)
         << "Subscribe option mismatch with stream subcription capabilities.";
     if (on_failure != nullptr) {
@@ -576,15 +616,25 @@ void ConferencePeerConnectionChannel::Subscribe(
           sio::int_message::create(subscribe_options.video.frameRate);
     }
     video_options->get_map()["parameters"] = video_spec;
+    if (subscribe_options.video.rid != "") {
+      video_options->get_map()["simulcastRid"] =
+          sio::string_message::create(subscribe_options.video.rid);
+    }
     media_options->get_map()["video"] = video_options;
   } else {
     media_options->get_map()["video"] = sio::bool_message::create(false);
   }
   sio_options->get_map()["media"] = media_options;
-  offer_answer_options_.offer_to_receive_audio =
-      stream->has_audio_ && !subscribe_options.audio.disabled;
-  offer_answer_options_.offer_to_receive_video =
-      stream->has_video_ && !subscribe_options.video.disabled;
+  if (stream->has_audio_ && !subscribe_options.audio.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
+  }
+  if (stream->has_video_ && !subscribe_options.video.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
+  }
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id) {
@@ -856,10 +906,36 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
       options, stream->MediaStream()->id(), "",
       [stream, this](std::string session_id) {
         SetSessionId(session_id);
-        rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-            new rtc::ScopedRefMessageData<MediaStreamInterface>(
-                stream->MediaStream());
-        pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
+        for (const auto track : stream->MediaStream()->GetAudioTracks()) {
+          webrtc::RtpTransceiverInit transceiver_init;
+          transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
+          transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+          AddTransceiver(track, transceiver_init);
+        }
+        for (const auto track : stream->MediaStream()->GetVideoTracks()) {
+          webrtc::RtpTransceiverInit transceiver_init;
+          transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
+          transceiver_init.direction =
+              webrtc::RtpTransceiverDirection::kSendOnly;
+          if (configuration_.video.size() > 0 &&
+              configuration_.video[0].rtp_encoding_parameters.size() != 0) {
+            for (auto encoding :
+                 configuration_.video[0].rtp_encoding_parameters) {
+              webrtc::RtpEncodingParameters param;
+              param.rid = encoding.rid;
+              if (encoding.max_bitrate_bps != 0)
+                param.max_bitrate_bps = encoding.max_bitrate_bps;
+              if (encoding.max_framerate != 0)
+                param.max_framerate = encoding.max_framerate;
+              if (param.scale_resolution_down_by > 0)
+                param.scale_resolution_down_by =
+                    encoding.scale_resolution_down_by;
+              param.active = encoding.active;
+              transceiver_init.send_encodings.push_back(param);
+            }
+          }
+          AddTransceiver(track, transceiver_init);
+        }
         CreateOffer();
       },
       on_failure);
@@ -912,7 +988,7 @@ void ConferencePeerConnectionChannel::ClosePeerConnection() {
   pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
                    nullptr);
 }
-bool ConferencePeerConnectionChannel::isMediaStreamEnded(
+bool ConferencePeerConnectionChannel::IsMediaStreamEnded(
     MediaStreamInterface* stream) const {
   RTC_CHECK(stream);
   for (auto track : stream->GetAudioTracks()) {

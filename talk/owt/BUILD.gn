@@ -13,14 +13,11 @@ if (is_ios) {
 }
 declare_args() {
   include_internal_audio_device = true
-  woogeen_msdk_lib_root = ""
-  woogeen_msdk_header_root = ""
-
-  # Disable some features while rebasing to M63. It should be removed once rebasing is finished.
-  owt_rebase_m63 = true
+  owt_msdk_lib_root = ""
+  owt_msdk_header_root = ""
 }
 if (is_ios || is_mac) {
-  config("woogeen_sdk_objc_warnings_config") {
+  config("owt_sdk_objc_warnings_config") {
     # Bug 1375. Fix -Wobjc-missing-property-synthesis warnings.
     cflags_objc = [ "-Wno-objc-missing-property-synthesis" ]
     cflags_objcc = [ "-Wno-objc-missing-property-synthesis" ]
@@ -41,10 +38,12 @@ if (is_android) {
 }
 static_library("owt_deps") {
   deps = [
-    "//third_party/jsoncpp",
-    "//third_party/libyuv:libyuv",
     "//third_party/webrtc/rtc_base:rtc_json",
   ]
+
+  if (is_android) {
+    deps += [ "//third_party/webrtc/sdk:native_api" ]
+  }
   complete_static_lib = true
 }
 if (!is_ios) {
@@ -63,13 +62,11 @@ if (!is_ios) {
 }
 static_library("owt_sdk_base") {
   sources = [
-    "sdk/base/customizedframescapturer.cc",
-    "sdk/base/customizedframescapturer.h",
-    "sdk/base/customizedvideoencoderproxy.cc",
-    "sdk/base/customizedvideoencoderproxy.h",
+    "sdk/base/cameravideocapturer.cc",
+    "sdk/base/cameravideocapturer.h",
+    "sdk/base/codecutils.cc",
+    "sdk/base/codecutils.h",
     "sdk/base/deviceutils.cc",
-    "sdk/base/encodedvideoencoderfactory.cc",
-    "sdk/base/encodedvideoencoderfactory.h",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",
     "sdk/base/functionalobserver.cc",
@@ -79,7 +76,6 @@ static_library("owt_sdk_base") {
     "sdk/base/logging.cc",
     "sdk/base/logsinks.cc",
     "sdk/base/logsinks.h",
-    "sdk/base/mediaconstraintsimpl.h",
     "sdk/base/mediautils.cc",
     "sdk/base/mediautils.h",
     "sdk/base/peerconnectionchannel.cc",
@@ -93,8 +89,11 @@ static_library("owt_sdk_base") {
     "sdk/base/stringutils.h",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",
-    "sdk/base/webrtcvideorendererimpl.cc",
-    "sdk/base/webrtcvideorendererimpl.h",
+    "sdk/base/vcmcapturer.cc",
+    "sdk/base/vcmcapturer.h",
+    "sdk/base/webrtcaudiorendererimpl.cc",
+    "sdk/base/webrtcaudiorendererimpl.h",
+    "sdk/include/cpp/owt/base/audioplayerinterface.h",
     "sdk/include/cpp/owt/base/clientconfiguration.h",
     "sdk/include/cpp/owt/base/connectionstats.h",
     "sdk/include/cpp/owt/base/deviceutils.h",
@@ -103,17 +102,31 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/localcamerastreamparameters.h",
     "sdk/include/cpp/owt/base/logging.h",
     "sdk/include/cpp/owt/base/stream.h",
-    "sdk/include/cpp/owt/base/videodecoderinterface.h",
     "sdk/include/cpp/owt/base/videorendererinterface.h",
   ]
+  if (is_win || is_linux) {
+    sources += [
+      "sdk/base/customizedframescapturer.cc",
+      "sdk/base/customizedframescapturer.h",
+      "sdk/base/customizedvideoencoderproxy.cc",
+      "sdk/base/customizedvideoencoderproxy.h",
+      "sdk/base/customizedvideosource.cc",
+      "sdk/base/customizedvideosource.h",
+      "sdk/base/encodedvideoencoderfactory.cc",
+      "sdk/base/encodedvideoencoderfactory.h",
+      "sdk/base/webrtcvideorendererimpl.cc",
+      "sdk/base/webrtcvideorendererimpl.h",
+      "sdk/include/cpp/owt/base/videodecoderinterface.h",
+    ]
+  }
   public_deps = [
     "//third_party/libyuv:libyuv",
     "//third_party/webrtc/api:libjingle_peerconnection_api",
+    "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
+    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
     "//third_party/webrtc/api/video:video_frame",
     "//third_party/webrtc/api/video_codecs:builtin_video_decoder_factory",
     "//third_party/webrtc/api/video_codecs:builtin_video_encoder_factory",
-    "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
-    "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
     "//third_party/webrtc/media:rtc_audio_video",
     "//third_party/webrtc/media:rtc_media_base",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
@@ -122,56 +135,66 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/rtc_base:rtc_base",
     "//third_party/webrtc/rtc_base:rtc_base_approved",
     "//third_party/webrtc/rtc_base:rtc_json",
-    "//third_party/webrtc/system_wrappers:field_trial_default",
-    "//third_party/webrtc/system_wrappers:metrics_default",
-    "//third_party/webrtc/system_wrappers:runtime_enabled_features_default",
-    "//third_party/webrtc/system_wrappers:system_wrappers_default",
+    "//third_party/webrtc/system_wrappers:field_trial",
+    "//third_party/webrtc/system_wrappers:metrics",
+    "//third_party/webrtc/system_wrappers:system_wrappers",
+  ]
+  deps = [
+    "//base:logging_buildflags",
   ]
   include_dirs = [
     "sdk/include/cpp",
     "//third_party",
   ]
 
-  if (woogeen_msdk_header_root != "") {
-    include_dirs += [ woogeen_msdk_header_root ]
+  if (owt_msdk_header_root != "") {
+    include_dirs += [ owt_msdk_header_root ]
   }
 
   defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   defines += [ "USE_BUILTIN_SW_CODECS" ]
+  if (!rtc_use_h265) {
+    defines += [ "DISABLE_H265" ]
+  } else {
+    defines += [ "OWT_USE_H265" ]
+  }
+  if (is_win || is_linux) {
+    # Custom audio/video input and output.
+    # When rebasing libwebrtc to a new version, custom audio/video input/output
+    # usually need some changes to fit the latest API.
+    defines += [ "OWT_CUSTOM_AVIO" ]
+  }
   if (is_ios) {
     sources += [
       "sdk/base/ios/networkmonitorios.cc",
       "sdk/base/ios/networkmonitorios.h",
     ]
-    deps = [
-      "//third_party/webrtc/sdk:framework_objc+link",
-    ]
+    public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
   }
   if (is_win) {
     sources += [
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
-      "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/msdkvideodecoder.cc",
-      "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideoencoder.cc",
-      "sdk/base/win/msdkvideoencoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
-      "sdk/base/win/msdkvideoencoderfactory.cc",
-      "sdk/base/win/msdkvideoencoderfactory.h",
       "sdk/base/win/base_allocator.cc",
       "sdk/base/win/base_allocator.h",
       "sdk/base/win/d3d_allocator.cc",
       "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/sysmem_allocator.h",
-      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/d3dnativeframe.h",
       "sdk/base/win/msdkvideobase.cc",
       "sdk/base/win/msdkvideobase.h",
+      "sdk/base/win/msdkvideodecoder.cc",
+      "sdk/base/win/msdkvideodecoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
+      "sdk/base/win/msdkvideoencoder.cc",
+      "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideoencoderfactory.cc",
+      "sdk/base/win/msdkvideoencoderfactory.h",
+      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/sysmem_allocator.h",
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
       "sdk/base/windowcapturer.cc",
-      "sdk/base/windowcapturer.h",
     ]
   }
 
@@ -183,7 +206,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-  if (include_internal_audio_device) {
+  if ((is_win || is_linux) && include_internal_audio_device) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
       "sdk/base/customizedaudiocapturer.h",
@@ -199,9 +222,6 @@ static_library("owt_sdk_base") {
       "-Wno-microsoft-extra-qualification",
       "-Wno-reorder",
     ]
-  }
-  if (!owt_rebase_m63) {
-    defines += [ "OWT_REBASE_M63" ]
   }
 }
 static_library("owt_sdk_p2p") {
@@ -224,9 +244,9 @@ static_library("owt_sdk_p2p") {
     "sdk/p2p/p2ppeerconnectionchannel.h",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.cc",
     "sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h",
+    "sdk/p2p/p2ppublication.cc",
     "sdk/p2p/p2psignalingsenderimpl.cc",
     "sdk/p2p/p2psignalingsenderimpl.h",
-    "sdk/p2p/p2ppublication.cc",
   ]
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
@@ -267,7 +287,6 @@ if (is_ios) {
       ":owt_sdk_conf",
       ":owt_sdk_p2p",
       "//third_party/jsoncpp",
-      "//third_party/webrtc/system_wrappers:system_wrappers_default",
     ]
     include_dirs = [
       "//third_party",
@@ -277,7 +296,7 @@ if (is_ios) {
     ]
     configs += [
       "//build/config/compiler:enable_arc",
-      ":woogeen_sdk_objc_warnings_config",
+      ":owt_sdk_objc_warnings_config",
     ]
     sources = [
       "sdk/base/objc/CameraVideoCapturer.h",
@@ -290,7 +309,8 @@ if (is_ios) {
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.h",
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.m",
       "sdk/base/objc/OWTErrors.m",
-      "sdk/base/objc/OWTGlobalConfiguration.mm",
+
+      #"sdk/base/objc/OWTGlobalConfiguration.mm",
       "sdk/base/objc/OWTLocalStream+Private.h",
       "sdk/base/objc/OWTLocalStream.mm",
       "sdk/base/objc/OWTMediaFormat+Internal.h",
@@ -309,7 +329,8 @@ if (is_ios) {
       "sdk/base/objc/RemoteStreamObserverObjcImpl.mm",
       "sdk/base/objc/public/OWTErrors.h",
       "sdk/base/objc/public/OWTFrameGeneratorProtocol.h",
-      "sdk/base/objc/public/OWTGlobalConfiguration.h",
+
+      #"sdk/base/objc/public/OWTGlobalConfiguration.h",
       "sdk/base/objc/public/OWTLocalCameraStream.h",
       "sdk/base/objc/public/OWTLocalCameraStreamParameters.h",
       "sdk/base/objc/public/OWTLocalCustomizedStream.h",
@@ -366,16 +387,17 @@ if (is_ios) {
     ]
   }
 }
-if (woogeen_include_tests) {
-  group("woogeen_tests") {
+if (owt_include_tests) {
+  group("owt_tests") {
     testonly = true
+
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
     deps = [
-      ":woogeen_unittests",
+      ":owt_unittests",
     ]
   }
-  test("woogeen_unittests") {
+  test("owt_unittests") {
     testonly = true
     sources = [
       "sdk/base/mediautils_unittest.cc",
@@ -404,11 +426,9 @@ if (woogeen_include_tests) {
         "wmcodecdspuuid.lib",
         "ws2_32.lib",
       ]
-      if (woogeen_msdk_lib_root != "") {
-        libs += [
-          "libmfx_vs2015.lib",
-        ]
-        lib_dirs = [ woogeen_msdk_lib_root ]
+      if (owt_msdk_lib_root != "") {
+        libs += [ "libmfx_vs2015.lib" ]
+        lib_dirs = [ owt_msdk_lib_root ]
       }
       ldflags = [
         "/ignore:4098",

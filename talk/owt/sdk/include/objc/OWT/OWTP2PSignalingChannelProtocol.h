@@ -9,7 +9,7 @@
  @brief Protocol for signaling channel.
  Developers may utilize their own signaling server by implementing this protocol.
  */
-RTC_EXPORT
+RTC_OBJC_EXPORT
 @protocol OWTP2PSignalingChannelProtocol<NSObject>
 @optional
 @property(nonatomic, weak) id<OWTP2PSignalingChannelDelegate> delegate;

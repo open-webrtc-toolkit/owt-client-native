@@ -87,10 +87,24 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
   if (self = [super init]) {
     _nativeSettings = nativeSettings;
   }
-  _audio = [[OWTAudioPublicationSettings alloc]
-      initWithNativeAudioPublicationSettings:nativeSettings.audio];
-  _video = [[OWTVideoPublicationSettings alloc]
-      initWithNativeVideoPublicationSettings:nativeSettings.video];
+  NSMutableArray<OWTAudioPublicationSettings*>* audio =
+      [NSMutableArray arrayWithCapacity:nativeSettings.audio.size()];
+  for (auto& nativeAudioSettings : _nativeSettings.audio) {
+    OWTAudioPublicationSettings* objcAudioSettings =
+        [[OWTAudioPublicationSettings alloc]
+            initWithNativeAudioPublicationSettings:nativeAudioSettings];
+    [audio addObject:objcAudioSettings];
+  }
+  _audio = audio;
+  NSMutableArray<OWTVideoPublicationSettings*>* video =
+      [NSMutableArray arrayWithCapacity:nativeSettings.video.size()];
+  for (auto& nativeVideoSettings : _nativeSettings.video) {
+    OWTVideoPublicationSettings* objcVideoSettings =
+        [[OWTVideoPublicationSettings alloc]
+            initWithNativeVideoPublicationSettings:nativeVideoSettings];
+    [video addObject:objcVideoSettings];
+  }
+  _video = video;
   return self;
 }
 @end
@@ -109,7 +123,7 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
 }
 @end
 @implementation OWTVideoPublicationSettings
-@dynamic codec, resolution, frameRate, bitrate, keyframeInterval;
+@dynamic codec, resolution, frameRate, bitrate, keyframeInterval, rid;
 - (instancetype)initWithNativeVideoPublicationSettings:
     (const owt::base::VideoPublicationSettings &)nativeSettings {
   if (self = [super init]) {
@@ -134,7 +148,11 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
 -(NSUInteger)keyframeInterval{
   return _nativeSettings.keyframe_interval;
 }
+- (NSString*)rid {
+  return [NSString stringForStdString:_nativeSettings.rid];
+}
 @end
+
 @implementation OWTAudioSubscriptionCapabilities
 @dynamic codecs;
 - (instancetype)initWithNativeAudioSubscriptionCapabilities:

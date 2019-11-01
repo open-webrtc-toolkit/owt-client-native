@@ -64,6 +64,33 @@ struct AudioCodecParameters {
   unsigned long channel_count;
   unsigned long clock_rate;
 };
+
+/// RTP endoding settings for a stream
+struct RtpEncodingParameters {
+  //  Currently this is implemented for the entire rtp sender by using
+  // the value of the first encoding parameter..
+  int max_bitrate_bps = 0;
+
+  // Specifies the maximum framerate in fps for video. ignored by audio
+  // Not supported for screencast.
+  int max_framerate = 0;
+
+  // For video, scale the resolution down by this factor. ignored by audio
+  double scale_resolution_down_by = 1.0;
+
+  // For an RtpSender, set to true to cause this encoding to be encoded and
+  // sent, and false for it not to be encoded and sent. This allows control
+  // across multiple encodings of a sender for turning simulcast layers on and
+  // off.
+  // TODO(webrtc.bugs.org/8807): Updating this parameter will trigger an encoder
+  // reset, but this isn't necessarily required.
+  bool active = true;
+
+  // Value to use for RID RTP header extension.
+  // Called "encodingId" in ORTC.
+  std::string rid;
+};
+
 /// Audio encoding parameters.
 struct AudioEncodingParameters {
   explicit AudioEncodingParameters() : codec(), max_bitrate(0) {}
@@ -72,6 +99,7 @@ struct AudioEncodingParameters {
       : codec(codec_param), max_bitrate(bitrate_bps) {}
   AudioEncodingParameters(const AudioEncodingParameters& aep) = default;
   AudioEncodingParameters& operator=(const AudioEncodingParameters&) = default;
+  std::vector<RtpEncodingParameters> rtp_encoding_parameters;
   AudioCodecParameters codec;
   unsigned long max_bitrate;
 };
@@ -85,6 +113,7 @@ struct VideoCodecParameters {
   VideoCodec name;
   std::string profile;
 };
+
 /// Video encoding parameters. Used to specify the video encoding settings when
 /// publishing the video.
 struct VideoEncodingParameters {
@@ -100,6 +129,7 @@ struct VideoEncodingParameters {
   VideoEncodingParameters(const VideoEncodingParameters& aep) = default;
   VideoEncodingParameters& operator=(const VideoEncodingParameters&) = default;
   VideoCodecParameters codec;
+  std::vector<RtpEncodingParameters> rtp_encoding_parameters;
   unsigned long max_bitrate;
   bool hardware_accelerated;
 };

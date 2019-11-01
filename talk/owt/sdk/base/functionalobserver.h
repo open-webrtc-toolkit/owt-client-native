@@ -6,8 +6,8 @@
 #include <functional>
 #include <unordered_map>
 #include "webrtc/api/jsep.h"
-#include "webrtc/api/peerconnectioninterface.h"
-#include "webrtc/rtc_base/scoped_ref_ptr.h"
+#include "webrtc/api/peer_connection_interface.h"
+#include "webrtc/api/scoped_refptr.h"
 #include "talk/owt/sdk/include/cpp/owt/base/connectionstats.h"
 namespace owt {
 namespace base {
@@ -97,7 +97,7 @@ class FunctionalNativeStatsObserver : public webrtc::StatsObserver {
  protected:
   FunctionalNativeStatsObserver(
       std::function<void(const webrtc::StatsReports& reports)> on_complete)
-      : on_complete_(on_complete){};
+      : on_complete_(on_complete){}
  private:
   std::function<void(const webrtc::StatsReports& reports)> on_complete_;
 };

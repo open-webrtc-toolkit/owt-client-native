@@ -5,7 +5,7 @@
 #include "webrtc/rtc_base/checks.h"
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"
 #import "talk/owt/sdk/conference/objc/OWTConferenceSubscription+Private.h"
-#import "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCLegacyStatsReport+Private.h"
+#import "webrtc/sdk/objc/api/peerconnection/RTCLegacyStatsReport+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import <OWT/OWTErrors.h>
 #import <OWT/OWTConferenceErrors.h>
@@ -180,6 +180,7 @@
   constrains->frameRate = _frameRate;
   constrains->bitrateMultiplier = _bitrateMultiplier;
   constrains->keyFrameInterval = _keyFrameInterval;
+  constrains->rid = [NSString stdStringForString:_rid];
   return constrains;
 }
 @end

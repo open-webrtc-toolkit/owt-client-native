@@ -4,8 +4,8 @@
 #ifndef OWT_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
 #define OWT_BASE_OBJC_OBJCVIDEOCAPTUREINTERFACE_H_
 #include "talk/owt/sdk/include/cpp/owt/base/localcamerastreamparameters.h"
-#include "third_party/webrtc/rtc_base/scoped_ref_ptr.h"
-#include "third_party/webrtc/api/mediastreaminterface.h"
+#include "third_party/webrtc/api/scoped_refptr.h"
+#include "third_party/webrtc/api/media_stream_interface.h"
 namespace owt {
 namespace base {
 /**
@@ -18,7 +18,7 @@ namespace base {
 class ObjcVideoCapturerInterface {
  public:
   virtual rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source() = 0;
-  virtual ~ObjcVideoCapturerInterface(){};
+  virtual ~ObjcVideoCapturerInterface(){}
 };
 class ObjcVideoCapturerFactory {
  public:

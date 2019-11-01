@@ -45,8 +45,8 @@ build_with_chromium = false
 # Some non-Chromium builds don't use Chromium's third_party/binutils.
 linux_use_bundled_binutils_override = true
 
-# Building with WooGeen client SDK.
-build_with_woogeen = true
+# Building with OWT client SDK.
+build_with_owt = true
 
 declare_args() {
   # Android 32-bit non-component, non-clang builds cannot have symbol_level=2
@@ -68,7 +68,7 @@ declare_args() {
   }
 
   # Includes tests.
-  woogeen_include_tests = false
+  owt_include_tests = false
 
   # Some non-Chromium builds don't support building java targets.
   enable_java_templates = true

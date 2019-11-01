@@ -5,9 +5,7 @@
 #define OWT_BASE_GLOBALCONFIGURATION_H_
 #include <memory>
 #include "owt/base/framegeneratorinterface.h"
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "owt/base/videodecoderinterface.h"
-#endif
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
@@ -85,7 +83,6 @@ class GlobalConfiguration {
           audio_frame_generator_.reset(nullptr);
       }
   }
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function sets the customized video decoder to decode the encoded images.
    @param Customized video decoder
@@ -94,7 +91,6 @@ class GlobalConfiguration {
       std::unique_ptr<VideoDecoderInterface> external_video_decoder) {
     video_decoder_ = std::move(external_video_decoder);
   }
-#endif
   /**
   @breif This function disables/enables auto echo cancellation.
   @details When it is enabled, SDK will turn on AEC functionality.
@@ -140,6 +136,7 @@ class GlobalConfiguration {
   }
   static bool hardware_acceleration_enabled_;
 #endif
+
   /**
    @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.
@@ -154,6 +151,7 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
+
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.
@@ -182,6 +180,7 @@ class GlobalConfiguration {
   static bool GetNSEnabled() {
     return audio_processing_settings_.NSEnabled ? true : false;
   }
+
   /**
    @brief This function returns audio frame generator.
    */
@@ -195,7 +194,6 @@ class GlobalConfiguration {
    */
   static bool encoded_frame_;
   static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function returns flag indicating whether customized video decoder is enabled or not
    @return Boolean flag indicating whether customized video decoder is enabled or not
@@ -214,7 +212,7 @@ class GlobalConfiguration {
    * Customized video decoder. Default is nullptr.
    */
   static std::unique_ptr<VideoDecoderInterface> video_decoder_;
-#endif
+
   static AudioProcessingSettings audio_processing_settings_;
 };
 }

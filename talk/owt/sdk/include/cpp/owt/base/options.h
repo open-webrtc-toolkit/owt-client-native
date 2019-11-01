@@ -3,51 +3,56 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_OPTIONS_H_
 #define OWT_BASE_OPTIONS_H_
+
+#include <string>
 #include <vector>
 #include "owt/base/commontypes.h"
 #include "owt/base/mediaconstraints.h"
 namespace owt {
 namespace base {
-/// Audio subscription capabilities. Empty means not setting corresponding capability.
+/// Audio subscription capabilities. Empty means not setting corresponding
+/// capability.
 struct AudioSubscriptionCapabilities {
-  std::vector<AudioCodecParameters>    codecs;
+  std::vector<AudioCodecParameters> codecs;
 };
 
-/// Video subscription capabilities. Empty means not setting corresponding capability.
+/// Video subscription capabilities. Empty means not setting corresponding
+/// capability.
 struct VideoSubscriptionCapabilities {
-  std::vector<VideoCodecParameters>    codecs;
-  std::vector<Resolution>              resolutions;
-  std::vector<double>                  frame_rates;
-  std::vector<double>                  bitrate_multipliers;
-  std::vector<unsigned long>           keyframe_intervals;
+  std::vector<VideoCodecParameters> codecs;
+  std::vector<Resolution> resolutions;
+  std::vector<double> frame_rates;
+  std::vector<double> bitrate_multipliers;
+  std::vector<unsigned long> keyframe_intervals;
 };
 struct SubscriptionCapabilities {
-  AudioSubscriptionCapabilities  audio;
-  VideoSubscriptionCapabilities  video;
+  AudioSubscriptionCapabilities audio;
+  VideoSubscriptionCapabilities video;
 };
 struct AudioPublicationSettings {
-  AudioCodecParameters     codec;
+  AudioCodecParameters codec;
 };
 struct VideoPublicationSettings {
-  VideoCodecParameters     codec;
-  Resolution               resolution;
-  double                   frame_rate;
-  unsigned long            bitrate;
-  unsigned long            keyframe_interval;
+  VideoCodecParameters codec;
+  Resolution resolution;
+  double frame_rate;
+  unsigned long bitrate;
+  unsigned long keyframe_interval;
+  std::string rid;
 };
 struct PublicationSettings {
-  AudioPublicationSettings  audio;
-  VideoPublicationSettings  video;
+  std::vector<AudioPublicationSettings> audio;
+  std::vector<VideoPublicationSettings> video;
 };
 /**
  @brief Publish options describing encoding settings.
  @details Set encoding constraint on video or video using this option.
 */
 struct PublishOptions {
-  std::vector<AudioEncodingParameters>  audio;
-  std::vector<VideoEncodingParameters>  video;
+  std::vector<AudioEncodingParameters> audio;
+  std::vector<VideoEncodingParameters> video;
 };
 
-} // namespace base
-} // namespace owt
+}  // namespace base
+}  // namespace owt
 #endif  // OWT_BASE_OPTIONS_H_

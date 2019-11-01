@@ -1,15 +1,19 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #include <iostream>
 #include "libyuv/convert.h"
-#include "webrtc/rtc_base/bytebuffer.h"
-#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/byte_buffer.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/thread.h"
+#include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/owt/sdk/base/desktopcapturer.h"
+
 using namespace rtc;
 namespace owt {
 namespace base {
@@ -22,9 +26,12 @@ class BasicScreenCapturer::BasicScreenCaptureThread
       public rtc::MessageHandler {
  public:
   explicit BasicScreenCaptureThread(BasicScreenCapturer* capturer)
-      : capturer_(capturer), finished_(false) {
+      : rtc::Thread(rtc::SocketServer::CreateDefault()),
+        capturer_(capturer),
+        finished_(false) {
     waiting_time_ms_ = 1000 / 30;  // For basic capturer, fix it to 30fps
   }
+
   virtual ~BasicScreenCaptureThread() { Stop(); }
   // Override virtual method of parent Thread. Context: Worker Thread.
   virtual void Run() {
@@ -69,69 +76,74 @@ BasicScreenCapturer::BasicScreenCapturer(webrtc::DesktopCaptureOptions options)
       height_(0),
       frame_buffer_capacity_(0),
       frame_buffer_(nullptr),
-      async_invoker_(nullptr),
       screen_capture_options_(options) {
   screen_capturer_ =
       webrtc::DesktopCapturer::CreateScreenCapturer(screen_capture_options_);
 }
 BasicScreenCapturer::~BasicScreenCapturer() {
-  Stop();
+  DeRegisterCaptureDataCallback();
+  if (capture_started_)
+    StopCapture();
 }
-void BasicScreenCapturer::Init() {
-  // Only I420 frame is supported. RGBA frame is not supported here.
-  cricket::VideoFormat format(width_, height_, cricket::VideoFormat::kMinimumInterval,
-                     cricket::FOURCC_I420);
-  std::vector<cricket::VideoFormat> supported;
-  supported.push_back(format);
-  SetSupportedFormats(supported);
-}
-CaptureState BasicScreenCapturer::Start(const cricket::VideoFormat& capture_format) {
-  if (IsRunning()) {
+
+int32_t BasicScreenCapturer::StartCapture(
+    const webrtc::VideoCaptureCapability& capabilit) {
+  if (capture_started_) {
     RTC_LOG(LS_ERROR) << "Basic Screen Capturerer is already running";
-    return CS_FAILED;
+    return 0;
   }
   if (!screen_capturer_.get()) {
     RTC_LOG(LS_ERROR) << "Desktop capturer creation failed, not able to start it";
-    return CS_FAILED;
+    return -1;
   }
-  SetCaptureFormat(&capture_format);
   screen_capturer_->Start(this);
-  worker_thread_ = rtc::Thread::Current();
-  RTC_DCHECK(!async_invoker_);
-  async_invoker_.reset(new rtc::AsyncInvoker());
-  screen_capture_thread_ = new BasicScreenCaptureThread(this);
+
+  screen_capture_thread_.reset(new BasicScreenCaptureThread(this));
   bool ret = screen_capture_thread_->Start();
-  if (ret) {
-    RTC_LOG(LS_INFO) << "Screen capture thread started";
-    return CS_RUNNING;
-  } else {
-    async_invoker_.reset();
-    worker_thread_ = nullptr;
+  if (!ret) {
     RTC_LOG(LS_ERROR) << "Screen capture thread failed to start";
-    return CS_FAILED;
+    return -1;
   }
+
+  capture_started_ = true;
+  return 0;
 }
+
 bool BasicScreenCapturer::IsRunning() {
   return screen_capture_thread_ && !screen_capture_thread_->Finished();
 }
-void BasicScreenCapturer::Stop() {
+
+int32_t BasicScreenCapturer::StopCapture() {
+  if (!capture_started_)
+    return 0;
   if (screen_capture_thread_) {
     screen_capture_thread_->Quit();
-    delete screen_capture_thread_;
-    screen_capture_thread_ = NULL;
-    RTC_LOG(LS_INFO) << "Screen capture thread stopped";
+    screen_capture_thread_.reset();
   }
-  SetCaptureFormat(NULL);
-  worker_thread_ = nullptr;
-  async_invoker_.reset();
+  capture_started_ = false;
+  return 0;
 }
-bool BasicScreenCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
-  if (!fourccs) {
-    return false;
-  }
-  fourccs->push_back(GetSupportedFormats()->at(0).fourcc);
-  return true;
+
+bool BasicScreenCapturer::CaptureStarted() {
+  return capture_started_;
 }
+
+int32_t BasicScreenCapturer::CaptureSettings(
+    webrtc::VideoCaptureCapability& settings) {
+  settings.width = width_;
+  settings.height = height_;
+  settings.maxFPS = 30;  // We should not hardcode it.
+  settings.videoType = webrtc::VideoType::kI420;
+
+  return 0;
+}
+
+int32_t BasicScreenCapturer::SetCaptureRotation(
+    webrtc::VideoRotation rotation) {
+  // Not implemented.
+  return 0;
+}
+
 int BasicScreenCapturer::I420DataSize(int height,
                                       int stride_y,
                                       int stride_u,
@@ -168,6 +180,8 @@ void BasicScreenCapturer::OnCaptureResult(
     RTC_LOG(LS_ERROR) << "Failed to cpature one screen frame.";
     return;
   }
+  if (!data_callback_)
+    return;
   int32_t frame_width = frame->size().width();
   int32_t frame_height = frame->size().height();
   uint8_t* frame_data_rgba = frame->data();
@@ -184,9 +198,16 @@ void BasicScreenCapturer::OnCaptureResult(
                      frame_buffer_->MutableDataU(), frame_buffer_->StrideU(),
                      frame_buffer_->MutableDataV(), frame_buffer_->StrideV(),
                      frame_width, frame_height);
-  webrtc::VideoFrame capturedFrame(frame_buffer_, 0, rtc::TimeMillis(),
-                                   webrtc::kVideoRotation_0);
-  OnFrame(capturedFrame, frame_width, frame_height);
+  webrtc::VideoFrame captured_frame =
+      webrtc::VideoFrame::Builder()
+          .set_video_frame_buffer(frame_buffer_)
+          .set_timestamp_rtp(0)
+          .set_timestamp_ms(rtc::TimeMillis())
+          .set_rotation(webrtc::kVideoRotation_0)
+          .build();
+
+  captured_frame.set_ntp_time_ms(0);
+  data_callback_->OnFrame(captured_frame);
 }
 }  // namespace base
 }  // namespace owt

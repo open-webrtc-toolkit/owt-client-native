@@ -1,0 +1,39 @@
+From 34e891c50f82fcc9fecd41322a89b56e94904be9 Mon Sep 17 00:00:00 2001
+From: Qiu Jianlin <jianlin.qiu@intel.com>
+Date: Sat, 17 Aug 2019 12:35:58 -0700
+Subject: [PATCH] Remove telemetry
+
+---
+ perf/chrome_telemetry_build/BUILD.gn | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/perf/chrome_telemetry_build/BUILD.gn b/perf/chrome_telemetry_build/BUILD.gn
+index e1853f94c4..13e072e5f6 100644
+--- a/perf/chrome_telemetry_build/BUILD.gn
++++ b/perf/chrome_telemetry_build/BUILD.gn
+@@ -36,11 +36,11 @@ group("telemetry_chrome_test") {
+       ]
+     }
+   } else {
+-    data_deps += [ "//chrome" ]
++    #data_deps += [ "//chrome" ]
+   }
+ 
+   if (is_win) {
+-    data_deps += [ "//chrome:reorder_imports" ]
++    #data_deps += [ "//chrome:reorder_imports" ]
+   }
+ 
+   if (is_linux) {
+@@ -66,7 +66,7 @@ group("telemetry_chrome_test") {
+   if (is_win && (symbol_level == 1 || symbol_level == 2)) {
+     data_deps += [
+       "//build/win:copy_cdb_to_output",
+-      "//third_party/crashpad/crashpad/tools:crashpad_database_util",
++      #"//third_party/crashpad/crashpad/tools:crashpad_database_util",
+     ]
+ 
+     # TODO(GYP): These should be provided automatically through data_deps.
+-- 
+2.21.0.windows.1
+

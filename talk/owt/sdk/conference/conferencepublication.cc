@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <algorithm>
 #include "webrtc/rtc_base/third_party/base64/base64.h"
-#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/owt/sdk/base/stringutils.h"
@@ -130,6 +130,12 @@ void ConferencePublication::OnStreamMuteOrUnmute(const std::string& stream_id,
       (*its).get().OnUnmute(track_kind);
     }
   }
+}
+
+void ConferencePublication::OnStreamRemoved(const std::string& stream_id) {
+  if (ended_ || stream_id != id_)
+    return;
+  Stop();
 }
 
 void ConferencePublication::OnStreamError(const std::string& error_msg) {

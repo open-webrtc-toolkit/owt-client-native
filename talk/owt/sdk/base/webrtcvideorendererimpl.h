@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_WEBRTCVIDEORENDERERIMPL_H_
 #define OWT_BASE_WEBRTCVIDEORENDERERIMPL_H_
-#include "webrtc/api/mediastreaminterface.h"
+
 #include "webrtc/api/video/video_sink_interface.h"
 #include "webrtc/api/video/video_frame.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"

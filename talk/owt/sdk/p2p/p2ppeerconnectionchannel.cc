@@ -8,6 +8,8 @@
 #include "talk/owt/sdk/base/sysinfo.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/api/task_queue/default_task_queue_factory.h"
+
 using namespace rtc;
 namespace owt {
 namespace p2p {
@@ -95,26 +97,31 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
       remote_side_supports_continual_ice_gathering_(true),
-      event_queue_(event_queue),
       ua_sent_(false),
       stop_send_needed_(true),
       remote_side_offline_(false),
       ended_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
+  if (event_queue) {
+    event_queue_ = event_queue;
+  } else {
+    auto task_queue_factory_ = webrtc::CreateDefaultTaskQueueFactory();
+    event_queue_ =
+        std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
+            "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
+  }
 }
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration,
     const std::string& local_id,
     const std::string& remote_id,
     P2PSignalingSenderInterface* sender)
-    : P2PPeerConnectionChannel(
-          configuration,
-          local_id,
-          remote_id,
-          sender,
-          std::shared_ptr<rtc::TaskQueue>(
-              new rtc::TaskQueue("PeerConnectionChannelEventQueue"))) {}
+    : P2PPeerConnectionChannel(configuration,
+                               local_id,
+                               remote_id,
+                               sender,
+                               nullptr) {}
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
   if (set_remote_sdp_task_)
     delete set_remote_sdp_task_;
@@ -419,9 +426,9 @@ void P2PPeerConnectionChannel::OnMessageStop() {
     }
     failure_callbacks_.clear();
   }
-  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                   nullptr);
+  ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
+  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -663,6 +670,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
+      TriggerOnStopped();
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -826,6 +834,14 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
   }
   return false;
 }
+
+void P2PPeerConnectionChannel::TriggerOnStopped() {
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
+       observers_.begin(); it != observers_.end(); it++) {
+    (*it)->OnStopped(remote_id_);
+  }
+}
+
 void P2PPeerConnectionChannel::CleanLastPeerConnection() {
   if (set_remote_sdp_task_) {
     delete set_remote_sdp_task_;
@@ -888,8 +904,7 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                       nullptr);
+      ClosePeerConnection();
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
@@ -903,6 +918,7 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     default:
       if (on_failure != nullptr) {
@@ -946,7 +962,6 @@ void P2PPeerConnectionChannel::GetConnectionStats(
     }
     return;
   }
-  RTC_LOG(LS_INFO) << "Get connection stats";
   rtc::scoped_refptr<FunctionalStatsObserver> observer =
       FunctionalStatsObserver::Create(std::move(on_success));
   GetStatsMessage* stats_message = new GetStatsMessage(
@@ -1032,18 +1047,32 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       Json::Value stream_tracks;
       Json::Value stream_sources;
       for (const auto& track : media_stream->GetAudioTracks()) {
+        // Signaling.
         stream_tracks.append(track->id());
         stream_sources[kStreamAudioSourceKey] = audio_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = audio_track_source;
         track_sources.append(track_info);
+
+        // RTP transceiver.
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(media_stream->id());
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        AddTransceiver(track, transceiver_init);
       }
       for (const auto& track : media_stream->GetVideoTracks()) {
+        // Signaling.
         stream_tracks.append(track->id());
         stream_sources[kStreamVideoSourceKey] = video_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = video_track_source;
         track_sources.append(track_info);
+
+        // RTP transceiver.
+        webrtc::RtpTransceiverInit transceiver_init;
+        transceiver_init.stream_ids.push_back(media_stream->id());
+        transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        AddTransceiver(track, transceiver_init);
       }
       // The second signaling message of track sources to remote peer.
       Json::Value json_track_sources;
@@ -1059,11 +1088,6 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       stream_info[kStreamSourceKey] = stream_sources;
       json_stream_info[kMessageDataKey] = stream_info;
       SendSignalingMessage(json_stream_info);
-      // Add media stream to the peerconnection.
-      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-          new rtc::ScopedRefMessageData<MediaStreamInterface>(media_stream);
-      RTC_LOG(LS_INFO) << "Post add stream";
-      pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeAddStream, param);
       negotiation_needed = true;
     }
     pending_publish_streams_.clear();
@@ -1100,8 +1124,7 @@ void P2PPeerConnectionChannel::SendStop(
 void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Send(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                   nullptr);
+  PeerConnectionChannel::ClosePc();
   ChangeSessionState(kSessionStateReady);
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {

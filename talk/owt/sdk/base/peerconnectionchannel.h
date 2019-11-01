@@ -4,10 +4,10 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #include <vector>
-#include "webrtc/rtc_base/messagehandler.h"
+#include "webrtc/rtc_base/message_handler.h"
 #include "webrtc/rtc_base/third_party/sigslot/sigslot.h"
+#include "webrtc/sdk/media_constraints.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
-#include "talk/owt/sdk/base/mediaconstraintsimpl.h"
 #include "talk/owt/sdk/base/functionalobserver.h"
 #include "talk/owt/sdk/include/cpp/owt/base/commontypes.h"
 namespace rtc {
@@ -75,10 +75,16 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
+  virtual void ClosePc();
+  virtual void AddTransceiver(
+      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+      const webrtc::RtpTransceiverInit& init);
+  virtual void AddTransceiver(cricket::MediaType media_type,
+                              const webrtc::RtpTransceiverInit& init);
   // Message looper event
   virtual void OnMessage(rtc::Message* msg) override;
   // PeerConnectionObserver
-  virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {};
+  virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {}
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(
@@ -98,8 +104,8 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // DataChannelObserver proxy
   // Data channel events will be bridged to these methods to avoid name
   // conflict.
-  virtual void OnDataChannelStateChange(){};
-  virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer){};
+  virtual void OnDataChannelStateChange(){}
+  virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer){}
   // CreateSessionDescriptionObserver
   virtual void OnCreateSessionDescriptionSuccess(
       webrtc::SessionDescriptionInterface* desc);
@@ -118,26 +124,29 @@ class PeerConnectionChannel : public rtc::MessageHandler,
     kMessageTypeSetLocalDescription,
     kMessageTypeSetRemoteDescription,
     kMessageTypeSetRemoteIceCandidate,
-    kMessageTypeAddStream,
     kMessageTypeRemoveStream,
+    kMessageTypeAddTransceiver,
     kMessageTypeClosePeerConnection,
     kMessageTypeGetStats,
     kMessageTypeCreateNetworkMonitor=201,
   };
-  Thread* pc_thread_;
+  std::unique_ptr<Thread> pc_thread_;
   PeerConnectionChannelConfiguration configuration_;
   // Use this data channel to send p2p messages.
   // Use a map if we need more than one data channels for a PeerConnection in
   // the future.
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
-  MediaConstraintsImpl media_constraints_;
-  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions offer_answer_options_;
+  webrtc::MediaConstraints media_constraints_;
+  // Direction of audio and video transceivers. In conference mode, there are at
+  // most 1 audio transceiver and 1 video transceiver.
+  webrtc::RtpTransceiverDirection audio_transceiver_direction_;
+  webrtc::RtpTransceiverDirection video_transceiver_direction_;
  private:
   // DataChannelObserver
   virtual void OnStateChange() override { OnDataChannelStateChange(); }
   virtual void OnMessage(const webrtc::DataBuffer& buffer) override {
     OnDataChannelMessage(buffer);
-  };
+  }
   // |factory_| is got from PeerConnectionDependencyFactory::Get() which is
   // shared among all PeerConnectionChannels.
   rtc::scoped_refptr<PeerConnectionDependencyFactory> factory_;
