@@ -47,6 +47,22 @@ class FunctionalSetSessionDescriptionObserver
   std::function<void()> on_success_;
   std::function<void(const std::string& error)> on_failure_;
 };
+
+class FunctionalSetRemoteDescriptionObserver
+    : public webrtc::SetRemoteDescriptionObserverInterface {
+ public:
+  static rtc::scoped_refptr<FunctionalSetRemoteDescriptionObserver> Create(
+      std::function<void(webrtc::RTCError error)> on_complete);
+  virtual void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override;
+
+ protected:
+  FunctionalSetRemoteDescriptionObserver(
+      std::function<void(webrtc::RTCError error)> on_complete);
+
+ private:
+  std::function<void(webrtc::RTCError error)> on_complete_;
+};
+
 // A StatsObserver implementation used to invoke user defined function to
 // retrieve current statistowt data.
 class FunctionalStatsObserver : public webrtc::StatsObserver {
