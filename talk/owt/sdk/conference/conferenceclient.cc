@@ -758,7 +758,7 @@ void ConferenceClient::GetConnectionStats(
       });
     }
     RTC_LOG(LS_WARNING)
-        << "Tried to get connection statistowt from unknown stream.";
+        << "Tried to get connection statistics from unknown stream.";
     return;
   }
   pcc->GetConnectionStats(on_success, on_failure);
@@ -779,7 +779,7 @@ void ConferenceClient::GetStats(
       });
     }
     RTC_LOG(LS_WARNING)
-        << "Tried to get connection statistowt from unknown stream.";
+        << "Tried to get connection statistics from unknown stream.";
     return;
   }
   pcc->GetStats(on_success, on_failure);

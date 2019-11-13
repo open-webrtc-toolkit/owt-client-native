@@ -87,7 +87,7 @@ RTC_OBJC_EXPORT
       onSuccess:(nullable void (^)(OWTP2PPublication*))onSuccess
       onFailure:(nullable void (^)(NSError*))onFailure;
 /**
- @brief Get the connection statistowt with target client.
+ @brief Get the connection statistics with target client.
  @param targetId Remote user's ID.
  @param onSuccess Success callback will be invoked if get statistoms
  information successes.
