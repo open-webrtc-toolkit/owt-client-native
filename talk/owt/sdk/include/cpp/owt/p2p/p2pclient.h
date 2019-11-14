@@ -173,7 +173,7 @@ class P2PClient final
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
-   @brief Get the connection statistowt with target client.
+   @brief Get the connection statistics with target client.
    @param target_id Remote user's ID.
    @param on_success Success callback will be invoked if get statistoms
    information successes.

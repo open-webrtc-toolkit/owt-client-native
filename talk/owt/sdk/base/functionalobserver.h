@@ -48,7 +48,7 @@ class FunctionalSetSessionDescriptionObserver
   std::function<void(const std::string& error)> on_failure_;
 };
 // A StatsObserver implementation used to invoke user defined function to
-// retrieve current statistowt data.
+// retrieve current statistics data.
 class FunctionalStatsObserver : public webrtc::StatsObserver {
  public:
   static rtc::scoped_refptr<FunctionalStatsObserver> Create(

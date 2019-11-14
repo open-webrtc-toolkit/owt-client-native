@@ -206,7 +206,7 @@ typedef std::vector<IceCandidatePairPtr> IceCandidatePairReports;
 /// Connection statistoms
 struct ConnectionStats {
   ConnectionStats() {}
-  /// Time stamp of connection statistowt generation
+  /// Time stamp of connection statistics generation
   std::chrono::system_clock::time_point time_stamp = std::chrono::system_clock::now();
   /// Video bandwidth statistoms
   VideoBandwidthStats video_bandwidth_stats;
