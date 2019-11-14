@@ -81,7 +81,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Stop current WebRTC session.
   void Stop(std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
-  // Get statistowt data for the specific connection.
+  // Get statistics data for the specific connection.
   void GetConnectionStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);

@@ -1,8 +1,8 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#ifndef OWT_BASE_BASOWTCREENCAPTURER_H_
-#define OWT_BASE_BASOWTCREENCAPTURER_H_
+#ifndef OWT_BASE_BASICSCREENCAPTURER_H_
+#define OWT_BASE_BASICSCREENCAPTURER_H_
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -188,4 +188,4 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
 };
 }  // namespace base
 }  // namespace owt
-#endif  // OWT_BASE_BASOWTCREENCAPTURER_H_
+#endif  // OWT_BASE_BASICSCREENCAPTURER_H_
