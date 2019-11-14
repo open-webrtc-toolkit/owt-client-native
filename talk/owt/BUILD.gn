@@ -39,6 +39,7 @@ if (is_android) {
 static_library("owt_deps") {
   deps = [
     "//third_party/webrtc/rtc_base:rtc_json",
+    "//third_party/webrtc/api:create_peerconnection_factory",
   ]
 
   if (is_android) {
@@ -122,6 +123,8 @@ static_library("owt_sdk_base") {
   public_deps = [
     "//third_party/libyuv:libyuv",
     "//third_party/webrtc/api:libjingle_peerconnection_api",
+    "//third_party/webrtc/api:create_peerconnection_factory",
+    "//third_party/webrtc/api/task_queue:default_task_queue_factory",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
     "//third_party/webrtc/api/video:video_frame",
@@ -321,7 +324,7 @@ if (is_ios) {
       "sdk/base/objc/OWTRemoteStream.mm",
       "sdk/base/objc/OWTStream+Internal.h",
       "sdk/base/objc/OWTStream.mm",
-      "sdk/base/objc/ObjcVideoCapturerInterface",
+      "sdk/base/objc/ObjcVideoCapturerInterface.h",
       "sdk/base/objc/ObjcVideoCodecFactory.h",
       "sdk/base/objc/ObjcVideoCodecFactory.mm",
       "sdk/base/objc/RTCPeerConnectionFactory+OWT.h",

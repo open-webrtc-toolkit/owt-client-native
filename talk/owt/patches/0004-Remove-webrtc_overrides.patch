@@ -1,12 +1,12 @@
-From bbba703fa21efec46c6e1224193c7dbc86e64c54 Mon Sep 17 00:00:00 2001
+From ab6a5c4fc8de53ef49ccec5255f6bf266bb5ffc9 Mon Sep 17 00:00:00 2001
 From: Qiu Jianlin <jianlin.qiu@intel.com>
-Date: Sat, 17 Aug 2019 12:30:58 -0700
+Date: Thu, 14 Nov 2019 16:03:42 +0800
 Subject: [PATCH] Remove webrtc_overrides
 
 ---
- webrtc_overrides/BUILD.gn                     | 125 ----------
+ webrtc_overrides/BUILD.gn                     | 111 ---------
  webrtc_overrides/DEPS                         |   7 -
- webrtc_overrides/OWNERS                       |   5 -
+ webrtc_overrides/OWNERS                       |   6 -
  webrtc_overrides/README.chromium              |  20 --
  webrtc_overrides/field_trial.cc               |  15 --
  webrtc_overrides/init_webrtc.cc               |  45 ----
@@ -18,10 +18,9 @@ Subject: [PATCH] Remove webrtc_overrides
  webrtc_overrides/rtc_base/gtest_prod_util.h   |  10 -
  webrtc_overrides/rtc_base/logging.cc          | 230 ------------------
  webrtc_overrides/rtc_base/logging.h           | 119 ---------
- webrtc_overrides/task_queue_factory.cc        | 144 -----------
+ webrtc_overrides/task_queue_factory.cc        | 146 -----------
  webrtc_overrides/task_queue_factory.h         |  21 --
- webrtc_overrides/task_queue_impl.cc           |  18 --
- 17 files changed, 1041 deletions(-)
+ 16 files changed, 1012 deletions(-)
  delete mode 100644 webrtc_overrides/BUILD.gn
  delete mode 100644 webrtc_overrides/DEPS
  delete mode 100644 webrtc_overrides/OWNERS
@@ -38,14 +37,13 @@ Subject: [PATCH] Remove webrtc_overrides
  delete mode 100644 webrtc_overrides/rtc_base/logging.h
  delete mode 100644 webrtc_overrides/task_queue_factory.cc
  delete mode 100644 webrtc_overrides/task_queue_factory.h
- delete mode 100644 webrtc_overrides/task_queue_impl.cc
 
 diff --git a/webrtc_overrides/BUILD.gn b/webrtc_overrides/BUILD.gn
 deleted file mode 100644
-index 61048ce87ba..00000000000
+index 4483d304ddf..00000000000
 --- a/webrtc_overrides/BUILD.gn
 +++ /dev/null
-@@ -1,125 +0,0 @@
+@@ -1,111 +0,0 @@
 -# Copyright 2017 The Chromium Authors. All rights reserved.
 -# Use of this source code is governed by a BSD-style license that can be
 -# found in the LICENSE file.
@@ -109,7 +107,6 @@ index 61048ce87ba..00000000000
 -  ]
 -  deps = [
 -    ":metrics",
--    ":task_queue_impl",
 -    "//base",
 -    "//third_party/webrtc/rtc_base",
 -    "//third_party/webrtc/system_wrappers",
@@ -148,19 +145,6 @@ index 61048ce87ba..00000000000
 -  ]
 -}
 -
--# TODO(bugs.webrtc.org/10284): Remove when TaskQueue factory is propagated
--# explicetely to all components that needs it.
--source_set("task_queue_impl") {
--  sources = [
--    "task_queue_impl.cc",
--  ]
--  configs += [ "//third_party/webrtc:library_impl_config" ]
--  deps = [
--    ":task_queue_factory",
--    "//third_party/webrtc/api/task_queue",
--  ]
--}
--
 -source_set("task_queue_factory") {
 -  sources = [
 -    "task_queue_factory.cc",
@@ -186,15 +170,16 @@ index a191f6dbec7..00000000000
 -]
 diff --git a/webrtc_overrides/OWNERS b/webrtc_overrides/OWNERS
 deleted file mode 100644
-index 40f882e0a19..00000000000
+index 5f3540dc792..00000000000
 --- a/webrtc_overrides/OWNERS
 +++ /dev/null
-@@ -1,5 +0,0 @@
--ajm@chromium.org
+@@ -1,6 +0,0 @@
 -grunell@chromium.org
+-mbonadei@chromium.org
 -tommi@chromium.org
 -
 -# COMPONENT: Blink>WebRTC
+-# TEAM: webrtc-dev@chromium.org
 diff --git a/webrtc_overrides/README.chromium b/webrtc_overrides/README.chromium
 deleted file mode 100644
 index 5ed2ca74f4e..00000000000
@@ -984,10 +969,10 @@ index 85622bc05da..00000000000
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_WEBRTC_RTC_BASE_LOGGING_H_
 diff --git a/webrtc_overrides/task_queue_factory.cc b/webrtc_overrides/task_queue_factory.cc
 deleted file mode 100644
-index 3be3b27635a..00000000000
+index f345c50934b..00000000000
 --- a/webrtc_overrides/task_queue_factory.cc
 +++ /dev/null
-@@ -1,144 +0,0 @@
+@@ -1,146 +0,0 @@
 -// Copyright 2019 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -1009,7 +994,7 @@ index 3be3b27635a..00000000000
 -class WebrtcTaskQueue final : public webrtc::TaskQueueBase {
 - public:
 -  explicit WebrtcTaskQueue(const base::TaskTraits& traits)
--      : task_runner_(base::CreateSequencedTaskRunnerWithTraits(traits)),
+-      : task_runner_(base::CreateSequencedTaskRunner(traits)),
 -        is_active_(new base::RefCountedData<bool>(true)) {
 -    DCHECK(task_runner_);
 -  }
@@ -1092,19 +1077,21 @@ index 3be3b27635a..00000000000
 -  switch (priority) {
 -    case webrtc::TaskQueueFactory::Priority::HIGH:
 -#if defined(OS_ANDROID)
--      return {base::WithBaseSyncPrimitives(), base::TaskPriority::HIGHEST};
+-      return {base::ThreadPool(), base::WithBaseSyncPrimitives(),
+-              base::TaskPriority::HIGHEST};
 -#else
--      return {base::TaskPriority::HIGHEST};
+-      return {base::ThreadPool(), base::TaskPriority::HIGHEST};
 -#endif
 -      break;
 -    case webrtc::TaskQueueFactory::Priority::LOW:
--      return {base::MayBlock(), base::TaskPriority::BEST_EFFORT};
+-      return {base::ThreadPool(), base::MayBlock(),
+-              base::TaskPriority::BEST_EFFORT};
 -    case webrtc::TaskQueueFactory::Priority::NORMAL:
 -    default:
 -#if defined(OS_ANDROID)
--      return {base::WithBaseSyncPrimitives()};
+-      return {base::ThreadPool(), base::WithBaseSyncPrimitives()};
 -#else
--      return {};
+-      return {base::ThreadPool()};
 -#endif
 -  }
 -}
@@ -1159,30 +1146,6 @@ index 20130868ef9..00000000000
 -CreateWebRtcTaskQueue(webrtc::TaskQueueFactory::Priority priority);
 -
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_TASK_QUEUE_FACTORY_H_
-diff --git a/webrtc_overrides/task_queue_impl.cc b/webrtc_overrides/task_queue_impl.cc
-deleted file mode 100644
-index 0d9b158f566..00000000000
---- a/webrtc_overrides/task_queue_impl.cc
-+++ /dev/null
-@@ -1,18 +0,0 @@
--// Copyright 2019 The Chromium Authors. All rights reserved.
--// Use of this source code is governed by a BSD-style license that can be
--// found in the LICENSE file.
--
--#include <memory>
--
--#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
--#include "third_party/webrtc_overrides/task_queue_factory.h"
--
--namespace webrtc {
--
--// Temporary link-time injection for the webrtc TaskQueueFactory implementation.
--// This will not be needed once bugs.webrtc.org/10284 is resolved.
--std::unique_ptr<TaskQueueFactory> CreateDefaultTaskQueueFactory() {
--  return CreateWebRtcTaskQueueFactory();
--}
--
--}  // namespace webrtc
 -- 
 2.21.0.windows.1
 
