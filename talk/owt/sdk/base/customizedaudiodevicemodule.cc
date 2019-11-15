@@ -45,7 +45,6 @@ rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
   if (audioDevice->AttachAudioBuffer() == -1) {
     return nullptr;
   }
-  WebRtcSpl_Init();
   return audioDevice;
 }
 // ============================================================================
