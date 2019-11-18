@@ -238,7 +238,7 @@ deps = {
     Var('chromium_git') + '/infra/luci/client-py.git' + '@' +  Var('swarming_revision'),
   # WebRTC-only dependencies (not present in Chromium).
   'src/third_party/webrtc':
-    Var('deps_webrtc_git') + '/owt-deps-webrtc' + '@' + 'edb3a91a170c2a0c05207773e5689209db045e3d',
+    Var('deps_webrtc_git') + '/owt-deps-webrtc' + '@' + 'cdef2af88e6466d5f02c574b7c61ce84a1383867',
   'src/third_party/accessibility_test_framework': {
     'packages': [
         {
