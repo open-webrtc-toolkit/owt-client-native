@@ -46,11 +46,11 @@ def _patch():
    # subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0009-Export-WebRTC-symbols-on-iOS.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0010-Remove-telemetry.patch')], shell=useShell, cwd=TOOL_PATH)) != 0:
+  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0010-Remove-telemetry.patch')], shell=useShell, cwd=TOOL_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TOOL_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch')], shell=useShell, cwd=LIBJPEG_TURBO_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0012-ios-Adds-CFBundleShortVersionString-to-the-plist-for.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
+  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0012-ios-Adds-CFBundleShortVersionString-to-the-plist-for.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
 
 def main(argv):
