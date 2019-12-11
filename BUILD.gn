@@ -18,4 +18,9 @@ group("default") {
   if (owt_include_tests) {
     deps += [ "talk/owt:owt_tests" ]
   }
+  if (rtc_include_tests) {
+    deps += [ "//third_party/webrtc:rtc_unittests",
+              "//third_party/webrtc:video_engine_tests"
+            ]
+  }
 }

@@ -33,9 +33,11 @@ class CustomizedVideoCapturerFactory {
   static rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
       VideoEncoderInterface* encoder);
+#if defined(WEBRTC_WIN)
   static rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer);
+#endif
 };
 
 class CustomizedVideoSource
@@ -69,10 +71,11 @@ class CustomizedCapturer : public CustomizedVideoSource,
   static CustomizedCapturer* Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
       VideoEncoderInterface* encoder);
+#if defined(WEBRTC_WIN)
   static CustomizedCapturer* Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer);
-
+#endif
   virtual ~CustomizedCapturer();
 
   // VideoSinkInterfaceImpl
@@ -84,8 +87,10 @@ class CustomizedCapturer : public CustomizedVideoSource,
             std::unique_ptr<VideoFrameGeneratorInterface> framer);
   bool Init(std::shared_ptr<LocalCustomizedStreamParameters> parameters,
             VideoEncoderInterface* encoder);
+#if defined(WEBRTC_WIN)
   bool Init(std::shared_ptr<LocalDesktopStreamParameters> parameters,
             std::unique_ptr<LocalScreenStreamObserver> observer);
+#endif
   void Destroy();
 
   rtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
@@ -120,7 +125,7 @@ class LocalRawCaptureTrackSource : public webrtc::VideoTrackSource {
   }
   std::unique_ptr<CustomizedCapturer> capturer_;
 };
-
+#if defined(WEBRTC_WIN)
 class LocalDesktopCaptureTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<LocalDesktopCaptureTrackSource> Create(
@@ -149,7 +154,7 @@ class LocalDesktopCaptureTrackSource : public webrtc::VideoTrackSource {
   }
   std::unique_ptr<CustomizedCapturer> capturer_;
 };
-
+#endif
 class LocalEncodedCaptureTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<LocalEncodedCaptureTrackSource> Create(
