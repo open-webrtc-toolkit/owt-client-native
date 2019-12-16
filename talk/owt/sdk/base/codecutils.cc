@@ -31,7 +31,7 @@ std::vector<webrtc::SdpVideoFormat> CodecUtils::SupportedH264Codecs() {
                        "0")};
 }  
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
   return {webrtc::SdpVideoFormat(cricket::kH265CodecName,
                                  {{cricket::kH265FmtpProfileSpace, "0"},

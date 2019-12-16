@@ -25,7 +25,7 @@ int32_t CustomizedVideoDecoderProxy::InitDecode(const webrtc::VideoCodec* codec_
   if (external_decoder_) {
     if (codec_type_ == kVideoCodecH264 && external_decoder_->InitDecodeContext(VideoCodec::kH264)) {
       return WEBRTC_VIDEO_CODEC_OK;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     } else if (codec_type_ == kVideoCodecH265 && external_decoder_->InitDecodeContext(VideoCodec::kH265)) {
       return WEBRTC_VIDEO_CODEC_OK;
 #endif

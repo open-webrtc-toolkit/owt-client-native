@@ -24,7 +24,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   if (is_h264_hw_supported) {
     supported_codec_types_.push_back(webrtc::kVideoCodecH264);
   }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 // TODO: Add logic to detect plugin by MSDK.
   bool is_h265_hw_supported = true;
   if (is_h265_hw_supported) {
@@ -44,7 +44,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     return webrtc::VP9Decoder::Create();
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
     return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
 #endif
@@ -61,7 +61,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }

@@ -135,7 +135,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     if (!m_mfxSession) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     if (codecType_ == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
     }

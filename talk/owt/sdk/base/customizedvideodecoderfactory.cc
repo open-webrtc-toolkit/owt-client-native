@@ -34,7 +34,7 @@ CustomizedVideoDecoderFactory::CreateVideoDecoder(
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }

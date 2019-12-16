@@ -28,7 +28,7 @@ EncodedVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return CustomizedVideoEncoderProxy::Create();
     // return webrtc::H264Encoder::Create(cricket::VideoCodec(format));
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName))
     return CustomizedVideoEncoderProxy::Create();
 #endif
@@ -45,7 +45,7 @@ EncodedVideoEncoderFactory::GetSupportedFormats() const {
   // supports with those provided by built-in H.264 encoder
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
