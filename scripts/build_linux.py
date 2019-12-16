@@ -20,14 +20,7 @@ HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_LIB = 'libowt-%(scheme)s.a'
 LIB_BLACK_LIST = ['video_capture']
-PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests',
-                             'common_video_unittests', 'modules_tests',
-                             'modules_unittests', 'peerconnection_unittests',
-                             'rtc_pc_unittests', 'rtc_stats_unittests',
-                             'rtc_unittests', 'system_wrappers_unittests',
-                             'test_support_unittests', 'tools_unittests',
-                             'voice_engine_unittests']
-NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
+PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 
 GN_ARGS = [
     'rtc_use_h264=true',
@@ -35,17 +28,20 @@ GN_ARGS = [
     'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
-    'rtc_include_tests=false',
-    'owt_include_tests=false',
+    'rtc_include_tests=true',
+    'owt_include_tests=true',
+    'rtc_build_examples=false',
+    'rtc_use_gtk=false',
     'use_sysroot=false',
-    'is_clang=false'
+    'is_clang=false',
+    'treat_warnings_as_errors=false'
 ]
 
 def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(r'out', out_lib)
 
-def gngen(arch, ssl_root, scheme):
+def gngen(arch, ssl_root, msdk_root, scheme):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -56,6 +52,19 @@ def gngen(arch, ssl_root, scheme):
         gn_args.append('owt_use_openssl=true')
         gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'/include'))
         gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'/lib'))
+    else:
+        gn_args.append('owt_use_openssl=false')
+    if msdk_root:
+        if arch == 'x86':
+            msdk_lib = msdk_root + r'/lib32'
+        elif arch == 'x64':
+            msdk_lib = msdk_root + r'/lib64'
+        else:
+            return False
+        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'/include'))
+        gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
+    else:
+        print('msdk_root is not set.')
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
     cmd = 'gn gen ' + out + ' ' + flattened_args
@@ -76,6 +85,15 @@ def ninjabuild(arch, scheme):
         return False
     src_lib_path = os.path.join(out_path, r'obj/talk/owt/libowt.a')
     shutil.copy(src_lib_path, gen_lib_path(scheme))
+    return True
+
+def runtest(scheme):
+    test_root_path = os.path.join(OUT_PATH, '%s-x64' % scheme)
+    for test_target in PARALLEL_TEST_TARGET_LIST:
+        if subprocess.call(['python', 'third_party/gtest-parallel/gtest-parallel',
+                            '%s/%s' % (test_root_path, test_target)],
+                           cwd=HOME_PATH, shell=False):
+            return False
     return True
 
 def gendocs():
@@ -114,6 +132,7 @@ def main():
     parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64'),
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
+    parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -128,14 +147,10 @@ def main():
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.scheme):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme):
             return 1
     if opts.sdk:
-        if opts.ssl_root:
-            if not ninjabuild(opts.arch, opts.scheme):
-                return 1
-        else:
-            print('Please set the ssl_root')
+         if not ninjabuild(opts.arch, opts.scheme):
             return 1
     if opts.tests:
         if not runtest(opts.scheme):

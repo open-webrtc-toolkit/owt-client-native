@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "talk/owt/sdk/base/customizedvideosource.h"
 #include "talk/owt/sdk/base/customizedframescapturer.h"
 #include "talk/owt/sdk/base/desktopcapturer.h"
+#include "talk/owt/sdk/base/customizedvideosource.h"
 
 namespace owt {
 namespace base {
@@ -25,6 +25,7 @@ CustomizedVideoCapturerFactory::Create(
       parameters->Fps(), parameters->Bitrate(), encoder);
 }
 
+#if defined(WEBRTC_WIN)
 rtc::scoped_refptr<webrtc::VideoCaptureModule>
 CustomizedVideoCapturerFactory::Create(
     std::shared_ptr<LocalDesktopStreamParameters> parameters,
@@ -40,6 +41,7 @@ CustomizedVideoCapturerFactory::Create(
     return new rtc::RefCountedObject<BasicScreenCapturer>(options);
   }
 }
+#endif
 
   CustomizedVideoSource::CustomizedVideoSource() = default;
   CustomizedVideoSource::~CustomizedVideoSource() = default;
@@ -88,6 +90,7 @@ CustomizedVideoCapturerFactory::Create(
     return vcm_capturer.release();
   }
 
+#if defined(WEBRTC_WIN)
   CustomizedCapturer* CustomizedCapturer::Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer) {
@@ -96,6 +99,7 @@ CustomizedVideoCapturerFactory::Create(
       return nullptr;
     return vcm_capturer.release();
   }
+#endif
 
   CustomizedCapturer::CustomizedCapturer() : vcm_(nullptr) {}
 
@@ -146,6 +150,7 @@ CustomizedVideoCapturerFactory::Create(
     return true;
   }
 
+#if defined(WEBRTC_WIN)
   bool CustomizedCapturer::Init(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer) {
@@ -167,6 +172,7 @@ CustomizedVideoCapturerFactory::Create(
     RTC_CHECK(vcm_->CaptureStarted());
     return true;
   }
+#endif
 
   void CustomizedCapturer::Destroy() {
     if (!vcm_)

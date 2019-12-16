@@ -197,7 +197,8 @@ void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
-
+#endif
+#if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";

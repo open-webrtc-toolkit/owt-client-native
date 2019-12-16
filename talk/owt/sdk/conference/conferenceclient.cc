@@ -15,6 +15,7 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
+
 using namespace rtc;
 namespace owt {
 namespace conference {

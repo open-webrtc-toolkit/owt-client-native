@@ -12,7 +12,7 @@
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
-#include "owt/base/videorendererinterface.h"
+//#include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 namespace webrtc {
 class MediaStreamInterface;
@@ -36,6 +36,8 @@ class VideoFrameGeneratorInterface;
 #if defined(WEBRTC_MAC)
 class ObjcVideoCapturerInterface;
 #endif
+class VideoRenderWindow;
+class VideoRendererInterface;
 using webrtc::MediaStreamInterface;
 /// Observer for Stream
 class StreamObserver {
@@ -96,12 +98,14 @@ class Stream {
   /// remote stream. Be noted if you turned hardware acceleration on, calling
   /// this API on remote stream will have no effect.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
-  /// Attach the stream to a renderer to receive frames from decoder.
-  /// Both I420 frame and native surface is supported.
-  virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
   /// Attach the stream to an audio player that receives PCM data besides sending to
   /// audio output device.
   virtual void AttachAudioPlayer(AudioPlayerInterface& player);
+#endif
+#if defined(WEBRTC_WIN)
+  /// Attach the stream to a renderer to receive frames from decoder.
+  /// Both I420 frame and native surface is supported.
+  virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
 #endif
   /// Detach the stream from its renderer.
   virtual void DetachVideoRenderer();

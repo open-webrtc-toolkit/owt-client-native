@@ -1,0 +1,25 @@
+From 874dd7c84787964c898d7abd690f5ad1c25681dc Mon Sep 17 00:00:00 2001
+From: JinChengShi <jinchengx.shi@intel.com>
+Date: Tue, 10 Dec 2019 17:21:01 +0800
+Subject: [PATCH] Fix examples path error.
+
+---
+ config/linux/gtk/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/config/linux/gtk/BUILD.gn b/config/linux/gtk/BUILD.gn
+index d78f7407c..5404a358f 100644
+--- a/config/linux/gtk/BUILD.gn
++++ b/config/linux/gtk/BUILD.gn
+@@ -35,7 +35,7 @@ group("gtk") {
+     "//remoting/host/file_transfer",
+     "//remoting/host:remoting_me2me_host_static",
+     "//remoting/test:it2me_standalone_host_main",
+-    "//webrtc/examples:peerconnection_client",
++    "//third_party/webrtc/examples:peerconnection_client",
+     "//chrome/browser/ui/libgtkui:*",
+   ]
+ 
+-- 
+2.17.1
+
