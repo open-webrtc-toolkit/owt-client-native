@@ -278,116 +278,16 @@ void ConferenceSocketSignalingChannel::Connect(
           });
     }
   });
-  socket_client_->socket()->on(
-      kEventNameStreamMessage,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            RTC_LOG(LS_VERBOSE) << "Received stream event.";
-            if (data->get_map()["status"] != nullptr &&
-                data->get_map()["status"]->get_flag() == sio::message::flag_string &&
-                data->get_map()["id"] != nullptr &&
-                data->get_map()["id"]->get_flag() == sio::message::flag_string) {
-              std::string stream_status = data->get_map()["status"]->get_string();
-              std::string stream_id = data->get_map()["id"]->get_string();
-              if (stream_status == "add") {
-                auto stream_info = data->get_map()["data"];
-                if (stream_info != nullptr && stream_info->get_flag() == sio::message::flag_object) {
-                  for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-                    (*it)->OnStreamAdded(stream_info);
-                  }
-                }
-              } else if (stream_status == "update") {
-                sio::message::ptr update_message = sio::object_message::create();
-                update_message->get_map()["id"] = sio::string_message::create(stream_id);
-                auto stream_update = data->get_map()["data"];
-                if (stream_update != nullptr && stream_update->get_flag() == sio::message::flag_object) {
-                  update_message->get_map()["event"] = stream_update;
-                }
-                for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-                  (*it)->OnStreamUpdated(update_message);
-                }
-              } else if (stream_status == "remove") {
-                sio::message::ptr remove_message = sio::object_message::create();
-                remove_message->get_map()["id"] = sio::string_message::create(stream_id);
-                for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-                  (*it)->OnStreamRemoved(remove_message);
-                }
-              }
-            }
-          }));
-  socket_client_->socket()->on(
-      kEventNameOnCustomMessage,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            RTC_LOG(LS_VERBOSE) << "Received custom message.";
-            std::string from = data->get_map()["from"]->get_string();
-            std::string message = data->get_map()["message"]->get_string();
-            std::string to = "me";
-            auto target = data->get_map()["to"];
-            if (target != nullptr && target->get_flag() == sio::message::flag_string) {
-              to = target->get_string();
-            }
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnCustomMessage(from, message, to);
-            }
-          }));
-  socket_client_->socket()->on(
-      kEventNameOnUserPresence,
-      sio::socket::event_listener_aux([&](
-          std::string const& name, sio::message::ptr const& data, bool is_ack,
-          sio::message::list& ack_resp) {
-        RTC_LOG(LS_VERBOSE) << "Received user join/leave message.";
-        if (data == nullptr || data->get_flag() != sio::message::flag_object ||
-            data->get_map()["action"] == nullptr ||
-            data->get_map()["action"]->get_flag() != sio::message::flag_string) {
-          RTC_DCHECK(false);
-          return;
-        }
-        auto participant_action = data->get_map()["action"]->get_string();
-        if (participant_action == "join") {
-          // Get the pariticipant ID from data;
-          auto participant_info = data->get_map()["data"];
-          if (participant_info != nullptr && participant_info->get_flag() == sio::message::flag_object
-              && participant_info->get_map()["id"] != nullptr
-              && participant_info->get_map()["id"]->get_flag() == sio::message::flag_string) {
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnUserJoined(participant_info);
-            }
-          }
-        } else if (participant_action == "leave") {
-          auto participant_info = data->get_map()["data"];
-          if (participant_info != nullptr && participant_info->get_flag() == sio::message::flag_string) {
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnUserLeft(participant_info);
-            }
-          }
-        } else {
-          RTC_NOTREACHED();
-        }
-      }));
-  socket_client_->socket()->on(
-      kEventNameOnSignalingMessage,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            RTC_LOG(LS_VERBOSE) << "Received signaling message from erizo.";
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnSignalingMessage(data);
-            }
-          }));
-  socket_client_->socket()->on(
-      kEventNameOnDrop,
-      sio::socket::event_listener_aux(
-          [&](std::string const& name, sio::message::ptr const& data,
-              bool is_ack, sio::message::list& ack_resp) {
-            RTC_LOG(LS_INFO) << "Received drop message.";
-            socket_client_->set_reconnect_attempts(0);
-            for (auto it = observers_.begin(); it != observers_.end(); ++it) {
-              (*it)->OnServerDisconnected();
-            }
-          }));
+  for (const std::string& notification_name :
+       {kEventNameStreamMessage, kEventNameTextMessage,
+        kEventNameOnUserPresence, kEventNameOnSignalingMessage,
+        kEventNameOnDrop}) {
+    socket_client_->socket()->on(
+        notification_name,
+        sio::socket::event_listener_aux(std::bind(
+            &ConferenceSocketSignalingChannel::OnNotificationFromServer, this,
+            std::placeholders::_1, std::placeholders::_2)));
+  }
   socket_client_->socket()->on(
       kEventNameConnectionFailed,
       sio::socket::event_listener_aux(
@@ -423,6 +323,105 @@ void ConferenceSocketSignalingChannel::Disconnect(
                                    });
   }
 }
+
+void ConferenceSocketSignalingChannel::OnNotificationFromServer(
+    const std::string& name,
+    sio::message::ptr const& data) {
+  if (name == kEventNameStreamMessage) {
+    RTC_LOG(LS_VERBOSE) << "Received stream event.";
+    if (data->get_map()["status"] != nullptr &&
+        data->get_map()["status"]->get_flag() == sio::message::flag_string &&
+        data->get_map()["id"] != nullptr &&
+        data->get_map()["id"]->get_flag() == sio::message::flag_string) {
+      std::string stream_status = data->get_map()["status"]->get_string();
+      std::string stream_id = data->get_map()["id"]->get_string();
+      if (stream_status == "add") {
+        auto stream_info = data->get_map()["data"];
+        if (stream_info != nullptr &&
+            stream_info->get_flag() == sio::message::flag_object) {
+          for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+            (*it)->OnStreamAdded(stream_info);
+          }
+        }
+      } else if (stream_status == "update") {
+        sio::message::ptr update_message = sio::object_message::create();
+        update_message->get_map()["id"] =
+            sio::string_message::create(stream_id);
+        auto stream_update = data->get_map()["data"];
+        if (stream_update != nullptr &&
+            stream_update->get_flag() == sio::message::flag_object) {
+          update_message->get_map()["event"] = stream_update;
+        }
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnStreamUpdated(update_message);
+        }
+      } else if (stream_status == "remove") {
+        sio::message::ptr remove_message = sio::object_message::create();
+        remove_message->get_map()["id"] =
+            sio::string_message::create(stream_id);
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnStreamRemoved(remove_message);
+        }
+      }
+    }
+  } else if (name == kEventNameTextMessage) {
+    RTC_LOG(LS_VERBOSE) << "Received custom message.";
+    std::string from = data->get_map()["from"]->get_string();
+    std::string message = data->get_map()["message"]->get_string();
+    std::string to = "me";
+    auto target = data->get_map()["to"];
+    if (target != nullptr && target->get_flag() == sio::message::flag_string) {
+      to = target->get_string();
+    }
+    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+      (*it)->OnCustomMessage(from, message, to);
+    }
+  } else if (name == kEventNameOnUserPresence) {
+    RTC_LOG(LS_VERBOSE) << "Received user join/leave message.";
+    if (data == nullptr || data->get_flag() != sio::message::flag_object ||
+        data->get_map()["action"] == nullptr ||
+        data->get_map()["action"]->get_flag() != sio::message::flag_string) {
+      RTC_DCHECK(false);
+      return;
+    }
+    auto participant_action = data->get_map()["action"]->get_string();
+    if (participant_action == "join") {
+      // Get the pariticipant ID from data;
+      auto participant_info = data->get_map()["data"];
+      if (participant_info != nullptr &&
+          participant_info->get_flag() == sio::message::flag_object &&
+          participant_info->get_map()["id"] != nullptr &&
+          participant_info->get_map()["id"]->get_flag() ==
+              sio::message::flag_string) {
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnUserJoined(participant_info);
+        }
+      }
+    } else if (participant_action == "leave") {
+      auto participant_info = data->get_map()["data"];
+      if (participant_info != nullptr &&
+          participant_info->get_flag() == sio::message::flag_string) {
+        for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+          (*it)->OnUserLeft(participant_info);
+        }
+      }
+    } else {
+      RTC_NOTREACHED();
+    }
+  } else if (name == kEventNameOnSignalingMessage) {
+    RTC_LOG(LS_VERBOSE) << "Received signaling message from erizo.";
+    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+      (*it)->OnSignalingMessage(data);
+    }
+  } else if (name == kEventNameOnDrop) {
+    RTC_LOG(LS_INFO) << "Received drop message.";
+    socket_client_->set_reconnect_attempts(0);
+    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+      (*it)->OnServerDisconnected();
+    }
+  }
+}
+
 void ConferenceSocketSignalingChannel::SendSubscriptionUpdateMessage(
   sio::message::ptr options,
   std::function<void()> on_success,
