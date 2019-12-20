@@ -20,13 +20,7 @@ HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 OUT_LIB = 'owt-%(scheme)s.lib'
 LIB_BLACK_LIST = ['video_capture']
-PARALLEL_TEST_TARGET_LIST = ['audio_decoder_unittests', 'common_audio_unittests',
-                             'common_video_unittests', 'modules_tests',
-                             'modules_unittests', 'peerconnection_unittests',
-                             'rtc_pc_unittests', 'rtc_stats_unittests',
-                             'rtc_unittests', 'system_wrappers_unittests',
-                             'test_support_unittests', 'tools_unittests',
-                             'voice_engine_unittests']
+PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 GN_ARGS = [
@@ -35,14 +29,12 @@ GN_ARGS = [
     'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
-    'rtc_include_tests=false',
-    'owt_include_tests=false',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
 ]
 
 
-def gngen(arch, ssl_root, msdk_root, scheme):
+def gngen(arch, ssl_root, msdk_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -64,8 +56,13 @@ def gngen(arch, ssl_root, msdk_root, scheme):
         gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'\\include'))
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
-        print('Please set the path of msdk_root.')
-        return False
+        print('msdk_root is not set.')
+    if tests:
+        gn_args.append('rtc_include_tests=true')
+        gn_args.append('owt_include_tests=true')
+    else:
+        gn_args.append('rtc_include_tests=false')
+        gn_args.append('owt_include_tests=false')
     flattened_args = ' '.join(gn_args)
     ret = subprocess.call(['gn', 'gen', 'out/%s-%s' % (scheme, arch), '--args=' + flattened_args],
                           cwd=HOME_PATH, shell=True)
@@ -180,17 +177,13 @@ def main():
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests):
             return 1
     if opts.sdk:
-        if opts.ssl_root and opts.msdk_root:
-            if not ninjabuild(opts.arch, opts.scheme):
-                return 1
-            else:
-                _mergelibs(opts.arch, opts.scheme, opts.ssl_root)
-        else:
-            print('Please set the ssl_root and msdk_root')
+        if not ninjabuild(opts.arch, opts.scheme):
             return 1
+        else:
+            _mergelibs(opts.arch, opts.scheme, opts.ssl_root)
     if opts.tests:
         if not runtest(opts.scheme):
             return 1
