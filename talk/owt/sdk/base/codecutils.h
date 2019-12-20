@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/video/video_codec_type.h"
 #include "media/base/h264_profile_level_id.h"
 namespace owt {
 namespace base {
@@ -16,6 +17,7 @@ class CodecUtils {
 #ifndef DISABLE_H265
   static std::vector<webrtc::SdpVideoFormat> GetSupportedH265Codecs();
 #endif
+  static webrtc::VideoCodecType ConvertSdpFormatToCodecType(webrtc::SdpVideoFormat format);
 };
 }
 }
