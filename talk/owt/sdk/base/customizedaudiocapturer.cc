@@ -131,8 +131,11 @@ bool CustomizedAudioCapturer::Playing() const {
   return false;
 }
 int32_t CustomizedAudioCapturer::StartRecording() {
-  recording_ = true;
-  const char* thread_name = "webrtc_audio_module_capture_thread";
+  {
+    rtc::CritScope lock(&crit_sect_);
+    recording_ = true;
+  }
+  const char* thread_name = "owt_audio_module_capture_thread";
   thread_rec_.reset(new rtc::PlatformThread(RecThreadFunc, this, thread_name, rtc::kRealtimePriority));
   thread_rec_->Start();
   return 0;
@@ -257,49 +260,48 @@ void CustomizedAudioCapturer::RecThreadFunc(void* pThis) {
   static_cast<CustomizedAudioCapturer*>(pThis)->RecThreadProcess();
 }
 bool CustomizedAudioCapturer::RecThreadProcess() {
-  if (!recording_) {
-    return false;
-  }
-  uint64_t current_time = clock_->CurrentNtpInMilliseconds();
-  uint64_t loop_cost_ms = 0;
-  crit_sect_.Enter();
-  if (last_thread_rec_end_time_ > 0) {
-      loop_cost_ms = current_time - last_thread_rec_end_time_;
-  }
-  if (last_call_record_millis_ == 0 ||
-      (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
-    if (frame_generator_->GenerateFramesForNext10Ms(
-            recording_buffer_.get(),
-            static_cast<uint32_t>(recording_buffer_size_)) !=
-        static_cast<uint32_t>(recording_buffer_size_)) {
-      crit_sect_.Leave();
-      //RTC_DCHECK(false);
-      SleepMs(1);
-      RTC_LOG(LS_ERROR) << "Get audio frames failed.";
-      last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
-      return true;
-    }
-    // Sample rate and channel number cannot be changed on the fly.
-    audio_buffer_->SetRecordedBuffer(
-        recording_buffer_.get(), recording_frames_in_10ms_);  // Buffer copied here
-    last_call_record_millis_ = current_time;
-    crit_sect_.Leave();
-    audio_buffer_->DeliverRecordedData();
+  while (recording_) {
+    uint64_t current_time = clock_->CurrentNtpInMilliseconds();
+    uint64_t loop_cost_ms = 0;
     crit_sect_.Enter();
+    if (last_thread_rec_end_time_ > 0) {
+        loop_cost_ms = current_time - last_thread_rec_end_time_;
+    }
+    if (last_call_record_millis_ == 0 ||
+        (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
+      if (frame_generator_->GenerateFramesForNext10Ms(
+              recording_buffer_.get(),
+              static_cast<uint32_t>(recording_buffer_size_)) !=
+          static_cast<uint32_t>(recording_buffer_size_)) {
+        crit_sect_.Leave();
+        SleepMs(1);
+        RTC_LOG(LS_ERROR) << "Get audio frames failed.";
+        last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
+        continue;
+      }
+      // Sample rate and channel number cannot be changed on the fly.
+      audio_buffer_->SetRecordedBuffer(
+          recording_buffer_.get(), recording_frames_in_10ms_);  // Buffer copied here
+      last_call_record_millis_ = current_time;
+      crit_sect_.Leave();
+      audio_buffer_->DeliverRecordedData();
+      crit_sect_.Enter();
+    }
+    crit_sect_.Leave();
+    int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
+    need_sleep_ms_ = 10 - cost_ms + need_sleep_ms_ - real_sleep_ms_ - loop_cost_ms;
+    if (need_sleep_ms_ > 0) {
+      current_time = clock_->CurrentNtpInMilliseconds();
+      SleepMs(need_sleep_ms_);
+      real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
+    } else {
+      RTC_LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
+                         "leads to large latency";
+      real_sleep_ms_ = 0;
+    }
+    last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
+    continue;
   }
-  crit_sect_.Leave();
-  int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
-  need_sleep_ms_ = 10 - cost_ms + need_sleep_ms_ - real_sleep_ms_ - loop_cost_ms;
-  if (need_sleep_ms_ > 0) {
-    current_time = clock_->CurrentNtpInMilliseconds();
-    SleepMs(need_sleep_ms_);
-    real_sleep_ms_ = clock_->CurrentNtpInMilliseconds() - current_time;
-  } else {
-    RTC_LOG(LS_WARNING) << "Cost too much time to get audio frames. This may "
-                       "leads to large latency";
-    real_sleep_ms_ = 0;
-  }
-  last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
   return true;
 }
 }
