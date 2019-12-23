@@ -16,8 +16,9 @@ using namespace webrtc;
 class CustomizedVideoDecoderProxy : public VideoDecoder {
  public:
   static std::unique_ptr<CustomizedVideoDecoderProxy> Create(
+      VideoCodecType type,
       VideoDecoderInterface* external_video_decoder);
-  explicit CustomizedVideoDecoderProxy(
+  explicit CustomizedVideoDecoderProxy(VideoCodecType type,
       VideoDecoderInterface* external_video_decoder);
   virtual ~CustomizedVideoDecoderProxy();
   int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
