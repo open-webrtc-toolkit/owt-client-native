@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "absl/memory/memory.h"
+#include "absl/strings/match.h"
 #include "absl/types/optional.h"
 #include "media/base/media_constants.h"
 #include "talk/owt/sdk/base/codecutils.h"
@@ -40,5 +41,21 @@ std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
                                   {cricket::kH265FmtpLevelId, "120"}})};
 }
 #endif
+webrtc::VideoCodecType CodecUtils::ConvertSdpFormatToCodecType(webrtc::SdpVideoFormat format){
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
+    return webrtc::kVideoCodecVP8;
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+    return webrtc::kVideoCodecVP9;
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+    return webrtc::kVideoCodecH264;
+#ifndef DISABLE_H265
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+    return webrtc::kVideoCodecH265;
+#endif
+  }
+  else {
+    return webrtc::kVideoCodecGeneric;
+  }
+}
 }  // namespace base
 }  // namespace owt
