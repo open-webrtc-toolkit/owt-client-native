@@ -7,8 +7,9 @@
 namespace owt {
 namespace base {
 
-CustomizedVideoDecoderProxy::CustomizedVideoDecoderProxy(VideoDecoderInterface* external_video_decoder)
-  : decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
+CustomizedVideoDecoderProxy::CustomizedVideoDecoderProxy(VideoCodecType type,
+  VideoDecoderInterface* external_video_decoder)
+  : codec_type_(type), decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
 
 CustomizedVideoDecoderProxy::~CustomizedVideoDecoderProxy() {
   if (external_decoder_) {
@@ -83,9 +84,9 @@ const char* CustomizedVideoDecoderProxy::ImplementationName() const {
 }
 
 std::unique_ptr<CustomizedVideoDecoderProxy>
-CustomizedVideoDecoderProxy::Create(
+CustomizedVideoDecoderProxy::Create(VideoCodecType type,
     VideoDecoderInterface* external_video_decoder) {
-  return absl::make_unique<CustomizedVideoDecoderProxy>(external_video_decoder);
+  return absl::make_unique<CustomizedVideoDecoderProxy>(type, external_video_decoder);
 }
 }
 }

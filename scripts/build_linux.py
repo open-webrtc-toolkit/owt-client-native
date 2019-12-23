@@ -28,8 +28,6 @@ GN_ARGS = [
     'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
-    'rtc_include_tests=true',
-    'owt_include_tests=true',
     'rtc_build_examples=false',
     'rtc_use_gtk=false',
     'use_sysroot=false',
@@ -41,7 +39,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(r'out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, scheme):
+def gngen(arch, ssl_root, msdk_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -65,6 +63,12 @@ def gngen(arch, ssl_root, msdk_root, scheme):
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('msdk_root is not set.')
+    if tests:
+        gn_args.append('rtc_include_tests=true')
+        gn_args.append('owt_include_tests=true')
+    else:
+        gn_args.append('rtc_include_tests=false')
+        gn_args.append('owt_include_tests=false')
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
     cmd = 'gn gen ' + out + ' ' + flattened_args
@@ -147,7 +151,7 @@ def main():
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme):
