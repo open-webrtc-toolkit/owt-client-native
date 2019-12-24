@@ -24,7 +24,11 @@ CustomizedVideoDecoderFactory::~CustomizedVideoDecoderFactory() {}
 std::unique_ptr<webrtc::VideoDecoder>
 CustomizedVideoDecoderFactory::CreateVideoDecoder(
     const webrtc::SdpVideoFormat& format) {
-  return CustomizedVideoDecoderProxy::Create(external_decoder_->Copy());
+  VideoCodecType type = owt::base::CodecUtils::ConvertSdpFormatToCodecType(format);
+  if (type != kVideoCodecGeneric) {
+    return CustomizedVideoDecoderProxy::Create(type, external_decoder_->Copy());
+  }
+  return nullptr;
 }
 
  std::vector<SdpVideoFormat>CustomizedVideoDecoderFactory::GetSupportedFormats() const {

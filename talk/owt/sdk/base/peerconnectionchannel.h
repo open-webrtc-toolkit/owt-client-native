@@ -56,10 +56,10 @@ struct PeerConnectionChannelConfiguration
   /// Indicate whether this PeerConnection is used for sending encoded frame.
   bool encoded_video_frame_;
 };
-class PeerConnectionChannel
-    : public webrtc::PeerConnectionObserver,
-      public webrtc::DataChannelObserver,
-      public sigslot::has_slots<> {
+class PeerConnectionChannel : public rtc::MessageHandler,
+                              public webrtc::PeerConnectionObserver,
+                              public webrtc::DataChannelObserver,
+                              public sigslot::has_slots<> {
  public:
   PeerConnectionChannel(PeerConnectionChannelConfiguration configuration);
  protected:
@@ -75,13 +75,15 @@ class PeerConnectionChannel
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
-
+  virtual void ClosePc();
   virtual void AddTransceiver(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
       const webrtc::RtpTransceiverInit& init);
   virtual void AddTransceiver(cricket::MediaType media_type,
                               const webrtc::RtpTransceiverInit& init);
-  // PeerConnectionObserver.
+  // Message looper event
+  virtual void OnMessage(rtc::Message* msg) override;
+  // PeerConnectionObserver
   virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {}
   virtual void OnSignalingChange(
       PeerConnectionInterface::SignalingState new_state) override;
@@ -113,14 +115,27 @@ class PeerConnectionChannel
   virtual void OnSetLocalSessionDescriptionFailure(const std::string& error);
   virtual void OnSetRemoteSessionDescriptionSuccess();
   virtual void OnSetRemoteSessionDescriptionFailure(const std::string& error);
-
-  virtual void OnSetRemoteDescriptionComplete(webrtc::RTCError error);
-
   // Fired when networks changed. (Only works on iOS)
   virtual void OnNetworksChanged();
-
+  enum MessageType : int {
+    kMessageTypeCreateOffer = 101,
+    kMessageTypeCreateAnswer,
+    kMessageTypeCreateDataChannel,
+    kMessageTypeSetLocalDescription,
+    kMessageTypeSetRemoteDescription,
+    kMessageTypeSetRemoteIceCandidate,
+    kMessageTypeRemoveStream,
+    kMessageTypeAddTransceiver,
+    kMessageTypeClosePeerConnection,
+    kMessageTypeGetStats,
+    kMessageTypeCreateNetworkMonitor=201,
+  };
+  std::unique_ptr<Thread> pc_thread_;
   PeerConnectionChannelConfiguration configuration_;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
+  // Use this data channel to send p2p messages.
+  // Use a map if we need more than one data channels for a PeerConnection in
+  // the future.
+  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   webrtc::MediaConstraints media_constraints_;
   // Direction of audio and video transceivers. In conference mode, there are at
   // most 1 audio transceiver and 1 video transceiver.
@@ -135,6 +150,7 @@ class PeerConnectionChannel
   // |factory_| is got from PeerConnectionDependencyFactory::Get() which is
   // shared among all PeerConnectionChannels.
   rtc::scoped_refptr<PeerConnectionDependencyFactory> factory_;
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 };
 }
 }
