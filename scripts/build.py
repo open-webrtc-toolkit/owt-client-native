@@ -174,9 +174,12 @@ def main():
   parser.add_argument('--skip_tests', default=False, action='store_true',
       help='Skip unit tests.')
   opts=parser.parse_args()
+  if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
+    print >> sys.stderr, ("Invalid ssl_root.")
+    return 1
   opts.arch=opts.target_arch.split(',')
   if not opts.scheme in SCHEME_DICT:
-    print >> sys.stderr, ("Invalid scheme name")
+    print >> sys.stderr, ("Invalid scheme name.")
     return 1
   for arch_item in opts.arch:
     if not arch_item in ARCH_PARAM_DICT:
