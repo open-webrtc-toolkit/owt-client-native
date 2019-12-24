@@ -44,16 +44,16 @@ def gngen(arch, ssl_root, msdk_root, scheme, tests):
         gn_args.append('enable_iterator_debugging=true')
     if ssl_root:
         gn_args.append('owt_use_openssl=true')
-        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\\include'))
-        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\\lib'))
+        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
+        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\lib'))
     if msdk_root:
         if arch == 'x86':
-            msdk_lib = msdk_root + r'\\lib\\win32'
+            msdk_lib = msdk_root + r'\lib\win32'
         elif arch == 'x64':
-            msdk_lib = msdk_root + r'\\lib\\x64'
+            msdk_lib = msdk_root + r'\lib\x64'
         else:
             return False
-        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'\\include'))
+        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'\include'))
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('msdk_root is not set.')
@@ -64,20 +64,20 @@ def gngen(arch, ssl_root, msdk_root, scheme, tests):
         gn_args.append('rtc_include_tests=false')
         gn_args.append('owt_include_tests=false')
     flattened_args = ' '.join(gn_args)
-    ret = subprocess.call(['gn', 'gen', 'out/%s-%s' % (scheme, arch), '--args=' + flattened_args],
-                          cwd=HOME_PATH, shell=True)
+    ret = subprocess.call(['gn.bat', 'gen', getoutputpath(arch, scheme), '--args=%s' % flattened_args],
+                          cwd=HOME_PATH, shell=False)
     if ret == 0:
         return True
     return False
 
 
 def getoutputpath(arch, scheme):
-    return 'out/%s-%s' % (scheme, arch)
+    return os.path.join(HOME_PATH, 'out','%s-%s' % (scheme, arch))
 
 
 def ninjabuild(arch, scheme):
     out_path = getoutputpath(arch, scheme)
-    if subprocess.call(['ninja', '-C', out_path], cwd=HOME_PATH, shell=True) != 0:
+    if subprocess.call(['ninja', '-C', out_path], cwd=HOME_PATH) != 0:
         return False
     return True
 
@@ -107,7 +107,7 @@ def _mergelibs(arch, scheme, ssl_root):
     libs = _getlibs(arch, scheme, ssl_root)
     command = ['lib.exe', '/OUT:out\%s' % out_lib]
     command.extend(libs)
-    subprocess.call(command, cwd=HOME_PATH, shell=True)
+    subprocess.call(command, cwd=HOME_PATH)
 
 
 # Run unit tests on simulator. Return True if all tests are passed.
@@ -116,11 +116,11 @@ def runtest(scheme):
     for test_target in PARALLEL_TEST_TARGET_LIST:
         if subprocess.call(['python', 'third_party\gtest-parallel\gtest-parallel',
                             '%s\%s.exe' % (test_root_path, test_target)],
-                           cwd=HOME_PATH, shell=True):
+                           cwd=HOME_PATH, shell=False):
             return False
     for test_target in NONPARALLEL_TEST_TARGET_LIST:
         if subprocess.call(['%s\%s.exe' % (test_root_path, test_target)],
-                           cwd=HOME_PATH, shell=True):
+                           cwd=HOME_PATH, shell=False):
             return False
     return True
 
@@ -131,7 +131,7 @@ def gendocs():
     doc_path = os.path.join(cmd_path, r'html')
     if os.path.exists(doc_path):
         shutil.rmtree(doc_path)
-    if subprocess.call(['doxygen', 'doxygen_c++.conf'], cwd=cmd_path, shell=True):
+    if subprocess.call(['doxygen', 'doxygen_c++.conf'], cwd=cmd_path, shell=False):
         return False
     return True
 
@@ -175,6 +175,12 @@ def main():
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
     opts = parser.parse_args()
+    if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
+        print('Invalid ssl_root.')
+        return 1
+    if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.msdk_root)):
+        print('Invalid msdk_root')
+        return 1
     print(opts)
     if opts.gn_gen:
         if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests):
