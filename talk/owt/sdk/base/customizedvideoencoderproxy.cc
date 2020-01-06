@@ -14,6 +14,7 @@
 #include "webrtc/rtc_base/logging.h"
 #include "talk/owt/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/owt/sdk/base/customizedvideoencoderproxy.h"
+#include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/include/cpp/owt/base/commontypes.h"
 // H.264 start code length.
@@ -191,6 +192,16 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP9.height[0] = encodedframe._encodedHeight;
     info.codecSpecific.VP9.width[0] = encodedframe._encodedWidth;
     info.codecSpecific.VP9.temporal_idx = kNoTemporalIdx;
+  } else if (codec_type_ == webrtc::kVideoCodecH264) {
+    int temporal_id = 0, priority_id = 0;
+    bool is_idr = false;
+    bool need_frame_marking = MediaUtils::GetH264TemporalInfo(
+        data_ptr, data_size, temporal_id, priority_id, is_idr);
+    if (need_frame_marking) {
+      info.codecSpecific.H264.temporal_idx = temporal_id;
+      info.codecSpecific.H264.idr_frame = is_idr;
+      info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
+    }
   }
   // Generate a header describing a single fragment.
   webrtc::RTPFragmentationHeader header;
