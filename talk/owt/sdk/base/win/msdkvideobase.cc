@@ -6,12 +6,13 @@
 #include "d3d_allocator.h"
 #include "mfxdefs.h"
 #include "msdkvideobase.h"
+#include "talk/owt/sdk/base/win/msdkcommon.h"
 
 namespace owt {
 namespace base {
 
-std::mutex MSDKFactory::get_singleton_mutex;
-MSDKFactory* MSDKFactory::singleton = nullptr;
+std::mutex MSDKFactory::get_singleton_mutex_;
+MSDKFactory* MSDKFactory::singleton_ = nullptr;
 
 static bool AreGuidsEqual(const mfxPluginUID* guid_first,
                           const mfxPluginUID* guid_second) {
@@ -29,12 +30,12 @@ static bool isValidPluginUID(const mfxPluginUID* uid) {
           AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_GACC));
 }
 
-MSDKFactory::MSDKFactory() : main_session(nullptr), mfe_timeout(0) {}
+MSDKFactory::MSDKFactory() : main_session_(nullptr), mfe_timeout_(0) {}
 
 bool MSDKFactory::Init() {
-  main_session = InternalCreateSession();
+  main_session_ = InternalCreateSession();
 
-  if (!main_session) {
+  if (!main_session_) {
     return false;
   }
   return true;
@@ -43,26 +44,26 @@ bool MSDKFactory::Init() {
 MSDKFactory::~MSDKFactory() {}
 
 void MSDKFactory::MFETimeout(uint32_t timeout) {
-  mfe_timeout = timeout < 100 ? timeout : 100;
+  mfe_timeout_ = timeout < 100 ? timeout : 100;
 }
 
 uint32_t MSDKFactory::MFETimeout() {
-  return mfe_timeout;
+  return mfe_timeout_;
 }
 
 MSDKFactory* MSDKFactory::Get() {
-  std::lock_guard<std::mutex> lock(get_singleton_mutex);
+  std::lock_guard<std::mutex> lock(get_singleton_mutex_);
 
-  if (singleton == nullptr) {
-    singleton = new MSDKFactory();
+  if (singleton_ == nullptr) {
+    singleton_ = new MSDKFactory();
 
-    if (singleton && !singleton->Init()) {
-      delete singleton;
-      singleton = nullptr;
+    if (singleton_ && !singleton_->Init()) {
+      delete singleton_;
+      singleton_ = nullptr;
     }
   }
 
-  return singleton;
+  return singleton_;
 }
 
 MFXVideoSession* MSDKFactory::InternalCreateSession() {
@@ -94,7 +95,7 @@ MFXVideoSession* MSDKFactory::CreateSession() {
     return nullptr;
   }
 
-  sts = main_session->JoinSession(*session);
+  sts = main_session_->JoinSession(*session);
   if (sts != MFX_ERR_NONE) {
     session->Close();
     delete session;

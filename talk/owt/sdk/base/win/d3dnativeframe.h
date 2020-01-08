@@ -5,10 +5,12 @@
 #define OWT_BASE_WIN_D3DNATIVEFRAME_H
 #include <d3d9.h>
 #include <dxva2api.h>
+#include "talk/owt/sdk/base/win/d3d11device.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
+
 namespace owt {
 namespace base {
-// structure that containts d3d9 device manager
+// Structure that containts d3d9 device manager
 // and d3d9 surface that contains decoded frame.
 struct NativeD3DSurfaceHandle {
   IDirect3DSurface9* surface_;
@@ -17,6 +19,6 @@ struct NativeD3DSurfaceHandle {
   int width_;   // width of the frame passing from decoder
   int height_;  // height of the frame passing from decoder
 };
-}
-}
+}  // namespace base
+}  // namespace owt
 #endif  // OWT_BASE_WIN_D3DNATIVEFRAME_H

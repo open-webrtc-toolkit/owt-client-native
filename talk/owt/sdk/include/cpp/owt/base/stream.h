@@ -12,7 +12,6 @@
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
-//#include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 namespace webrtc {
 class MediaStreamInterface;
@@ -55,7 +54,7 @@ class StreamObserver {
 class WebrtcVideoRendererImpl;
 class WebrtcAudioRendererImpl;
 #if defined(WEBRTC_WIN)
-class WebrtcVideoRendererD3D9Impl;
+class WebrtcVideoRendererD3D11Impl;
 #endif
 /// Base class of all streams with media stream
 class Stream {
@@ -131,7 +130,7 @@ class Stream {
   WebrtcVideoRendererImpl* renderer_impl_;
   WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
-  WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
+  WebrtcVideoRendererD3D11Impl* d3d11_renderer_impl_;
 #endif
   StreamSourceInfo source_;
 

@@ -6,7 +6,8 @@
 #include <memory>
 #include "owt/base/commontypes.h"
 #if defined(WEBRTC_WIN)
-#include <Windows.h>
+#include <d3d11.h>
+#include <windows.h>
 #endif
 #if defined(WEBRTC_LINUX)
 #include <X11/Xlib.h>
@@ -16,6 +17,7 @@ namespace base {
 enum class VideoBufferType {
   kI420,
   kARGB,
+  kD3D11Handle,
 };
 enum class VideoRendererType {
   kI420,
@@ -29,7 +31,10 @@ struct VideoBuffer {
   Resolution resolution;
   // Buffer type
   VideoBufferType type;
-  ~VideoBuffer() { delete[] buffer; }
+  ~VideoBuffer() {
+    if (type != VideoBufferType::kD3D11Handle)
+      delete[] buffer;
+  }
 };
 /// VideoRenderWindow wraps a native Window handle
 #if defined(WEBRTC_WIN)
@@ -47,6 +52,7 @@ class VideoRenderWindow {
     @return Returns the window handle.
   */
   HWND GetWindowHandle() { return wnd_; }
+
  private:
   HWND wnd_;
 };
@@ -66,6 +72,7 @@ class VideoRenderWindow {
     @return Returns the window handle.
   */
   Window GetWindowHandle() { return wnd_; }
+
  private:
   Window wnd_;
 };
@@ -79,6 +86,14 @@ class VideoRendererInterface {
   /// Render type that indicates the VideoBufferType the renderer would receive.
   virtual VideoRendererType Type() = 0;
 };
+#if defined(WEBRTC_WIN)
+struct D3D11Handle {
+  ID3D11Texture2D* texture;
+  ID3D11Device* d3d11_device;
+  ID3D11VideoDevice* d3d11_video_device;
+  ID3D11VideoContext* context;
+};
+#endif
 }  // namespace base
 }  // namespace owt
 #endif  // OWT_BASE_VIDEORENDERERINTERFACE_H_

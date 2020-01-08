@@ -22,7 +22,9 @@
 #endif
 #include "third_party/libyuv/include/libyuv.h"
 #include "webrtc/media/base/codec.h"
+#include "talk/owt/sdk/base/win/d3d11device.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
+#include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"
 #include <atlbase.h>
 #include <codecapi.h>
 #include <combaseapi.h>
@@ -30,6 +32,7 @@
 #include <dxva2api.h>
 #include "msdkvideobase.h"
 #include "base_allocator.h"
+#include "d3d11_allocator.h"
 
 namespace owt {
 namespace base {
@@ -40,13 +43,6 @@ namespace base {
 class MSDKVideoDecoder : public webrtc::VideoDecoder,
     public rtc::MessageHandler {
 public:
-    enum State{
-        kUnitialized,
-        kNormal,
-        kResetting,
-        kStopped,
-        kFlushing,
-    };
     explicit MSDKVideoDecoder();
     virtual ~MSDKVideoDecoder();
 
@@ -70,45 +66,39 @@ public:
 private:
     int32_t InitDecodeOnCodecThread();
     void CheckOnCodecThread();
-    bool CreateD3DDevice();
     int32_t Reset();
 
-    // Type of video codec.
-    webrtc::VideoCodecType codecType_;
     mfxStatus ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize);
     void WipeMfxBitstream(mfxBitstream* pBitstream);
     void ReadFromInputStream(mfxBitstream* pBitstream, const uint8_t *data, size_t len);
     mfxU16 DecGetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
     mfxU16 DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
+    mfxStatus CreateD3D11Resources();
 
     // Begin MSDK variables
-    MFXVideoSession*        m_mfxSession;
-    MFXVideoDECODE*         m_pmfxDEC;
-    std::shared_ptr<D3DFrameAllocator> m_pMFXAllocator;
-    mfxVideoParam           m_mfxVideoParams;
-    mfxBitstream            m_mfxBS; // Contains encoded data
-    mfxFrameAllocResponse   m_mfxResponse; // Memory allocation response for decoder
-    mfxFrameSurface1*       m_pInputSurfaces;
-    mfxPluginUID            m_pluginID;
-    bool                    m_video_param_extracted;
-    uint32_t                m_decBsOffset;
+    MFXVideoSession*        mfx_session_;
+    std::unique_ptr<MFXVideoDECODE> msdk_dec_;
+    mfxVideoParam           mfx_video_param_;
+    mfxBitstream            mfx_bs_; // Contains encoded data
+    mfxFrameAllocResponse   mfx_alloc_response_; // Memory allocation response for decoder
+    mfxFrameSurface1*       mfx_input_surfaces_;
+    mfxPluginUID            mfx_plugin_id_;
+    bool                    mfx_video_param_extracted_;
+    uint32_t                mfx_dec_bs_offset_;
     // End of MSDK variables
-    IDirect3D9Ex*               m_pD3D9;
-    IDirect3DDevice9Ex*         m_pD3DD9;
-    IDirect3DDeviceManager9*    d3d_manager;
-    D3DPRESENT_PARAMETERS       present_params;
-    UINT                        m_resetToken;
 
-    rtc::CriticalSection critical_section_;
+    // Begin D3D11 variables
+    std::unique_ptr<RTCD3D11Device> d3d11_device_;
+    std::unique_ptr<D3D11FrameAllocator> d3d11_frame_allocator_;
+    std::unique_ptr<D3D11AllocatorParams> d3d11_allocator_param_;
+    std::unique_ptr<D3D11Handle> surface_handle_;
+    // End D3D11 variables
+
     bool inited_;
-    int width_;
-    int height_;
-    std::unique_ptr<rtc::Thread> decoder_thread_;  // Thread on which the decoder will be working on.
+    std::unique_ptr<rtc::Thread> decoder_thread_;
     webrtc::VideoCodec codec_;
 
-    webrtc::I420BufferPool decoded_frame_pool_;
     webrtc::DecodedImageCallback* callback_;
-    rtc::CriticalSection timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
 #ifdef OWT_DEBUG_DEC
