@@ -107,6 +107,9 @@ class ConferenceSocketSignalingChannel
   };
   /// Fires upon a new ticket is received.
   void OnReconnectionTicket(const std::string& ticket);
+  // Hindle notifications from server.
+  void OnNotificationFromServer(const std::string& name,
+                                sio::message::ptr const& data);
   void RefreshReconnectionTicket();
   void TriggerOnServerDisconnected();
   void Emit(const std::string& name,
