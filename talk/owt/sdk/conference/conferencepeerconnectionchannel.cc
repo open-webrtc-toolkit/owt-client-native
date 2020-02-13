@@ -922,14 +922,19 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
             for (auto encoding :
                  configuration_.video[0].rtp_encoding_parameters) {
               webrtc::RtpEncodingParameters param;
-              param.rid = encoding.rid;
+              if (encoding.rid != "")
+                param.rid = encoding.rid;
               if (encoding.max_bitrate_bps != 0)
                 param.max_bitrate_bps = encoding.max_bitrate_bps;
               if (encoding.max_framerate != 0)
                 param.max_framerate = encoding.max_framerate;
-              if (param.scale_resolution_down_by > 0)
+              if (encoding.scale_resolution_down_by > 0)
                 param.scale_resolution_down_by =
                     encoding.scale_resolution_down_by;
+              if (encoding.num_temporal_layers > 0 &&
+                  encoding.num_temporal_layers <= 4) {
+                param.num_temporal_layers = encoding.num_temporal_layers;
+              }
               param.active = encoding.active;
               transceiver_init.send_encodings.push_back(param);
             }

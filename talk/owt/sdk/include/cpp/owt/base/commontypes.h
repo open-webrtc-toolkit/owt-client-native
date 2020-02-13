@@ -67,6 +67,9 @@ struct AudioCodecParameters {
 
 /// RTP endoding settings for a stream
 struct RtpEncodingParameters {
+  // number of temporal layers requested to encoder, if supported.
+  int num_temporal_layers = 1;
+
   //  Currently this is implemented for the entire rtp sender by using
   // the value of the first encoding parameter..
   int max_bitrate_bps = 0;
@@ -88,7 +91,7 @@ struct RtpEncodingParameters {
 
   // Value to use for RID RTP header extension.
   // Called "encodingId" in ORTC.
-  std::string rid;
+  std::string rid = "";
 };
 
 /// Audio encoding parameters.

@@ -84,6 +84,21 @@ class GlobalConfiguration {
       }
   }
   /**
+   @brief This function sets the temporal layers for H.264.
+
+   This API is added as upstream has not yet passed the temporal layer setting
+   in RtpEncodingParameters to H.264 encoder. Remove this API once upstream
+   implementation done.
+
+   @param num_temporal_layers Number of temporal layers for H.264. Value greater
+   than 4 or smaller than 1 will be ignored.
+  */
+  static void SetH264EncoderTemporalLayers(int layers) {
+    if (layers < 1 || layers > 4)
+      return;
+    h264_temporal_layers_ = layers;
+  }
+  /**
    @brief This function sets the customized video decoder to decode the encoded images.
    @param Customized video decoder
    */
@@ -136,7 +151,19 @@ class GlobalConfiguration {
   }
   static bool hardware_acceleration_enabled_;
 #endif
+  /**
+   @brief This function gets H.264 temporal layer settings.
 
+   This is added as upstream has not yet passed the temporal layer setting
+   in RtpEncodingParameters to H.264 encoder. Remove once upstream implementation
+   done.
+
+   @return temporal layer setting for H.264.
+  */
+  static int GetH264TemporalLayers() {
+    return h264_temporal_layers_;
+  }
+  static int h264_temporal_layers_;
   /**
    @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.

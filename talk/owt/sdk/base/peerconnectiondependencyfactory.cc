@@ -95,6 +95,10 @@ void PeerConnectionDependencyFactory::
       GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
   }
+  // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
+  int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
+  field_trial_ +=
+      "OWT-H264TemporalLayers/" + std::to_string(h264_temporal_layers) + std::string("/");
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
   if (!rtc::InitializeSSL()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize SSL.";
@@ -102,13 +106,13 @@ void PeerConnectionDependencyFactory::
     return;
   }
   worker_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+
   worker_thread->SetName("worker_thread", nullptr);
   signaling_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+
   signaling_thread->SetName("signaling_thread", nullptr);
   network_thread = rtc::Thread::CreateWithSocketServer();
-  ;
+
   network_thread->SetName("network_thread", nullptr);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
