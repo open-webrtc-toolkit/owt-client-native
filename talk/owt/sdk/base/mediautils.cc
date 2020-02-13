@@ -99,7 +99,27 @@ absl::optional<unsigned int> MediaUtils::GetH264TemporalLayers() {
   return layers;
 }
 bool ParseSlice(const uint8_t* slice, size_t length, int& temporal_id, int& priority_id, bool& is_idr) {
-  // TODO: PrefixParser does not exist. Temporal scalability is disabled.
+  using namespace webrtc;
+  webrtc::H264::NaluType nalu_type = webrtc::H264::ParseNaluType(slice[0]);
+  absl::optional<PrefixParser::PrefixState> prefix_state;
+  switch (nalu_type) {
+    case H264::NaluType::kPrefix: {
+      prefix_state = PrefixParser::ParsePrefix(
+          slice + webrtc::H264::kNaluTypeSize,
+                                 length - webrtc::H264::kNaluTypeSize);
+      break;
+    }
+    // Ignore all other cases as we only care about prefix NAL.
+    default:
+      break;
+  }
+  if (prefix_state.has_value()) {
+    temporal_id = prefix_state.value().temporal_id;
+    is_idr = prefix_state.value().idr_flag == 1 ? true : false;
+    priority_id = prefix_state.value().priority_id;
+    return true;
+  }
+
   return false;
 }
 bool MediaUtils::GetH264TemporalInfo(uint8_t* buffer, size_t buffer_length,
