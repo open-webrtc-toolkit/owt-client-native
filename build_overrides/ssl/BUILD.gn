@@ -30,8 +30,8 @@ if (owt_use_openssl) {
       }
     } else {
       libs = [
-        "libeay32.lib",
-        "ssleay32.lib",
+        "crypto",
+        "ssl",
       ]
     }
     if (is_clang) {

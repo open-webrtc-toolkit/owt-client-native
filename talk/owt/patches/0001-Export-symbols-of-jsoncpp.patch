@@ -1,0 +1,27 @@
+From 3f42957b5e3f4224d6948881587a278aa18542f9 Mon Sep 17 00:00:00 2001
+From: "Liu, Kai1" <kai1.liu@intel.com>
+Date: Tue, 10 Mar 2020 14:59:49 +0800
+Subject: [PATCH] Export symbols of jsoncpp
+
+Signed-off-by: Liu, Kai1 <kai1.liu@intel.com>
+---
+ jsoncpp/BUILD.gn | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/jsoncpp/BUILD.gn b/jsoncpp/BUILD.gn
+index f2f48b9ee7c..b7603fa2d12 100644
+--- a/jsoncpp/BUILD.gn
++++ b/jsoncpp/BUILD.gn
+@@ -44,6 +44,9 @@ source_set("jsoncpp") {
+     "JSON_USE_NULLREF=0",
+   ]
+ 
++  configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
++  configs += [ "//build/config/gcc:symbol_visibility_default" ]
++
+   include_dirs = [ "source/src/lib_json" ]
+ 
+   if (!is_win || is_clang) {
+-- 
+2.17.1
+

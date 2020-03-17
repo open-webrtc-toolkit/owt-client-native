@@ -1,0 +1,26 @@
+From a59ad6fef977e98015a5ee2a0986e31e571fd06f Mon Sep 17 00:00:00 2001
+From: "Liu, Kai1" <kai1.liu@intel.com>
+Date: Tue, 10 Mar 2020 15:00:35 +0800
+Subject: [PATCH] Export symbols of libyuv
+
+Signed-off-by: Liu, Kai1 <kai1.liu@intel.com>
+---
+ BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index 8904fd6c..f8f41578 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -16,7 +16,7 @@ declare_args() {
+   # When building a shared library using a target in WebRTC or
+   # Chromium projects that depends on libyuv, setting this flag
+   # to true makes libyuv symbols visible inside that library.
+-  libyuv_symbols_visible = false
++  libyuv_symbols_visible = true
+ }
+ 
+ config("libyuv_config") {
+-- 
+2.17.1
+
