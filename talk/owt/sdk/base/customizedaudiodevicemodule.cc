@@ -587,7 +587,7 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
 void CustomizedAudioDeviceModule::CreateOutputAdm(){
   if(_outputAdm==nullptr){
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
-        AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
+        AudioDeviceModule::kDummyAudio, task_queue_factory_.get());
   }
 }
 }
