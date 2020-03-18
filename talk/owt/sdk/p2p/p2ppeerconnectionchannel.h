@@ -214,6 +214,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool remote_side_supports_unified_plan_;
   bool is_creating_offer_;  // It will be true during creating and setting offer.
   bool remote_side_supports_continual_ice_gathering_;
+  // Removing ack for data channel messages. If
+  // |remote_side_ignores_datachannel_ack_| is true, don't send acks.
+  // https://github.com/open-webrtc-toolkit/owt-server-p2p/issues/17.
+  bool remote_side_ignores_datachannel_acks_;
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;

@@ -71,6 +71,7 @@ const string kUaCapabilitiesKey = "capabilities";
 const string kUaContinualGatheringKey = "continualIceGathering";
 const string kUaUnifiedPlanKey = "unifiedPlan";
 const string kUaStreamRemovableKey = "streamRemovable";
+const string kUaIgnoresDataChannelAcksKey = "ignoreDataChannelAcks";
 // Text message sent through data channel
 const string kDataChannelLabelForTextMessage = "message";
 const string kTextMessageDataKey = "data";
@@ -97,6 +98,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       remote_side_supports_unified_plan_(true),
       is_creating_offer_(false),
       remote_side_supports_continual_ice_gathering_(true),
+      remote_side_ignores_datachannel_acks_(false),
       ua_sent_(false),
       stop_send_needed_(true),
       remote_side_offline_(false),
@@ -1172,11 +1174,13 @@ void P2PPeerConnectionChannel::OnDataChannelMessage(
     return;
   }
   // Send the ack for text message.
-  Json::Value ack;
-  ack[kMessageTypeKey] = kChatDataReceived;
-  ack[kMessageDataKey] = message_id;
-  SendSignalingMessage(ack);
-  //  Deal with the received text message.
+  if (!remote_side_ignores_datachannel_acks_) {
+    Json::Value ack;
+    ack[kMessageTypeKey] = kChatDataReceived;
+    ack[kMessageDataKey] = message_id;
+    SendSignalingMessage(ack);
+  }
+  // Deal with the received text message.
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
            observers_.begin();
        it != observers_.end(); ++it) {
@@ -1236,6 +1240,7 @@ Json::Value P2PPeerConnectionChannel::UaInfo() {
   capabilities[kUaContinualGatheringKey] = true;
   capabilities[kUaUnifiedPlanKey] = true;
   capabilities[kUaStreamRemovableKey] = true;
+  capabilities[kUaIgnoresDataChannelAcksKey] = true;
   ua[kUaSdkKey] = sdk;
   ua[kUaRuntimeKey] = runtime;
   ua[kUaOsKey] = os;
@@ -1252,12 +1257,16 @@ void P2PPeerConnectionChannel::HandleRemoteCapability(Json::Value& ua) {
   remote_side_supports_plan_b_ = !remote_side_supports_unified_plan_;
   rtc::GetBoolFromJsonObject(capabilities, kUaStreamRemovableKey,
                              &remote_side_supports_remove_stream_);
+  rtc::GetBoolFromJsonObject(capabilities, kUaIgnoresDataChannelAcksKey,
+                             &remote_side_ignores_datachannel_acks_);
   RTC_LOG(LS_INFO) << "Remote side supports removing stream? "
                    << remote_side_supports_remove_stream_;
   RTC_LOG(LS_INFO) << "Remote side supports WebRTC Plan B? "
                    << remote_side_supports_plan_b_;
   RTC_LOG(LS_INFO) << "Remote side supports WebRTC Unified Plan?"
                    << remote_side_supports_unified_plan_;
+  RTC_LOG(LS_INFO) << "Remote side ignores data channel acks?"
+                   << remote_side_ignores_datachannel_acks_;
 }
 void P2PPeerConnectionChannel::SendUaInfo() {
   Json::Value json;
