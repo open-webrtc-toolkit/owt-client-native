@@ -221,30 +221,30 @@ void P2PPeerConnectionChannel::Send(
   }
   // Try to send the text message.
   Json::Value content;
-  long message_id = message_seq_num_++;
+  if (message_seq_num_ == INT_MAX) {
+    message_seq_num_ = 0;
+  }
+  int message_id = message_seq_num_++;
   content[kTextMessageIdKey] = std::to_string(message_id);
   content[kTextMessageDataKey] = message;
   std::string data = rtc::JsonValueToString(content);
   if (data_channel_ != nullptr &&
       data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
     data_channel_->Send(CreateDataBuffer(data));
-    RTC_LOG(LS_INFO) << "Send message: " << data;
+    if (on_success) {
+      on_success();
+    }
   } else {
     {
       std::lock_guard<std::mutex> lock(pending_messages_mutex_);
       std::shared_ptr<std::string> data_copy(
           std::make_shared<std::string>(data));
-      pending_messages_.push_back(data_copy);
+      pending_messages_.push_back(std::tuple<std::shared_ptr<std::string>,
+              std::function<void()>,
+              std::function<void(std::unique_ptr<Exception>)>>{data_copy, on_success, on_failure});
     }
     if (data_channel_ == nullptr) // Otherwise, wait for data channel ready.
       CreateDataChannel(kDataChannelLabelForTextMessage);
-  }
-  std::string id_value = std::to_string(message_id);
-  if (on_success)
-    message_success_callbacks_[id_value] = on_success;
-  if (on_failure) {
-    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
-    failure_callbacks_[id_value] = on_failure;
   }
 }
 void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
@@ -383,10 +383,6 @@ void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
     Json::Value tracks;
     rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &tracks);
     OnMessageTracksAdded(tracks);
-  } else if (message_type == kChatDataReceived) {
-    std::string id;
-    rtc::GetStringFromJsonObject(json_message, kMessageDataKey, &id);
-    OnMessageDataReceived(id);
   } else if (message_type == kChatClosed) {
     OnMessageStop();
   } else {
@@ -409,22 +405,41 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
 void P2PPeerConnectionChannel::OnMessageStop() {
   RTC_LOG(LS_INFO) << "Remote user stopped.";
   {
-    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
-    for (std::unordered_map<
-             std::string,
-             std::function<void(std::unique_ptr<Exception>)>>::iterator it =
-             failure_callbacks_.begin();
-         it != failure_callbacks_.end(); it++) {
-      std::function<void(std::unique_ptr<Exception>)> failure_callback =
-          it->second;
-      event_queue_->PostTask([failure_callback] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "Stop message received."));
-        failure_callback(std::move(e));
-      });
+    {
+      std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+      for (std::unordered_map<
+               std::string,
+               std::function<void(std::unique_ptr<Exception>)>>::iterator it =
+               failure_callbacks_.begin();
+           it != failure_callbacks_.end(); it++) {
+        std::function<void(std::unique_ptr<Exception>)> failure_callback =
+            it->second;
+        event_queue_->PostTask([failure_callback] {
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kP2PClientInvalidArgument,
+                            "Stop message received."));
+          failure_callback(std::move(e));
+        });
+      }
+      failure_callbacks_.clear();
     }
-    failure_callbacks_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(pending_messages_mutex_);
+    for (auto it = pending_messages_.begin(); it != pending_messages_.end();
+         ++it) {
+      std::function<void(std::unique_ptr<Exception>)> on_failure;
+      std::tie(std::ignore, std::ignore, on_failure) = *it;
+      if (on_failure) {
+        event_queue_->PostTask([on_failure] {
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kP2PClientInvalidArgument,
+                            "Stop message received."));
+          on_failure(std::move(e));
+        });
+      }
+    }
+    pending_messages_.clear();
   }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
@@ -527,20 +542,7 @@ void P2PPeerConnectionChannel::OnMessageTracksAdded(
     }
   }
 }
-void P2PPeerConnectionChannel::OnMessageDataReceived(std::string& id) {
-  // Here comes the message id for its callback accordingly.
-  if (message_success_callbacks_.find(id) == message_success_callbacks_.end()) {
-    RTC_LOG(LS_WARNING) << "Received unknown data with message ID: " << id;
-    return;
-  }
-  std::function<void()> callback = message_success_callbacks_[id];
-  event_queue_->PostTask([callback] { callback(); });
-  message_success_callbacks_.erase(id);
-  // Remove the failure callback accordingly
-  std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
-  if (failure_callbacks_.find(id) != failure_callbacks_.end())
-    failure_callbacks_.erase(id);
-}
+
 void P2PPeerConnectionChannel::OnMessageTrackSources(
     Json::Value& track_sources) {
   string id;
@@ -1201,7 +1203,13 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
     std::lock_guard<std::mutex> lock(pending_messages_mutex_);
     for (auto it = pending_messages_.begin(); it != pending_messages_.end();
          ++it) {
-      data_channel_->Send(CreateDataBuffer(**it));
+      std::shared_ptr<std::string> message;
+      std::function<void()> on_success;
+      std::tie(message, on_success, std::ignore)=*it;
+      data_channel_->Send(CreateDataBuffer(*message));
+      if(on_success){
+        on_success();
+      }
     }
     pending_messages_.clear();
   }
