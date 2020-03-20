@@ -428,7 +428,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
-  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
