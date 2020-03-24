@@ -679,16 +679,6 @@ deps = {
       'condition': 'checkout_android',
       'dep_type': 'cipd',
   },
-  'src/third_party/android_deps/libs/com_google_android_gms_play_services_base': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_base',
-              'version': 'version:15.0.1-cr0',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
   'src/third_party/android_deps/libs/com_google_android_gms_play_services_basement': {
       'packages': [
           {
