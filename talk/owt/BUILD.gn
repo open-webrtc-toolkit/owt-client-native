@@ -215,7 +215,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-  if ((is_win || is_linux) && include_internal_audio_device) {
+  if (is_win || is_linux) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
       "sdk/base/customizedaudiocapturer.h",

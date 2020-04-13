@@ -584,11 +584,17 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
   return _ptrAudioDevice->GetRecordAudioParameters(params);
 }
 #endif  // WEBRTC_IOS
-void CustomizedAudioDeviceModule::CreateOutputAdm(){
-  if(_outputAdm==nullptr){
+
+void CustomizedAudioDeviceModule::CreateOutputAdm() {
+  if (_outputAdm == nullptr) {
+#if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
+#else
+    _outputAdm = new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>();
+#endif
   }
 }
+
 }
 }  // namespace webrtc
