@@ -19,6 +19,7 @@ THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 LIBJPEG_TURBO_PATH = os.path.join(THIRD_PARTY_PATH, 'libjpeg_turbo')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
+LIBYUV_PATH = os.path.join(THIRD_PARTY_PATH, 'libyuv')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
 TOOL_PATH = os.path.join(HOME_PATH, 'tools')
 BASE_PATH = os.path.join(HOME_PATH, 'base')
@@ -54,6 +55,10 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
   #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0012-ios-Adds-CFBundleShortVersionString-to-the-plist-for.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Export-symbols-of-jsoncpp.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Export-symbols-of-libyuv.patch')], shell=useShell, cwd=LIBYUV_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBYUV_PATH)
 
 def main(argv):
   _patch()

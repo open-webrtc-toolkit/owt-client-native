@@ -88,7 +88,7 @@ def ninjabuild(arch, scheme):
     if subprocess.call(['ninja', '-C', out_path], cwd=HOME_PATH, shell=False) != 0:
         return False
     src_lib_path = os.path.join(out_path, r'obj/talk/owt/libowt.a')
-    shutil.copy(src_lib_path, gen_lib_path(scheme))
+    # shutil.copy(src_lib_path, gen_lib_path(scheme))
     return True
 
 def runtest(scheme):

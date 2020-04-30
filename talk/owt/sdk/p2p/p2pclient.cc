@@ -360,6 +360,11 @@ void P2PClient::OnStopped(const std::string& remote_id) {
   {
     const std::lock_guard<std::mutex> lock(removed_pc_channels_mutex_);
     removed_pc_channels_.push_back(pc_channels_[remote_id]);
+    const int kCachedPccNum = 20;
+    while (removed_pc_channels_.size() > kCachedPccNum) {
+       std::vector<std::shared_ptr<P2PPeerConnectionChannel>>::iterator iter = removed_pc_channels_.begin();
+       removed_pc_channels_.erase(iter);
+    }
   }
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   pc_channels_.erase(remote_id);
