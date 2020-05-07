@@ -46,6 +46,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch')], shell=useShell, cwd=LIBJPEG_TURBO_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0013-Remove-unused-gni-for-av1-build.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
 
 def main(argv):
   _patch()

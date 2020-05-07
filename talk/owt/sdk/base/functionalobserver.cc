@@ -23,9 +23,9 @@ void FunctionalCreateSessionDescriptionObserver::OnSuccess(
   }
 }
 void FunctionalCreateSessionDescriptionObserver::OnFailure(
-    const std::string& error) {
+    webrtc::RTCError error) {
   if (on_failure_ != nullptr) {
-    on_failure_(error);
+    on_failure_(error.message());
   }
 }
 FunctionalSetSessionDescriptionObserver::
@@ -46,9 +46,9 @@ void FunctionalSetSessionDescriptionObserver::OnSuccess() {
   }
 }
 void FunctionalSetSessionDescriptionObserver::OnFailure(
-    const std::string& error) {
+    webrtc::RTCError error) {
   if (on_failure_ != nullptr) {
-    on_failure_(error);
+    on_failure_(error.message());
   }
 }
 FunctionalStatsObserver::FunctionalStatsObserver(
