@@ -1,29 +1,28 @@
-From ac67a0da28a1b0e0b5bbddf8dc895cd399842aad Mon Sep 17 00:00:00 2001
-From: Jianjun Zhu <jianjun.zhu@intel.com>
-Date: Mon, 17 Jul 2017 09:07:13 +0800
-Subject: [PATCH] Use OpenSSL for libsrtp.
+From 0466a08ad38767bbeea992e934d9ec1dd41a85b3 Mon Sep 17 00:00:00 2001
+From: Qiu Jainlin <jianlin.qiu@intel.com>
+Date: Thu, 7 May 2020 09:53:01 +0800
+Subject: [PATCH] Use OpenSSL for libsrtp
+
 ---
- BUILD.gn | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ BUILD.gn | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
 diff --git a/BUILD.gn b/BUILD.gn
-index df1e9b2..6335dc9 100644
+index 6359585..722c111 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -2,6 +2,7 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
-+import("//build_overrides/ssl/ssl.gni")
+++import("//build_overrides/ssl/ssl.gni")
  import("//testing/test.gni")
  
  declare_args() {
-@@ -115,9 +116,13 @@ static_library("libsrtp") {
-     "srtp/ekt.c",
-     "srtp/srtp.c",
+@@ -117,6 +118,13 @@ static_library("libsrtp") {
+   public_deps = [
+     "//third_party/boringssl:boringssl",
    ]
--  public_deps = [
--    "//third_party/boringssl:boringssl",
--  ]
 +  if (owt_use_openssl) {
 +    configs += [ "//build_overrides/ssl:external_openssl" ]
 +  } else {
@@ -35,4 +34,5 @@ index df1e9b2..6335dc9 100644
  
  if (build_libsrtp_tests) {
 -- 
-2.4.4
+2.24.1.windows.2
+
