@@ -18,6 +18,7 @@ TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 LIBJPEG_TURBO_PATH = os.path.join(THIRD_PARTY_PATH, 'libjpeg_turbo')
+FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
 TOOL_PATH = os.path.join(HOME_PATH, 'tools')
@@ -48,6 +49,8 @@ def _patch():
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
   if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0013-Remove-unused-gni-for-av1-build.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
     subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
+  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch')], shell=useShell, cwd=FFMPEG_PATH)) != 0:
+    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=FFMPEG_PATH)
 
 def main(argv):
   _patch()

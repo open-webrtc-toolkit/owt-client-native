@@ -133,7 +133,7 @@ void PeerConnectionDependencyFactory::
   } else if (render_hardware_acceleration_enabled_) {
     encoder_factory.reset(new MSDKVideoEncoderFactory());
   } else {
-    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
   }
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
@@ -142,7 +142,7 @@ void PeerConnectionDependencyFactory::
   } else if (render_hardware_acceleration_enabled_) {
     decoder_factory.reset(new MSDKVideoDecoderFactory());
   } else {
-    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
+    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
 
 #elif defined(WEBRTC_LINUX)
