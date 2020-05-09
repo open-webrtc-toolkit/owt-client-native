@@ -1,12 +1,14 @@
-From ac67a0da28a1b0e0b5bbddf8dc895cd399842aad Mon Sep 17 00:00:00 2001
-From: Jianjun Zhu <jianjun.zhu@intel.com>
-Date: Mon, 17 Jul 2017 09:07:13 +0800
-Subject: [PATCH] Use OpenSSL for libsrtp.
+From 501f74d86d6b932a9094221b90d75d72c86a6022 Mon Sep 17 00:00:00 2001
+From: Qiu Jainlin <jianlin.qiu@intel.com>
+Date: Thu, 7 May 2020 22:34:03 +0800
+Subject: [PATCH] Use OpenSSL for libsrtp
+
 ---
  BUILD.gn | 11 ++++++++---
  1 file changed, 8 insertions(+), 3 deletions(-)
+
 diff --git a/BUILD.gn b/BUILD.gn
-index df1e9b2..6335dc9 100644
+index 6359585..7b448b4 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -17,7 +19,7 @@ index df1e9b2..6335dc9 100644
  import("//testing/test.gni")
  
  declare_args() {
-@@ -115,9 +116,13 @@ static_library("libsrtp") {
+@@ -114,9 +115,13 @@ static_library("libsrtp") {
      "srtp/ekt.c",
      "srtp/srtp.c",
    ]
@@ -35,4 +37,5 @@ index df1e9b2..6335dc9 100644
  
  if (build_libsrtp_tests) {
 -- 
-2.4.4
+2.24.1.windows.2
+

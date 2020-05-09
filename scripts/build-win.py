@@ -25,7 +25,8 @@ NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 GN_ARGS = [
     'is_clang=false',
-    'rtc_use_h264=false',
+    'rtc_use_h264=true',
+    'ffmpeg_branding="Chrome"',
     'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
