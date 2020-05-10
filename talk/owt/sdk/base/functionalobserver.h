@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "webrtc/api/jsep.h"
 #include "webrtc/api/peer_connection_interface.h"
+#include "webrtc/api/rtc_error.h"
 #include "webrtc/api/scoped_refptr.h"
 #include "talk/owt/sdk/include/cpp/owt/base/connectionstats.h"
 namespace owt {
@@ -20,7 +21,7 @@ class FunctionalCreateSessionDescriptionObserver
       std::function<void(webrtc::SessionDescriptionInterface*)> on_success,
       std::function<void(const std::string&)> on_failure);
   virtual void OnSuccess(webrtc::SessionDescriptionInterface* desc);
-  virtual void OnFailure(const std::string& error);
+  virtual void OnFailure(webrtc::RTCError error);
  protected:
   FunctionalCreateSessionDescriptionObserver(
       std::function<void(webrtc::SessionDescriptionInterface*)> on_success,
@@ -38,7 +39,7 @@ class FunctionalSetSessionDescriptionObserver
       std::function<void()> on_success,
       std::function<void(const std::string&)> on_failure);
   virtual void OnSuccess();
-  virtual void OnFailure(const std::string& error);
+  virtual void OnFailure(webrtc::RTCError error);
  protected:
   FunctionalSetSessionDescriptionObserver(
       std::function<void()> on_success,

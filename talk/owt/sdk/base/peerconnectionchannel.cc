@@ -216,7 +216,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
           static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
               msg->pdata);
       MediaStreamInterface* stream = param->data();
-      for (const auto track : stream->GetAudioTracks()) {
+      for (const auto& track : stream->GetAudioTracks()) {
         RTC_CHECK(peer_connection_);
         std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
             peer_connection_->GetSenders();
@@ -232,7 +232,7 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
         }
       }
 
-      for (const auto track : stream->GetVideoTracks()) {
+      for (const auto& track : stream->GetVideoTracks()) {
         RTC_CHECK(peer_connection_);
         std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
             peer_connection_->GetSenders();

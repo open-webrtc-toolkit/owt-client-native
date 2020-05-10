@@ -17,7 +17,7 @@ You need [Doxygen](http://www.doxygen.nl/) in your path.
 ### Prepare the development environment
 Before you start, make sure you have following prerequisites installed/built:
 
-- [WebRTC stack build dependencies](https://webrtc.org/native-code/development/prerequisite-sw/).
+- [WebRTC stack build dependencies](https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/development/prerequisite-sw/index.md).
 - [OpenSSL 1.1.0l or higher](https://www.openssl.org/source/).
 
 Following dependencies are for Windows only:
