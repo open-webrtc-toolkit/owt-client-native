@@ -5,6 +5,7 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 #define OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 
+#include <d3d11.h>
 #include <vector>
 
 #include "webrtc/api/video_codecs/sdp_video_format.h"
@@ -16,7 +17,7 @@ namespace base {
 // Declaration of MSDK based decoder factory.
 class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  public:
-  MSDKVideoDecoderFactory();
+  MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_external);
   virtual ~MSDKVideoDecoderFactory();
 
   // VideoDecoderFactory implementation
@@ -26,6 +27,7 @@ class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
       const webrtc::SdpVideoFormat& format) override;
  private:
   std::vector<webrtc::VideoCodecType> supported_codec_types_;
+  ID3D11Device* external_device_ = nullptr;
 };
 }  // namespace base
 }  // namespace owt

@@ -53,21 +53,31 @@ if (!is_ios) {
       ":owt_sdk_base",
       ":owt_sdk_conf",
       ":owt_sdk_p2p",
-      "//third_party/protobuf:protobuf_lite",
       "//third_party/webrtc",
       "//third_party/webrtc:webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
+
+    if (rtc_enable_protobuf) {
+      deps += [
+        "//third_party/protobuf:protobuf_lite",
+      ]
+    }
     complete_static_lib = true
   }
 }
 static_library("owt_sdk_base") {
   sources = [
+    "sdk/base/clock.cc",
     "sdk/base/cameravideocapturer.cc",
     "sdk/base/cameravideocapturer.h",
     "sdk/base/codecutils.cc",
     "sdk/base/codecutils.h",
     "sdk/base/deviceutils.cc",
+    "sdk/base/encodedstreamproviderwrapper.cc",
+    "sdk/base/encodedstreamproviderwrapper.h",
+    "sdk/base/encodedvideoencoderfactory.cc",
+    "sdk/base/encodedvideoencoderfactory.h",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",
     "sdk/base/functionalobserver.cc",
@@ -90,6 +100,7 @@ static_library("owt_sdk_base") {
     "sdk/base/stringutils.h",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",
+    "sdk/base/cursorutils.cc",
     "sdk/base/vcmcapturer.cc",
     "sdk/base/vcmcapturer.h",
     "sdk/base/webrtcaudiorendererimpl.cc",
@@ -113,8 +124,6 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideoencoderproxy.h",
       "sdk/base/customizedvideosource.cc",
       "sdk/base/customizedvideosource.h",
-      "sdk/base/encodedvideoencoderfactory.cc",
-      "sdk/base/encodedvideoencoderfactory.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/include/cpp/owt/base/videodecoderinterface.h",
@@ -141,6 +150,7 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/system_wrappers:field_trial",
     "//third_party/webrtc/system_wrappers:metrics",
     "//third_party/webrtc/system_wrappers:system_wrappers",
+    "//third_party/ffmpeg:ffmpeg",
   ]
   deps = [
     "//base:logging_buildflags",
@@ -178,27 +188,42 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
+      "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/videorendererwin.cc",
+      "sdk/base/win/videorendererwin.h",
+      "sdk/base/windowcapturer.cc",
+      "sdk/base/windowcapturer.h",
+    ]
+  }
+  
+    if (owt_msdk_header_root != "") {
+    sources += [
+      "sdk/base/win/msdkvideodecoder.cc",
+      "sdk/base/win/msdkvideodecoder.h",
+      "sdk/base/win/msdkvideoencoder.cc",
+      "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
+      "sdk/base/win/msdkvideoencoderfactory.cc",
+      "sdk/base/win/msdkvideoencoderfactory.h",
       "sdk/base/win/base_allocator.cc",
       "sdk/base/win/base_allocator.h",
       "sdk/base/win/d3d_allocator.cc",
       "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/d3d11_allocator.cc",
+      "sdk/base/win/d3d11_allocator.h",
+      "sdk/base/win/sysmem_allocator.h",
+      "sdk/base/win/sysmem_allocator.cc",
       "sdk/base/win/msdkvideobase.cc",
       "sdk/base/win/msdkvideobase.h",
-      "sdk/base/win/msdkvideodecoder.cc",
-      "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
-      "sdk/base/win/msdkvideoencoder.cc",
-      "sdk/base/win/msdkvideoencoder.h",
-      "sdk/base/win/msdkvideoencoderfactory.cc",
-      "sdk/base/win/msdkvideoencoderfactory.h",
-      "sdk/base/win/sysmem_allocator.cc",
-      "sdk/base/win/sysmem_allocator.h",
-      "sdk/base/win/videorendererwin.cc",
-      "sdk/base/win/videorendererwin.h",
-      "sdk/base/windowcapturer.cc",
+      "sdk/base/win/d3d11va_h264_decoder.cc",
+      "sdk/base/win/d3d11va_h264_decoder.h",
+      "sdk/base/win/d3d11device.cc",
+      "sdk/base/win/d3d11device.h",
+      "sdk/base/win/videorendererd3d11.cc",
+      "sdk/base/win/videorendererd3d11.h",
     ]
+    defines += [ "OWT_USE_MSDK" ]
   }
 
   if (!is_ios) {
@@ -209,7 +234,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-  if ((is_win || is_linux) && include_internal_audio_device) {
+  if (is_win || is_linux) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
       "sdk/base/customizedaudiocapturer.h",

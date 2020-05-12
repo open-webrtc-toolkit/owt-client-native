@@ -4,7 +4,7 @@
 #ifndef OWT_BASE_CUSTOMIZEDAUDIODEVICEMODULE_H_
 #define OWT_BASE_CUSTOMIZEDAUDIODEVICEMODULE_H_
 
-#if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
+//#if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 #include <memory>
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
 #include "webrtc/api/scoped_refptr.h"
@@ -129,5 +129,5 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
 };
 }
 }
-#endif  // defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
+//#endif  // defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 #endif  // OWT_BASE_CUSTOMIZEDAUDIODEVICEMODULE_H_

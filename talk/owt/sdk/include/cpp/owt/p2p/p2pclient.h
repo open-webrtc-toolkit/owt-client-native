@@ -170,6 +170,23 @@ class P2PClient final
    */
   void Send(const std::string& target_id,
             const std::string& message,
+            bool is_reliable,
+            std::function<void()> on_success,
+            std::function<void(std::unique_ptr<Exception>)> on_failure);
+   /**
+    @brief Send a message to remote client on text message channel.
+    @param target_id Remote user's ID.
+    @param message The message to be sent.
+    @param on_success Success callback will be invoked if send
+                      deny event successfully.
+    @param on_failure Failure callback will be invoked if one of
+    the following cases happened.
+    1. P2PClient is disconnected from the server.
+    2. Target ID is null or target user is offline.
+    3. There is no WebRTC session with target user.
+    */
+  void Send(const std::string& target_id,
+            const std::string& message,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
@@ -215,7 +232,7 @@ class P2PClient final
                  std::function<void()> on_success,
                  std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::shared_ptr<P2PPeerConnectionChannel> GetPeerConnectionChannel(
-      const std::string& target_id);
+      const std::string& target_id, bool replace = false);
   bool IsPeerConnectionChannelCreated(const std::string& target_id);
   owt::base::PeerConnectionChannelConfiguration GetPeerConnectionChannelConfiguration();
   // Queue for callbacks and events. Shared among P2PClient and all of it's

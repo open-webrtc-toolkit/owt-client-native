@@ -32,7 +32,7 @@ class CustomizedVideoCapturerFactory {
       std::unique_ptr<VideoFrameGeneratorInterface> framer);
   static rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
 #if defined(WEBRTC_WIN)
   static rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
@@ -70,7 +70,7 @@ class CustomizedCapturer : public CustomizedVideoSource,
       std::unique_ptr<VideoFrameGeneratorInterface> framer);
   static CustomizedCapturer* Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
 #if defined(WEBRTC_WIN)
   static CustomizedCapturer* Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
@@ -86,7 +86,7 @@ class CustomizedCapturer : public CustomizedVideoSource,
   bool Init(std::shared_ptr<LocalCustomizedStreamParameters> parameters,
             std::unique_ptr<VideoFrameGeneratorInterface> framer);
   bool Init(std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-            VideoEncoderInterface* encoder);
+            std::shared_ptr<EncodedStreamProvider> encoder);
 #if defined(WEBRTC_WIN)
   bool Init(std::shared_ptr<LocalDesktopStreamParameters> parameters,
             std::unique_ptr<LocalScreenStreamObserver> observer);
@@ -159,7 +159,7 @@ class LocalEncodedCaptureTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<LocalEncodedCaptureTrackSource> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder) {
+      std::shared_ptr<EncodedStreamProvider> encoder) {
     std::unique_ptr<CustomizedCapturer> capturer;
     capturer =
         absl::WrapUnique(CustomizedCapturer::Create(parameters, encoder));

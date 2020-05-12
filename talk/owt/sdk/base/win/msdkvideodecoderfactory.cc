@@ -11,11 +11,12 @@
 #include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
+#include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
 
 namespace owt {
 namespace base {
 
-MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
+MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_external) {
   supported_codec_types_.clear();
   
   supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
@@ -31,6 +32,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
     supported_codec_types_.push_back(webrtc::kVideoCodecH265);
   }
 #endif
+  external_device_ = d3d11_device_external;
 }
 
 MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {
@@ -48,6 +50,8 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
     return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
 #endif
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+    return owt::base::H264DXVADecoderImpl::Create(cricket::VideoCodec(format));
   }
 
   return nullptr;

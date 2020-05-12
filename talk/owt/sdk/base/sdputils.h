@@ -15,6 +15,8 @@ class SdpUtils {
                                          std::vector<AudioCodec>& codec);
   static std::string SetPreferVideoCodecs(const std::string& sdp,
                                          std::vector<VideoCodec>& codec);
+  static std::string SetStartVideoBandwidth(const std::string& sdp,
+                                            int bandwidth);
  private:
   /**
    @brief Replace SDP for preferred codec.

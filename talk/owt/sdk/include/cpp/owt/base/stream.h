@@ -55,7 +55,7 @@ class StreamObserver {
 class WebrtcVideoRendererImpl;
 class WebrtcAudioRendererImpl;
 #if defined(WEBRTC_WIN)
-class WebrtcVideoRendererD3D9Impl;
+class WebrtcVideoRendererD3D11Impl;
 #endif
 /// Base class of all streams with media stream
 class Stream {
@@ -131,7 +131,9 @@ class Stream {
   WebrtcVideoRendererImpl* renderer_impl_;
   WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
-  WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
+#if defined(OWT_USE_MSDK)
+  WebrtcVideoRendererD3D11Impl* d3d11_renderer_impl_;
+#endif
 #endif
   StreamSourceInfo source_;
 
@@ -231,12 +233,13 @@ class LocalStream : public Stream {
     with video encoder interface.
     @param parameters Parameters for creating the stream. The stream will not
     be impacted if changing parameters after it is created.
-    @param encoder Pointer to an instance implementing VideoEncoderInterface.
+    @param encoder Pointer to an instance of EncodedStreamProvider.
     @return Pointer to created LocalStream.
   */
   static std::shared_ptr<LocalStream> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
+#if defined(WEBRTC_WIN)
   /**
     @brief Initialize a local screen stream with parameters.
     @param parameters Parameters for creating the stream. The stream will
@@ -248,7 +251,7 @@ class LocalStream : public Stream {
   static std::shared_ptr<LocalStream> Create(
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer);
-
+#endif
  protected:
   explicit LocalStream(const LocalCameraStreamParameters& parameters,
                        int& error_code);
@@ -260,7 +263,7 @@ class LocalStream : public Stream {
       std::unique_ptr<VideoFrameGeneratorInterface> framer);
   explicit LocalStream(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
   explicit LocalStream(std::shared_ptr<LocalDesktopStreamParameters> parameters,
                        std::unique_ptr<LocalScreenStreamObserver> observer);
 

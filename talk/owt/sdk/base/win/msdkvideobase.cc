@@ -67,8 +67,11 @@ MSDKFactory* MSDKFactory::Get() {
 
 MFXVideoSession* MSDKFactory::InternalCreateSession() {
   mfxStatus sts = MFX_ERR_NONE;
-  mfxIMPL impl = MFX_IMPL_HARDWARE_ANY;
-  mfxVersion version = {{3, 1}};
+  mfxIMPL impl = MFX_IMPL_HARDWARE_ANY | MFX_IMPL_VIA_D3D11;
+
+  mfxVersion version;
+  version.Major = 1;
+  version.Minor = 0;
 
   MFXVideoSession* session = new MFXVideoSession();
   if (!session)
@@ -146,11 +149,11 @@ bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id,
   mfxStatus sts = MFX_ERR_NONE;
   switch (codec_id) {
     case MFX_CODEC_HEVC:
-      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCE_GACC, 1);
+      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCE_HW, 1);
       if (sts != MFX_ERR_NONE) {
         return false;
       }
-      *plugin_id = MFX_PLUGINID_HEVCE_GACC;
+      *plugin_id = MFX_PLUGINID_HEVCE_HW;
       break;
     case MFX_CODEC_AVC:
       break;

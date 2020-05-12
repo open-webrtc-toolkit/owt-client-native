@@ -72,4 +72,10 @@ declare_args() {
 
   # Some non-Chromium builds don't support building java targets.
   enable_java_templates = true
+
+  owt_gpra_lib_root = ""
+
+  owt_gpra_header_root = ""
+
+  owt_use_gpra = false
 }

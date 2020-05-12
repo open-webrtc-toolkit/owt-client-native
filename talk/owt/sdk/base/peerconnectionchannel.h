@@ -136,6 +136,7 @@ class PeerConnectionChannel : public rtc::MessageHandler,
   // Use a map if we need more than one data channels for a PeerConnection in
   // the future.
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  rtc::scoped_refptr<webrtc::DataChannelInterface> control_data_channel_;
   webrtc::MediaConstraints media_constraints_;
   // Direction of audio and video transceivers. In conference mode, there are at
   // most 1 audio transceiver and 1 video transceiver.

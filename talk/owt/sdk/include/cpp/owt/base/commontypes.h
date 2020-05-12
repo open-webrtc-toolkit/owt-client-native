@@ -8,6 +8,9 @@
 #include <unordered_map>
 namespace owt {
 namespace base {
+
+#define OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX 240
+
 /// Audio codec
 enum class AudioCodec : int {
   kPcmu = 1,   ///< g711 u-law

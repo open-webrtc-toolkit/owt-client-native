@@ -58,6 +58,74 @@ std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
   cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, false);
   return cur_sdp;
 }
+
+std::string SdpUtils::SetStartVideoBandwidth(const std::string& sdp,
+                                             int bandwidth) {
+  std::regex reg_red_codec("a=rtpmap:(\\d+) red\\/\\d+[\r]?[\n]?",
+                           std::regex_constants::icase);
+  std::smatch fmtp_map_match;
+  std::string red_codec;
+  auto search_result = std::regex_search(sdp, fmtp_map_match, reg_red_codec);
+  if (search_result && fmtp_map_match.size() > 0) {
+    red_codec = fmtp_map_match[1];
+  }
+
+  std::regex reg_video("m=video .*? ([0-9 ]+)[\r]?[\n]?",
+                       std::regex_constants::icase);
+  search_result = std::regex_search(sdp, fmtp_map_match, reg_video);
+  if (!search_result && fmtp_map_match.size() == 0) {
+    return sdp;
+  }
+  std::string str = fmtp_map_match[1];
+  int start = 0;
+  std::string delim = " ";
+  size_t idx = str.find(delim, start);
+  std::string ret_str = sdp;
+  std::string reg_start_replace = "(a=fmtp:";
+  std::string reg_end_replace = ")";
+  std::string to_replace =
+      "$1 x-google-start-bitrate=" + std::to_string(bandwidth);
+  std::string reg_start_insert = "(a=rtpmap:(";
+  std::string reg_end_insert = ") .*[\r]?[\n]?)";
+  std::string to_insert =
+      "$1a=fmtp:$2 x-google-start-bitrate=" + std::to_string(bandwidth) + "\n";
+  std::regex reg_fmtp_video;
+  std::string sub_str = "";
+  while (idx != std::string::npos) {
+    sub_str = str.substr(start, idx - start);
+    start = idx + delim.size();
+    idx = str.find(delim, start);
+    if (sub_str.compare(red_codec) == 0) {
+      continue;
+    }
+    reg_fmtp_video.assign(reg_start_replace + sub_str + reg_end_replace,
+                          std::regex_constants::icase);
+    search_result = std::regex_search(ret_str, fmtp_map_match, reg_fmtp_video);
+    if (!search_result && fmtp_map_match.size() == 0) {
+      reg_fmtp_video.assign(reg_start_insert + sub_str + reg_end_insert,
+                            std::regex_constants::icase);
+      ret_str = std::regex_replace(ret_str, reg_fmtp_video, to_insert);
+    } else {
+      ret_str = std::regex_replace(ret_str, reg_fmtp_video, to_replace);
+    }
+  }
+  sub_str = str.substr(start);
+  if (sub_str.compare(red_codec) == 0) {
+    return ret_str;
+  }
+  reg_fmtp_video.assign(reg_start_replace + sub_str + reg_end_replace,
+                        std::regex_constants::icase);
+  search_result = std::regex_search(ret_str, fmtp_map_match, reg_fmtp_video);
+  if (!search_result && fmtp_map_match.size() == 0) {
+    reg_fmtp_video.assign(reg_start_insert + sub_str + reg_end_insert,
+                          std::regex_constants::icase);
+    ret_str = std::regex_replace(ret_str, reg_fmtp_video, to_insert);
+  } else {
+    ret_str = std::regex_replace(ret_str, reg_fmtp_video, to_replace);
+  }
+  return ret_str;
+}
+
 std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
     std::string& codec_name,
     bool is_audio) {
@@ -96,7 +164,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
   std::vector<std::string> kept_codec_values;
   if (!is_audio) {
     // Get red and ulpfec payload type if any.
-    bool has_red = false, has_ulpfec = false;
+    bool has_red = false, has_ulpfec = false, has_flexfec = false;
     std::regex reg_red_map(
         "a=rtpmap:(\\d+) red\\/\\d+(?=[\r]?[\n]?)",
         std::regex_constants::icase);
@@ -117,6 +185,15 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       ulpfec_codec_value = ulpfec_map_match[1];
       has_ulpfec = true;
     }
+    std::regex reg_flexfec_map("a=rtpmap:(\\d+) flexfec-03\\/\\d+(?=[\r]?[\n]?)",
+                           std::regex_constants::icase);
+    std::smatch flexfec_map_match;
+    std::string flexfec_codec_value;
+    search_result = std::regex_search(sdp, flexfec_map_match, reg_flexfec_map);
+    if (search_result && flexfec_map_match.size() != 0) {
+      flexfec_codec_value = flexfec_map_match[1];
+      has_flexfec = true;
+    }
     if (has_red) {
       kept_codec_values.push_back(red_codec_value);
       for (auto& rtx_value : rtx_maps) {
@@ -132,6 +209,10 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
             kept_codec_values.push_back(rtx_value.first);
         }
       }
+    }
+    if (has_flexfec) {
+      kept_codec_values.push_back(flexfec_codec_value);
+      // flex-fec does not involve rtx so we don't search its rtx association.
     }
   }
   for (auto& codec_name : codec_names) {

@@ -14,6 +14,8 @@
 #include <mfxvideo++.h>
 #include <mfxplugin++.h>
 #include <mfxvp8.h>
+#include <memory>
+
 #include "msdkcommon.h"
 #include "sysmem_allocator.h"
 
@@ -32,14 +34,17 @@ class MSDKFactory {
   MFXVideoSession* CreateSession();
 
   void DestroySession(MFXVideoSession* session);
-  
-  MFXVideoSession* GetMainSession();
 
-  bool LoadDecoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
-  bool LoadEncoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
+  bool LoadDecoderPlugin(uint32_t codec_id,
+                         MFXVideoSession* session,
+                         mfxPluginUID* plugin_id);
+  bool LoadEncoderPlugin(uint32_t codec_id,
+                         MFXVideoSession* session,
+                         mfxPluginUID* plugin_id);
   void UnloadMSDKPlugin(MFXVideoSession* session, mfxPluginUID* plugin_id);
 
-  static std::shared_ptr<D3DFrameAllocator> CreateFrameAllocator(IDirect3DDeviceManager9* d3d_manager);
+  static std::shared_ptr<D3DFrameAllocator> CreateFrameAllocator(
+      IDirect3DDeviceManager9* d3d_manager);
   static std::shared_ptr<SysMemFrameAllocator> CreateFrameAllocator();
   void MFETimeout(uint32_t timeout);
   uint32_t MFETimeout();
@@ -47,11 +52,9 @@ class MSDKFactory {
     // Returns the number of adapter associated with MSDK session, 0 for SW
     // session
     static mfxU32 GetNumber(mfxSession session, mfxIMPL implVia = 0) {
-      mfxU32 adapterNum = 0;             // default
+      mfxU32 adapter_num = 0;             // default
       mfxIMPL impl = MFX_IMPL_SOFTWARE;  // default in case no HW IMPL is found
 
-      // We don't care for error codes in further code; if something goes wrong
-      // we fall back to the default adapter
       if (session) {
         MFXQueryIMPL(session, &impl);
       } else {
@@ -67,31 +70,31 @@ class MSDKFactory {
       }
 
       // Extract the base implementation type
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl);
+      mfxIMPL base_impl = MFX_IMPL_BASETYPE(impl);
 
       const struct {
         // Actual implementation
         mfxIMPL impl;
         // Adapter's number
-        mfxU32 adapterID;
+        mfxU32 adapter_id;
 
-      } implTypes[] = {{MFX_IMPL_HARDWARE, 0},
+      } impl_types[] = {{MFX_IMPL_HARDWARE, 0},
                        {MFX_IMPL_SOFTWARE, 0},
                        {MFX_IMPL_HARDWARE2, 1},
                        {MFX_IMPL_HARDWARE3, 2},
                        {MFX_IMPL_HARDWARE4, 3}};
 
       // Get corresponding adapter number
-      for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(*implTypes); i++) {
-        if (implTypes[i].impl == baseImpl) {
-          adapterNum = implTypes[i].adapterID;
+      for (mfxU8 i = 0; i < sizeof(impl_types) / sizeof(*impl_types); i++) {
+        if (impl_types[i].impl == base_impl) {
+          adapter_num = impl_types[i].adapter_id;
           break;
         }
       }
-
-      return adapterNum;
+      return adapter_num;
     }
- };
+  };
+
  protected:
   MSDKFactory();
   bool Init();

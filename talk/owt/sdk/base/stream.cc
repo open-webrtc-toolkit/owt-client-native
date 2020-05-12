@@ -17,6 +17,7 @@
 #if defined(WEBRTC_WIN)
 #include "talk/owt/sdk/base/desktopcapturer.h"
 #include "talk/owt/sdk/base/win/videorendererwin.h"
+#include "talk/owt/sdk/base/win/videorendererd3d11.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #endif
 #if defined(WEBRTC_IOS)
@@ -73,7 +74,9 @@ Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
+#if defined(OWT_USE_MSDK)
+      d3d11_renderer_impl_(nullptr),
+#endif
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
       id_("") {}
@@ -81,7 +84,9 @@ Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
+#if defined(OWT_USE_MSDK)
+      d3d11_renderer_impl_(nullptr),
+#endif
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
       id_(id) {}
@@ -149,31 +154,6 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
-
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
-  if (media_stream_ == nullptr) {
-    RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
-    return;
-  }
-  auto video_tracks = media_stream_->GetVideoTracks();
-  if (video_tracks.size() == 0) {
-    RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
-    return;
-  } else if (video_tracks.size() > 1) {
-    RTC_LOG(LS_WARNING)
-        << "There are more than one video tracks, the first one "
-           "will be attachecd to renderer.";
-  }
-  WebrtcVideoRendererImpl* old_renderer =
-      renderer_impl_ ? renderer_impl_ : nullptr;
-  renderer_impl_ = new WebrtcVideoRendererImpl(renderer);
-  video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
-  if (old_renderer)
-    delete old_renderer;
-  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
-}
-
 void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
@@ -197,9 +177,7 @@ void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
-#endif
-#if defined(WEBRTC_WIN)
-void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
+void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
@@ -213,21 +191,61 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
         << "There are more than one video tracks, the first one "
            "will be attachecd to renderer.";
   }
-  WebrtcVideoRendererD3D9Impl* old_renderer =
-      d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
-  d3d9_renderer_impl_ =
-      new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
-  video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
+  WebrtcVideoRendererImpl* old_renderer =
+      renderer_impl_ ? renderer_impl_ : nullptr;
+  renderer_impl_ = new WebrtcVideoRendererImpl(renderer);
+  video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
   if (old_renderer)
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
+void Stream::DetachAudioPlayer() {
+  if (media_stream_ == nullptr)
+    return;
+
+  auto audio_tracks = media_stream_->GetAudioTracks();
+  if (audio_tracks.size() == 0)
+    return;
+
+  if (audio_renderer_impl_ != nullptr) {
+    audio_tracks[0]->RemoveSink(audio_renderer_impl_);
+    delete audio_renderer_impl_;
+    audio_renderer_impl_ = nullptr;
+  }
+}
+#if defined(WEBRTC_WIN)
+void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
+#if defined(OWT_USE_MSDK)
+  if (media_stream_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    return;
+  }
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
+    RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  } else if (video_tracks.size() > 1) {
+    RTC_LOG(LS_WARNING)
+        << "There are more than one video tracks, the first one "
+           "will be attachecd to renderer.";
+  }
+  WebrtcVideoRendererD3D11Impl* old_renderer =
+      d3d11_renderer_impl_ ? d3d11_renderer_impl_ : nullptr;
+  d3d11_renderer_impl_ =
+      new WebrtcVideoRendererD3D11Impl(render_window.GetWindowHandle());
+  video_tracks[0]->AddOrUpdateSink(d3d11_renderer_impl_, rtc::VideoSinkWants());
+  if (old_renderer)
+    delete old_renderer;
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
+#endif
+}
 #endif
 
 void Stream::DetachVideoRenderer() {
+#if defined(OWT_USE_MSDK)
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
-      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
+      (renderer_impl_ == nullptr && d3d11_renderer_impl_ == nullptr))
     return;
 #else
   if (media_stream_ == nullptr || renderer_impl_ == nullptr)
@@ -243,27 +261,13 @@ void Stream::DetachVideoRenderer() {
     renderer_impl_ = nullptr;
   }
 #if defined(WEBRTC_WIN)
-  if (d3d9_renderer_impl_ != nullptr) {
-    video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
-    delete d3d9_renderer_impl_;
-    d3d9_renderer_impl_ = nullptr;
+  if (d3d11_renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(d3d11_renderer_impl_);
+    delete d3d11_renderer_impl_;
+    d3d11_renderer_impl_ = nullptr;
   }
 #endif
-}
-
-void Stream::DetachAudioPlayer() {
-  if (media_stream_ == nullptr)
-    return;
-
-  auto audio_tracks = media_stream_->GetAudioTracks();
-  if (audio_tracks.size() == 0)
-    return;
-
-  if (audio_renderer_impl_ != nullptr) {
-    audio_tracks[0]->RemoveSink(audio_renderer_impl_);
-    delete audio_renderer_impl_;
-    audio_renderer_impl_ = nullptr;
-  }
+#endif
 }
 
 StreamSourceInfo Stream::Source() const {
@@ -375,9 +379,10 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 }
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
-  std::shared_ptr<LocalStream> stream(new LocalStream(parameters, encoder));
-  return stream;
+    std::shared_ptr<EncodedStreamProvider> encoder) {
+    std::shared_ptr<LocalStream> stream(
+        new LocalStream(parameters, encoder));
+    return stream;
 }
 LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
                          int& error_code) {
@@ -561,7 +566,7 @@ LocalStream::LocalStream(
 }
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
+    std::shared_ptr<EncodedStreamProvider> encoder) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     RTC_LOG(LS_WARNING) << "Create LocalStream without video and audio.";
   }

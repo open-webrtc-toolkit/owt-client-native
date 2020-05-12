@@ -5,12 +5,15 @@
 #define OWT_BASE_GLOBALCONFIGURATION_H_
 #include <memory>
 #include "owt/base/framegeneratorinterface.h"
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "owt/base/videodecoderinterface.h"
+#endif
 #if defined(WEBRTC_WIN)
 #include <windows.h>
+#include <d3d11.h>
 #endif
 namespace owt {
-namespace base{
+namespace base {
 /** @cond */
 /// Audio processing settings.
 struct AudioProcessingSettings {
@@ -39,10 +42,12 @@ struct AudioProcessingSettings {
 /** @endcond */
 /**
  @brief configuration of global using.
- GlobalConfiguration class of setting for encoded frame and hardware accecleartion configuration.
+ GlobalConfiguration class of setting for encoded frame and hardware
+ accecleartion configuration.
 */
 class GlobalConfiguration {
   friend class PeerConnectionDependencyFactory;
+
  public:
 #if defined(WEBRTC_WIN)
   /**
@@ -52,17 +57,66 @@ class GlobalConfiguration {
   static void SetVideoHardwareAccelerationEnabled(bool enabled) {
     hardware_acceleration_enabled_ = enabled;
   }
+
+  /**
+   @breif This function sets the d3d11 device for the decoder if hardware
+   acceleration is turned on. If hardware acceleration is not turned on, this
+   device will be used for creating D3D11 texture for renderer only.
+   @param d3d11_device The device used for decoding.
+  */
+  static void SetD3DDeviceForDecoding(ID3D11Device* d3d11_device) {
+    d3d11_decoding_device_ = d3d11_device;
+  }
 #endif
+  /**
+   @brief This sets the link MTU
+   @param mtu_size The link mtu
+  */
+  static void SetLinkMTU(int mtu_size) {
+    link_mtu_ = mtu_size;
+  }
+  /**
+   @brief This function sets the minimum and maximum port number for webrtc
+   connection.
+   @param min_port minimum port number
+   @param max_port maximum port number
+  */
+  static void SetIcePortAllocationRange(int min_port, int max_port) {
+    min_port_ = min_port;
+    max_port_ = max_port;
+  }
+  /**
+  @brief This function sets the SDK into low latency streaming mode.
+  @param enabled Enable low latency mode or not.
+  */
+  static void SetLowLatencyStreamingEnabled(bool enabled) {
+    low_latency_streaming_enabled_ = enabled;
+  }
+  /**
+   @brief This function enables logging of latency to file
+   @param enabled Enable logging of latency to file.
+  */
+  static void SetLatencyLoggingEnabled(bool enabled) {
+    log_latency_to_file_enabled_ = enabled;
+  }
   /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
-   please be noted at present only vp8 and h.264 encoded frame input is supported.
-   If the client configuration sets preferred coded to vp9 or h265, the encoded
-   frame might not be sent out to remote.
+   please be noted at present only vp8 and h.264 encoded frame input is
+   supported. If the client configuration sets preferred coded to vp9 or h265,
+   the encoded frame might not be sent out to remote.
    @param enabled Capturing frame is encoded or not.
    */
   static void SetEncodedVideoFrameEnabled(bool enabled) {
-     encoded_frame_ = enabled;
+    encoded_frame_ = enabled;
+  }
+  /**
+   @brief This function sets the weight of delay-based BWE impact on final
+   estimated bandwidth.
+   @param weight The weight of delay based BWE result in range of [0, 100]
+  */
+  static void SetDelayBasedBWEWeight(int weight) {
+    delay_based_bwe_weight_ = weight;
   }
   /** @endcond */
   /**
@@ -77,11 +131,8 @@ class GlobalConfiguration {
   static void SetCustomizedAudioInputEnabled(
       bool enabled,
       std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator) {
-      if (enabled) {
-          audio_frame_generator_ = std::move(audio_frame_generator);
-      } else {
-          audio_frame_generator_.reset(nullptr);
-      }
+    if (enabled)
+      audio_frame_generator_ = std::move(audio_frame_generator);
   }
   /**
    @brief This function sets the temporal layers for H.264.
@@ -138,6 +189,7 @@ class GlobalConfiguration {
   static void SetNSEnabled(bool enabled) {
     audio_processing_settings_.NSEnabled = enabled;
   }
+
  private:
   GlobalConfiguration() {}
   virtual ~GlobalConfiguration() {}
@@ -150,7 +202,33 @@ class GlobalConfiguration {
     return hardware_acceleration_enabled_;
   }
   static bool hardware_acceleration_enabled_;
+
+  /**
+   @brief This function gets the D3D11Device used for decoding/rendering.
+   @return The D3D11Device handle sets by application.
+  */
+  static ID3D11Device* GetD3D11DeviceForDecoding() {
+    return d3d11_decoding_device_;
+  }
+  static ID3D11Device* d3d11_decoding_device_;
 #endif
+  static int GetLinkMTU() {
+    return link_mtu_;
+  }
+  static int link_mtu_;
+    /**
+   @brief This function gets the minimum & maximum port to be used for webrtc
+   connection.
+   @param min_port returned minimum port number to be used
+   @param max_port returned maximum port number to be used
+  */
+  static void GetIcePortAllocationRanges(int& min_port, int& max_port) {
+    min_port = min_port_;
+    max_port = max_port_;
+    return;
+  }
+  static int min_port_;
+  static int max_port_;
   /**
    @brief This function gets H.264 temporal layer settings.
 
@@ -164,6 +242,19 @@ class GlobalConfiguration {
     return h264_temporal_layers_;
   }
   static int h264_temporal_layers_;
+  /**
+  @breif This function get low latency streaming is enabled or not.
+  @return true or false.
+  */
+  static bool GetLowLatencyStreamingEnabled() {
+    return low_latency_streaming_enabled_;
+  }
+  static bool low_latency_streaming_enabled_;
+
+  static bool GetLatencyLoggingEnabled() {
+    return log_latency_to_file_enabled_;
+  }
+  static bool log_latency_to_file_enabled_;
   /**
    @brief This function gets whether encoded video frame input is enabled or not.
    @return true or false.
@@ -220,6 +311,7 @@ class GlobalConfiguration {
    * be published.
    */
   static bool encoded_frame_;
+  static int delay_based_bwe_weight_;
   static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
   /**
    @brief This function returns flag indicating whether customized video decoder is enabled or not
@@ -228,6 +320,11 @@ class GlobalConfiguration {
   static bool GetCustomizedVideoDecoderEnabled() {
     return video_decoder_ ? true : false;
   }
+  /**
+   @brief This function returns the weight of delay based BWE in overall
+   bandwidth estimation.
+  */
+  static int GetDelayBasedBweWeight() { return delay_based_bwe_weight_; }
   /**
    @brief This function gets customized video decoder
    @return Customized video decoder

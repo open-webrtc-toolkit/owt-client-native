@@ -111,8 +111,9 @@ PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
   RTC_CHECK(peer_connection_);
   return peer_connection_->signaling_state();
 }
-void PeerConnectionChannel::ClosePc(){
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
+void PeerConnectionChannel::ClosePc() {
+  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
+                   nullptr);
 }
 void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
   RTC_CHECK(peer_connection_);
@@ -154,9 +155,16 @@ void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
       rtc::TypedMessageData<std::string>* param =
           static_cast<rtc::TypedMessageData<std::string>*>(msg->pdata);
       webrtc::DataChannelInit config;
-      data_channel_ =
-          peer_connection_->CreateDataChannel(param->data(), &config);
-      data_channel_->RegisterObserver(this);
+      if (param->data() == "control") {
+        config.maxRetransmits = 0;
+        control_data_channel_ =
+            peer_connection_->CreateDataChannel(param->data(), &config);
+        control_data_channel_->RegisterObserver(this);
+      } else {
+        data_channel_ =
+            peer_connection_->CreateDataChannel(param->data(), &config);
+        data_channel_->RegisterObserver(this);
+      }
       RTC_LOG(LS_INFO) << "Created data channel.";
       delete param;
       break;

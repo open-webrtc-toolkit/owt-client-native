@@ -24,15 +24,15 @@
 using namespace rtc;
 namespace owt {
 namespace base {
+static const uint8_t frame_number_sei_guid[16] = {
+    0xef, 0xc8, 0xe7, 0xb0, 0x26, 0x26, 0x47, 0xfd,
+    0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
+
 CustomizedVideoEncoderProxy::CustomizedVideoEncoderProxy()
-    : callback_(nullptr), external_encoder_(nullptr) {
+    : callback_(nullptr) {
   picture_id_ = 0;
 }
 CustomizedVideoEncoderProxy::~CustomizedVideoEncoderProxy() {
-  if (external_encoder_) {
-    delete external_encoder_;
-    external_encoder_ = nullptr;
-  }
 }
 int CustomizedVideoEncoderProxy::InitEncode(
     const webrtc::VideoCodec* codec_settings,
@@ -51,56 +51,25 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     const webrtc::VideoFrame& input_image,
     const std::vector<webrtc::VideoFrameType>* frame_types) {
   // Get the videoencoderinterface instance from the input video frame.
-  CustomizedEncoderBufferHandle* encoder_buffer_handle =
-      reinterpret_cast<CustomizedEncoderBufferHandle*>(
-          static_cast<owt::base::EncodedFrameBuffer*>(
+  CustomizedEncoderBufferHandle2* encoder_buffer_handle =
+      reinterpret_cast<CustomizedEncoderBufferHandle2*>(
+          static_cast<owt::base::EncodedFrameBuffer2*>(
               input_image.video_frame_buffer().get())
               ->native_handle());
-  if (external_encoder_ == nullptr && encoder_buffer_handle != nullptr &&
-      encoder_buffer_handle->encoder != nullptr) {
-    // First time we get passed in encoder impl. Initialize it. Use codec
-    // settings in the natvie handle instead of that passed uplink.
-    external_encoder_ = encoder_buffer_handle->encoder->Copy();
-    if (external_encoder_ == nullptr) {
-      RTC_LOG(LS_ERROR) << "Fail to duplicate video encoder";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    size_t width = encoder_buffer_handle->width;
-    size_t height = encoder_buffer_handle->height;
-    uint32_t fps = encoder_buffer_handle->fps;
-    uint32_t bitrate_kbps = encoder_buffer_handle->bitrate_kbps;
-    // TODO(jianlin): Add support for H265 and VP9. For VP9/HEVC since the
-    // RTPFragmentation information must be extracted by parsing the bitstream,
-    // we commented out the support of them temporarily.
-    VideoCodec media_codec;
-    if (codec_type_ == webrtc::kVideoCodecH264)
-      media_codec = VideoCodec::kH264;
-    else if (codec_type_ == webrtc::kVideoCodecVP8)
-      media_codec = VideoCodec::kVp8;
-#ifndef DISABLE_H265
-    else if (codec_type_ == webrtc::kVideoCodecH265)
-      media_codec = VideoCodec::kH265;
-#endif
-    else if (codec_type_ == webrtc::kVideoCodecVP9)
-      media_codec = VideoCodec::kVp9;
-    else {  // Not matching any supported format.
-      RTC_LOG(LS_ERROR) << "Requested encoding format not supported";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    Resolution resolution(static_cast<int>(width), static_cast<int>(height));
-    if (!external_encoder_->InitEncoderContext(resolution, fps, bitrate_kbps,
-                                               media_codec)) {
-      RTC_LOG(LS_ERROR) << "Failed to init external encoder context";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-  } else if (encoder_buffer_handle != nullptr &&
-             encoder_buffer_handle->encoder == nullptr) {
-    RTC_LOG(LS_ERROR) << "Invalid external encoder passed.";
+  if (encoder_buffer_handle == nullptr ||
+      encoder_buffer_handle->buffer_ == nullptr ||
+      encoder_buffer_handle->buffer_length_ == 0) {
+    RTC_LOG(LS_ERROR) << "Received invalid encoded frame.";
     return WEBRTC_VIDEO_CODEC_ERROR;
-  } else if (encoder_buffer_handle == nullptr) {
-    RTC_LOG(LS_ERROR) << "Invalid native handle passed.";
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  } else {  // normal case.
+  }
+
+  // Set encoder event callback object if not done already.
+  if (encoder_event_callback_ == nullptr) {
+    encoder_event_callback_ = encoder_buffer_handle->encoder_event_callback_;
+  }
+
+  // Check codec type before proceeding.
+  {  // normal case.
 #ifndef DISABLE_H265
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
@@ -123,32 +92,79 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       }
     }
   }
-#ifdef WEBRTC_ANDROID
-  uint8_t* data_ptr = nullptr;
-  uint32_t data_size = 0;
-  if (external_encoder_) {
-    data_size = external_encoder_->EncodeOneFrame(request_key_frame, &data_ptr);
+
+  if (encoder_event_callback_ != nullptr && request_key_frame) {
+    encoder_event_callback_->RequestKeyFrame();
   }
-  if (data_ptr == nullptr) {
+
+  auto side_data_size =
+      encoder_buffer_handle->meta_data_.encoded_image_sidedata_size();
+  auto side_data_ptr =
+      encoder_buffer_handle->meta_data_.encoded_image_sidedata_get();
+  if (side_data_size > OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  webrtc::EncodedImage encodedframe(data_ptr, data_size, data_size);
-#else
-  if (external_encoder_) {
-    if (!external_encoder_->EncodeOneFrame(buffer, request_key_frame))
-      return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-  std::unique_ptr<uint8_t[]> data(new uint8_t[buffer.size()]);
+
+  // construct the SEI. index 0-22 is the sei overhead, and last byte is RBSP
+  std::unique_ptr<uint8_t[]> data(new uint8_t[encoder_buffer_handle->buffer_length_ + side_data_size + 24]);
   uint8_t* data_ptr = data.get();
-  uint32_t data_size = static_cast<uint32_t>(buffer.size());
-  std::copy(buffer.begin(), buffer.end(), data_ptr);
-  webrtc::EncodedImage encodedframe(data_ptr, buffer.size(), buffer.size());
-#endif
+  uint32_t data_size =
+      static_cast<uint32_t>(encoder_buffer_handle->buffer_length_);
+
+  if (codec_type_ != webrtc::kVideoCodecH264 && side_data_size > 0) {
+    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+  }
+
+  // SEI prefix is only enabled for H.264.
+  if (codec_type_ == webrtc::kVideoCodecH264 && side_data_ptr && side_data_size) {
+    data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
+    data_ptr[3] = 0x01; // start code: byte 0-3
+    data_ptr[4] = 0x06; // NAL-type: SEI
+    data_ptr[5] = 0x05; // userdata unregistered
+    data_ptr[6] = 16 + side_data_size; // payload size
+    for (int i = 0; i < 16; i++) {
+      data_ptr[i + 7] = frame_number_sei_guid[i];
+    }
+    memcpy(data_ptr + 23, side_data_ptr, side_data_size);
+    data_ptr[side_data_size + 23] = 0x80;
+    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+    memcpy(data_ptr + side_data_size + 24, encoder_buffer_handle->buffer_,
+           encoder_buffer_handle->buffer_length_);
+    data_size += side_data_size + 24;
+  } else {
+    memcpy(data_ptr, encoder_buffer_handle->buffer_,
+           encoder_buffer_handle->buffer_length_);
+  }
+
+  webrtc::EncodedImage encodedframe(data_ptr, data_size, data_size);
+
   encodedframe._encodedWidth = input_image.width();
   encodedframe._encodedHeight = input_image.height();
   encodedframe._completeFrame = true;
-  encodedframe.capture_time_ms_ = input_image.render_time_ms();
+  encodedframe.capture_time_ms_ =
+      /*input_image.render_time_ms()*/ encoder_buffer_handle->meta_data_
+          .capture_timestamp;
   encodedframe.SetTimestamp(input_image.timestamp());
+  encodedframe.playout_delay_.min_ms = 0;
+  encodedframe.playout_delay_.max_ms = 0;
+  encodedframe.timing_.encode_start_ms =
+      encoder_buffer_handle->meta_data_.encoding_start;
+  encodedframe.timing_.encode_finish_ms =
+      encoder_buffer_handle->meta_data_.encoding_end;
+  encodedframe.timing_.flags = webrtc::VideoSendTiming::kTriggeredByTimer;
+  if (!update_ts_) {
+    encodedframe.capture_time_ms_ = last_capture_timestamp_;
+    encodedframe.SetTimestamp(last_timestamp_);
+  } else {
+    last_capture_timestamp_ = encodedframe.capture_time_ms_;
+    last_timestamp_ = encodedframe.Timestamp();
+  }
+
+  if (encoder_buffer_handle->meta_data_.last_fragment)
+    update_ts_ = true;
+  else
+    update_ts_ = false;
+
   // VP9 requires setting the frame type according to actual frame type.
   if (codec_type_ == webrtc::kVideoCodecVP9 && data_size > 2) {
     uint8_t au_key = 1;
@@ -165,7 +181,9 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     } else {
       au_key = (first_byte >> 2) & 0x1;
     }
-    encodedframe._frameType = (au_key == 0) ? webrtc::VideoFrameType::kVideoFrameKey : webrtc::VideoFrameType::kVideoFrameDelta;
+    encodedframe._frameType = (au_key == 0)
+                                  ? webrtc::VideoFrameType::kVideoFrameKey
+                                  : webrtc::VideoFrameType::kVideoFrameDelta;
   }
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
@@ -202,7 +220,18 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       info.codecSpecific.H264.idr_frame = is_idr;
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
+	info.codecSpecific.H264.picture_id = encoder_buffer_handle->meta_data_.picture_id;
+    info.codecSpecific.H264.last_fragment_in_frame =
+        encoder_buffer_handle->meta_data_.last_fragment;
   }
+#ifndef DISABLE_H265
+  else if (codec_type_ == webrtc::kVideoCodecH265) {
+    info.codecSpecific.H265.picture_id =
+        encoder_buffer_handle->meta_data_.picture_id;
+    info.codecSpecific.H265.last_fragment_in_frame =
+        encoder_buffer_handle->meta_data_.last_fragment;
+  }
+#endif
   // Generate a header describing a single fragment.
   webrtc::RTPFragmentationHeader header;
   memset(&header, 0, sizeof(header));
@@ -286,9 +315,6 @@ void CustomizedVideoEncoderProxy::OnLossNotification(
 
 int CustomizedVideoEncoderProxy::Release() {
   callback_ = nullptr;
-  if (external_encoder_ != nullptr) {
-    external_encoder_->Release();
-  }
   return WEBRTC_VIDEO_CODEC_OK;
 }
 int32_t CustomizedVideoEncoderProxy::NextNaluPosition(uint8_t* buffer,
