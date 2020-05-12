@@ -26,12 +26,13 @@
 #include "webrtc/rtc_base/thread_annotations.h"
 #include "owt/base/framegeneratorinterface.h"
 #include "owt/base/videoencoderinterface.h"
+#include "talk/owt/sdk/base/encodedstreamproviderwrapper.h"
 
 namespace owt {
 namespace base {
 
 // Simulated video capturer that periodically reads frames from a file.
-class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
+class CustomizedFramesCapturer : public webrtc::VideoCaptureModule, public EncodedStreamProviderSink {
  public:
   CustomizedFramesCapturer(
       std::unique_ptr<VideoFrameGeneratorInterface> rawFrameGenerator);
@@ -39,7 +40,7 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
                            int height,
                            int fps,
                            int bitrate_kbps,
-                           VideoEncoderInterface* encoder);
+                           std::shared_ptr<EncodedStreamProvider> encoder);
   virtual ~CustomizedFramesCapturer();
 
   CustomizedFramesCapturer(const CustomizedFramesCapturer&) = delete;
@@ -55,8 +56,12 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   virtual const char* CurrentDeviceName() const override {
     return "CustomizedCapturer";
   }
+
   virtual bool CaptureStarted() override;
   virtual int32_t CaptureSettings(webrtc::VideoCaptureCapability& settings) override;
+// EncodedStreamProviderSink implementation
+  virtual void OnStreamProviderFrame(const std::vector<uint8_t>& buffer,
+                                     const EncodedImageMetaData& meta_data);
   virtual int32_t SetCaptureRotation(webrtc::VideoRotation rotation) override;
   virtual bool SetApplyRotation(bool enable) override {
     return false;
@@ -80,7 +85,7 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
 
   rtc::VideoSinkInterface<webrtc::VideoFrame>* data_callback_;
   std::unique_ptr<VideoFrameGeneratorInterface> frame_generator_;
-  VideoEncoderInterface* encoder_;
+  std::shared_ptr<EncodedStreamProvider> encoder_;
   std::unique_ptr<CustomizedFramesThread> frames_generator_thread_;
   int width_;
   int height_;
@@ -95,6 +100,9 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   webrtc::Mutex lock_;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
+  std::shared_ptr<EncodedStreamProviderWrapper>
+      encoded_stream_provider_wrapper_;
+  EncoderEventCallbackWrapper* encoder_event_callback_ = nullptr;
 };
 }  // namespace base
 }  // namespace owt
