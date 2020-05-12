@@ -159,7 +159,9 @@ class Stream {
   WebrtcVideoRendererImpl* renderer_impl_;
   WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
+#if defined(OWT_USE_MSDK)
   WebrtcVideoRendererD3D11Impl* d3d11_renderer_impl_;
+#endif
 #endif
 #if defined(WEBRTC_LINUX)
   WebrtcVideoRendererVaImpl* va_renderer_impl_;
@@ -350,12 +352,12 @@ class LocalStream : public Stream {
     with video encoder interface.
     @param parameters Parameters for creating the stream. The stream will not
     be impacted if changing parameters after it is created.
-    @param encoder Pointer to an instance implementing VideoEncoderInterface.
+    @param encoder Pointer to an instance of EncodedStreamProvider.
     @return Pointer to created LocalStream.
   */
   static std::shared_ptr<LocalStream> Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
 #endif
 
 #if defined(WEBRTC_WIN)
@@ -387,7 +389,7 @@ class LocalStream : public Stream {
       std::unique_ptr<VideoFrameGeneratorInterface> framer);
   explicit LocalStream(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface* encoder);
+      std::shared_ptr<EncodedStreamProvider> encoder);
 #endif
 #if defined(WEBRTC_WIN)
   explicit LocalStream(std::shared_ptr<LocalDesktopStreamParameters> parameters,

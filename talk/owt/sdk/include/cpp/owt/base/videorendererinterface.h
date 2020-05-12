@@ -36,13 +36,18 @@ struct D3D11ImageHandle {
 #endif
 /// Video buffer and its information
 struct VideoBuffer {
-  /// Video buffer
-  uint8_t* buffer;
+  /// Video buffer. If is native, 
+   void* buffer;
   /// Resolution for the Video buffer
   Resolution resolution;
   // Buffer type
   VideoBufferType type;
-  ~VideoBuffer() { delete[] buffer; }
+  ~VideoBuffer() {
+    if (type != VideoBufferType::kD3D11Handle)
+      delete[] buffer;
+    else
+      delete buffer;
+  }
 };
 /// VideoRenderWindow wraps a native Window handle
 #if defined(WEBRTC_WIN)
@@ -129,6 +134,23 @@ class VideoRendererInterface {
   /// Render type that indicates the VideoBufferType the renderer would receive.
   virtual VideoRendererType Type() = 0;
 };
+#if defined(WEBRTC_WIN)
+struct D3D11Handle {
+  ID3D11Texture2D* texture;
+  ID3D11Device* d3d11_device;
+  ID3D11VideoDevice* d3d11_video_device;
+  ID3D11VideoContext* context;
+};
+struct D3D11VAHandle {
+  ID3D11Texture2D* texture;
+  int array_index;
+  ID3D11Device* d3d11_device;
+  ID3D11VideoDevice* d3d11_video_device;
+  ID3D11VideoContext* context;
+  uint8_t side_data[OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX];
+  size_t side_data_size;
+};
+#endif
 }  // namespace base
 }  // namespace owt
 #endif  // OWT_BASE_VIDEORENDERERINTERFACE_H_

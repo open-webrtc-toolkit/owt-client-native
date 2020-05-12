@@ -1030,7 +1030,8 @@ struct VideoReceiverReport {
                       int32_t delay, std::string codec_name, int32_t jitter)
       : bytes_rcvd(bytes_rcvd), packets_rcvd(packets_rcvd), packets_lost(packets_lost)
       , fir_count(fir_count), pli_count(pli_count), nack_count(nack_count)
-      , frame_resolution_rcvd(Resolution(rcvd_frame_width, rcvd_frame_height)), framerate_output(framerate_output)
+      , frame_resolution_rcvd(Resolution(rcvd_frame_width, rcvd_frame_height))
+      , framerate_rcvd(framerate_rcvd), framerate_output(framerate_output)
       , delay(delay), codec_name(codec_name), jitter(jitter) {}
   /// Video bytes received
   int64_t bytes_rcvd;

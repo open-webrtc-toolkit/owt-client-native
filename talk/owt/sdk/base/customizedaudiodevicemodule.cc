@@ -17,6 +17,8 @@
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/rtc_base/ref_counted_object.h"
 #include "webrtc/rtc_base/time_utils.h"
+#include "talk/owt/sdk/base/customizedaudiocapturer.h"
+#include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 
 // Code partly borrowed from WebRTC project's audio device moudule implementation.
 #define CHECK_INITIALIZED() \
@@ -587,8 +589,8 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
 }
 #endif  // WEBRTC_IOS
 
-void CustomizedAudioDeviceModule::CreateOutputAdm(){
-  if(_outputAdm == nullptr) {
+void CustomizedAudioDeviceModule::CreateOutputAdm() {
+  if(_outputAdm==nullptr){
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());

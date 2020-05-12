@@ -77,6 +77,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                  std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Send message to remote user.
   void Send(const std::string& message,
+            bool is_reliable,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Stop current WebRTC session.
@@ -98,6 +99,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::function<void()> GetLatestPublishSuccessCallback();
   std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
   bool IsAbandoned();
+  void DisableSendingStop();
  protected:
   void CreateOffer() override;
   void CreateAnswer() override;
@@ -158,6 +160,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CreateDataChannel(const std::string& label);
   // Send all messages in pending message list.
   void DrainPendingMessages();
+  void DrainPendingControlMessages();
   // Cleans all variables associated with last peerconnection.
   void DrainPendingRemoteCandidates();
   void CleanLastPeerConnection();
@@ -213,6 +216,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       pending_messages_;
   // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
+  std::vector<std::tuple<std::shared_ptr<std::string>,
+                         std::function<void()>,
+                         std::function<void(std::unique_ptr<Exception>)>>>
+      pending_control_messages_;
   webrtc::Mutex pending_remote_candidates_crit_;
   std::vector<std::unique_ptr<webrtc::IceCandidateInterface>>
       pending_remote_candidates_

@@ -5,7 +5,7 @@ import("third_party/webrtc/webrtc.gni")
 group("default") {
   testonly = true
   deps = []
-  if (!is_linux && !is_win) {
+  if (!is_linux && !is_win && rtc_build_examples) {
     deps += [ "//third_party/webrtc/examples" ]
   }
   if (is_ios) {

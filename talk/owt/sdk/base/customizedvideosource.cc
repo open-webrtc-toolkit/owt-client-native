@@ -19,7 +19,7 @@ CustomizedVideoCapturerFactory::Create(
 rtc::scoped_refptr<webrtc::VideoCaptureModule>
 CustomizedVideoCapturerFactory::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
+    std::shared_ptr<EncodedStreamProvider> encoder) {
   return rtc::make_ref_counted<CustomizedFramesCapturer>(
       parameters->ResolutionWidth(), parameters->ResolutionHeight(),
       parameters->Fps(), parameters->Bitrate(), encoder);
@@ -83,7 +83,7 @@ CustomizedVideoCapturerFactory::Create(
 
   CustomizedCapturer* CustomizedCapturer::Create(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface * encoder) {
+      std::shared_ptr<EncodedStreamProvider> encoder) {
     std::unique_ptr<CustomizedCapturer> vcm_capturer(new CustomizedCapturer());
     if (!vcm_capturer->Init(parameters, encoder))
       return nullptr;
@@ -130,7 +130,7 @@ CustomizedVideoCapturerFactory::Create(
 
   bool CustomizedCapturer::Init(
       std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-      VideoEncoderInterface * encoder) {
+      std::shared_ptr<EncodedStreamProvider> encoder) {
     vcm_ = CustomizedVideoCapturerFactory::Create(parameters, encoder);
 
     if (!vcm_)

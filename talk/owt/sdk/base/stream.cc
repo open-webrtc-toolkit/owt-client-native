@@ -80,7 +80,9 @@ Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
+#if defined(OWT_USE_MSDK)
       d3d11_renderer_impl_(nullptr),
+#endif
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
               VideoSourceInfo::kUnknown,
@@ -94,7 +96,9 @@ Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
+#if defined(OWT_USE_MSDK)
       d3d11_renderer_impl_(nullptr),
+#endif
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
               VideoSourceInfo::kUnknown,
@@ -180,7 +184,6 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
-
 void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
@@ -231,7 +234,6 @@ void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 #endif
-
 #if defined(WEBRTC_LINUX)
 void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
   if (media_stream_ == nullptr) {
@@ -257,10 +259,8 @@ void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
-#endif
 
-#if defined(WEBRTC_WIN)
-void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
+void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
     return;
@@ -282,10 +282,12 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (old_renderer)
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
+#endif
 }
 #endif
 
 void Stream::DetachVideoRenderer() {
+#if defined(OWT_USE_MSDK)
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
       (renderer_impl_ == nullptr && d3d11_renderer_impl_ == nullptr))
@@ -321,21 +323,7 @@ void Stream::DetachVideoRenderer() {
     va_renderer_impl_ = nullptr;
   }
 #endif
-}
-
-void Stream::DetachAudioPlayer() {
-  if (media_stream_ == nullptr)
-    return;
-
-  auto audio_tracks = media_stream_->GetAudioTracks();
-  if (audio_tracks.size() == 0)
-    return;
-
-  if (audio_renderer_impl_ != nullptr) {
-    audio_tracks[0]->RemoveSink(audio_renderer_impl_);
-    delete audio_renderer_impl_;
-    audio_renderer_impl_ = nullptr;
-  }
+#endif
 }
 
 StreamSourceInfo Stream::Source() const {
@@ -450,9 +438,10 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 }
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
-  std::shared_ptr<LocalStream> stream(new LocalStream(parameters, encoder));
-  return stream;
+    std::shared_ptr<EncodedStreamProvider> encoder) {
+    std::shared_ptr<LocalStream> stream(
+        new LocalStream(parameters, encoder));
+    return stream;
 }
 #endif
 
@@ -655,7 +644,7 @@ LocalStream::LocalStream(
 }
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
-    VideoEncoderInterface* encoder) {
+    std::shared_ptr<EncodedStreamProvider> encoder) {
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     RTC_LOG(LS_WARNING) << "Create LocalStream without video and audio.";
   }

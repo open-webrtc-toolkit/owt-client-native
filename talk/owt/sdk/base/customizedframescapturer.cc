@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-
+#include <algorithm>
 #include "talk/owt/sdk/base/customizedframescapturer.h"
 #include "talk/owt/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
@@ -91,13 +91,16 @@ CustomizedFramesCapturer::CustomizedFramesCapturer(
       bitrate_kbps_(0),
       frame_type_(frame_generator_->GetType()),
       frame_buffer_capacity_(0),
-      frame_buffer_(nullptr) {}
+      frame_buffer_(nullptr) {
+  encoded_stream_provider_wrapper_ = nullptr;
+  encoder_event_callback_ = nullptr;
+}
 CustomizedFramesCapturer::CustomizedFramesCapturer(
     int width,
     int height,
     int fps,
     int bitrate_kbps,
-    VideoEncoderInterface* encoder)
+    std::shared_ptr<EncodedStreamProvider> encoder)
     : frame_generator_(nullptr),
       encoder_(encoder),
       width_(width),
@@ -105,7 +108,15 @@ CustomizedFramesCapturer::CustomizedFramesCapturer(
       fps_(fps),
       bitrate_kbps_(bitrate_kbps),
       frame_buffer_capacity_(0),
-      frame_buffer_(nullptr) {}
+      frame_buffer_(nullptr) {
+  if (encoder.get()) {
+    encoded_stream_provider_wrapper_.reset(
+        new EncodedStreamProviderWrapper(encoder));
+  } else {
+    encoded_stream_provider_wrapper_ = nullptr;
+  }
+  encoder_event_callback_ = nullptr;	  
+}
 CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   DeRegisterCaptureDataCallback();
   StopCapture();
@@ -114,6 +125,10 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   // application. mark it to nullptr to avoid ReadFrame
   // passing native buffer to stack.
   encoder_ = nullptr;
+    if (encoder_event_callback_ != nullptr) {
+    delete encoder_event_callback_;
+    encoder_event_callback_ = nullptr;
+  }
 }
 
 void CustomizedFramesCapturer::RegisterCaptureDataCallback(
@@ -143,6 +158,13 @@ int32_t CustomizedFramesCapturer::StartCapture(
       return -1;
     }
   }
+  if (encoded_stream_provider_wrapper_ != nullptr) {
+    encoded_stream_provider_wrapper_->AddSink(this);
+    if (encoder_event_callback_ == nullptr)
+      encoder_event_callback_ =
+          new EncoderEventCallbackWrapper(encoded_stream_provider_wrapper_);
+    encoder_event_callback_->StartStreaming();
+  }
   capture_started_ = true;
   return 0;
 }
@@ -155,6 +177,13 @@ int32_t CustomizedFramesCapturer::StopCapture() {
     }
     frames_generator_thread_->Quit();
     frames_generator_thread_.reset();
+  }
+  if (encoded_stream_provider_wrapper_ != nullptr) {
+    encoded_stream_provider_wrapper_->RemoveSink();
+  }
+
+  if (encoder_event_callback_ != nullptr) {
+    encoder_event_callback_->StopStreaming();
   }
   capture_started_ = false;
   return 0;
@@ -184,6 +213,45 @@ int32_t CustomizedFramesCapturer::SetCaptureRotation(
     webrtc::VideoRotation rotation) {
   // Not implemented.
   return 0;
+}
+
+void CustomizedFramesCapturer::OnStreamProviderFrame(
+    const std::vector<uint8_t>& buffer,
+    const EncodedImageMetaData& meta_data) {
+  if (buffer.size() == 0)
+    return;
+
+  CustomizedEncoderBufferHandle2* encoder_context =
+      new CustomizedEncoderBufferHandle2;
+  encoder_context->encoder_event_callback_ = encoder_event_callback_;
+  encoder_context->width_ = width_;
+  encoder_context->height_ = height_;
+  encoder_context->fps_ = fps_;
+  encoder_context->bitrate_kbps_ = bitrate_kbps_;
+  encoder_context->meta_data_.capture_timestamp = meta_data.capture_timestamp;
+  encoder_context->meta_data_.encoding_end = meta_data.encoding_end;
+  encoder_context->meta_data_.encoding_start = meta_data.encoding_start;
+  encoder_context->meta_data_.last_fragment = meta_data.last_fragment;
+  encoder_context->meta_data_.picture_id = meta_data.picture_id;
+  if (meta_data.encoded_image_sidedata_size() > 0) {
+    encoder_context->meta_data_.encoded_image_sidedata_new(
+        meta_data.encoded_image_sidedata_size());
+    memcpy(encoder_context->meta_data_.encoded_image_sidedata_get(),
+           meta_data.encoded_image_sidedata_get(),
+           meta_data.encoded_image_sidedata_size());
+    // sidedata will be freed by encoder proxy.
+  }
+  uint8_t* frame_buffer = new uint8_t[buffer.size()];
+  std::copy(buffer.begin(), buffer.end(), frame_buffer);
+
+  encoder_context->buffer_ = frame_buffer;
+  encoder_context->buffer_length_ = buffer.size();
+
+  rtc::scoped_refptr<owt::base::EncodedFrameBuffer2> rtc_buffer =
+      new rtc::RefCountedObject<owt::base::EncodedFrameBuffer2>(encoder_context);
+  webrtc::VideoFrame pending_frame(rtc_buffer, 0, rtc::TimeMillis(),
+                                   webrtc::kVideoRotation_0);
+  data_callback_->OnFrame(pending_frame);
 }
 
 int CustomizedFramesCapturer::I420DataSize(int height,
@@ -238,28 +306,8 @@ void CustomizedFramesCapturer::ReadFrame() {
 
     capture_frame.set_ntp_time_ms(0);
     data_callback_->OnFrame(capture_frame);
-  } else if (encoder_ != nullptr) {  // video encoder interface used. Pass the
-                                     // encoder information.
-    CustomizedEncoderBufferHandle* encoder_context =
-        new CustomizedEncoderBufferHandle;
-    encoder_context->encoder = encoder_;
-    encoder_context->width = width_;
-    encoder_context->height = height_;
-    encoder_context->fps = fps_;
-    encoder_context->bitrate_kbps = bitrate_kbps_;
-    rtc::scoped_refptr<owt::base::EncodedFrameBuffer> buffer =
-        rtc::make_ref_counted<owt::base::EncodedFrameBuffer>(encoder_context);
-
-    webrtc::VideoFrame pending_frame =
-        webrtc::VideoFrame::Builder()
-            .set_video_frame_buffer(buffer)
-            .set_timestamp_rtp(0)
-            .set_timestamp_ms(rtc::TimeMillis())
-            .set_rotation(webrtc::kVideoRotation_0)
-            .build();
-
-    pending_frame.set_ntp_time_ms(0);
-    data_callback_->OnFrame(pending_frame);
+  } else {
+    // For encoded input, we use push mode so it will not be delivered in capture thread.
   }
 }
 }  // namespace base

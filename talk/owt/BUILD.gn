@@ -77,16 +77,22 @@ if (!is_ios) {
       ":owt_sdk_base",
       ":owt_sdk_conf",
       ":owt_sdk_p2p",
-      "//third_party/protobuf:protobuf_lite",
       "//third_party/webrtc",
       "//third_party/webrtc:webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
+
+    if (rtc_enable_protobuf) {
+      deps += [
+        "//third_party/protobuf:protobuf_lite",
+      ]
+    }
     complete_static_lib = true
   }
 }
 static_library("owt_sdk_base") {
   sources = [
+    "sdk/base/clock.cc",
     "sdk/base/cameravideocapturer.cc",
     "sdk/base/cameravideocapturer.h",
     "sdk/base/codecutils.cc",
@@ -94,6 +100,10 @@ static_library("owt_sdk_base") {
     "sdk/base/commontypes.cc",
     "sdk/base/connectionstats.cc",
     "sdk/base/deviceutils.cc",
+    "sdk/base/encodedstreamproviderwrapper.cc",
+    "sdk/base/encodedstreamproviderwrapper.h",
+    "sdk/base/encodedvideoencoderfactory.cc",
+    "sdk/base/encodedvideoencoderfactory.h",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",
     "sdk/base/functionalobserver.cc",
@@ -114,6 +124,7 @@ static_library("owt_sdk_base") {
     "sdk/base/stringutils.h",
     "sdk/base/sysinfo.cc",
     "sdk/base/sysinfo.h",
+    "sdk/base/cursorutils.cc",
     "sdk/base/vcmcapturer.cc",
     "sdk/base/vcmcapturer.h",
     "sdk/base/webrtcaudiorendererimpl.cc",
@@ -137,8 +148,6 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideoencoderproxy.h",
       "sdk/base/customizedvideosource.cc",
       "sdk/base/customizedvideosource.h",
-      "sdk/base/encodedvideoencoderfactory.cc",
-      "sdk/base/encodedvideoencoderfactory.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/base/windowcapturer.cc",
@@ -169,6 +178,7 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/system_wrappers:field_trial",
     "//third_party/webrtc/system_wrappers:metrics",
     "//third_party/webrtc/system_wrappers:system_wrappers",
+    "//third_party/ffmpeg:ffmpeg",
   ]
   deps = [ "//base:logging_buildflags" ]
   include_dirs = [
@@ -176,12 +186,32 @@ static_library("owt_sdk_base") {
     "//third_party",
   ]
 
-  defines = [ "USE_BUILTIN_SW_CODECS" ]
-
-  if (is_win && owt_msdk_header_root != "") {
+  if (owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
-    defines += [ "OWT_USE_MSDK" ]
+  }
+
+  defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
+  defines += [ "USE_BUILTIN_SW_CODECS" ]
+  if (rtc_use_h265) {
+    defines += [ "WEBRTC_USE_H265" ]
+  }
+  if (is_win || is_linux) {
+    # Custom audio/video input and output.
+    # When rebasing libwebrtc to a new version, custom audio/video input/output
+    # usually need some changes to fit the latest API.
+    defines += [ "OWT_CUSTOM_AVIO" ]
+  }
+  if (is_ios) {
     sources += [
+      "sdk/base/ios/networkmonitorios.cc",
+      "sdk/base/ios/networkmonitorios.h",
+    ]
+    public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
+  }
+  if (is_win) {
+    sources += [
+      "sdk/base/desktopcapturer.cc",
+      "sdk/base/desktopcapturer.h",
       "sdk/base/win/base_allocator.cc",
       "sdk/base/win/base_allocator.h",
       "sdk/base/win/d3d11_allocator.cc",
@@ -191,19 +221,32 @@ static_library("owt_sdk_base") {
       "sdk/base/win/d3dnativeframe.h",
       "sdk/base/win/mediacapabilities.cc",
       "sdk/base/win/mediacapabilities.h",
+      "sdk/base/win/videorendererwin.cc",
+      "sdk/base/win/videorendererwin.h",
+      "sdk/base/windowcapturer.cc",
+      "sdk/base/windowcapturer.h",
       "sdk/base/win/msdkvideobase.cc",
       "sdk/base/win/msdkvideobase.h",
+    ]
+  }
+  
+  if (owt_msdk_header_root != "") {
+    sources += [
       "sdk/base/win/msdkvideodecoder.cc",
       "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
       "sdk/base/win/msdkvideoencoder.cc",
       "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
       "sdk/base/win/msdkvideoencoderfactory.cc",
       "sdk/base/win/msdkvideoencoderfactory.h",
-      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/base_allocator.cc",
+      "sdk/base/win/base_allocator.h",
+      "sdk/base/win/d3d_allocator.cc",
+      "sdk/base/win/d3d_allocator.h",
+      "sdk/base/win/d3d11_allocator.cc",
+      "sdk/base/win/d3d11_allocator.h",
       "sdk/base/win/sysmem_allocator.h",
-      "sdk/base/win/vp9ratecontrol.cc",
       "sdk/base/win/vp9ratecontrol.h",
       "sdk/base/win/vpedefs.h",
     ]
@@ -254,8 +297,8 @@ static_library("owt_sdk_base") {
       "sdk/base/win/video_capture_mf.h",
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
-      "sdk/base/win/videorendererwin.cc",
-      "sdk/base/win/videorendererwin.h",
+      "sdk/base/win/msdkvideobase.cc",
+      "sdk/base/win/msdkvideobase.h",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
   }
@@ -264,19 +307,15 @@ static_library("owt_sdk_base") {
       include_dirs += [ owt_msdk_header_root ]
       defines += [ "OWT_USE_MSDK" ]
       sources += [
-        "sdk/base/linux/base_allocator.cc",
-        "sdk/base/linux/base_allocator.h",
+      "sdk/base/windowcapturer.cc",
         "sdk/base/linux/displayutils.cc",
         "sdk/base/linux/displayutils.h",
-        "sdk/base/linux/msdkvideodecoder.cc",
-        "sdk/base/linux/msdkvideodecoder.h",
-        "sdk/base/linux/msdkvideodecoderfactory.cc",
-        "sdk/base/linux/msdkvideodecoderfactory.h",
         "sdk/base/linux/msdkvideosession.cc",
         "sdk/base/linux/msdkvideosession.h",
         "sdk/base/linux/vaapi_allocator.cc",
         "sdk/base/linux/vaapi_allocator.h",
       ]
+    defines += [ "OWT_USE_MSDK" ]
     }
     sources += [
       "sdk/base/linux/videorenderlinux.cc",

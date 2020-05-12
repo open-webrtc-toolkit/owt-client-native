@@ -161,11 +161,11 @@ bool MSDKFactory::LoadEncoderPlugin(uint32_t codec_id,
   mfxStatus sts = MFX_ERR_NONE;
   switch (codec_id) {
     case MFX_CODEC_HEVC:
-      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCE_GACC, 1);
+      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCE_HW, 1);
       if (sts != MFX_ERR_NONE) {
         return false;
       }
-      *plugin_id = MFX_PLUGINID_HEVCE_GACC;
+      *plugin_id = MFX_PLUGINID_HEVCE_HW;
       break;
     case MFX_CODEC_AVC:
       break;

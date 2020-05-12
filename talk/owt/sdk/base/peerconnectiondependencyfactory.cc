@@ -23,7 +23,7 @@
 #include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/rtc_base/physical_socket_server.h"
 #if defined(WEBRTC_WIN)
-#ifdef OWT_USE_MSDK
+#include <d3d11.h>
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
 #endif
@@ -171,16 +171,14 @@ void PeerConnectionDependencyFactory::
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
       << "Failed to start threads";
-
-  network_manager_ = std::make_shared<rtc::BasicNetworkManager>(
-      network_thread->socketserver());
-  packet_socket_factory_ = std::make_shared<rtc::BasicPacketSocketFactory>(
-      network_thread->socketserver());
-
-  // Use webrtc::VideoEn(De)coderFactory on iOS.
-  std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
-  std::unique_ptr<webrtc::VideoDecoderFactory> decoder_factory;
+  network_manager_ =
+      std::make_shared<rtc::BasicNetworkManager>();
+  packet_socket_factory_ =
+      std::make_shared<rtc::BasicPacketSocketFactory>(network_thread.get());
 #if defined(WEBRTC_IOS)
+  // Use webrtc::VideoEn(De)coderFactory on iOS.
+  std::unique_ptr<VideoEncoderFactory> encoder_factory;
+  std::unique_ptr<VideoDecoderFactory> decoder_factory;
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
 #elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
@@ -220,12 +218,11 @@ void PeerConnectionDependencyFactory::
 #else
 #error "Unsupported platform."
 #endif
-  rtc::scoped_refptr<AudioDeviceModule> adm;
 
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
+  rtc::scoped_refptr<AudioDeviceModule> adm;
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     // Create ADM on worker thred as RegisterAudioCallback is invoked there.
     adm = worker_thread->BlockingCall(
@@ -245,13 +242,23 @@ void PeerConnectionDependencyFactory::
     }
 #endif
   }
-#endif
-
+#if defined(WEBRTC_IOS)
+  pc_factory_ = webrtc::CreatePeerConnectionFactory(
+      network_thread, worker_thread, signaling_thread, adm,
+      webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
+      std::move(decoder_factory), nullptr,
+      nullptr);  // Decoder factory
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
       network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
-      std::move(decoder_factory), nullptr, nullptr);
+      webrtc::CreateBuiltinAudioDecoderFactory(),
+      std::move(encoder_factory),   // Encoder factory
+      std::move(decoder_factory), nullptr, nullptr);  // Decoder factory
+#else
+#error "Unsupported platform."
+#endif
   pc_factory_->AddRef();
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread finished.";
 }
@@ -261,10 +268,15 @@ PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
   std::unique_ptr<cricket::PortAllocator> port_allocator;
-  port_allocator.reset(new cricket::BasicPortAllocator(
-      network_manager_.get(), packet_socket_factory_.get()));
-  return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
-                                            nullptr, observer));
+  port_allocator.reset(new cricket::BasicPortAllocator(network_manager_.get(), packet_socket_factory_.get()));
+  int min_port = 0;
+  int max_port = 0;
+  GlobalConfiguration::GetIcePortAllocationRanges(min_port, max_port);
+  if (min_port > 0 && max_port > 0 && max_port >= min_port) {
+    port_allocator->SetPortRange(min_port, max_port);
+  }
+  return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator), nullptr, observer))
+      .get();
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
   RTC_CHECK(!pc_factory_.get());
@@ -306,6 +318,12 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
     options.auto_gain_control =
         absl::optional<bool>(agc_enabled ? true : false);
     options.noise_suppression = absl::optional<bool>(ns_enabled ? true : false);
+#ifdef OWT_LOW_LATENCY
+    options.highpass_filter = absl::optional<bool>(false);
+    options.typing_detection = absl::optional<bool>(false);
+    options.experimental_agc = absl::optional<bool>(false);
+    options.experimental_ns = absl::optional<bool>(false);
+#endif
     scoped_refptr<webrtc::AudioSourceInterface> audio_source =
         CreateAudioSource(options);
     return pc_thread_->BlockingCall([this, &id, &audio_source] {
