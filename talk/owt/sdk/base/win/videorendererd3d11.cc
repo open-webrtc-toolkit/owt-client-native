@@ -23,18 +23,18 @@ void WebrtcVideoRendererD3D11Impl::Destroy() {}
 
 void WebrtcVideoRendererD3D11Impl::Resize(size_t width, size_t height) {}
 
-mfxStatus WebrtcVideoRendererD3D11Impl::CreateOrUpdateContext(
+bool WebrtcVideoRendererD3D11Impl::CreateOrUpdateContext(
   ID3D11Device* device,
   ID3D11VideoDevice* video_device,
   ID3D11VideoContext* context, 
-  mfxU16 width, 
-  mfxU16 height) {
+  uint16_t width, 
+  uint16_t height) {
   if (!wnd_ || !dxgi_factory_.p || !IsWindow(wnd_))
-    return MFX_ERR_NOT_FOUND;
+    return false;
 
   if (device == nullptr || video_device == nullptr
       ||context == nullptr || width == 0 || height == 0)
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
 
   if (device != d3d11_device_ || context != d3d11_video_context_) {
     // If device get changed, re-create the swap chain.
@@ -52,7 +52,7 @@ mfxStatus WebrtcVideoRendererD3D11Impl::CreateOrUpdateContext(
         &swap_chain_for_hwnd_);
 
     if (FAILED(hr)) {
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
     }
 
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
@@ -74,11 +74,11 @@ mfxStatus WebrtcVideoRendererD3D11Impl::CreateOrUpdateContext(
     hr = d3d11_video_device_->CreateVideoProcessorEnumerator(
         &content_desc, &video_processors_enum_);
     if (FAILED(hr)) {
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
     }
   }
 
-  return MFX_ERR_NONE;
+  return true;
 }
 
 void WebrtcVideoRendererD3D11Impl::FillSwapChainDesc(
@@ -95,28 +95,28 @@ void WebrtcVideoRendererD3D11Impl::FillSwapChainDesc(
   scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 }
 
-mfxStatus WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(mfxU16 width,
-    mfxU16 height) {
+bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(uint16_t width,
+    uint16_t height) {
   if (width == 0 || height == 0 || d3d11_video_device_ == nullptr)
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
 
   video_processor_.Release();
   HRESULT hr = d3d11_video_device_->CreateVideoProcessor(video_processors_enum_, 0,
                                                  &video_processor_);
   if (FAILED(hr)) {
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
   }
 
-  return MFX_ERR_NONE;
+  return true;
 }
 
-mfxStatus WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
-  if (texture == nullptr || !swap_chain_for_hwnd_.p
-      || !d3d11_video_device_ || !d3d11_video_context_)
-    return MFX_ERR_NULL_PTR;
+bool WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
+  if (texture == nullptr || !swap_chain_for_hwnd_.p || !d3d11_video_device_ ||
+      !d3d11_video_context_)
+    return false;
 
-  mfxStatus sts = CreateVideoProcessor(width_, height_);
-  if (sts != MFX_ERR_NONE)
+  bool sts = CreateVideoProcessor(width_, height_);
+  if (!sts)
     return sts;
 
   CComPtr<ID3D11Texture2D> current_back_buffer;
@@ -124,7 +124,7 @@ mfxStatus WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
   HRESULT hr = swap_chain_for_hwnd_->GetBuffer(
       0, __uuidof(ID3D11Texture2D), (void**)&current_back_buffer.p);
   if (FAILED(hr))
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
 
   // Create output view and input view
   D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC output_view_desc;
@@ -138,7 +138,7 @@ mfxStatus WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
       &output_view_.p);
 
   if (FAILED(hr))
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
 
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC input_view_desc;
   MSDK_ZERO_MEMORY(input_view_desc);
@@ -150,7 +150,7 @@ mfxStatus WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
   hr = d3d11_video_device_->CreateVideoProcessorInputView(
       texture, video_processors_enum_, &input_view_desc, &input_view_.p);
   if (FAILED(hr))
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
 
   // Blit NV12 surface to RGB back buffer here.
   RECT rect = {0, 0, width_, height_};
@@ -175,14 +175,14 @@ mfxStatus WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
   hr = d3d11_video_context_->VideoProcessorBlt(
       video_processor_, output_view_, 0, 1, &stream);
   if (FAILED(hr)) {
-    return MFX_ERR_NONE;
+    return false;
   }
 
   DXGI_PRESENT_PARAMETERS parameters = {0};
   // TODO: handle device loss, etc. Need to find a way
   // to inform decoder to recreate the d3d11 device/context.
   hr = swap_chain_for_hwnd_->Present1(0, 0, &parameters);
-  return MFX_ERR_NONE;
+  return true;
 }
 
 void WebrtcVideoRendererD3D11Impl::OnFrame(
@@ -213,10 +213,10 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
         wnd_ == nullptr || texture == nullptr)
       return;
 
-	width_ = width;
+    width_ = width;
     height_ = height;
-    mfxStatus sts = CreateOrUpdateContext(render_device, render_video_device, render_context, width, height);
-    if (sts == MFX_ERR_NONE) {
+    bool sts = CreateOrUpdateContext(render_device, render_video_device, render_context, width, height);
+    if (sts) {
       RenderFrame(texture);
     }
   } else {  // I420 frame passed.

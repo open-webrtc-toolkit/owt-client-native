@@ -20,7 +20,7 @@ class Clock {
   int64_t TimeInMilliseconds();
 
  private:
-   webrtc::Clock* clock_;
+  webrtc::Clock* clock_;
 };
 
 }  // namespace base

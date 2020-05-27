@@ -9,7 +9,6 @@
 #include <combaseapi.h>
 #include <d3d11.h>
 #include <dxgi1_2.h>
-#include "talk/owt/sdk/base/win/msdkcommon.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_sink_interface.h"
 namespace owt {
@@ -24,12 +23,12 @@ class WebrtcVideoRendererD3D11Impl
  private:
   void Destroy();
   void Resize(size_t width, size_t height);
-  mfxStatus CreateOrUpdateContext(ID3D11Device* device,
+  bool CreateOrUpdateContext(ID3D11Device* device,
       ID3D11VideoDevice* video_device, ID3D11VideoContext* context,
-      mfxU16 width, mfxU16 height);
+      uint16_t width, uint16_t height);
   void FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC1& scd);
-  mfxStatus CreateVideoProcessor(mfxU16 width, mfxU16 height);
-  mfxStatus RenderFrame(ID3D11Texture2D* texture);
+  bool CreateVideoProcessor(uint16_t width, uint16_t height);
+  bool RenderFrame(ID3D11Texture2D* texture);
 
   HWND wnd_ = nullptr;
   uint16_t width_ = 0;

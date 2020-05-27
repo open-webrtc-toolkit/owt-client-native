@@ -12,7 +12,6 @@
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
-//#include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 namespace webrtc {
 class MediaStreamInterface;
