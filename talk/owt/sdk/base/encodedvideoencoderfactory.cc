@@ -21,13 +21,10 @@ EncodedVideoEncoderFactory::EncodedVideoEncoderFactory() {}
 std::unique_ptr<webrtc::VideoEncoder>
 EncodedVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
-    return webrtc::VP8Encoder::Create();
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
-    return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) ||
+      absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) ||
+      absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return CustomizedVideoEncoderProxy::Create();
-    // return webrtc::H264Encoder::Create(cricket::VideoCodec(format));
 #ifndef DISABLE_H265
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName))
     return CustomizedVideoEncoderProxy::Create();
