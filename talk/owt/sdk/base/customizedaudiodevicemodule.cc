@@ -1,6 +1,17 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+ * Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the thirdpartylicense.txt file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
 #include "talk/owt/sdk/base/customizedaudiocapturer.h"
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 #include "webrtc/rtc_base/refcountedobject.h"
@@ -8,6 +19,7 @@
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
+
 #define CHECK_INITIALIZED() \
   {                         \
     if (!_initialized) {    \
