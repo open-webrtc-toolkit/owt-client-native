@@ -37,7 +37,9 @@ GN_ARGS = [
     'use_lld=false',
     'rtc_include_tests=false',
     'owt_include_tests=false',
+    'rtc_use_gtk=false',
     'use_sysroot=false',
+    'treat_warnings_as_errors=false',
     'is_clang=false'
 ]
 

@@ -12,11 +12,11 @@
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/owt/sdk/base/eventtrigger.h"
 #include "talk/owt/sdk/base/stringutils.h"
-#include "talk/owt/sdk/include/cpp/owt/base/stream.h"
-#include "talk/owt/sdk/include/cpp/owt/p2p/p2pclient.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannelobservercppimpl.h"
 #include "talk/owt/sdk/p2p/p2psignalingsenderimpl.h"
+#include "talk/owt/sdk/include/cpp/owt/base/stream.h"
+#include "talk/owt/sdk/include/cpp/owt/p2p/p2pclient.h"
 using namespace rtc;
 namespace owt {
 namespace p2p {
