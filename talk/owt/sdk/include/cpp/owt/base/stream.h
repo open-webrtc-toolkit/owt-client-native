@@ -96,9 +96,13 @@ class Stream {
   /// remote stream. Be noted if you turned hardware acceleration on, calling
   /// this API on remote stream will have no effect.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+#endif
+#if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
   virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
+#endif
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /// Attach the stream to an audio player that receives PCM data besides sending to
   /// audio output device.
   virtual void AttachAudioPlayer(AudioPlayerInterface& player);
