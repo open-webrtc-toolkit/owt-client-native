@@ -374,9 +374,18 @@ retry:
           d3d_context->height_ = height_;
           d3d_context->surface_ = (IDirect3DSurface9*)dxMemId->first;
 
+          D3DSURFACE_DESC surface_desc;
+          memset(&surface_desc, 0, sizeof(surface_desc));
+          if (d3d_context->surface_) {
+            hr = d3d_context->surface_->GetDesc(&surface_desc);
+            if (SUCCEEDED(hr)) {
+              d3d_context->width_ = surface_desc.Width;
+              d3d_context->height_ = surface_desc.Height;
+            }
+          }
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
-                  (void*)d3d_context, width_, height_);
+                  (void*)d3d_context, d3d_context->width_, d3d_context->height_);
           webrtc::VideoFrame decoded_frame(buffer, inputImage.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
