@@ -493,7 +493,7 @@ void P2PPeerConnectionChannel::OnMessageStop() {
         });
       }
     }
-    pending_messages_.clear();
+    pending_control_messages_.clear();
   }
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
