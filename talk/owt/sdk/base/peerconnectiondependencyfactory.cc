@@ -121,6 +121,10 @@ PeerConnectionDependencyFactory::GetPeerConnectionFactory() {
 void PeerConnectionDependencyFactory::
     CreatePeerConnectionFactoryOnCurrentThread() {
   RTC_LOG(LS_INFO) << "CreatePeerConnectionOnCurrentThread";
+  if (GlobalConfiguration::GetLowLatencyStreamingEnabled()) {
+    field_trial_ += "OWT-LowLatencyMode/Enabled/";
+  }
+
   if (GlobalConfiguration::GetAECEnabled() &&
       GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
