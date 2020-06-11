@@ -13,15 +13,12 @@ The following devices have been tested using this SDK:
 The release package includes two sample applications to get you started quickly with the SDK. The following three static libraries are provided in the SDK along with their respective headers:
 - OWT.framework - a framework providing the abilities to connect to conference server or another Open WebRTC Toolkit P2P endpoints.
 - WebRTC.framework - a framework providing WebRTC features. You can find its source code at https://webrtc.googlesource.com/src. We modified some code make it work with OpenSSL.
-- libsioclient.a - this library includes Socket.IO C++ client without TLS features.
-- libsioclient_tls.a - this library includes the Socket.IO C++ client with TLS features.
-- libsioclient_tls_no_verification.a - this library includes the Socket.IO C++ client with TLS feature, but will skip verification of server's certificate.
+
 Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 # 4 Socket.IO {#section4}
-Socket.IO cpp client is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp).
+OWT iOS SDK depends on Socket.IO cpp client, which is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is 725a8e0e17ecead64574fd9879bd7029b0bf25fa. OpenSSL version is 1.1.1 with the latest patch release.
 Please make sure your app has network access before making Socket.IO connection. As Socket.IO cpp client uses low level network APIs, iOS system may not ask user for network permission. Thus, Socket.IO connection will fail because app does not have network access.
-The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a. Conference sample use libsioclient_tls_no_verification.a by default. This lib enables TLS but does not verify server's certification. It was provided for evaluation use only. Do not use it in production environments.
-The libsioclient_tls.a included in release package has been enhanced so it will verify server's certificate. If the server is using an invalid certificate, handshake will fail. You can also compile Socket.IO lib (commit 725a8e0e17ecead64574fd9879bd7029b0bf25fa) by yourself. Make sure you link to OpenSSL 1.1.0l to build Socket.IO lib.
+The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a.
 # 5 Background modes {#section5}
 Socket connections are disconnected when the device is locked. If your app must remain connected with server, "VoIP" needs to be added to your app's background modes. For detailed information about background execution, please refer to the [iOS developer library](https://developer.apple.com/library/ios/documentation/iPhone/Conceptual/iPhoneOSProgrammingGuide/BackgroundExecution/BackgroundExecution.html).
 # 6 NAT and firewall traversal {#section6}
