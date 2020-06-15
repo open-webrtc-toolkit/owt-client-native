@@ -26,15 +26,17 @@
   return [NSString stringForStdString:_nativeParticipant->UserId()];
 }
 
-- (void)setDelegate:(id<OWTConferenceParticipantDelegate>) delegate {
-  _observer = std::unique_ptr<
-      owt::conference::ParticipantObserverObjcImpl,
-      std::function<void(owt::conference::ParticipantObserverObjcImpl*)>>(
-      new owt::conference::ParticipantObserverObjcImpl(self, delegate),
-      [&self](owt::conference::ParticipantObserverObjcImpl* observer) {
-        self->_nativeParticipant->RemoveObserver(*observer);
-      });
+- (void)setDelegate:(id<OWTConferenceParticipantDelegate>)delegate {
+  _observer = std::unique_ptr<owt::conference::ParticipantObserverObjcImpl>(
+      new owt::conference::ParticipantObserverObjcImpl(self, delegate));
   _nativeParticipant->AddObserver(*_observer.get());
   _delegate = delegate;
 }
+
+- (void)dealloc {
+  if (_observer) {
+    self->_nativeParticipant->RemoveObserver(*_observer.get());
+  }
+}
+
 @end

@@ -43,14 +43,16 @@
   return std::static_pointer_cast<owt::base::RemoteStream>(stream);
 }
 - (void)setDelegate:(id<OWTRemoteStreamDelegate>)delegate {
-  _observer = std::unique_ptr<
-      owt::base::RemoteStreamObserverObjcImpl,
-      std::function<void(owt::base::RemoteStreamObserverObjcImpl*)>>(
-      new owt::base::RemoteStreamObserverObjcImpl(self, delegate),
-      [&self](owt::base::RemoteStreamObserverObjcImpl* observer) {
-        [self nativeRemoteStream] -> RemoveObserver(*_observer.get());
-      });
+  _observer = std::unique_ptr<owt::base::RemoteStreamObserverObjcImpl>(
+      new owt::base::RemoteStreamObserverObjcImpl(self, delegate));
   auto remoteStream = [self nativeRemoteStream];
   remoteStream->AddObserver(*_observer.get());
 }
+
+- (void)dealloc {
+  if (_observer) {
+    [self nativeRemoteStream]->RemoveObserver(*_observer.get());
+  }
+}
+
 @end

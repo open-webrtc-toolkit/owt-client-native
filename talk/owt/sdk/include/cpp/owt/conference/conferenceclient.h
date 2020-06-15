@@ -51,10 +51,11 @@ class ConferenceSocketSignalingChannel;
 */
 class ParticipantObserver {
   public:
-    /**
-      @brief Participant leave event callback.
-    */
-    virtual void OnLeft() {}
+   virtual ~ParticipantObserver() = default;
+   /**
+     @brief Participant leave event callback.
+   */
+   virtual void OnLeft() {}
 };
 /// Participant represents one conference client in a conference room.
 class Participant {

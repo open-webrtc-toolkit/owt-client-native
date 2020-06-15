@@ -42,6 +42,7 @@ using webrtc::MediaStreamInterface;
 /// Observer for Stream
 class StreamObserver {
  public:
+  virtual ~StreamObserver() = default;
   /// Triggered when a stream is ended, or the stream is no longer available in
   /// conference mode.
   virtual void OnEnded() {}

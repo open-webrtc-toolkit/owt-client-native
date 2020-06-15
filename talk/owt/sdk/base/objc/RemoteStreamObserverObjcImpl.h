@@ -17,7 +17,7 @@ class RemoteStreamObserverObjcImpl : public StreamObserver {
   virtual void OnMute(owt::base::TrackKind track_kind) override;
   virtual void OnUnmute(owt::base::TrackKind track_kind) override;
  private:
-  OWTRemoteStream* stream_;
+  __weak OWTRemoteStream* stream_;
   id<OWTRemoteStreamDelegate> delegate_;
 };
 }  // namespace base
