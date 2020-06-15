@@ -180,7 +180,6 @@ ConferenceClient::ConferenceClient(
           webrtc::TaskQueueFactory::Priority::NORMAL));
 }
 ConferenceClient::~ConferenceClient() {
-  signaling_channel_->RemoveObserver(*this);
 }
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
@@ -743,6 +742,7 @@ void ConferenceClient::Leave(
     subscribe_pcs_.clear();
   }
   signaling_channel_->Disconnect(RunInEventQueue(on_success), on_failure);
+  signaling_channel_->RemoveObserver(*this);
 }
 void ConferenceClient::GetConnectionStats(
     const std::string& session_id,
