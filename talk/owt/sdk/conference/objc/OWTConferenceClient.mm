@@ -107,6 +107,7 @@
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<owt::base::LocalStream> nativeStream(
       std::static_pointer_cast<owt::base::LocalStream>(nativeStreamRefPtr));
+  __weak OWTConferenceClient *weakSelf = self;
   if (options == nil) {
     _nativeConferenceClient->Publish(
         nativeStream,
@@ -118,7 +119,7 @@
                 initWithNativePublication:publication]);
         },
         [=](std::unique_ptr<owt::base::Exception> e) {
-          [self triggerOnFailure:onFailure withException:(std::move(e))];
+          [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
         });
   } else {
     _nativeConferenceClient->Publish(
@@ -131,16 +132,17 @@
                 initWithNativePublication:publication]);
         },
         [=](std::unique_ptr<owt::base::Exception> e) {
-          [self triggerOnFailure:onFailure withException:(std::move(e))];
+          [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
         });
   }
 }
 - (void)subscribe:(OWTRemoteStream*)stream
         onSuccess:(void (^)(OWTConferenceSubscription*))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
+  __weak OWTConferenceClient *weakSelf = self;
   OWTConferenceSubscribeOptions* options =
       [[OWTConferenceSubscribeOptions alloc] init];
-  [self subscribe:stream
+  [weakSelf subscribe:stream
       withOptions:options
         onSuccess:onSuccess
         onFailure:onFailure];
@@ -153,6 +155,7 @@
   auto nativeStreamRefPtr = [stream nativeStream];
   std::shared_ptr<owt::base::RemoteStream> nativeStream(
       std::static_pointer_cast<owt::base::RemoteStream>(nativeStreamRefPtr));
+  __weak OWTConferenceClient *weakSelf = self;
   if (options == nil) {
     _nativeConferenceClient->Subscribe(
         nativeStream,
@@ -166,7 +169,7 @@
           }
         },
         [=](std::unique_ptr<owt::base::Exception> e) {
-          [self triggerOnFailure:onFailure withException:(std::move(e))];
+          [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
         });
   } else {
     _nativeConferenceClient->Subscribe(
@@ -181,13 +184,14 @@
           }
         },
         [=](std::unique_ptr<owt::base::Exception> e) {
-          [self triggerOnFailure:onFailure withException:(std::move(e))];
+          [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
         });
   }
 }
 - (void)send:(NSString*)message
    onSuccess:(void (^)())onSuccess
    onFailure:(void (^)(NSError*))onFailure {
+  __weak OWTConferenceClient *weakSelf = self;
   _nativeConferenceClient->Send(
       [message UTF8String],
       [=] {
@@ -195,13 +199,14 @@
           onSuccess();
       },
       [=](std::unique_ptr<owt::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
+        [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 - (void)send:(NSString*)message
            to:(NSString*)receiver
     onSuccess:(void (^)())onSuccess
     onFailure:(void (^)(NSError*))onFailure {
+  __weak OWTConferenceClient *weakSelf = self;
   _nativeConferenceClient->Send(
       [message UTF8String], [receiver UTF8String],
       [=] {
@@ -209,7 +214,7 @@
           onSuccess();
       },
       [=](std::unique_ptr<owt::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
+        [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 typedef void (^SuccessBlock)();
@@ -229,13 +234,14 @@ PlayPauseFailureCallback(FailureBlock on_failure,
 }
 - (void)leaveWithOnSuccess:(void (^)())onSuccess
                  onFailure:(void (^)(NSError*))onFailure {
+  __weak OWTConferenceClient *weakSelf = self;
   _nativeConferenceClient->Leave(
       [=]() {
         if (onSuccess != nil)
           onSuccess();
       },
       [=](std::unique_ptr<owt::base::Exception> e) {
-        [self triggerOnFailure:onFailure withException:(std::move(e))];
+        [weakSelf triggerOnFailure:onFailure withException:(std::move(e))];
       });
 }
 - (void)setDelegate:(id<OWTConferenceClientDelegate>)delegate {
@@ -244,7 +250,7 @@ PlayPauseFailureCallback(FailureBlock on_failure,
     _observer = std::unique_ptr<
             owt::conference::ConferenceClientObserverObjcImpl,
             std::function<void(owt::conference::ConferenceClientObserverObjcImpl*)>>(
-                    new owt::conference::ConferenceClientObserverObjcImpl(self, delegate),
+                    new owt::conference::ConferenceClientObserverObjcImpl(weakSelf, delegate),
                     [=](owt::conference::ConferenceClientObserverObjcImpl* observer) {
                         __strong OWTConferenceClient *strongSelf = weakSelf;
                         if (strongSelf != nil) {
