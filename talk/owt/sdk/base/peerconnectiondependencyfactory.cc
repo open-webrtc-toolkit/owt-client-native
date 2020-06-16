@@ -154,8 +154,15 @@ void PeerConnectionDependencyFactory::
 
   // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
   int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
+  field_trial_ += "OWT-H264TemporalLayers/" +
+                  std::to_string(h264_temporal_layers) + std::string("/");
+  int link_mtu = GlobalConfiguration::GetLinkMTU();
+  if (link_mtu > 0) {
+    field_trial_ += "OWT-LinkMTU/" + std::to_string(link_mtu) + "/";
+  }
+  int delay_bwe_weight = GlobalConfiguration::GetDelayBasedBweWeight();
   field_trial_ +=
-      "OWT-H264TemporalLayers/" + std::to_string(h264_temporal_layers) + std::string("/");
+      "OWT-DelayBweWeight/" + std::to_string(delay_bwe_weight) + "/";
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
   if (!rtc::InitializeSSL()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize SSL.";
