@@ -39,6 +39,8 @@ class CustomizedVideoEncoderProxy : public webrtc::VideoEncoder {
   webrtc::VideoCodecType codec_type_;
   uint16_t picture_id_;
   VideoEncoderInterface* external_encoder_;
+  uint8_t gof_idx_;
+  webrtc::GofInfoVP9 gof_;
 };
 }
 }
