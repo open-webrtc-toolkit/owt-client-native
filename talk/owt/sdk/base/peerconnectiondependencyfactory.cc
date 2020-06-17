@@ -218,6 +218,14 @@ void PeerConnectionDependencyFactory::
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
 
+  // If still video factory is not in place, use internal factory.
+  if (!encoder_factory.get()) {
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+  }
+  if (!decoder_factory.get()) {
+    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
+  }
+
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
   // adm.
