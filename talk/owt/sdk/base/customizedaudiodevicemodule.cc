@@ -100,7 +100,11 @@ int32_t CustomizedAudioDeviceModule::AttachAudioBuffer() {
 CustomizedAudioDeviceModule::~CustomizedAudioDeviceModule() {
   if (_ptrAudioDevice) {
     delete _ptrAudioDevice;
-    _ptrAudioDevice = NULL;
+    _ptrAudioDevice = nullptr;
+  }
+  if (_ptrAudioDeviceBuffer) {
+    delete _ptrAudioDeviceBuffer;
+    _ptrAudioDeviceBuffer = nullptr;
   }
 }
 // ============================================================================
