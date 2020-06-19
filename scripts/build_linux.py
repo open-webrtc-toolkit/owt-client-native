@@ -27,19 +27,15 @@ GN_ARGS = [
     'ffmpeg_branding="Chrome"',
     'rtc_use_h265=true',
     'is_component_build=false',
-    'use_lld=false',
     'rtc_build_examples=false',
     'rtc_use_gtk=false',
-    'use_sysroot=false',
-    'is_clang=false',
-    'treat_warnings_as_errors=false'
 ]
 
 def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(r'out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, scheme, tests):
+def gngen(arch, ssl_root, msdk_root, scheme, tests, use_gcc):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -69,6 +65,9 @@ def gngen(arch, ssl_root, msdk_root, scheme, tests):
     else:
         gn_args.append('rtc_include_tests=false')
         gn_args.append('owt_include_tests=false')
+    if use_gcc:
+        gn_args.extend(['is_clang=false', 'use_lld=false', 'use_sysroot=false', 'treat_warnings_as_errors=false'])
+
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
     cmd = 'gn gen ' + out + ' ' + flattened_args
@@ -148,10 +147,11 @@ def main():
     parser.add_argument('--docs', default=False, action='store_true',
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
+    parser.add_argument('--use_gcc', help='Compile with GCC and libstdc++. Default is clang and libc++.', action='store_true')
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests, opts.use_gcc):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme):
