@@ -43,7 +43,10 @@ static_library("owt_deps") {
   ]
 
   if (is_android) {
-    deps += [ "//third_party/webrtc/sdk:native_api" ]
+      deps += [
+        "//third_party/webrtc/modules/utility",
+        "//third_party/webrtc/sdk/android:libjingle_peerconnection_jni",
+      ]
   }
   complete_static_lib = true
 }
@@ -132,6 +135,9 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/api/video_codecs:builtin_video_encoder_factory",
     "//third_party/webrtc/media:rtc_audio_video",
     "//third_party/webrtc/media:rtc_media_base",
+    "//third_party/webrtc/modules/audio_device",
+    "//third_party/webrtc/modules/audio_processing",
+    "//third_party/webrtc/modules/audio_processing:api",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
     "//third_party/webrtc/modules/video_capture:video_capture_module",
     "//third_party/webrtc/pc:libjingle_peerconnection",
