@@ -18,7 +18,7 @@ bool GlobalConfiguration::low_latency_streaming_enabled_ = false;
 bool GlobalConfiguration::log_latency_to_file_enabled_ = false;
 bool GlobalConfiguration::encoded_frame_ = false;
 
-int GlobalConfiguration::delay_based_bwe_weight_ = 0;
+int GlobalConfiguration::delay_based_bwe_weight_ = 100;
 std::unique_ptr<AudioFrameGeneratorInterface>
     GlobalConfiguration::audio_frame_generator_ = nullptr;
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
