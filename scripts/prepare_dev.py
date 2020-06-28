@@ -34,7 +34,7 @@ patchList = [
     ('0002-Use-OpenSSL-for-libsrtp.patch', LIBSRTP_PATH),
     ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
     ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
-    #('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
+    ('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
     ('0007-Fix-examples-path-error.patch', BUILD_PATH),
     #('0009-Fix-compile-issue-for-linux-g-build.patch', BUILD_PATH),
     ('0009-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
