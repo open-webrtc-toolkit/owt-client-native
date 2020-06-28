@@ -442,24 +442,23 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   ChangeSessionState(kSessionStateReady);
   TriggerOnStopped();
   {
-    {
-      std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
-      for (std::unordered_map<
-               std::string,
-               std::function<void(std::unique_ptr<Exception>)>>::iterator it =
-               failure_callbacks_.begin();
-           it != failure_callbacks_.end(); it++) {
-        std::function<void(std::unique_ptr<Exception>)> failure_callback =
-            it->second;
-        event_queue_->PostTask([failure_callback] {
-          std::unique_ptr<Exception> e(
-              new Exception(ExceptionType::kP2PClientInvalidArgument,
-                            "Stop message received."));
+    std::lock_guard<std::mutex> lock(failure_callbacks_mutex_);
+    for (std::unordered_map<
+             std::string,
+             std::function<void(std::unique_ptr<Exception>)>>::iterator it =
+             failure_callbacks_.begin();
+         it != failure_callbacks_.end(); it++) {
+      std::function<void(std::unique_ptr<Exception>)> failure_callback =
+          it->second;
+      event_queue_->PostTask([failure_callback] {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidArgument,
+                          "Stop message received."));
+        if (failure_callback)
           failure_callback(std::move(e));
-        });
-      }
-      failure_callbacks_.clear();
+      });
     }
+    failure_callbacks_.clear();
   }
   {
     std::lock_guard<std::mutex> lock(pending_messages_mutex_);
@@ -740,6 +739,8 @@ void P2PPeerConnectionChannel::OnNegotiationNeeded() {
 }
 void P2PPeerConnectionChannel::OnIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
+  if (ended_)
+    return;
   RTC_LOG(LS_INFO) << "Ice connection state changed: " << new_state;
   switch (new_state) {
     case webrtc::PeerConnectionInterface::kIceConnectionConnected:
@@ -1103,25 +1104,13 @@ void P2PPeerConnectionChannel::GetStats(
     }
     return;
   }
-  if (session_state_ != kSessionStateConnected) {
-    if (on_failure != nullptr) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Cannot get connection stats in this state. Please "
-                          "try it after connection is established."));
-        on_failure(std::move(e));
-      });
-    }
-    return;
-  }
-  RTC_LOG(LS_INFO) << "Get native stats";
   rtc::scoped_refptr<FunctionalNativeStatsObserver> observer =
       FunctionalNativeStatsObserver::Create(std::move(on_success));
   peer_connection_->GetStats(
       observer.get(), nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelDebug);
 }
+
 bool P2PPeerConnectionChannel::HaveLocalOffer() {
   return SignalingState() == webrtc::PeerConnectionInterface::kHaveLocalOffer;
 }
