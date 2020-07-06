@@ -25,32 +25,33 @@ TOOL_PATH = os.path.join(HOME_PATH, 'tools')
 BASE_PATH = os.path.join(HOME_PATH, 'base')
 platform = os.name
 useShell = False
-if(platform == "nt"):
+if (platform == "nt"):
   useShell = True
 
-def _patch():
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Use-OpenSSL-for-usrsctp.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0002-Use-OpenSSL-for-libsrtp.patch')], shell=useShell, cwd=LIBSRTP_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBSRTP_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Remove-webrtc_overrides.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Fixed-compile-issue-and-disable-thin-archive.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0007-Fix-examples-path-error.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0009-Fix-compile-issue-for-linux-g-build.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-  #  subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
-  #  subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0009-Export-WebRTC-symbols-on-iOS.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch')], shell=useShell, cwd=LIBJPEG_TURBO_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0013-Remove-unused-gni-for-av1-build.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch')], shell=useShell, cwd=FFMPEG_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=FFMPEG_PATH)
+# list each patch to be applied along with path where it should be applied
+patchList = [
+    ('0001-Use-OpenSSL-for-usrsctp.patch', THIRD_PARTY_PATH),
+    ('0002-Use-OpenSSL-for-libsrtp.patch', LIBSRTP_PATH),
+    ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
+    ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
+    ('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
+    ('0007-Fix-examples-path-error.patch', BUILD_PATH),
+    #('0009-Fix-compile-issue-for-linux-g-build.patch', BUILD_PATH),
+    ('0009-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
+    ('0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch', LIBJPEG_TURBO_PATH),
+    ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
+    ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH)
+]
+
+def _patch(ignoreFailures=False):
+    for patchName, applyPath in patchList:
+        if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, patchName)],
+                            shell=useShell, cwd=applyPath)) != 0:
+            if (ignoreFailures):
+                subprocess.call(['git', 'am', '--skip'], shell=useShell,
+                                cwd=applyPath)
+            else:
+                sys.exit(1)
 
 def main(argv):
   _patch()

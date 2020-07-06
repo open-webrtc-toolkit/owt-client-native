@@ -10,7 +10,7 @@ namespace owt {
 namespace base {
 static const std::string kSdkVersion("4.3");
 static const std::string kRuntimeName("WebRTC");
-static const std::string kRuntimeVersion("76");
+static const std::string kRuntimeVersion("83");
 static const std::string kUnknown("Unknown");
 std::string SysInfo::SdkType() {
 #if defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
