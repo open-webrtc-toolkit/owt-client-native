@@ -104,7 +104,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       ua_sent_(false),
       stop_send_needed_(true),
       remote_side_offline_(false),
-      ended_(false) {
+      ended_(false),
+      local_stop_triggered_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
   if (event_queue) {
@@ -780,6 +781,9 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
         webrtc::MutexLock lock(&remote_track_source_info_mutex_);
         remote_track_source_info_.clear();
       }
+      // It might take a long time before PC switch to these two states.
+      remote_side_offline_ = true;
+      TriggerOnStopped();
       break;
     default:
       break;
@@ -946,6 +950,13 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
 }
 
 void P2PPeerConnectionChannel::TriggerOnStopped() {
+  // TriggerOnStopped might be called in signalng thread. Post it to event queue
+  // instead.
+  if (local_stop_triggered_)
+    return;
+  local_stop_triggered_ = true;
+
+  // P2PClient will likely remove our reference
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
        observers_.begin(); it != observers_.end(); it++) {
     (*it)->OnStopped(remote_id_);
