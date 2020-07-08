@@ -251,6 +251,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool stop_send_needed_;
   bool remote_side_offline_;
   bool ended_;
+  bool local_stop_triggered_;
 };
 }
 }
