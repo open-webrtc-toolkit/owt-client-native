@@ -906,13 +906,13 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
       options, stream->MediaStream()->id(), "",
       [stream, this](std::string session_id) {
         SetSessionId(session_id);
-        for (const auto track : stream->MediaStream()->GetAudioTracks()) {
+        for (const auto& track : stream->MediaStream()->GetAudioTracks()) {
           webrtc::RtpTransceiverInit transceiver_init;
           transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
           transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
           AddTransceiver(track, transceiver_init);
         }
-        for (const auto track : stream->MediaStream()->GetVideoTracks()) {
+        for (const auto& track : stream->MediaStream()->GetVideoTracks()) {
           webrtc::RtpTransceiverInit transceiver_init;
           transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
           transceiver_init.direction =

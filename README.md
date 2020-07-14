@@ -1,7 +1,7 @@
 # Open WebRTC Toolkit Native SDK
 
 ## Introduction
-The Open WebRTC Toolkit client SDK for native Windows/Linux/iOS applications is built upon the W3C WebRTC standard to accelerate the development of real time communication applications on these platforms. It supports peer to peer and conference mode communication working with Open Media Stream MCU server.
+The Open WebRTC Toolkit client SDK for native Windows/Linux/Android/iOS applications is built upon the W3C WebRTC standard to accelerate the development of real time communication applications on these platforms. It supports peer to peer and conference mode communication working with Open Media Stream MCU server.
 
 - Supported Windows platform: Windows 7 and above.
 - Supported Linux platform: Ubuntu 16.04.
@@ -58,7 +58,9 @@ target_os = []
 - Build OWT iOS SDK with `scripts\build.py`.
 
 #### Android
-This branch does not support Android build, please switch to `4.2.x` branch.
+- Replace the last line of .gclient with target_os=["android"]
+- Run gclient sync. It may take a long time to download large amount of data.
+- Build libwebrtc for OWT Android SDK with scripts/build_android.py.
 
 ## How to contribute
 We warmly welcome community contributions to the owt-client-native repository. If you are willing to contribute your features and ideas to OWT, follow the process below:
