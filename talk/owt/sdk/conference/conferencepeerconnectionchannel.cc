@@ -906,13 +906,13 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
       options, stream->MediaStream()->id(), "",
       [stream, this](std::string session_id) {
         SetSessionId(session_id);
-        for (const auto track : stream->MediaStream()->GetAudioTracks()) {
+        for (const auto& track : stream->MediaStream()->GetAudioTracks()) {
           webrtc::RtpTransceiverInit transceiver_init;
           transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
           transceiver_init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
           AddTransceiver(track, transceiver_init);
         }
-        for (const auto track : stream->MediaStream()->GetVideoTracks()) {
+        for (const auto& track : stream->MediaStream()->GetVideoTracks()) {
           webrtc::RtpTransceiverInit transceiver_init;
           transceiver_init.stream_ids.push_back(stream->MediaStream()->id());
           transceiver_init.direction =
@@ -922,14 +922,19 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
             for (auto encoding :
                  configuration_.video[0].rtp_encoding_parameters) {
               webrtc::RtpEncodingParameters param;
-              param.rid = encoding.rid;
+              if (encoding.rid != "")
+                param.rid = encoding.rid;
               if (encoding.max_bitrate_bps != 0)
                 param.max_bitrate_bps = encoding.max_bitrate_bps;
               if (encoding.max_framerate != 0)
                 param.max_framerate = encoding.max_framerate;
-              if (param.scale_resolution_down_by > 0)
+              if (encoding.scale_resolution_down_by > 0)
                 param.scale_resolution_down_by =
                     encoding.scale_resolution_down_by;
+              if (encoding.num_temporal_layers > 0 &&
+                  encoding.num_temporal_layers <= 4) {
+                param.num_temporal_layers = encoding.num_temporal_layers;
+              }
               param.active = encoding.active;
               transceiver_init.send_encodings.push_back(param);
             }

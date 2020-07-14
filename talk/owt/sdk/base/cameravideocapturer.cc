@@ -72,9 +72,7 @@ void CameraVideoCapturer::RemoveSink(
 }
 
 void CameraVideoCapturer::UpdateVideoAdapter() {
-  rtc::VideoSinkWants wants = broadcaster_.wants();
-  video_adapter_.OnResolutionFramerateRequest(
-      wants.target_pixel_count, wants.max_pixel_count, wants.max_framerate_fps);
+  video_adapter_.OnSinkWants(broadcaster_.wants());
 }
 
 }  // namespace test

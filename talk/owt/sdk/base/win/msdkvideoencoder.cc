@@ -9,6 +9,7 @@
 #include <vector>
 #include "libyuv/convert_from.h"
 #include "mfxcommon.h"
+#include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/win/d3d_allocator.h"
 #include "talk/owt/sdk/base/win/msdkvideobase.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
@@ -256,6 +257,32 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     }
   }
 
+  // TODO(jianlin): switch to value in codec_settings instead of relying
+  // on global settings when upstream handles RtpEncodingParameters correctly.
+  int num_temporal_layers = 1;
+#if USE_H264_RTP_ENCODING_PARAM
+  num_temporal_layers =
+      std::min(static_cast<int>(
+                   codec_settings->simulcastStream[0].numberOfTemporalLayers),
+               4);
+#else
+  num_temporal_layers = MediaUtils::GetH264TemporalLayers().value_or(1);
+#endif
+
+  if (codec_id == MFX_CODEC_AVC && num_temporal_layers > 1) {
+    mfxExtAvcTemporalLayers extAvcTemporalLayers;
+    MSDK_ZERO_MEMORY(extAvcTemporalLayers);
+    extAvcTemporalLayers.Header.BufferId = MFX_EXTBUFF_AVC_TEMPORAL_LAYERS;
+    extAvcTemporalLayers.Header.BufferSz = sizeof(extAvcTemporalLayers);
+
+    extAvcTemporalLayers.BaseLayerPID = 1;
+    for (int layer = 0; layer < num_temporal_layers; layer++) {
+      extAvcTemporalLayers.Layer[layer].Scale = pow(2, layer);
+    }
+
+    m_EncExtParams.push_back((mfxExtBuffer*)&extAvcTemporalLayers);
+  }
+
   if (!m_EncExtParams.empty()) {
     m_mfxEncParams.ExtParam =
         &m_EncExtParams[0];  // vector is stored linearly in memory
@@ -307,7 +334,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
 
   inited_ = true;
   return WEBRTC_VIDEO_CODEC_OK;
-}
+}  // namespace base
 
 void MSDKVideoEncoder::WipeMfxBitstream(mfxBitstream* pBitstream) {
   // Free allocated memory
@@ -523,8 +550,9 @@ retry:
   encodedFrame._completeFrame = true;
   encodedFrame.capture_time_ms_ = input_image.render_time_ms();
   encodedFrame.SetTimestamp(input_image.timestamp());
-  encodedFrame._frameType =
-      is_keyframe_required ? webrtc::VideoFrameType::kVideoFrameKey : webrtc::VideoFrameType::kVideoFrameDelta;
+  encodedFrame._frameType = is_keyframe_required
+                                ? webrtc::VideoFrameType::kVideoFrameKey
+                                : webrtc::VideoFrameType::kVideoFrameDelta;
 
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
@@ -561,6 +589,18 @@ retry:
     header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
     header.fragmentationLength[i] =
         scPositions[i + 1] - header.fragmentationOffset[i];
+  }
+  // Export temporal scalability information for H.264
+  if (codecType_ == webrtc::kVideoCodecH264) {
+    int temporal_id = 0, priority_id = 0;
+    bool is_idr = false;
+    bool need_frame_marking = MediaUtils::GetH264TemporalInfo(encoded_data,
+        encoded_data_size, temporal_id, priority_id, is_idr);
+    if (need_frame_marking) {
+      info.codecSpecific.H264.temporal_idx = temporal_id;
+      info.codecSpecific.H264.idr_frame = is_idr;
+      info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
+    }
   }
   const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
@@ -628,6 +668,7 @@ webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
   // TODO(johny): Enable temporal scalability support here and turn the
   // scaling_settings on.
   info.scaling_settings = VideoEncoder::ScalingSettings::kOff;
+  info.supports_simulcast = false;
   return info;
 }
 
@@ -658,6 +699,7 @@ int MSDKVideoEncoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+// TODO: move this to MediaUtils so it can be shared.
 int32_t MSDKVideoEncoder::NextNaluPosition(uint8_t* buffer,
                                            size_t buffer_size,
                                            uint8_t* sc_length) {
@@ -695,7 +737,7 @@ int32_t MSDKVideoEncoder::NextNaluPosition(uint8_t* buffer,
 }
 
 std::unique_ptr<MSDKVideoEncoder> MSDKVideoEncoder::Create(
-  cricket::VideoCodec format) {
+    cricket::VideoCodec format) {
   return absl::make_unique<MSDKVideoEncoder>();
 }
 

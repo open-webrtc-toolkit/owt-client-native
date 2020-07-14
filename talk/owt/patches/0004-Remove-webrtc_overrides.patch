@@ -1,26 +1,26 @@
-From ab6a5c4fc8de53ef49ccec5255f6bf266bb5ffc9 Mon Sep 17 00:00:00 2001
-From: Qiu Jianlin <jianlin.qiu@intel.com>
-Date: Thu, 14 Nov 2019 16:03:42 +0800
+From a97d58537750064c1d4929a2c141e52fe0206ff9 Mon Sep 17 00:00:00 2001
+From: Qiu Jainlin <jianlin.qiu@intel.com>
+Date: Thu, 7 May 2020 09:57:47 +0800
 Subject: [PATCH] Remove webrtc_overrides
 
 ---
- webrtc_overrides/BUILD.gn                     | 111 ---------
+ webrtc_overrides/BUILD.gn                     | 168 -------------
  webrtc_overrides/DEPS                         |   7 -
  webrtc_overrides/OWNERS                       |   6 -
  webrtc_overrides/README.chromium              |  20 --
  webrtc_overrides/field_trial.cc               |  15 --
  webrtc_overrides/init_webrtc.cc               |  45 ----
- webrtc_overrides/init_webrtc.h                |  13 -
+ webrtc_overrides/init_webrtc.h                |  15 --
  webrtc_overrides/metrics.cc                   |  57 -----
- .../rtc_base/diagnostic_logging.h             | 125 ----------
+ .../rtc_base/diagnostic_logging.h             | 126 ----------
  webrtc_overrides/rtc_base/event.cc            |  40 ---
- webrtc_overrides/rtc_base/event.h             |  47 ----
+ webrtc_overrides/rtc_base/event.h             |  48 ----
  webrtc_overrides/rtc_base/gtest_prod_util.h   |  10 -
  webrtc_overrides/rtc_base/logging.cc          | 230 ------------------
- webrtc_overrides/rtc_base/logging.h           | 119 ---------
- webrtc_overrides/task_queue_factory.cc        | 146 -----------
- webrtc_overrides/task_queue_factory.h         |  21 --
- 16 files changed, 1012 deletions(-)
+ webrtc_overrides/rtc_base/logging.h           | 123 ----------
+ webrtc_overrides/task_queue_factory.cc        | 144 -----------
+ webrtc_overrides/task_queue_factory.h         |  24 --
+ 16 files changed, 1078 deletions(-)
  delete mode 100644 webrtc_overrides/BUILD.gn
  delete mode 100644 webrtc_overrides/DEPS
  delete mode 100644 webrtc_overrides/OWNERS
@@ -40,58 +40,133 @@ Subject: [PATCH] Remove webrtc_overrides
 
 diff --git a/webrtc_overrides/BUILD.gn b/webrtc_overrides/BUILD.gn
 deleted file mode 100644
-index 4483d304ddf..00000000000
+index 4f44c48d26b..00000000000
 --- a/webrtc_overrides/BUILD.gn
 +++ /dev/null
-@@ -1,111 +0,0 @@
+@@ -1,168 +0,0 @@
 -# Copyright 2017 The Chromium Authors. All rights reserved.
 -# Use of this source code is governed by a BSD-style license that can be
 -# found in the LICENSE file.
 -
 -import("//build/config/chromecast_build.gni")
 -
--group("webrtc_overrides") {
--  public_deps = [
--    ":webrtc",
--  ]
--}
--
--source_set("webrtc") {
--  public_deps = [
--    # TODO(kjellander): Start cleaning up this target as soon as
--    # https://codereview.chromium.org/2022833002/ is landed. The target should
--    # be removed entirely if possible.
--    "//third_party/webrtc/rtc_base:rtc_base_approved",
--  ]
--  deps = [
--    "//third_party/webrtc/p2p:rtc_p2p",
--  ]
--
--  # When Chromium is built for NACL or Chromecast, WebRTC provides a
--  # field_trial implementation so there is no need to depend on
--  # ":field_trial".
--  # This configuration happens here:
--  # https://cs.chromium.org/chromium/src/third_party/webrtc/webrtc.gni?l=44-51&rcl=95c56eebe0a2b31ad5752138d15b431124e17d36
--  if (!is_chromecast && !is_nacl) {
--    # When Chromium doesn't build for NaCL or Chromecast, WebRTC doesn't
--    # provide an implementation for field_trial and a custom one (that uses
--    # base/metrics/field_trial.h is provided).
--    deps += [
--      ":field_trial",
--      "//base",
--    ]
--  }
--
+-component("webrtc_component") {
 -  configs += [ "//third_party/webrtc:common_config" ]
 -  public_configs = [ "//third_party/webrtc:common_inherited_config" ]
+-  public_deps = [
+-    ":init_webrtc",
+-    ":metrics",
+-    ":task_queue_factory",
+-    "//third_party/webrtc/api:callfactory_api",
+-    "//third_party/webrtc/api:ice_transport_factory",
+-    "//third_party/webrtc/api:libjingle_logging_api",
+-    "//third_party/webrtc/api:libjingle_peerconnection_api",
+-    "//third_party/webrtc/api:media_stream_interface",
+-    "//third_party/webrtc/api:packet_socket_factory",
+-    "//third_party/webrtc/api:rtc_error",
+-    "//third_party/webrtc/api:rtc_stats_api",
+-    "//third_party/webrtc/api:rtp_parameters",
+-    "//third_party/webrtc/api:scoped_refptr",
+-    "//third_party/webrtc/api/audio:aec3_config",
+-    "//third_party/webrtc/api/audio:aec3_config_json",
+-    "//third_party/webrtc/api/audio:aec3_factory",
+-    "//third_party/webrtc/api/audio_codecs:audio_codecs_api",
+-    "//third_party/webrtc/api/audio_codecs/L16:audio_decoder_L16",
+-    "//third_party/webrtc/api/audio_codecs/L16:audio_encoder_L16",
+-    "//third_party/webrtc/api/audio_codecs/g711:audio_decoder_g711",
+-    "//third_party/webrtc/api/audio_codecs/g711:audio_encoder_g711",
+-    "//third_party/webrtc/api/audio_codecs/g722:audio_decoder_g722",
+-    "//third_party/webrtc/api/audio_codecs/g722:audio_encoder_g722",
+-    "//third_party/webrtc/api/audio_codecs/isac:audio_decoder_isac",
+-    "//third_party/webrtc/api/audio_codecs/isac:audio_encoder_isac",
+-    "//third_party/webrtc/api/audio_codecs/opus:audio_decoder_multiopus",
+-    "//third_party/webrtc/api/audio_codecs/opus:audio_decoder_opus",
+-    "//third_party/webrtc/api/audio_codecs/opus:audio_encoder_multiopus",
+-    "//third_party/webrtc/api/audio_codecs/opus:audio_encoder_opus",
+-    "//third_party/webrtc/api/rtc_event_log:rtc_event_log_factory",
+-    "//third_party/webrtc/api/video:video_bitrate_allocation",
+-    "//third_party/webrtc/api/video:video_frame",
+-    "//third_party/webrtc/api/video:video_frame_i420",
+-    "//third_party/webrtc/api/video:video_rtp_headers",
+-    "//third_party/webrtc/api/video_codecs:builtin_video_decoder_factory",
+-    "//third_party/webrtc/api/video_codecs:rtc_software_fallback_wrappers",
+-    "//third_party/webrtc/api/video_codecs:video_codecs_api",
+-    "//third_party/webrtc/common_video",
+-    "//third_party/webrtc/common_video:common_video",
+-    "//third_party/webrtc/media:rtc_audio_video",
+-    "//third_party/webrtc/media:rtc_internal_video_codecs",
+-    "//third_party/webrtc/media:rtc_media",
+-    "//third_party/webrtc/media:rtc_media_base",
+-    "//third_party/webrtc/media:rtc_simulcast_encoder_adapter",
+-    "//third_party/webrtc/media:rtc_vp9_profile",
+-    "//third_party/webrtc/modules/audio_device",
+-    "//third_party/webrtc/modules/audio_device:audio_device_api",
+-    "//third_party/webrtc/modules/audio_processing",
+-    "//third_party/webrtc/modules/audio_processing:api",
+-    "//third_party/webrtc/modules/audio_processing:audio_processing_statistics",
+-    "//third_party/webrtc/modules/audio_processing/aec_dump",
+-    "//third_party/webrtc/modules/audio_processing/aec_dump:aec_dump",
+-    "//third_party/webrtc/modules/desktop_capture",
+-    "//third_party/webrtc/modules/desktop_capture:primitives",
+-    "//third_party/webrtc/modules/video_coding:video_codec_interface",
+-    "//third_party/webrtc/modules/video_coding:webrtc_h264",
+-    "//third_party/webrtc/p2p:libstunprober",
+-    "//third_party/webrtc/p2p:rtc_p2p",
+-    "//third_party/webrtc/pc:libjingle_peerconnection",
+-    "//third_party/webrtc/pc:peerconnection",
+-    "//third_party/webrtc/pc:rtc_pc",
+-    "//third_party/webrtc/pc:rtc_pc_base",
+-    "//third_party/webrtc/rtc_base",
+-    "//third_party/webrtc/rtc_base:async_resolver_interface",
+-    "//third_party/webrtc/rtc_base:ip_address",
+-    "//third_party/webrtc/rtc_base:rtc_base",
+-    "//third_party/webrtc/rtc_base:rtc_base_approved",
+-    "//third_party/webrtc/rtc_base:rtc_task_queue",
+-    "//third_party/webrtc/rtc_base:socket_address",
+-    "//third_party/webrtc/rtc_base:threading",
+-    "//third_party/webrtc/rtc_base:timeutils",
+-    "//third_party/webrtc/rtc_base/third_party/base64",
+-    "//third_party/webrtc/rtc_base/third_party/sigslot",
+-    "//third_party/webrtc/rtc_base/third_party/sigslot:sigslot",
+-    "//third_party/webrtc/stats",
+-    "//third_party/webrtc/stats:rtc_stats",
+-    "//third_party/webrtc/stats:rtc_stats_test_utils",
+-    "//third_party/webrtc/system_wrappers",
+-  ]
+-  if (is_chromecast) {
+-    public_deps += [
+-      "//third_party/webrtc/api/audio:audio_frame_api",
+-      "//third_party/webrtc/api/task_queue",
+-      "//third_party/webrtc/api/video:encoded_image",
+-      "//third_party/webrtc/media:rtc_h264_profile_id",
+-      "//third_party/webrtc/media:rtc_media_engine_defaults",
+-      "//third_party/webrtc/modules/audio_device:audio_device_default",
+-      "//third_party/webrtc/modules/audio_mixer:audio_mixer_impl",
+-      "//third_party/webrtc/modules/video_coding:codec_globals_headers",
+-    ]
+-  }
+-  if (is_chromecast || is_nacl) {
+-    # For chromecast and NaCL, provide a default field trial implementation.
+-    public_deps += [ "//third_party/webrtc/system_wrappers:field_trial" ]
+-  } else {
+-    # Other Chromium flavors get a custom implementation.
+-    # See the default value of "rtc_exclude_field_trial_default"
+-    # in https://cs.chromium.org/chromium/src/third_party/webrtc/webrtc.gni
+-    # for how that is done.
+-    public_deps += [ ":field_trial" ]
+-  }
 -}
 -
--static_library("init_webrtc") {
+-source_set("init_webrtc") {
+-  visibility = [ ":*" ]
 -  sources = [
 -    "init_webrtc.cc",
 -    "init_webrtc.h",
 -  ]
--  configs += [ "//third_party/webrtc:common_config" ]
+-  configs += [
+-    "//third_party/webrtc:common_config",
+-    "//third_party/webrtc:library_impl_config",
+-  ]
 -  public_configs = [
 -    "//third_party/webrtc:common_inherited_config",
 -
@@ -102,57 +177,39 @@ index 4483d304ddf..00000000000
 -    "//third_party/abseil-cpp:absl_include_config",
 -    "//third_party/abseil-cpp:absl_define_config",
 -  ]
--  public_deps = [
--    ":libjingle_webrtc_common",
--  ]
 -  deps = [
--    ":metrics",
 -    "//base",
 -    "//third_party/webrtc/rtc_base",
+-    "//third_party/webrtc/rtc_base/system:rtc_export",
 -    "//third_party/webrtc/system_wrappers",
 -  ]
 -}
 -
--static_library("metrics") {
--  sources = [
--    "metrics.cc",
--  ]
--  deps = [
--    "//base",
--  ]
+-source_set("metrics") {
+-  # TODO(mbonadei): Migrate WebRTC deps to webrtc_component and uncomment.
+-  # visibility = [ ":*" ]
+-  sources = [ "metrics.cc" ]
+-  deps = [ "//base" ]
 -}
 -
--static_library("field_trial") {
--  sources = [
--    "field_trial.cc",
--  ]
--  deps = [
--    "//base",
--  ]
--}
--
--source_set("libjingle_webrtc_common") {
--  configs += [ "//third_party/webrtc:common_config" ]
--  public_configs = [ "//third_party/webrtc:common_inherited_config" ]
--
--  deps = [
--    ":webrtc",
--    "//third_party/webrtc/media:rtc_media",
--    "//third_party/webrtc/media:rtc_media_base",
--    "//third_party/webrtc/pc:libjingle_peerconnection",
--    "//third_party/webrtc/pc:rtc_pc",
--    "//third_party/webrtc/system_wrappers",
--  ]
+-source_set("field_trial") {
+-  # TODO(mbonadei): Migrate WebRTC deps to webrtc_component and uncomment.
+-  # visibility = [ ":*" ]
+-  sources = [ "field_trial.cc" ]
+-  deps = [ "//base" ]
 -}
 -
 -source_set("task_queue_factory") {
+-  visibility = [ ":*" ]
 -  sources = [
 -    "task_queue_factory.cc",
 -    "task_queue_factory.h",
 -  ]
+-  configs += [ "//third_party/webrtc:library_impl_config" ]
 -  deps = [
 -    "//base",
 -    "//third_party/webrtc/api/task_queue",
+-    "//third_party/webrtc/rtc_base/system:rtc_export",
 -  ]
 -}
 diff --git a/webrtc_overrides/DEPS b/webrtc_overrides/DEPS
@@ -280,10 +337,10 @@ index db086b6f758..00000000000
 -}
 diff --git a/webrtc_overrides/init_webrtc.h b/webrtc_overrides/init_webrtc.h
 deleted file mode 100644
-index f5e6efbd38e..00000000000
+index a10848eacbb..00000000000
 --- a/webrtc_overrides/init_webrtc.h
 +++ /dev/null
-@@ -1,13 +0,0 @@
+@@ -1,15 +0,0 @@
 -// Copyright 2013 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -291,10 +348,12 @@ index f5e6efbd38e..00000000000
 -#ifndef THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
 -#define THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
 -
+-#include "third_party/webrtc/rtc_base/system/rtc_export.h"
+-
 -// Initialize WebRTC. Call this explicitly to initialize WebRTC module
 -// (before initializing the sandbox in Chrome) and hook up Chrome+WebRTC
 -// integration such as common logging and tracing.
--bool InitializeWebRtcModule();
+-RTC_EXPORT bool InitializeWebRtcModule();
 -
 -#endif // THIRD_PARTY_WEBRTC_OVERRIDES_INIT_WEBRTC_H_
 diff --git a/webrtc_overrides/metrics.cc b/webrtc_overrides/metrics.cc
@@ -362,10 +421,10 @@ index 2284046bc60..00000000000
 -}  // namespace webrtc
 diff --git a/webrtc_overrides/rtc_base/diagnostic_logging.h b/webrtc_overrides/rtc_base/diagnostic_logging.h
 deleted file mode 100644
-index e8d31254cae..00000000000
+index 7643f52e736..00000000000
 --- a/webrtc_overrides/rtc_base/diagnostic_logging.h
 +++ /dev/null
-@@ -1,125 +0,0 @@
+@@ -1,126 +0,0 @@
 -// Copyright 2015 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -378,6 +437,7 @@ index e8d31254cae..00000000000
 -
 -#include "third_party/webrtc/api/scoped_refptr.h"
 -#include "third_party/webrtc/rtc_base/checks.h"
+-#include "third_party/webrtc/rtc_base/system/rtc_export.h"
 -
 -namespace rtc {
 -
@@ -428,7 +488,7 @@ index e8d31254cae..00000000000
 -
 -// Class that writes a log message to the logging delegate ("WebRTC logging
 -// stream" in Chrome) and to Chrome's logging stream.
--class DiagnosticLogMessage {
+-class RTC_EXPORT DiagnosticLogMessage {
 - public:
 -  DiagnosticLogMessage(const char* file,
 -                       int line,
@@ -482,7 +542,7 @@ index e8d31254cae..00000000000
 -// TODO(grunell): Change name to InitDiagnosticLoggingDelegate or
 -// InitDiagnosticLogging. Change also in init_webrtc.h/cc.
 -// TODO(grunell): typedef the delegate function.
--void InitDiagnosticLoggingDelegateFunction(
+-RTC_EXPORT void InitDiagnosticLoggingDelegateFunction(
 -    void (*delegate)(const std::string&));
 -
 -void SetExtraLoggingInit(
@@ -539,10 +599,10 @@ index f81232c0acb..00000000000
 -}  // namespace rtc
 diff --git a/webrtc_overrides/rtc_base/event.h b/webrtc_overrides/rtc_base/event.h
 deleted file mode 100644
-index 47a34cdac76..00000000000
+index 78a76e8b1db..00000000000
 --- a/webrtc_overrides/rtc_base/event.h
 +++ /dev/null
-@@ -1,47 +0,0 @@
+@@ -1,48 +0,0 @@
 -// Copyright 2017 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -553,11 +613,12 @@ index 47a34cdac76..00000000000
 -#include "base/macros.h"
 -#include "base/synchronization/waitable_event.h"
 -#include "base/threading/thread_restrictions.h"
+-#include "third_party/webrtc/rtc_base/system/rtc_export.h"
 -
 -namespace rtc {
 -
 -// Overrides WebRTC's internal event implementation to use Chromium's.
--class Event {
+-class RTC_EXPORT Event {
 - public:
 -  static const int kForever = -1;
 -
@@ -844,19 +905,19 @@ index d10fd254db1..00000000000
 -}  // namespace rtc
 diff --git a/webrtc_overrides/rtc_base/logging.h b/webrtc_overrides/rtc_base/logging.h
 deleted file mode 100644
-index 85622bc05da..00000000000
+index 5513bc6ef58..00000000000
 --- a/webrtc_overrides/rtc_base/logging.h
 +++ /dev/null
-@@ -1,119 +0,0 @@
+@@ -1,123 +0,0 @@
 -// Copyright 2015 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
 -
 -// This file overrides the logging macros in WebRTC (webrtc/rtc_base/logging.h).
 -// Instead of using WebRTC's logging implementation, the WebRTC macros are
--// mapped to DIAGNOSTIC_LOGING. In its implementation (DiagnosticLogMessage in
--// third_party/webrtc_overrides/rtc_base/logging.h), the corresponding
--// base/logging.h macros (e.g. Chromium's VLOG) are used.
+-// mapped to DIAGNOSTIC_LOGGING. In its implementation (DiagnosticLogMessage in
+-// third_party/webrtc_overrides/rtc_base/diagnostic_logging.h), the
+-// corresponding base/logging.h macros (e.g. Chromium's VLOG) are used.
 -// If this file is included outside of WebRTC/libjingle it should be included
 -// after base/logging.h (if any) or compiler error or unexpected behavior may
 -// occur (macros that have the same name in WebRTC as in Chromium will use
@@ -897,10 +958,14 @@ index 85622bc05da..00000000000
 -
 -}  // namespace rtc
 -
--#define DIAGNOSTIC_LOG(sev, ctx, err, ...)                                   \
--  rtc::DiagnosticLogMessage(__FILE__, __LINE__, sev, rtc::ERRCTX_##ctx, err, \
--                            ##__VA_ARGS__)                                   \
--      .stream()
+-// The LogMessageVoidify() call suppresses -Wunreachable-code diagnostics
+-// in certain conditions (see https://crbug.com/1065568)
+-// TODO(thakis): Make the warning smarter and then remove this again.
+-#define DIAGNOSTIC_LOG(sev, ctx, err, ...)                                     \
+-  rtc::LogMessageVoidify() & rtc::DiagnosticLogMessage(__FILE__, __LINE__,     \
+-                                                       sev, rtc::ERRCTX_##ctx, \
+-                                                       err, ##__VA_ARGS__)     \
+-                                 .stream()
 -
 -#define RTC_LOG_CHECK_LEVEL(sev) CheckVlogIsOn(rtc::sev, __FILE__)
 -#define RTC_LOG_CHECK_LEVEL_V(sev) CheckVlogIsOn(sev, __FILE__)
@@ -969,10 +1034,10 @@ index 85622bc05da..00000000000
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_WEBRTC_RTC_BASE_LOGGING_H_
 diff --git a/webrtc_overrides/task_queue_factory.cc b/webrtc_overrides/task_queue_factory.cc
 deleted file mode 100644
-index f345c50934b..00000000000
+index e81ef238494..00000000000
 --- a/webrtc_overrides/task_queue_factory.cc
 +++ /dev/null
-@@ -1,146 +0,0 @@
+@@ -1,144 +0,0 @@
 -// Copyright 2019 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -983,8 +1048,8 @@ index f345c50934b..00000000000
 -#include "base/memory/ref_counted.h"
 -#include "base/memory/scoped_refptr.h"
 -#include "base/synchronization/waitable_event.h"
--#include "base/task/post_task.h"
 -#include "base/task/task_traits.h"
+-#include "base/task/thread_pool.h"
 -#include "build/build_config.h"
 -#include "third_party/webrtc/api/task_queue/task_queue_base.h"
 -#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
@@ -994,7 +1059,7 @@ index f345c50934b..00000000000
 -class WebrtcTaskQueue final : public webrtc::TaskQueueBase {
 - public:
 -  explicit WebrtcTaskQueue(const base::TaskTraits& traits)
--      : task_runner_(base::CreateSequencedTaskRunner(traits)),
+-      : task_runner_(base::ThreadPool::CreateSequencedTaskRunner(traits)),
 -        is_active_(new base::RefCountedData<bool>(true)) {
 -    DCHECK(task_runner_);
 -  }
@@ -1077,21 +1142,19 @@ index f345c50934b..00000000000
 -  switch (priority) {
 -    case webrtc::TaskQueueFactory::Priority::HIGH:
 -#if defined(OS_ANDROID)
--      return {base::ThreadPool(), base::WithBaseSyncPrimitives(),
--              base::TaskPriority::HIGHEST};
+-      return {base::WithBaseSyncPrimitives(), base::TaskPriority::HIGHEST};
 -#else
--      return {base::ThreadPool(), base::TaskPriority::HIGHEST};
+-      return {base::TaskPriority::HIGHEST};
 -#endif
 -      break;
 -    case webrtc::TaskQueueFactory::Priority::LOW:
--      return {base::ThreadPool(), base::MayBlock(),
--              base::TaskPriority::BEST_EFFORT};
+-      return {base::MayBlock(), base::TaskPriority::BEST_EFFORT};
 -    case webrtc::TaskQueueFactory::Priority::NORMAL:
 -    default:
 -#if defined(OS_ANDROID)
--      return {base::ThreadPool(), base::WithBaseSyncPrimitives()};
+-      return {base::WithBaseSyncPrimitives()};
 -#else
--      return {base::ThreadPool()};
+-      return {};
 -#endif
 -  }
 -}
@@ -1121,10 +1184,10 @@ index f345c50934b..00000000000
 -}
 diff --git a/webrtc_overrides/task_queue_factory.h b/webrtc_overrides/task_queue_factory.h
 deleted file mode 100644
-index 20130868ef9..00000000000
+index 957cf75e4e9..00000000000
 --- a/webrtc_overrides/task_queue_factory.h
 +++ /dev/null
-@@ -1,21 +0,0 @@
+@@ -1,24 +0,0 @@
 -// Copyright 2019 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -1137,15 +1200,18 @@ index 20130868ef9..00000000000
 -#include "base/task/task_traits.h"
 -#include "third_party/webrtc/api/task_queue/task_queue_base.h"
 -#include "third_party/webrtc/api/task_queue/task_queue_factory.h"
+-#include "third_party/webrtc/rtc_base/system/rtc_export.h"
 -
 -// Creates factory for webrtc::TaskQueueBase backed by base::SequencedTaskRunner
--// Tested by /content/renderer/media/webrtc/task_queue_factory_unittest.cc
--std::unique_ptr<webrtc::TaskQueueFactory> CreateWebRtcTaskQueueFactory();
+-// Tested by
+-// /third_party/blink/renderer/platform/peerconnection/task_queue_factory_test.cc
+-RTC_EXPORT std::unique_ptr<webrtc::TaskQueueFactory>
+-CreateWebRtcTaskQueueFactory();
 -
--std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+-RTC_EXPORT std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
 -CreateWebRtcTaskQueue(webrtc::TaskQueueFactory::Priority priority);
 -
 -#endif  // THIRD_PARTY_WEBRTC_OVERRIDES_TASK_QUEUE_FACTORY_H_
 -- 
-2.21.0.windows.1
+2.24.1.windows.2
 

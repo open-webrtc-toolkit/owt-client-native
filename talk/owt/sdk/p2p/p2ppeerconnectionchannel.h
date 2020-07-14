@@ -196,16 +196,16 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   SetSessionDescriptionMessage* set_remote_sdp_task_;
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
-                         // "disconnect"
-  int reconnect_timeout_;  // Unit: second
-  long message_seq_num_; // Message ID to be sent through data channel
-  std::vector<std::shared_ptr<std::string>> pending_messages_;  // Messages need
-                                                                // to be sent
-                                                                // once data
-                                                                // channel is
-                                                                // ready.
+                         // "disconnect".
+  int reconnect_timeout_;  // Unit: second.
+  int message_seq_num_; // Message ID to be sent through data channel.
+  // Messages need to be sent once data channel is ready.
+  std::vector<std::tuple<std::shared_ptr<std::string>,
+                         std::function<void()>,
+                         std::function<void(std::unique_ptr<Exception>)>>>
+      pending_messages_;
+  // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
-  std::unordered_map<std::string, std::function<void()>> message_success_callbacks_;
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
@@ -214,6 +214,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool remote_side_supports_unified_plan_;
   bool is_creating_offer_;  // It will be true during creating and setting offer.
   bool remote_side_supports_continual_ice_gathering_;
+  // Removing ack for data channel messages. If
+  // |remote_side_ignores_datachannel_ack_| is true, don't send acks.
+  // https://github.com/open-webrtc-toolkit/owt-server-p2p/issues/17.
+  bool remote_side_ignores_datachannel_acks_;
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;

@@ -18,42 +18,40 @@ TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 LIBJPEG_TURBO_PATH = os.path.join(THIRD_PARTY_PATH, 'libjpeg_turbo')
+FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
 TOOL_PATH = os.path.join(HOME_PATH, 'tools')
 BASE_PATH = os.path.join(HOME_PATH, 'base')
 platform = os.name
 useShell = False
-if(platform == "nt"):
+if (platform == "nt"):
   useShell = True
 
-def _patch():
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0001-Use-OpenSSL-for-usrsctp.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0002-Use-OpenSSL-for-libsrtp.patch')], shell=useShell, cwd=LIBSRTP_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBSRTP_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0003-Start-iOS-simulator-before-running-tests.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
-  #  subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0004-Remove-webrtc_overrides.patch')], shell=useShell, cwd=THIRD_PARTY_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=THIRD_PARTY_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0005-Fixed-compile-issue-and-disable-thin-archive.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0007-Fix-examples-path-error.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0009-Fix-compile-issue-for-linux-g-build.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-  #  subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch')], shell=useShell, cwd=BASE_PATH)) != 0:
-  #  subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BASE_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0008-ios-Various-build-fixes-for-Xcode-10.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-   # subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0009-Export-WebRTC-symbols-on-iOS.patch')], shell=useShell, cwd=BUILD_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=BUILD_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0010-Remove-telemetry.patch')], shell=useShell, cwd=TOOL_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TOOL_PATH)
-  if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch')], shell=useShell, cwd=LIBJPEG_TURBO_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=LIBJPEG_TURBO_PATH)
-  #if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, '0012-ios-Adds-CFBundleShortVersionString-to-the-plist-for.patch')], shell=useShell, cwd=TESTING_PATH)) != 0:
-    subprocess.call(['git', 'am', '--skip'], shell=useShell, cwd=TESTING_PATH)
+# list each patch to be applied along with path where it should be applied
+patchList = [
+    ('0001-Use-OpenSSL-for-usrsctp.patch', THIRD_PARTY_PATH),
+    ('0002-Use-OpenSSL-for-libsrtp.patch', LIBSRTP_PATH),
+    ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
+    ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
+    ('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
+    ('0007-Fix-examples-path-error.patch', BUILD_PATH),
+    #('0009-Fix-compile-issue-for-linux-g-build.patch', BUILD_PATH),
+    ('0009-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
+    ('0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch', LIBJPEG_TURBO_PATH),
+    ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
+    ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH)
+]
+
+def _patch(ignoreFailures=False):
+    for patchName, applyPath in patchList:
+        if (subprocess.call(['git', 'am', os.path.join(PATCH_PATH, patchName)],
+                            shell=useShell, cwd=applyPath)) != 0:
+            if (ignoreFailures):
+                subprocess.call(['git', 'am', '--skip'], shell=useShell,
+                                cwd=applyPath)
+            else:
+                sys.exit(1)
 
 def main(argv):
   _patch()

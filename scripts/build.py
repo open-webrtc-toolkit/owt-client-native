@@ -34,7 +34,7 @@ OUT_HEADER_PATH = os.path.join(OUT_PATH, 'headers')
 ARCH_PARAM_DICT = {'arm':'device-arm32', 'arm64':'device-arm64',
     'x86':'simulator-x86','x64':'simulator-x64'}
 SCHEME_DICT = {'debug':'Debug', 'release':'Release'}
-HEADER_LIST = ['talk/owt/sdk/include/objc/OWT/*']
+HEADER_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'sdk', 'include', 'objc', 'OWT')
 FRAMEWORK_INFO_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'sdk',
     'supportingfiles', 'objc', 'Info.plist')
 FRAMEWORK_MODULE_MAP_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'sdk',
@@ -50,7 +50,7 @@ TEST_SCHEME = 'debug'
 TEST_SIMULATOR_DEVICE = 'iPhone X'
 
 def gngen(arch, ssl_root, scheme):
-  gn_args = '--args=\'target_os="ios" target_cpu="%s" is_component_build=false '\
+  gn_args = 'target_os="ios" target_cpu="%s" is_component_build=false '\
       'ios_enable_code_signing=false ios_deployment_target="9.0" use_xcode_clang=true '\
       'rtc_libvpx_build_vp9=true enable_ios_bitcode=true rtc_use_h265=true'%arch
   if(scheme=='release'):
@@ -60,9 +60,8 @@ def gngen(arch, ssl_root, scheme):
   if ssl_root:
     gn_args += (' owt_use_openssl=true owt_openssl_header_root="%s" '\
         'owt_openssl_lib_root="%s"'%(ssl_root+'/include',ssl_root+'/lib'))
-  gn_args+='\''
-  ret = subprocess.call(['gn gen %s %s'%(getoutputpath(arch,scheme), gn_args)],
-      cwd=HOME_PATH, shell=True)
+  ret = subprocess.call(['gn', 'gen', getoutputpath(arch, scheme), '--args=%s' % gn_args],
+                        cwd=HOME_PATH, shell=False)
   if ret == 0:
     return True
   return False
@@ -78,9 +77,9 @@ def ninjabuild(arch, scheme, targets):
   return True
 
 def copyheaders(headers_target_folder):
-  for header in HEADER_LIST:
-    subprocess.call(['cp %s %s/'%(header, headers_target_folder)], cwd=HOME_PATH,
-    shell=True)
+  if os.path.exists(headers_target_folder):
+    shutil.rmtree(headers_target_folder)
+  shutil.copytree(HEADER_PATH, headers_target_folder)
 
 def getexternalliblist(ssl_root):
   libs = []
@@ -174,9 +173,12 @@ def main():
   parser.add_argument('--skip_tests', default=False, action='store_true',
       help='Skip unit tests.')
   opts=parser.parse_args()
+  if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
+    print >> sys.stderr, ("Invalid ssl_root.")
+    return 1
   opts.arch=opts.target_arch.split(',')
   if not opts.scheme in SCHEME_DICT:
-    print >> sys.stderr, ("Invalid scheme name")
+    print >> sys.stderr, ("Invalid scheme name.")
     return 1
   for arch_item in opts.arch:
     if not arch_item in ARCH_PARAM_DICT:
