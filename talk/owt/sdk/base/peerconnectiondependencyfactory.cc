@@ -150,14 +150,14 @@ void PeerConnectionDependencyFactory::
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   } else {
-    encoder_factory = std::move(webrtc::CreateBuiltinVideoEncoderFactory());
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
   }
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else {
-    decoder_factory = std::move(webrtc::CreateBuiltinVideoDecoderFactory());
+    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
 #else
 #error "Unsupported platform."
