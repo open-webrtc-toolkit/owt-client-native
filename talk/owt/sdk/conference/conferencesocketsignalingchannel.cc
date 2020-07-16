@@ -77,7 +77,6 @@ ConferenceSocketSignalingChannel::~ConferenceSocketSignalingChannel() {
 }
 void ConferenceSocketSignalingChannel::AddObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
-  std::lock_guard<std::mutex> lock(observer_mutex_);
   if (std::find(observers_.begin(), observers_.end(), &observer) !=
       observers_.end()) {
     RTC_LOG(LS_INFO) << "Adding duplicated observer.";
@@ -87,7 +86,6 @@ void ConferenceSocketSignalingChannel::AddObserver(
 }
 void ConferenceSocketSignalingChannel::RemoveObserver(
     ConferenceSocketSignalingChannelObserver& observer) {
-  std::lock_guard<std::mutex> lock(observer_mutex_);
   observers_.erase(std::remove(observers_.begin(), observers_.end(), &observer),
                    observers_.end());
 }
@@ -295,7 +293,6 @@ void ConferenceSocketSignalingChannel::Connect(
       sio::socket::event_listener_aux(
           [&](std::string const& name, sio::message::ptr const& data,
               bool is_ack, sio::message::list& ack_resp) {
-            std::lock_guard<std::mutex> lock(observer_mutex_);
             for (auto it = observers_.begin(); it != observers_.end(); ++it) {
               (*it)->OnStreamError(data);
             }
@@ -342,7 +339,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
         auto stream_info = data->get_map()["data"];
         if (stream_info != nullptr &&
             stream_info->get_flag() == sio::message::flag_object) {
-          std::lock_guard<std::mutex> lock(observer_mutex_);
           for (auto it = observers_.begin(); it != observers_.end(); ++it) {
             (*it)->OnStreamAdded(stream_info);
           }
@@ -356,7 +352,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
             stream_update->get_flag() == sio::message::flag_object) {
           update_message->get_map()["event"] = stream_update;
         }
-        std::lock_guard<std::mutex> lock(observer_mutex_);
         for (auto it = observers_.begin(); it != observers_.end(); ++it) {
           (*it)->OnStreamUpdated(update_message);
         }
@@ -364,7 +359,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
         sio::message::ptr remove_message = sio::object_message::create();
         remove_message->get_map()["id"] =
             sio::string_message::create(stream_id);
-        std::lock_guard<std::mutex> lock(observer_mutex_);
         for (auto it = observers_.begin(); it != observers_.end(); ++it) {
           (*it)->OnStreamRemoved(remove_message);
         }
@@ -379,7 +373,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
     if (target != nullptr && target->get_flag() == sio::message::flag_string) {
       to = target->get_string();
     }
-    std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnCustomMessage(from, message, to);
     }
@@ -400,7 +393,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
           participant_info->get_map()["id"] != nullptr &&
           participant_info->get_map()["id"]->get_flag() ==
               sio::message::flag_string) {
-        std::lock_guard<std::mutex> lock(observer_mutex_);
         for (auto it = observers_.begin(); it != observers_.end(); ++it) {
           (*it)->OnUserJoined(participant_info);
         }
@@ -409,7 +401,6 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
       auto participant_info = data->get_map()["data"];
       if (participant_info != nullptr &&
           participant_info->get_flag() == sio::message::flag_string) {
-        std::lock_guard<std::mutex> lock(observer_mutex_);
         for (auto it = observers_.begin(); it != observers_.end(); ++it) {
           (*it)->OnUserLeft(participant_info);
         }
@@ -419,14 +410,12 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
     }
   } else if (name == kEventNameOnSignalingMessage) {
     RTC_LOG(LS_VERBOSE) << "Received signaling message from erizo.";
-    std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnSignalingMessage(data);
     }
   } else if (name == kEventNameOnDrop) {
     RTC_LOG(LS_INFO) << "Received drop message.";
     socket_client_->set_reconnect_attempts(0);
-    std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnServerDisconnected();
     }
@@ -739,7 +728,6 @@ void ConferenceSocketSignalingChannel::TriggerOnServerDisconnected() {
     disconnect_complete_();
   }
   disconnect_complete_ = nullptr;
-  std::lock_guard<std::mutex> lock(observer_mutex_);
   for (auto it = observers_.begin(); it != observers_.end(); ++it) {
     (*it)->OnServerDisconnected();
   }
