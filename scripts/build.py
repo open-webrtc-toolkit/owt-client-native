@@ -141,7 +141,7 @@ def dist(arch_list, scheme, ssl_root):
 # Get iOS simulator SDK version
 def getsdkversion():
   settings = {}
-  sdk_info.FillXcodeVersion(settings)
+  sdk_info.FillXcodeVersion(settings, None)
   sdk_info.FillSDKPathAndVersion(settings, 'iphonesimulator', settings['xcode_version'])
   return settings['sdk_version']
 
