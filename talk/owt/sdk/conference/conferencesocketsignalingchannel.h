@@ -126,6 +126,7 @@ class ConferenceSocketSignalingChannel
       const owt::base::Resolution& resolution);
   sio::client* socket_client_;
   std::vector<ConferenceSocketSignalingChannelObserver*> observers_;
+  std::mutex observer_mutex_;
   std::function<void(std::unique_ptr<Exception>)>
       connect_failure_callback_;
   std::function<void()> disconnect_complete_;

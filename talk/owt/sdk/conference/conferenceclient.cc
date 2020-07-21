@@ -178,10 +178,13 @@ ConferenceClient::ConferenceClient(
       std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
           "ConferenceClientEventQueue",
           webrtc::TaskQueueFactory::Priority::NORMAL));
+  signaling_channel_->AddObserver(*this);
 }
+
 ConferenceClient::~ConferenceClient() {
   signaling_channel_->RemoveObserver(*this);
 }
+
 void ConferenceClient::AddObserver(ConferenceClientObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<ConferenceClientObserver>>::iterator it =
@@ -250,7 +253,6 @@ void ConferenceClient::Join(
                            "please pass it without modification.";
     token_base64 = rtc::Base64::Encode(token);
   }
-  signaling_channel_->AddObserver(*this);
   signaling_channel_->Connect(
       token_base64,
       [=](sio::message::ptr info) {
