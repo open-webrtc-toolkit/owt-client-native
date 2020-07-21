@@ -21,7 +21,7 @@
  */
 - (void)unpublish:(OWTLocalStream*)stream
                to:(NSString*)targetId
-        onSuccess:(nullable void (^)())onSuccess
+        onSuccess:(nullable void (^)(void))onSuccess
         onFailure:(nullable void (^)(NSError*))onFailure;
 @end
 typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
@@ -62,7 +62,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
         }
       }];
 }
-- (void)disconnectWithOnSuccess:(void (^)())onSuccess
+- (void)disconnectWithOnSuccess:(void (^)(void))onSuccess
                       onFailure:(void (^)(NSError*))onFailure {
   for (id key in _peerConnectionChannels) {
     OWTP2PPeerConnectionChannel* channel =
@@ -102,7 +102,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 }
 - (void)unpublish:(OWTLocalStream*)stream
                to:(NSString*)targetId
-        onSuccess:(void (^)())onSuccess
+        onSuccess:(void (^)(void))onSuccess
         onFailure:(void (^)(NSError*))onFailure {
   if (![self checkSignalingChannelOnline:onFailure])
     return;
@@ -126,7 +126,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 }
 - (void)sendSignalingMessage:(NSString*)data
                           to:(NSString*)targetId
-                   onSuccess:(void (^)())onSuccess
+                   onSuccess:(void (^)(void))onSuccess
                    onFailure:(void (^)(NSError*))onFailure {
   [_signalingChannel sendMessage:data
                               to:targetId
@@ -143,7 +143,7 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
 }
 - (void)send:(NSString*)message
            to:(NSString*)targetId
-    onSuccess:(nullable void (^)())onSuccess
+    onSuccess:(nullable void (^)(void))onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure {
   if (![self checkSignalingChannelOnline:onFailure])
     return;

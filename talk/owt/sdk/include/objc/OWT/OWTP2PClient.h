@@ -47,7 +47,7 @@ RTC_OBJC_EXPORT
  happened:
                 1. OWTP2PClient haven't connected to a signaling server.
  */
-- (void)disconnectWithOnSuccess:(nullable void (^)())onSuccess
+- (void)disconnectWithOnSuccess:(nullable void (^)(void))onSuccess
                       onFailure:(nullable void (^)(NSError*))onFailure;
 /**
  @brief Send a message to remote client
@@ -63,7 +63,7 @@ RTC_OBJC_EXPORT
  */
 - (void)send:(NSString*)message
            to:(NSString*)targetId
-    onSuccess:(nullable void (^)())onSuccess
+    onSuccess:(nullable void (^)(void))onSuccess
     onFailure:(nullable void (^)(NSError*))onFailure;
 /**
  @brief Stop a WebRTC session.

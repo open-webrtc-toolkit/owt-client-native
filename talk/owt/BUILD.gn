@@ -18,9 +18,7 @@ declare_args() {
 }
 if (is_ios || is_mac) {
   config("owt_sdk_objc_warnings_config") {
-    # Bug 1375. Fix -Wobjc-missing-property-synthesis warnings.
-    cflags_objc = [ "-Wno-objc-missing-property-synthesis" ]
-    cflags_objcc = [ "-Wno-objc-missing-property-synthesis" ]
+    cflags_objc = [ "-Wstrict-prototypes" ]
   }
 }
 if (is_android) {

@@ -6,10 +6,10 @@
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PPublication.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PPeerConnectionChannelObserver.h"
 @interface OWTP2PPublication () <OWTP2PPeerConnectionChannelObserver>
-@property(nonatomic, readonly) void (^stopMethod)();
+@property(nonatomic, readonly) void (^stopMethod)(void);
 @property(nonatomic, readonly) void (^statsMethod)
     (void (^)(NSArray<RTCLegacyStatsReport*>*), void (^)(NSError*));
-- (instancetype)initWithStop:(void (^)())stopMethod
+- (instancetype)initWithStop:(void (^)(void))stopMethod
                        stats:
                            (void (^)(void (^)(NSArray<RTCLegacyStatsReport*>*),
                                      void (^)(NSError*)))statsMethod;

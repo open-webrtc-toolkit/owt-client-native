@@ -20,12 +20,12 @@
       onSuccess:(void (^)(OWTP2PPublication*))onSuccess
       onFailure:(void (^)(NSError*))onFailure;
 - (void)unpublish:(OWTLocalStream*)stream
-        onSuccess:(void (^)())onSuccess
+        onSuccess:(void (^)(void))onSuccess
         onFailure:(void (^)(NSError*))onFailure;
 - (void)send:(NSString*)message
-    withOnSuccess:(void (^)())onSuccess
+    withOnSuccess:(void (^)(void))onSuccess
         onFailure:(void (^)(NSError*))onFailure;
-- (void)stopWithOnSuccess:(void (^)())onSuccess
+- (void)stopWithOnSuccess:(void (^)(void))onSuccess
                 onFailure:(void (^)(NSError*))onFailure;
 - (void)statsWithOnSuccess:(void (^)(NSArray<RTCLegacyStatsReport*>*))onSuccess
                  onFailure:(void (^)(NSError*))onFailure;
