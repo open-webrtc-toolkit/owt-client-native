@@ -197,7 +197,8 @@ void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
-
+#endif
+#if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
@@ -364,6 +365,7 @@ std::shared_ptr<LocalStream> LocalStream::Create(
       new LocalStream(parameters, std::move(observer)));
   return stream;
 }
+#endif
 std::shared_ptr<LocalStream> LocalStream::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
@@ -377,7 +379,6 @@ std::shared_ptr<LocalStream> LocalStream::Create(
   std::shared_ptr<LocalStream> stream(new LocalStream(parameters, encoder));
   return stream;
 }
-#endif
 LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
                          int& error_code) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
@@ -523,7 +524,7 @@ LocalStream::LocalStream(
   media_stream_->AddRef();
   source_.video = VideoSourceInfo::kScreenCast;
 }
-
+#endif
 LocalStream::LocalStream(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
@@ -590,7 +591,7 @@ LocalStream::LocalStream(
   media_stream_ = stream;
   media_stream_->AddRef();
 }
-#endif
+
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {

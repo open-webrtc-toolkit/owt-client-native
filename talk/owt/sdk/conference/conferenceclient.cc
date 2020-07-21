@@ -1,13 +1,11 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include <algorithm>
 #include <string>
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/stringutils.h"
 #include "talk/owt/sdk/conference/conferencepeerconnectionchannel.h"
-#include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
 #include "webrtc/api/stats_types.h"
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
@@ -15,6 +13,8 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
+#include "talk/owt/sdk/include/cpp/owt/base/stream.h"
+#include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 using namespace rtc;
 namespace owt {
 namespace conference {
