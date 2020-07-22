@@ -20,7 +20,7 @@ class ParticipantObserverObjcImpl : public ParticipantObserver {
   virtual void OnLeft() override;
 
  private:
-  OWTConferenceParticipant* participant_;
+  __weak OWTConferenceParticipant* participant_;
   id<OWTConferenceParticipantDelegate> delegate_;
 };
 }  // namespace conference
