@@ -7,6 +7,7 @@
 #import "talk/owt/sdk/p2p/objc/OWTP2PPeerConnectionChannel.h"
 @interface OWTP2PClient ()
 - (OWTP2PPeerConnectionChannel*)getPeerConnectionChannel:(NSString*)targetId;
+- (void)removePeerConnectionChannel:(NSString*)targetId;
 /**
  @brief Unpublish the stream to the remote client.
  @param stream The stream which will be removed.
@@ -124,6 +125,16 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
   }
   return channel;
 }
+
+- (void)removePeerConnectionChannel:(NSString*)targetId {
+  OWTP2PPeerConnectionChannel* channel =
+      [_peerConnectionChannels objectForKey:targetId];
+  if (channel) {
+    [channel removeObserver:self];
+    [_peerConnectionChannels removeObjectForKey:targetId];
+  }
+}
+
 - (void)sendSignalingMessage:(NSString*)data
                           to:(NSString*)targetId
                    onSuccess:(void (^)())onSuccess
@@ -209,9 +220,12 @@ typedef enum { kDisconnected, kConnecting, kConnected } SignalingChannelState;
     [_delegate p2pClientDidDisconnect:self];
   }
 }
+
 - (void)onStoppedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received chat stopped.");
+  [self removePeerConnectionChannel:remoteUserId];
 }
+
 - (void)onStartedFrom:(NSString*)remoteUserId {
   RTCLogInfo(@"PeerClient received chat started.");
 }
