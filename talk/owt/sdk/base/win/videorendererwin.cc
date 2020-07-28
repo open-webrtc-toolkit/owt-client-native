@@ -147,6 +147,23 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       Resize(video_frame.width(), video_frame.height());
       inited_for_raw_ = true;
     } else {
+      HRESULT hr = m_d3d_device_->TestCooperativeLevel();
+      if (FAILED(hr)){
+        if(hr == D3DERR_DEVICELOST){
+          RTC_LOG(LS_WARNING) << "Device lost.";
+          return;
+        }
+        else if(hr == D3DERR_DEVICENOTRESET){
+          Destroy();
+          RTC_LOG(LS_WARNING) << "Device try to reinit.";
+          return;
+        }
+        else{
+          RTC_LOG(LS_WARNING) << "Device driver internal error.";
+          return;
+        }
+      }
+      
       if (static_cast<size_t>(video_frame.width()) != width_ ||
           static_cast<size_t>(video_frame.height()) != height_) {
         Resize(static_cast<size_t>(video_frame.width()),
