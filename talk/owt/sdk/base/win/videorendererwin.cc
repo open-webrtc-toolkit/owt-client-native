@@ -151,17 +151,16 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
       if (FAILED(hr)){
         if(hr == D3DERR_DEVICELOST){
           RTC_LOG(LS_WARNING) << "Device lost.";
-          return;
         }
         else if(hr == D3DERR_DEVICENOTRESET){
           Destroy();
           RTC_LOG(LS_WARNING) << "Device try to reinit.";
-          return;
         }
         else{
           RTC_LOG(LS_WARNING) << "Device driver internal error.";
-          return;
         }
+        
+        return;
       }
       
       if (static_cast<size_t>(video_frame.width()) != width_ ||
