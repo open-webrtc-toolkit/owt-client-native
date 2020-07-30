@@ -8,7 +8,7 @@
 @protocol OWTP2PSignalingSenderProtocol<NSObject>
 - (void)sendSignalingMessage:(NSString*)message
                           to:(NSString*)targetId
-                   onSuccess:(void (^)())onSuccess
+                   onSuccess:(void (^)(void))onSuccess
                    onFailure:(void (^)(NSError*))onFailure;
 @end
 /// @endcond
