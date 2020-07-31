@@ -345,8 +345,8 @@ webrtc::VideoEncoder::EncoderInfo CustomizedVideoEncoderProxy::GetEncoderInfo()
   info.supports_native_handle = true;
   info.is_hardware_accelerated = false;
   info.has_internal_source = false;
-  info.implementation_name = "CustomizedEncoder";
-  info.has_trusted_rate_controller = true;
+  info.implementation_name = "OWTPassthroughEncoder";
+  info.has_trusted_rate_controller = false;
   info.scaling_settings = VideoEncoder::ScalingSettings::kOff;
   return info;
 }

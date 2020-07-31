@@ -11,13 +11,14 @@ namespace owt {
 namespace base {
 PeerConnectionChannel::PeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration)
-    : pc_thread_(nullptr),
-      configuration_(configuration),
-      factory_(nullptr),
-      peer_connection_(nullptr) {}
+    : configuration_(configuration),
+      peer_connection_(nullptr),
+      factory_(nullptr) {}
+
 PeerConnectionChannel::~PeerConnectionChannel() {
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
+    peer_connection_ = nullptr;
   }
 }
 bool PeerConnectionChannel::InitializePeerConnection() {
@@ -35,13 +36,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
     RTC_DCHECK(false);
     return false;
   }
-  if (pc_thread_ == nullptr) {
-    pc_thread_ = rtc::Thread::CreateWithSocketServer();
-    pc_thread_->SetName("pc_thread", nullptr);
-    pc_thread_->Start();
-  }
   RTC_CHECK(peer_connection_);
-  RTC_CHECK(pc_thread_);
   rtc::NetworkMonitorInterface* network_monitor = factory_->NetworkMonitor();
   if (network_monitor) {
     network_monitor->SignalNetworksChanged.connect(
@@ -106,160 +101,13 @@ PeerConnectionChannel::LocalDescription() {
   RTC_CHECK(peer_connection_);
   return peer_connection_->local_description();
 }
+
 PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
     const {
   RTC_CHECK(peer_connection_);
   return peer_connection_->signaling_state();
 }
-void PeerConnectionChannel::ClosePc(){
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection, nullptr);
-}
-void PeerConnectionChannel::OnMessage(rtc::Message* msg) {
-  RTC_CHECK(peer_connection_);
-  if (peer_connection_->signaling_state() ==
-      webrtc::PeerConnectionInterface::SignalingState::kClosed) {
-    RTC_LOG(LS_WARNING)
-        << "Attempt to perform PeerConnection operation when it is closed.";
-    return;
-  }
-  switch (msg->message_id) {
-    case kMessageTypeClosePeerConnection:
-      peer_connection_->Close();
-      break;
-    case kMessageTypeCreateOffer: {
-      rtc::TypedMessageData<
-          scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* param =
-          static_cast<rtc::TypedMessageData<
-              scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
-              msg->pdata);
-      peer_connection_->CreateOffer(
-          param->data(),
-          webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
-      delete param;
-      break;
-    }
-    case kMessageTypeCreateAnswer: {
-      rtc::TypedMessageData<
-          scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* param =
-          static_cast<rtc::TypedMessageData<
-              scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*>(
-              msg->pdata);
-      peer_connection_->CreateAnswer(
-          param->data(),
-          webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
-      delete param;
-      break;
-    }
-    case kMessageTypeCreateDataChannel: {
-      rtc::TypedMessageData<std::string>* param =
-          static_cast<rtc::TypedMessageData<std::string>*>(msg->pdata);
-      webrtc::DataChannelInit config;
-      data_channel_ =
-          peer_connection_->CreateDataChannel(param->data(), &config);
-      data_channel_->RegisterObserver(this);
-      RTC_LOG(LS_INFO) << "Created data channel.";
-      delete param;
-      break;
-    }
-    case kMessageTypeSetLocalDescription: {
-      SetSessionDescriptionMessage* param =
-          static_cast<SetSessionDescriptionMessage*>(msg->pdata);
-      // Set codec preference.
-      webrtc::SessionDescriptionInterface* desc = param->description;
-      std::string sdp_string;
-      if (!desc->ToString(&sdp_string)) {
-        RTC_LOG(LS_ERROR) << "Error parsing local description.";
-        RTC_DCHECK(false);
-      }
-      std::vector<AudioCodec> audio_codecs;
-      for (auto& audio_enc_param : configuration_.audio) {
-        audio_codecs.push_back(audio_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-      std::vector<VideoCodec> video_codecs;
-      for (auto& video_enc_param : configuration_.video) {
-        video_codecs.push_back(video_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
-      webrtc::SessionDescriptionInterface* new_desc(
-          webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-      peer_connection_->SetLocalDescription(param->observer, new_desc);
-      delete param;
-      break;
-    }
-    case kMessageTypeSetRemoteDescription: {
-      SetSessionDescriptionMessage* param =
-          static_cast<SetSessionDescriptionMessage*>(msg->pdata);
-      // Set codec preference.
-      webrtc::SessionDescriptionInterface* desc = param->description;
-      std::string sdp_string;
-      if (!desc->ToString(&sdp_string)) {
-        RTC_LOG(LS_ERROR) << "Error parsing local description.";
-        RTC_DCHECK(false);
-      }
-      webrtc::SessionDescriptionInterface* new_desc(
-          webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-      peer_connection_->SetRemoteDescription(param->observer, new_desc);
-      delete param;
-      break;
-    }
-    case kMessageTypeSetRemoteIceCandidate: {
-      rtc::TypedMessageData<webrtc::IceCandidateInterface*>* param =
-          static_cast<rtc::TypedMessageData<webrtc::IceCandidateInterface*>*>(
-              msg->pdata);
-      peer_connection_->AddIceCandidate(param->data());
-      delete param;
-      break;
-    }
-    case kMessageTypeRemoveStream: {
-      rtc::ScopedRefMessageData<MediaStreamInterface>* param =
-          static_cast<rtc::ScopedRefMessageData<MediaStreamInterface>*>(
-              msg->pdata);
-      MediaStreamInterface* stream = param->data();
-      for (const auto& track : stream->GetAudioTracks()) {
-        RTC_CHECK(peer_connection_);
-        std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
-            peer_connection_->GetSenders();
-        if (senders.size() == 0) {
-          return;
-        }
-        for (auto sender : senders) {
-          auto sender_track = sender->track();
-          if (sender_track != nullptr && sender_track->id() == track->id()) {
-            peer_connection_->RemoveTrack(sender);
-            break;
-          }
-        }
-      }
 
-      for (const auto& track : stream->GetVideoTracks()) {
-        RTC_CHECK(peer_connection_);
-        std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
-            peer_connection_->GetSenders();
-        if (senders.size() == 0) {
-          return;
-        }
-        for (auto sender : senders) {
-          auto sender_track = sender->track();
-          if (sender_track != nullptr && sender_track->id() == track->id()) {
-            peer_connection_->RemoveTrack(sender);
-            break;
-          }
-        }
-      }
-      delete param;
-      break;
-    }
-    case kMessageTypeGetStats: {
-      GetStatsMessage* param = static_cast<GetStatsMessage*>(msg->pdata);
-      peer_connection_->GetStats(param->observer, nullptr, param->level);
-      delete param;
-      break;
-    }
-    default:
-      RTC_LOG(LS_WARNING) << "Unknown message type.";
-  }
-}
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
   RTC_LOG(LS_INFO) << "Set remote sdp success.";
   if (peer_connection_->remote_description() &&
@@ -267,10 +115,21 @@ void PeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
     CreateAnswer();
   }
 }
+
 void PeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_INFO) << "Set remote sdp failed.";
 }
+
+void PeerConnectionChannel::OnSetRemoteDescriptionComplete(
+    webrtc::RTCError error) {
+  if (error.ok()) {
+    OnSetRemoteSessionDescriptionSuccess();
+  } else {
+    OnSetRemoteSessionDescriptionFailure(error.message());
+  }
+}
+
 void PeerConnectionChannel::OnCreateSessionDescriptionSuccess(
     webrtc::SessionDescriptionInterface* desc) {
   RTC_LOG(LS_INFO) << "Create sdp success.";

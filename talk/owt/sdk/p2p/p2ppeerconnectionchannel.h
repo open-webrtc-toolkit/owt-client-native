@@ -160,6 +160,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Set remote capability flags based on UA.
   void HandleRemoteCapability(Json::Value& ua);
   void SendUaInfo();
+  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
   std::string remote_id_;
@@ -193,7 +194,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::vector<P2PPeerConnectionChannelObserver*> observers_;
   std::unordered_map<std::string, std::function<void()>> publish_success_callbacks_;
   // Store remote SDP if it cannot be set currently.
-  SetSessionDescriptionMessage* set_remote_sdp_task_;
+  std::unique_ptr<webrtc::SessionDescriptionInterface> pending_remote_sdp_;
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect".
