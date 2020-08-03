@@ -5,6 +5,7 @@
 #include <string>
 #include "absl/strings/match.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -19,13 +20,15 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
     return webrtc::VP8Encoder::Create();
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
-    //return webrtc::H264Encoder::Create(cricket::VideoCodec(format));
+  // TODO: Replace with AV1 HW encoder post TGL.
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
+    return webrtc::CreateLibaomAv1Encoder();
 #ifndef DISABLE_H265
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName))
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName))
     return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
 #endif
   return nullptr;
@@ -41,6 +44,9 @@ MSDKVideoEncoderFactory::GetSupportedFormats() const {
   // supports with those provided by built-in H.264 encoder
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
+  if (webrtc::kIsLibaomAv1EncoderSupported) {
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
+  }
 #ifndef DISABLE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
