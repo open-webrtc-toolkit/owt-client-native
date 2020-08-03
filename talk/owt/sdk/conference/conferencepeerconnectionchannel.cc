@@ -8,6 +8,7 @@
 #include "talk/owt/sdk/base/functionalobserver.h"
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
+#include "talk/owt/sdk/base/sdputils.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
@@ -110,12 +111,8 @@ void ConferencePeerConnectionChannel::CreateOffer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  rtc::TypedMessageData<
-      scoped_refptr<FunctionalCreateSessionDescriptionObserver>>* data =
-      new rtc::TypedMessageData<
-          scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
-  RTC_LOG(LS_INFO) << "Post create offer";
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateOffer, data);
+  peer_connection_->CreateOffer(
+      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 void ConferencePeerConnectionChannel::IceRestart() {
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
@@ -145,13 +142,8 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  rtc::TypedMessageData<
-      scoped_refptr<FunctionalCreateSessionDescriptionObserver>>*
-      message_observer = new rtc::TypedMessageData<
-          scoped_refptr<FunctionalCreateSessionDescriptionObserver>>(observer);
-  RTC_LOG(LS_INFO) << "Post create answer";
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeCreateAnswer,
-                   message_observer);
+  peer_connection_->CreateAnswer(
+      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
@@ -294,10 +286,7 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
           std::bind(&ConferencePeerConnectionChannel::
                         OnSetLocalSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  SetSessionDescriptionMessage* msg =
-      new SetSessionDescriptionMessage(observer.get(), desc);
-  RTC_LOG(LS_INFO) << "Post set local desc";
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetLocalDescription, msg);
+  peer_connection_->SetLocalDescription(observer, desc);
 }
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
@@ -346,26 +335,41 @@ void ConferencePeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
 void ConferencePeerConnectionChannel::SetRemoteDescription(
     const std::string& type,
     const std::string& sdp) {
-  webrtc::SessionDescriptionInterface* desc(webrtc::CreateSessionDescription(
+  std::unique_ptr<webrtc::SessionDescriptionInterface> desc(
+      webrtc::CreateSessionDescription(
       "answer", sdp,
       nullptr));  // TODO(jianjun): change answer to type.toLowerCase.
   if (!desc) {
     RTC_LOG(LS_ERROR) << "Failed to create session description.";
     return;
   }
-  scoped_refptr<FunctionalSetSessionDescriptionObserver> observer =
-      FunctionalSetSessionDescriptionObserver::Create(
-          std::bind(&ConferencePeerConnectionChannel::
-                        OnSetRemoteSessionDescriptionSuccess,
-                    this),
-          std::bind(&ConferencePeerConnectionChannel::
-                        OnSetRemoteSessionDescriptionFailure,
+  scoped_refptr<FunctionalSetRemoteDescriptionObserver> observer =
+      FunctionalSetRemoteDescriptionObserver::Create(std::bind(
+          &ConferencePeerConnectionChannel::OnSetRemoteDescriptionComplete,
                     this, std::placeholders::_1));
-  SetSessionDescriptionMessage* msg =
-      new SetSessionDescriptionMessage(observer.get(), desc);
-  RTC_LOG(LS_INFO) << "Post set remote desc";
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeSetRemoteDescription, msg);
+  std::string sdp_string;
+  if (!desc->ToString(&sdp_string)) {
+    RTC_LOG(LS_ERROR) << "Error parsing local description.";
+    RTC_DCHECK(false);
+  }
+  std::vector<AudioCodec> audio_codecs;
+  for (auto& audio_enc_param : configuration_.audio) {
+    audio_codecs.push_back(audio_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
+  std::vector<VideoCodec> video_codecs;
+  for (auto& video_enc_param : configuration_.video) {
+    video_codecs.push_back(video_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
+      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+  // Sychronous call. After done, will invoke OnSetRemoteDescription. If
+  // remote sent an offer, we create answer for it.
+  RTC_LOG(LS_WARNING) << "SetRemoteSdp:" << sdp_string;
+  peer_connection_->SetRemoteDescription(std::move(new_desc), observer);
 }
+
 bool ConferencePeerConnectionChannel::CheckNullPointer(
     uintptr_t pointer,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -764,22 +768,15 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
     }
     return;
   }
-  if (subscribed_stream_) {
+  if (subscribed_stream_ || published_stream_) {
     scoped_refptr<FunctionalStatsObserver> observer =
         FunctionalStatsObserver::Create(on_success);
-    GetStatsMessage* stats_message = new GetStatsMessage(
-        observer.get(), subscribed_stream_->MediaStream(),
+    peer_connection_->GetStats(
+        observer, nullptr,
         webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-    pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
-  } else {
-    scoped_refptr<FunctionalStatsObserver> observer =
-        FunctionalStatsObserver::Create(on_success);
-    GetStatsMessage* stats_message = new GetStatsMessage(
-        observer.get(), published_stream_->MediaStream(),
-        webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-    pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
   }
 }
+
 void ConferencePeerConnectionChannel::GetStats(
     std::function<void(const webrtc::StatsReports& reports)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -788,11 +785,11 @@ void ConferencePeerConnectionChannel::GetStats(
   }
   scoped_refptr<FunctionalNativeStatsObserver> observer =
       FunctionalNativeStatsObserver::Create(on_success);
-  GetNativeStatsMessage* stats_message = new GetNativeStatsMessage(
-      observer.get(), nullptr,
+  peer_connection_->GetStats(
+      observer, nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeGetStats, stats_message);
 }
+
 void ConferencePeerConnectionChannel::OnSignalingMessage(
     sio::message::ptr message) {
   if (message == nullptr) {
@@ -989,9 +986,10 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
 }
 void ConferencePeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
-  RTC_CHECK(pc_thread_);
-  pc_thread_->Post(RTC_FROM_HERE, this, kMessageTypeClosePeerConnection,
-                   nullptr);
+  if (peer_connection_) {
+    peer_connection_->Close();
+    peer_connection_ = nullptr;
+  }
 }
 bool ConferencePeerConnectionChannel::IsMediaStreamEnded(
     MediaStreamInterface* stream) const {

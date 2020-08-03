@@ -233,6 +233,7 @@ class P2PClient final
   mutable std::mutex remote_ids_mutex_;
   std::vector<std::string> allowed_remote_ids_;
 };
-}
-}
+
+} // namespace p2p
+} // namespace owt
 #endif  // OWT_P2P_P2PCLIENT_H_

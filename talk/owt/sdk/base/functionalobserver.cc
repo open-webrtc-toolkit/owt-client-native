@@ -51,6 +51,25 @@ void FunctionalSetSessionDescriptionObserver::OnFailure(
     on_failure_(error.message());
   }
 }
+
+FunctionalSetRemoteDescriptionObserver::FunctionalSetRemoteDescriptionObserver(
+    std::function<void(webrtc::RTCError error)> on_complete)
+    : on_complete_(on_complete) {}
+
+rtc::scoped_refptr<FunctionalSetRemoteDescriptionObserver>
+FunctionalSetRemoteDescriptionObserver::Create(
+    std::function<void(webrtc::RTCError error)> on_complete) {
+  return new rtc::RefCountedObject<FunctionalSetRemoteDescriptionObserver>(
+      on_complete);
+}
+
+void FunctionalSetRemoteDescriptionObserver::OnSetRemoteDescriptionComplete(
+    webrtc::RTCError error) {
+  if (on_complete_ != nullptr) {
+    on_complete_(std::move(error));
+  }
+}
+
 FunctionalStatsObserver::FunctionalStatsObserver(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_complete)
     : on_complete_(on_complete) {}
