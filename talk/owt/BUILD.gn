@@ -68,6 +68,7 @@ static_library("owt_sdk_base") {
     "sdk/base/cameravideocapturer.h",
     "sdk/base/codecutils.cc",
     "sdk/base/codecutils.h",
+    "sdk/base/connectionstats.cc",
     "sdk/base/deviceutils.cc",
     "sdk/base/eventtrigger.h",
     "sdk/base/exception.cc",

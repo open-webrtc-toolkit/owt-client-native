@@ -2,6 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include "talk/owt/sdk/base/functionalobserver.h"
+#include <memory>
+#include "api/stats/rtc_stats.h"
+#include "api/stats/rtcstats_objects.h"
+
 namespace owt {
 namespace base {
 FunctionalCreateSessionDescriptionObserver::
@@ -342,5 +346,346 @@ void FunctionalNativeStatsObserver::OnComplete(
   }
   on_complete_(reports);
 }
+
+rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback>
+FunctionalStandardRTCStatsCollectorCallback::Create(
+    std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
+        on_stats_delivered) {
+  return new rtc::RefCountedObject<FunctionalStandardRTCStatsCollectorCallback>(
+      std::move(on_stats_delivered));
 }
+
+void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
+    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+  if (!on_stats_delivered_)
+    return;
+
+  std::shared_ptr<owt::base::RTCStatsReport> reports =
+      std::make_shared<owt::base::RTCStatsReport>();
+
+  // Create the owt version of RTCStatsReport and send to the
+  // owt_stats_delivered_ callback.
+  for (const auto& stats : *report) {
+    if (strcmp(stats.type(), RTCStatsType::kDataChannel) == 0) {
+      auto& webrtc_stats = stats.cast_to<webrtc::RTCDataChannelStats>();
+      std::unique_ptr<owt::base::RTCDataChannelStats> stat =
+          std::make_unique<owt::base::RTCDataChannelStats>(
+              stats.id(), webrtc_stats.timestamp_us(),
+              webrtc_stats.label.is_defined()
+                  ? webrtc_stats.label.ValueToString()
+                  : "",
+              webrtc_stats.protocol.is_defined()
+                  ? webrtc_stats.protocol.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, datachannelid, int32_t,
+                                         (-1)),
+              webrtc_stats.state.is_defined()
+                  ? webrtc_stats.state.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, messages_sent, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_sent, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, messages_received,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_received, uint64_t,
+                                         0));
+      reports->AddStats(std::move(stat));
+    } else if (strcmp(stats.type(), RTCStatsType::kCandidatePair) == 0) {
+      auto& webrtc_stats = stats.cast_to<webrtc::RTCIceCandidatePairStats>();
+      std::unique_ptr<owt::base::RTCIceCandidatePairStats> stat =
+          std::make_unique<owt::base::RTCIceCandidatePairStats>(
+              webrtc_stats.id(), webrtc_stats.timestamp_us(),
+              webrtc_stats.transport_id.is_defined()
+                  ? webrtc_stats.transport_id.ValueToString()
+                  : "",
+              webrtc_stats.local_candidate_id.is_defined()
+                  ? webrtc_stats.local_candidate_id.ValueToString()
+                  : "",
+              webrtc_stats.remote_candidate_id.is_defined()
+                  ? webrtc_stats.remote_candidate_id.ValueToString()
+                  : "",
+              webrtc_stats.state.is_defined()
+                  ? webrtc_stats.state.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, priority, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nominated, bool, false),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, writable, bool, false),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, readable, bool, false),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_sent, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_received, uint64_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_round_trip_time,
+                                         double, (-1)),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, current_round_trip_time,
+                                         double, (-1)),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, available_outgoing_bitrate, double, (-1)),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, available_incoming_bitrate, double, (-1)),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, requests_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, requests_sent, uint64_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, responses_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, responses_sent, uint64_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, retransmissions_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, retransmissions_sent,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, consent_requests_received, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, consent_requests_sent,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, consent_responses_received, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, consent_responses_sent,
+                                         uint64_t, 0));
+      reports->AddStats(std::move(stat));
+    } else if (strcmp(stats.type(), RTCStatsType::kTrack) == 0) {
+      auto& webrtc_stats = stats.cast_to<webrtc::RTCMediaStreamTrackStats>();
+      std::unique_ptr<owt::base::RTCMediaStreamTrackStats> stat =
+          std::make_unique<owt::base::RTCMediaStreamTrackStats>(
+              webrtc_stats.id(), webrtc_stats.timestamp_us(),
+              webrtc_stats.track_identifier.is_defined()
+                  ? webrtc_stats.track_identifier.ValueToString()
+                  : "",
+              webrtc_stats.media_source_id.is_defined()
+                  ? webrtc_stats.media_source_id.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, remote_source, bool,
+                                         false),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, ended, bool, false),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, detached, bool, false),
+              webrtc_stats.kind.is_defined() ? webrtc_stats.kind.ValueToString()
+                                             : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, jitter_buffer_delay,
+                                         double, -1),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, jitter_buffer_emitted_count, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frame_width, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frame_height, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_per_second,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_sent, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, huge_frames_sent,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_received,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_decoded, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_dropped, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_corrupted,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, partial_frames_lost,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, full_frames_lost,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, audio_level, double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_audio_energy,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, echo_return_loss, double,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, echo_return_loss_enhancement, double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_samples_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_samples_duration,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, concealed_samples,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, silent_concealed_samples,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, concealment_events,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, inserted_samples_for_deceleration, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, removed_samples_for_acceleration, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, jitter_buffer_flushes,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, delayed_packet_outage_samples, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, relative_packet_arrival_delay, double, -1),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, jitter_buffer_target_delay, double, -1),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, interruption_count,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, total_interruption_duration, double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, freeze_count, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, pause_count, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_freezes_duration,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_pauses_duration,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_frames_duration,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, sum_squared_frame_durations, double, 0));
+      reports->AddStats(std::move(stat));
+    } else if (strcmp(stats.type(), RTCStatsType::kInboundRTP) == 0) {
+      auto& webrtc_stats = stats.cast_to<webrtc::RTCInboundRTPStreamStats>();
+      std::unique_ptr<owt::base::RTCInboundRTPStreamStats> stat =
+          std::make_unique<owt::base::RTCInboundRTPStreamStats>(
+              webrtc_stats.id(), webrtc_stats.timestamp_us(),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, ssrc, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, is_remote, bool, false),
+              webrtc_stats.media_type.is_defined()
+                  ? webrtc_stats.media_type.ValueToString()
+                  : "",
+              webrtc_stats.kind.is_defined() ? webrtc_stats.kind.ValueToString()
+                                             : "",
+              webrtc_stats.track_id.is_defined()
+                  ? webrtc_stats.track_id.ValueToString()
+                  : "",
+              webrtc_stats.transport_id.is_defined()
+                  ? webrtc_stats.transport_id.ValueToString()
+                  : "",
+              webrtc_stats.codec_id.is_defined()
+                  ? webrtc_stats.codec_id.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fir_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, pli_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nack_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, sli_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, qp_sum, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_received,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fec_packets_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fec_packets_discarded,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_received, uint64_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, header_bytes_received,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_lost, int32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, last_packet_received_timestamp, double, -1),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, jitter, double, -1),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, round_trip_time, double,
+                                         -1),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_discarded,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_repaired,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_packets_lost,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_packets_discarded,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_loss_count,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_discard_count,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_loss_rate, double,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_discard_rate,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, gap_loss_rate, double,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, gap_discard_rate, double,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_decoded, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, key_frames_decoded,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_decode_time,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_inter_frame_delay,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, total_squared_inter_frame_delay, double, 0),
+              webrtc_stats.content_type.is_defined()
+                  ? webrtc_stats.content_type.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, estimated_playout_timestamp, double, 0),
+              webrtc_stats.decoder_implementation.is_defined()
+                  ? webrtc_stats.decoder_implementation.ValueToString()
+                  : "");
+      reports->AddStats(std::move(stat));
+    } else if (strcmp(stats.type(), RTCStatsType::kOutboundRTP) == 0) {
+      auto& webrtc_stats = stats.cast_to<webrtc::RTCOutboundRTPStreamStats>();
+      std::unique_ptr<owt::base::RTCOutboundRTPStreamStats> stat =
+          std::make_unique<owt::base::RTCOutboundRTPStreamStats>(
+              webrtc_stats.id(), webrtc_stats.timestamp_us(),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, ssrc, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, is_remote, bool, false),
+              webrtc_stats.media_type.is_defined()
+                  ? webrtc_stats.media_type.ValueToString()
+                  : "",
+              webrtc_stats.kind.is_defined() ? webrtc_stats.kind.ValueToString()
+                                             : "",
+              webrtc_stats.track_id.is_defined()
+                  ? webrtc_stats.track_id.ValueToString()
+                  : "",
+              webrtc_stats.transport_id.is_defined()
+                  ? webrtc_stats.transport_id.ValueToString()
+                  : "",
+              webrtc_stats.codec_id.is_defined()
+                  ? webrtc_stats.codec_id.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fir_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, pli_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nack_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, sli_count, uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, qp_sum, uint64_t, 0),
+              webrtc_stats.media_source_id.is_defined()
+                  ? webrtc_stats.media_source_id.ValueToString()
+                  : "",
+              webrtc_stats.remote_id.is_defined()
+                  ? webrtc_stats.remote_id.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_sent, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, retransmitted_packets_sent, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_sent, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, header_bytes_sent,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, retransmitted_bytes_sent,
+                                         uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, target_bitrate, double,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_encoded, uint32_t,
+                                         0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, key_frames_encoded,
+                                         uint32_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_encode_time,
+                                         double, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(
+                  webrtc_stats, total_encoded_bytes_target, uint64_t, 0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_packet_send_delay,
+                                         double, 0),
+              webrtc_stats.quality_limitation_reason.is_defined()
+                  ? webrtc_stats.quality_limitation_reason.ValueToString()
+                  : "",
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats,
+                                         quality_limitation_resolution_changes,
+                                         uint32_t, 0),
+              webrtc_stats.content_type.is_defined()
+                  ? webrtc_stats.content_type.ValueToString()
+                  : "",
+              webrtc_stats.encoder_implementation.is_defined()
+                  ? webrtc_stats.encoder_implementation.ValueToString()
+                  : "");
+      reports->AddStats(std::move(stat));
+    }
+  }
+  if (reports->size() > 0) {
+    on_stats_delivered_(reports);
+  }
 }
+
+} // namespace base
+} // namespace owt

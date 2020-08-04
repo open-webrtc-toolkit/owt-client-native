@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include "owt/base/commontypes.h"
+#include "owt/base/macros.h"
 #include "owt/base/mediaconstraints.h"
 #include "owt/base/publication.h"
 namespace rtc {
@@ -19,9 +20,13 @@ class P2PPublication : public Publication {
  public:
   P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream);
   virtual ~P2PPublication() {}
-  /// Get connection stats of current publication
-  void GetStats(
+  /// Deprecated. Get connection stats of current publication.
+  OWT_DEPRECATED void GetStats(
       std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+  /// Get connection stats of current publication.
+  void GetStats(
+      std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure) override;
   /// Stop current publication.
   void Stop() override;

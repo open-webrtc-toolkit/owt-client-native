@@ -111,6 +111,25 @@ void ConferenceSubscription::GetStats(
      that->GetConnectionStats(id_, on_success, on_failure);
    }
 }
+
+void ConferenceSubscription::GetStats(
+    std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  auto that = conference_client_.lock();
+  if (that == nullptr || ended_) {
+    std::string failure_message("Session ended.");
+    if (on_failure != nullptr && event_queue_.get()) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceInvalidParam, failure_message));
+        on_failure(std::move(e));
+      });
+    }
+  } else {
+    that->GetConnectionStats(id_, on_success, on_failure);
+  }
+}
+
 void ConferenceSubscription::ApplyOptions(
   const SubscriptionUpdateOptions& options,
   std::function<void()> on_success,

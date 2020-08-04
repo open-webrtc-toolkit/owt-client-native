@@ -180,6 +180,26 @@ void P2PClient::GetConnectionStats(
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->GetConnectionStats(on_success, on_failure);
 }
+
+void P2PClient::GetConnectionStats(
+    const std::string& target_id,
+    std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!IsPeerConnectionChannelCreated(target_id)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kP2PClientInvalidState,
+                          "Non-existed peer connection cannot provide stats."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->GetConnectionStats(on_success, on_failure);
+}
+
 void P2PClient::SetLocalId(const std::string& local_id) {
   local_id_ = local_id;
 }

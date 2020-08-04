@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include "owt/base/commontypes.h"
+#include "owt/base/macros.h"
 #include "owt/base/mediaconstraints.h"
 #include "owt/base/publication.h"
 #include "owt/conference/streamupdateobserver.h"
@@ -37,9 +38,13 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     void Unmute(TrackKind track_kind,
                 std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure) override;
-    /// Get conneciton stats of current publication
-    void GetStats(
+    /// Deprecated. Get conneciton stats of current publication
+    OWT_DEPRECATED void GetStats(
         std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure) override;
+    /// Get connection stats of current publication
+    void GetStats(
+        std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure) override;
     void GetNativeStats(
         std::function<void(
