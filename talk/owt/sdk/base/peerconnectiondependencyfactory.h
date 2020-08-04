@@ -6,6 +6,10 @@
 #include <mutex>
 #include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/api/media_stream_interface.h"
+#if defined(WEBRTC_WIN)
+#include "webrtc/api/task_queue/task_queue_factory.h"
+#include "webrtc/modules/audio_device/win/audio_device_core_win.h"
+#endif
 #include "webrtc/sdk/media_constraints.h"
 #include "webrtc/rtc_base/bind.h"
 namespace owt {
@@ -91,6 +95,10 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   rtc::NetworkMonitorInterface* network_monitor_;
 #endif
   std::string field_trial_;
+#if defined(WEBRTC_WIN)
+  std::unique_ptr<webrtc::ScopedCOMInitializer> com_initializer_;
+  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
+#endif
 };
 }
 }  // namespace owt

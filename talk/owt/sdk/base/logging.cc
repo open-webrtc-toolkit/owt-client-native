@@ -22,11 +22,11 @@ static std::unordered_map<int, rtc::LoggingSeverity> logging_severity_map = {
     {static_cast<int>(LoggingSeverity::kError), rtc::LS_ERROR},
     {static_cast<int>(LoggingSeverity::kNone), rtc::LS_NONE}};
 static std::unordered_map<int, std::string> logging_param_map = {
-    { static_cast<int>(LoggingSeverity::kVerbose), "debug verbose" },
-    { static_cast<int>(LoggingSeverity::kInfo), "debug info" },
-    { static_cast<int>(LoggingSeverity::kWarning), "debug warning" },
-    { static_cast<int>(LoggingSeverity::kError), "debug error" },
-    { static_cast<int>(LoggingSeverity::kNone), "debug none" } };
+    { static_cast<int>(LoggingSeverity::kVerbose), "verbose" },
+    { static_cast<int>(LoggingSeverity::kInfo), "info" },
+    { static_cast<int>(LoggingSeverity::kWarning), "warning" },
+    { static_cast<int>(LoggingSeverity::kError), "error" },
+    { static_cast<int>(LoggingSeverity::kNone), "none" } };
 void Logging::Severity(LoggingSeverity severity) {
   min_severity_ = severity;
   rtc::LogMessage::LogToDebug(logging_severity_map[static_cast<int>(severity)]);

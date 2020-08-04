@@ -13,6 +13,9 @@
 #include "webrtc/api/video_codecs/builtin_video_decoder_factory.h"
 #include "webrtc/api/video_codecs/builtin_video_encoder_factory.h"
 #include "webrtc/media/base/media_channel.h"
+#if defined(WEBRTC_WIN)
+#include "webrtc/modules/audio_device/include/audio_device_factory.h"
+#endif
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssl_adapter.h"
@@ -175,6 +178,17 @@ void PeerConnectionDependencyFactory::
         Bind(&PeerConnectionDependencyFactory::
                  CreateCustomizedAudioDeviceModuleOnCurrentThread,
              this));
+  } else {
+#if defined(WEBRTC_WIN)
+    // For Widnows we create the audio device with non audio_device_impl
+    // dependent factory to facilitate switching of playback devices.
+    task_queue_factory_ = CreateDefaultTaskQueueFactory();
+    com_initializer_ = std::make_unique<webrtc::ScopedCOMInitializer>(
+        webrtc::ScopedCOMInitializer::kMTA);
+    if (com_initializer_->succeeded())
+      adm = CreateWindowsCoreAudioAudioDeviceModule(
+          task_queue_factory_.get(), true);
+#endif
   }
 #endif
 
