@@ -27,6 +27,7 @@ enum class VideoCodec : int {
   kVp9,
   kH264,
   kH265,
+  kAv1,
   kUnknown
 };
 /// Track kind

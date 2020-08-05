@@ -4,6 +4,7 @@
 
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -24,6 +25,9 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   if (is_h264_hw_supported) {
     supported_codec_types_.push_back(webrtc::kVideoCodecH264);
   }
+  // Use SW AV1 until HW decoder in place. TODO: replace with
+  // DXVA decoder or MSDK decoder on TGL and above.
+  supported_codec_types_.push_back(webrtc::kVideoCodecAV1);
 #ifndef DISABLE_H265
 // TODO: Add logic to detect plugin by MSDK.
   bool is_h265_hw_supported = true;
@@ -44,6 +48,8 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     return webrtc::VP9Decoder::Create();
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
+    return webrtc::CreateLibaomAv1Decoder();
 #ifndef DISABLE_H265
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
     return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
@@ -61,6 +67,9 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
+  if (webrtc::kIsLibaomAv1DecoderSupported) {
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
+  }
 #ifndef DISABLE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);

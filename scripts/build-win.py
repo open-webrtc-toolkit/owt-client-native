@@ -30,6 +30,7 @@ GN_ARGS = [
     'rtc_use_h265=true',
     'is_component_build=false',
     'use_lld=false',
+    'enable_libaom=true',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
 ]
