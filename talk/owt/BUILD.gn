@@ -36,15 +36,15 @@ if (is_android) {
 }
 static_library("owt_deps") {
   deps = [
-    "//third_party/webrtc/rtc_base:rtc_json",
     "//third_party/webrtc/api:create_peerconnection_factory",
+    "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
   if (is_android) {
-      deps += [
-        "//third_party/webrtc/modules/utility",
-        "//third_party/webrtc/sdk/android:libjingle_peerconnection_jni",
-      ]
+    deps += [
+      "//third_party/webrtc/modules/utility",
+      "//third_party/webrtc/sdk/android:libjingle_peerconnection_jni",
+    ]
   }
   complete_static_lib = true
 }
@@ -123,11 +123,11 @@ static_library("owt_sdk_base") {
   }
   public_deps = [
     "//third_party/libyuv:libyuv",
-    "//third_party/webrtc/api:libjingle_peerconnection_api",
     "//third_party/webrtc/api:create_peerconnection_factory",
-    "//third_party/webrtc/api/task_queue:default_task_queue_factory",
+    "//third_party/webrtc/api:libjingle_peerconnection_api",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_decoder_factory",
     "//third_party/webrtc/api/audio_codecs:builtin_audio_encoder_factory",
+    "//third_party/webrtc/api/task_queue:default_task_queue_factory",
     "//third_party/webrtc/api/video:video_frame",
     "//third_party/webrtc/api/video_codecs:builtin_video_decoder_factory",
     "//third_party/webrtc/api/video_codecs:builtin_video_encoder_factory",
@@ -146,9 +146,7 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/system_wrappers:metrics",
     "//third_party/webrtc/system_wrappers:system_wrappers",
   ]
-  deps = [
-    "//base:logging_buildflags",
-  ]
+  deps = [ "//base:logging_buildflags" ]
   include_dirs = [
     "sdk/include/cpp",
     "//third_party",
@@ -203,6 +201,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererwin.h",
       "sdk/base/windowcapturer.cc",
     ]
+    public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
   }
 
   if (!is_ios) {
@@ -400,9 +399,7 @@ if (owt_include_tests) {
 
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
-    deps = [
-      ":owt_unittests",
-    ]
+    deps = [ ":owt_unittests" ]
   }
   test("owt_unittests") {
     testonly = true
