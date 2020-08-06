@@ -766,6 +766,28 @@ void ConferenceClient::GetConnectionStats(
   }
   pcc->GetConnectionStats(on_success, on_failure);
 }
+
+void ConferenceClient::GetConnectionStats(
+    const std::string& session_id,
+    std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  auto pcc = GetConferencePeerConnectionChannel(session_id);
+  if (pcc == nullptr) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Stream is not published or subscribed."));
+        on_failure(std::move(e));
+      });
+    }
+    RTC_LOG(LS_WARNING)
+        << "Tried to get connection statistics from unknown stream.";
+    return;
+  }
+  pcc->GetConnectionStats(on_success, on_failure);
+}
+
 void ConferenceClient::GetStats(
     const std::string& session_id,
     std::function<void(const std::vector<const webrtc::StatsReport*>& reports)>

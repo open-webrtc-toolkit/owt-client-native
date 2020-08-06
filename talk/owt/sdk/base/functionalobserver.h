@@ -9,9 +9,41 @@
 #include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/api/rtc_error.h"
 #include "webrtc/api/scoped_refptr.h"
+#include "webrtc/api/stats/rtc_stats_collector_callback.h"
+#include "webrtc/api/stats/rtc_stats_report.h"
 #include "talk/owt/sdk/include/cpp/owt/base/connectionstats.h"
+
 namespace owt {
 namespace base {
+#define OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, member_name, member_type, \
+                                   default_value)                          \
+  webrtc_stats.member_name.is_defined()                                    \
+      ? *(webrtc_stats.member_name                                         \
+              .cast_to<webrtc::RTCStatsMember<member_type>>())             \
+      : default_value
+
+// A webrtc::RTCStatsCollectorCallback implementation
+class FunctionalStandardRTCStatsCollectorCallback
+    : public webrtc::RTCStatsCollectorCallback {
+ public:
+  static rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback> Create(
+      std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
+          on_stats_delivered);
+
+  void OnStatsDelivered(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) override;
+
+ protected:
+  FunctionalStandardRTCStatsCollectorCallback(
+      std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
+          on_stats_delivered)
+      : on_stats_delivered_(on_stats_delivered) {}
+
+ private:
+  std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
+      on_stats_delivered_;
+};
+
 // A webrtc::CreateSessionDescriptionObserver implementation used to invoke user
 // defined function when creating description complete.
 class FunctionalCreateSessionDescriptionObserver
@@ -118,6 +150,7 @@ class FunctionalNativeStatsObserver : public webrtc::StatsObserver {
  private:
   std::function<void(const webrtc::StatsReports& reports)> on_complete_;
 };
-}
-}
+
+} // namespace base
+} // namespace owt
 #endif  // OWT_BASE_FUNCTIONALOBSERVER_H_

@@ -777,6 +777,28 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
   }
 }
 
+void ConferencePeerConnectionChannel::GetConnectionStats(
+    std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!published_stream_ && !subscribed_stream_) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "No stream associated with the session"));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  if (subscribed_stream_ || published_stream_) {
+    rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback> observer =
+        FunctionalStandardRTCStatsCollectorCallback::Create(
+            std::move(on_success));
+    peer_connection_->GetStats(observer);
+  }
+}
+
 void ConferencePeerConnectionChannel::GetStats(
     std::function<void(const webrtc::StatsReports& reports)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {

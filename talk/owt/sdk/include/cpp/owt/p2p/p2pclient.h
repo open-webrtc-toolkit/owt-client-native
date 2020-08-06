@@ -11,6 +11,7 @@
 #include <set>
 #include "owt/base/commontypes.h"
 #include "owt/base/connectionstats.h"
+#include "owt/base/macros.h"
 #include "owt/base/stream.h"
 #include "owt/p2p/p2ppublication.h"
 #include "owt/p2p/p2psignalingchannelinterface.h"
@@ -173,9 +174,24 @@ class P2PClient final
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
+   @brief Deprecated. Get the connection statistics with target client.
+   @param target_id Remote user's ID.
+   @param on_success Success callback will be invoked if get statistics
+   information successes.
+   @param on_failure Failure callback will be invoked if one of the following
+   cases happened.
+   1. P2PClient is disconnected from the server.
+   2. Target ID is invalid.
+   3. There is no WebRTC session with target user.
+   */
+  OWT_DEPRECATED void GetConnectionStats(
+      const std::string& target_id,
+      std::function<void(std::shared_ptr<owt::base::ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+  /**
    @brief Get the connection statistics with target client.
    @param target_id Remote user's ID.
-   @param on_success Success callback will be invoked if get statistoms
+   @param on_success Success callback will be invoked if get statistics
    information successes.
    @param on_failure Failure callback will be invoked if one of the following
    cases happened.
@@ -185,7 +201,8 @@ class P2PClient final
    */
   void GetConnectionStats(
       const std::string& target_id,
-      std::function<void(std::shared_ptr<owt::base::ConnectionStats>)> on_success,
+      std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
+          on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /** @cond */
   void SetLocalId(const std::string& local_id);

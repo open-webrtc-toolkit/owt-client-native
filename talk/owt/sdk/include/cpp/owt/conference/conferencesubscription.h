@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include "owt/base/commontypes.h"
+#include "owt/base/macros.h"
 #include "owt/base/mediaconstraints.h"
 #include "owt/base/subscription.h"
 #include "owt/base/connectionstats.h"
@@ -36,13 +37,17 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     void Unmute(TrackKind track_kind,
                 std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
-    /// Get conneciton stats of current subscription
-    void GetStats(
+    /// Deprecated. Get conneciton stats of current subscription
+    OWT_DEPRECATED void GetStats(
         std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
     void GetNativeStats(
         std::function<void(
             const std::vector<const webrtc::StatsReport*>& reports)> on_success,
+        std::function<void(std::unique_ptr<Exception>)> on_failure);
+    /// Get connection stats on current subscription.
+    void GetStats(
+        std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
         std::function<void(std::unique_ptr<Exception>)> on_failure);
     /// Stop current subscription.
     void Stop();

@@ -4,8 +4,9 @@
 #ifndef OWT_BASE_PUBLICATION_H_
 #define OWT_BASE_PUBLICATION_H_
 #include "owt/base/commontypes.h"
-#include "owt/base/exception.h"
 #include "owt/base/connectionstats.h"
+#include "owt/base/exception.h"
+#include "owt/base/macros.h"
 namespace owt {
 namespace base {
 /// Observer that receives event from publication.
@@ -30,9 +31,13 @@ class Publication {
   virtual void Unmute(TrackKind track_kind,
                       std::function<void()> on_success,
                       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Deprecated. Get conneciton stats of current publication
+  OWT_DEPRECATED virtual void GetStats(
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Get conneciton stats of current publication
   virtual void GetStats(
-      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Stop current publication.
   virtual void Stop() = 0;

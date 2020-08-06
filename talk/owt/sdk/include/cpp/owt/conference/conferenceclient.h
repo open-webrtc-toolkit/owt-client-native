@@ -12,6 +12,7 @@
 #include "owt/base/commontypes.h"
 #include "owt/base/clientconfiguration.h"
 #include "owt/base/connectionstats.h"
+#include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/stream.h"
 #include "owt/base/exception.h"
@@ -350,11 +351,18 @@ class ConferenceClient final
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
-    @brief Get a stream's connection statistoms
+    @brief Deprecated. Get a stream's connection statistics
+  */
+  OWT_DEPRECATED void GetConnectionStats(
+      const std::string& session_id,
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+  /**
+   @brief Get a stream's connection statistics
   */
   void GetConnectionStats(
       const std::string& session_id,
-      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   void GetStats(
       const std::string& session_id,
