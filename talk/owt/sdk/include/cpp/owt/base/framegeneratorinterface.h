@@ -74,6 +74,11 @@ class VideoFrameGeneratorInterface {
    @brief This function gets the video frame type of video frame generator.
    */
   virtual VideoFrameCodec GetType() = 0;
+  /**
+   @brief This function can perform any cleanup that must be done on the same thread as
+   GenerateNextFrame(). Default implementation provided for backwards compatibility.
+   */
+  virtual void Cleanup() {};
 };
 } // namespace base
 } // namespace owt

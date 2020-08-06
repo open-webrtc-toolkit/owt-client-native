@@ -36,10 +36,12 @@ class CustomizedFramesCapturer::CustomizedFramesThread
   virtual void Run() {
     // Read the first frame and start the message pump. The pump runs until
     // Stop() is called externally or Quit() is called by OnMessage().
+    // Before returning, cleanup any thread-sensitive resources.
     if (capturer_) {
       capturer_->ReadFrame();
       rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
       rtc::Thread::Current()->ProcessMessages(kForever);
+      capturer_->CleanupGenerator();
     }
     rtc::CritScope cs(&crit_);
     finished_ = true;
@@ -147,6 +149,12 @@ int32_t CustomizedFramesCapturer::StopCapture() {
   }
   capture_started_ = false;
   return 0;
+}
+
+void CustomizedFramesCapturer::CleanupGenerator() {
+  if (frame_generator_) {
+    frame_generator_->Cleanup();
+  }
 }
 
 bool CustomizedFramesCapturer::CaptureStarted() {
