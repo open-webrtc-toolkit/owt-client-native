@@ -70,6 +70,9 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   // capacity should be greater or equal to |size|.
   virtual void AdjustFrameBuffer(uint32_t size);
 
+  // Tell generator to cleanup resources. Called by CustomizedFramesThread.
+  virtual void CleanupGenerator();
+
  private:
   class CustomizedFramesThread;  // Forward declaration, defined in .cc.
   int I420DataSize(int height, int stride_y, int stride_u, int stride_v);
