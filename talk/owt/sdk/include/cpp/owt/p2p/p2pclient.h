@@ -207,6 +207,9 @@ class P2PClient final
   /** @cond */
   void SetLocalId(const std::string& local_id);
   /** @endcond */
+  void UpdateClientConfiguration(P2PClientConfiguration configuration) {
+     configuration_ = configuration;
+  }
  protected:
   // Implement P2PSignalingSenderInterface
   virtual void SendSignalingMessage(const std::string& message,
@@ -242,8 +245,6 @@ class P2PClient final
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;
   std::mutex pc_channels_mutex_;
-  std::vector<std::shared_ptr<P2PPeerConnectionChannel>> removed_pc_channels_;
-  std::mutex removed_pc_channels_mutex_;
   std::string local_id_;
   std::vector<std::reference_wrapper<P2PClientObserver>> observers_;
   P2PClientConfiguration configuration_;

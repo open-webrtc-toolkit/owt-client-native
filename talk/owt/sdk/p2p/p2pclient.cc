@@ -377,12 +377,11 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
                          remote_id, message);
 }
 void P2PClient::OnStopped(const std::string& remote_id) {
-  {
-    const std::lock_guard<std::mutex> lock(removed_pc_channels_mutex_);
-    removed_pc_channels_.push_back(pc_channels_[remote_id]);
-  }
-  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
-  pc_channels_.erase(remote_id);
+  std::thread([this, remote_id] {
+    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+    signaling_channel_->SendMessage("chat-closed", remote_id, nullptr, nullptr);
+    pc_channels_.erase(remote_id);
+  }).detach();
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
