@@ -9,8 +9,9 @@ import("//build_overrides/ssl/ssl.gni")
 
 # Exclude pulse audio on Chromium since its prerequisites don't require
 # pulse audio.
-rtc_include_pulse_audio = true
-
+rtc_include_pulse_audio = false
+rtc_use_x11 = false
+use_ozone = true
 # Exclude internal ADM since Chromium uses its own IO handling.
 rtc_include_internal_audio_device = true
 

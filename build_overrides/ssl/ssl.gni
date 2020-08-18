@@ -6,13 +6,13 @@
 
 declare_args() {
   # Use external OpenSSL instead of BoringSSL.
-  owt_use_openssl = false
+  owt_use_openssl = true
 
   # External OpenSSL header path
-  owt_openssl_header_root = ""
+  owt_openssl_header_root = "/usr/include"
 
   # External OpenSSL lib path
-  owt_openssl_lib_root = ""
+  owt_openssl_lib_root = "/usr/lib/x86_64-linux-gnu"
 }
 
 if (owt_use_openssl) {
