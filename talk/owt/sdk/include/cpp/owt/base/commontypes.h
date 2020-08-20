@@ -157,18 +157,57 @@ enum class VideoSourceInfo : int {
   kMixed,       ///< From MCU mix engine
   kUnknown
 };
+#ifdef OWT_ENABLE_QUIC
+/// Data source info.
+/// This enumeration defines possible video sources.
+enum class DataSourceInfo : int {
+  kCamera = 1,  ///< Camera
+  kScreenCast,  ///< Screen-cast
+  kFile,        ///< From file
+  kUnknown
+};
+/// TransportType
+enum class TransportType : int {
+  kWebRTC = 1,
+  kWebTransport,
+  kUnknown = 99
+};
+/// TransportContraints
+struct TransportConstraints {
+  explicit TransportConstraints()
+      : type(TransportType::kWebRTC) {}
+
+  TransportType type;
+};
+#endif
 /// Stream source.
 struct StreamSourceInfo {
   explicit StreamSourceInfo()
     : audio(AudioSourceInfo::kUnknown),
-      video(VideoSourceInfo::kUnknown) {}
-  StreamSourceInfo(AudioSourceInfo audio_source, VideoSourceInfo video_source)
+      video(VideoSourceInfo::kUnknown)
+#ifdef OWT_ENABLE_QUIC
+      ,data(DataSourceInfo::kUnknown)
+#endif
+  {}
+  StreamSourceInfo(AudioSourceInfo audio_source, VideoSourceInfo video_source
+#ifdef OWT_ENABLE_QUIC
+  , DataSourceInfo data_source
+#endif
+  )
     : audio(audio_source),
-      video(video_source) {}
+      video(video_source)
+#ifdef OWT_ENABLE_QUIC
+      ,data(data_source)
+#endif
+  {}
   /// The audio source info of the stream
   AudioSourceInfo audio;
   /// The video source info of the stream
   VideoSourceInfo video;
+#ifdef OWT_ENABLE_QUIC
+  /// The data source info of the stream
+  DataSourceInfo data;
+#endif
 };
 struct EnumClassHash {
   template <typename T>

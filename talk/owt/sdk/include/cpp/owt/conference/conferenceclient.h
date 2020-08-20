@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_CONFERENCE_CONFERENCECLIENT_H_
 #define OWT_CONFERENCE_CONFERENCECLIENT_H_
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -20,6 +21,10 @@
 #include "owt/conference/conferencesubscription.h"
 #include "owt/conference/streamupdateobserver.h"
 #include "owt/conference/subscribeoptions.h"
+#ifdef OWT_ENABLE_QUIC
+#include "owt/quic/quic_transport_client_interface.h"
+#endif
+
 namespace sio{
   class message;
 }
@@ -35,6 +40,9 @@ namespace owt {
 namespace conference {
 class Participant;
 using namespace owt::base;
+#ifdef OWT_ENABLE_QUIC
+using namespace owt::quic;
+#endif
 /**
   @brief Configuration for creating a ConferenceClient
   @details This configuration is used while creating ConferenceClient.
@@ -44,6 +52,9 @@ using namespace owt::base;
 struct ConferenceClientConfiguration : ClientConfiguration {};
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
+#ifdef OWT_ENABLE_QUIC
+class ConferenceWebTransportChannel;
+#endif
 class ConferenceSocketSignalingChannel;
 /**
   @brief Observer interface for participant
@@ -173,6 +184,19 @@ class ConferencePeerConnectionChannelObserver {
       std::shared_ptr<Stream> stream,
       std::shared_ptr<const Exception> exception) = 0;
 };
+#ifdef OWT_ENABLE_QUIC
+// The visitor interface for QuicTransportClientInterface
+class ConferenceWebTransportChannelObserver {
+ public:
+  virtual ~ConferenceWebTransportChannelObserver() = default;
+  // Called when connected to a server.
+  virtual void OnConnected() = 0;
+  // Called when a connection is failed.
+  virtual void OnConnectionFailed() = 0;
+  // Called when an incoming stream is received.
+  virtual void OnIncomingStream(owt::quic::QuicTransportStreamInterface*) = 0;
+};
+#endif
 /** @endcond */
 /// Observer for OWTConferenceClient.
 class ConferenceClientObserver {
@@ -214,6 +238,9 @@ class ConferenceClientObserver {
 class ConferenceClient final
     : ConferenceSocketSignalingChannelObserver,
       ConferencePeerConnectionChannelObserver,
+#ifdef OWT_ENABLE_QUIC
+      owt::conference::ConferenceWebTransportChannelObserver,
+#endif
       public std::enable_shared_from_this<ConferenceClient> {
   friend class ConferencePublication;
   friend class ConferenceSubscription;
@@ -385,7 +412,24 @@ class ConferenceClient final
       TrackKind track_kind,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
+#ifdef OWT_ENABLE_QUIC
+  /**
+   @brief Creates a WritableStream used to construct a LocalStream for WebTransport.
+    This is underlying an Unidirection stream for write only. Please be noted this
+    can only be called when client is connected to MCU(successfully joined).
+  */
+  void CreateSendStream(
+      std::function <void(std::shared_ptr<owt::base::WritableStream>)> on_success,
+      std::function <void(std::unique_ptr<Exception>)> on_failure);
+#endif
  private:
+#ifdef OWT_ENABLE_QUIC
+  // Overrides WebTransportChannelObserver
+  void OnConnected();
+  void OnConnectionFailed();
+  void OnIncomingStream(owt::quic::QuicTransportStreamInterface*);
+#endif
+
   /// Return true if |pointer| is not a null pointer, else return false and
   /// trigger |on_failure| with |failure_message|.
   bool CheckNullPointer(
@@ -425,10 +469,13 @@ class ConferenceClient final
   void AddStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
   /// Remove an object from conference client.
   void RemoveStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
+#ifdef OWT_ENABLE_QUIC
+  void InitializeQuicClientIfSupported(const std::string& token_base64);
+#endif
   enum StreamType: int;
   ConferenceClientConfiguration configuration_;
   // Queue for callbacks and events. Shared among ConferenceClient and all of
-  // it's ConferencePeerConnectionChannel.
+  // it's ConferencePeerConnectionChannels or ConferenceWebTransportChannels
   std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   std::mutex observer_mutex_;
@@ -457,6 +504,11 @@ class ConferenceClient final
   std::vector<std::reference_wrapper<ConferenceClientObserver>> observers_;
   mutable std::mutex stream_update_observer_mutex_;
   std::vector <std::reference_wrapper<ConferenceStreamUpdateObserver>> stream_update_observers_;
+#ifdef OWT_ENABLE_QUIC
+  // Each conference client will be associated with one quic_transport_channel_ instance.
+  std::shared_ptr<ConferenceWebTransportChannel> web_transport_channel_;
+  std::atomic<bool> web_transport_channel_connected_;
+#endif
 };
 }
 }

@@ -40,7 +40,7 @@ class ConferenceSocketSignalingChannel
       sio::message::ptr options,
       std::string publish_stream_label,
       std::string subcribe_stream_label,
-      std::function<void(std::string)> on_success,
+      std::function<void(std::string, std::string)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendSdp(
       sio::message::ptr message,

@@ -69,6 +69,33 @@ class LocalCameraStreamParameters final {
   bool video_enabled_;
   bool audio_enabled_;
 };
+
+
+#ifdef OWT_ENABLE_QUIC
+/**
+  @brief This class contains parameters and methods needed for creating
+  a data stream for publishing to MCU.
+  Currently this only contains an |data_enabled_| field but may be extended
+  later to support more settings.
+ */
+class LocalDataStreamParameters final {
+ public:
+  LocalDataStreamParameters(bool data_enabled) {
+    data_enabled_ = data_enabled;
+  }
+  ~LocalDataStreamParameters() {}
+
+  /** @cond */
+  bool DataEnabled() const {
+    return data_enabled_;
+  }
+  /** @endcond */
+
+ private:
+  bool data_enabled_ = true;
+};
+#endif
+
 /**
   @brief This class contains parameters and methods that needed for creating a
   local customized stream.

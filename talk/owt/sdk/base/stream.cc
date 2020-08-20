@@ -439,6 +439,21 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 }
 #endif
 
+#ifdef OWT_ENABLE_QUIC
+LocalStream::LocalStream(std::shared_ptr<WritableStream> writer) {
+  writer_ = writer;
+  is_data_ = true;
+}
+
+std::shared_ptr<LocalStream> LocalStream::Create(
+    std::shared_ptr<WritableStream> writable_stream,
+    int& error_code) {
+  std::shared_ptr<LocalStream> stream(new LocalStream(writable_stream));
+  error_code = 0;
+  return stream;
+}
+#endif
+
 LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
                          int& error_code) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
@@ -654,6 +669,7 @@ LocalStream::LocalStream(
   media_stream_->AddRef();
 }
 #endif
+
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {
@@ -662,6 +678,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
+
 RemoteStream::RemoteStream(
     const std::string& id,
     const std::string& from,
@@ -671,14 +688,25 @@ RemoteStream::RemoteStream(
       origin_(from),
       subscription_capabilities_(subscription_capabilities),
       publication_settings_(publication_settings) {}
-std::string RemoteStream::Origin() {
+  std::string RemoteStream::Origin() {
   return origin_;
 }
+
 void RemoteStream::MediaStream(MediaStreamInterface* media_stream) {
   Stream::MediaStream(media_stream);
 }
 MediaStreamInterface* RemoteStream::MediaStream() {
   return media_stream_;
 }
+
+#ifdef OWT_ENABLE_QUIC
+RemoteStream::RemoteStream(
+    std::shared_ptr<ReadableStream> reader,
+    const std::string& from)
+    : origin_(from) {
+  reader_ = reader;
+  is_data_ = true;
+}
+#endif
 }  // namespace base
 }  // namespace owt
