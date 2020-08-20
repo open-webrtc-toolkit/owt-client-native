@@ -9,8 +9,19 @@
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
+#ifdef OWT_ENABLE_QUIC
+#include <array>
+#include <vector>
+#include "owt/quic/quic_transport_client_interface.h"
+#define QUIC_CERT_FINGERPRINT_SIZE 33
+#endif
+
 namespace owt {
 namespace base{
+#ifdef OWT_ENABLE_QUIC
+// certificate fingerprint must be null terminiated.
+typedef std::array<char, QUIC_CERT_FINGERPRINT_SIZE> cert_fingerprint_t;
+#endif
 /** @cond */
 /// Audio processing settings.
 struct AudioProcessingSettings {
@@ -53,12 +64,27 @@ class GlobalConfiguration {
     hardware_acceleration_enabled_ = enabled;
   }
 #endif
+#ifdef OWT_ENABLE_QUIC
+  /**
+   @brief This function sets trusted server certificate fingerprints for
+   QUIC connections. If fingerprints is empty, will use webpki for certificate
+   verification.
+   @param fingerprints collection of trusted certificates' fingerprints.
+  */
+  static void SetTrustedQuicCertificateFingerprints(
+      const std::vector<cert_fingerprint_t>& fingerprints);
+  /**
+   @brief This function gets trusted certificate fingerprints
+   @return the vector of trusted certificate fingerprints
+  */
+  static std::vector<cert_fingerprint_t>
+  GetTrustedQuicCertificateFingerPrints() {
+    return trusted_quic_certificate_fingerprints_;
+  }
+#endif
   /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
-   please be noted at present only vp8 and h.264 encoded frame input is supported.
-   If the client configuration sets preferred coded to vp9 or h265, the encoded
-   frame might not be sent out to remote.
    @param enabled Capturing frame is encoded or not.
    */
   static void SetEncodedVideoFrameEnabled(bool enabled) {
@@ -178,7 +204,9 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
-
+#ifdef OWT_ENABLE_QUIC
+  static std::vector<cert_fingerprint_t> trusted_quic_certificate_fingerprints_;
+#endif
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

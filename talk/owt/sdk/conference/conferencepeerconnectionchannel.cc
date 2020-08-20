@@ -923,7 +923,7 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   signaling_channel_->SendInitializationMessage(
       options, stream->MediaStream()->id(), "",
-      [stream, this](std::string session_id) {
+      [stream, this](std::string session_id, std::string transport_id) {
         SetSessionId(session_id);
         for (const auto& track : stream->MediaStream()->GetAudioTracks()) {
           webrtc::RtpTransceiverInit transceiver_init;
