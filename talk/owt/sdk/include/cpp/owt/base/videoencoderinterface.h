@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_VIDEOENCODERINTERFACE_H_
 #define OWT_BASE_VIDEOENCODERINTERFACE_H_
+#include <algorithm>
+#include <array>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -10,11 +12,38 @@
 
 namespace owt {
 namespace base {
+/// Decoding Target Indication. Reserved for SVC.
+enum DecodingTargetIndication {
+  kNotPresent = 0,  ///< This frame is not associated with any decoding target
+  kDiscardable,
+  kSwitch,
+  kRequired
+};
 
+struct GenericDescriptorInfo {
+  GenericDescriptorInfo()
+      : active(false), temporal_id(0), spatial_id(0) {
+    std::fill(dependencies.begin(), dependencies.end(), -1);
+    std::fill(decoding_target_indications.begin(),
+              decoding_target_indications.end(),
+              DecodingTargetIndication::kNotPresent);
+  }
+  /// Indicate current frame info structure will
+  /// be used for populating dependency structure
+  bool active = false;
+  /// Temporal id of current frame
+  int32_t temporal_id;
+  /// Spatial layer id of current frame.
+  int32_t spatial_id;
+  /// Direct dependencies of current frame identified by frame number.
+  std::array<int, 5> dependencies;
+  /// Reserved for SVC.
+  std::array<int, 10> decoding_target_indications;
+};
 struct EncodedImageMetaData {
   // ctor
   EncodedImageMetaData()
-        : picture_id(0),
+      : picture_id(0),
         last_fragment(true),
         capture_timestamp(0),
         encoding_start(0),
@@ -39,6 +68,9 @@ struct EncodedImageMetaData {
   uint64_t encoding_start;
   // End encoding time in ms
   uint64_t encoding_end;
+  // Generic frame descriptor
+  GenericDescriptorInfo frame_descriptor;
+
   // Allocate sidedata. If allocated already, will free it first.
   // For OWT, maximum allowed size is 240 bytes.
   uint8_t* encoded_image_sidedata_new(size_t data_length) {
@@ -64,6 +96,7 @@ struct EncodedImageMetaData {
       side_data_length = 0;
     }
   }
+
  private:
   // Side data
   uint8_t* side_data = nullptr;
@@ -75,7 +108,7 @@ class EncodedStreamProviderSink {
  public:
   // Invoked by EncodedStream
   virtual void OnStreamProviderFrame(const std::vector<uint8_t>& buffer,
-                       const EncodedImageMetaData& meta_data) = 0;
+                                     const EncodedImageMetaData& meta_data) = 0;
 };
 
 // Registered to EncodedStreamProvider to receive events from encoder.
@@ -105,7 +138,8 @@ class EncoderEventCallback {
 /**
   @brief Encoded stream provider
   */
-class EncodedStreamProvider final : public std::enable_shared_from_this<EncodedStreamProvider> {
+class EncodedStreamProvider final
+    : public std::enable_shared_from_this<EncodedStreamProvider> {
  public:
   static std::shared_ptr<EncodedStreamProvider> Create();
 

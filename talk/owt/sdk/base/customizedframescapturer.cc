@@ -233,6 +233,20 @@ void CustomizedFramesCapturer::OnStreamProviderFrame(
   encoder_context->meta_data_.encoding_start = meta_data.encoding_start;
   encoder_context->meta_data_.last_fragment = meta_data.last_fragment;
   encoder_context->meta_data_.picture_id = meta_data.picture_id;
+  encoder_context->meta_data_.frame_descriptor.active =
+      meta_data.frame_descriptor.active;
+  if (encoder_context->meta_data_.frame_descriptor.active) {
+    // Set frame descriptor if active.
+    encoder_context->meta_data_.frame_descriptor.spatial_id =
+        meta_data.frame_descriptor.spatial_id;
+    encoder_context->meta_data_.frame_descriptor.temporal_id =
+        meta_data.frame_descriptor.temporal_id;
+    memcpy(&encoder_context->meta_data_.frame_descriptor.dependencies[0],
+           &meta_data.frame_descriptor.dependencies[0], 5);
+    memcpy(&encoder_context->meta_data_.frame_descriptor
+                .decoding_target_indications[0],
+           &meta_data.frame_descriptor.decoding_target_indications[0], 10);
+  }
   if (meta_data.encoded_image_sidedata_size() > 0) {
     encoder_context->meta_data_.encoded_image_sidedata_new(
         meta_data.encoded_image_sidedata_size());
