@@ -241,6 +241,17 @@ int32_t CustomizedVideoEncoderProxy::Encode(
         encoder_buffer_handle->meta_data_.picture_id;
     info.codecSpecific.H265.last_fragment_in_frame =
         encoder_buffer_handle->meta_data_.last_fragment;
+    if (encoder_buffer_handle->meta_data_.frame_descriptor.active) {
+      for (int i = 0; i < 5; i++) {
+        if (encoder_buffer_handle->meta_data_.frame_descriptor.dependencies[i] >
+            0)
+          info.codecSpecific.H265.dependencies[i] =
+              encoder_buffer_handle->meta_data_.frame_descriptor.dependencies[i];
+        else
+          info.codecSpecific.H265.dependencies[i] = -1;
+      }
+      // TODO: DTIs not overlooked at present for HEVC.
+    }
   }
 #endif
   const auto result = callback_->OnEncodedImage(encoded_frame, &info);
