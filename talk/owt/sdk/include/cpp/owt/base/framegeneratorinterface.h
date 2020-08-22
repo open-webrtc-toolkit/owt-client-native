@@ -78,7 +78,7 @@ class VideoFrameGeneratorInterface {
    @brief This function can perform any cleanup that must be done on the same thread as
    GenerateNextFrame(). Default implementation provided for backwards compatibility.
    */
-  virtual void Cleanup() {}
+  void Cleanup() {}
 };
 } // namespace base
 } // namespace owt
