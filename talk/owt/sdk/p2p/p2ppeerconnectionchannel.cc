@@ -1156,7 +1156,6 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   if (peer_connection_) {
     peer_connection_->Close();
-    peer_connection_ = nullptr;
   }
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {
