@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <vector>
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
@@ -18,7 +19,8 @@ namespace base {
 
 MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   supported_codec_types_.clear();
-  
+  // Always fallback to SW VP8 encoder as we don't want to
+  // use the PAK + Shader one;
   supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
 
   bool is_h264_hw_supported = true;
@@ -35,6 +37,24 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
     supported_codec_types_.push_back(webrtc::kVideoCodecH265);
   }
 #endif
+
+  MediaCapabilities* media_capability = MediaCapabilities::Get();
+  std::vector<owt::base::VideoCodec> codecs_to_check;
+  codecs_to_check.push_back(owt::base::VideoCodec::kH264);
+  codecs_to_check.push_back(owt::base::VideoCodec::kVp9);
+#ifndef DISABLE_H265
+  codecs_to_check.push_back(owt::base::VideoCodec::kH265);
+#endif
+  codecs_to_check.push_back(owt::base::VideoCodec::kAv1);
+  codecs_to_check.push_back(owt::base::VideoCodec::kVp8);
+  std::vector<VideoDecoderCapability> capabilities =
+      media_capability->SupportedCapabilitiesForVideoDecoder(codecs_to_check);
+
+  for (auto& capability : capabilities) {
+    if (capability.codec_type == owt::base::VideoCodec::kH264) {
+      
+    }
+  }
 }
 
 MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {

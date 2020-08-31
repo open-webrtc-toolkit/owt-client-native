@@ -5,15 +5,18 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 #define OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 
+#include <cstddef>
 #include <vector>
 #include "base_allocator.h"
 #include "mfxplugin++.h"
 #include "mfxvideo++.h"
 #include "mfxvideo.h"
 #include "sysmem_allocator.h"
+#include "webrtc/api/video_codecs/video_codec.h"
 #include "webrtc/media/base/codec.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
 
 namespace owt {
 namespace base {
@@ -23,9 +26,10 @@ enum MemType {
   MSDK_D3D11_MEMORY = 0x02,
 };
 
+/// Encoder with Intel MediaSDK as the backend.
 class MSDKVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit MSDKVideoEncoder();
+  explicit MSDKVideoEncoder(const cricket::VideoCodec& codec);
   virtual ~MSDKVideoEncoder();
 
   static std::unique_ptr<MSDKVideoEncoder> Create(cricket::VideoCodec format);
@@ -59,25 +63,40 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   int32_t bitrate_;  // Bitrate in bits per second.
   int32_t width_;
   int32_t height_;
-  webrtc::VideoCodecType codecType_;
+  webrtc::VideoCodecType codec_type;
+  uint32_t num_temporal_layers;
+  uint32_t num_spatial_layers = 1;  // For MSDK this is fixed to 1;
+  webrtc::InterLayerPredMode inter_layer_prediction_mode;
 
-  MFXVideoSession* m_mfxSession;
+  std::unique_ptr<MFXVideoSession> m_mfxSession;
+  // TODO: we should probably remove this.
   mfxPluginUID m_pluginID;
-  MFXVideoENCODE* m_pmfxENC;
+  std::unique_ptr<MFXVideoENCODE> m_pmfxENC;
   std::shared_ptr<SysMemFrameAllocator> m_pMFXAllocator;
   mfxVideoParam m_mfxEncParams;
+
+  // Used by HEVC
   mfxExtHEVCParam m_ExtHEVCParam;
+  // H265Profile space is always 0.
+  H265ProfileId h265_profile; 
+
+  // Used by VP9
+  mfxExtVP9Param vp9_ext_param;
+  VP9Profile vp9_profile;
+
+
+  // TODO: change to actual version when turning this on.
+#if (MFX_VERSION >= MFX_VERSION_NEXT)
+  mfxExtAV1Param av1_ext_param;
+  AV1Profile av1_profile;
+#endif
+
   std::vector<mfxExtBuffer*> m_EncExtParams;
   mfxFrameAllocResponse m_EncResponse;
   mfxFrameSurface1* m_pEncSurfaces;  // frames array for encoder
   mfxU32 m_nFramesProcessed;
-  std::unique_ptr<rtc::Thread> encoder_thread_;
-  bool inited_;
-#ifdef OWT_DEBUG_MSDK_ENC
-  FILE* output;
-  FILE* input;
-  FILE* raw_in;
-#endif
+  std::unique_ptr<rtc::Thread> encoder_thread;
+  std::atomic<bool> inited;
 };
 }  // namespace base
 }  // namespace owt

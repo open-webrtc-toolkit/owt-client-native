@@ -35,6 +35,7 @@ class MSDKFactory {
   
   MFXVideoSession* GetMainSession();
 
+  bool QueryPlatform(MFXVideoSession* session, mfxPlatform* platform);
   bool LoadDecoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
   bool LoadEncoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
   void UnloadMSDKPlugin(MFXVideoSession* session, mfxPluginUID* plugin_id);

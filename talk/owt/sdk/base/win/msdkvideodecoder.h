@@ -82,8 +82,8 @@ private:
     mfxU16 DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
 
     // Begin MSDK variables
-    MFXVideoSession*        m_mfxSession;
-    MFXVideoDECODE*         m_pmfxDEC;
+    std::unique_ptr<MFXVideoSession> m_mfxSession;
+    std::unique_ptr<MFXVideoDECODE> m_pmfxDEC;
     std::shared_ptr<D3DFrameAllocator> m_pMFXAllocator;
     mfxVideoParam           m_mfxVideoParams;
     mfxBitstream            m_mfxBS; // Contains encoded data

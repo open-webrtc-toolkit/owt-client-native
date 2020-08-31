@@ -1,16 +1,15 @@
-// Copyright (C) <2020> Intel Corporation
-//
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2020 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#include <memory>
-#include "talk/owt/sdk/base/win/vp9ratecontrol.h"
-#include "vp9/ratectrl_rtc.h"
-#include "webrtc/rtc_base/logging.h"
+#include "media/gpu/vaapi/vp9_rate_control.h"
 
+#include "base/logging.h"
+#include "base/memory/ptr_util.h"
+#include "third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h"
 
-namespace owt {
-namespace base {
-
+namespace media {
+namespace {
 class LibvpxVP9RateControl : public VP9RateControl {
  public:
   explicit LibvpxVP9RateControl(std::unique_ptr<libvpx::VP9RateControlRTC> impl)
@@ -39,16 +38,16 @@ class LibvpxVP9RateControl : public VP9RateControl {
   const std::unique_ptr<libvpx::VP9RateControlRTC> impl_;
 };
 
+}  // namespace
+
 // static
 std::unique_ptr<VP9RateControl> VP9RateControl::Create(
     const libvpx::VP9RateControlRtcConfig& config) {
   auto impl = libvpx::VP9RateControlRTC::Create(config);
   if (!impl) {
-    RTC_LOG(LS_ERROR) << "Failed creating libvpx::VP9RateControlRTC";
+    DLOG(ERROR) << "Failed creating libvpx::VP9RateControlRTC";
     return nullptr;
   }
   return std::make_unique<LibvpxVP9RateControl>(std::move(impl));
 }
-}  // namespace base
-}  // namespace owt
-
+}  // namespace media
