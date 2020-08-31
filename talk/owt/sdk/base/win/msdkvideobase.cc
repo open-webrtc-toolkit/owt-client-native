@@ -7,6 +7,8 @@
 #include "mfxdefs.h"
 #include "msdkvideobase.h"
 
+#include "webrtc/rtc_base/logging.h"
+
 namespace owt {
 namespace base {
 
@@ -165,6 +167,20 @@ void MSDKFactory::UnloadMSDKPlugin(MFXVideoSession* session,
   if (isValidPluginUID(plugin_id)) {
     MFXVideoUSER_UnLoad(*session, plugin_id);
   }
+}
+
+bool MSDKFactory::QueryPlatform(MFXVideoSession* session, mfxPlatform* platform) {
+  if (!session || !platform)
+    return false;
+
+  mfxStatus sts = MFX_ERR_NONE;
+  sts = MFXVideoCORE_QueryPlatform(*session, platform);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_ERROR) << "Failed to qeury platform info.";
+    return false;
+  }
+
+  return true;
 }
 
 std::shared_ptr<D3DFrameAllocator> MSDKFactory::CreateFrameAllocator(

@@ -6,7 +6,8 @@
 #include <memory>
 #include "owt/base/commontypes.h"
 #if defined(WEBRTC_WIN)
-#include <Windows.h>
+#include <d3d11.h>
+#include <windows.h>
 #endif
 #if defined(WEBRTC_LINUX)
 #if defined(WEBRTC_USE_X11)
@@ -18,11 +19,21 @@ namespace base {
 enum class VideoBufferType {
   kI420,
   kARGB,
+  kD3D11,  // Format self-described.
 };
 enum class VideoRendererType {
   kI420,
   kARGB,
+  kD3D11,  // Format self-described.
 };
+
+#if defined(WEBRTC_WIN)
+struct D3D11ImageHandle {
+  ID3D11Device* d3d11_device;
+  ID3D11Texture2D* texture;     // The DX texture or texture array.
+  int texture_array_index;      // When >=0, indicate the index within texture array 
+};
+#endif
 /// Video buffer and its information
 struct VideoBuffer {
   /// Video buffer

@@ -9,6 +9,7 @@
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/api/video_codecs/sdp_video_format.h"
 #include "webrtc/api/video_codecs/video_encoder_factory.h"
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
 
 namespace owt {
 namespace base {

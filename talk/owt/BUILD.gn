@@ -179,6 +179,7 @@ static_library("owt_sdk_base") {
 
   if (owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
+    defines += [ "OWT_USE_MSDK" ]
   }
 
   if (rtc_include_internal_audio_device) {
@@ -187,6 +188,7 @@ static_library("owt_sdk_base") {
   if (rtc_use_x11) {
     defines += [ "WEBRTC_USE_X11" ]
   }
+
   if (!rtc_use_h265) {
     defines += [ "DISABLE_H265" ]
   } else {
@@ -214,7 +216,11 @@ static_library("owt_sdk_base") {
       "sdk/base/win/base_allocator.h",
       "sdk/base/win/d3d_allocator.cc",
       "sdk/base/win/d3d_allocator.h",
+      "sdk/base/win/d3d11_allocator.cc",
+      "sdk/base/win/d3d11_allocator.h",
       "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/mediacapabilities.cc",
+      "sdk/base/win/mediacapabilities.h",
       "sdk/base/win/msdkvideobase.cc",
       "sdk/base/win/msdkvideobase.h",
       "sdk/base/win/msdkvideodecoder.cc",
@@ -229,10 +235,12 @@ static_library("owt_sdk_base") {
       "sdk/base/win/sysmem_allocator.h",
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
+      "sdk/base/win/videorendererd3d11.cc",
+      "sdk/base/win/videorendererd3d11.h",
       "sdk/base/win/vp9ratecontrol.cc",
       "sdk/base/win/vp9ratecontrol.h",
-      #"sdk/base/win/vp9temporallayers.cc",
-      #"sdk/base/win/vp9temporallayers.h",
+      "sdk/base/win/vp9temporallayers.cc",
+      "sdk/base/win/vp9temporallayers.h",
       "sdk/base/windowcapturer.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]

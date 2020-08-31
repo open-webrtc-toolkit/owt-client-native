@@ -17,6 +17,6 @@ struct NativeD3DSurfaceHandle {
   int width_;   // width of the frame passing from decoder
   int height_;  // height of the frame passing from decoder
 };
-}
+
 }
 #endif  // OWT_BASE_WIN_D3DNATIVEFRAME_H

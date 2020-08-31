@@ -9,16 +9,28 @@
 #include "webrtc/common_video/h264/prefix_parser.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/bit_buffer.h"
+#include "webrtc/rtc_base/string_to_number.h"
 #include "system_wrappers/include/field_trial.h"
 #include "talk/owt/sdk/base/mediautils.h"
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
 
 namespace owt {
 namespace base {
+
+const char kAV1FmtpProfileId[] = "profile";
+const char kAV1FmtpLevelId[] = "level-idx";
+
+const char kHEVCFmtpProfileId[] = "profile-id";
+const char kHEVCFmtpLevelId[] = "level-id";
+
 static const std::map<const std::string, const Resolution> resolution_name_map = {
     {"cif", Resolution(352, 288)},
     {"vga", Resolution(640, 480)},
     {"hd720p", Resolution(1280, 720)},
-    {"hd1080p", Resolution(1920, 1080)}};
+    {"hd1080p", Resolution(1920, 1080)},
+    {"4k", Resolution(3840, 2160)},
+    {"8k", Resolution(7680, 4320)}};
+
 static const std::map<const std::string, const AudioCodec>
     audio_codec_names = {
         {"opus", AudioCodec::kOpus}, {"isac", AudioCodec::kIsac},
@@ -26,11 +38,13 @@ static const std::map<const std::string, const AudioCodec>
         {"pcma", AudioCodec::kPcma}, {"ilbc", AudioCodec::kIlbc},
         {"aac", AudioCodec::kAac},   {"ac3", AudioCodec::kAc3},
         {"asao", AudioCodec::kAsao}, {"unknown", AudioCodec::kUnknown}};
+
 static const std::map<const std::string, const VideoCodec>
     video_codec_names = {{"vp8", VideoCodec::kVp8},
                          {"vp9", VideoCodec::kVp9},
                          {"h264", VideoCodec::kH264},
                          {"h265", VideoCodec::kH265}};
+
 std::string MediaUtils::GetResolutionName(const Resolution& resolution) {
   for (auto it = resolution_name_map.begin(); it != resolution_name_map.end();
        ++it) {
@@ -40,6 +54,7 @@ std::string MediaUtils::GetResolutionName(const Resolution& resolution) {
   }
   return "";
 }
+
 AudioCodec MediaUtils::GetAudioCodecFromString(const std::string& codec_name) {
   auto it = audio_codec_names.find(codec_name);
   if (it != audio_codec_names.end()) {
@@ -127,5 +142,33 @@ bool MediaUtils::GetH264TemporalInfo(uint8_t* buffer, size_t buffer_length,
   }
   return prefix_nal_found;
 }
+
+absl::optional<AV1Profile> StringToAV1Profile(const std::string& str) {
+  const absl::optional<int> i = rtc::StringToNumber<int>(str);
+  if (!i.has_value())
+    return absl::nullopt;
+
+  switch (i.value()) {
+    case 0:
+      return AV1Profile::kMain;
+    case 1:
+      return AV1Profile::kHigh;
+    case 2:
+      return AV1Profile::kProfessional;
+    default:
+      return absl::nullopt;
+  }
+  return absl::nullopt;
+}
+
+absl::optional<AV1Profile> MediaUtils::ParseSdpForAV1Profile(
+    const webrtc::SdpVideoFormat::Parameters& params) {
+  const auto profile_it = params.find(kAV1FmtpProfileId);
+  if (profile_it == params.end())
+    return AV1Profile::kMain;
+  const std::string& profile_str = profile_it->second;
+  return StringToAV1Profile(profile_str);
+}
+
 }  // namespace base
 }  // namespace owt
