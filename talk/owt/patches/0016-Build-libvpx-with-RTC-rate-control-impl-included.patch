@@ -1,0 +1,97 @@
+From d1cd1ab4fb5416fe8b10f3d0cf34c33c056efe3a Mon Sep 17 00:00:00 2001
+From: Qiu Jainlin <jianlin.qiu@intel.com>
+Date: Mon, 31 Aug 2020 13:09:26 +0800
+Subject: [PATCH] Build libvpx with RTC rate control impl included
+
+---
+ libvpx/libvpx_srcs.gni | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/libvpx/libvpx_srcs.gni b/libvpx/libvpx_srcs.gni
+index be796cb6a16..76ce977d67e 100644
+--- a/libvpx/libvpx_srcs.gni
++++ b/libvpx/libvpx_srcs.gni
+@@ -259,6 +259,8 @@ libvpx_srcs_x86 = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -733,6 +735,8 @@ libvpx_srcs_x86_64 = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -1210,6 +1214,8 @@ libvpx_srcs_arm = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -1577,6 +1583,8 @@ libvpx_srcs_arm_neon = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -1973,6 +1981,8 @@ libvpx_srcs_arm_neon_cpu_detect = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -2418,6 +2428,8 @@ libvpx_srcs_arm64 = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -2825,6 +2837,8 @@ libvpx_srcs_arm_neon_highbd = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -3261,6 +3275,8 @@ libvpx_srcs_arm64_highbd = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+@@ -4330,6 +4346,8 @@ libvpx_srcs_generic = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+-- 
+2.28.0.windows.1
+
