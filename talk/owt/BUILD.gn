@@ -4,6 +4,27 @@
 
 import("//build_overrides/webrtc.gni")
 import("//testing/test.gni")
+
+# Introduced for using libvpx config files. We only enable libvpx rate
+# controller for VP9 on Windows.
+if (is_win) {
+  os_category = current_os
+
+  if (current_cpu == "x86") {
+    cpu_arch_full = "ia32"
+  } else if (current_cpu == "x64") {
+    cpu_arch_full = "x64"
+  } else if (current_cpu == "arm") {
+    if (arm_use_neon) {
+      cpu_arch_full = "arm-neon"
+    } else if (is_android) {
+      cpu_arch_full = "arm-neon-cpu-detect"
+    } else {
+      cpu_arch_full = "arm"
+    }
+  }
+}
+
 if (is_android) {
   import("//build/config/android/config.gni")
   import("//build/config/android/rules.gni")
@@ -200,9 +221,19 @@ static_library("owt_sdk_base") {
       "sdk/base/win/sysmem_allocator.h",
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
+      "sdk/base/win/vp9ratecontrol.cc",
+      "sdk/base/win/vp9ratecontrol.h",
+      #"sdk/base/win/vp9temporallayers.cc",
+      #"sdk/base/win/vp9temporallayers.h",
       "sdk/base/windowcapturer.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
+    public_deps += [ "//third_party/libvpx" ]
+    include_dirs += [
+      "//third_party/libvpx/source/config",
+      "//third_party/libvpx/source/config/$os_category/$cpu_arch_full",
+      "//third_party/libvpx/source/libvpx",
+    ]
   }
 
   if (!is_ios) {
