@@ -18,6 +18,8 @@ TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
+LIBVPX_PATH = os.path.join(THIRD_PARTY_PATH, 'libvpx')
+LIBVPX_SOURCE_PATH = os.path.join(LIBVPX_PATH, 'source/libvpx')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
 CONFIG_PATH = os.path.join(BUILD_PATH, 'config')
@@ -43,6 +45,8 @@ patchList = [
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
     ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH)
+    ('0015-vp9-add-rate-control-interface-for-RTC.patch', LIBVPX_SOURCE_PATH),
+    ('0016-Build-libvpx-with-RTC-rate-control-impl-included.patch', LIBVPX_PATH) 
 ]
 
 def _patch(ignoreFailures=False):
