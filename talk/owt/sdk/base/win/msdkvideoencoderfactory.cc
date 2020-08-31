@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
 #include <string>
 #include "absl/strings/match.h"
-#include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
@@ -12,14 +12,17 @@
 #include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
+#include "webrtc/media/base/vp9_profile.h"
 
 namespace owt {
 namespace base {
 
 std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
+  // VP8 encoding will always use SW impl.
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
     return webrtc::VP8Encoder::Create();
+  // VP9 encoding will only be enabled on ICL+;
   else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
@@ -58,14 +61,11 @@ MSDKVideoEncoderFactory::GetSupportedFormats() const {
 webrtc::VideoEncoderFactory::CodecInfo
 MSDKVideoEncoderFactory::QueryVideoEncoder(
     const webrtc::SdpVideoFormat& format) const {
-  // TODO(johny): Basically we need to return different CodecInfo for different
-  // codec/profile combinations.
   webrtc::VideoEncoderFactory::CodecInfo info;
-  info.is_hardware_accelerated = false;
+  info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
-
 
 }  // namespace base
 }  // namespace owt

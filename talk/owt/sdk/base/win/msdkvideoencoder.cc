@@ -2,9 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifdef OWT_DEBUG_MSDK_ENC
-#include <fstream>
-#endif
 #include <string>
 #include <vector>
 #include "libyuv/convert_from.h"
@@ -17,41 +14,44 @@
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/thread.h"
+#include "webrtc/media/base/vp9_profile.h"
+#include "webrtc/common_video/h264/h264_common.h"
+#ifndef DISABLE_H265
+#include "webrtc/common_video/h265/h265_common.h"
+#endif
 
 using namespace rtc;
 // H.265/H.264 start code length.
 #define NAL_SC_LENGTH 4
 #define NAL_SC_ALT_LENGTH 3
-// Maximum allowed NALUs in one output frame.
-#define MAX_NALUS_PERFRAME 32
+
 namespace owt {
 namespace base {
 
-MSDKVideoEncoder::MSDKVideoEncoder()
+// Implementation notes:
+// For VP9/AV1 encoder, if temporal scalability is requested(a.k.a., we use
+// CBR mode encoding. Otherwise, CQP encoding is requested for accurate
+// bitrate allocation among temporal layers. Be noted MSDK only supports
+// L1T2/L1T3 for both VP9/AV1 at present.
+MSDKVideoEncoder::MSDKVideoEncoder(const cricket::VideoCodec& format)
     : callback_(nullptr),
       bitrate_(0),
       width_(0),
       height_(0),
-      encoder_thread_(rtc::Thread::Create()),
-      inited_(false) {
-  m_pmfxENC = nullptr;
+      encoder_thread(rtc::Thread::Create()),
+      inited(false) {
   m_pEncSurfaces = nullptr;
   m_nFramesProcessed = 0;
-  encoder_thread_->SetName("MSDKVideoEncoderThread", NULL);
-  RTC_CHECK(encoder_thread_->Start())
+  
+  encoder_thread->SetName("MSDKVideoEncoderThread", nullptr);
+  RTC_CHECK(encoder_thread->Start())
       << "Failed to start encoder thread for MSDK encoder";
-#ifdef OWT_DEBUG_MSDK_ENC
-  output = fopen("out.bin", "wb");
-  input = fopen("in.yuv", "wb");
-  raw_in = fopen("source.yuv", "r");
-#endif
 }
 
 MSDKVideoEncoder::~MSDKVideoEncoder() {
   if (m_pmfxENC != nullptr) {
     m_pmfxENC->Close();
-    delete m_pmfxENC;
-    m_pmfxENC = nullptr;
+    m_pmfxENC.reset();
   }
   MSDK_SAFE_DELETE_ARRAY(m_pEncSurfaces);
   if (m_mfxSession) {
@@ -77,7 +77,11 @@ int MSDKVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   height_ = codec_settings->height;
   // We can only set average bitrate on the HW encoder.
   bitrate_ = codec_settings->startBitrate * 1000;
-  codecType_ = codec_settings->codecType;
+  codec_type = codec_settings->codecType;
+  switch (codec_settings->codecType) { 
+    case webrtc::kVideoCodecVP9:
+      codec_settings->VP9
+  }
   // MSDK does not require all operations dispatched to the same thread.
   // We however always use dedicated thread.
   return encoder_thread_->Invoke<int>(
@@ -124,7 +128,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   uint32_t codec_id = MFX_CODEC_AVC;
   // If already inited, what we need to do is to reset the encoder,
   // instead of setting it all over again.
-  if (inited_) {
+  if (inited) {
     m_pmfxENC->Close();
     MSDK_SAFE_DELETE_ARRAY(m_pEncSurfaces);
     m_pMFXAllocator.reset();
@@ -137,7 +141,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 #ifndef DISABLE_H265
-    if (codecType_ == webrtc::kVideoCodecH265) {
+    if (codec_type == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
     }
 #endif
@@ -332,7 +336,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     }
   }
 
-  inited_ = true;
+  inited = true;
   return WEBRTC_VIDEO_CODEC_OK;
 }  // namespace base
 
@@ -340,10 +344,6 @@ void MSDKVideoEncoder::WipeMfxBitstream(mfxBitstream* pBitstream) {
   // Free allocated memory
   MSDK_SAFE_DELETE_ARRAY(pBitstream->Data);
 }
-
-#ifdef OWT_DEBUG_MSDK_ENC
-int count = 0;
-#endif
 
 mfxU16 MSDKVideoEncoder::MSDKGetFreeSurface(mfxFrameSurface1* pSurfacesPool,
                                             mfxU16 nPoolSize) {
@@ -425,29 +425,16 @@ int MSDKVideoEncoder::Encode(
     // conversion. For now I420 to NV12 CSC is AVX2 instruction optimized.
     rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
         input_image.video_frame_buffer()->ToI420());
-#ifdef OWT_DEBUG_MSDK_ENC
-    if (input != nullptr && count < 30) {
-      fwrite((void*)(buffer->DataY()), w * h, 1, input);
-      fwrite((void*)(buffer->DataU()), w * h / 4, 1, input);
-      fwrite((void*)(buffer->DataV()), w * h / 4, 1, input);
-    }
-#endif
+
     libyuv::I420ToNV12(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
                        buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
                        pData.Y, pitch, pData.UV, pitch, w, h);
-#ifdef OWT_DEBUG_MSDK_ENC
-    if (count == 30) {
-      fclose(input);
-      input = nullptr;
-    }
-#endif
   } else if (MFX_FOURCC_YV12 == pInfo.FourCC) {
     // Do not support it.
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // Our input is YUV420p and needs to convert to nv12
-  //...we're done with the frame
+  // Done with the frame
   sts = m_pMFXAllocator->Unlock(m_pMFXAllocator->pthis, pSurf->Data.MemId,
                                 &(pSurf->Data));
   if (MFX_ERR_NONE != sts) {
@@ -533,15 +520,7 @@ retry:
 
   uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data) + bs.DataOffset;
   int encoded_data_size = bs.DataLength;
-#ifdef OWT_DEBUG_MSDK_ENC
-  count++;
-  if (output != nullptr && count <= 20) {
-    fwrite((void*)(encoded_data), encoded_data_size, 1, output);
-  } else if (count == 30) {
-    fclose(output);
-    output = nullptr;
-  }
-#endif
+
   webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size,
                                     encoded_data_size);
 
@@ -556,42 +535,56 @@ retry:
 
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
-  info.codecType = codecType_;
-  // Generate a header describing a single fragment.
+  info.codecType = codec_type;
+
+  // Generate a header describing a single fragment. This can be removed
+  // after update to latest webrtc stack.
+
+#ifndef OWT_M87_REBASE
   webrtc::RTPFragmentationHeader header;
   memset(&header, 0, sizeof(header));
 
-  int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
-  uint8_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
-  int32_t scPositionsLength = 0;
-  int32_t scPosition = 0;
-  while (scPositionsLength < MAX_NALUS_PERFRAME) {
-    uint8_t sc_length = 0;
-    int32_t naluPosition = NextNaluPosition(
-        encoded_data + scPosition, encoded_data_size - scPosition, &sc_length);
-    if (naluPosition < 0) {
-      break;
+  if (codec_type == webrtc::kVideoCodecH264) {
+    std::vector<webrtc::H264::NaluIndex> nalu_indices =
+        webrtc::H264::FindNaluIndices(encoded_data, encoded_data_size);
+
+    if (nalu_indices.size() > 0) {
+      size_t fragment_count = nalu_indices.size();
+      header.VerifyAndAllocateFragmentationHeader(fragment_count);
+      size_t nalu_idx = 0;
+      for (auto& nalu : nalu_indices) {
+        header.fragmentationOffset[nalu_idx] = nalu.payload_start_offset;
+        header.fragmentationLength[nalu_idx] = nalu.payload_size;
+      }
     }
-    scPosition += naluPosition;
-    scLengths[scPositionsLength] = sc_length;
-    scPositions[scPositionsLength] = scPosition;
-    scPositionsLength++;
-    scPosition += sc_length;
   }
-  if (scPositionsLength == 0) {
-    RTC_LOG(LS_ERROR) << "Start code is not found for codec!";
-    delete[] pbsData;
-    return WEBRTC_VIDEO_CODEC_ERROR;
+#ifndef DISABLE_H265
+  else if (codec_type == webrtc::kVideoCodecH265) {
+    std::vector<webrtc::H265::NaluIndex> nalu_indices =
+        webrtc::H265::FindNaluIndices(encoded_data, encoded_data_size);
+
+    if (nalu_indices.size() > 0) {
+      size_t fragment_count = nalu_indices.size();
+      header.VerifyAndAllocateFragmentationHeader(fragment_count);
+      size_t nalu_idx = 0;
+      for (auto& nalu : nalu_indices) {
+        header.fragmentationOffset[nalu_idx] = nalu.payload_start_offset;
+        header.fragmentationLength[nalu_idx] = nalu.payload_size;
+      }
+    }
   }
-  scPositions[scPositionsLength] = encoded_data_size;
-  header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
-  for (int i = 0; i < scPositionsLength; i++) {
-    header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
-    header.fragmentationLength[i] =
-        scPositions[i + 1] - header.fragmentationOffset[i];
+#endif
+  else if (codec_type == webrtc::kVideoCodecVP9) {
+    // No data partitioning, so there is only 1 partition.
+  
+  } else if (codec_type == webrtc::kVideoCodecAV1) {
+     // Fill in the dependency structure and generic frame info.
+  
   }
+#endif
+
   // Export temporal scalability information for H.264
-  if (codecType_ == webrtc::kVideoCodecH264) {
+  if (codec_type == webrtc::kVideoCodecH264) {
     int temporal_id = 0, priority_id = 0;
     bool is_idr = false;
     bool need_frame_marking = MediaUtils::GetH264TemporalInfo(encoded_data,
@@ -631,7 +624,7 @@ int MSDKVideoEncoder::RegisterEncodeCompleteCallback(
 }
 
 void MSDKVideoEncoder::SetRates(const RateControlParameters& parameters) {
-  if (!inited_) {
+  if (!inited) {
     RTC_LOG(LS_WARNING) << "SetRates() while not initialized";
     return;
   }
@@ -659,7 +652,7 @@ void MSDKVideoEncoder::OnLossNotification(
 
 webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
   EncoderInfo info;
-  info.supports_native_handle = false;
+  info.supports_native_handle = true;
   info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   info.implementation_name = "IntelMediaSDK";
@@ -668,6 +661,8 @@ webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
   // TODO(johny): Enable temporal scalability support here and turn the
   // scaling_settings on.
   info.scaling_settings = VideoEncoder::ScalingSettings::kOff;
+  // MSDK encoders do not support simulcast. Stack will rely on SimulcastAdapter
+  // to enable simulcast(for AVC/AV1).
   info.supports_simulcast = false;
   return info;
 }
@@ -675,8 +670,7 @@ webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
 int MSDKVideoEncoder::Release() {
   if (m_pmfxENC != nullptr) {
     m_pmfxENC->Close();
-    delete m_pmfxENC;
-    m_pmfxENC = nullptr;
+    m_pmfxENC.reset();
   }
   MSDK_SAFE_DELETE_ARRAY(m_pEncSurfaces);
   m_pEncSurfaces = nullptr;
@@ -693,7 +687,7 @@ int MSDKVideoEncoder::Release() {
     m_pMFXAllocator->Close();
   m_pMFXAllocator.reset();
 
-  inited_ = false;
+  inited = false;
   // Need to reset to that the session is invalidated and won't use the
   // callback anymore.
   return WEBRTC_VIDEO_CODEC_OK;
@@ -738,7 +732,7 @@ int32_t MSDKVideoEncoder::NextNaluPosition(uint8_t* buffer,
 
 std::unique_ptr<MSDKVideoEncoder> MSDKVideoEncoder::Create(
     cricket::VideoCodec format) {
-  return absl::make_unique<MSDKVideoEncoder>();
+  return absl::make_unique<MSDKVideoEncoder>(format);
 }
 
 }  // namespace base
