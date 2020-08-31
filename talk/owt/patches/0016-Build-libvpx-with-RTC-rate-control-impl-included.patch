@@ -1,0 +1,25 @@
+From 53f7e3a9dd0499338d3d4655c472bf2a2e32952f Mon Sep 17 00:00:00 2001
+From: Qiu Jainlin <jianlin.qiu@intel.com>
+Date: Mon, 31 Aug 2020 13:09:26 +0800
+Subject: [PATCH] Build libvpx with RTC rate control impl included
+
+---
+ libvpx/libvpx_srcs.gni | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/libvpx/libvpx_srcs.gni b/libvpx/libvpx_srcs.gni
+index be796cb6a16..c9724442488 100644
+--- a/libvpx/libvpx_srcs.gni
++++ b/libvpx/libvpx_srcs.gni
+@@ -4330,6 +4330,8 @@ libvpx_srcs_generic = [
+   "//third_party/libvpx/source/libvpx/vp9/vp9_dx_iface.h",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.c",
+   "//third_party/libvpx/source/libvpx/vp9/vp9_iface_common.h",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.cc",
++  "//third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h",
+   "//third_party/libvpx/source/libvpx/vpx/internal/vpx_codec_internal.h",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_codec.c",
+   "//third_party/libvpx/source/libvpx/vpx/src/vpx_decoder.c",
+-- 
+2.28.0.windows.1
+
