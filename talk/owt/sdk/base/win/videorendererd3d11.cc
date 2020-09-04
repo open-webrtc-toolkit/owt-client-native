@@ -5,7 +5,6 @@
 #include "rtc_base/logging.h"
 #include "talk/owt/sdk/base/win/videorendererd3d11.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
-#include "talk/owt/sdk/base/win/d3d11device.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -189,8 +188,8 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     const webrtc::VideoFrame& video_frame) {
   if (video_frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
-    D3D11Handle* native_handle =
-        reinterpret_cast<D3D11Handle*>(
+    D3D11ImageHandle* native_handle =
+        reinterpret_cast<D3D11ImageHandle*>(
             reinterpret_cast<owt::base::NativeHandleBuffer*>(
                 video_frame.video_frame_buffer().get())
                 ->native_handle());
@@ -199,9 +198,27 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
       return;
 
     ID3D11Device* render_device = native_handle->d3d11_device;
-    ID3D11VideoDevice* render_video_device = native_handle->d3d11_video_device;
+    ID3D11DeviceContext* device_context = nullptr;
+
+
+    render_device->GetImmediateContext(&device_context);
+    if (!device_context)
+      return;
+
+    HRESULT hr = S_OK;
+    ID3D11VideoDevice* video_device = nullptr;
+    hr = render_device->QueryInterface(__uuidof(ID3D11VideoDevice),
+                                (void**)&video_device);
+    if (FAILED(hr))
+      return;
+
+    ID3D11VideoContext* video_context = nullptr;
+    hr = device_context->QueryInterface(__uuidof(ID3D11VideoContext),
+                                        (void**)&video_context);
+    if (FAILED(hr))
+      return;
+
     ID3D11Texture2D* texture = native_handle->texture;
-    ID3D11VideoContext* render_context = native_handle->context;
 
     uint16_t width = video_frame.video_frame_buffer()->width();
     uint16_t height = video_frame.video_frame_buffer()->height();
@@ -209,13 +226,14 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     if (width == 0 || height == 0)
       return;
 
-    if (render_device == nullptr || render_video_device == nullptr ||
+    if (render_device == nullptr || video_device == nullptr ||
         wnd_ == nullptr || texture == nullptr)
       return;
 
     width_ = width;
     height_ = height;
-    bool sts = CreateOrUpdateContext(render_device, render_video_device, render_context, width, height);
+    bool sts = CreateOrUpdateContext(render_device, video_device, video_context,
+                                     width, height);
     if (sts) {
       RenderFrame(texture);
     }

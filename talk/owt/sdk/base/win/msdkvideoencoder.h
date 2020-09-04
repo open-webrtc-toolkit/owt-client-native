@@ -5,7 +5,9 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 #define OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 
+#include <atomic>
 #include <cstddef>
+#include <memory>
 #include <vector>
 #include "base_allocator.h"
 #include "mfxplugin++.h"
@@ -13,6 +15,7 @@
 #include "mfxvideo.h"
 #include "sysmem_allocator.h"
 #include "webrtc/api/video_codecs/video_codec.h"
+#include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/media/base/codec.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
@@ -20,6 +23,7 @@
 
 namespace owt {
 namespace base {
+
 enum MemType {
   MSDK_SYSTEM_MEMORY = 0x00,
   MSDK_D3D9_MEMORY = 0x01,
@@ -68,9 +72,7 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   uint32_t num_spatial_layers = 1;  // For MSDK this is fixed to 1;
   webrtc::InterLayerPredMode inter_layer_prediction_mode;
 
-  std::unique_ptr<MFXVideoSession> m_mfxSession;
-  // TODO: we should probably remove this.
-  mfxPluginUID m_pluginID;
+  MFXVideoSession* m_mfxSession;
   std::unique_ptr<MFXVideoENCODE> m_pmfxENC;
   std::shared_ptr<SysMemFrameAllocator> m_pMFXAllocator;
   mfxVideoParam m_mfxEncParams;

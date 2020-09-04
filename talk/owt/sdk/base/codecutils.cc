@@ -38,6 +38,11 @@ std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
                                  {{cricket::kH265FmtpProfileSpace, "0"},
                                   {cricket::kH265FmtpProfileId, "1"},
                                   {cricket::kH265FmtpTierFlag, "0"},
+                                  {cricket::kH265FmtpLevelId, "120"}}),
+          webrtc::SdpVideoFormat(cricket::kH265CodecName,
+                                 {{cricket::kH265FmtpProfileSpace, "0"},
+                                  {cricket::kH265FmtpProfileId, "2"},
+                                  {cricket::kH265FmtpTierFlag, "0"},
                                   {cricket::kH265FmtpLevelId, "120"}})};
 }
 #endif
