@@ -28,11 +28,6 @@ using namespace rtc;
 namespace owt {
 namespace base {
 
-// Implementation notes:
-// For VP9/AV1 encoder, if temporal scalability is requested(a.k.a., we use
-// CBR mode encoding. Otherwise, CQP encoding is requested for accurate
-// bitrate allocation among temporal layers. Be noted MSDK only supports
-// L1T2/L1T3 for both VP9/AV1 at present.
 MSDKVideoEncoder::MSDKVideoEncoder(const cricket::VideoCodec& format)
     : callback_(nullptr),
       bitrate_(0),
@@ -42,7 +37,6 @@ MSDKVideoEncoder::MSDKVideoEncoder(const cricket::VideoCodec& format)
       inited(false) {
   m_pEncSurfaces = nullptr;
   m_nFramesProcessed = 0;
-  
   encoder_thread->SetName("MSDKVideoEncoderThread", nullptr);
   RTC_CHECK(encoder_thread->Start())
       << "Failed to start encoder thread for MSDK encoder";
@@ -57,14 +51,13 @@ MSDKVideoEncoder::~MSDKVideoEncoder() {
   if (m_mfxSession) {
     MSDKFactory* factory = MSDKFactory::Get();
     if (factory) {
-      factory->UnloadMSDKPlugin(m_mfxSession, &m_pluginID);
       factory->DestroySession(m_mfxSession);
     }
   }
   m_pMFXAllocator.reset();
 
-  if (encoder_thread_.get()) {
-    encoder_thread_->Stop();
+  if (encoder_thread.get()) {
+    encoder_thread->Stop();
   }
 }
 
@@ -78,13 +71,9 @@ int MSDKVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   // We can only set average bitrate on the HW encoder.
   bitrate_ = codec_settings->startBitrate * 1000;
   codec_type = codec_settings->codecType;
-  switch (codec_settings->codecType) { 
-    case webrtc::kVideoCodecVP9:
-      codec_settings->VP9
-  }
-  // MSDK does not require all operations dispatched to the same thread.
-  // We however always use dedicated thread.
-  return encoder_thread_->Invoke<int>(
+
+
+  return encoder_thread->Invoke<int>(
       RTC_FROM_HERE,
       rtc::Bind(&MSDKVideoEncoder::InitEncodeOnEncoderThread, this,
                 codec_settings, number_of_cores, max_payload_size));
@@ -121,11 +110,30 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     int number_of_cores,
     size_t max_payload_size) {
   mfxStatus sts;
-  RTC_LOG(LS_ERROR) << "InitEncodeOnEncoderThread: maxBitrate:"
+  RTC_LOG(LS_INFO) << "InitEncodeOnEncoderThread: maxBitrate:"
                     << codec_settings->maxBitrate
                     << "framerate:" << codec_settings->maxFramerate
                     << "targetBitRate:" << codec_settings->maxBitrate;
   uint32_t codec_id = MFX_CODEC_AVC;
+  switch (codec_type) {
+    case webrtc::kVideoCodecH264:
+      codec_id = MFX_CODEC_AVC;
+      break;
+#ifndef DISABLE_H265
+    case webrtc::kVideoCodecH265:
+      codec_id = MFX_CODEC_HEVC;
+      break;
+#endif
+    case webrtc::kVideoCodecVP9:
+      codec_id = MFX_CODEC_VP9;
+      break;
+    case webrtc::kVideoCodecAV1:
+      codec_id = MFX_CODEC_AV1;
+      break;
+    default:
+      RTC_LOG(LS_ERROR) << "Invalid codec specified.";
+      return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
   // If already inited, what we need to do is to reset the encoder,
   // instead of setting it all over again.
   if (inited) {
@@ -140,16 +148,10 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     if (!m_mfxSession) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-#ifndef DISABLE_H265
-    if (codec_type == webrtc::kVideoCodecH265) {
-      codec_id = MFX_CODEC_HEVC;
-    }
-#endif
-    if (!factory->LoadEncoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
 
-    // Create frame allocator, let the allocator create the param of its own
+    // We only enable HEVC on ICL+, so not loading any GACC/SW HEVC plugin
+    // with our implementation.
+
     m_pMFXAllocator = MSDKFactory::CreateFrameAllocator();
     if (nullptr == m_pMFXAllocator) {
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -160,7 +162,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     // Create the encoder
-    m_pmfxENC = new MFXVideoENCODE(*m_mfxSession);
+    m_pmfxENC.reset(new MFXVideoENCODE(*m_mfxSession));
     if (m_pmfxENC == nullptr) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -285,6 +287,15 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     }
 
     m_EncExtParams.push_back((mfxExtBuffer*)&extAvcTemporalLayers);
+  }
+
+  // Turn off IVF header for VP9
+  if (codec_id == MFX_CODEC_VP9) {
+    MSDK_ZERO_MEMORY(vp9_ext_param);
+    vp9_ext_param.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
+    vp9_ext_param.Header.BufferId = MFX_EXTBUFF_VP9_PARAM;
+    vp9_ext_param.Header.BufferSz = sizeof(vp9_ext_param);
+    m_EncExtParams.push_back((mfxExtBuffer*)&vp9_ext_param);
   }
 
   if (!m_EncExtParams.empty()) {
@@ -678,7 +689,6 @@ int MSDKVideoEncoder::Release() {
   if (m_mfxSession) {
     MSDKFactory* factory = MSDKFactory::Get();
     if (factory) {
-      factory->UnloadMSDKPlugin(m_mfxSession, &m_pluginID);
       factory->DestroySession(m_mfxSession);
     }
     m_mfxSession = nullptr;

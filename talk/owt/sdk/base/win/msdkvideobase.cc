@@ -4,6 +4,7 @@
 
 #include "atlbase.h"
 #include "d3d_allocator.h"
+#include "d3d11_allocator.h"
 #include "mfxdefs.h"
 #include "msdkvideobase.h"
 
@@ -121,6 +122,8 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
 
   switch (codec_id) {
     case MFX_CODEC_HEVC:
+      // Actually MSDK does not support this plugin any more. Consider
+      // not loading the plugin in decoder implementation.
       sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCD_HW, 1);
       if (sts != MFX_ERR_NONE) {
         return false;
@@ -211,5 +214,25 @@ std::shared_ptr<SysMemFrameAllocator> MSDKFactory::CreateFrameAllocator() {
 
   return pAllocator;
 }
+
+std::shared_ptr<D3D11FrameAllocator> MSDKFactory::CreateD3D11FrameAllocator(
+    ID3D11Device* d3d11_device) {
+  if (!d3d11_device) {
+    RTC_LOG(LS_ERROR) << "Invalid D3D11 device provided for frame allocator.";
+    return nullptr;
+  }
+  mfxStatus sts = MFX_ERR_NONE;
+  std::shared_ptr<D3D11FrameAllocator> pAllocator =
+      std::make_shared<D3D11FrameAllocator>();
+  D3D11AllocatorParams param;
+  param.pDevice = d3d11_device;
+  sts = pAllocator->Init(&param);
+  if (sts != MFX_ERR_NONE) {
+    return nullptr;
+  }
+
+  return pAllocator;
+}
+
 }  // namespace base
 }  // namespace owt
