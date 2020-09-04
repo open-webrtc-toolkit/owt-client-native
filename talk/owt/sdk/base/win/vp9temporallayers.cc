@@ -2,52 +2,79 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "media/gpu/vaapi/vp9_rate_control.h"
+#ifndef OWT_BASE_WIN_VP9TEMPORALLAYERS_H_
+#define OWT_BASE_WIN_VP9TEMPORALLAYERS_H_
 
-#include "base/logging.h"
-#include "base/memory/ptr_util.h"
-#include "third_party/libvpx/source/libvpx/vp9/ratectrl_rtc.h"
+#include "talk/owt/sdk/base/win/vp9ratecontrol.h"
 
-namespace media {
-namespace {
-class LibvpxVP9RateControl : public VP9RateControl {
+#include <memory>
+#include "webrtc/rtc_base/logging.h"
+
+namespace owt {
+namespace base {
+class VP9Picture;
+struct Vp9Metadata;
+
+// This class defines a set of fixed temporal layers configurations, for two and
+// three layers. It keeps a state of the current temporal index and is used to
+// update each frame with the correct encoder settings to realize the selected
+// pattern. NOTE: this class doesn't support spatial layers yet.
+// Temporal layers and spatial layers are described in
+// https://tools.ietf.org/html/draft-ietf-payload-vp9-10#section-3.
+class VP9TemporalLayers {
  public:
-  explicit LibvpxVP9RateControl(std::unique_ptr<libvpx::VP9RateControlRTC> impl)
-      : impl_(std::move(impl)) {}
+  struct FrameConfig;
 
-  ~LibvpxVP9RateControl() override = default;
-  LibvpxVP9RateControl(const LibvpxVP9RateControl&) = delete;
-  LibvpxVP9RateControl& operator=(const LibvpxVP9RateControl&) = delete;
+  // This class doesn't support spatial layers, but we have to
+  // take them into account in determining the maximum number of used reference
+  // frames for inter frames. It is because the maximum supported spatial layers
+  // is three and the number of slots in the vp9 reference frames pool is eight,
+  // the number of available reference frames is 2 (= 8/3).
+  constexpr static size_t kMinSupportedTemporalLayers = 2u;
+  constexpr static size_t kMaxSupportedTemporalLayers = 3u;
+  constexpr static size_t kMaxSpatialLayers = 3u;
+  constexpr static size_t kMaxNumUsedReferenceFrames =
+      kVp9NumRefFrames / kMaxSpatialLayers;
+  static_assert(kMaxNumUsedReferenceFrames == 2u,
+                "VP9TemporalLayers uses two reference frames");
 
-  void UpdateRateControl(
-      const libvpx::VP9RateControlRtcConfig& rate_control_config) override {
-    impl_->UpdateRateControl(rate_control_config);
-  }
-  int GetQP() const override { return impl_->GetQP(); }
-  int GetLoopfilterLevel() const override {
-    return impl_->GetLoopfilterLevel();
-  }
-  void ComputeQP(const libvpx::VP9FrameParamsQpRTC& frame_params) override {
-    impl_->ComputeQP(frame_params);
-  }
-  void PostEncodeUpdate(uint64_t encoded_frame_size) override {
-    impl_->PostEncodeUpdate(encoded_frame_size);
-  }
+  explicit VP9TemporalLayers(size_t num_temporal_layers);
+  ~VP9TemporalLayers();
+
+  // Sets |picture|'s used reference frames and |ref_frames_used| so that they
+  // structure valid temporal layers. This also fills |picture|'s
+  // |metadata_for_encoding|.
+  void FillUsedRefFramesAndMetadata(
+      VP9Picture* picture,
+      std::array<bool, kVp9NumRefsPerFrame>* ref_frames_used);
+
+  size_t num_layers() const { return num_layers_; }
 
  private:
-  const std::unique_ptr<libvpx::VP9RateControlRTC> impl_;
+  // Useful functions to construct refresh flag and detect reference frames
+  // from the flag.
+  uint8_t RefreshFrameFlag(const FrameConfig& temporal_layers_config) const;
+  void FillVp9MetadataForEncoding(Vp9Metadata* metadata,
+                                  const FrameConfig& temporal_layers_config,
+                                  bool has_reference) const;
+  void UpdateRefFramesPatternIndex(const FrameConfig& temporal_layers_config);
+
+  // Following variables are configured upon construction, containing the amount
+  // of temporal layers, the associated temporal layers indices and the nature
+  // (reference, update, both, none) of each frame in the temporal group,
+  // respectively.
+  const size_t num_layers_;
+  const std::vector<FrameConfig> temporal_layers_reference_pattern_;
+
+  // The used slots of the vp9 reference pool.
+  const uint8_t pool_slots_[kMaxNumUsedReferenceFrames];
+
+  // The current index into the |temporal_layers_reference_pattern_|.
+  uint8_t pattern_index_;
+
+  // The pattern index used for reference frames slots.
+  uint8_t pattern_index_of_ref_frames_slots_[kMaxNumUsedReferenceFrames] = {};
 };
-
-}  // namespace
-
-// static
-std::unique_ptr<VP9RateControl> VP9RateControl::Create(
-    const libvpx::VP9RateControlRtcConfig& config) {
-  auto impl = libvpx::VP9RateControlRTC::Create(config);
-  if (!impl) {
-    DLOG(ERROR) << "Failed creating libvpx::VP9RateControlRTC";
-    return nullptr;
-  }
-  return std::make_unique<LibvpxVP9RateControl>(std::move(impl));
 }
-}  // namespace media
+}
+#endif

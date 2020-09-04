@@ -44,13 +44,10 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
   //
   // Although hardware support it, we will not enable HW encoding for VP8/HEVC
   // with PAK + Shader.
-  bool support_vp8 = false;
   bool support_h264 = false, h264_lp = false, h264_argb = false;
   bool support_hevc_8 = false, support_hevc_10 = false,
        support_hevc_scc = false;
   bool support_vp9_8 = false, support_vp9_10 = false;
-  bool support_av1_main = false, support_av1_high = false,
-       support_av1_prof = false;
   bool is_discrete_graphics = false;
 
   std::vector<VideoEncoderCapability> capabilities;
@@ -83,7 +80,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
       // VP9/HEVC/AVC at this stage, as AV1 HW encoding is not enabled.
       mfxStatus sts = MFX_ERR_NONE;
       mfxVideoParam video_param;
-      mfxPluginUID plugin_id;
+
       for (auto& codec : codec_types) {
         if (codec == owt::base::VideoCodec::kVp9) {
           memset(&video_param, 0, sizeof(video_param));
@@ -103,7 +100,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
           // VP9 will always be low power. And for MSDK, temporal scalability
           // and tiles don't work togehter. Also be noted we only support
           // input of size not smaller than 256x144.
-          if (supported_vp9_8) {
+          if (support_vp9_8) {
             VideoEncoderCapability vp9_8_cap;
             vp9_8_cap.codec_type = owt::base::VideoCodec::kVp9;
             vp9_8_cap.has_trusted_rate_controller = true;
@@ -151,7 +148,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             support_hevc_8 &= false;
 
           memset(&video_param, 0, sizeof(video_param));
-          video_param.mfx.CodecId = MFX_CODEC_HEVC_MAIN10;
+          video_param.mfx.CodecId = MFX_CODEC_HEVC;
           video_param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
           sts = mfx_encoder->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
@@ -160,7 +157,8 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
 #if (MFX_VERSION >= 1032)  // 2020.R1
           // MSDK API v1.32 enables screen content e
           memset(&video_param, 0, sizeof(video_param));
-          video_param.mfx.CodecId = MFX_CODEC_HEVC_SCC;
+          video_param.mfx.CodecId = MFX_CODEC_HEVC;
+          video_param.mfx.CodecProfile = MFX_PROFILE_HEVC_SCC;
           sts = mfx_encoder->Query(nullptr, &video_param);
           if (sts == MFX_ERR_NONE)
             support_hevc_scc = true;
@@ -173,7 +171,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             hevc_8_cap.low_power = true;
             hevc_8_cap.max_temporal_layers = 3;
             hevc_8_cap.max_spatial_layers = 1;
-            hevc_8_cap.codec_specific.H265.profile = H265Profile::kMain;
+            hevc_8_cap.codec_specific.H265.profile = H265ProfileId::kMain;
             hevc_8_cap.supported_brc_modes.push_back(BRCMode::kCBR);
             hevc_8_cap.supported_brc_modes.push_back(BRCMode::kVBR);
             hevc_8_cap.supported_brc_modes.push_back(BRCMode::kCQP);
@@ -188,7 +186,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             hevc_10_cap.low_power = true;
             hevc_10_cap.max_temporal_layers = 3;
             hevc_10_cap.max_spatial_layers = 1;
-            hevc_10_cap.codec_specific.H265.profile = H265Profile::kMain10;
+            hevc_10_cap.codec_specific.H265.profile = H265ProfileId::kMain10;
             hevc_10_cap.supported_brc_modes.push_back(BRCMode::kCBR);
             hevc_10_cap.supported_brc_modes.push_back(BRCMode::kVBR);
             hevc_10_cap.supported_brc_modes.push_back(BRCMode::kCQP);
@@ -208,7 +206,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             hevc_scc_cap.max_temporal_layers = 1;
             hevc_scc_cap.max_spatial_layers = 1;
             hevc_scc_cap.low_power = true;
-            hevc_scc_cap.codec_specific.H265.profile = H265Profile::KScc;
+            hevc_scc_cap.codec_specific.H265.profile = H265ProfileId::KScc;
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kCBR);
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kVBR);
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kCQP);
@@ -236,13 +234,13 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             avc_cap.low_power = h264_lp;
             avc_cap.max_temporal_layers = 3;
             avc_cap.max_spatial_layers = 1;
-            avc_cap.supported_brc_modes.push_back(BRCMode::KCBR);
+            avc_cap.supported_brc_modes.push_back(BRCMode::kCBR);
             avc_cap.supported_brc_modes.push_back(BRCMode::kVBR);
             avc_cap.supported_brc_modes.push_back(BRCMode::kCQP);
             avc_cap.sampling_modes.push_back(SamplingMode::kNv12);
             if (h264_argb)
               avc_cap.sampling_modes.push_back(SamplingMode::kARGB);
-            capabilities.push_back(avc_caps);
+            capabilities.push_back(avc_cap);
           }
         }
       }
@@ -260,11 +258,11 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
     mfxStatus sts = MFX_ERR_NONE;
     mfxVideoParam video_param;
 
-    unsigned short platform_code = mfx_platform.PlatformCode;
+    unsigned short platform_code = mfx_platform.CodeName;
     for (auto& codec : codec_types) {
       if (codec == owt::base::VideoCodec::kVp9) {
         if (platform_code < MFX_PLATFORM_KABYLAKE)
-          contine;
+          continue;
 
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_VP9;
@@ -300,7 +298,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
 
         sts = mfx_decoder->Query(nullptr, &video_param);
         if (sts == MFX_ERR_NONE) {
-          VideoDecoderCapability hevc_cap;
+          VideoDecoderCapability h265_cap;
           h265_cap.codec_type = owt::base::VideoCodec::kH265;
           h265_cap.hardware_accelerated = true;
           // Starting from KBL we support both 8-bit and 10-bit, so
@@ -321,14 +319,14 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_AV1;
 
-          sts = mfx_decoder->Query(nullptr, video_param);
+          sts = mfx_decoder->Query(nullptr, &video_param);
           if (sts == MFX_ERR_NONE) {
             VideoDecoderCapability av1_cap;
             av1_cap.codec_type = owt::base::VideoCodec::kAv1;
             av1_cap.hardware_accelerated = true;
             av1_cap.max_resolution = VideoResolutionMax::k8K;
             // We support all 3 profiles so not specifying them here.
-            capabilities.ush_back(av1_cap);
+            capabilities.push_back(av1_cap);
           }
         }
 #endif
@@ -380,7 +378,7 @@ MediaCapabilities::~MediaCapabilities() {
     mfx_decoder.reset();
   }
   if (msdk_factory && mfx_session) {
-    msdk_factory->DestroySession(*mfx_session);
+    msdk_factory->DestroySession(mfx_session);
   }
 }
 
@@ -404,7 +402,7 @@ bool MediaCapabilities::Init() {
   if (!mfx_decoder)
     goto failed;
 
-  res = msdk_factory->QueryPlatform(*mfx_session, &mfx_platform);
+  res = msdk_factory->QueryPlatform(mfx_session, &mfx_platform);
   if (res)
     inited = true;
 

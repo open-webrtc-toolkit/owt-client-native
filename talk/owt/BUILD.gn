@@ -230,8 +230,8 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererd3d11.h",
       "sdk/base/win/vp9ratecontrol.cc",
       "sdk/base/win/vp9ratecontrol.h",
-      "sdk/base/win/vp9temporallayers.cc",
-      "sdk/base/win/vp9temporallayers.h",
+      #"sdk/base/win/vp9temporallayers.cc",
+      #"sdk/base/win/vp9temporallayers.h",
       "sdk/base/windowcapturer.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]

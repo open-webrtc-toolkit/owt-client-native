@@ -18,5 +18,8 @@ struct NativeD3DSurfaceHandle {
   int height_;  // height of the frame passing from decoder
 };
 
-}
+// We keep D3D11ImageHandle definition in videorendererinterface,
+// as we may allow external renderer to accept the same handle.
+}  // namespace base
+}  // namespace owt
 #endif  // OWT_BASE_WIN_D3DNATIVEFRAME_H
