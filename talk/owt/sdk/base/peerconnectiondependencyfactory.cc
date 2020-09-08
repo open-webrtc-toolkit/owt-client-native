@@ -24,6 +24,8 @@
 #if defined(WEBRTC_WIN)
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
+#elif defined(WEBRTC_LINUX)
+#include "talk/owt/sdk/base/linux/msdkvideodecoderfactory.h"
 #elif defined(WEBRTC_IOS)
 #include "talk/owt/sdk/base/ios/networkmonitorios.h"
 #include "talk/owt/sdk/base/objc/ObjcVideoCodecFactory.h"
@@ -50,7 +52,7 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
     : pc_thread_(rtc::Thread::CreateWithSocketServer()),
       callback_thread_(rtc::Thread::CreateWithSocketServer()),
       field_trial_("WebRTC-H264HighProfile/Enabled/") {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   if (GlobalConfiguration::GetVideoHardwareAccelerationEnabled()) {
     render_hardware_acceleration_enabled_ = true;
   } else {
@@ -127,17 +129,17 @@ void PeerConnectionDependencyFactory::
 #if defined(WEBRTC_IOS)
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
-#elif defined(WEBRTC_WIN)
+#elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   // Configure codec factories. MSDK factory will internally use built-in codecs
   // if hardware acceleration is not in place. For H.265/H.264, if hardware acceleration
   // is turned off at application level, negotiation will fail.
-  if (encoded_frame_) {
-    encoder_factory.reset(new EncodedVideoEncoderFactory());
-  } else if (render_hardware_acceleration_enabled_) {
-    encoder_factory.reset(new MSDKVideoEncoderFactory());
-  } else {
+  //if (encoded_frame_) {
+  //  encoder_factory.reset(new EncodedVideoEncoderFactory());
+  //} else if (render_hardware_acceleration_enabled_) {
+  //  encoder_factory.reset(new MSDKVideoEncoderFactory());
+  //} else {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
-  }
+  //}
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(

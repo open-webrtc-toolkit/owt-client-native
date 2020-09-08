@@ -9,7 +9,7 @@
 #include <Windows.h>
 #endif
 #if defined(WEBRTC_LINUX)
-#include <X11/Xlib.h>
+//#include <X11/Xlib.h>
 #endif
 namespace owt {
 namespace base {
@@ -50,8 +50,8 @@ class VideoRenderWindow {
  private:
   HWND wnd_;
 };
-#endif
-#if defined(WEBRTC_LINUX)
+
+
 class VideoRenderWindow {
  public:
   VideoRenderWindow() : wnd_(0) {}
@@ -68,6 +68,29 @@ class VideoRenderWindow {
   Window GetWindowHandle() { return wnd_; }
  private:
   Window wnd_;
+};
+#endif
+#if defined(WEBRTC_LINUX)
+typedef void (*PFN_RETURN_BUFFER)(void *data, uint32_t bufid);
+/// libva surface
+typedef void* VADisplay;        /* window system dependent */
+typedef unsigned int VASurfaceID;
+struct VaSurface {
+  VADisplay display;
+  VASurfaceID surface;
+  int width;
+  int height;
+  int frameno;
+  int bufferid;
+  void *data;
+  void *pfnReturnBuffer;
+  ~VaSurface() {}
+};
+
+class VideoRendererVaInterface {
+ public:
+  virtual void RenderFrame(std::unique_ptr<VaSurface> surface) = 0;
+  virtual ~VideoRendererVaInterface() {}
 };
 #endif
 /// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack

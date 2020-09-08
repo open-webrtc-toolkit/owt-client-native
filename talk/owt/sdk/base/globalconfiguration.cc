@@ -4,7 +4,7 @@
 #include "owt/base/globalconfiguration.h"
 namespace owt {
 namespace base {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 // Enable hardware acceleration by default is on.
 bool GlobalConfiguration::hardware_acceleration_enabled_ = true;
 #endif
