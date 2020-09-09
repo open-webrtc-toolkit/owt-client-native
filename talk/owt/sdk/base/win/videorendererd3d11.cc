@@ -151,7 +151,7 @@ bool WebrtcVideoRendererD3D11Impl::RenderFrame(ID3D11Texture2D* texture) {
   if (FAILED(hr))
     return false;
 
-  // Blit NV12 surface to RGB back buffer here.
+  // Blit NV12/P010 surface to RGB back buffer here.
   RECT rect = {0, 0, width_, height_};
   D3D11_VIDEO_PROCESSOR_STREAM stream;
   memset(&stream, 0, sizeof(stream));

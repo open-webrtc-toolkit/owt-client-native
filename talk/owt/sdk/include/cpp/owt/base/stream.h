@@ -69,7 +69,7 @@ class StreamObserver {
 class WebrtcVideoRendererImpl;
 class WebrtcAudioRendererImpl;
 #if defined(WEBRTC_WIN)
-class WebrtcVideoRendererD3D9Impl;
+class WebrtcVideoRendererD3D11Impl;
 #endif
 #if defined(WEBRTC_LINUX)
 class WebrtcVideoRendererVaImpl;
@@ -158,7 +158,7 @@ class Stream {
   WebrtcVideoRendererImpl* renderer_impl_;
   WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
-  WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
+  WebrtcVideoRendererD3D11Impl* d3d11_renderer_impl_;
 #endif
 #if defined(WEBRTC_LINUX)
   WebrtcVideoRendererVaImpl* va_renderer_impl_;

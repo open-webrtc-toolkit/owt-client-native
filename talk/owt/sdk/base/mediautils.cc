@@ -161,6 +161,31 @@ absl::optional<AV1Profile> StringToAV1Profile(const std::string& str) {
   return absl::nullopt;
 }
 
+absl::optional<H265ProfileId> StringToH265Profile(const std::string& str) {
+  const absl::optional<int> i = rtc::StringToNumber<int>(str);
+  if (!i.has_value())
+    return absl::nullopt;
+  // See ISO/IEC-23008-2 section A.3.5. we use the general_profile_idc
+  // as the profile-id per RFC 7798.
+  switch (i.value()) {
+    case 1:
+      return H265ProfileId::kMain;
+    case 2:
+      return H265ProfileId::kMain10;
+    case 3:
+      return H265ProfileId::kMainStillPicture;
+    case 4:
+      return H265ProfileId::kMainRExt;
+#if (MFX_VERSION >= MFX_VERSION_NEXT)
+    case 5:
+      return H265ProfileId::kScc;
+#endif
+    default:
+      return absl::nullopt;
+  }
+  return absl::nullopt;
+}
+
 absl::optional<AV1Profile> MediaUtils::ParseSdpForAV1Profile(
     const webrtc::SdpVideoFormat::Parameters& params) {
   const auto profile_it = params.find(kAV1FmtpProfileId);
@@ -168,6 +193,15 @@ absl::optional<AV1Profile> MediaUtils::ParseSdpForAV1Profile(
     return AV1Profile::kMain;
   const std::string& profile_str = profile_it->second;
   return StringToAV1Profile(profile_str);
+}
+
+absl::optional<H265ProfileId> MediaUtils::ParseSdpForH265Profile(
+    const webrtc::SdpVideoFormat::Parameters& params) {
+  const auto profile_it = params.find(kHEVCFmtpProfileId);
+  if (profile_it == params.end())
+    return H265ProfileId::kMain;
+  const std::string& profile_str = profile_it->second;
+  return StringToH265Profile(profile_str);
 }
 
 }  // namespace base
