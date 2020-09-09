@@ -17,9 +17,12 @@
 #include "webrtc/api/video_codecs/video_codec.h"
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/media/base/codec.h"
+#include "webrtc/media/base/vp9_profile.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
 #include "talk/owt/sdk/base/win/mediacapabilities.h"
+#include "talk/owt/sdk/base/win/vp9ratecontrol.h"
+#include "vp9/ratectrl_rtc.h"
 
 namespace owt {
 namespace base {
@@ -62,13 +65,16 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   mfxU16 MSDKGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool,
                                  mfxU16 nPoolSize);
   void WipeMfxBitstream(mfxBitstream* pBitstream);
+  libvpx::VP9RateControlRtcConfig CreateVP9RateControlConfig();
 
   webrtc::EncodedImageCallback* callback_;
   int32_t bitrate_;  // Bitrate in bits per second.
   int32_t width_;
   int32_t height_;
+  uint32_t frame_rate;
   webrtc::VideoCodecType codec_type;
-  uint32_t num_temporal_layers;
+  cricket::VideoCodec rtp_codec_parameters;
+  uint8_t num_temporal_layers = 1;
   uint32_t num_spatial_layers = 1;  // For MSDK this is fixed to 1;
   webrtc::InterLayerPredMode inter_layer_prediction_mode;
 
@@ -77,20 +83,23 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   std::shared_ptr<SysMemFrameAllocator> m_pMFXAllocator;
   mfxVideoParam m_mfxEncParams;
 
-  // Used by HEVC
+  // Members used by HEVC
   mfxExtHEVCParam m_ExtHEVCParam;
   // H265Profile space is always 0.
-  H265ProfileId h265_profile; 
+  H265ProfileId h265_profile = owt::base::H265ProfileId::kMain; 
 
-  // Used by VP9
+  // Members used by VP9
   mfxExtVP9Param vp9_ext_param;
-  VP9Profile vp9_profile;
+  webrtc::VP9Profile vp9_profile = webrtc::VP9Profile::kProfile0;
+  std::unique_ptr<VP9RateControl> vp9_rate_ctrl;
+  libvpx::VP9RateControlRtcConfig vp9_rc_config;
+  libvpx::VP9FrameParamsQpRTC frame_params;
 
-
-  // TODO: change to actual version when turning this on.
+  // TODO(johny): MSDK will remove the version macro usage for headers.
+  // Turn this on when appropriate.
 #if (MFX_VERSION >= MFX_VERSION_NEXT)
   mfxExtAV1Param av1_ext_param;
-  AV1Profile av1_profile;
+  AV1Profile av1_profile = owt::base::AV1Profile::kMain;
 #endif
 
   std::vector<mfxExtBuffer*> m_EncExtParams;
@@ -99,6 +108,10 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   mfxU32 m_nFramesProcessed;
   std::unique_ptr<rtc::Thread> encoder_thread;
   std::atomic<bool> inited;
+
+  // Gof related information for VP9 codec specific info.
+  uint8_t gof_idx;
+  webrtc::GofInfoVP9 gof;
 };
 }  // namespace base
 }  // namespace owt

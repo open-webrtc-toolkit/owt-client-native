@@ -139,6 +139,13 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
       }
       *plugin_id = MFX_PLUGINID_VP8D_HW;
       break;
+    case MFX_CODEC_VP9:
+      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_VP9D_HW, 1);
+      if (sts != MFX_ERR_NONE) {
+        return false;
+      }
+      *plugin_id = MFX_PLUGINID_VP9D_HW;
+      break;
     default:
       break;
   }

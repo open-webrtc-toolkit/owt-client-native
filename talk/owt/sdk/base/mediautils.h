@@ -180,6 +180,8 @@ class MediaUtils {
                                   bool& is_idr);
   static absl::optional<AV1Profile> ParseSdpForAV1Profile(
       const webrtc::SdpVideoFormat::Parameters& params);
+  static absl::optional<H265ProfileId> ParseSdpForH265Profile(
+      const webrtc::SdpVideoFormat::Parameters& params);
 };
 }
 }

@@ -47,6 +47,7 @@ MSDKVideoDecoder::MSDKVideoDecoder()
   m_pInputSurfaces = nullptr;
   m_video_param_extracted = false;
   m_decBsOffset = 0;
+  inited = false;
   surface_handle.reset(new D3D11ImageHandle());
 }
 
@@ -147,7 +148,8 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   uint32_t codec_id = MFX_CODEC_AVC;
 
   if (inited) {
-    m_pmfxDEC->Close();
+    if (m_pmfxDEC)
+      m_pmfxDEC->Close();
     MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
 
     if (m_pMFXAllocator) {
@@ -169,6 +171,10 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
       codec_id = MFX_CODEC_VP9;
     } else if (codec_.codecType == webrtc::kVideoCodecAV1) {
       codec_id = MFX_CODEC_AV1;
+    }
+
+    if (!factory->LoadDecoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     if (!CreateD3D11Device()) {
@@ -194,6 +200,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     MSDK_ZERO_MEMORY(m_mfxBS);
     m_mfxBS.Data = new mfxU8[MSDK_BS_INIT_SIZE];
     m_mfxBS.MaxLength = MSDK_BS_INIT_SIZE;
+    RTC_LOG(LS_ERROR) << "Creating underlying MSDK decoder.";
     m_pmfxDEC.reset(new MFXVideoDECODE(*m_mfxSession));
     if (m_pmfxDEC == nullptr) {
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -201,8 +208,10 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   }
 
   m_mfxVideoParams.mfx.CodecId = codec_id;
-
+  if (codec_id == MFX_CODEC_VP9)
+    m_mfxVideoParams.mfx.EnableReallocRequest = MFX_CODINGOPTION_ON;
   inited = true;
+  RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread --";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -212,16 +221,19 @@ int32_t MSDKVideoDecoder::Decode(
     int64_t renderTimeMs) {
 
   mfxStatus sts = MFX_ERR_NONE;
-  HRESULT hr;
-  bool device_opened = false;
   mfxFrameSurface1 *pOutputSurface = nullptr;
+
   m_mfxVideoParams.IOPattern =
       MFX_IOPATTERN_OUT_VIDEO_MEMORY;
-  m_mfxVideoParams.AsyncDepth = 1;
+  m_mfxVideoParams.AsyncDepth = 4;
+
   ReadFromInputStream(&m_mfxBS, inputImage.data(), inputImage.size());
 
 dec_header:
   if (inited && !m_video_param_extracted) {
+    if (!m_pmfxDEC.get()) {
+      RTC_LOG(LS_ERROR) << "MSDK decoder not created.";
+    }
     sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
     if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
       mfxU16 nSurfNum = 0;
