@@ -286,7 +286,24 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
           std::bind(&ConferencePeerConnectionChannel::
                         OnSetLocalSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->SetLocalDescription(observer, desc);
+  std::string sdp_string;
+  if (!desc->ToString(&sdp_string)) {
+    RTC_LOG(LS_ERROR) << "Error parsing local description.";
+    RTC_DCHECK(false);
+  }
+  std::vector<AudioCodec> audio_codecs;
+  for (auto& audio_enc_param : configuration_.audio) {
+    audio_codecs.push_back(audio_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
+  std::vector<VideoCodec> video_codecs;
+  for (auto& video_enc_param : configuration_.video) {
+    video_codecs.push_back(video_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  webrtc::SessionDescriptionInterface* new_desc(
+      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+  peer_connection_->SetLocalDescription(observer, new_desc);
 }
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
@@ -347,27 +364,7 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
       FunctionalSetRemoteDescriptionObserver::Create(std::bind(
           &ConferencePeerConnectionChannel::OnSetRemoteDescriptionComplete,
                     this, std::placeholders::_1));
-  std::string sdp_string;
-  if (!desc->ToString(&sdp_string)) {
-    RTC_LOG(LS_ERROR) << "Error parsing local description.";
-    RTC_DCHECK(false);
-  }
-  std::vector<AudioCodec> audio_codecs;
-  for (auto& audio_enc_param : configuration_.audio) {
-    audio_codecs.push_back(audio_enc_param.codec.name);
-  }
-  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-  std::vector<VideoCodec> video_codecs;
-  for (auto& video_enc_param : configuration_.video) {
-    video_codecs.push_back(video_enc_param.codec.name);
-  }
-  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
-  std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
-      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-  // Sychronous call. After done, will invoke OnSetRemoteDescription. If
-  // remote sent an offer, we create answer for it.
-  RTC_LOG(LS_WARNING) << "SetRemoteSdp:" << sdp_string;
-  peer_connection_->SetRemoteDescription(std::move(new_desc), observer);
+  peer_connection_->SetRemoteDescription(std::move(desc), observer);
 }
 
 bool ConferencePeerConnectionChannel::CheckNullPointer(
