@@ -304,6 +304,8 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
     const Json::Value& data,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (ended_)
+    return;
   RTC_CHECK(signaling_sender_);
   std::string json_string = rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(
@@ -436,7 +438,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
-  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -692,7 +693,6 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-      TriggerOnStopped();
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -920,8 +920,8 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      ClosePeerConnection();
       SendStop(nullptr, nullptr);
+      ClosePeerConnection();
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       break;
@@ -929,6 +929,7 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     case kSessionStateOffered:
       SendStop(nullptr, nullptr);
@@ -1156,6 +1157,8 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   if (peer_connection_) {
     peer_connection_->Close();
+    peer_connection_ = nullptr;
+    TriggerOnStopped();
   }
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {
