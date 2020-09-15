@@ -24,7 +24,7 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
   bool is_h264_hw_supported = false, is_av1_hw_supported = false;
 #ifndef DISABLE_H265
   // TODO: Add logic to detect plugin by MSDK.
-  bool is_h265_hw_supported = true;
+  bool is_h265_hw_supported = false;
 #endif
 
   MediaCapabilities* media_capability = MediaCapabilities::Get();
@@ -94,9 +94,6 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
   else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) &&
            !vp9_hw)
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) &&
-           !h264_hw)
-    return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
   // TODO: Replace with AV1 HW encoder post TGL.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
            !av1_hw)
@@ -112,7 +109,7 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
 std::vector<webrtc::SdpVideoFormat>
 MSDKVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
-  //supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   // TODO: We should combine the codec profiles that hardware H.264 encoder

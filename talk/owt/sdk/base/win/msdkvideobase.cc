@@ -29,6 +29,7 @@ static bool isValidPluginUID(const mfxPluginUID* uid) {
   return (AreGuidsEqual(uid, &MFX_PLUGINID_HEVCD_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_VP8D_HW) ||
+          AreGuidsEqual(uid, &MFX_PLUGINID_VP9D_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_GACC));
 }
 
@@ -68,9 +69,11 @@ MSDKFactory* MSDKFactory::Get() {
   return singleton;
 }
 
-MFXVideoSession* MSDKFactory::InternalCreateSession() {
+MFXVideoSession* MSDKFactory::InternalCreateSession(bool use_d3d11) {
   mfxStatus sts = MFX_ERR_NONE;
   mfxIMPL impl = MFX_IMPL_HARDWARE_ANY;
+  if (use_d3d11)
+    impl |= MFX_IMPL_VIA_D3D11;
   mfxVersion version = {{3, 1}};
 
   MFXVideoSession* session = new MFXVideoSession();
@@ -87,11 +90,11 @@ MFXVideoSession* MSDKFactory::InternalCreateSession() {
   return session;
 }
 
-MFXVideoSession* MSDKFactory::CreateSession() {
+MFXVideoSession* MSDKFactory::CreateSession(bool use_d3d11) {
   mfxStatus sts = MFX_ERR_NONE;
   MFXVideoSession* session = nullptr;
 
-  session = InternalCreateSession();
+  session = InternalCreateSession(use_d3d11);
 
   if (!session) {
     return nullptr;

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "msdkvideobase.h"
+#include "mfxadapter.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/win/d3d11_allocator.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
@@ -67,15 +68,53 @@ void MSDKVideoDecoder::CheckOnCodecThread() {
 
 bool MSDKVideoDecoder::CreateD3D11Device() {
   HRESULT hr = S_OK;
-  UINT create_flag = D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
 
   static D3D_FEATURE_LEVEL feature_levels[] = {
       D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
       D3D_FEATURE_LEVEL_10_1};
   D3D_FEATURE_LEVEL feature_levels_out;
 
+  mfxU8 headers[] = {0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0xE0, 0x0A, 0x96,
+                     0x52, 0x85, 0x89, 0xC8, 0x00, 0x00, 0x00, 0x01, 0x68,
+                     0xC9, 0x23, 0xC8, 0x00, 0x00, 0x00, 0x01, 0x09, 0x10};
+  mfxBitstream bs = {};
+  bs.Data = headers;
+  bs.DataLength = bs.MaxLength = sizeof(headers);
+
+  mfxStatus sts = MFX_ERR_NONE;
+  mfxU32 num_adapters;
+  sts = MFXQueryAdaptersNumber(&num_adapters);
+
+  if (sts != MFX_ERR_NONE)
+    return false;
+
+  std::vector<mfxAdapterInfo> display_data(num_adapters);
+  mfxAdaptersInfo adapters = {display_data.data(), mfxU32(display_data.size()),
+                              0u};
+  sts = MFXQueryAdaptersDecode(&bs, MFX_CODEC_AVC, &adapters);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_ERROR) << "Failed to query adapter with hardware acceleration";
+    return false;
+  }
+  mfxU32 adapter_idx = adapters.Adapters[0].Number;
+
+  hr = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&m_pDXGIFactory));
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR)
+        << "Failed to create dxgi factory for adatper enumeration.";
+    return false;
+  }
+
+  hr = m_pDXGIFactory->EnumAdapters(adapter_idx, &m_pAdapter);
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to enum adapter for specified adapter index.";
+    return false;
+  }
+
+  // On DG1 this setting driver type to hardware will result-in device
+  // creation failure.
   hr = D3D11CreateDevice(
-      nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flag, feature_levels,
+      m_pAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, feature_levels,
       sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
       &d3d11_device, &feature_levels_out, &d3d11_device_context);
   if (FAILED(hr)) {
@@ -173,9 +212,9 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
       codec_id = MFX_CODEC_AV1;
     }
 
-    if (!factory->LoadDecoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    //if (!factory->LoadDecoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
+    //  return WEBRTC_VIDEO_CODEC_ERROR;
+    //}
 
     if (!CreateD3D11Device()) {
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -256,6 +295,8 @@ dec_header:
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
       nSurfNum = MSDK_MAX(request.NumFrameSuggested, 1);
+
+      request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
       sts = m_pMFXAllocator->Alloc(m_pMFXAllocator->pthis, &request,
                                    &m_mfxResponse);
       if (MFX_ERR_NONE != sts) {
@@ -275,6 +316,19 @@ dec_header:
         MSDK_MEMCPY_VAR(m_pInputSurfaces[i].Info, &(request.Info),
                         sizeof(mfxFrameInfo));
         m_pInputSurfaces[i].Data.MemId = m_mfxResponse.mids[i];
+        m_pInputSurfaces[i].Data.MemType = request.Type;
+      }
+
+      if (!m_mfxVideoParams.mfx.FrameInfo.FrameRateExtN ||
+          m_mfxVideoParams.mfx.FrameInfo.FrameRateExtD) {
+        m_mfxVideoParams.mfx.FrameInfo.FrameRateExtN = 30;
+        m_mfxVideoParams.mfx.FrameInfo.FrameRateExtD = 1;
+      }
+
+      if (!m_mfxVideoParams.mfx.FrameInfo.AspectRatioH ||
+          !m_mfxVideoParams.mfx.FrameInfo.AspectRatioW) {
+        m_mfxVideoParams.mfx.FrameInfo.AspectRatioH = 1;
+        m_mfxVideoParams.mfx.FrameInfo.AspectRatioW = 1;
       }
       // Finally we're done with all configurations and we're OK to init the
       // decoder.
@@ -319,12 +373,15 @@ retry:
     if (sts == MFX_ERR_NONE && syncp != nullptr) {
       sts = m_mfxSession->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
-        mfxHDLPair* dxMemId = (mfxHDLPair*)pOutputSurface->Data.MemId;
-
+        mfxMemId dxMemId = pOutputSurface->Data.MemId;
+        mfxHDLPair pair = {nullptr};
+        // Maybe we should also send the allocator as part of the frame
+        // handle for locking/unlocking purpose.
+        m_pMFXAllocator->GetFrameHDL(dxMemId, (mfxHDL*)&pair);
         if (callback_) {
           surface_handle->d3d11_device = d3d11_device.p;
           surface_handle->texture =
-              reinterpret_cast<ID3D11Texture2D*>(dxMemId->first);
+              reinterpret_cast<ID3D11Texture2D*>(pair.first);
           // Texture_array_index not used when decoding with MSDK.
           surface_handle->texture_array_index = 0;
           D3D11_TEXTURE2D_DESC texture_desc;
