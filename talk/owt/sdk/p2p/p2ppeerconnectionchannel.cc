@@ -304,8 +304,6 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
     const Json::Value& data,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (ended_)
-    return;
   RTC_CHECK(signaling_sender_);
   std::string json_string = rtc::JsonValueToString(data);
   signaling_sender_->SendSignalingMessage(
@@ -1144,6 +1142,9 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
   if (negotiation_needed) {
     OnNegotiationNeeded();
   }
+  latest_local_stream_ = nullptr;
+  latest_publish_success_callback_ = nullptr;
+  latest_publish_failure_callback_ = nullptr;
 }
 void P2PPeerConnectionChannel::SendStop(
     std::function<void()> on_success,
