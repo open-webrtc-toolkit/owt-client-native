@@ -94,6 +94,7 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   std::unique_ptr<VP9RateControl> vp9_rate_ctrl;
   libvpx::VP9RateControlRtcConfig vp9_rc_config;
   libvpx::VP9FrameParamsQpRTC frame_params;
+  bool vp9_use_external_brc = false;
 
   // TODO(johny): MSDK will remove the version macro usage for headers.
   // Turn this on when appropriate.

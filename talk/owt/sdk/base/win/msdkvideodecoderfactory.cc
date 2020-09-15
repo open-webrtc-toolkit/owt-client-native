@@ -80,8 +80,10 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     else if (codec == webrtc::kVideoCodecVP9)
       vp9_hw = true;
 #ifndef DISABLE_H265
-    else if (codec == webrtc::kVideoCodecH265)
+    else if (codec == webrtc::kVideoCodecH265) {
       h265_hw = true;
+      RTC_LOG(LS_ERROR) << "Enabling hardware hevc.";
+    }
 #endif
   }
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) && !vp9_hw) {
@@ -98,7 +100,8 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
 #ifndef DISABLE_H265
   // This should not happen.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
-    return nullptr;
+    RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
+    //return nullptr;
   }
 #endif
 
@@ -108,7 +111,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
  std::vector<webrtc::SdpVideoFormat> MSDKVideoDecoderFactory::GetSupportedFormats()
     const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
-  //supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())

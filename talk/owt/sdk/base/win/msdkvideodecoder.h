@@ -7,6 +7,7 @@
 #include <codecapi.h>
 #include <combaseapi.h>
 #include <d3d11.h>
+#include <dxgi1_2.h>
 #include <dxva2api.h>
 #include <memory>
 #include <utility>
@@ -93,6 +94,8 @@ private:
     CComPtr<ID3D11DeviceContext> d3d11_device_context;
     CComPtr<ID3D11VideoDevice> d3d11_video_device;
     CComPtr<ID3D11VideoContext> d3d11_video_context;
+    CComQIPtr<IDXGIAdapter> m_pAdapter;
+    CComPtr<IDXGIFactory2> m_pDXGIFactory;
     // Store current decoded frame.
     std::unique_ptr<D3D11ImageHandle> surface_handle;
 
