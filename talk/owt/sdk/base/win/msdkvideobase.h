@@ -31,7 +31,7 @@ class MSDKFactory {
 
   static MSDKFactory* Get();
 
-  MFXVideoSession* CreateSession();
+  MFXVideoSession* CreateSession(bool use_d3d11 = true);
 
   void DestroySession(MFXVideoSession* session);
   
@@ -99,7 +99,7 @@ class MSDKFactory {
  protected:
   MSDKFactory();
   bool Init();
-  MFXVideoSession* InternalCreateSession();
+  MFXVideoSession* InternalCreateSession(bool use_d3d11 = true);
 
  private:
   static MSDKFactory* singleton;
