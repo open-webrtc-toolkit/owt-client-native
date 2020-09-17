@@ -16,8 +16,9 @@ PeerConnectionChannel::PeerConnectionChannel(
       factory_(nullptr) {}
 
 PeerConnectionChannel::~PeerConnectionChannel() {
-  if (peer_connection_ != nullptr) {
+  if (peer_connection_) {
     peer_connection_->Close();
+    peer_connection_ = nullptr;
   }
 }
 bool PeerConnectionChannel::InitializePeerConnection() {

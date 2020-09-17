@@ -436,7 +436,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
-  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -692,7 +691,6 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-      TriggerOnStopped();
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -920,8 +918,8 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      ClosePeerConnection();
       SendStop(nullptr, nullptr);
+      ClosePeerConnection();
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       break;
@@ -929,6 +927,7 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     case kSessionStateOffered:
       SendStop(nullptr, nullptr);
@@ -1143,6 +1142,9 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
   if (negotiation_needed) {
     OnNegotiationNeeded();
   }
+  latest_local_stream_ = nullptr;
+  latest_publish_success_callback_ = nullptr;
+  latest_publish_failure_callback_ = nullptr;
 }
 void P2PPeerConnectionChannel::SendStop(
     std::function<void()> on_success,
@@ -1156,6 +1158,8 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   if (peer_connection_) {
     peer_connection_->Close();
+    peer_connection_ = nullptr;
+    TriggerOnStopped();
   }
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {
