@@ -293,7 +293,25 @@ void CustomizedVideoEncoderProxy::OnRttUpdate(int64_t rtt_ms) {
 
 void CustomizedVideoEncoderProxy::OnLossNotification(
     const LossNotification& loss_notification) {
-  // Currently not handled.
+  DependencyNotification notification;
+  notification.timestamp_of_last_decodable =
+      loss_notification.timestamp_of_last_decodable;
+  notification.timestamp_of_last_received =
+      loss_notification.timestamp_of_last_received;
+  if (loss_notification.last_received_decodable.has_value()) {
+    notification.last_received_decodable =
+        loss_notification.last_received_decodable.value();
+    notification.last_packet_not_received = false;
+  } else {
+    notification.last_packet_not_received = true;
+  }
+  if (loss_notification.dependencies_of_last_received_decodable.has_value()) {
+    notification.last_frame_dependency_unknown = false;
+    notification.dependencies_of_last_received_decodable =
+        loss_notification.dependencies_of_last_received_decodable.value();
+  } else {
+    notification.last_frame_dependency_unknown = true;
+  }
 }
 
 int CustomizedVideoEncoderProxy::Release() {

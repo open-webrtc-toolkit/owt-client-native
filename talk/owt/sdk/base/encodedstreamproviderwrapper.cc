@@ -30,6 +30,14 @@ void EncodedStreamProviderWrapper::RequestRateUpdate(uint64_t bitrate_bps,
   }
 }
 
+void EncodedStreamProviderWrapper::RequestLossNotification(DependencyNotification notification) {
+  auto that = encoded_stream_provider_.lock();
+
+  if (that != nullptr) {
+    that->RequestLossNotification(notification);
+  }
+}
+
 void EncodedStreamProviderWrapper::AddSink(EncodedStreamProviderSink* sink) {
   auto that = encoded_stream_provider_.lock();
 
@@ -85,6 +93,13 @@ void EncodedStreamProvider::RequestRateUpdate(uint64_t bitrate_bps,
   for (auto its = stream_provider_observers_.begin();
        its != stream_provider_observers_.end(); ++its) {
     (*its).get().OnRateUpdate(bitrate_bps, frame_rate);
+  }
+}
+
+void EncodedStreamProvider::RequestLossNotification(DependencyNotification notification) {
+  for (auto its = stream_provider_observers_.begin();
+       its != stream_provider_observers_.end(); ++its) {
+    (*its).get().OnLossNotification(notification);
   }
 }
 
