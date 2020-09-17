@@ -24,6 +24,8 @@ class EncodedStreamProviderWrapper : public std::enable_shared_from_this<Encoded
 
   void RequestRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate);
 
+  void RequestLossNotification(DependencyNotification notification);
+
   void Start();
 
   void Stop(); 
@@ -50,6 +52,13 @@ class EncoderEventCallbackWrapper : public EncoderEventCallback {
     if (that) {
       that->RequestKeyFrame();
     }
+  }
+
+  void RequestLossNotification(DependencyNotification notification) {
+    auto that = provider_wrapper_.lock();
+    if (that) {
+      that->RequestLossNotification(notification);
+	}
   }
 
   void RequestRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate) {

@@ -40,6 +40,29 @@ struct GenericDescriptorInfo {
   /// Reserved for SVC.
   std::array<int, 10> decoding_target_indications;
 };
+
+struct DependencyNotification {
+  // The timestamp of the last decodable frame *prior* to the last received.
+  uint32_t timestamp_of_last_decodable;
+  // The timestamp of the last received frame. It may be undecodable.
+  uint32_t timestamp_of_last_received;
+  // If dependency of last frame is known. Only when this is false can you
+  // check the |dependencies_of_last_received_decodable|.
+  bool last_frame_dependency_unknown;
+  // True if all dependency of last received
+  bool dependencies_of_last_received_decodable;
+  // If true, means no packet belonging to the last frame was missed, but the
+  // last packet in the frame was not yet received.
+  bool last_packet_not_received;
+  // Describes whether the received frame was decodable.
+  // Only when |last_packet_not_received| is false, you can check this flag.
+  // If false, means some dependeny was undecodable, or some packets belonging
+  // to last received frame was missing.
+  // If true, means all dependencies were decodable, and all packets belonging to
+  // the last received frame were received.
+  bool last_received_decodable;
+};
+
 struct EncodedImageMetaData {
   // ctor
   EncodedImageMetaData()
@@ -121,6 +144,9 @@ class EncoderObserver {
   virtual void OnKeyFrameRequest() = 0;
 
   virtual void OnRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate) = 0;
+
+  virtual void OnLossNotification(
+      DependencyNotification notification) = 0;
 };
 
 // Encoder event callback interface
@@ -133,6 +159,8 @@ class EncoderEventCallback {
   virtual void RequestKeyFrame() = 0;
 
   virtual void RequestRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate) = 0;
+
+  virtual void RequestLossNotification(DependencyNotification notification) = 0;
 };
 
 /**
@@ -153,6 +181,9 @@ class EncodedStreamProvider final
 
   // Not intented to be called by application. May move to private later.
   void RequestRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate);
+
+    // Not intented to be called by application. May move to private later.
+  void RequestLossNotification(DependencyNotification notification);
 
   void StartStreaming();
 
