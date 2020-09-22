@@ -1,0 +1,31 @@
+From e662812f4dd3d5295aa1b418415833d12af94230 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Tue, 22 Sep 2020 17:21:59 +0800
+Subject: [PATCH] Disable loop range analysis when build with Xcode clang.
+
+Range loop analysis is disabled by default in clang 12, but it's enabled by
+clang shipped with Xcode 12. Disable it before warnings in WebRTC are fixed.
+---
+ config/compiler/BUILD.gn | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 298da6368..575c7ee56 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1409,6 +1409,12 @@ config("default_warnings") {
+       cflags += [ "-Wundeclared-selector" ]
+     }
+ 
++    if (use_xcode_clang) {
++      # Range loop analysis is disabled by default in clang 12. But it's enabled
++      # by clang shipped with Xcode 12.
++      cflags += [ "-Wno-range-loop-analysis" ]
++    }
++
+     # Suppress warnings about ABI changes on ARM (Clang doesn't give this
+     # warning).
+     if (current_cpu == "arm" && !is_clang) {
+-- 
+2.26.2
+
