@@ -377,6 +377,10 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
                          remote_id, message);
 }
 void P2PClient::OnStopped(const std::string& remote_id) {
+  {
+    const std::lock_guard<std::mutex> removed_lock(removed_pc_mutex_);
+    removed_pc_ = pc_channels_[remote_id];
+  }
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   pc_channels_.erase(remote_id);
 }
