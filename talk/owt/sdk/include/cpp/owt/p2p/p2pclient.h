@@ -207,10 +207,7 @@ class P2PClient final
   /** @cond */
   void SetLocalId(const std::string& local_id);
   /** @endcond */
-  void UpdateClientConfiguration(P2PClientConfiguration configuration) {
-    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
-    configuration_ = configuration;
-  }
+  void UpdateClientConfiguration(P2PClientConfiguration configuration);
  protected:
   // Implement P2PSignalingSenderInterface
   virtual void SendSignalingMessage(const std::string& message,

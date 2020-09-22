@@ -203,6 +203,10 @@ void P2PClient::GetConnectionStats(
 void P2PClient::SetLocalId(const std::string& local_id) {
   local_id_ = local_id;
 }
+void P2PClient::UpdateClientConfiguration(P2PClientConfiguration configuration) {
+  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+  configuration_ = configuration;
+}
 void P2PClient::OnSignalingMessage(const std::string& message,
                                    const std::string& remote_id) {
   // First to check whether remote_id is in the allowed_remote_ids_ list.
