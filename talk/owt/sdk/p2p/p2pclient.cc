@@ -203,7 +203,7 @@ void P2PClient::GetConnectionStats(
 void P2PClient::SetLocalId(const std::string& local_id) {
   local_id_ = local_id;
 }
-void P2PClient::UpdateClientConfiguration(P2PClientConfiguration configuration) {
+void P2PClient::UpdateClientConfiguration(const P2PClientConfiguration& configuration) {
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   configuration_ = configuration;
 }
@@ -380,10 +380,11 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
                          &P2PClientObserver::OnMessageReceived,
                          remote_id, message);
 }
+// Does not remove final reference to channel until the next channel stops, so connections
+// are fully closed and all methods return before cleanup.
 void P2PClient::OnStopped(const std::string& remote_id) {
-  std::lock(removed_pc_mutex_, pc_channels_mutex_);
-  const std::lock_guard<std::mutex> lock1(removed_pc_mutex_, std::adopt_lock);
-  const std::lock_guard<std::mutex> lock2(pc_channels_mutex_, std::adopt_lock);
+  const std::lock_guard<std::mutex> lock1(removed_pc_mutex_);
+  const std::lock_guard<std::mutex> lock2(pc_channels_mutex_);
   removed_pc_ = pc_channels_[remote_id];
   pc_channels_.erase(remote_id);
 }
