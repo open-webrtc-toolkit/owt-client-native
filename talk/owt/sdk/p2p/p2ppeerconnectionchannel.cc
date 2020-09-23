@@ -1240,8 +1240,8 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
       std::function<void()> on_success;
       std::tie(message, on_success, std::ignore)=*it;
       data_channel_->Send(CreateDataBuffer(*message));
-      if(on_success){
-        on_success();
+      if (on_success) {
+        event_queue_->PostTask([on_success] { on_success(); });
       }
     }
     pending_messages_.clear();
