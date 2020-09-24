@@ -129,8 +129,10 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
   if (signaling_sender_)
     delete signaling_sender_;
-  ended_ = true;
-  ClosePeerConnection();
+  if (peer_connection_ != nullptr) {
+    peer_connection_->Close();
+    peer_connection_ = nullptr;
+  }
 }
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
@@ -436,7 +438,6 @@ void P2PPeerConnectionChannel::OnMessageStop() {
   }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
-  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "OnMessageSignal";
@@ -692,7 +693,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-      TriggerOnStopped();
+      ended_ = true;
       CleanLastPeerConnection();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionFailed:
@@ -920,8 +921,8 @@ void P2PPeerConnectionChannel::Stop(
   switch (session_state_) {
     case kSessionStateConnecting:
     case kSessionStateConnected:
-      ClosePeerConnection();
       SendStop(nullptr, nullptr);
+      ClosePeerConnection();
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
       break;
@@ -929,6 +930,7 @@ void P2PPeerConnectionChannel::Stop(
       SendStop(nullptr, nullptr);
       stop_send_needed_ = false;
       ChangeSessionState(kSessionStateReady);
+      TriggerOnStopped();
       break;
     case kSessionStateOffered:
       SendStop(nullptr, nullptr);
@@ -1160,6 +1162,7 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   if (peer_connection_) {
     peer_connection_->Close();
     peer_connection_ = nullptr;
+    TriggerOnStopped();
   }
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {
@@ -1243,8 +1246,8 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
       std::function<void()> on_success;
       std::tie(message, on_success, std::ignore)=*it;
       data_channel_->Send(CreateDataBuffer(*message));
-      if(on_success){
-        on_success();
+      if (on_success) {
+        event_queue_->PostTask([on_success]{ on_success(); });
       }
     }
     pending_messages_.clear();
