@@ -131,7 +131,6 @@ P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
     delete signaling_sender_;
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
-    peer_connection_ = nullptr;
   }
 }
 void P2PPeerConnectionChannel::Publish(
@@ -237,7 +236,7 @@ void P2PPeerConnectionChannel::Send(
       data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
     data_channel_->Send(CreateDataBuffer(data));
     if (on_success) {
-      on_success();
+      event_queue_->PostTask([on_success] { on_success(); });
     }
   } else {
     {
@@ -593,7 +592,7 @@ void P2PPeerConnectionChannel::OnSignalingChange(
         pending_remote_sdp_.reset();
         peer_connection_->SetRemoteDescription(std::move(new_desc), observer);
       } else {
-        CheckWaitedList();
+        event_queue_->PostTask([this] { DrainPendingStreams(); });
       }
       break;
     default:
@@ -673,7 +672,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
     case webrtc::PeerConnectionInterface::kIceConnectionConnected:
     case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
       ChangeSessionState(kSessionStateConnected);
-      CheckWaitedList();
+      //CheckWaitedList();
       // reset |last_disconnect_|.
       last_disconnect_ =
           std::chrono::time_point<std::chrono::system_clock>::max();
@@ -1107,9 +1106,12 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       negotiation_needed = true;
     }
     pending_publish_streams_.clear();
-    latest_local_stream_ = nullptr;
-    latest_publish_success_callback_ = nullptr;
-    latest_publish_failure_callback_ = nullptr;
+    if (latest_local_stream_)
+      latest_local_stream_ = nullptr;
+    if (latest_publish_success_callback_)
+      latest_publish_success_callback_ = nullptr;
+    if (latest_publish_failure_callback_)
+      latest_publish_failure_callback_ = nullptr;
   }
   // Then to unpublish the pending_unpublish_streams_ list.
   {
@@ -1161,9 +1163,8 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   if (peer_connection_) {
     peer_connection_->Close();
-    peer_connection_ = nullptr;
-    TriggerOnStopped();
   }
+  TriggerOnStopped();
 }
 void P2PPeerConnectionChannel::CheckWaitedList() {
   RTC_LOG(LS_INFO) << "CheckWaitedList";

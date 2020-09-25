@@ -385,8 +385,11 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
 void P2PClient::OnStopped(const std::string& remote_id) {
   const std::lock_guard<std::mutex> lock1(removed_pc_mutex_);
   const std::lock_guard<std::mutex> lock2(pc_channels_mutex_);
-  removed_pc_ = pc_channels_[remote_id];
-  pc_channels_.erase(remote_id);
+  auto it = pc_channels_.find(remote_id);
+  if (it != pc_channels_.end()) {
+    removed_pc_ = pc_channels_[remote_id];
+    pc_channels_.erase(remote_id);
+  }
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
