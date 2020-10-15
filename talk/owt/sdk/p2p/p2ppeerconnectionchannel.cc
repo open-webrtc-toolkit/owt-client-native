@@ -128,7 +128,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
                                nullptr) {}
 
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
-  if (signaling_sender) {
+  if (signaling_sender_) {
     SendStop(nullptr, nullptr);
     delete signaling_sender_;
   }
