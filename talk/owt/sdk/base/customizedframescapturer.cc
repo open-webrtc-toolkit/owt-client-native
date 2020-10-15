@@ -42,6 +42,8 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
       rtc::Thread::Current()->ProcessMessages(kForever);
       capturer_->CleanupGenerator();
+      // Clear capturer pointer so any lingerering POSTs back out.
+      capturer_ = nullptr;
     }
     rtc::CritScope cs(&crit_);
     finished_ = true;
@@ -120,10 +122,9 @@ void CustomizedFramesCapturer::DeRegisterCaptureDataCallback() {
 
 int32_t CustomizedFramesCapturer::StartCapture(
     const webrtc::VideoCaptureCapability& capability) {
+  rtc::CritScope lock(&capture_lock_);
   if (capture_started_)
     return 0;
-
-  rtc::CritScope lock(&capture_lock_);
   if (!frames_generator_thread_) {
     quit_ = false;
     frames_generator_thread_.reset(new CustomizedFramesThread(this, fps_));
@@ -139,13 +140,13 @@ int32_t CustomizedFramesCapturer::StartCapture(
 }
 
 int32_t CustomizedFramesCapturer::StopCapture() {
+  rtc::CritScope lock(&capture_lock_);
   if (frames_generator_thread_) {
     {
-      rtc::CritScope lock(&capture_lock_);
       quit_ = true;
+      frames_generator_thread_->Quit();
+      frames_generator_thread_.reset();
     }
-    frames_generator_thread_->Quit();
-    frames_generator_thread_.reset();
   }
   capture_started_ = false;
   return 0;

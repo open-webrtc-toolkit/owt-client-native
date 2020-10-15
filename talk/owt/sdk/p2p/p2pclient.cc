@@ -34,6 +34,9 @@ P2PClient::P2PClient(
       std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
           "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
 }
+P2PClient::~P2PClient() {
+  signaling_channel_->RemoveObserver(*this);
+}
 void P2PClient::Connect(
     const std::string& host,
     const std::string& token,
@@ -58,34 +61,24 @@ void P2PClient::Disconnect(
   signaling_channel_->Disconnect(on_success, on_failure);
 }
 void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
+  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) !=
       allowed_remote_ids_.end()) {
     RTC_LOG(LS_INFO) << "Adding duplicated remote id.";
     return;
   }
-  const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
   allowed_remote_ids_.push_back(target_id);
 }
 void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
                                       std::function<void()> on_success,
                                       std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
-      allowed_remote_ids_.end()) {
-    if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientRemoteNotExisted,
-                          "Trying to delete non-existed remote id."));
-        on_failure(std::move(e));
-      });
-    }
-    return;
-  }
   {
     const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
-    allowed_remote_ids_.erase(
-        std::remove(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id),
-        allowed_remote_ids_.end());
+    allowed_remote_ids_.erase(std::find_if(
+      allowed_remote_ids_.begin(), allowed_remote_ids_.end(),
+      [&](std::string& id)
+          -> bool { return id == target_id;}
+    ));
   }
   Stop(target_id, on_success, on_failure);
 }
@@ -95,18 +88,22 @@ void P2PClient::Publish(
     std::function<void(std::shared_ptr<P2PPublication>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   // Firstly check whether target_id is in the allowed_remote_ids_ list.
-  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
-      allowed_remote_ids_.end()) {
+  bool not_allowed = false;
+  {
+    const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+    not_allowed = (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
+      allowed_remote_ids_.end());
+  }
+  if (not_allowed) {
     if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientRemoteNotAllowed,
-                          "Publishing a stream cannot be done since the remote user is not allowed."));
-        on_failure(std::move(e));
-      });
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientRemoteNotAllowed,
+         "Publishing a stream cannot be done since the remote user is not allowed."));
+      on_failure(std::move(e));
     }
     return;
   }
+
   // Secondly use pcc to publish the stream.
   auto pcc = GetPeerConnectionChannel(target_id);
   std::weak_ptr<P2PClient> weak_this = shared_from_this();
@@ -117,7 +114,8 @@ void P2PClient::Publish(
     if (!that)
       return;
     std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id, stream));
-    that->event_queue_->PostTask([on_success, publication] {on_success(publication); });
+    on_success(publication);
+    //that->event_queue_->PostTask([on_success, publication] {on_success(publication); });
   }, on_failure);
 }
 void P2PClient::Send(
@@ -126,15 +124,18 @@ void P2PClient::Send(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   // Firstly check whether target_id is in the allowed_remote_ids_ list.
-  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
-      allowed_remote_ids_.end()) {
+  bool not_allowed = false;
+  {
+    const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+    not_allowed = (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
+      allowed_remote_ids_.end());
+  }
+  if (not_allowed) {
     if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientRemoteNotAllowed,
-                          "Sending a message cannot be done since the remote user is not allowed."));
-        on_failure(std::move(e));
-      });
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientRemoteNotAllowed,
+                        "Sending a message cannot be done since the remote user is not allowed."));
+      on_failure(std::move(e));
     }
     return;
   }
@@ -148,19 +149,15 @@ void P2PClient::Stop(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!IsPeerConnectionChannelCreated(target_id)) {
     if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-          new Exception(ExceptionType::kP2PClientInvalidState,
-            "Non-existed chat need not be stopped."));
-        on_failure(std::move(e));
-      });
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientInvalidState,
+          "Non-existed chat need not be stopped."));
+      on_failure(std::move(e));
     }
     return;
   }
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
-  const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
-  pc_channels_.erase(target_id);
 }
 void P2PClient::GetConnectionStats(
     const std::string& target_id,
@@ -168,12 +165,10 @@ void P2PClient::GetConnectionStats(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!IsPeerConnectionChannelCreated(target_id)) {
     if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-          new Exception(ExceptionType::kP2PClientInvalidState,
-            "Non-existed peer connection cannot provide stats."));
-        on_failure(std::move(e));
-      });
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientInvalidState,
+          "Non-existed peer connection cannot provide stats."));
+      on_failure(std::move(e));
     }
     return;
   }
@@ -187,12 +182,10 @@ void P2PClient::GetConnectionStats(
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   if (!IsPeerConnectionChannelCreated(target_id)) {
     if (on_failure) {
-      event_queue_->PostTask([on_failure] {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidState,
-                          "Non-existed peer connection cannot provide stats."));
-        on_failure(std::move(e));
-      });
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidState,
+                        "Non-existed peer connection cannot provide stats."));
+      on_failure(std::move(e));
     }
     return;
   }
@@ -210,8 +203,13 @@ void P2PClient::UpdateClientConfiguration(const P2PClientConfiguration& configur
 void P2PClient::OnSignalingMessage(const std::string& message,
                                    const std::string& remote_id) {
   // First to check whether remote_id is in the allowed_remote_ids_ list.
-  if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
-      allowed_remote_ids_.end()) {
+  bool not_allowed = false;
+  {
+    const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+    not_allowed = (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), remote_id) ==
+        allowed_remote_ids_.end());
+  }
+  if (not_allowed) {
     RTC_LOG(LS_WARNING) << "Chat cannot be setup since the remote user is not allowed.";
     return;
   }
@@ -320,6 +318,7 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
   auto pcc_it = pc_channels_.find(target_id);
   // if the channel has already been abandoned
   if (pcc_it != pc_channels_.end() && pcc_it->second->IsAbandoned()) {
+    removed_pc_ = pc_channels_[target_id];
     pc_channels_.erase(target_id);
     pcc_it = pc_channels_.end();
   }
@@ -383,13 +382,24 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
 // Does not remove final reference to channel until the next channel stops, so connections
 // are fully closed and all methods return before cleanup.
 void P2PClient::OnStopped(const std::string& remote_id) {
-  const std::lock_guard<std::mutex> lock1(removed_pc_mutex_);
-  const std::lock_guard<std::mutex> lock2(pc_channels_mutex_);
-  auto it = pc_channels_.find(remote_id);
-  if (it != pc_channels_.end()) {
-    removed_pc_ = pc_channels_[remote_id];
-    pc_channels_.erase(remote_id);
+  {
+    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+    auto it = pc_channels_.find(remote_id);
+    if (it != pc_channels_.end()) {
+      removed_pc_ = pc_channels_[remote_id];
+      pc_channels_.erase(remote_id);
+    }
   }
+  // Remove from allowed ids to prevent memory leak.
+  {
+    const std::lock_guard<std::mutex> remote_lock(remote_ids_mutex_);
+    allowed_remote_ids_.erase(std::find_if(
+      allowed_remote_ids_.begin(), allowed_remote_ids_.end(),
+      [&](std::string& id)
+          -> bool { return id == remote_id;}
+    ));
+  }
+  // remove from allowed ids to prevent memory leaks.
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(

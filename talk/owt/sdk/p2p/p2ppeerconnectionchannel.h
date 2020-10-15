@@ -39,7 +39,8 @@ class P2PPeerConnectionChannelObserver {
 // An instance of P2PPeerConnectionChannel manages a session for a specified
 // remote client.
 class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
-                                 public PeerConnectionChannel {
+                                 public PeerConnectionChannel,
+                                 public std::enable_shared_from_this<P2PPeerConnectionChannel> {
  public:
   explicit P2PPeerConnectionChannel(
       PeerConnectionChannelConfiguration configuration,
@@ -121,6 +122,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   virtual void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
+  virtual void OnRenegotiationNeeded() override;
   // DataChannelObserver
   virtual void OnDataChannelStateChange() override;
   virtual void OnDataChannelMessage(const webrtc::DataBuffer& buffer) override;
@@ -147,6 +149,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void SendStop(std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
+  // Returns a new reference, so lifetime of connection lasts at least until end of caller.
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetPeerConnectionRef();
   void ClosePeerConnection();  // Stop session and clean up.
   // Returns true if |pointer| is not nullptr. Otherwise, return false and
   // execute |on_failure|.
@@ -199,6 +203,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::unordered_map<std::string, std::function<void()>> publish_success_callbacks_;
   // Store remote SDP if it cannot be set currently.
   std::unique_ptr<webrtc::SessionDescriptionInterface> pending_remote_sdp_;
+  std::mutex last_disconnect_mutex_;
   std::chrono::time_point<std::chrono::system_clock>
       last_disconnect_;  // Last time |peer_connection_| changes its state to
                          // "disconnect".
@@ -211,6 +216,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       pending_messages_;
   // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
+  // Protects |ended_|
+  std::mutex ended_mutex_;
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
@@ -226,12 +233,11 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::mutex is_creating_offer_mutex_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
-  std::mutex failure_callbacks_mutex_;
-  std::unordered_map<std::string, std::function<void(std::unique_ptr<Exception>)>> failure_callbacks_;
   std::shared_ptr<LocalStream> latest_local_stream_;
   std::function<void()> latest_publish_success_callback_;
   std::function<void(std::unique_ptr<Exception>)> latest_publish_failure_callback_;
   bool ua_sent_;
+  std::mutex stop_send_mutex_;
   bool stop_send_needed_;
   bool remote_side_offline_;
   bool ended_;

@@ -5,10 +5,12 @@
 #define OWT_P2P_PUBLICATION_H_
 #include <vector>
 #include <mutex>
+#include <functional>
 #include "owt/base/commontypes.h"
 #include "owt/base/macros.h"
 #include "owt/base/mediaconstraints.h"
 #include "owt/base/publication.h"
+#include "owt/base/stream.h"
 namespace rtc {
 class TaskQueue;
 }
