@@ -318,7 +318,6 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
   auto pcc_it = pc_channels_.find(target_id);
   // if the channel has already been abandoned
   if (pcc_it != pc_channels_.end() && pcc_it->second->IsAbandoned()) {
-    removed_pc_ = pc_channels_[target_id];
     pc_channels_.erase(target_id);
     pcc_it = pc_channels_.end();
   }

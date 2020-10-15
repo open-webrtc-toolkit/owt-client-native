@@ -127,8 +127,10 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
                                nullptr) {}
 
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
-  if (signaling_sender_)
+  if (signaling_sender) {
+    SendStop(nullptr, nullptr);
     delete signaling_sender_;
+  }
   if (peer_connection_ != nullptr) {
     peer_connection_->Close();
   }
@@ -817,7 +819,10 @@ void P2PPeerConnectionChannel::TriggerOnStopped() {
 void P2PPeerConnectionChannel::CleanLastPeerConnection() {
   pending_remote_sdp_.reset();
   negotiation_needed_ = false;
-  last_disconnect_ = std::chrono::time_point<std::chrono::system_clock>::max();
+  {
+    std::lock_guard<std::mutex> lock(last_disconnect_mutex_);
+    last_disconnect_ = std::chrono::time_point<std::chrono::system_clock>::max();
+  }
 }
 void P2PPeerConnectionChannel::Unpublish(
     std::shared_ptr<LocalStream> stream,
