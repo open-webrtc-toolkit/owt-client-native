@@ -210,10 +210,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   int reconnect_timeout_;  // Unit: second.
   int message_seq_num_; // Message ID to be sent through data channel.
   // Messages need to be sent once data channel is ready.
-  std::vector<std::tuple<std::shared_ptr<std::string>,
-                         std::function<void()>,
-                         std::function<void(std::unique_ptr<Exception>)>>>
-      pending_messages_;
+  std::vector<std::string> pending_messages_;
   // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
   // Protects |ended_|

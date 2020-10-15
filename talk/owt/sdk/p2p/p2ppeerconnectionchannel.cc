@@ -106,6 +106,7 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       ended_(false) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
+  CreateDataChannel(kDataChannelLabelForTextMessage);
   if (event_queue) {
     event_queue_ = event_queue;
   } else {
@@ -253,24 +254,26 @@ void P2PPeerConnectionChannel::Send(
   content[kTextMessageIdKey] = std::to_string(message_id);
   content[kTextMessageDataKey] = message;
   std::string data = rtc::JsonValueToString(content);
-  if (data_channel_ != nullptr &&
-      data_channel_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
-    data_channel_->Send(CreateDataBuffer(data));
-    if (on_success) {
-      on_success();
+  rtc::scoped_refptr<webrtc::DataChannelInterface> temp_dc_;
+  {
+    std::lock_guard<std::mutex> lock(ended_mutex_);
+    if (!ended_) {
+      temp_dc_ = data_channel_;
     }
+  }
+  if (temp_dc_ && temp_dc_->state() == webrtc::DataChannelInterface::DataState::kOpen) {
+    temp_dc_->Send(CreateDataBuffer(data));
   } else {
     {
       std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-      std::shared_ptr<std::string> data_copy(
-          std::make_shared<std::string>(data));
-      pending_messages_.push_back(std::tuple<std::shared_ptr<std::string>,
-              std::function<void()>,
-              std::function<void(std::unique_ptr<Exception>)>>{data_copy, on_success, on_failure});
+      pending_messages_.push_back(data);
     }
-    if (data_channel_ == nullptr) // Otherwise, wait for data channel ready.
-      CreateDataChannel(kDataChannelLabelForTextMessage);
   }
+  if (on_success) {
+    on_success();
+  }
+  (void) on_failure; // UNUSED
+  DrainPendingMessages();
 }
 void P2PPeerConnectionChannel::ChangeSessionState(SessionState state) {
   RTC_LOG(LS_INFO) << "PeerConnectionChannel change session state : " << state;
@@ -414,21 +417,6 @@ void P2PPeerConnectionChannel::OnMessageUserAgent(Json::Value& ua) {
 }
 void P2PPeerConnectionChannel::OnMessageStop() {
   RTC_LOG(LS_INFO) << "Remote user stopped.";
-  {
-    std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-    for (auto it = pending_messages_.begin(); it != pending_messages_.end();
-         ++it) {
-      std::function<void(std::unique_ptr<Exception>)> on_failure;
-      std::tie(std::ignore, std::ignore, on_failure) = *it;
-      if (on_failure) {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "Stop message received."));
-        on_failure(std::move(e));
-      }
-    }
-    pending_messages_.clear();
-  }
   ClosePeerConnection();
   ChangeSessionState(kSessionStateReady);
 }
@@ -632,6 +620,9 @@ void P2PPeerConnectionChannel::OnDataChannel(
   // Currently only one data channel for one connection. If we are going to
   // support multiple data channels(one for text, one for large files), replace
   // |data_channel_| with a map.
+  if (data_channel_) {
+    data_channel_->UnregisterObserver();
+  }
   data_channel_ = data_channel;
   data_channel_->RegisterObserver(this);
 }
@@ -1133,6 +1124,7 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
       ended_ = true;
       temp_pc_ = peer_connection_;
       peer_connection_ = nullptr;
+      data_channel_ = nullptr;
     }
   }
   if (temp_pc_) {
@@ -1159,8 +1151,7 @@ void P2PPeerConnectionChannel::CheckWaitedList() {
 }
 
 void P2PPeerConnectionChannel::OnDataChannelStateChange() {
-  RTC_CHECK(data_channel_);
-  if (data_channel_->state() ==
+  if (data_channel_ && data_channel_->state() ==
       webrtc::DataChannelInterface::DataState::kOpen) {
     DrainPendingMessages();
   }
@@ -1218,22 +1209,27 @@ webrtc::DataBuffer P2PPeerConnectionChannel::CreateDataBuffer(
   return data_buffer;
 }
 void P2PPeerConnectionChannel::DrainPendingMessages() {
-  RTC_LOG(LS_INFO) << "Draining pending messages. Message queue size: "
-                   << pending_messages_.size();
-  RTC_CHECK(data_channel_);
+  std::vector<std::string> messages_snapshot;
+  rtc::scoped_refptr<webrtc::DataChannelInterface> temp_dc_;
   {
+    std::lock_guard<std::mutex> lock(ended_mutex_);
+    if (!ended_) {
+      temp_dc_ = data_channel_;
+    }
+  }
+  if (temp_dc_) {
     std::lock_guard<std::mutex> lock(pending_messages_mutex_);
-    for (auto it = pending_messages_.begin(); it != pending_messages_.end();
-         ++it) {
-      std::shared_ptr<std::string> message;
-      std::function<void()> on_success;
-      std::tie(message, on_success, std::ignore)=*it;
-      data_channel_->Send(CreateDataBuffer(*message));
-      if (on_success) {
-	on_success();
-      }
+    RTC_LOG(LS_INFO) << "Draining pending messages. Message queue size: "
+                   << pending_messages_.size();
+    for (const auto& m : pending_messages_) {
+      messages_snapshot.push_back(m);
     }
     pending_messages_.clear();
+  
+    // After releasing locks, safe to call Send
+    for (const auto& msg : messages_snapshot) {
+      temp_dc_->Send(CreateDataBuffer(msg));
+    }
   }
 }
 Json::Value P2PPeerConnectionChannel::UaInfo() {
