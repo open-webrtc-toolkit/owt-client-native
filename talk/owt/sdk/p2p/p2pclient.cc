@@ -381,24 +381,25 @@ void P2PClient::OnMessageReceived(const std::string& remote_id,
 // Does not remove final reference to channel until the next channel stops, so connections
 // are fully closed and all methods return before cleanup.
 void P2PClient::OnStopped(const std::string& remote_id) {
-  {
-    const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
-    auto it = pc_channels_.find(remote_id);
-    if (it != pc_channels_.end()) {
-      removed_pc_ = pc_channels_[remote_id];
-      pc_channels_.erase(remote_id);
+  event_queue_->PostTask([this, remote_id] {
+    {
+      const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
+      auto it = pc_channels_.find(remote_id);
+      if (it != pc_channels_.end()) {
+        removed_pc_ = pc_channels_[remote_id];
+        pc_channels_.erase(remote_id);
+      }
     }
-  }
-  // Remove from allowed ids to prevent memory leak.
-  {
-    const std::lock_guard<std::mutex> remote_lock(remote_ids_mutex_);
-    allowed_remote_ids_.erase(std::find_if(
-      allowed_remote_ids_.begin(), allowed_remote_ids_.end(),
-      [&](std::string& id)
-          -> bool { return id == remote_id;}
-    ));
-  }
-  // remove from allowed ids to prevent memory leaks.
+    // Remove from allowed ids to prevent memory leak.
+    {
+      const std::lock_guard<std::mutex> remote_lock(remote_ids_mutex_);
+      allowed_remote_ids_.erase(std::find_if(
+        allowed_remote_ids_.begin(), allowed_remote_ids_.end(),
+        [&](std::string& id)
+            -> bool { return id == remote_id;}
+      ));
+    }
+  });
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
