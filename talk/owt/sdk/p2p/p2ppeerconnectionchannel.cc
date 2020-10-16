@@ -1118,11 +1118,13 @@ void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   // Reference to peer connection  that outlives the scope of the locks.
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_;
+  rtc::scoped_refptr<webrtc::DataChannelInterface> temp_dc_;
   {
     std::lock_guard<std::mutex> lock(ended_mutex_);
     if (!ended_) {
       ended_ = true;
       temp_pc_ = peer_connection_;
+      temp_dc_ = data_channel_;
       peer_connection_ = nullptr;
       data_channel_ = nullptr;
     }
