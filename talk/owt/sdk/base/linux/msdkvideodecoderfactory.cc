@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include <iostream>
+//
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
@@ -31,8 +31,6 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
  
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) ||
       absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-      //return MSDKVideoDecoder::CreateVideoDecoder(format);
-      std::cout<<"MSDKVideoDecoderFactory::CreateVideoDecoder"<<std::endl;
       return (std::unique_ptr<webrtc::VideoDecoder>)new MsdkVideoDecoder();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     return webrtc::VP9Decoder::Create();
@@ -60,10 +58,6 @@ std::vector<webrtc::SdpVideoFormat> MSDKVideoDecoderFactory::GetSupportedFormats
 #endif
   return supported_codecs;
 }
-//void MSDKVideoDecoderFactory::DestroyVideoDecoder(
-//    webrtc::VideoDecoder* decoder) {
-//  delete decoder;
-//}
 
 }  // namespace base
 }  // namespace owt

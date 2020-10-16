@@ -1,19 +1,15 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
-#include "webrtc/rtc_base/logging.h"
-//#include "webrtc/rtc_base/refcountedobject.h"
-
-#include "msdkvideobase.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
-//#include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "talk/owt/sdk/base/linux/msdkvideodecoder.h"
 #include "webrtc/api/scoped_refptr.h"
-
+#include "webrtc/rtc_base/logging.h"
 
 #include "msdkcommon.h"
+#include "msdkvideobase.h"
 #include "msdkvideodecoder.h"
 #include "vaapi_allocator.h"
 #include "xwindownativeframe.h"
@@ -22,45 +18,35 @@
 #include <iostream>
 #include <fstream>
 #include <sys/time.h>
-//extern void AddTraceEvent(
-//    char *eventname,
-//    char *eventinfo,
-//    int frameno);
+
 using namespace std;
+
 namespace owt {
 namespace base {
 
-
-static mfxU16 msdk_atomic_add16(volatile mfxU16 *mem, mfxU16 val)
-{
-    asm volatile ("lock; xaddw %0,%1"
-                  : "=r" (val), "=m" (*mem)
-                  : "0" (val), "m" (*mem)
-                  : "memory", "cc");
-    return val;
+static mfxU16 msdk_atomic_add16(volatile mfxU16 *mem, mfxU16 val) {
+  asm volatile ("lock; xaddw %0,%1"
+                : "=r" (val), "=m" (*mem)
+                : "0" (val), "m" (*mem)
+                : "memory", "cc");
+  return val;
 }
 
 
-mfxU16 msdk_atomic_inc16(volatile mfxU16 *pVariable)
-{
-    return msdk_atomic_add16(pVariable, 1) + 1;
+mfxU16 msdk_atomic_inc16(volatile mfxU16 *pVariable) {
+  return msdk_atomic_add16(pVariable, 1) + 1;
 }
 
 /* Thread-safe 16-bit variable decrementing */
-mfxU16 msdk_atomic_dec16(volatile mfxU16 *pVariable)
-{
-    return msdk_atomic_add16(pVariable, (mfxU16)-1) + 1;
+mfxU16 msdk_atomic_dec16(volatile mfxU16 *pVariable) {
+  return msdk_atomic_add16(pVariable, (mfxU16)-1) + 1;
 }
 
-
-void ReturnBuffer(void * data, unsigned int nIndex)
-{
-   //if(nIndex < allocate_response_.NumFrameActual)
-     MsdkVideoDecoder *pMsdkVideoDec = (MsdkVideoDecoder *) data;
-     //std::cout<<" webrtc: data="<<data <<" nIndex="<< nIndex << " render_lock="<<pMsdkVideoDec->pmsdkDecSurfaces[nIndex].render_lock<< std::endl;
-     msdk_atomic_dec16(&( pMsdkVideoDec->pmsdkDecSurfaces[nIndex].render_lock));
-     //std::cout<<" webrtc: data="<<data <<" nIndex="<< nIndex << " render_lock="<<pMsdkVideoDec->pmsdkDecSurfaces[nIndex].render_lock<< std::endl;
+void ReturnBuffer(void * data, unsigned int nIndex) {
+  MsdkVideoDecoder *pMsdkVideoDec = (MsdkVideoDecoder *) data;
+  msdk_atomic_dec16(&( pMsdkVideoDec->pmsdkDecSurfaces[nIndex].render_lock));
 }
+
 MsdkVideoDecoder::MsdkVideoDecoder()
     : inited_(false),
       frame_allocator_(nullptr),
@@ -68,24 +54,22 @@ MsdkVideoDecoder::MsdkVideoDecoder()
       input_surfaces_(nullptr),
       video_param_extracted_(false),
       bit_stream_offset_(0),
-      decoder_session_(nullptr),
-      decoder_thread_(new rtc::Thread(rtc::SocketServer::CreateDefault())),
-      decoder_(nullptr),
-      callback_(nullptr),
       search_start(0),
-      pmsdkDecSurfaces(nullptr) {
+      decoder_thread_(new rtc::Thread(rtc::SocketServer::CreateDefault())),
+      decoder_session_(nullptr),
+      decoder_(nullptr),
+      callback_(nullptr) {
+  pmsdkDecSurfaces = nullptr,
   video_parameter_.reset(new mfxVideoParam);
   memset(video_parameter_.get(), 0, sizeof(mfxVideoParam));
   memset(&allocate_response_, 0, sizeof(mfxFrameAllocResponse));
-  decoder_thread_->SetName("H264MsdkDecoderThread", nullptr);
+  decoder_thread_->SetName("MsdkDecoderThread", nullptr);
   RTC_CHECK(decoder_thread_->Start())
       << "Failed to start H264 MSDK decoder thread";
 }
 
 MsdkVideoDecoder::~MsdkVideoDecoder() {
-
-  std::cout<<"***************** Release MSDK Video Decoder *************************"<<std::endl;
-   if (decoder_) {
+  if (decoder_) {
     decoder_->Close();
     delete decoder_;
     decoder_ = nullptr;
@@ -118,9 +102,7 @@ MsdkVideoDecoder::~MsdkVideoDecoder() {
 
 int32_t MsdkVideoDecoder::InitDecode(const webrtc::VideoCodec* codec_settings,
                                      int32_t number_of_cores) {
-  RTC_LOG(LS_INFO) << "InitDecode enter";
   if (codec_settings == nullptr) {
-    RTC_LOG(LS_ERROR) << "NULL codec settings";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -137,10 +119,9 @@ int32_t MsdkVideoDecoder::InitDecode(const webrtc::VideoCodec* codec_settings,
 }
 
 int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
-  RTC_LOG(LS_INFO) << "InitDecodeOnDecoderThread() begins";
   RTC_CHECK(decoder_thread_.get() ==
             rtc::ThreadManager::Instance()->CurrentThread())
-      << "H264 MSDK decoder is running on wrong thread!";
+      << "MSDK decoder is running on wrong thread!";
 
   // Set video_param_extracted_ flag to false to make sure the delayed
   // DecoderHeader call will happen in Decode() after initialization here.
@@ -154,20 +135,18 @@ int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-  RTC_LOG(LS_INFO) << "msdk_session->createSession called";
     decoder_session_ = msdk_session->createSession();
     if (!decoder_session_) {
       RTC_LOG(LS_ERROR) << "Failed to create a new MSDK video session.";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-  RTC_LOG(LS_INFO) << "msdk_session->createFraemAcllocator";
     frame_allocator_ = msdk_session->createFrameAllocator();
     if (!frame_allocator_) {
       RTC_LOG(LS_ERROR) << "Failed to create frame allocator.";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-  RTC_LOG(LS_INFO) << "msdk_session->SetFrameAllocator";
+
     sts = decoder_session_->SetFrameAllocator(frame_allocator_.get());
     if (sts != MFX_ERR_NONE) {
       RTC_LOG(LS_ERROR)
@@ -175,7 +154,6 @@ int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-  RTC_LOG(LS_INFO) << "msdk_session->new a decoder";
     decoder_ = new MFXVideoDECODE(*decoder_session_);
   }
 
@@ -184,13 +162,11 @@ int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-    RTC_LOG(LS_ERROR) << "create MSDK H264 decoder success.";
   bit_stream_.reset(new mfxBitstream());
   memset((void*)bit_stream_.get(), 0, sizeof(mfxBitstream));
   bit_stream_->Data = new mfxU8[MSDK_BS_INIT_SIZE];
   bit_stream_->MaxLength = MSDK_BS_INIT_SIZE;
 
-    RTC_LOG(LS_ERROR) << "Run the initialization of MSDK h26e decoder.";
   // Run the initialization of MSDK H264 decoder.
   if (InitVideoDecoder() == WEBRTC_VIDEO_CODEC_ERROR) {
     RTC_LOG(LS_ERROR) << "Init MSDK H264 decoder failed.";
@@ -200,13 +176,10 @@ int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
   if (codec_settings_.codecType == webrtc::VideoCodecType::kVideoCodecH264) {
     video_parameter_->mfx.CodecId = MFX_CODEC_AVC;
 
-    RTC_LOG(LS_ERROR) << "CodecType = 264.";
   } else if (codec_settings_.codecType == webrtc::kVideoCodecH265) {
     video_parameter_->mfx.CodecId = MFX_CODEC_HEVC;
-    RTC_LOG(LS_ERROR) << "CodecType = 265.";
   }
 
-    RTC_LOG(LS_ERROR) << "Initialize Decoder Success.";
   inited_ = true;
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -214,17 +187,12 @@ int32_t MsdkVideoDecoder::InitDecodeOnDecoderThread() {
 int32_t MsdkVideoDecoder::InitVideoDecoder() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
-static unsigned int gFrameNo = 0;
+
 int32_t MsdkVideoDecoder::Decode(
     const webrtc::EncodedImage& input_image,
     bool missing_frames,
-  //  const webrtc::CodecSpecificInfo* codec_specific_info,
     int64_t render_time_ms) {
 
-
-//	std::cout<< "Frame: Enter" << gFrameNo << " timestamp:"<< input_image.Timestamp() << std::endl;
-
-  RTC_LOG(LS_ERROR) << "Start to do decode.";
   if (!inited_) {
     RTC_LOG(LS_WARNING) << "Decoder needs to be initialized first.";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -273,7 +241,6 @@ int32_t MsdkVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
-      //allocate_response_.NumFrameActual = 10;
       // Allocate both the input and output surfaces.
       input_surfaces_ = new mfxFrameSurface1[allocate_response_.NumFrameActual];
       if (nullptr == input_surfaces_) {
@@ -288,10 +255,7 @@ int32_t MsdkVideoDecoder::Decode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
       for (int i = 0; i < allocate_response_.NumFrameActual; i++) {
-
         memset(&(input_surfaces_[i]), 0, sizeof(mfxFrameSurface1));
-        // to use the allocate_request_.Info or
-        // video_parameter_->mfx.FrameInfo??
         MSDK_MEMCPY_VAR(input_surfaces_[i].Info,
                         &(video_parameter_->mfx.FrameInfo),
                         sizeof(mfxFrameInfo));
@@ -315,44 +279,36 @@ int32_t MsdkVideoDecoder::Decode(
     }
   }
 
-   RTC_LOG(LS_ERROR) << "Start to do decode 1.";
   mfxSyncPoint syncp;
   mfxFrameSurface1* pOutputSurface = nullptr;
   mfxFrameSurface1* moreFreeSurf = nullptr;
-  // If we get video param changed, that means we need to continue with
-  // decoding.
-    gFrameNo ++;
-    //std::cout<<"decode actually assigned surfaces:"<<allocate_response_.NumFrameActual<<std::endl;
-  //  AddTraceEvent("Decode","start", gFrameNo);
+
+  frame_num++;
+
   while (true) {
-  more_surface:
+more_surface:
     mfxU16 moreIdx =
         DecGetFreeSurface2(pmsdkDecSurfaces, allocate_response_.NumFrameActual);
     if (moreIdx != MSDK_INVALID_SURF_IDX) {
       moreFreeSurf = &input_surfaces_[moreIdx];
     } else {
-	    std::cout<<"No surface available for decoding"<<std::endl;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-  retry:
-    //std::cout<<"  Call DecodeFrameAsync" << " Video len:" << bit_stream_->DataLength << " index="<<moreIdx<< std::endl;
+retry:
     bit_stream_offset_ = bit_stream_->DataOffset;
-
     if(bit_stream_->DataLength <=0 ){
       sts = MFX_ERR_MORE_DATA;
     }else{
-    
-    sts = decoder_->DecodeFrameAsync(bit_stream_.get(), moreFreeSurf,
+      sts = decoder_->DecodeFrameAsync(bit_stream_.get(), moreFreeSurf,
                                      &pOutputSurface, &syncp);
-   }
+    }
     // Get the output frame from the output surface
     if (sts == MFX_ERR_NONE && syncp != nullptr) {
       sts = decoder_session_->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
         vaapiMemId* memId = (vaapiMemId*)(pOutputSurface->Data.MemId);
         if (!memId) {
-		std::cout<<"Failed to get the memory ID of output surface."<<std::endl;
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
         VADisplay dpy = (MsdkVideoSession::get())->GetVADisplay();
@@ -375,23 +331,18 @@ int32_t MsdkVideoDecoder::Decode(
           xwindow_context->surface_  = *memId->m_surface;
           xwindow_context->width_    = pOutputSurface->Info.CropW;
           xwindow_context->height_   = pOutputSurface->Info.CropH;
-          xwindow_context->frameno   = gFrameNo;
+          xwindow_context->frameno   = frame_num;
           xwindow_context->bufferid  = bufid;
 	  xwindow_context->data      = this; 
           xwindow_context->pfnReturnBuffer = reinterpret_cast<void *>(ReturnBuffer);
          
-          //std::cout<<"display:"<<xwindow_context->display_<< " surface:"<<xwindow_context->surface_<<" width"<<xwindow_context->width_ <<" bufferid:"<< xwindow_context->bufferid << " data:"<<xwindow_context->data << " returnbuffer"<<xwindow_context->pfnReturnBuffer<<std::endl;
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
                   (void*)xwindow_context, pOutputSurface->Info.CropW,
                   pOutputSurface->Info.CropH);
           webrtc::VideoFrame decoded_frame(buffer, input_image.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);
-	  struct timeval tv;
-	  gettimeofday(&tv, NULL);
-	 // std::cout<< "Dec Frame:" << gFrameNo << " timestamp:"<< tv.tv_sec*1000 + tv.tv_usec/1000 << std::endl;
           decoded_frame.set_ntp_time_ms(input_image.ntp_time_ms_);
-	  //AddTraceEvent("Decode","end", gFrameNo);
           callback_->Decoded(decoded_frame);
         }
       }
@@ -405,11 +356,8 @@ int32_t MsdkVideoDecoder::Decode(
     } else if (MFX_ERR_MORE_SURFACE == sts) {
       goto more_surface;
     } else if (MFX_ERR_NONE != sts) {
-      // TODO: Restart the decoder
-      // InitDecodeOnDecoderThread();
       bit_stream_->DataLength += bit_stream_->DataOffset - bit_stream_offset_;
       bit_stream_->DataOffset = bit_stream_offset_;
-      printf("failed 1 sts=%d\r\n",sts);
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
@@ -461,10 +409,8 @@ mfxStatus MsdkVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream,
 void MsdkVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream,
                                            const uint8_t* data,
                                            size_t len) {
-  RTC_LOG(LS_ERROR) << "ReadFromInputStream.";
-
   if (bit_stream_->MaxLength - bit_stream_->DataLength < len) {
-    // remaining BS size is not enough to hold current image, we enlarge it the
+    // Remaining BS size is not enough to hold current image, we enlarge it the
     // gap*2.
     mfxU32 newSize = static_cast<mfxU32>(
         bit_stream_->MaxLength > len ? bit_stream_->MaxLength * 2 : len * 2);
@@ -478,29 +424,18 @@ void MsdkVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream,
 
 void MsdkVideoDecoder::WipeMfxBitstream(mfxBitstream* pBitstream) {
   MSDK_CHECK_POINTER(pBitstream);
-
-  // free allocated memory
   MSDK_SAFE_DELETE_ARRAY(pBitstream->Data);
 }
 
-//void MsdkVideoDecoder::ReturnBuffer(unsigned int nIndex)
-//{
-//   if(nIndex < allocate_response_.NumFrameActual)
-//     msdk_atomic_dec16(&(pmsdkDecSurfaces[nIndex].render_lock));
-//}
 mfxU16 MsdkVideoDecoder::DecGetFreeSurface2(msdkFrameSurface2* pSurfacesPool,
                                            mfxU16 nPoolSize) {
   mfxU32 SleepInterval = 2;  // milliseconds
   mfxU16 idx = MSDK_INVALID_SURF_IDX;
-  RTC_LOG(LS_ERROR) << "DecGetFreeSurface.";
-  // wait if there's no free surface
   for (mfxU32 i = 0; i < MSDK_WAIT_INTERVAL; i += SleepInterval) {
     idx = DecGetFreeSurfaceIndex2(pSurfacesPool, nPoolSize);
-
     if (MSDK_INVALID_SURF_IDX != idx)
       break;
     else{
-      std::cout<<"not found surfaces"<<std::endl;
       MSDK_SLEEP(SleepInterval);
     }
   }
@@ -526,11 +461,8 @@ mfxU16 MsdkVideoDecoder::DecGetFreeSurface(mfxFrameSurface1* pSurfacesPool,
                                            mfxU16 nPoolSize) {
   mfxU32 SleepInterval = 10;  // milliseconds
   mfxU16 idx = MSDK_INVALID_SURF_IDX;
-  RTC_LOG(LS_ERROR) << "DecGetFreeSurface.";
-  // wait if there's no free surface
   for (mfxU32 i = 0; i < MSDK_WAIT_INTERVAL; i += SleepInterval) {
     idx = DecGetFreeSurfaceIndex(pSurfacesPool, nPoolSize);
-
     if (MSDK_INVALID_SURF_IDX != idx)
       break;
     else

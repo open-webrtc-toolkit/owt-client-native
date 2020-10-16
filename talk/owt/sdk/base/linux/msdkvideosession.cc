@@ -1,4 +1,4 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <va/va.h>
 #include <va/va_drm.h>
-#include <iostream>
 #include "msdkvideosession.h"
 #include "vaapi_allocator.h"
 #include "webrtc/rtc_base/logging.h"
@@ -19,8 +18,6 @@ std::mutex MsdkVideoSession::mutex_;
 
 MsdkVideoSession::MsdkVideoSession()
     : m_fd(-1), m_vaDisp(nullptr), m_mainSession(nullptr) {
-
-    std::cout<<"MsdkVideoSession::Construct called"<<std::endl;
 }
 
 bool MsdkVideoSession::init() {
@@ -41,9 +38,6 @@ bool MsdkVideoSession::init() {
 
       continue;
     }
-
-    std::cout<<"Open drm device: " << drm_device_paths[i] << std::endl;
-
     RTC_LOG(LS_INFO) << "Open drm device: " << drm_device_paths[i];
     break;
   }
@@ -108,12 +102,10 @@ MsdkVideoSession* MsdkVideoSession::get(void) {
     session = session_instance_.load(std::memory_order_relaxed);
 
     if (session == nullptr) {
-      RTC_LOG(LS_INFO) << "Instantiating Singleton.";
       session = new MsdkVideoSession();
 
       if (!session->init()) {
         RTC_LOG(LS_ERROR) << "Init Singleton failed.";
-
         delete session;
         session = nullptr;
       } else {
@@ -137,14 +129,12 @@ MFXVideoSession* MsdkVideoSession::createSession_internal(void) {
   MFXVideoSession* pSession = new MFXVideoSession;
   if (!pSession) {
     RTC_LOG(LS_ERROR) << "Create session failed.";
-
     return nullptr;
   }
 
   sts = pSession->Init(impl, &ver);
   if (sts != MFX_ERR_NONE) {
     RTC_LOG(LS_ERROR) << "Init session failed.";
-
     delete pSession;
     return nullptr;
   }
@@ -152,11 +142,9 @@ MFXVideoSession* MsdkVideoSession::createSession_internal(void) {
   sts = pSession->SetHandle((mfxHandleType)MFX_HANDLE_VA_DISPLAY, m_vaDisp);
   if (sts != MFX_ERR_NONE) {
     RTC_LOG(LS_ERROR) << "SetHandle failed.";
-
     delete pSession;
     return nullptr;
   }
-  RTC_LOG(LS_ERROR) << "createSession_internal succes.";
   return pSession;
 }
 
@@ -174,7 +162,6 @@ MFXVideoSession* MsdkVideoSession::createSession() {
     RTC_LOG(LS_ERROR) << "Join main session failed";
     return nullptr;
   }
-  RTC_LOG(LS_ERROR) << "createSession succes.";
   return pSession;
 }
 
@@ -184,14 +171,12 @@ void MsdkVideoSession::destroySession(MFXVideoSession* pSession) {
     pSession->Close();
     delete pSession;
   }
-  RTC_LOG(LS_ERROR) << "destroySession failed.";
 }
 
 std::shared_ptr<mfxFrameAllocator> MsdkVideoSession::createFrameAllocator() {
   mfxStatus sts = MFX_ERR_NONE;
   vaapiFrameAllocator* pAlloc = nullptr;
   struct vaapiAllocatorParams p;
-  RTC_LOG(LS_ERROR) << "createFrameAllocator called.";
 
   pAlloc = new vaapiFrameAllocator();
   p.m_dpy = m_vaDisp;
@@ -199,8 +184,6 @@ std::shared_ptr<mfxFrameAllocator> MsdkVideoSession::createFrameAllocator() {
   sts = pAlloc->Init(&p);
   if (sts != MFX_ERR_NONE) {
     RTC_LOG(LS_ERROR) << "Init frame allocator failed";
-
-   std::cout<<"Init frame allocator failed" << std::endl;
     return nullptr;
   }
 

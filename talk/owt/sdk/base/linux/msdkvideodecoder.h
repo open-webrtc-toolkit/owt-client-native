@@ -1,21 +1,16 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef OWT_BASE_LINUX_MSDKVIDEODECODER_H_
 #define OWT_BASE_LINUX_MSDKVIDEODECODER_H_
 
-// For decoder and encoder factory
-#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/api/video_codecs/sdp_video_format.h"
-//#include "webrtc/api/video_codecs/video_encoder_factory.h"
-//#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
-
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
-//#include "webrtc/rtc_base/criticalsection.h"
 #include "webrtc/rtc_base/thread.h"
 
 #include "displayutils.h"
@@ -23,12 +18,12 @@
 
 namespace owt {
 namespace base {
-typedef struct msdkFrameSurface2
-{
-    mfxFrameSurface1 * frame;
-//    msdk_tick submit;
-    mfxU16 render_lock;
-}msdkFrameSurface2;
+
+typedef struct msdkFrameSurface2 {
+  mfxFrameSurface1 * frame;
+  mfxU16 render_lock;
+} msdkFrameSurface2;
+
 class MsdkVideoDecoder : public webrtc::VideoDecoder {
  public:
   MsdkVideoDecoder();
@@ -37,11 +32,8 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores) override;
 
-  //static std::unique_ptr<MsdkVideoDecoder> Create(cricket::VideoCodec format);
-
   int32_t Decode(const webrtc::EncodedImage& inputImage,
                  bool missingFrames,
-               //  const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
                  int64_t renderTimeMs = -1) override;
 
 
@@ -50,8 +42,11 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
 
   int32_t Release() override;
 
-  const char* ImplementationName() const override { return "msdk"; }
- msdkFrameSurface2* pmsdkDecSurfaces;
+  const char* ImplementationName() const override {
+    return "Intel MediaSDK";
+  }
+
+  msdkFrameSurface2* pmsdkDecSurfaces;
  private:
   int32_t InitDecodeOnDecoderThread();
   int32_t InitVideoDecoder();
@@ -76,7 +71,6 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   std::unique_ptr<mfxBitstream> bit_stream_;
   mfxFrameAllocResponse allocate_response_;
   mfxFrameSurface1* input_surfaces_;
-  //msdkFrameSurface2* pmsdkDecSurfaces;
   mfxFrameAllocRequest allocate_request_;
 
   bool video_param_extracted_;
@@ -88,6 +82,7 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   MFXVideoDECODE* decoder_;
 
   webrtc::DecodedImageCallback* callback_;
+  unsigned int frame_num = 0;
 };
 
 }  // namespace base

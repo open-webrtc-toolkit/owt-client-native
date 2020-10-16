@@ -1,4 +1,4 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,20 +24,21 @@ MsdkVideoEncoder::MsdkVideoEncoder() :
     input_surfaces_(nullptr),
     frame_count_(0) {
   memset(&allocate_response_, 0, sizeof(mfxFrameAllocResponse));
-  encoder_thread_->SetName("H264MsdkEncoderThread", NULL);
-  RTC_CHECK(encoder_thread_->Start()) << "Failed to start encoder thread for H264 MSDK encoder";
+  encoder_thread_->SetName("MsdkEncoderThread", nullptr);
+  RTC_CHECK(encoder_thread_->Start())
+     << "Failed to start encoder thread for MSDK encoder";
 }
 
 MsdkVideoEncoder::~MsdkVideoEncoder() {
   if (encoder_) {
     encoder_->Close();
     delete encoder_;
-    encoder_ = NULL;
+    encoder_ = nullptr;
   }
 
   if (input_surfaces_) {
     delete[] input_surfaces_;
-    input_surfaces_ = NULL;
+    input_surfaces_ = nullptr;
   }
 
   if (frame_allocator_) {
@@ -120,7 +121,7 @@ int32_t MsdkVideoEncoder::Encode(const webrtc::VideoFrame& frame,
   if (MFX_FOURCC_NV12 != pInfo.FourCC && MFX_FOURCC_YV12 != pInfo.FourCC)
     return WEBRTC_VIDEO_CODEC_ERROR;
 
-  mfxU16 w, h, /*i,*/ pitch;
+  mfxU16 w, h, pitch;
   if (pInfo.CropH > 0 && pInfo.CropW > 0) {
       w = pInfo.CropW;
       h = pInfo.CropH;
@@ -150,7 +151,6 @@ int32_t MsdkVideoEncoder::Encode(const webrtc::VideoFrame& frame,
   if (MFX_ERR_NONE != sts)
     return WEBRTC_VIDEO_CODEC_ERROR;
 
-  // Preparation done. Go to encode.
   mfxEncodeCtrl ctrl;
   memset((void*)&ctrl, 0, sizeof(ctrl));
 
@@ -228,7 +228,6 @@ int32_t MsdkVideoEncoder::Encode(const webrtc::VideoFrame& frame,
   }
 
   if (scPositionsLength == 0) {
-    RTC_LOG(LS_ERROR) << "Start code is not found for H264 codec!";
     delete[] pbsData;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -243,7 +242,6 @@ int32_t MsdkVideoEncoder::Encode(const webrtc::VideoFrame& frame,
     header.fragmentationTimeDiff[i] = 0;
   }
 
-  // Pass the encoeded frame back to the pipeline
   const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: " << result.error;
@@ -339,10 +337,9 @@ int32_t MsdkVideoEncoder::InitEncodeOnEncoderThread(
     const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
     size_t max_payload_size) {
-  RTC_LOG(LS_INFO) << "InitEncodeOnEncoderThread() begins";
   RTC_CHECK(encoder_thread_.get() ==
             rtc::ThreadManager::Instance()->CurrentThread())
-      << "H264 MSDK encoder is running on wrong thread!";
+      << "MSDK encoder is running on wrong thread!";
 
   if (!inited_) {
     MsdkVideoSession* msdk_session = MsdkVideoSession::get();
@@ -380,7 +377,9 @@ int32_t MsdkVideoEncoder::InitEncodeOnEncoderThread(
     // Allocate request for encoder
     mfxFrameAllocRequest allocate_request;
     memset(&allocate_request, 0, sizeof(allocate_request));
-    allocate_request.Type = MFX_MEMTYPE_FROM_VPPIN | MFX_MEMTYPE_DXVA2_PROCESSOR_TARGET | MFX_MEMTYPE_EXTERNAL_FRAME;
+    allocate_request.Type = MFX_MEMTYPE_FROM_VPPIN |
+	    MFX_MEMTYPE_DXVA2_PROCESSOR_TARGET |
+	    MFX_MEMTYPE_EXTERNAL_FRAME;
 
     allocate_request.NumFrameMin         = 1;
     allocate_request.NumFrameSuggested   = 1;
@@ -444,27 +443,16 @@ int32_t MsdkVideoEncoder::InitEncodeParameter() {
 
   video_parameter_->mfx.CodecId         = MFX_CODEC_AVC;
   video_parameter_->mfx.CodecProfile    = MFX_PROFILE_AVC_BASELINE;
-  //video_parameter_->mfx.CodecLevel      = MFX_LEVEL_AVC_51;
   video_parameter_->mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
   video_parameter_->mfx.TargetKbps        = codec_settings_.maxBitrate; // Target Bitrate??
   video_parameter_->mfx.MaxKbps           = codec_settings_.maxBitrate;
   video_parameter_->mfx.RateControlMethod = MFX_RATECONTROL_VBR;
-  //video_parameter_->mfx.GopPicSize        = m_frameRate * 2; // Chunbo: keyFrameIntervalSeconds is 2 seconds?
   video_parameter_->mfx.NumSlice = 0;
   video_parameter_->mfx.FrameInfo.FrameRateExtN   = codec_settings_.maxFramerate;
   video_parameter_->mfx.FrameInfo.FrameRateExtD   = 1;
-  // H264ConvertFrameRate(
-  //     codec_settings_.maxFramerate > 30 ? 30 : codec_settings_.maxFramerate,
-  //     &m_mfxEncParams.mfx.FrameInfo.FrameRateExtN,
-  //     &m_mfxEncParams.mfx.FrameInfo.FrameRateExtD);
   video_parameter_->mfx.EncodedOrder = 0;
-  video_parameter_->IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
-
-  // frame info parameters
   video_parameter_->mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
   video_parameter_->mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  //video_parameter_->mfx.FrameInfo.BitDepthChroma = 8;
-  //video_parameter_->mfx.FrameInfo.BitDepthLuma = 8;
   video_parameter_->mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   video_parameter_->mfx.FrameInfo.CropX   = 0;
   video_parameter_->mfx.FrameInfo.CropY   = 0;
@@ -472,6 +460,7 @@ int32_t MsdkVideoEncoder::InitEncodeParameter() {
   video_parameter_->mfx.FrameInfo.CropH   = codec_settings_.height;
   video_parameter_->mfx.FrameInfo.Width   = ALIGN16(codec_settings_.width);
   video_parameter_->mfx.FrameInfo.Height  = ALIGN16(codec_settings_.height);
+  video_parameter_->IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
   video_parameter_->AsyncDepth = 4;
   video_parameter_->mfx.NumRefFrame = 1;
   video_parameter_->mfx.GopRefDist = 1;
@@ -480,12 +469,9 @@ int32_t MsdkVideoEncoder::InitEncodeParameter() {
   memset(coding_option_.get(), 0, sizeof(mfxExtCodingOption));
   coding_option_->Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
   coding_option_->Header.BufferSz = sizeof(*coding_option_);
-  //coding_option_->MaxDecFrameBuffering = m_mfxEncParams.mfx.NumRefFrame;
   coding_option_->AUDelimiter = MFX_CODINGOPTION_OFF;
-  //coding_option_->RecoveryPointSEI = MFX_CODINGOPTION_OFF;
   coding_option_->PicTimingSEI = MFX_CODINGOPTION_OFF;
   coding_option_->VuiNalHrdParameters = MFX_CODINGOPTION_OFF;
-  //coding_option_->VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
 
   coding_option_2_.reset(new mfxExtCodingOption2);
   memset(coding_option_2_.get(), 0, sizeof(mfxExtCodingOption2));
@@ -502,5 +488,5 @@ int32_t MsdkVideoEncoder::InitEncodeParameter() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-}
-}
+} // namespace base
+} // namespace owt

@@ -1,4 +1,4 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -66,4 +66,4 @@ class MsdkVideoSession {
 }  // namespace base
 }  // namespace owt
 
-#endif  // ICS_BASE_LINUX_MSDKVIDEOSESSION_H_
+#endif  // OWT_BASE_LINUX_MSDKVIDEOSESSION_H_

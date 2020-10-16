@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include <iostream>
+//
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 #endif
@@ -133,13 +133,18 @@ void PeerConnectionDependencyFactory::
   // Configure codec factories. MSDK factory will internally use built-in codecs
   // if hardware acceleration is not in place. For H.265/H.264, if hardware acceleration
   // is turned off at application level, negotiation will fail.
-  //if (encoded_frame_) {
-  //  encoder_factory.reset(new EncodedVideoEncoderFactory());
-  //} else if (render_hardware_acceleration_enabled_) {
-  //  encoder_factory.reset(new MSDKVideoEncoderFactory());
-  //} else {
+  if (encoded_frame_) {
+    encoder_factory.reset(new EncodedVideoEncoderFactory());
+  } else if (render_hardware_acceleration_enabled_) {
+#if defined(WEBRTC_LINUX)
+    // For Linux HW encoder pending verification.
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
-  //}
+#else
+    encoder_factory.reset(new MSDKVideoEncoderFactory());
+#endif
+  } else {
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+  }
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
@@ -150,20 +155,6 @@ void PeerConnectionDependencyFactory::
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
 
-#elif defined(WEBRTC_LINUX)
-  // MSDK support for Linux is not in place. Use default.
-  if (encoded_frame_) {
-    encoder_factory.reset(new EncodedVideoEncoderFactory());
-  } else {
-    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
-  }
-
-  if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
-    decoder_factory.reset(new CustomizedVideoDecoderFactory(
-        GlobalConfiguration::GetCustomizedVideoDecoder()));
-  } else {
-    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
-  }
 #else
 #error "Unsupported platform."
 #endif

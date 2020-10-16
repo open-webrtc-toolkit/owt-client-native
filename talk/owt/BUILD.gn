@@ -135,6 +135,7 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/media:rtc_audio_video",
     "//third_party/webrtc/media:rtc_media_base",
     "//third_party/webrtc/modules/audio_device",
+    "//third_party/webrtc/modules/audio_device:audio_device_impl",
     "//third_party/webrtc/modules/audio_processing",
     "//third_party/webrtc/modules/audio_processing:api",
     "//third_party/webrtc/modules/desktop_capture:desktop_capture",
@@ -153,12 +154,18 @@ static_library("owt_sdk_base") {
     "//third_party",
   ]
 
+  defines = [ "USE_BUILTIN_SW_CODECS" ]
+
   if (owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
   }
 
-  defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
-  defines += [ "USE_BUILTIN_SW_CODECS" ]
+  if (rtc_include_internal_audio_device) {
+    defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
+  }
+  if (rtc_use_x11) {
+    defines += [ "WEBRTC_USE_X11" ]
+  }
   if (!rtc_use_h265) {
     defines += [ "DISABLE_H265" ]
   } else {
@@ -205,7 +212,7 @@ static_library("owt_sdk_base") {
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
   }
   if (is_linux) {
-    #if (woogeen_msdk_header_root != "") {
+    if (owt_msdk_header_root != "") {
       sources += [
         "sdk/base/linux/displayutils.cc",
         "sdk/base/linux/displayutils.h",
@@ -217,17 +224,13 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/msdkvideosession.h",
         "sdk/base/linux/msdkvideodecoderfactory.cc",
         "sdk/base/linux/msdkvideodecoderfactory.h",
-        #"sdk/base/linux/msdkvideoencoderfactory.cc",
-        #"sdk/base/linux/msdkvideoencoderfactory.h",
         "sdk/base/linux/msdkvideodecoder.cc",
         "sdk/base/linux/msdkvideodecoder.h",
-        #"sdk/base/linux/msdkvideoencoder.cc",
-        #"sdk/base/linux/msdkvideoencoder.h",
         "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/linux/videorenderlinux.cc",
         "sdk/base/linux/videorenderlinux.h",
       ]
-    #}
+    }
   }
   if (!is_ios) {
     sources += [
@@ -237,7 +240,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-  if ((is_win || is_linux) && include_internal_audio_device) {
+  if ((is_win || is_linux)) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
       "sdk/base/customizedaudiocapturer.h",

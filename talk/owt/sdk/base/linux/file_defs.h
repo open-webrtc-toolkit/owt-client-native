@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef __FILE_DEFS_H__
-#define __FILE_DEFS_H__
+#ifndef OWT_BASE_LINUX_FILE_DEFS_H_
+#define OWT_BASE_LINUX__FILE_DEFS_H_
 
 #include "mfx/mfxdefs.h"
 
@@ -15,4 +15,4 @@
 
 #define msdk_fgets  fgets
 
-#endif // #ifndef __FILE_DEFS_H__
+#endif // OWT_BASE_LINUX_FILE_DEFS_H_

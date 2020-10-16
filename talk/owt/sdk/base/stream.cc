@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include <iostream>
+//
 #include "modules/video_capture/video_capture.h"
 #include "pc/video_track_source.h"
 #include "talk/owt/sdk/base/vcmcapturer.h"
@@ -93,16 +93,26 @@ Stream::Stream(const std::string& id)
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
       ended_(false),
       id_(id) {}
-#else
+#elif defined(WEBRTC_LINUX)
 Stream::Stream()
-    : media_stream_(nullptr), renderer_impl_(nullptr), va_renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr),   va_renderer_impl_(nullptr),source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr),  va_renderer_impl_(nullptr),audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
+#else
+Stream::Stream()
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
+Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
+    : media_stream_(nullptr), source_(source) {
+  MediaStream(media_stream);
+}
+Stream::Stream(const std::string& id)
+    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
+
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
 }
@@ -158,7 +168,31 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
   }
 }
 
-#if defined(WEBRTC_WIN) 
+void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
+  if (media_stream_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
+    return;
+  }
+  auto audio_tracks = media_stream_->GetAudioTracks();
+  if (audio_tracks.size() == 0) {
+    RTC_LOG(LS_ERROR) << "Attach failed because of no audio tracks.";
+    return;
+  } else if (audio_tracks.size() > 1) {
+    RTC_LOG(LS_WARNING)
+        << "There are more than one audio tracks, the first one "
+           "will be attachecd to renderer.";
+  }
+  WebrtcAudioRendererImpl* old_renderer =
+      audio_renderer_impl_ ? audio_renderer_impl_ : nullptr;
+  audio_renderer_impl_ = new WebrtcAudioRendererImpl(player);
+  audio_tracks[0]->RemoveSink(old_renderer);
+  audio_tracks[0]->AddSink(audio_renderer_impl_);
+  if (old_renderer)
+    delete old_renderer;
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+
+#if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
@@ -175,32 +209,8 @@ void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   }
   WebrtcVideoRendererImpl* old_renderer =
       renderer_impl_ ? renderer_impl_ : nullptr;
-  renderer_impl_ = new WebrtcVideoRendererVaImpl(renderer);
+  renderer_impl_ = new WebrtcVideoRendererImpl(renderer);
   video_tracks[0]->AddOrUpdateSink(renderer_impl_, rtc::VideoSinkWants());
-  if (old_renderer)
-    delete old_renderer;
-  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
-}
-
-void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
-  if (media_stream_ == nullptr) {
-    RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
-    return;
-  }
-  auto audio_tracks = media_stream_->GetAudioTracks();
-  if (audio_tracks.size() == 0) {
-    RTC_LOG(LS_ERROR) << "Attach failed because of no audio tracks.";
-    return;
-  } else if (audio_tracks.size() > 1) {
-    RTC_LOG(LS_WARNING)
-        << "There are more than one audio tracks, the first one "
-           "will be attachecd to renderer.";
-  }
-  WebrtcAudioRendererImpl* old_renderer =
-      audio_renderer_impl_ ? audio_renderer_impl_ : nullptr;
-  audio_renderer_impl_ = new WebrtcAudioRendererImpl(player);
-  audio_tracks[0]->RemoveSink(old_renderer);
-  audio_tracks[0]->AddSink(audio_renderer_impl_);
   if (old_renderer)
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
@@ -209,11 +219,8 @@ void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
 
 #if defined(WEBRTC_LINUX)
 void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
-
-  std::cout<<"AttachVideoRender called "<<std::endl;
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
-    std::cout<<" cannot attach an audio only stream to a renderer "<<std::endl;
     return;
   }
   auto video_tracks = media_stream_->GetVideoTracks();
@@ -226,7 +233,6 @@ void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
            "will be attachecd to renderer.";
   }
 
-  std::cout<<"AttachVideoRender: try to create a new webRTCvideoRender VAAPI IMPL "<<std::endl;
   WebrtcVideoRendererVaImpl* old_renderer =
       va_renderer_impl_ ? va_renderer_impl_ : nullptr;
   va_renderer_impl_ = new WebrtcVideoRendererVaImpl(renderer);
@@ -236,30 +242,8 @@ void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
 }
 
-void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
-  if (media_stream_ == nullptr) {
-    RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
-    return;
-  }
-  auto audio_tracks = media_stream_->GetAudioTracks();
-  if (audio_tracks.size() == 0) {
-    RTC_LOG(LS_ERROR) << "Attach failed because of no audio tracks.";
-    return;
-  } else if (audio_tracks.size() > 1) {
-    RTC_LOG(LS_WARNING)
-        << "There are more than one audio tracks, the first one "
-           "will be attachecd to renderer.";
-  }
-  WebrtcAudioRendererImpl* old_renderer =
-      audio_renderer_impl_ ? audio_renderer_impl_ : nullptr;
-  audio_renderer_impl_ = new WebrtcAudioRendererImpl(player);
-  audio_tracks[0]->RemoveSink(old_renderer);
-  audio_tracks[0]->AddSink(audio_renderer_impl_);
-  if (old_renderer)
-    delete old_renderer;
-  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
-}
 #endif
+
 #if defined(WEBRTC_WIN)
 void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
   if (media_stream_ == nullptr) {
