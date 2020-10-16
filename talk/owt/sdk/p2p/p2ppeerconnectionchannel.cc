@@ -799,12 +799,10 @@ bool P2PPeerConnectionChannel::CheckNullPointer(
 }
 
 void P2PPeerConnectionChannel::TriggerOnStopped() {
-  event_queue_->PostTask([this]() {
-    for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
-         observers_.begin(); it != observers_.end(); it++) {
-      (*it)->OnStopped(remote_id_);
-    }
-  });
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
+       observers_.begin(); it != observers_.end(); it++) {
+    (*it)->OnStopped(remote_id_);
+  }
 }
 
 void P2PPeerConnectionChannel::CleanLastPeerConnection() {
