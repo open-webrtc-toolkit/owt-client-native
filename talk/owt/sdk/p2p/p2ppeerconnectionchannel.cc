@@ -1002,12 +1002,12 @@ bool P2PPeerConnectionChannel::IsStale() {
     auto signaling_state = temp_pc_->signaling_state();
     is_stale = (age > kStaleThresholdSecs) &&
                ((ice_state == webrtc::PeerConnectionInterface::kIceConnectionNew)
-                || (ice_state == webrtc::PeerConnectionInterface::kIceConnectionFailed) &&
-                   (signaling_state == webrtc::PeerConnectionInterface::kHaveLocalOffer));
+                || ((ice_state == webrtc::PeerConnectionInterface::kIceConnectionFailed) &&
+                   (signaling_state == webrtc::PeerConnectionInterface::kHaveLocalOffer)));
     std::cout << "(" << age <<  " > " << kStaleThresholdSecs << ") && (("
-              << ice_state << " == " << webrtc::PeerConnectionInterface::kIceConnectionNew << ") || ("
+              << ice_state << " == " << webrtc::PeerConnectionInterface::kIceConnectionNew << ") || (("
               << ice_state << " == " << webrtc::PeerConnectionInterface::kIceConnectionFailed << ") && ("
-              << signaling_state << " == " << webrtc::PeerConnectionInterface::kHaveLocalOffer << ")) = "
+              << signaling_state << " == " << webrtc::PeerConnectionInterface::kHaveLocalOffer << "))) = "
               << is_stale
               << std::endl;
   } else {
