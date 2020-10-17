@@ -211,6 +211,7 @@ class P2PClient final
   void SetLocalId(const std::string& local_id);
   /** @endcond */
   void UpdateClientConfiguration(const P2PClientConfiguration& configuration);
+  bool IsPeerConnectionStale(const std::string& target_id);
  protected:
   // Implement P2PSignalingSenderInterface
   virtual void SendSignalingMessage(const std::string& message,

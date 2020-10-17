@@ -98,6 +98,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::function<void()> GetLatestPublishSuccessCallback();
   std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
   bool IsAbandoned();
+  bool IsStale();
  protected:
   void CreateOffer() override;
   void CreateAnswer() override;
@@ -238,6 +239,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool stop_send_needed_;
   bool remote_side_offline_;
   bool ended_;
+  std::chrono::time_point<std::chrono::system_clock> created_time_;
 };
 }
 }

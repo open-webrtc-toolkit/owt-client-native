@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <thread>
 #include <vector>
+#include <iostream>
 #include "talk/owt/sdk/base/eventtrigger.h"
 #include "talk/owt/sdk/base/functionalobserver.h"
 #include "talk/owt/sdk/base/sdputils.h"
@@ -77,6 +78,7 @@ const string kUaIgnoresDataChannelAcksKey = "ignoreDataChannelAcks";
 const string kDataChannelLabelForTextMessage = "message";
 const string kTextMessageDataKey = "data";
 const string kTextMessageIdKey = "id";
+const int kStaleThresholdSecs = 300; // 5 min
 P2PPeerConnectionChannel::P2PPeerConnectionChannel(
     PeerConnectionChannelConfiguration configuration,
     const std::string& local_id,
@@ -103,7 +105,8 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
       ua_sent_(false),
       stop_send_needed_(true),
       remote_side_offline_(false),
-      ended_(false) {
+      ended_(false),
+      created_time_(std::chrono::system_clock::now()) {
   RTC_CHECK(signaling_sender_);
   InitializePeerConnection();
   CreateDataChannel(kDataChannelLabelForTextMessage);
@@ -662,7 +665,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }
       // Check state after a period of time.
       std::thread([this]() {
-        // Extends lifetime of this with ref until detached thread exits. 
+        // Extends lifetime of this with ref until detached thread exits.
 	auto ref = shared_from_this();
         std::this_thread::sleep_for(std::chrono::seconds(reconnect_timeout_));
 	int secs_since_disconnect = 0;
@@ -751,7 +754,7 @@ void P2PPeerConnectionChannel::OnSetLocalSessionDescriptionSuccess() {
     is_creating_offer_ = false;
   }
   {
-    std::lock_guard<std::mutex> lock(ended_mutex_);  
+    std::lock_guard<std::mutex> lock(ended_mutex_);
     if (ended_) { return; }
   }
   // Setting maximum bandwidth here.
@@ -867,7 +870,7 @@ void P2PPeerConnectionChannel::Stop(
     case kSessionStateConnected:
     case kSessionStateMatched:
     case kSessionStateOffered:
-      
+
       SendStop(nullptr, nullptr);
       ClosePeerConnection();
       {
@@ -989,6 +992,29 @@ P2PPeerConnectionChannel::GetLatestPublishFailureCallback() {
 bool P2PPeerConnectionChannel::IsAbandoned() {
   return remote_side_offline_;
 }
+bool P2PPeerConnectionChannel::IsStale() {
+  bool is_stale = false;
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (temp_pc_) {
+    auto now = std::chrono::system_clock::now();
+    auto age = std::chrono::duration_cast<std::chrono::seconds>(now - created_time_).count();
+    auto ice_state = temp_pc_->ice_connection_state();
+    auto signaling_state = temp_pc_->signaling_state();
+    is_stale = (age > kStaleThresholdSecs) &&
+               ((ice_state == webrtc::PeerConnectionInterface::kIceConnectionNew)
+                || (ice_state == webrtc::PeerConnectionInterface::kIceConnectionFailed) &&
+                   (signaling_state == webrtc::PeerConnectionInterface::kHaveLocalOffer));
+    std::cout << "(" << age <<  " > " << kStaleThresholdSecs << ") && (("
+              << ice_state << " == " << webrtc::PeerConnectionInterface::kIceConnectionNew << ") || ("
+              << ice_state << " == " << webrtc::PeerConnectionInterface::kIceConnectionFailed << ") && ("
+              << signaling_state << " == " << webrtc::PeerConnectionInterface::kHaveLocalOffer << ")) = "
+              << is_stale
+              << std::endl;
+  } else {
+    is_stale = true;
+  }
+  return is_stale;
+}
 void P2PPeerConnectionChannel::DrainPendingStreams() {
   RTC_LOG(LS_INFO) << "Draining pending stream";
   ChangeSessionState(kSessionStateConnecting);
@@ -1005,7 +1031,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       publish_snapshot.push_back(stream);
     }
     pending_publish_streams_.clear();
-  } 
+  }
   // Then to unpublish the pending_unpublish_streams_ list.
   std::vector<std::shared_ptr<LocalStream>> unpublish_snapshot;
   {
@@ -1225,7 +1251,7 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
       messages_snapshot.push_back(m);
     }
     pending_messages_.clear();
-  
+
     // After releasing locks, safe to call Send
     for (const auto& msg : messages_snapshot) {
       temp_dc_->Send(CreateDataBuffer(msg));
