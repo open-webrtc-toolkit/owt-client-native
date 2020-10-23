@@ -786,6 +786,7 @@ void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionSuccess() {
 void P2PPeerConnectionChannel::OnSetRemoteSessionDescriptionFailure(
     const std::string& error) {
   RTC_LOG(LS_ERROR) << "Set remote sdp failed. " << error;
+  std::cout << "Set remote_sdp FAILED" << std::endl << std::endl;
   Stop(nullptr, nullptr);
 }
 bool P2PPeerConnectionChannel::CheckNullPointer(
@@ -825,16 +826,16 @@ void P2PPeerConnectionChannel::Unpublish(
     RTC_LOG(LS_WARNING) << "Local stream cannot be nullptr.";
     return;
   }
-  if (!remote_side_supports_remove_stream_) {
-    if (on_failure != nullptr) {
-      RTC_LOG(LS_WARNING) << "Remote side does not support removeStream.";
-      std::unique_ptr<Exception> e(
-          new Exception(ExceptionType::kP2PClientUnsupportedMethod,
-                        "Remote side does not support unpublish."));
-      on_failure(std::move(e));
-    }
-    return;
-  }
+  // if (!remote_side_supports_remove_stream_) {
+  //   if (on_failure != nullptr) {
+  //     RTC_LOG(LS_WARNING) << "Remote side does not support removeStream.";
+  //     std::unique_ptr<Exception> e(
+  //         new Exception(ExceptionType::kP2PClientUnsupportedMethod,
+  //                       "Remote side does not support unpublish."));
+  //     on_failure(std::move(e));
+  //   }
+  //   return;
+  // }
   RTC_CHECK(stream->MediaStream());
   // Calling MediaStream->id() runs on signaling_thread, so must be outside locks.
   std::string stream_id = stream->MediaStream()->id();
@@ -842,15 +843,18 @@ void P2PPeerConnectionChannel::Unpublish(
     std::lock_guard<std::mutex> lock(published_streams_mutex_);
     auto it = published_streams_.find(stream_id);
     if (it == published_streams_.end()) {
-      if (on_failure) {
-        std::unique_ptr<Exception> e(
-            new Exception(ExceptionType::kP2PClientInvalidArgument,
-                          "The stream is not published."));
-        on_failure(std::move(e));
-      }
-      return;
+      // if (on_failure) {
+      //   std::unique_ptr<Exception> e(
+      //       new Exception(ExceptionType::kP2PClientInvalidArgument,
+      //                     "The stream is not published."));
+      //   on_failure(std::move(e));
+      // }
+      // return;
+      RTC_LOG(LS_ERROR) << "Did not find published stream.";
+    } else {
+      RTC_LOG(LS_ERROR) << "Found published stream.";
+      published_streams_.erase(it);
     }
-    published_streams_.erase(it);
   }
   {
     std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
@@ -1048,6 +1052,18 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
     // Snapshot vector has no thread contention, safe to call webrtc methods.
     for (auto it = publish_snapshot.begin(); it != publish_snapshot.end(); ++it) {
       std::shared_ptr<LocalStream> stream = *it;
+
+      // Skip publishing streams that will then be unpublished
+      bool is_to_be_unpublished = false;
+      for (auto& un_stream : unpublish_snapshot) {
+        if (stream == un_stream) { // comparison of pointers;
+          RTC_LOG(LS_ERROR) << "Trying to Publish and Unpublish stream.";
+          is_to_be_unpublished = true;
+          break;
+        }
+      }
+      if (is_to_be_unpublished) continue;
+
       std::string audio_track_source = "mic";
       std::string video_track_source = "camera";
       if (stream->Source().audio == owt::base::AudioSourceInfo::kScreenCast) {
