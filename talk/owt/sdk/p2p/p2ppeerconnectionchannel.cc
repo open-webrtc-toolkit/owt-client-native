@@ -659,30 +659,31 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       DrainPendingStreams();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionDisconnected:
-      {
-        std::lock_guard<std::mutex> lock(last_disconnect_mutex_);
-        last_disconnect_ = std::chrono::system_clock::now();
-      }
-      // Check state after a period of time.
-      std::thread([this]() {
-        // Extends lifetime of this with ref until detached thread exits.
-	auto ref = shared_from_this();
-        std::this_thread::sleep_for(std::chrono::seconds(reconnect_timeout_));
-	int secs_since_disconnect = 0;
-	{
-	  std::lock_guard<std::mutex> lock(last_disconnect_mutex_);
-          if (last_disconnect_ != std::chrono::time_point<std::chrono::system_clock>::max()) {
-	    secs_since_disconnect = std::chrono::duration_cast<std::chrono::seconds>(
-		std::chrono::system_clock::now() - last_disconnect_).count();
-	  }
-	}
-	if (secs_since_disconnect >= reconnect_timeout_) {
-          RTC_LOG(LS_INFO) << "Detect reconnection failed, stop this session.";
-          Stop(nullptr, nullptr);
-        } else {
-          RTC_LOG(LS_INFO) << "Detect reconnection succeed.";
-        }
-      }).detach();
+      // {
+      //   std::lock_guard<std::mutex> lock(last_disconnect_mutex_);
+      //   last_disconnect_ = std::chrono::system_clock::now();
+      // }
+
+ //      // Check state after a period of time.
+ //      std::thread([this]() {
+ //        // Extends lifetime of this with ref until detached thread exits.
+	// auto ref = shared_from_this();
+ //        std::this_thread::sleep_for(std::chrono::seconds(reconnect_timeout_));
+	// int secs_since_disconnect = 0;
+	// {
+	//   std::lock_guard<std::mutex> lock(last_disconnect_mutex_);
+ //          if (last_disconnect_ != std::chrono::time_point<std::chrono::system_clock>::max()) {
+	//     secs_since_disconnect = std::chrono::duration_cast<std::chrono::seconds>(
+	// 	std::chrono::system_clock::now() - last_disconnect_).count();
+	//   }
+	// }
+	// if (secs_since_disconnect >= reconnect_timeout_) {
+ //          RTC_LOG(LS_ERROR) << "Detect reconnection failed, stop this session.";
+ //          Stop(nullptr, nullptr);
+ //        } else {
+ //          RTC_LOG(LS_ERROR) << "Detect reconnection succeed.";
+ //        }
+ //      }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
       CleanLastPeerConnection();
