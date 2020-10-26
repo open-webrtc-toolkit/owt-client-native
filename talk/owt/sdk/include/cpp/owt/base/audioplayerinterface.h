@@ -20,6 +20,7 @@ class AudioPlayerInterface {
  protected:
   virtual ~AudioPlayerInterface() {}
 };
+
 }  // namespace base
 }  // namespace owt
 #endif  // OWT_BASE_AUDIOPLAYERINTERFACE_H_

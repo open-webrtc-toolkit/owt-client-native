@@ -184,6 +184,7 @@ void Stream::SetAudioTracksEnabled(bool enabled) {
     (*it)->set_enabled(enabled);
   }
 }
+
 void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
   if (media_stream_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Cannot attach to empty stream.";
@@ -314,6 +315,13 @@ void Stream::DetachVideoRenderer() {
     va_renderer_impl_ = nullptr;
   }
 #endif
+#endif
+#if defined(WEBRTC_LINUX) && defined(OWT_USE_MSDK)
+  if (va_renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(va_renderer_impl_);
+    delete va_renderer_impl_;
+    va_renderer_impl_ = nullptr;
+  }
 #endif
 }
 

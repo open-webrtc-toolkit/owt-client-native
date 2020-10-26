@@ -205,8 +205,9 @@ int32_t MsdkVideoDecoder::Decode(
   // 4. Invoke the callback to send decoded image to video sink.
   ReadFromInputStream(bit_stream_.get(), input_image.data(),
                       input_image.size());
-  bit_stream_->DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
-
+  if (input_image._completeFrame){
+      bit_stream_->DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
+  }
   mfxStatus sts = MFX_ERR_NONE;
   // First try to extract the video parameters from the frame after the
   // initialization

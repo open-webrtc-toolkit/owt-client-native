@@ -131,6 +131,11 @@ class Stream {
 #endif
 
 #if defined(WEBRTC_WIN)
+  /// Attach the stream to a Linux VA renderer.
+  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+#endif
+
+#if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
   virtual void AttachVideoRenderer(VideoRenderWindow& render_window);
