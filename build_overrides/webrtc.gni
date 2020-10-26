@@ -14,6 +14,9 @@ rtc_include_pulse_audio = true
 # Exclude internal ADM since Chromium uses its own IO handling.
 rtc_include_internal_audio_device = true
 
+# Do not use X11 for Linux.
+rtc_use_x11 = false
+
 # Don't include WebRTC tests.
 rtc_include_tests = false
 

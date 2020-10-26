@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/rtc_base/ref_counted_object.h"
 #include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
+#include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "talk/owt/sdk/base/customizedaudiocapturer.h"
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 
@@ -30,6 +30,7 @@
       return false;              \
     };                           \
   }
+
 namespace owt {
 namespace base {
 // ============================================================================
@@ -584,11 +585,17 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
   return _ptrAudioDevice->GetRecordAudioParameters(params);
 }
 #endif  // WEBRTC_IOS
+
 void CustomizedAudioDeviceModule::CreateOutputAdm(){
-  if(_outputAdm==nullptr){
+  if(_outputAdm == nullptr) {
+#if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
+#else
+    _outputAdm = new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>();
+#endif
   }
 }
+
 }
 }  // namespace webrtc

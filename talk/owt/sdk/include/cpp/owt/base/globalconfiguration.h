@@ -44,7 +44,7 @@ struct AudioProcessingSettings {
 class GlobalConfiguration {
   friend class PeerConnectionDependencyFactory;
  public:
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
   @brief This function sets hardware acceleration is enabled for video decoding.
   @param enabled Enbale video decoding with hardware acceleration or not.
@@ -141,7 +141,7 @@ class GlobalConfiguration {
  private:
   GlobalConfiguration() {}
   virtual ~GlobalConfiguration() {}
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function gets hardware acceleration is enabled or not.
    @return true or false.

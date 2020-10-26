@@ -86,7 +86,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   std::unique_ptr<rtc::Thread> worker_thread;
   std::unique_ptr<rtc::Thread> signaling_thread;
   std::unique_ptr<rtc::Thread> network_thread;
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   bool render_hardware_acceleration_enabled_;  // Enabling HW acceleration for
                                                // VP8, H.264 & HEVC enc/dec
 #endif

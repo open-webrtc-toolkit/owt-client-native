@@ -12,7 +12,7 @@
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
-//#include "owt/base/videorendererinterface.h"
+#include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 namespace webrtc {
 class MediaStreamInterface;
@@ -58,6 +58,10 @@ class WebrtcAudioRendererImpl;
 #if defined(WEBRTC_WIN)
 class WebrtcVideoRendererD3D9Impl;
 #endif
+#if defined(WEBRTC_LINUX)
+class WebrtcVideoRendererVaImpl;
+#endif
+
 /// Base class of all streams with media stream
 class Stream {
  public:
@@ -94,15 +98,22 @@ class Stream {
     from mixed stream, it will be set as kMixed.
   */
   virtual StreamSourceInfo Source() const;
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+
+  virtual void AttachAudioPlayer(AudioPlayerInterface& player);
+
+#if defined(WEBRTC_LINUX)
   /// Attach the stream to a renderer to receive ARGB/I420 frames for local or
   /// remote stream. Be noted if you turned hardware acceleration on, calling
   /// this API on remote stream will have no effect.
-  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+  virtual void AttachVideoRenderer(VideoRendererVaInterface& renderer);
   /// Attach the stream to an audio player that receives PCM data besides sending to
   /// audio output device.
-  virtual void AttachAudioPlayer(AudioPlayerInterface& player);
 #endif
+#if defined(WEBRTC_WIN)
+  /// Attach the stream to a Linux VA renderer.
+  virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
+#endif
+
 #if defined(WEBRTC_WIN)
   /// Attach the stream to a renderer to receive frames from decoder.
   /// Both I420 frame and native surface is supported.
@@ -133,6 +144,9 @@ class Stream {
   WebrtcAudioRendererImpl* audio_renderer_impl_;
 #if defined(WEBRTC_WIN)
   WebrtcVideoRendererD3D9Impl* d3d9_renderer_impl_;
+#endif
+#if defined(WEBRTC_LINUX)
+  WebrtcVideoRendererVaImpl* va_renderer_impl_;
 #endif
   StreamSourceInfo source_;
 

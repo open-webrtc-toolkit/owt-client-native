@@ -9,7 +9,9 @@
 #include <Windows.h>
 #endif
 #if defined(WEBRTC_LINUX)
+#if defined(WEBRTC_USE_X11)
 #include <X11/Xlib.h>
+#endif
 #endif
 namespace owt {
 namespace base {
@@ -51,7 +53,9 @@ class VideoRenderWindow {
   HWND wnd_;
 };
 #endif
+
 #if defined(WEBRTC_LINUX)
+#if defined(WEBRTC_USE_X11)
 class VideoRenderWindow {
  public:
   VideoRenderWindow() : wnd_(0) {}
@@ -70,7 +74,42 @@ class VideoRenderWindow {
   Window wnd_;
 };
 #endif
-/// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack
+#endif
+#if defined(WEBRTC_LINUX)
+typedef void (*PFN_RETURN_BUFFER)(void *data, uint32_t bufid);
+typedef void* VADisplay;        /* window system dependent */
+typedef unsigned int VASurfaceID;
+
+/// libva surface that contains a decoded image for rendering on
+/// target window system.
+struct VaSurface {
+  /// va display associated with decoder.
+  VADisplay display;
+  /// va surface ID.
+  VASurfaceID surface;
+  /// Width of image.
+  int width;
+  /// Height of image.
+  int height;
+  /// Unique frame number assigned by decoder.
+  int frameno;
+  /// Index of buffer in surface pool.
+  int bufferid;
+  /// Pointer to side data.
+  void *data;
+  /// Buffer free callback when surface is no longer used by renderer.
+  void *pfnReturnBuffer;
+  ~VaSurface() {}
+};
+
+/// Video renderer interface for Linux using va based decoding.
+class VideoRendererVaInterface {
+ public:
+  virtual void RenderFrame(std::unique_ptr<VaSurface> surface) = 0;
+  virtual ~VideoRendererVaInterface() {}
+};
+#endif
+/// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack.
 class VideoRendererInterface {
  public:
   /// Passes video buffer to renderer.
