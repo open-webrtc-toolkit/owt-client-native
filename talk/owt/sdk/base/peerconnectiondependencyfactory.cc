@@ -164,7 +164,7 @@ void PeerConnectionDependencyFactory::
   field_trial_ +=
       "OWT-DelayBweWeight/" + std::to_string(delay_bwe_weight) + "/";
   int start_bitrate, min_bitrate, max_bitrate;
-  GlobalConfiguration::GetBWERateLimits(start_bitrate, min_bitrate,
+  GlobalConfiguration::GetBweRateLimits(start_bitrate, min_bitrate,
                                         max_bitrate);
   if (start_bitrate > 0 || min_bitrate > 0 || max_bitrate > 0)
   field_trial_ += "OWT-Bwe-RateLimits/start:" + std::to_string(start_bitrate) + ",min:" +
@@ -224,7 +224,6 @@ void PeerConnectionDependencyFactory::
   } else {
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
-
   // If still video factory is not in place, use internal factory.
   if (!encoder_factory.get()) {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();

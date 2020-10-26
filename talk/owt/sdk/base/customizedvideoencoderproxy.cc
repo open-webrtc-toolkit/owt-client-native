@@ -232,7 +232,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.H264.picture_id = encoder_buffer_handle->meta_data_.picture_id;
     info.codecSpecific.H264.last_fragment_in_frame =
         encoder_buffer_handle->meta_data_.last_fragment;
-    encodedframe._frameType = is_idr ? webrtc::VideoFrameType::kVideoFrameKey
+    encoded_frame._frameType = is_idr ? webrtc::VideoFrameType::kVideoFrameKey
                                      : webrtc::VideoFrameType::kVideoFrameDelta;
   }
 #ifdef WEBRTC_USE_H265

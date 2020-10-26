@@ -186,12 +186,19 @@ static_library("owt_sdk_base") {
     "//third_party",
   ]
 
+  defines = [ "USE_BUILTIN_SW_CODECS" ]
+
   if (owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
   }
 
-  defines = [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
-  defines += [ "USE_BUILTIN_SW_CODECS" ]
+  if (rtc_include_internal_audio_device) {
+    defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
+  }
+  if (rtc_use_x11) {
+    defines += [ "WEBRTC_USE_X11" ]
+  }
+
   if (rtc_use_h265) {
     defines += [ "WEBRTC_USE_H265" ]
   }
@@ -331,6 +338,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
+
   if (is_win || is_linux) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",

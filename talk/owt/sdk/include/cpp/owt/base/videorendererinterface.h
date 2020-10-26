@@ -14,6 +14,7 @@
 #include <X11/Xlib.h>
 #endif
 #endif
+
 namespace owt {
 namespace base {
 enum class VideoBufferType {
@@ -26,6 +27,7 @@ enum class VideoRendererType {
   kARGB,
   kD3D11,  // Format self-described.
 };
+
 
 #if defined(WEBRTC_WIN)
 struct D3D11ImageHandle {
@@ -91,6 +93,7 @@ class VideoRenderWindow {
 };
 #endif
 #endif
+
 #if defined(WEBRTC_LINUX)
 typedef void (*PFN_RETURN_BUFFER)(void *data, uint32_t bufid);
 typedef void* VADisplay;        /* window system dependent */
@@ -154,3 +157,4 @@ struct D3D11VAHandle {
 }  // namespace base
 }  // namespace owt
 #endif  // OWT_BASE_VIDEORENDERERINTERFACE_H_
+

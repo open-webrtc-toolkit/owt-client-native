@@ -82,6 +82,14 @@ Update to latest macOS(Big Sur) and Xcode. iOS SDK can only be built on macOS.
 1. Run gclient sync. It may take long time to download large amount of data.
 1. Build libwebrtc for OWT Android SDK with scripts/build_android.py.
 
+#### Linux
+- Run `gclient sync` in the directory that contains 'src'. It may take a long time to download a large amount of data.
+- Go to the `src/scripts` directory, and run: 
+`python build_linux.py --gn_gen --sdk --output_path /path/to/out --fake_audio`. The built binary will be under `output_path`, 
+- The document for sdk will also be copied to this directory if docs have been generated. 
+- If `output_path` is not set, the built binary will be under the `src/out` directory.
+
+
 ## How to contribute
 We warmly welcome community contributions to the owt-client-native repository. If you are willing to contribute your features and ideas to OWT, follow the process below:
 
