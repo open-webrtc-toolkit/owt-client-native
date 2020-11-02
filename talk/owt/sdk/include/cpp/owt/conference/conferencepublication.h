@@ -69,6 +69,9 @@ class ConferencePublication : public Publication, public ConferenceStreamUpdateO
     std::vector<std::reference_wrapper<PublicationObserver>> observers_;
     std::weak_ptr<ConferenceClient> conference_client_;   // Weak ref to associated conference client
     std::shared_ptr<rtc::TaskQueue> event_queue_;
+#ifdef OWT_ENABLE_QUIC
+    std::shared_ptr<owt::base::QuicStream> writable_stream_;
+#endif
 };
 } // namespace conference
 } // namespace owt

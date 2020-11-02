@@ -139,6 +139,7 @@ class ConferenceSocketSignalingChannel
   std::queue<SioMessage> outgoing_messages_;
   int outgoing_message_id_;
   std::mutex outgoing_message_mutex_;
+  std::string quic_transport_id_;
 };
 }
 }

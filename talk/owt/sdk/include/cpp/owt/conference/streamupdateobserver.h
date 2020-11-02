@@ -4,6 +4,9 @@
 #ifndef OWT_CONFERENCE_STREAMUPDATEOBSERVER_H
 #define OWT_CONFERENCE_STREAMUPDATEOBSERVER_H
 #include "owt/base/commontypes.h"
+#ifdef OWT_ENABLE_QUIC
+#include "owt/quic/quic_transport_stream_interface.h"
+#endif
 namespace owt {
 namespace conference {
 /** @cond */
@@ -17,6 +20,10 @@ public:
     owt::base::TrackKind track_kind, bool muted) {}
   virtual void OnStreamRemoved(const std::string& stream_id) {}
   virtual void OnStreamError(const std::string& error_msg){}
+#ifdef OWT_ENABLE_QUIC
+  virtual void OnIncomingStream(
+      const std::string& session_id, owt::quic::QuicTransportStreamInterface* stream) {}
+#endif
 };
 /** @endcond */
 }

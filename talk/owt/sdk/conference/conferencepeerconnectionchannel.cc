@@ -638,7 +638,7 @@ void ConferencePeerConnectionChannel::Subscribe(
   }
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
-      [this](std::string session_id) {
+      [this](std::string session_id, std::string transport_id) {
         // Pre-set the session's ID.
         SetSessionId(session_id);
         CreateOffer();
