@@ -24,7 +24,7 @@ pipeline {
             }
             steps {
                 echo "$GIT_COMMIT"
-                sh "${iosCIPath}/buildSdk.sh ${GIT_COMMIT}"
+                sh "${linuxCiPath}/buildSdk.sh ${GIT_COMMIT}"
             }
           }
          }
