@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_STREAM_H_
 #define OWT_BASE_STREAM_H_
-#include <cstdin>
+#include <atomic>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -19,6 +19,7 @@
 #ifdef OWT_ENABLE_QUIC
 #include "owt/quic/quic_transport_stream_interface.h"
 #endif
+
 namespace webrtc {
 class MediaStreamInterface;
 class VideoTrackSourceInterface;
@@ -28,6 +29,7 @@ class MediaConstraints;
 namespace owt {
 namespace conference {
 class ConferencePeerConnectionChannel;
+class ConferenceWebTransportChannel;
 class ConferenceClient;
 class ConferenceInfo;
 }  // namespace conference
@@ -50,7 +52,7 @@ class StreamObserver {
  public:
   virtual ~StreamObserver() = default;
   /// Triggered when a stream is ended, or the stream is no longer available in
-  /// conference mode.
+  /// conference mode. For QUIC stream, also gets triggered if received FIN.
   virtual void OnEnded() {}
   /// Triggered when the stream info is updated in conference mode.
   virtual void OnUpdated() {}
@@ -58,6 +60,11 @@ class StreamObserver {
   virtual void OnMute(TrackKind track_kind) {}
   /// Triggered when the stream is unmuted
   virtual void OnUnmute(TrackKind track_kind) {}
+#ifdef OWT_ENABLE_QUIC
+  /// Triggered when the underlying stream is a QUIC stream, and data is available
+  /// for reading.
+  virtual void OnCanRead() {}
+#endif
 };
 class WebrtcVideoRendererImpl;
 class WebrtcAudioRendererImpl;
@@ -99,15 +106,6 @@ class Stream {
       const {
     return attributes_;
   }
-#ifdef OWT_ENABLE_QUIC
-  /**
-   @brief Check if current stream is used for WebTransport
-   @return True if current stream is used for WebTransport. False otherwise.
-   */
-  virtual bool DataEnabled() const {
-    return is_data_;
-  }
-#endif
   /**
     @brief Returns the audio/video source info of the stream
     @details The source info of video/audio indicates the device source type of
@@ -166,9 +164,6 @@ class Stream {
   WebrtcVideoRendererVaImpl* va_renderer_impl_;
 #endif
   StreamSourceInfo source_;
-#ifdef OWT_ENABLE_QUIC
-  bool is_data_ = false;
-#endif
  private:
   void SetAudioTracksEnabled(bool enabled);
   void SetVideoTracksEnabled(bool enabled);
@@ -179,93 +174,29 @@ class Stream {
 };
 
 #ifdef OWT_ENABLE_QUIC
-///  A writable stream  is created by MCU which can be used to construct
-///  LocalStream for publishing.
-class WritableStream : public owt::quic::QuicTransportStreamInterface::Visitor {
+/// A writable stream  is created by MCU which can be used to construct
+/// LocalStream for publishing. Underlyingly it is a bi-directional stream
+/// by design.
+class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
  public:
-  WritableStream(owt::quic::QuicTransportStreamInterface* quic_stream,
-                 const std::string& session_id)
-      : quic_stream_(quic_stream), session_id_(session_id) {
-    if (quic_stream_) {
-      quic_stream_->SetVisitor(this);
-    }
-  }
-  ~WritableStream() {
-    if (quic_stream_) {
-      delete quic_stream_;
-      quic_stream_ = nullptr;
-    }
-  }
-  void Write(uint8_t* data, size_t length) {
-    if (quic_stream_ && can_write_ && !fin_read_) {
-      quic_stream_->Write(data, length);
-    }
-  }
-  // Overrides QuicTransportStreamInterface::Visitor
-  void OnCanRead() override {
+  QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
+             const std::string& session_id);
+  ~QuicStream();
+  void Write(uint8_t* data, size_t length);
+  size_t Read(uint8_t* data, size_t length);
+  size_t ReadableBytes() const;
+  // Implemnents QuicTransportStreamInterface::Visitor
+  void OnCanRead() {
     can_read_ = true;
   }
-  void OnCanWrite() override {
-    // According to transport payload protocol, send the initial session id.
-    quic_stream_->Write(session_id_.c_str(), session_id_.length());
+  void OnCanWrite() {
     can_write_ = true;
   }
-  void OnFinRead() override {
+  void OnFinRead() {
+    // OnFinRead the stream is no longer readable/writable
     fin_read_ = true;
-  }
- private:
-  // Writable stream is always created by conference client with the underlying QuicStream owned
-  // by current WritableStream.
-  owt::quic::QuicTransportStreamInterface* quic_stream_;
-  std::string session_id_;
-  std::atomic<bool> can_read_ = false;
-  std::atomic<bool> can_write_ = false;
-  std::atomic<bool> fin_read_ = false;
-};
-
-/// <summary>
-///  A readable stream constructed from QuicStream for remote webtransport
-///  stream from MCU.
-/// </summary>
-class ReadableStream : public owt::quic::QuicTransportStreamInterface::Visitor {
- public:
-  ReadableStream(owt::quic::QuicTransportStreamInterface* quic_stream,
-                 const std::string& session_id)
-      : quic_stream_(quic_stream), session_id_(session_id) {
-    if (quic_stream_) {
-      quic_stream_->SetVisitor(this);
-    }
-  }
-  ~ReadableStream() {
-    if (quic_stream_) {
-      delete quic_stream_;
-      quic_stream_ = nullptr;
-    }
-  }
-  size_t Read(uint8_t* data, size_t length) {
-    if (quic_stream_ && data && length > 0 && can_read && !fin_read_) {
-      return quic_stream_->Read(data, length);
-    } else {
-      return 0;
-    }
-  }
-  size_t ReadableBytes const {
-    if (quic_stream_ && can_read && !fin_read_) {
-      return quic_stream_->ReadableBytes();
-    } else {
-      return 0;
-    }
-  }
-  // Overrides QuicTransportStreamInterface::Visitor
-  void OnCanRead() override {
-    can_read_ = true;
-  }
-  void OnCanWrite() override {
-    quic_stream_->Write(session_id_.c_str(), session_id_.length());
-    can_write_ = true;
-  }
-  void OnFinRead() override {
-    fin_read_ = true;
+    can_read_ = false;
+    can_write_ = false;
   }
  private:
   owt::quic::QuicTransportStreamInterface* quic_stream_;
@@ -274,6 +205,7 @@ class ReadableStream : public owt::quic::QuicTransportStreamInterface::Visitor {
   std::atomic<bool> can_write_ = false;
   std::atomic<bool> fin_read_ = false;
 };
+#endif // OWT_ENABLE_QUIC
 
 class LocalScreenStreamObserver {
  public:
@@ -337,8 +269,10 @@ class LocalStream : public Stream {
    @param error_code Error code will be set if creation fails.
   */
   static std::shared_ptr<LocalStream> Create(
-      std::shared_ptr<WritableStream> writable_stream,
+      std::shared_ptr<QuicStream> writable_stream,
       int& error_code);
+
+  std::shared_ptr<owt::base::QuicStream> Stream();
 #endif
 
   /**
@@ -398,6 +332,9 @@ class LocalStream : public Stream {
       std::shared_ptr<LocalDesktopStreamParameters> parameters,
       std::unique_ptr<LocalScreenStreamObserver> observer);
 #endif
+  virtual bool AudioEnabled() const { return has_audio_; }
+  virtual bool VideoEnabled() const { return has_video_; }
+  virtual bool DataEnabled() const { return has_data_; }
 
  protected:
   explicit LocalStream(const LocalCameraStreamParameters& parameters,
@@ -418,18 +355,22 @@ class LocalStream : public Stream {
                        std::unique_ptr<LocalScreenStreamObserver> observer);
 #endif
 #ifdef OWT_ENABLE_QUIC
-  explicit LocalStream(std::shared_ptr<WritableStream> writer);
+  explicit LocalStream(std::shared_ptr<owt::base::QuicStream> stream);
 #endif
  private:
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   bool encoded_ = false;
 #endif
 #ifdef OWT_ENABLE_QUIC
-  std::shared_ptr<WritableStream> writer_;
+  std::shared_ptr<owt::base::QuicStream> quic_stream_;
 #endif
 #if defined(WEBRTC_MAC)
   std::unique_ptr<ObjcVideoCapturerInterface> capturer_;
 #endif
+ private:
+  bool has_audio_ = false;
+  bool has_video_ = false;
+  bool has_data_ = false;
 };
 /**
   @brief This class represents a remote stream.
@@ -438,6 +379,7 @@ class LocalStream : public Stream {
 */
 class RemoteStream : public Stream {
   friend class owt::conference::ConferencePeerConnectionChannel;
+  friend class owt::conference::ConferenceWebTransportChannel;
   friend class owt::conference::ConferenceClient;
   friend class owt::conference::ConferenceInfo;
   friend class owt::p2p::P2PPeerConnectionChannel;
@@ -451,13 +393,20 @@ class RemoteStream : public Stream {
       const owt::base::PublicationSettings& publication_settings);
   explicit RemoteStream(MediaStreamInterface* media_stream,
                         const std::string& from);
-#ifdef OWT_ENABLE_QUIC
-  explicit RemoteStream(std::shared_ptr<owt::base::ReadableStream> quic_stream,
-                        const std::string& from);
-#endif
+  // Remote stream initialized without capabilities are considered data stream.
+  explicit RemoteStream(const std::string& id, const std::string& from);
   virtual void Attributes(
       const std::unordered_map<std::string, std::string>& attributes) {
     attributes_ = attributes;
+  }
+  virtual bool AudioEnabled() const {
+    return has_audio_;
+  }
+  virtual bool VideoEnabled() const {
+    return has_video_;
+  }
+  virtual bool DataEnabled() const {
+    return has_data_;
   }
   /** @endcond */
   /// Return the remote user ID, indicates who published this stream.
@@ -481,18 +430,17 @@ class RemoteStream : public Stream {
   }
   /** @endcond */
   void Stop() {}
-
  protected:
+  // TODO: move this out of RemoteStream interface. Both MediaStream and QuicStream
+  // should be owned by the suscription.
   MediaStreamInterface* MediaStream();
   void MediaStream(MediaStreamInterface* media_stream);
 
  private:
   std::string origin_;
-  bool has_audio_ = true;
-  bool has_video_ = true;
-#ifdef OWT_ENABLE_QUIC
-  std::shared_ptr<ReadableStream> reader_;
-#endif
+  bool has_audio_ = false;
+  bool has_video_ = false;
+  bool has_data_ = false;
   owt::base::SubscriptionCapabilities subscription_capabilities_;
   owt::base::PublicationSettings publication_settings_;
 };

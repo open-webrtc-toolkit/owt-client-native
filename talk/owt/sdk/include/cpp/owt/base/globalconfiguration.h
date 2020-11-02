@@ -13,13 +13,12 @@
 #include <array>
 #include <vector>
 #include "owt/quic/quic_transport_client_interface.h"
-#define QUIC_CERT_FINGERPRINT_SIZE 33
+#define QUIC_CERT_FINGERPRINT_SIZE 32
 #endif
 
 namespace owt {
 namespace base{
 #ifdef OWT_ENABLE_QUIC
-// certificate fingerprint must be null terminiated.
 typedef std::array<char, QUIC_CERT_FINGERPRINT_SIZE> cert_fingerprint_t;
 #endif
 /** @cond */

@@ -82,7 +82,13 @@ Stream::Stream()
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+#ifdef OWT_ENABLE_QUIC
+      source_(AudioSourceInfo::kUnknown,
+              VideoSourceInfo::kUnknown,
+              DataSourceInfo::kUnknown),
+#else
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
+#endif
       ended_(false),
       id_("") {}
 Stream::Stream(const std::string& id)
@@ -90,7 +96,13 @@ Stream::Stream(const std::string& id)
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+#ifdef OWT_ENABLE_QUIC
+      source_(AudioSourceInfo::kUnknown,
+              VideoSourceInfo::kUnknown,
+              DataSourceInfo::kUnknown),
+#else
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
+#endif
       ended_(false),
       id_(id) {}
 #elif defined(WEBRTC_LINUX)
@@ -440,13 +452,13 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 #endif
 
 #ifdef OWT_ENABLE_QUIC
-LocalStream::LocalStream(std::shared_ptr<WritableStream> writer) {
-  writer_ = writer;
-  is_data_ = true;
+LocalStream::LocalStream(std::shared_ptr<QuicStream> writer) {
+  quic_stream_ = writer;
+  has_data_ = true;
 }
 
 std::shared_ptr<LocalStream> LocalStream::Create(
-    std::shared_ptr<WritableStream> writable_stream,
+    std::shared_ptr<QuicStream> writable_stream,
     int& error_code) {
   std::shared_ptr<LocalStream> stream(new LocalStream(writable_stream));
   error_code = 0;
@@ -688,8 +700,14 @@ RemoteStream::RemoteStream(
       origin_(from),
       subscription_capabilities_(subscription_capabilities),
       publication_settings_(publication_settings) {}
-  std::string RemoteStream::Origin() {
+
+std::string RemoteStream::Origin() {
   return origin_;
+}
+
+RemoteStream::RemoteStream(const std::string& id, const std::string& from)
+    :Stream(id),
+     origin_(from) {
 }
 
 void RemoteStream::MediaStream(MediaStreamInterface* media_stream) {
@@ -700,12 +718,45 @@ MediaStreamInterface* RemoteStream::MediaStream() {
 }
 
 #ifdef OWT_ENABLE_QUIC
-RemoteStream::RemoteStream(
-    std::shared_ptr<ReadableStream> reader,
-    const std::string& from)
-    : origin_(from) {
-  reader_ = reader;
-  is_data_ = true;
+QuicStream::QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
+           const std::string& session_id)
+    : quic_stream_(quic_stream), session_id_(session_id) {
+  if (quic_stream_) {
+    quic_stream_->SetVisitor(this);
+  }
+}
+
+QuicStream::~QuicStream() {
+  if (quic_stream_) {
+    delete quic_stream_;
+    quic_stream_ = nullptr;
+  }
+}
+
+void QuicStream::Write(uint8_t* data, size_t length) {
+  if (quic_stream_ && can_write_ && !fin_read_) {
+    quic_stream_->Write(data, length);
+  }
+}
+
+size_t QuicStream::Read(uint8_t* data, size_t length) {
+  if (quic_stream_ && data && length > 0 && can_read_ && !fin_read_) {
+    return quic_stream_->Read(data, length);
+  } else {
+    return 0;
+  }
+}
+
+size_t QuicStream::ReadableBytes() const {
+  if (quic_stream_ && can_read_ && !fin_read_) {
+    return quic_stream_->ReadableBytes();
+  } else {
+    return 0;
+  }
+}
+
+std::shared_ptr<owt::base::QuicStream> LocalStream::Stream() {
+  return quic_stream_;
 }
 #endif
 }  // namespace base

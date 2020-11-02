@@ -13,6 +13,7 @@
 #include "owt/base/exception.h"
 #include "owt/conference/streamupdateobserver.h"
 #include "owt/conference/subscribeoptions.h"
+
 namespace rtc {
   class TaskQueue;
 }
@@ -20,6 +21,11 @@ namespace webrtc{
   class StatsReport;
 }
 namespace owt {
+namespace quic {
+class QuicTransportStreamInterface;
+}
+}
+  namespace owt {
 namespace conference {
 class ConferenceClient;
 using namespace owt::base;
@@ -55,6 +61,9 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     bool Ended() { return ended_; }
     /// Get the subscription ID
     std::string Id() const { return id_; }
+#ifdef OWT_ENABLE_QUIC
+    std::shared_ptr<owt::base::QuicStream> Stream();
+#endif
     /// Update the subscription with new encoding settings.
     void ApplyOptions(
         const SubscriptionUpdateOptions& options,
@@ -68,6 +77,9 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     void OnStreamMuteOrUnmute(const std::string& stream_id, TrackKind track_kind, bool muted);
     void OnStreamRemoved(const std::string& stream_id);
     void OnStreamError(const std::string& error_msg);
+#ifdef OWT_ENABLE_QUIC
+    void OnIncomingStream(const std::string& session_id, owt::quic::QuicTransportStreamInterface* stream);
+#endif
     std::string id_;
     std::string stream_id_;
     bool ended_;
@@ -75,6 +87,9 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     std::vector<std::reference_wrapper<SubscriptionObserver>> observers_;
     std::weak_ptr<ConferenceClient>  conference_client_;   // Weak ref to associated conference client
     std::shared_ptr<rtc::TaskQueue> event_queue_;
+#ifdef OWT_ENABLE_QUIC
+    std::shared_ptr<owt::base::QuicStream> quic_stream_;
+#endif
 };
 
 } // namespace conference

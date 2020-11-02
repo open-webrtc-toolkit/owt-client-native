@@ -21,9 +21,6 @@
 #include "owt/conference/conferencesubscription.h"
 #include "owt/conference/streamupdateobserver.h"
 #include "owt/conference/subscribeoptions.h"
-#ifdef OWT_ENABLE_QUIC
-#include "owt/quic/quic_transport_client_interface.h"
-#endif
 
 namespace sio{
   class message;
@@ -143,7 +140,7 @@ class ConferenceInfo {
     // Trigger stream updated event.
     void TriggerOnStreamUpdated(const std::string& stream_id);
     // Trigger stream mute/unmute events
-    void TriggerOnStreamMuteOrUnmute(const std::string& stream_id, owt::base::TrackKind track_kind, bool muted); 
+    void TriggerOnStreamMuteOrUnmute(const std::string& stream_id, owt::base::TrackKind track_kind, bool muted);
   private:
     bool ParticipantPresent(const std::string& participant_id);
     bool RemoteStreamPresent(const std::string& stream_id);
@@ -193,8 +190,10 @@ class ConferenceWebTransportChannelObserver {
   virtual void OnConnected() = 0;
   // Called when a connection is failed.
   virtual void OnConnectionFailed() = 0;
-  // Called when an incoming stream is received.
-  virtual void OnIncomingStream(owt::quic::QuicTransportStreamInterface*) = 0;
+  // Called when an incoming stream is received by QUIC channel
+  virtual void OnIncomingStream(
+      const std::string& session_id,
+      owt::quic::QuicTransportStreamInterface* stream) = 0;
 };
 #endif
 /** @endcond */
@@ -328,6 +327,15 @@ class ConferenceClient final
       const std::string& receiver,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
+#ifdef OWT_ENABLE_QUIC
+  /**
+   @brief Creates a LocalStream for WebTransport.
+    Please be noted this can only be called when client is connected to MCU(successfully joined).
+  */
+  void CreateSendStream(
+      std::function<void(std::shared_ptr<owt::base::LocalStream>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+#endif
  protected:
   ConferenceClient(const ConferenceClientConfiguration& configuration);
   // Implementing ConferenceSocketSignalingChannelObserver.
@@ -412,22 +420,13 @@ class ConferenceClient final
       TrackKind track_kind,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-#ifdef OWT_ENABLE_QUIC
-  /**
-   @brief Creates a WritableStream used to construct a LocalStream for WebTransport.
-    This is underlying an Unidirection stream for write only. Please be noted this
-    can only be called when client is connected to MCU(successfully joined).
-  */
-  void CreateSendStream(
-      std::function <void(std::shared_ptr<owt::base::WritableStream>)> on_success,
-      std::function <void(std::unique_ptr<Exception>)> on_failure);
-#endif
  private:
 #ifdef OWT_ENABLE_QUIC
   // Overrides WebTransportChannelObserver
   void OnConnected();
   void OnConnectionFailed();
-  void OnIncomingStream(owt::quic::QuicTransportStreamInterface*);
+  void OnIncomingStream(const std::string& session_id,
+                        owt::quic::QuicTransportStreamInterface* stream);
 #endif
 
   /// Return true if |pointer| is not a null pointer, else return false and
@@ -456,6 +455,10 @@ class ConferenceClient final
   void TriggerOnStreamUpdated(std::shared_ptr<sio::message> stream_info);
   void TriggerOnStreamError(std::shared_ptr<Stream> stream,
                             std::shared_ptr<const Exception> exception);
+#ifdef OWT_ENABLE_QUIC
+  void TriggerOnIncomingStream(const std::string& session_id,
+                               owt::quic::QuicTransportStreamInterface* stream);
+#endif
   // Return true if |user_info| is correct, and |*participant| points to the participant
   // object
   bool ParseUser(std::shared_ptr<sio::message> user_info, Participant** participant) const;
@@ -471,6 +474,8 @@ class ConferenceClient final
   void RemoveStreamUpdateObserver(ConferenceStreamUpdateObserver& observer);
 #ifdef OWT_ENABLE_QUIC
   void InitializeQuicClientIfSupported(const std::string& token_base64);
+  std::string WebTransportId();
+  bool ParseWebTransportToken();
 #endif
   enum StreamType: int;
   ConferenceClientConfiguration configuration_;
@@ -508,6 +513,13 @@ class ConferenceClient final
   // Each conference client will be associated with one quic_transport_channel_ instance.
   std::shared_ptr<ConferenceWebTransportChannel> web_transport_channel_;
   std::atomic<bool> web_transport_channel_connected_;
+  std::string webtransport_id_;  // transportId used for publish/subscribe.
+  std::string webtransport_token_; // base64 encoded webTransportToken recevied after joining. key is session_id(publication_id)
+  std::map<std::string, std::shared_ptr<ConferencePublication>> quic_publications_;
+  mutable std::mutex quic_publications_mutex_;
+  // key is session_id(subscription_id)
+  std::map<std::string, std::shared_ptr<ConferenceSubscription>> quic_subscriptions_;
+  mutable std::mutex quic_subscriptions_mutex_;
 #endif
 };
 }
