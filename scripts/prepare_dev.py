@@ -38,6 +38,7 @@ patchList = [
     ('0007-Fix-examples-path-error.patch', BUILD_PATH),
     ('0008-Disable-loop-range-analysis-when-build-with-Xcode-cl.patch', BUILD_PATH),
     ('0009-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
+    ('0010-mac-make-find_sdk.py-work-when-the-sdk-goes-to-11.patch', BUILD_PATH),
     ('0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch', LIBJPEG_TURBO_PATH),
     ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH)
