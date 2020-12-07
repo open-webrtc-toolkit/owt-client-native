@@ -77,9 +77,10 @@ void ConferenceWebTransportChannel::Connect() {
 
   owt::quic::QuicTransportClientInterface::Parameters quic_params;
   memset(&quic_params, 0, sizeof(quic_params));
+  owt::quic::CertificateFingerprint* fingerprint =
+      new owt::quic::CertificateFingerprint[cert_fingerprint_size];
   if (cert_fingerprint_size > 0) {
-    *(quic_params.server_certificate_fingerprints) =
-        new owt::quic::CertificateFingerprint[cert_fingerprint_size];
+    quic_params.server_certificate_fingerprints = &fingerprint;
     quic_params.server_certificate_fingerprints_length = cert_fingerprint_size;
   }
   int fingerprint_idx = 0;
@@ -87,12 +88,15 @@ void ConferenceWebTransportChannel::Connect() {
     memcpy(quic_params.server_certificate_fingerprints[fingerprint_idx],
            fingerprint.data(), fingerprint.size());
   }
+  RTC_LOG(LS_ERROR) << "Creating Quic transport client.";
   quic_transport_client_.reset(quic_transport_factory_->CreateQuicTransportClient(
       url_.c_str(), quic_params));
   if (quic_transport_client_.get()) {
     quic_transport_client_->SetVisitor(this);
     // Async. Connect status will be notified through visitor.
     quic_transport_client_->Connect();
+  } else {
+    RTC_LOG(LS_ERROR) << "Failed to create Quic transport client.";
   }
 }
 
@@ -298,7 +302,7 @@ std::function<void()> ConferenceWebTransportChannel::RunInEventQueue(
 }
 
 void ConferenceWebTransportChannel::OnConnected() {
-  RTC_LOG(LS_INFO) << "Quic client connected.";
+  RTC_LOG(LS_ERROR) << "Quic client connected.";
   //Authenticate the client.
   RTC_DCHECK(quic_transport_client_.get());
   auth_stream_ = quic_transport_client_->CreateBidirectionalStream();

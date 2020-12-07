@@ -21,5 +21,9 @@ AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
 AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
     true, true, true, true};
 #endif
+#ifdef OWT_ENABLE_QUIC
+std::vector<cert_fingerprint_t>
+    GlobalConfiguration::trusted_quic_certificate_fingerprints_;
+#endif
 }
 }

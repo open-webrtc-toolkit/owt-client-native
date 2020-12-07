@@ -71,7 +71,9 @@ class GlobalConfiguration {
    @param fingerprints collection of trusted certificates' fingerprints.
   */
   static void SetTrustedQuicCertificateFingerprints(
-      const std::vector<cert_fingerprint_t>& fingerprints);
+      const std::vector<cert_fingerprint_t>& fingerprints) {
+    trusted_quic_certificate_fingerprints_ = fingerprints;
+  }
   /**
    @brief This function gets trusted certificate fingerprints
    @return the vector of trusted certificate fingerprints
