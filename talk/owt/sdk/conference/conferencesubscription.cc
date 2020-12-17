@@ -216,9 +216,11 @@ void ConferenceSubscription::OnIncomingStream(const std::string& session_id,
   if (ended_ || stream_id_ != session_id)
     return;
   quic_stream_ = std::make_shared<owt::base::QuicStream>(stream, session_id);
+#if 0
   for (auto its = observers_.begin(); its != observers_.end(); ++its) {
     (*its).get().OnReady();
   }
+#endif
 }
 #endif
 

@@ -721,9 +721,6 @@ MediaStreamInterface* RemoteStream::MediaStream() {
 QuicStream::QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
            const std::string& session_id)
     : quic_stream_(quic_stream), session_id_(session_id) {
-  if (quic_stream_) {
-    quic_stream_->SetVisitor(this);
-  }
 }
 
 QuicStream::~QuicStream() {
@@ -734,13 +731,14 @@ QuicStream::~QuicStream() {
 }
 
 void QuicStream::Write(uint8_t* data, size_t length) {
-  if (quic_stream_ && can_write_ && !fin_read_) {
-    quic_stream_->Write(data, length);
+  if (quic_stream_ /*&& can_write_*/ && !fin_read_) {
+    size_t written = quic_stream_->Write(data, length);
+    RTC_LOG(LS_ERROR) << "Bytes written:" << written;
   }
 }
 
 size_t QuicStream::Read(uint8_t* data, size_t length) {
-  if (quic_stream_ && data && length > 0 && can_read_ && !fin_read_) {
+  if (quic_stream_ && data && length > 0 /*&& can_read_*/ && !fin_read_) {
     return quic_stream_->Read(data, length);
   } else {
     return 0;
@@ -748,7 +746,7 @@ size_t QuicStream::Read(uint8_t* data, size_t length) {
 }
 
 size_t QuicStream::ReadableBytes() const {
-  if (quic_stream_ && can_read_ && !fin_read_) {
+  if (quic_stream_ /*&& can_read_*/ && !fin_read_) {
     return quic_stream_->ReadableBytes();
   } else {
     return 0;

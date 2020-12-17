@@ -20,7 +20,7 @@
 using namespace rtc;
 namespace owt {
 namespace conference {
-#define SIGNALING_PROTOCOL_VERSION "1.1"
+#define SIGNALING_PROTOCOL_VERSION "1.2"
 const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message
@@ -486,6 +486,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
            }
            // TODO: Spec returns {transportId, publication/subscriptionId} while MCU impl
            // is currently returning id and transportId.
+           RTC_LOG(LS_ERROR) << "Fetching transport ID:";
            std::string session_id = msg.at(1)->get_map()["id"]->get_string();
            std::string transport_id("");
            auto transport_id_obj = msg.at(1)->get_map()["transportId"];
@@ -493,6 +494,8 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
                transport_id_obj->get_flag() == sio::message::flag_string) {
              transport_id = transport_id_obj->get_string();
            }
+           RTC_LOG(LS_ERROR) << "Session ID:" << session_id
+                             << ", TransportID:" << transport_id;
            if (event_name == kEventNamePublish || event_name == kEventNameSubscribe) {
              on_success(session_id, transport_id);
              return;

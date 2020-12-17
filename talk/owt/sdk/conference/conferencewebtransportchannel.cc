@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include "talk/owt/sdk/conference/conferencewebtransportchannel.h"
+#include <chrono>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -14,10 +15,12 @@
 #include "talk/owt/sdk/include/cpp/owt/base/globalconfiguration.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/string_utils.h"
 #include "owt/quic/quic_definitions.h"
 #include "owt/quic/quic_transport_client_interface.h"
 #include "owt/quic/quic_transport_factory.h"
 #include "owt/quic/quic_transport_stream_interface.h"
+#include <iostream>
 
 using namespace rtc;
 using namespace owt::quic;
@@ -47,6 +50,7 @@ ConferenceWebTransportChannel::ConferenceWebTransportChannel(
       webtransport_token_(webtransport_token) {
   quic_transport_factory_.reset(owt::quic::QuicTransportFactory::Create());
   quic_client_connected_ = false;
+  auth_cv_ = std::make_unique<std::condition_variable>();
   RTC_CHECK(signaling_channel_);
 }
 
@@ -56,6 +60,7 @@ ConferenceWebTransportChannel::~ConferenceWebTransportChannel() {
 }
 
 void ConferenceWebTransportChannel::Authenticate() {
+  RTC_LOG(LS_INFO) << "Authenticating the client.";
   // Send the transportTicket acquired on joining.
   if (!auth_stream_)
     return;
@@ -85,18 +90,36 @@ void ConferenceWebTransportChannel::Connect() {
   }
   int fingerprint_idx = 0;
   for (auto fingerprint : trusted_fingerprints) {
-    memcpy(quic_params.server_certificate_fingerprints[fingerprint_idx],
-           fingerprint.data(), fingerprint.size());
+    quic_params.server_certificate_fingerprints[fingerprint_idx]->fingerprint =
+        new char[fingerprint.length()];
+    memcpy((void*)(quic_params.server_certificate_fingerprints[fingerprint_idx]->fingerprint),
+           fingerprint.c_str(), fingerprint.length());
   }
-  RTC_LOG(LS_ERROR) << "Creating Quic transport client.";
+  RTC_LOG(LS_INFO) << "Creating Quic transport client.";
   quic_transport_client_.reset(quic_transport_factory_->CreateQuicTransportClient(
       url_.c_str(), quic_params));
   if (quic_transport_client_.get()) {
     quic_transport_client_->SetVisitor(this);
-    // Async. Connect status will be notified through visitor.
     quic_transport_client_->Connect();
   } else {
     RTC_LOG(LS_ERROR) << "Failed to create Quic transport client.";
+  }
+}
+
+void ConferenceWebTransportChannel::AuthenticateCallback() {
+  // Authenticate the client.
+  RTC_LOG(LS_INFO) << "Authenticating the client.";
+  //std::unique_lock<std::mutex> lock(auth_mutex_);
+  //auth_cv_->wait(lock);
+  RTC_DCHECK(quic_transport_client_.get());
+  auth_stream_ = quic_transport_client_->CreateBidirectionalStream();
+  if (auth_stream_) {
+    auth_stream_observer_ = std::make_unique<
+        owt::conference::ConferenceWebTransportChannel::AuthStreamObserver>(
+        this);
+    RTC_LOG(LS_INFO) << "auth stream id:" << auth_stream_->Id();
+    Authenticate();
+    auth_stream_->SetVisitor(auth_stream_observer_.get());
   }
 }
 
@@ -144,11 +167,13 @@ void ConferenceWebTransportChannel::Publish(
   options->get_map()[kStreamOptionAttributesKey] = attributes_ptr;
   // media object should be null for data stream.
   sio::message::ptr media_ptr = sio::object_message::create();
-  options->get_map()["media"] = media_ptr;
+  media_ptr->get_map()["tracks"] = sio::array_message::create();
+  options->get_map()["media"] = /*media_ptr*/sio::null_message::create();
   options->get_map()["data"] = sio::bool_message::create(true);
   sio::message::ptr transport_ptr = sio::object_message::create();
   transport_ptr->get_map()["type"] = sio::string_message::create("quic");
   transport_ptr->get_map()["id"] = sio::string_message::create(transport_id_);
+  options->get_map()["transport"] = transport_ptr;
   SendPublishMessage(options, stream, on_success, on_failure);
 }
 
@@ -172,7 +197,7 @@ void ConferenceWebTransportChannel::Subscribe(
   }
 
   sio::message::ptr sio_options = sio::object_message::create();
-  sio::message::ptr media_options = sio::object_message::create();
+  sio::message::ptr media_options = sio::null_message::create();
   sio_options->get_map()["media"] = media_options;
   sio::message::ptr transport_options = sio::object_message::create();
   transport_options->get_map()["type"] = sio::string_message::create("quic");
@@ -180,16 +205,20 @@ void ConferenceWebTransportChannel::Subscribe(
       sio::string_message::create(transport_id_);
   sio::message::ptr data_options = sio::object_message::create();
   data_options->get_map()["from"] =
-      sio::string_message::create(stream->Origin());
+      sio::string_message::create(stream->Id());
+  sio_options->get_map()["transport"] = transport_options;
+  sio_options->get_map()["data"] = data_options;
   signaling_channel_->SendInitializationMessage(
       sio_options, "", "data-stream",
       [this, on_success, on_failure](std::string session_id,
                                      std::string transport_id) {
         if (on_success) {
+          const std::lock_guard<std::mutex> lock(subscribed_session_ids_mutex_);
+          subscribed_session_ids_.push_back(session_id);
           on_success(session_id);
         }
       },
-      on_failure);  // TODO: on_failure
+      on_failure);
 }
 
 void ConferenceWebTransportChannel::Unpublish(
@@ -276,6 +305,9 @@ void ConferenceWebTransportChannel::SendPublishMessage(
         auto that = weak_this.lock();
         if (that) {
           if (on_success) {
+            const std::lock_guard<std::mutex> lock(
+                that->published_session_ids_mutex_);
+            that->published_session_ids_.push_back(session_id);
             on_success(session_id, transport_id);
           }
         }
@@ -303,10 +335,14 @@ std::function<void()> ConferenceWebTransportChannel::RunInEventQueue(
 
 void ConferenceWebTransportChannel::OnConnected() {
   RTC_LOG(LS_ERROR) << "Quic client connected.";
-  //Authenticate the client.
-  RTC_DCHECK(quic_transport_client_.get());
-  auth_stream_ = quic_transport_client_->CreateBidirectionalStream();
-  auth_stream_observer_ = std::make_unique<owt::conference::ConferenceWebTransportChannel::AuthStreamObserver>(this);
+#ifdef OWT_QUIC_ASYNC_AUTHENTICATION
+  {
+    std::unique_lock<std::mutex> lock(auth_mutex_);
+    auth_cv_->notify_one();
+  }
+#endif
+
+  AuthenticateCallback();
   quic_client_connected_ = true;
   if (observer_) {
     observer_->OnConnected();
@@ -321,6 +357,20 @@ void ConferenceWebTransportChannel::OnConnectionFailed() {
   }
 }
 
+static std::string ConvertToUUID(uint8_t* src) {
+#define UUID_TEXT_LEN_PLUS_1 33
+  char* dst = new char[UUID_TEXT_LEN_PLUS_1];
+  memset(dst, 0, UUID_TEXT_LEN_PLUS_1);
+  sprintf_s(dst, UUID_TEXT_LEN_PLUS_1,
+            "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+            src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7],
+            src[8], src[9], src[10], src[11], src[12], src[13], src[14],
+            src[15]);
+  std::string uuid(dst);
+  delete []dst;
+  return uuid;
+}
+
 // This gets called for subscription case. After sucessful
 // subscribe signaling, MCU will create the send stream on
 // server side, and this results in client's OnIncomingStream
@@ -329,17 +379,33 @@ void ConferenceWebTransportChannel::OnConnectionFailed() {
 // with subscription.
 void ConferenceWebTransportChannel::OnIncomingStream(
     owt::quic::QuicTransportStreamInterface* stream) {
-  // At the time of this callback, the session id is still unknown.
+  // At the time of this callback, the session id may still be unknown.
   // We will need to wait until we read it over signaling session.
-  RTC_LOG(LS_INFO) << "Incoming quic stream.";
+  RTC_LOG(LS_INFO) << "Received incoming quic stream.";
   owt::conference::ConferenceWebTransportChannel::IncomingStreamObserver* stream_observer =
       new owt::conference::ConferenceWebTransportChannel::IncomingStreamObserver(this, stream);
   stream->SetVisitor(stream_observer);
+
+  int max_retries = 5;
+  while (max_retries > 0) {
+    if (stream->ReadableBytes() >= 16) {
+      uint8_t* session_bin = new uint8_t[16];
+      memset(session_bin, 0, 16);
+      stream->Read(session_bin, 16);
+      std::string session_id = ConvertToUUID(session_bin);
+      RTC_LOG(LS_ERROR) << "Session ID from server:" << session_id;
+      OnStreamSessionId(session_id, stream);
+      delete []session_bin;
+      break;
+    } else {
+      max_retries--;
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+  }
 }
 
 void ConferenceWebTransportChannel::OnStreamSessionId(const std::string& session_id,
     owt::quic::QuicTransportStreamInterface* stream) {
-  // TODO: remove the stream observer for this stream first.
   if (observer_) {
     observer_->OnIncomingStream(session_id, stream);
   }
@@ -369,6 +435,7 @@ void ConferenceWebTransportChannel::CreateSendStream(
   // For local stream session id is not specified at stream creation time.
   std::shared_ptr<owt::base::QuicStream> writable_stream =
       std::make_shared<owt::base::QuicStream>(quic_stream, "0");
+  writable_stream->SetVisitor(writable_stream.get());
   int error_code = 0;
   on_success(owt::base::LocalStream::Create(writable_stream, error_code));
 }

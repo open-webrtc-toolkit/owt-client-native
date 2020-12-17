@@ -258,7 +258,17 @@ void ConferenceClient::OnConnectionFailed() {
 void ConferenceClient::OnIncomingStream(const std::string& session_id,
   owt::quic::QuicTransportStreamInterface* stream) {
   RTC_LOG(LS_INFO) << "Quic client received a stream on session:" << session_id;
-  TriggerOnIncomingStream(session_id, stream);
+  // Check if the subscription exists for this stream. Trigger immediately
+  // if exists. Otherwise push to pending list.
+  {
+    std::lock_guard<std::mutex> lock(quic_subscriptions_mutex_);
+    if (quic_subscriptions_.find(session_id) != quic_subscriptions_.end()) {
+      TriggerOnIncomingStream(session_id, stream);
+    } else {
+      std::lock_guard<std::mutex> stream_lock(pending_quic_streams_mutex_);
+      pending_incoming_streams_[session_id] = stream;
+    }
+  }
 }
 
 std::string ConferenceClient::WebTransportId() {
@@ -472,6 +482,33 @@ void ConferenceClient::Join(
       on_failure);
 }
 
+
+static  void ConvertUUID(const char* src_ptr, uint8_t* dest) {
+#define GUID_CHAR_LEN 32
+#define GUID_BIN_LEN 16
+  char* src = new char[GUID_CHAR_LEN];
+  memcpy(src, src_ptr, GUID_CHAR_LEN);
+  memset(dest, 0, GUID_BIN_LEN);
+  size_t uuid_idx = 0, data_idx = 0, src_len = strlen(src);
+  for (; data_idx < GUID_BIN_LEN && uuid_idx < src_len;) {
+    if ('A' <= src[uuid_idx] && src[uuid_idx] <= 'Z')
+      src[uuid_idx] |= (1 << 5);
+    uint8_t temp_h = ('0' <= src[uuid_idx] && src[uuid_idx] <= '9')
+                         ? src[uuid_idx] - '0'
+                         : src[uuid_idx] - 'W';
+    uuid_idx++;
+    if ('A' <= src[uuid_idx] && src[uuid_idx] <= 'Z')
+      src[uuid_idx] |= (1 << 5);
+    uint8_t temp_l = ('0' <= src[uuid_idx] && src[uuid_idx] <= '9')
+                         ? src[uuid_idx] - '0'
+                         : src[uuid_idx] - 'W';
+    dest[data_idx] = (temp_h << 4) | temp_l;
+    data_idx++;
+    uuid_idx++;
+  }
+  delete []src;
+}
+
 void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
@@ -488,6 +525,10 @@ void ConferenceClient::Publish(
     RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    RTC_LOG(LS_ERROR) << "Signaling channel disconnected.";
+    return;
+  }
 #ifdef OWT_ENABLE_QUIC
   if (stream->DataEnabled()) {
     if (web_transport_channel_ && web_transport_channel_connected_) {
@@ -501,13 +542,22 @@ void ConferenceClient::Publish(
             // map current pcc
             if (on_success != nullptr) {
               // For QUIC stream we use session_id as stream_id for publication.
+              RTC_LOG(LS_ERROR)
+                  << "Publication succeed. Returning session id/transport id:"
+                  << session_id;
               std::shared_ptr<ConferencePublication> cp(
                   new ConferencePublication(that, session_id, session_id));
               {
                 std::lock_guard<std::mutex> lock(that->quic_publications_mutex_);
                 that->quic_publications_[session_id] = cp;
               }
-              stream->Stream()->Write((uint8_t*)session_id.c_str(), session_id.length());
+              RTC_LOG(LS_ERROR)
+                  << "Writting session id for stream auth:" << session_id;
+              // Convert to hex16 and write for stream auth.
+              uint8_t* stream_uuid = new uint8_t[16];
+              ConvertUUID(session_id.c_str(), stream_uuid);
+              stream->Stream()->Write(stream_uuid, 16);
+              delete []stream_uuid;
               on_success(cp);
             }
           },
@@ -544,10 +594,6 @@ void ConferenceClient::Publish(
         on_failure(std::move(e));
       });
     }
-    return;
-  }
-  if (!CheckSignalingChannelOnline(on_failure)) {
-    RTC_LOG(LS_ERROR) << "Signaling channel disconnected.";
     return;
   }
   // Reorder SDP according to perference list.
@@ -600,6 +646,7 @@ void ConferenceClient::Subscribe(
   }
 #ifdef OWT_ENABLE_QUIC
   if (stream->DataEnabled()) {
+    RTC_LOG(LS_ERROR) << "Requesting subscibe of quic stream.";
     if (web_transport_channel_ && web_transport_channel_connected_) {
       std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
       web_transport_channel_->Subscribe(
@@ -608,7 +655,6 @@ void ConferenceClient::Subscribe(
             auto that = weak_this.lock();
             if (!that)
               return;
-            // map current pcc
             if (on_success != nullptr) {
               // For QUIC stream we use session_id as stream_id for publication.
               std::shared_ptr<ConferenceSubscription> cp(
@@ -617,6 +663,19 @@ void ConferenceClient::Subscribe(
                 std::lock_guard<std::mutex> lock(
                     that->quic_subscriptions_mutex_);
                 that->quic_subscriptions_[session_id] = cp;
+              }
+              RTC_LOG(LS_ERROR)
+                  << "Returning forward subsciption for quic stream subscribe.";
+              // Check if any pending stream for this to be attached.
+              {
+                std::lock_guard<std::mutex> stream_lock(
+                    that->pending_quic_streams_mutex_);
+                if (that->pending_incoming_streams_.find(session_id) !=
+                    that->pending_incoming_streams_.end()) {
+                  that->TriggerOnIncomingStream(
+                      session_id, that->pending_incoming_streams_[session_id]);
+                  that->pending_incoming_streams_.erase(session_id);
+                }
               }
               on_success(cp);
             }
@@ -740,6 +799,7 @@ void ConferenceClient::UnPublish(
     std::lock_guard<std::mutex> lock(quic_publications_mutex_);
     auto it = quic_publications_.find(session_id);
     if (it != quic_publications_.end() && web_transport_channel_) {
+      RTC_LOG(LS_INFO) << "Unpublishing quic publication.";
       web_transport_channel_->Unpublish(session_id, on_success, on_failure);
       quic_publications_.erase(session_id);
       return;
@@ -1229,22 +1289,27 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
   std::string video_source("");
   std::string audio_source("");
   std::string data_source("");
+
+  /*
+  { id: '7b1c8f4beb684ab18cfca95ed377a520',
+  status: 'add',
+  data:
+   { id: '7b1c8f4beb684ab18cfca95ed377a520',
+     type: 'forward',
+     media: { tracks: [] },
+     data: true,
+     info: { owner: 'ctM4Z72nLVf3F88ZAAAW', type: 'quic', inViews: [] } } }
+  */
   bool has_audio = false, has_video = false, has_data = false;
   std::unordered_map<std::string, std::string> attributes;
   auto media_info = stream_info->get_map()["media"];
-  if (media_info == nullptr ||
-      media_info->get_flag() != sio::message::flag_object) {
+  if (stream_info->get_map()["data"] != nullptr) {
     // Check if current stream is a quic stream.
     auto data_info = stream_info->get_map()["data"];
     if (data_info != nullptr &&
         data_info->get_flag() == sio::message::flag_boolean) {
       has_data = data_info->get_bool();
-    }
-    // A stream must either has data or media.
-    if (!has_data) {
-      RTC_LOG(LS_ERROR) << "Invalid media info from stream " << id
-                        << ", this stream will be ignored.";
-      return;
+      RTC_LOG(LS_ERROR) << "Stream has data:" << has_data;
     }
   }
   auto type = stream_info->get_map()["type"]->get_string();
@@ -1359,7 +1424,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
   auto video_info = media_info->get_map()["video"];
   if (video_info == nullptr ||
       video_info->get_flag() != sio::message::flag_object) {
-    RTC_LOG(LS_INFO) << "No audio info in the media info";
+    RTC_LOG(LS_INFO) << "No video info in the media info";
   } else {
     // Parse the VideoInfo structure.
     auto video_source_obj = video_info->get_map()["source"];
@@ -1522,33 +1587,13 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
   if (type == "forward") {
     // Forward stream might be quic stream
     if (has_data) {
+      RTC_LOG(LS_ERROR) << "Adding stream of id:" << id;
       auto remote_stream = std::make_shared<RemoteStream>(id, owner_id);
       remote_stream->has_audio_ = false;
       remote_stream->has_video_ = false;
       remote_stream->has_data_ = true;
       added_streams_[id] = remote_stream;
       added_stream_type_[id] = StreamType::kStreamTypeQuic;
-    }
-    AudioSourceInfo audio_source_info(AudioSourceInfo::kUnknown);
-    VideoSourceInfo video_source_info(VideoSourceInfo::kUnknown);
-    auto audio_source_it = audio_source_names.find(audio_source);
-    if (audio_source_it != audio_source_names.end()) {
-      audio_source_info = audio_source_it->second;
-    }
-    auto video_source_it = video_source_names.find(video_source);
-    if (video_source_it != video_source_names.end()) {
-      video_source_info = video_source_it->second;
-    }
-    if (video_source != "screen-cast") {
-      auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
-      remote_stream->has_audio_ = has_audio;
-      remote_stream->has_video_ = has_video;
-      remote_stream->Attributes(attributes);
-      remote_stream->source_.audio = audio_source_info;
-      remote_stream->source_.video = video_source_info;
-      added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeCamera;
       {
         const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
         current_conference_info_->AddOrUpdateStream(remote_stream, updated);
@@ -1561,24 +1606,59 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
         }
       }
     } else {
-      auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
-      RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
-      remote_stream->has_audio_ = has_audio;
-      remote_stream->has_video_ = true;
-      remote_stream->Attributes(attributes);
-      remote_stream->source_.audio = audio_source_info;
-      remote_stream->source_.video = video_source_info;
-      added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeScreen;
-      {
-        const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
-        current_conference_info_->AddOrUpdateStream(remote_stream, updated);
-        if (!joining && !updated) {
-          for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-            auto& o = (*its).get();
-            event_queue_->PostTask(
-                [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+      AudioSourceInfo audio_source_info(AudioSourceInfo::kUnknown);
+      VideoSourceInfo video_source_info(VideoSourceInfo::kUnknown);
+      auto audio_source_it = audio_source_names.find(audio_source);
+      if (audio_source_it != audio_source_names.end()) {
+        audio_source_info = audio_source_it->second;
+      }
+      auto video_source_it = video_source_names.find(video_source);
+      if (video_source_it != video_source_names.end()) {
+        video_source_info = video_source_it->second;
+      }
+      if (video_source != "screen-cast") {
+        auto remote_stream = std::make_shared<RemoteStream>(
+            id, owner_id, subscription_capabilities, publication_settings);
+        remote_stream->has_audio_ = has_audio;
+        remote_stream->has_video_ = has_video;
+        remote_stream->Attributes(attributes);
+        remote_stream->source_.audio = audio_source_info;
+        remote_stream->source_.video = video_source_info;
+        added_streams_[id] = remote_stream;
+        added_stream_type_[id] = StreamType::kStreamTypeCamera;
+        {
+          const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+          current_conference_info_->AddOrUpdateStream(remote_stream, updated);
+          if (!joining && !updated) {
+            for (auto its = observers_.begin(); its != observers_.end();
+                 ++its) {
+              auto& o = (*its).get();
+              event_queue_->PostTask(
+                  [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+            }
+          }
+        }
+      } else {
+        auto remote_stream = std::make_shared<RemoteStream>(
+            id, owner_id, subscription_capabilities, publication_settings);
+        RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
+        remote_stream->has_audio_ = has_audio;
+        remote_stream->has_video_ = true;
+        remote_stream->Attributes(attributes);
+        remote_stream->source_.audio = audio_source_info;
+        remote_stream->source_.video = video_source_info;
+        added_streams_[id] = remote_stream;
+        added_stream_type_[id] = StreamType::kStreamTypeScreen;
+        {
+          const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+          current_conference_info_->AddOrUpdateStream(remote_stream, updated);
+          if (!joining && !updated) {
+            for (auto its = observers_.begin(); its != observers_.end();
+                 ++its) {
+              auto& o = (*its).get();
+              event_queue_->PostTask(
+                  [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+            }
           }
         }
       }

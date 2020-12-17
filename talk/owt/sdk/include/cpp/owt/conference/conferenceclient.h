@@ -21,7 +21,9 @@
 #include "owt/conference/conferencesubscription.h"
 #include "owt/conference/streamupdateobserver.h"
 #include "owt/conference/subscribeoptions.h"
-
+#ifdef OWT_ENABLE_QUIC
+#include "owt/quic/quic_transport_stream_interface.h"
+#endif
 namespace sio{
   class message;
 }
@@ -520,6 +522,9 @@ class ConferenceClient final
   // key is session_id(subscription_id)
   std::map<std::string, std::shared_ptr<ConferenceSubscription>> quic_subscriptions_;
   mutable std::mutex quic_subscriptions_mutex_;
+  std::unordered_map<std::string, QuicTransportStreamInterface*>
+      pending_incoming_streams_;
+  mutable std::mutex pending_quic_streams_mutex_;
 #endif
 };
 }

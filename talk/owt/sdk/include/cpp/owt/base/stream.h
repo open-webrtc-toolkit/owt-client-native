@@ -198,11 +198,16 @@ class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
     can_read_ = false;
     can_write_ = false;
   }
+  void SetVisitor(owt::quic::QuicTransportStreamInterface::Visitor* visitor) {
+    if (quic_stream_ && visitor) {
+      quic_stream_->SetVisitor(visitor);
+    }
+  }
  private:
   owt::quic::QuicTransportStreamInterface* quic_stream_;
   std::string session_id_;
-  std::atomic<bool> can_read_ = false;
-  std::atomic<bool> can_write_ = false;
+  std::atomic<bool> can_read_ = true;
+  std::atomic<bool> can_write_ = true;
   std::atomic<bool> fin_read_ = false;
 };
 #endif // OWT_ENABLE_QUIC

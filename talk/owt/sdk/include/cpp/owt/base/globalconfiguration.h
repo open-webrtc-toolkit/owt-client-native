@@ -19,7 +19,7 @@
 namespace owt {
 namespace base{
 #ifdef OWT_ENABLE_QUIC
-typedef std::array<char, QUIC_CERT_FINGERPRINT_SIZE> cert_fingerprint_t;
+typedef std::string cert_fingerprint_t;
 #endif
 /** @cond */
 /// Audio processing settings.

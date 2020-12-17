@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_CONFERENCE_CONFERENCEWEBTRANSPORTCHANNEL_H_
 #define OWT_CONFERENCE_CONFERENCEWEBTRANSPORTCHANNEL_H_
+#include <chrono>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
-#include <chrono>
 #include <random>
 #include <string>
+#include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/owt/include/sio_message.h"
 #include "talk/owt/include/sio_client.h"
@@ -44,14 +46,19 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
    public:
     AuthStreamObserver(ConferenceWebTransportChannel* channel)
         : channel_(channel) {}
-    virtual void OnCanRead() {}
+    virtual void OnCanRead() {
+        RTC_LOG(LS_ERROR) << "On Can read.";
+    }
     virtual void OnCanWrite() {
+      RTC_LOG(LS_ERROR) << "On Can Write.";
       if (channel_ && !authenticated_) {
         channel_->Authenticate();
         authenticated_ = true;
       }
     }
-    virtual void OnFinRead() {}
+    virtual void OnFinRead() {
+        RTC_LOG(LS_ERROR) << "Fin Read";
+    }
    private:
     ConferenceWebTransportChannel* channel_;
     bool authenticated_ = false;
@@ -62,28 +69,7 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     IncomingStreamObserver(ConferenceWebTransportChannel* channel, owt::quic::QuicTransportStreamInterface* stream)
         : channel_(channel)
         , stream_(stream) {}
-    virtual void OnCanRead() {
-      if (stream_) {
-        uint8_t session_id[16] = {1};
-        stream_->Read(&session_id[0], 16);
-        bool may_be_signaling = true;
-        for (auto i : session_id) {
-          if (i != 0) {
-            may_be_signaling = false;
-            break;
-          }
-        }
-        if (may_be_signaling) {
-          // 4-bytes length
-          stream_->Read(&session_id[0], 4);
-          stream_->Read(&session_id[0], 16);
-          std::string signaled_session_id(session_id, session_id + sizeof(session_id));
-          if (channel_) {
-            channel_->OnStreamSessionId(signaled_session_id, stream_);
-          }
-        }
-      }
-    }
+    virtual void OnCanRead() {}
     virtual void OnCanWrite() {}
     virtual void OnFinRead() {}
    public:
@@ -152,10 +138,10 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     std::function <void(std::string session_id, std::string transport_id)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::function<void()> RunInEventQueue(std::function<void()> func);
+  void AuthenticateCallback();
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   ConferenceWebTransportChannelObserver* observer_;
   bool connected_;
-  // Queue for callbacks and events.
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::unique_ptr<owt::quic::QuicTransportFactory> quic_transport_factory_;
@@ -174,6 +160,9 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
   mutable std::mutex published_session_ids_mutex_;
   std::vector<std::string> subscribed_session_ids_;
   mutable std::mutex subscribed_session_ids_mutex_;
+  // We cannot do authentication in the OnConnected callback.
+  mutable std::mutex auth_mutex_;
+  std::unique_ptr<std::condition_variable> auth_cv_;
 };
 }
 }
