@@ -174,17 +174,44 @@ class Stream {
 };
 
 #ifdef OWT_ENABLE_QUIC
-/// A writable stream  is created by MCU which can be used to construct
-/// LocalStream for publishing. Underlyingly it is a bi-directional stream
-/// by design.
+/// A QuicStream can be fetched from a published LocalStream for data,
+/// on which you can write to MCU;
+/// Or from a subscription from MCU for data, on which you can read.
 class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
  public:
   QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
              const std::string& session_id);
   ~QuicStream();
-  void Write(uint8_t* data, size_t length);
+
+  /**
+   @brief Write data to MCU.
+   @details Send data to MCU with WebTransport. Should be only
+   called when stream is published.
+   @param data Pointer to data to be written to MCU
+   @param length Size of data to be written.
+   @param Actual bytes written to MCU.
+  */
+  size_t Write(uint8_t* data, size_t length);
+  /**
+   @brief Read data from MCU.
+   @details Read data from MCU with WebTransport. Should only
+   be called on stream returned from subscription.
+   @param data Pointer to the buffer from storing data.
+   @param length Size of the buffer.
+   @return Size of data actually read from MCU.
+  */
   size_t Read(uint8_t* data, size_t length);
+  /**
+   @brief Returns the amount of data that can be read on the stream
+   @return Bytes of data available on the stream.
+  */
   size_t ReadableBytes() const;
+  void SetVisitor(owt::quic::QuicTransportStreamInterface::Visitor* visitor) {
+    if (quic_stream_ && visitor) {
+      quic_stream_->SetVisitor(visitor);
+    }
+  }
+  /** @cond */
   // Implemnents QuicTransportStreamInterface::Visitor
   void OnCanRead() {
     can_read_ = true;
@@ -198,17 +225,13 @@ class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
     can_read_ = false;
     can_write_ = false;
   }
-  void SetVisitor(owt::quic::QuicTransportStreamInterface::Visitor* visitor) {
-    if (quic_stream_ && visitor) {
-      quic_stream_->SetVisitor(visitor);
-    }
-  }
+  /** @endcond */
  private:
   owt::quic::QuicTransportStreamInterface* quic_stream_;
   std::string session_id_;
-  std::atomic<bool> can_read_ = true;
-  std::atomic<bool> can_write_ = true;
-  std::atomic<bool> fin_read_ = false;
+  std::atomic<bool> can_read_;
+  std::atomic<bool> can_write_;
+  std::atomic<bool> fin_read_;
 };
 #endif // OWT_ENABLE_QUIC
 
@@ -268,15 +291,20 @@ class LocalStream : public Stream {
 
 #ifdef OWT_ENABLE_QUIC
   /**
-   @brief Create a data stream.
-   @detail This creates a WebTransport stream with specified configuraitons.
-   @param parameters WebTransport stream settings for stream creation.
+   @brief Create a data stream for writing data to MCU.
+   @detail This creates a WebTransport stream for publishing data.
    @param error_code Error code will be set if creation fails.
+   @return Pointer to created LocalStream.
   */
   static std::shared_ptr<LocalStream> Create(
       std::shared_ptr<QuicStream> writable_stream,
       int& error_code);
 
+  /**
+   @brief Get underlying quic stream from a local stream.
+   @detail The returns the stream writer for WebTransport
+   @return Pointer to the writable quic stream.
+  */
   std::shared_ptr<owt::base::QuicStream> Stream();
 #endif
 

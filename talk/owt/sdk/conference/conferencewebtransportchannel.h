@@ -1,8 +1,9 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_CONFERENCE_CONFERENCEWEBTRANSPORTCHANNEL_H_
 #define OWT_CONFERENCE_CONFERENCEWEBTRANSPORTCHANNEL_H_
+
 #include <chrono>
 #include <condition_variable>
 #include <memory>
@@ -30,7 +31,7 @@ using namespace owt::base;
 using namespace owt::quic;
 
 // An instance of ConferenceWebTransportChannel manages a WebTransport channel with
-// MCU as well as it's signaling through Socket.IO.
+// MCU as well as its signaling through Socket.IO.
 class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterface::Visitor, 
     public std::enable_shared_from_this<ConferenceWebTransportChannel> {
  public:
@@ -46,19 +47,14 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
    public:
     AuthStreamObserver(ConferenceWebTransportChannel* channel)
         : channel_(channel) {}
-    virtual void OnCanRead() {
-        RTC_LOG(LS_ERROR) << "On Can read.";
-    }
+    virtual void OnCanRead() {}
     virtual void OnCanWrite() {
-      RTC_LOG(LS_ERROR) << "On Can Write.";
       if (channel_ && !authenticated_) {
         channel_->Authenticate();
         authenticated_ = true;
       }
     }
-    virtual void OnFinRead() {
-        RTC_LOG(LS_ERROR) << "Fin Read";
-    }
+    virtual void OnFinRead() {}
    private:
     ConferenceWebTransportChannel* channel_;
     bool authenticated_ = false;
@@ -110,7 +106,9 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
       const std::string& session_id,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-  // Socket.IO event. WebTransport channel does not rely on this.
+  // Socket.IO event. WebTransport channel does not rely on this at
+  // present. TODO(jianlin): handle quic signaling message for progress
+  // update.
   virtual void OnSignalingMessage(sio::message::ptr message) {}
   // TODO: define stats API
   void OnStreamError(const std::string& error_message);
@@ -160,7 +158,6 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
   mutable std::mutex published_session_ids_mutex_;
   std::vector<std::string> subscribed_session_ids_;
   mutable std::mutex subscribed_session_ids_mutex_;
-  // We cannot do authentication in the OnConnected callback.
   mutable std::mutex auth_mutex_;
   std::unique_ptr<std::condition_variable> auth_cv_;
 };

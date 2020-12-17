@@ -404,6 +404,20 @@ void ConferencePeerConnectionChannel::Publish(
     }
     return;
   }
+  int audio_track_count = 0, video_track_count = 0;
+  audio_track_count = stream->MediaStream()->GetAudioTracks().size();
+  video_track_count = stream->MediaStream()->GetVideoTracks().size();
+  if (audio_track_count == 0 && video_track_count == 0) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown,
+            "Cannot publish media stream without any tracks."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
   publish_success_callback_ = on_success;
   failure_callback_ = on_failure;
   audio_transceiver_direction_=webrtc::RtpTransceiverDirection::kSendOnly;
@@ -416,24 +430,32 @@ void ConferencePeerConnectionChannel::Publish(
         sio::string_message::create(attr.second);
   }
   options->get_map()[kStreamOptionAttributesKey] = attributes_ptr;
-  // media
+  // TODO(jianlin): currently we fix mid to 0/1. Need
+  // to update the flow to set local desc for retrieving the mid.
   sio::message::ptr media_ptr = sio::object_message::create();
-  if (stream->MediaStream()->GetAudioTracks().size() == 0) {
-    media_ptr->get_map()["audio"] = sio::bool_message::create(false);
-  } else {
+  sio::message::ptr tracks_ptr = sio::array_message::create();
+  if (audio_track_count != 0) {
+    RTC_LOG(LS_INFO) << "Adding audio tracks for publish.";
     sio::message::ptr audio_options = sio::object_message::create();
+    audio_options->get_map()["type"] = sio::string_message::create("audio");
+    audio_options->get_map()["mid"] = sio::string_message::create("0");
     if (stream->Source().audio == owt::base::AudioSourceInfo::kScreenCast) {
       audio_options->get_map()["source"] =
           sio::string_message::create("screen-cast");
     } else {
       audio_options->get_map()["source"] = sio::string_message::create("mic");
     }
-    media_ptr->get_map()["audio"] = audio_options;
+    tracks_ptr->get_vector().push_back(audio_options);
   }
-  if (stream->MediaStream()->GetVideoTracks().size() == 0) {
-    media_ptr->get_map()["video"] = sio::bool_message::create(false);
-  } else {
+  if (video_track_count != 0) {
+    RTC_LOG(LS_INFO) << "Adding video tracks for publish.";
     sio::message::ptr video_options = sio::object_message::create();
+    video_options->get_map()["type"] = sio::string_message::create("video");
+    if (audio_track_count == 0) {
+      video_options->get_map()["mid"] = sio::string_message::create("0");
+    } else {
+      video_options->get_map()["mid"] = sio::string_message::create("1");
+    }
     if (stream->Source().video == owt::base::VideoSourceInfo::kScreenCast) {
       video_options->get_map()["source"] =
           sio::string_message::create("screen-cast");
@@ -441,11 +463,16 @@ void ConferencePeerConnectionChannel::Publish(
       video_options->get_map()["source"] =
           sio::string_message::create("camera");
     }
-    media_ptr->get_map()["video"] = video_options;
+    tracks_ptr->get_vector().push_back(video_options);
   }
+  media_ptr->get_map()["tracks"] = tracks_ptr;
   options->get_map()["media"] = media_ptr;
+  sio::message::ptr transport_ptr = sio::object_message::create();
+  transport_ptr->get_map()["type"] = sio::string_message::create("webrtc");
+  options->get_map()["transport"] = transport_ptr;
   SendPublishMessage(options, stream, on_failure);
 }
+
 static bool SubOptionAllowed(
     const SubscribeOptions& subscribe_options,
     const PublicationSettings& publication_settings,
@@ -556,7 +583,6 @@ void ConferencePeerConnectionChannel::Subscribe(
     }
     return;
   }
-  subscribed_stream_ = stream;
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     RTC_LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
     return;
@@ -572,18 +598,38 @@ void ConferencePeerConnectionChannel::Subscribe(
   }
   subscribe_success_callback_ = on_success;
   failure_callback_ = on_failure;
-  sio::message::ptr sio_options = sio::object_message::create();
-  sio::message::ptr media_options = sio::object_message::create();
+  int audio_track_count = 0, video_track_count = 0;
   if (stream->has_audio_ && !subscribe_options.audio.disabled) {
-    sio::message::ptr audio_options = sio::object_message::create();
-    audio_options->get_map()["from"] =
-        sio::string_message::create(stream->Id());
-    media_options->get_map()["audio"] = audio_options;
-  } else {
-    media_options->get_map()["audio"] = sio::bool_message::create(false);
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
+    audio_track_count = 1;
   }
   if (stream->has_video_ && !subscribe_options.video.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
+    video_track_count = 1;
+  }
+  sio::message::ptr sio_options = sio::object_message::create();
+  sio::message::ptr media_options = sio::object_message::create();
+  sio::message::ptr tracks_options = sio::array_message::create();
+  if (audio_track_count > 0) {
+    sio::message::ptr audio_options = sio::object_message::create();
+    audio_options->get_map()["type"] = sio::string_message::create("audio");
+    audio_options->get_map()["mid"] = sio::string_message::create("0");
+    audio_options->get_map()["from"] =
+        sio::string_message::create(stream->Id());
+    tracks_options->get_vector().push_back(audio_options);
+  }
+  if (video_track_count > 0) {
     sio::message::ptr video_options = sio::object_message::create();
+    video_options->get_map()["type"] = sio::string_message::create("video");
+    if (audio_track_count == 0) {
+      video_options->get_map()["mid"] = sio::string_message::create("0");
+    } else {
+      video_options->get_map()["mid"] = sio::string_message::create("1");
+    }
     video_options->get_map()["from"] =
         sio::string_message::create(stream->Id());
     sio::message::ptr video_spec = sio::object_message::create();
@@ -621,21 +667,15 @@ void ConferencePeerConnectionChannel::Subscribe(
       video_options->get_map()["simulcastRid"] =
           sio::string_message::create(subscribe_options.video.rid);
     }
-    media_options->get_map()["video"] = video_options;
-  } else {
-    media_options->get_map()["video"] = sio::bool_message::create(false);
+    tracks_options->get_vector().push_back(video_options);
   }
+
+  media_options->get_map()["tracks"] = tracks_options;
   sio_options->get_map()["media"] = media_options;
-  if (stream->has_audio_ && !subscribe_options.audio.disabled) {
-    webrtc::RtpTransceiverInit transceiver_init;
-    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
-    AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
-  }
-  if (stream->has_video_ && !subscribe_options.video.disabled) {
-    webrtc::RtpTransceiverInit transceiver_init;
-    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
-    AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
-  }
+  sio::message::ptr transport_ptr = sio::object_message::create();
+  transport_ptr->get_map()["type"] = sio::string_message::create("webrtc");
+  sio_options->get_map()["transport"] = transport_ptr;
+
   signaling_channel_->SendInitializationMessage(
       sio_options, "", stream->Id(),
       [this](std::string session_id, std::string transport_id) {
@@ -644,6 +684,7 @@ void ConferencePeerConnectionChannel::Subscribe(
         CreateOffer();
       },
       on_failure);  // TODO: on_failure
+  subscribed_stream_ = stream;
 }
 void ConferencePeerConnectionChannel::Unpublish(
     const std::string& session_id,

@@ -67,13 +67,16 @@ class GlobalConfiguration {
   /**
    @brief This function sets trusted server certificate fingerprints for
    QUIC connections. If fingerprints is empty, will use webpki for certificate
-   verification.
+   verification. Fingerprint should be a string of format "xx:xx:xx..." which
+   contains SHA-256 of the certificate fingerprint. See more details of the MCU
+   document for getting this value.
    @param fingerprints collection of trusted certificates' fingerprints.
   */
   static void SetTrustedQuicCertificateFingerprints(
       const std::vector<cert_fingerprint_t>& fingerprints) {
     trusted_quic_certificate_fingerprints_ = fingerprints;
   }
+  /** @cond */
   /**
    @brief This function gets trusted certificate fingerprints
    @return the vector of trusted certificate fingerprints
@@ -82,6 +85,7 @@ class GlobalConfiguration {
   GetTrustedQuicCertificateFingerPrints() {
     return trusted_quic_certificate_fingerprints_;
   }
+  /** @endcod */
 #endif
   /** @cond */
   /**

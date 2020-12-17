@@ -332,7 +332,10 @@ class ConferenceClient final
 #ifdef OWT_ENABLE_QUIC
   /**
    @brief Creates a LocalStream for WebTransport.
-    Please be noted this can only be called when client is connected to MCU(successfully joined).
+   @details Please be noted this can only be called when
+   client is connected to MCU(successfully joined).
+   @param onSuccess Success callback with a LocalStream on which
+   you can get a QuicStream.
   */
   void CreateSendStream(
       std::function<void(std::shared_ptr<owt::base::LocalStream>)> on_success,
