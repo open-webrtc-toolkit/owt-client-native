@@ -63,9 +63,6 @@ void BasicWindowCapturer::WindowCaptureThreadFunc(void* pThis) {
 }
 
 bool BasicWindowCapturer::CaptureThreadProcess() {
-  while (!capture_started_) {
-    webrtc::SleepMs(10);
-  }
   while (capture_started_) {
     uint64_t current_time = clock_->CurrentNtpInMilliseconds();
     lock_.Enter();
@@ -112,6 +109,7 @@ int32_t BasicWindowCapturer::StartCapture(
     return -1;
   }
 
+  capture_started_ = true;
   worker_thread_->Invoke<void>(
       RTC_FROM_HERE, rtc::Bind(&BasicWindowCapturer::InitOnWorkerThread, this));
   if (observer_) {
@@ -124,7 +122,6 @@ int32_t BasicWindowCapturer::StartCapture(
   }
 
   window_capturer_->Start(this);
-  capture_started_ = true;
   return 0;
 }
 
@@ -144,10 +141,10 @@ int32_t BasicWindowCapturer::StopCapture() {
 void BasicWindowCapturer::StopOnWorkerThread() {
   if (capture_thread_) {
     stopped_ = true;
+    capture_started_ = false;
     capture_thread_->Stop();
     capture_thread_.reset();
   }
-  capture_started_ = false;
 }
 
 bool BasicWindowCapturer::CaptureStarted() {
