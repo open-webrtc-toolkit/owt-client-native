@@ -286,7 +286,7 @@ mfxStatus D3DFrameAllocator::ReleaseResponse(mfxFrameAllocResponse *response)
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
             if (response->mids[i]) {
                 mfxHDLPair *dxMids = (mfxHDLPair*)response->mids[i];
-                if (dxMids->first)
+                if (dxMids != nullptr && dxMids->first)
                 {
                     static_cast<IDirect3DSurface9*>(dxMids->first)->Release();
                 }
@@ -309,7 +309,6 @@ mfxStatus D3DFrameAllocator::AllocImpl(mfxFrameAllocRequest *request, mfxFrameAl
 
     if (format == D3DFMT_UNKNOWN)
     {
-        msdk_printf(MSDK_STRING("D3D Allocator: invalid fourcc is provided (%#X), exitting\n"),request->Info.FourCC);
         return MFX_ERR_UNSUPPORTED;
     }
 
