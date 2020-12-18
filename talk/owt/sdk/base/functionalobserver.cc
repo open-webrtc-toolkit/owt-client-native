@@ -292,7 +292,21 @@ TransportProtocolType FunctionalStatsObserver::GetTransportProtocolType(const st
   RTC_DCHECK(false);
   return TransportProtocolType::kUnknown;
 }
-std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateReport(const webrtc::StatsReport& report){
+std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateReport(
+    const webrtc::StatsReport& report){
+  if (report.FindValue(
+          webrtc::StatsReport::kStatsValueNameCandidateIPAddress) == nullptr ||
+      report.FindValue(
+          webrtc::StatsReport::kStatsValueNameCandidatePortNumber) == nullptr ||
+      report.FindValue(
+          webrtc::StatsReport::kStatsValueNameCandidateTransportType) ==
+          nullptr ||
+      report.FindValue(webrtc::StatsReport::kStatsValueNameCandidateType) ==
+          nullptr ||
+      report.FindValue(webrtc::StatsReport::kStatsValueNameCandidatePriority) ==
+          nullptr)
+    return nullptr;
+
    std::shared_ptr<IceCandidateReport> candidate_report_ptr(new IceCandidateReport(
       report.id()->ToString(),
       report.FindValue(webrtc::StatsReport::kStatsValueNameCandidateIPAddress)->string_val(),
@@ -302,6 +316,7 @@ std::shared_ptr<IceCandidateReport> FunctionalStatsObserver::GetIceCandidateRepo
       report.FindValue(webrtc::StatsReport::kStatsValueNameCandidatePriority)->int_val()));
    return candidate_report_ptr;
 }
+
 FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
     const webrtc::StatsReport* report) {
   // Check if it's ssrc report.

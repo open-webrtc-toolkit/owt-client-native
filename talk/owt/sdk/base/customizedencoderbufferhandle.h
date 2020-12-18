@@ -45,8 +45,8 @@ class EncodedFrameBuffer : public VideoFrameBuffer {
   void* native_handle() { return native_handle_; }
  private:
   CustomizedEncoderBufferHandle* native_handle_;
-  size_t width_;
-  size_t height_;
+  size_t width_ = 0;
+  size_t height_ = 0;
 };
 }  // namespace base
 }  // namespace owt
