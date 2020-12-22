@@ -175,8 +175,8 @@ class Stream {
 
 #ifdef OWT_ENABLE_QUIC
 /// A QuicStream can be fetched from a published LocalStream for data,
-/// on which you can write to MCU;
-/// Or from a subscription from MCU for data, on which you can read.
+/// on which you can write to server;
+/// Or from a subscription from server for data, on which you can read.
 class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
  public:
   QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
@@ -184,21 +184,21 @@ class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
   ~QuicStream();
 
   /**
-   @brief Write data to MCU.
-   @details Send data to MCU with WebTransport. Should be only
+   @brief Write data to server.
+   @details Send data to server with WebTransport. Should be only
    called when stream is published.
-   @param data Pointer to data to be written to MCU
+   @param data Pointer to data to be written to server
    @param length Size of data to be written.
-   @param Actual bytes written to MCU.
+   @param Actual bytes written to server.
   */
   size_t Write(uint8_t* data, size_t length);
   /**
-   @brief Read data from MCU.
-   @details Read data from MCU with WebTransport. Should only
+   @brief Read data from server.
+   @details Read data from server with WebTransport. Should only
    be called on stream returned from subscription.
    @param data Pointer to the buffer from storing data.
    @param length Size of the buffer.
-   @return Size of data actually read from MCU.
+   @return Size of data actually read from server.
   */
   size_t Read(uint8_t* data, size_t length);
   /**
@@ -291,13 +291,13 @@ class LocalStream : public Stream {
 
 #ifdef OWT_ENABLE_QUIC
   /**
-   @brief Create a data stream for writing data to MCU.
+   @brief Create a data stream for writing data to server.
    @detail This creates a WebTransport stream for publishing data.
    @param error_code Error code will be set if creation fails.
    @return Pointer to created LocalStream.
   */
   static std::shared_ptr<LocalStream> Create(
-      std::shared_ptr<QuicStream> writable_stream,
+      std::shared_ptr<QuicStream> quic_stream,
       int& error_code);
 
   /**
@@ -407,7 +407,7 @@ class LocalStream : public Stream {
 };
 /**
   @brief This class represents a remote stream.
-  @details A remote is published from a remote client or MCU. Do not construct
+  @details A remote is published from a remote client or server. Do not construct
   remote stream outside SDK.
 */
 class RemoteStream : public Stream {

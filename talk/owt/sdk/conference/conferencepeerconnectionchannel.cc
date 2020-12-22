@@ -202,7 +202,7 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
     connected_ = true;
   } else if (new_state == PeerConnectionInterface::kIceConnectionFailed) {
     // TODO(jianlin): Change trigger condition back to kIceConnectionClosed
-    // once MCU re-enables IceRestart and client supports it as well.
+    // once conference server re-enables IceRestart and client supports it as well.
     if (connected_) {
       OnStreamError(std::string("Stream ICE connection failed."));
     }
@@ -430,8 +430,10 @@ void ConferencePeerConnectionChannel::Publish(
         sio::string_message::create(attr.second);
   }
   options->get_map()[kStreamOptionAttributesKey] = attributes_ptr;
-  // TODO(jianlin): currently we fix mid to 0/1. Need
+  // TODO(jianlin): Currently we fix mid to 0/1. Need
   // to update the flow to set local desc for retrieving the mid.
+  // See https://github.com/open-webrtc-toolkit/owt-client-native/issues/459
+  // for more details.
   sio::message::ptr media_ptr = sio::object_message::create();
   sio::message::ptr tracks_ptr = sio::array_message::create();
   if (audio_track_count != 0) {
@@ -562,6 +564,7 @@ static bool SubOptionAllowed(
   return (resolution_supported && frame_rate_supported &&
       keyframe_interval_supported && bitrate_multiplier_supported);
 }
+
 void ConferencePeerConnectionChannel::Subscribe(
     std::shared_ptr<RemoteStream> stream,
     const SubscribeOptions& subscribe_options,
@@ -901,7 +904,7 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
             return;
           std::unique_ptr<Exception> e(new Exception(
               ExceptionType::kConferenceUnknown,
-              "MCU internal error during connection establishment."));
+              "Server internal error during connection establishment."));
           that->failure_callback_(std::move(e));
           that->ResetCallbacks();
         });
@@ -909,13 +912,13 @@ void ConferencePeerConnectionChannel::OnSignalingMessage(
     }
     return;
   } else if (message->get_flag() != sio::message::flag_object) {
-    RTC_LOG(LS_WARNING) << "Ignore invalid signaling message from MCU.";
+    RTC_LOG(LS_WARNING) << "Ignore invalid signaling message from server.";
     return;
   }
-  // Since trickle ICE from MCU is not supported, we parse the message as
+  // Since trickle ICE from server is not supported, we parse the message as
   // SOAC message, not Canddiate message.
   if (message->get_map().find("type") == message->get_map().end()) {
-    RTC_LOG(LS_INFO) << "Ignore erizo message without type from MCU.";
+    RTC_LOG(LS_INFO) << "Ignore message without type from server.";
     return;
   }
   if (message->get_map()["type"]->get_flag() != sio::message::flag_string ||

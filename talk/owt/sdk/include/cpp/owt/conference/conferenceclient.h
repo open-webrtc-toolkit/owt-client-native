@@ -39,16 +39,30 @@ namespace owt {
 namespace conference {
 class Participant;
 using namespace owt::base;
+
 #ifdef OWT_ENABLE_QUIC
 using namespace owt::quic;
+typedef std::string cert_fingerprint_t;
 #endif
+
 /**
   @brief Configuration for creating a ConferenceClient
   @details This configuration is used while creating ConferenceClient.
   Changing this configuration does NOT impact ConferenceClient already
   created.
 */
-struct ConferenceClientConfiguration : ClientConfiguration {};
+struct ConferenceClientConfiguration : public ClientConfiguration {
+#ifdef OWT_ENABLE_QUIC
+ public:
+  // This function sets trusted server certificate fingerprints for
+  // QUIC connections. If fingerprints is empty, will use webpki for certificate
+  // verification. Fingerprint should be a string of format "xx:xx:xx..." which
+  // contains SHA-256 of the certificate fingerprint. See more details of the MCU
+  // document for getting this value.
+  std::vector<cert_fingerprint_t> trusted_quic_certificate_fingerprints;
+#endif
+};
+
 class RemoteMixedStream;
 class ConferencePeerConnectionChannel;
 #ifdef OWT_ENABLE_QUIC

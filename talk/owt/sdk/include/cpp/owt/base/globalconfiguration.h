@@ -9,18 +9,9 @@
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
-#ifdef OWT_ENABLE_QUIC
-#include <array>
-#include <vector>
-#include "owt/quic/quic_transport_client_interface.h"
-#define QUIC_CERT_FINGERPRINT_SIZE 32
-#endif
 
 namespace owt {
 namespace base{
-#ifdef OWT_ENABLE_QUIC
-typedef std::string cert_fingerprint_t;
-#endif
 /** @cond */
 /// Audio processing settings.
 struct AudioProcessingSettings {
@@ -62,30 +53,6 @@ class GlobalConfiguration {
   static void SetVideoHardwareAccelerationEnabled(bool enabled) {
     hardware_acceleration_enabled_ = enabled;
   }
-#endif
-#ifdef OWT_ENABLE_QUIC
-  /**
-   @brief This function sets trusted server certificate fingerprints for
-   QUIC connections. If fingerprints is empty, will use webpki for certificate
-   verification. Fingerprint should be a string of format "xx:xx:xx..." which
-   contains SHA-256 of the certificate fingerprint. See more details of the MCU
-   document for getting this value.
-   @param fingerprints collection of trusted certificates' fingerprints.
-  */
-  static void SetTrustedQuicCertificateFingerprints(
-      const std::vector<cert_fingerprint_t>& fingerprints) {
-    trusted_quic_certificate_fingerprints_ = fingerprints;
-  }
-  /** @cond */
-  /**
-   @brief This function gets trusted certificate fingerprints
-   @return the vector of trusted certificate fingerprints
-  */
-  static std::vector<cert_fingerprint_t>
-  GetTrustedQuicCertificateFingerPrints() {
-    return trusted_quic_certificate_fingerprints_;
-  }
-  /** @endcod */
 #endif
   /** @cond */
   /**
@@ -209,9 +176,6 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
-#ifdef OWT_ENABLE_QUIC
-  static std::vector<cert_fingerprint_t> trusted_quic_certificate_fingerprints_;
-#endif
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

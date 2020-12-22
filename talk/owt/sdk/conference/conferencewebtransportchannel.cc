@@ -1,4 +1,4 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2020> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 #include "talk/owt/sdk/conference/conferencewebtransportchannel.h"
@@ -34,14 +34,17 @@ const std::string kStreamOptionStateKey = "state";
 const std::string kStreamOptionDataKey = "type";
 const std::string kStreamOptionWebTransportKey = "data";
 const std::string kStreamOptionAttributesKey = "attributes";
+#define QUIC_CERT_FINGERPRINT_SIZE 32
 
 ConferenceWebTransportChannel::ConferenceWebTransportChannel(
+    const ConferenceClientConfiguration& configuration,
     const std::string& url,
     const std::string& webtransport_id,
     const std::string& webtransport_token,
     std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel,
     std::shared_ptr<rtc::TaskQueue> event_queue)
-    : signaling_channel_(signaling_channel),
+    : configuration_(configuration),
+      signaling_channel_(signaling_channel),
       connected_(false),
       event_queue_(event_queue),
       url_(url),
@@ -56,7 +59,7 @@ ConferenceWebTransportChannel::ConferenceWebTransportChannel(
 ConferenceWebTransportChannel::~ConferenceWebTransportChannel() {
   RTC_LOG(LS_INFO) << "Deconstruct conference WebTransport channel";
   // We will rely on conference client to stop all publications/subscriptions.
-  if (quic_client_connected_) {
+  if (quic_client_connected_ && quic_transport_client_) {
     quic_transport_client_->Close();
     quic_client_connected_ = false;
   }
@@ -73,21 +76,24 @@ void ConferenceWebTransportChannel::Authenticate() {
   // Send token as described in
   // https://github.com/open-webrtc-toolkit/owt-server/blob/20e8aad216cc446095f63c409339c34c7ee770ee/doc/design/quic-transport-payload-format.md.
   uint32_t token_size = webtransport_token_.length();
+  if (token_size == 0)
+    return;
   memcpy(&signaling_stream_id[0], &token_size, sizeof(uint32_t));
   auth_stream_->Write(&signaling_stream_id[0], sizeof(uint32_t));
   auth_stream_->Write((uint8_t*)(webtransport_token_.c_str()), token_size);
 }
 
 void ConferenceWebTransportChannel::Connect() {
-  std::vector<owt::base::cert_fingerprint_t> trusted_fingerprints =
-      GlobalConfiguration::GetTrustedQuicCertificateFingerPrints();
+  std::vector<owt::conference::cert_fingerprint_t> trusted_fingerprints =
+      configuration_.trusted_quic_certificate_fingerprints;
   size_t cert_fingerprint_size = trusted_fingerprints.size();
 
   owt::quic::QuicTransportClientInterface::Parameters quic_params;
   memset(&quic_params, 0, sizeof(quic_params));
-  owt::quic::CertificateFingerprint* fingerprint =
-      new owt::quic::CertificateFingerprint[cert_fingerprint_size];
+  owt::quic::CertificateFingerprint* fingerprint = nullptr;
+
   if (cert_fingerprint_size > 0) {
+    fingerprint = new owt::quic::CertificateFingerprint[cert_fingerprint_size];
     quic_params.server_certificate_fingerprints = &fingerprint;
     quic_params.server_certificate_fingerprints_length = cert_fingerprint_size;
   }
@@ -156,7 +162,8 @@ void ConferenceWebTransportChannel::Publish(
     std::function<void(std::unique_ptr<owt::base::Exception>)> on_failure) {
   RTC_LOG(LS_INFO) << "Publish a local stream.";
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
+    RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
+    return;
   }
   sio::message::ptr options = sio::object_message::create();
   // attributes
@@ -194,6 +201,7 @@ void ConferenceWebTransportChannel::Subscribe(
         on_failure(std::move(e));
       });
     }
+    return;
   }
 
   sio::message::ptr sio_options = sio::object_message::create();
@@ -318,6 +326,7 @@ void ConferenceWebTransportChannel::SendPublishMessage(
 void ConferenceWebTransportChannel::OnStreamError(
     const std::string& error_message) {
   // Not implemented.
+  RTC_NOTREACHED();
 }
 
 std::function<void()> ConferenceWebTransportChannel::RunInEventQueue(
@@ -357,6 +366,7 @@ void ConferenceWebTransportChannel::OnConnectionFailed() {
   }
 }
 
+#ifdef OWT_ENABLE_QUIC
 static std::string ConvertToUUID(uint8_t* src) {
 #define UUID_TEXT_LEN_PLUS_1 33
   if (!src)
@@ -372,6 +382,7 @@ static std::string ConvertToUUID(uint8_t* src) {
   delete []dst;
   return uuid;
 }
+#endif
 
 // This gets called for subscription case. After sucessful
 // subscribe signaling, MCU will create the send stream on

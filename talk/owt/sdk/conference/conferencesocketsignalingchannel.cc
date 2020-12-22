@@ -269,8 +269,8 @@ void ConferenceSocketSignalingChannel::Connect(
               socket_client_->close();
               return;
             }
-            // The second element is room info, please refer to MCU
-            // erizoController's implementation for detailed message format.
+            // The second element is room info, please refer to server's
+            // portal implementation for detailed message format.
             sio::message::ptr message = msg.at(1);
             if (message->get_flag() == sio::message::flag_string) {
               OnReconnectionTicket(message->get_string());
@@ -418,7 +418,7 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
       RTC_NOTREACHED();
     }
   } else if (name == kEventNameOnSignalingMessage) {
-    RTC_LOG(LS_VERBOSE) << "Received signaling message from MCU.";
+    RTC_LOG(LS_VERBOSE) << "Received signaling message from server.";
     std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnSignalingMessage(data);
@@ -484,7 +484,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
              RTC_DCHECK(false);
              return;
            }
-           // TODO: Spec returns {transportId, publication/subscriptionId} while MCU impl
+           // TODO: Spec returns {transportId, publication/subscriptionId} while server impl
            // is currently returning id and transportId.
            RTC_LOG(LS_ERROR) << "Fetching transport ID:";
            std::string session_id = msg.at(1)->get_map()["id"]->get_string();
@@ -661,7 +661,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
       t.detach();
     }
   } else {
-    RTC_LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+    RTC_LOG(LS_WARNING) << "Send message to server received negative ack.";
     if (msg.size() > 1) {
       sio::message::ptr error_ptr = msg.at(1);
       if (error_ptr->get_flag() == sio::message::flag_string) {

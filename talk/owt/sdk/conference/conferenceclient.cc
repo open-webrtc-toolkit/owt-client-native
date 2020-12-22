@@ -167,7 +167,7 @@ enum ConferenceClient::StreamType : int {
   kStreamTypeCamera = 1,
   kStreamTypeScreen,
   kStreamTypeMix,
-  kStreamTypeQuic,
+  kStreamTypeData,
 };
 const std::string play_pause_failure_message =
     "Cannot play/pause a stream that have not been published or subscribed.";
@@ -333,7 +333,8 @@ void ConferenceClient::InitializeQuicClientIfSupported(const std::string& token_
 
   if (webtransport_url.length() > 0) {
     web_transport_channel_ = std::make_shared<ConferenceWebTransportChannel>(
-        webtransport_url, webtransport_id_, webtransport_token_, signaling_channel_, event_queue_);
+        configuration_, webtransport_url, webtransport_id_,
+        webtransport_token_, signaling_channel_, event_queue_);
     web_transport_channel_->AddObserver(this);
     web_transport_channel_->Connect();
   }
@@ -482,7 +483,7 @@ void ConferenceClient::Join(
       on_failure);
 }
 
-
+#ifdef OWT_ENABLE_QUIC
 static  void ConvertUUID(const char* src_ptr, uint8_t* dest) {
 #define GUID_CHAR_LEN 32
 #define GUID_BIN_LEN 16
@@ -508,6 +509,7 @@ static  void ConvertUUID(const char* src_ptr, uint8_t* dest) {
   }
   delete []src;
 }
+#endif
 
 void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
@@ -1591,7 +1593,7 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       remote_stream->has_video_ = false;
       remote_stream->has_data_ = true;
       added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeQuic;
+      added_stream_type_[id] = StreamType::kStreamTypeData;
       {
         const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
         current_conference_info_->AddOrUpdateStream(remote_stream, updated);

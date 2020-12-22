@@ -452,8 +452,8 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 #endif
 
 #ifdef OWT_ENABLE_QUIC
-LocalStream::LocalStream(std::shared_ptr<QuicStream> writer) {
-  quic_stream_ = writer;
+LocalStream::LocalStream(std::shared_ptr<QuicStream> quic_stream) {
+  quic_stream_ = quic_stream;
   has_data_ = true;
 }
 

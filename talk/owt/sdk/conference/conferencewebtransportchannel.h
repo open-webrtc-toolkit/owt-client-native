@@ -36,6 +36,7 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     public std::enable_shared_from_this<ConferenceWebTransportChannel> {
  public:
   explicit ConferenceWebTransportChannel(
+      const ConferenceClientConfiguration& configuration,
       const std::string& url,
       const std::string& webtransport_id,
       const std::string& webtransport_token,
@@ -137,6 +138,7 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     std::function<void(std::unique_ptr<Exception>)> on_failure);
   std::function<void()> RunInEventQueue(std::function<void()> func);
   void AuthenticateCallback();
+  ConferenceClientConfiguration configuration_;
   std::shared_ptr<ConferenceSocketSignalingChannel> signaling_channel_;
   ConferenceWebTransportChannelObserver* observer_;
   bool connected_;
