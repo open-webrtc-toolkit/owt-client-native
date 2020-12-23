@@ -40,10 +40,22 @@ struct VideoSubscriptionConstraints {
   unsigned long keyFrameInterval;
   std::string rid;
 };
+
+#ifdef OWT_ENABLE_QUIC
+/// Data subscription constraints.
+struct DataSubscriptionConstraints {
+  explicit DataSubscriptionConstraints() : enabled(false) {}
+  bool enabled;
+};
+#endif
+
 /// Subscribe options
 struct SubscribeOptions {
   AudioSubscriptionConstraints audio;
   VideoSubscriptionConstraints video;
+#ifdef OWT_ENABLE_QUIC
+  DataSubscriptionConstraints data;
+#endif
 };
 /// Video subscription update constrains used by subscription's ApplyOptions
 /// API.

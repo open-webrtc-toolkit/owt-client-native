@@ -20,7 +20,7 @@
 using namespace rtc;
 namespace owt {
 namespace conference {
-#define SIGNALING_PROTOCOL_VERSION "1.1"
+#define SIGNALING_PROTOCOL_VERSION "1.2"
 const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message
@@ -269,8 +269,8 @@ void ConferenceSocketSignalingChannel::Connect(
               socket_client_->close();
               return;
             }
-            // The second element is room info, please refer to MCU
-            // erizoController's implementation for detailed message format.
+            // The second element is room info, please refer to server's
+            // portal implementation for detailed message format.
             sio::message::ptr message = msg.at(1);
             if (message->get_flag() == sio::message::flag_string) {
               OnReconnectionTicket(message->get_string());
@@ -418,7 +418,7 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
       RTC_NOTREACHED();
     }
   } else if (name == kEventNameOnSignalingMessage) {
-    RTC_LOG(LS_VERBOSE) << "Received signaling message from erizo.";
+    RTC_LOG(LS_VERBOSE) << "Received signaling message from server.";
     std::lock_guard<std::mutex> lock(observer_mutex_);
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnSignalingMessage(data);
@@ -450,7 +450,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
     sio::message::ptr options,
     std::string publish_stream_label,
     std::string subscribe_stream_label,
-    std::function<void(std::string)> on_success,
+    std::function<void(std::string, std::string)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   sio::message::list message_list;
   message_list.push(options);
@@ -484,10 +484,20 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
              RTC_DCHECK(false);
              return;
            }
+           // TODO: Spec returns {transportId, publication/subscriptionId} while server impl
+           // is currently returning id and transportId.
+           RTC_LOG(LS_ERROR) << "Fetching transport ID:";
            std::string session_id = msg.at(1)->get_map()["id"]->get_string();
+           std::string transport_id("");
+           auto transport_id_obj = msg.at(1)->get_map()["transportId"];
+           if (transport_id_obj != nullptr &&
+               transport_id_obj->get_flag() == sio::message::flag_string) {
+             transport_id = transport_id_obj->get_string();
+           }
+           RTC_LOG(LS_ERROR) << "Session ID:" << session_id
+                             << ", TransportID:" << transport_id;
            if (event_name == kEventNamePublish || event_name == kEventNameSubscribe) {
-             // Notify PeerConnectionChannel.
-             on_success(session_id);
+             on_success(session_id, transport_id);
              return;
            }
            return;
@@ -651,7 +661,7 @@ void ConferenceSocketSignalingChannel::OnEmitAck(
       t.detach();
     }
   } else {
-    RTC_LOG(LS_WARNING) << "Send message to MCU received negative ack.";
+    RTC_LOG(LS_WARNING) << "Send message to server received negative ack.";
     if (msg.size() > 1) {
       sio::message::ptr error_ptr = msg.at(1);
       if (error_ptr->get_flag() == sio::message::flag_string) {

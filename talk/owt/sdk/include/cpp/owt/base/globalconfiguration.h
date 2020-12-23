@@ -9,6 +9,7 @@
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #endif
+
 namespace owt {
 namespace base{
 /** @cond */
@@ -56,9 +57,6 @@ class GlobalConfiguration {
   /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
-   please be noted at present only vp8 and h.264 encoded frame input is supported.
-   If the client configuration sets preferred coded to vp9 or h265, the encoded
-   frame might not be sent out to remote.
    @param enabled Capturing frame is encoded or not.
    */
   static void SetEncodedVideoFrameEnabled(bool enabled) {
@@ -178,7 +176,6 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
-
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

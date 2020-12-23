@@ -9,6 +9,7 @@
 #include "talk/owt/sdk/base/stringutils.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferencesubscription.h"
+
 using namespace rtc;
 namespace owt {
 namespace conference {
@@ -209,6 +210,20 @@ void ConferenceSubscription::OnStreamError(const std::string& error_msg) {
   }
 }
 
+#ifdef OWT_ENABLE_QUIC
+void ConferenceSubscription::OnIncomingStream(const std::string& session_id,
+    owt::quic::QuicTransportStreamInterface* stream) {
+  if (ended_ || stream_id_ != session_id)
+    return;
+  quic_stream_ = std::make_shared<owt::base::QuicStream>(stream, session_id);
+#if 0
+  for (auto its = observers_.begin(); its != observers_.end(); ++its) {
+    (*its).get().OnReady();
+  }
+#endif
+}
+#endif
+
 void ConferenceSubscription::AddObserver(SubscriptionObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<SubscriptionObserver>>::iterator it =
@@ -233,5 +248,11 @@ void ConferenceSubscription::RemoveObserver(SubscriptionObserver& observer) {
   if (it != observers_.end())
     observers_.erase(it);
 }
+
+#ifdef OWT_ENABLE_QUIC
+std::shared_ptr<owt::base::QuicStream> ConferenceSubscription::Stream() {
+  return quic_stream_;
+}
+#endif
 }
 }

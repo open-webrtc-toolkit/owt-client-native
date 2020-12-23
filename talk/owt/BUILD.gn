@@ -171,6 +171,14 @@ static_library("owt_sdk_base") {
   } else {
     defines += [ "OWT_USE_H265" ]
   }
+  
+  if (owt_use_quic) {
+    defines += [ "OWT_ENABLE_QUIC" ]
+    if (owt_quic_header_root != "") {
+      include_dirs += [ owt_quic_header_root ]
+    }
+  }
+  
   if (is_win || is_linux) {
     # Custom audio/video input and output.
     # When rebasing libwebrtc to a new version, custom audio/video input/output
@@ -312,6 +320,17 @@ static_library("owt_sdk_conf") {
   ]
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  if (owt_use_quic) {
+    defines = [ "OWT_ENABLE_QUIC" ]
+    if (owt_quic_header_root != "") {
+      sources += [
+        "sdk/conference/conferencewebtransportchannel.cc",
+        "sdk/conference/conferencewebtransportchannel.h",
+      ]
+      include_dirs += [ owt_quic_header_root ]
+    }
   }
 }
 if (is_ios) {

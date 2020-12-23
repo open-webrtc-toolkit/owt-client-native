@@ -40,7 +40,7 @@ class ConferenceSocketSignalingChannel
       sio::message::ptr options,
       std::string publish_stream_label,
       std::string subcribe_stream_label,
-      std::function<void(std::string)> on_success,
+      std::function<void(std::string, std::string)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   virtual void SendSdp(
       sio::message::ptr message,
@@ -139,6 +139,7 @@ class ConferenceSocketSignalingChannel
   std::queue<SioMessage> outgoing_messages_;
   int outgoing_message_id_;
   std::mutex outgoing_message_mutex_;
+  std::string quic_transport_id_;
 };
 }
 }

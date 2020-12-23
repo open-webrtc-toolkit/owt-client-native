@@ -7,12 +7,17 @@
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/stringutils.h"
 #include "talk/owt/sdk/conference/conferencepeerconnectionchannel.h"
+#ifdef OWT_ENABLE_QUIC
+#include "talk/owt/sdk/conference/conferencewebtransportchannel.h"
+#endif
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
+#include "talk/owt/sdk/include/cpp/owt/base/globalconfiguration.h"
 #include "webrtc/api/stats_types.h"
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
 #include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 
@@ -157,10 +162,12 @@ void ConferenceInfo::TriggerOnStreamMuteOrUnmute(
     }
   }
 }
+
 enum ConferenceClient::StreamType : int {
   kStreamTypeCamera = 1,
   kStreamTypeScreen,
   kStreamTypeMix,
+  kStreamTypeData,
 };
 const std::string play_pause_failure_message =
     "Cannot play/pause a stream that have not been published or subscribed.";
@@ -179,6 +186,10 @@ ConferenceClient::ConferenceClient(
           "ConferenceClientEventQueue",
           webrtc::TaskQueueFactory::Priority::NORMAL));
   signaling_channel_->AddObserver(*this);
+#ifdef OWT_ENABLE_QUIC
+  // Quic transport client will be created when we join the meeting.
+  web_transport_channel_connected_ = false;
+#endif
 }
 
 ConferenceClient::~ConferenceClient() {
@@ -232,6 +243,126 @@ void ConferenceClient::RemoveStreamUpdateObserver(
   if (it != stream_update_observers_.end())
     stream_update_observers_.erase(it);
 }
+
+#ifdef OWT_ENABLE_QUIC
+void ConferenceClient::OnConnected() {
+  RTC_LOG(LS_INFO) << "Quic client connected.";
+  web_transport_channel_connected_ = true;
+}
+
+void ConferenceClient::OnConnectionFailed() {
+  RTC_LOG(LS_INFO) << "Quic client disconnected.";
+  web_transport_channel_connected_ = false;
+}
+
+void ConferenceClient::OnIncomingStream(const std::string& session_id,
+  owt::quic::QuicTransportStreamInterface* stream) {
+  RTC_LOG(LS_INFO) << "Quic client received a stream on session:" << session_id;
+  // Check if the subscription exists for this stream. Trigger immediately
+  // if exists. Otherwise push to pending list.
+  {
+    std::lock_guard<std::mutex> lock(quic_subscriptions_mutex_);
+    if (quic_subscriptions_.find(session_id) != quic_subscriptions_.end()) {
+      TriggerOnIncomingStream(session_id, stream);
+    } else {
+      std::lock_guard<std::mutex> stream_lock(pending_quic_streams_mutex_);
+      pending_incoming_streams_[session_id] = stream;
+    }
+  }
+}
+
+std::string ConferenceClient::WebTransportId() {
+  return webtransport_id_;
+}
+
+// Get transportId from the base64 encoded webTransportToken
+bool ConferenceClient::ParseWebTransportToken() {
+  if (webtransport_token_ == "" ||
+      !StringUtils::IsBase64EncodedString(webtransport_token_)) {
+    RTC_LOG(LS_ERROR) << "Invalid WebTransport token received from server.";
+    return false;
+  }
+
+  std::string base64_decoded("");
+  if (!rtc::Base64::Decode(webtransport_token_, rtc::Base64::DO_STRICT,
+                           &base64_decoded, nullptr)) {
+    RTC_LOG(LS_ERROR) << "Failed to decode token for webTransportId";
+    return false;
+  }
+  Json::Value json_token;
+  Json::Reader reader;
+  if (!reader.parse(base64_decoded, json_token)) {
+    RTC_LOG(LS_ERROR) << "Parsing token body failed.";
+    return false;
+  }
+  bool res = rtc::GetStringFromJsonObject(json_token, "transportId",
+                                          &webtransport_id_);
+  if (!res) {
+    RTC_LOG(LS_ERROR) << "Failed to get transportId from webTransportToken";
+    return false;
+  }
+
+  return res;
+}
+
+void ConferenceClient::InitializeQuicClientIfSupported(const std::string& token_base64) {
+  if (!StringUtils::IsBase64EncodedString(token_base64)) {
+    RTC_LOG(LS_ERROR) << "Invalid token for initialize quic client.";
+    return;
+  }
+
+  std::string base64_decoded("");
+  if (!rtc::Base64::Decode(token_base64, rtc::Base64::DO_STRICT, &base64_decoded,
+                           nullptr)) {
+    RTC_LOG(LS_ERROR)
+        << "Failed to decoded token for extracting webTransportUrl.";
+    return;
+  }
+  Json::Value json_token;
+  Json::Reader reader;
+  if (!reader.parse(base64_decoded, json_token)) {
+    RTC_LOG(LS_ERROR) << "Parsing token body failed.";
+    return;
+  }
+  std::string webtransport_url("");
+  bool res = rtc::GetStringFromJsonObject(json_token, "webTransportUrl", &webtransport_url);
+  if (!res) {
+    RTC_LOG(LS_INFO) << "Server does not support WebTransport or does not provide the URL for QUIC";
+    return;
+  }
+
+  if (webtransport_url.length() > 0) {
+    web_transport_channel_ = std::make_shared<ConferenceWebTransportChannel>(
+        configuration_, webtransport_url, webtransport_id_,
+        webtransport_token_, signaling_channel_, event_queue_);
+    web_transport_channel_->AddObserver(this);
+    web_transport_channel_->Connect();
+  }
+}
+
+void ConferenceClient::CreateSendStream(
+    std::function<void(std::shared_ptr<owt::base::LocalStream>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!on_success) {
+    RTC_LOG(LS_WARNING) << "No success callback provided. Do nothing.";
+    return;
+  }
+  if (!web_transport_channel_.get() || !web_transport_channel_connected_) {
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown,
+                          "Cannot create send stream without quic server connected."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+
+  web_transport_channel_->CreateSendStream(on_success, on_failure);
+}
+#endif
+
 void ConferenceClient::Join(
     const std::string& token,
     std::function<void(std::shared_ptr<ConferenceInfo>)> on_success,
@@ -253,6 +384,7 @@ void ConferenceClient::Join(
                            "please pass it without modification.";
     token_base64 = rtc::Base64::Encode(token);
   }
+
   signaling_channel_->Connect(
       token_base64,
       [=](sio::message::ptr info) {
@@ -325,6 +457,22 @@ void ConferenceClient::Join(
             TriggerOnStreamAdded(*it, true);
           }
         }
+#ifdef OWT_ENABLE_QUIC
+        auto webtransport_token = info->get_map()["webTransportToken"];
+        if (webtransport_token != nullptr &&
+            webtransport_token->get_flag() == sio::message::flag_string) {
+          // Base64 encoded webTransportToken with format:
+          // {tokenId, transportId, participantId, issueTime}. Parse the transportId
+          // and save it.
+          webtransport_token_ =
+              info->get_map()["webTransportToken"]->get_string();
+          bool transport_id_get = ParseWebTransportToken();
+          // If server provides WebTransport channel, prepare the QUIC client as
+          // well. No underlying webtransport connection setup at this phase.
+          if (transport_id_get)
+            InitializeQuicClientIfSupported(token_base64);
+        }
+#endif
         // Invoke the success callback before trigger any participant join or
         // stream added message.
         if (on_success) {
@@ -334,6 +482,35 @@ void ConferenceClient::Join(
       },
       on_failure);
 }
+
+#ifdef OWT_ENABLE_QUIC
+static  void ConvertUUID(const char* src_ptr, uint8_t* dest) {
+#define GUID_CHAR_LEN 32
+#define GUID_BIN_LEN 16
+  char* src = new char[GUID_CHAR_LEN];
+  memcpy(src, src_ptr, GUID_CHAR_LEN);
+  memset(dest, 0, GUID_BIN_LEN);
+  size_t uuid_idx = 0, data_idx = 0, src_len = strlen(src);
+  for (; data_idx < GUID_BIN_LEN && uuid_idx < src_len;) {
+    if ('A' <= src[uuid_idx] && src[uuid_idx] <= 'Z')
+      src[uuid_idx] |= (1 << 5);
+    uint8_t temp_h = ('0' <= src[uuid_idx] && src[uuid_idx] <= '9')
+                         ? src[uuid_idx] - '0'
+                         : src[uuid_idx] - 'W';
+    uuid_idx++;
+    if ('A' <= src[uuid_idx] && src[uuid_idx] <= 'Z')
+      src[uuid_idx] |= (1 << 5);
+    uint8_t temp_l = ('0' <= src[uuid_idx] && src[uuid_idx] <= '9')
+                         ? src[uuid_idx] - '0'
+                         : src[uuid_idx] - 'W';
+    dest[data_idx] = (temp_h << 4) | temp_l;
+    data_idx++;
+    uuid_idx++;
+  }
+  delete []src;
+}
+#endif
+
 void ConferenceClient::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void(std::shared_ptr<ConferencePublication>)> on_success,
@@ -350,6 +527,59 @@ void ConferenceClient::Publish(
     RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
     return;
   }
+  if (!CheckSignalingChannelOnline(on_failure)) {
+    RTC_LOG(LS_ERROR) << "Signaling channel disconnected.";
+    return;
+  }
+#ifdef OWT_ENABLE_QUIC
+  if (stream->DataEnabled()) {
+    if (web_transport_channel_ && web_transport_channel_connected_) {
+      std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+      web_transport_channel_->Publish(
+          stream,
+          [stream, on_success, weak_this](std::string session_id, std::string transport_id) {
+            auto that = weak_this.lock();
+            if (!that)
+              return;
+            // map current pcc
+            if (on_success != nullptr) {
+              // For QUIC stream we use session_id as stream_id for publication.
+              RTC_LOG(LS_INFO)
+                  << "Publication succeed. Returning session id/transport id:"
+                  << session_id;
+              std::shared_ptr<ConferencePublication> cp(
+                  new ConferencePublication(that, session_id, session_id));
+              {
+                std::lock_guard<std::mutex> lock(that->quic_publications_mutex_);
+                that->quic_publications_[session_id] = cp;
+              }
+              RTC_LOG(LS_INFO)
+                  << "Writting session id for stream auth:" << session_id;
+              // Convert to hex16 and write for stream auth.
+              uint8_t* stream_uuid = new uint8_t[16];
+              ConvertUUID(session_id.c_str(), stream_uuid);
+              stream->Stream()->Write(stream_uuid, 16);
+              delete []stream_uuid;
+              on_success(cp);
+            }
+          },
+          on_failure);
+    } else {
+      RTC_LOG(LS_ERROR)
+          << "Cannot publish a quic stream without quic client connected.";
+      std::string failure_message(
+          "Publishing quic stream without quic client connected");
+      if (on_failure != nullptr) {
+        event_queue_->PostTask([on_failure, failure_message]() {
+          std::unique_ptr<Exception> e(new Exception(
+              ExceptionType::kConferenceUnknown, failure_message));
+          on_failure(std::move(e));
+        });
+      }
+    }
+    return;
+  }
+#endif
   if (!CheckNullPointer((uintptr_t)(stream->MediaStream()), on_failure)) {
     RTC_LOG(LS_ERROR) << "Cannot publish a local stream without media stream.";
     return;
@@ -366,10 +596,6 @@ void ConferenceClient::Publish(
         on_failure(std::move(e));
       });
     }
-    return;
-  }
-  if (!CheckSignalingChannelOnline(on_failure)) {
-    RTC_LOG(LS_ERROR) << "Signaling channel disconnected.";
     return;
   }
   // Reorder SDP according to perference list.
@@ -417,14 +643,65 @@ void ConferenceClient::Subscribe(
     const SubscribeOptions& options,
     std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
-    RTC_LOG(LS_ERROR) << "Local stream cannot be nullptr.";
-    return;
-  }
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
-  RTC_LOG(LS_INFO) << "Stream ID: " << stream->Id();
+#ifdef OWT_ENABLE_QUIC
+  if (stream->DataEnabled()) {
+    RTC_LOG(LS_INFO) << "Requesting subscibe of quic stream.";
+    if (web_transport_channel_ && web_transport_channel_connected_) {
+      std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+      web_transport_channel_->Subscribe(
+          stream,
+          [on_success, weak_this](std::string session_id) {
+            auto that = weak_this.lock();
+            if (!that)
+              return;
+            if (on_success != nullptr) {
+              // For QUIC stream we use session_id as stream_id for publication.
+              std::shared_ptr<ConferenceSubscription> cp(
+                  new ConferenceSubscription(that, session_id, session_id));
+              {
+                std::lock_guard<std::mutex> lock(
+                    that->quic_subscriptions_mutex_);
+                that->quic_subscriptions_[session_id] = cp;
+              }
+              // Check if any pending stream for this to be attached.
+              {
+                std::lock_guard<std::mutex> stream_lock(
+                    that->pending_quic_streams_mutex_);
+                if (that->pending_incoming_streams_.find(session_id) !=
+                    that->pending_incoming_streams_.end()) {
+                  that->TriggerOnIncomingStream(
+                      session_id, that->pending_incoming_streams_[session_id]);
+                  that->pending_incoming_streams_.erase(session_id);
+                }
+              }
+              on_success(cp);
+            }
+          },
+          on_failure);
+    } else {
+      RTC_LOG(LS_ERROR)
+          << "Cannot subscribe a quic stream without quic client connected.";
+      std::string failure_message(
+          "Subscribing quic stream without quic client connected");
+      if (on_failure != nullptr) {
+        event_queue_->PostTask([on_failure, failure_message]() {
+          std::unique_ptr<Exception> e(new Exception(
+              ExceptionType::kConferenceUnknown, failure_message));
+          on_failure(std::move(e));
+        });
+      }
+    }
+    return;
+  }
+#endif
+
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    RTC_LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    return;
+  }
   if (added_stream_type_.find(stream->Id()) == added_stream_type_.end()) {
     std::string failure_message(
         "Subscribing an invalid stream. Please check whether this stream is "
@@ -462,8 +739,7 @@ void ConferenceClient::Subscribe(
     if (it != subscribe_pcs_.end()) {
       std::string failure_message(
           "The same remote stream has already been subscribed. Subcribe after "
-          "it is "
-          "unsubscribed");
+          "it is unsubscribed");
       if (on_failure != nullptr) {
         event_queue_->PostTask([on_failure, failure_message]() {
           std::unique_ptr<Exception> e(new Exception(
@@ -515,6 +791,19 @@ void ConferenceClient::UnPublish(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
+#ifdef OWT_ENABLE_QUIC
+  {
+    // Unpublish on quic connection if it is a quic session.
+    std::lock_guard<std::mutex> lock(quic_publications_mutex_);
+    auto it = quic_publications_.find(session_id);
+    if (it != quic_publications_.end() && web_transport_channel_) {
+      RTC_LOG(LS_INFO) << "Unpublishing quic publication.";
+      web_transport_channel_->Unpublish(session_id, on_success, on_failure);
+      quic_publications_.erase(session_id);
+      return;
+    }
+  }
+#endif
   auto pcc = GetConferencePeerConnectionChannel(session_id);
   if (pcc == nullptr) {
     if (on_failure) {
@@ -551,6 +840,18 @@ void ConferenceClient::UnSubscribe(
   if (!CheckSignalingChannelOnline(on_failure)) {
     return;
   }
+#ifdef OWT_ENABLE_QUIC
+  {
+    // Unsubscribe on quic connection if it is a quic session.
+    std::lock_guard<std::mutex> lock(quic_subscriptions_mutex_);
+    auto it = quic_subscriptions_.find(session_id);
+    if (it != quic_subscriptions_.end() && web_transport_channel_) {
+      web_transport_channel_->Unsubscribe(session_id, on_success, on_failure);
+      quic_subscriptions_.erase(session_id);
+      return;
+    }
+  }
+#endif
   auto pcc = GetConferencePeerConnectionChannel(session_id);
   if (pcc == nullptr) {
     if (on_failure) {
@@ -744,11 +1045,27 @@ void ConferenceClient::Leave(
     std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
     subscribe_pcs_.clear();
   }
+#ifdef OWT_ENABLE_QUIC
+  {
+    std::lock_guard<std::mutex> lock(quic_publications_mutex_);
+    for (auto& publication : quic_publications_) {
+      publication.second->Stop();
+    }
+    quic_publications_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(quic_subscriptions_mutex_);
+    for (auto& subscription : quic_subscriptions_) {
+      subscription.second->Stop();
+    }
+    quic_subscriptions_.clear();
+  }
+#endif
   signaling_channel_->Disconnect(RunInEventQueue(on_success), on_failure);
 }
 void ConferenceClient::GetConnectionStats(
     const std::string& session_id,
-    std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+    std::function<void(std::shared_ptr<owt::base::ConnectionStats>)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   auto pcc = GetConferencePeerConnectionChannel(session_id);
   if (pcc == nullptr) {
@@ -821,7 +1138,8 @@ void ConferenceClient::OnCustomMessage(std::string& from,
   }
 }
 void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
-  // MCU returns inconsistent format for this event. :(
+  // v1.2 may return SessionProgress which is  {id: SessionId, status: "ready|error"}.
+  std::string transport_id = message->get_map()["id"]->get_string();
   std::string stream_id = (message->get_map()["peerId"] == nullptr)
                               ? message->get_map()["id"]->get_string()
                               : message->get_map()["peerId"]->get_string();
@@ -836,6 +1154,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
     RTC_LOG(LS_WARNING) << "Ignore signaling status except soac/ready/error.";
     return;
   }
+  // On Signaling messae will only be invoked for WebRTC channels.
   auto pcc = GetConferencePeerConnectionChannel(stream_id);
   if (pcc == nullptr) {
     RTC_LOG(LS_WARNING) << "Received signaling message from unknown sender.";
@@ -967,15 +1286,30 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
   std::string owner_id("");
   std::string video_source("");
   std::string audio_source("");
-  bool has_audio = false, has_video = false;
+  std::string data_source("");
+
+  /*
+  Example for QUIC stream:
+  { id: '7b1c8f4beb684ab18cfca95ed377a520',
+  status: 'add',
+  data:
+   { id: '7b1c8f4beb684ab18cfca95ed377a520',
+     type: 'forward',
+     media: { tracks: [] },
+     data: true,
+     info: { owner: 'ctM4Z72nLVf3F88ZAAAW', type: 'quic', inViews: [] } } }
+  */
+  bool has_audio = false, has_video = false, has_data = false;
   std::unordered_map<std::string, std::string> attributes;
   auto media_info = stream_info->get_map()["media"];
-  if (media_info == nullptr ||
-      media_info->get_flag() != sio::message::flag_object) {
-    RTC_DCHECK(false);
-    RTC_LOG(LS_ERROR) << "Invalid media info from stream " << id
-                      << ", this stream will be ignored.";
-    return;
+  if (stream_info->get_map()["data"] != nullptr) {
+    // Check if current stream is a quic stream.
+    auto data_info = stream_info->get_map()["data"];
+    if (data_info != nullptr &&
+        data_info->get_flag() == sio::message::flag_boolean) {
+      has_data = data_info->get_bool();
+      RTC_LOG(LS_ERROR) << "Stream has data:" << has_data;
+    }
   }
   auto type = stream_info->get_map()["type"]->get_string();
   if (type != "mixed" && type != "forward") {
@@ -993,7 +1327,8 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
       }
     }
   } else if (type == "forward") {
-    // Get the stream attributes and owner id;
+    // Get the stream attributes and owner id; QUIC streams will
+    // always be of "foward" type.
     auto pub_info = stream_info->get_map()["info"];
     if (pub_info == nullptr ||
         pub_info->get_flag() != sio::message::flag_object) {
@@ -1004,270 +1339,261 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
     owner_id = pub_info->get_map()["owner"]->get_string();
     attributes = AttributesFromStreamInfo(pub_info);
   }
+
   SubscriptionCapabilities subscription_capabilities;
   PublicationSettings publication_settings;
-  auto audio_info = media_info->get_map()["audio"];
-  if (audio_info == nullptr ||
-      audio_info->get_flag() != sio::message::flag_object) {
-    RTC_LOG(LS_INFO) << "No audio in stream " << id;
-  } else {
-    // Parse the VideoInfo structure.
-    auto audio_source_obj = audio_info->get_map()["source"];
-    if (audio_source_obj != nullptr &&
-        audio_source_obj->get_flag() == sio::message::flag_string) {
-      audio_source = audio_source_obj->get_string();
-    }
-    auto audio_format_obj = audio_info->get_map()["format"];
-    if (audio_format_obj == nullptr ||
-        audio_format_obj->get_flag() != sio::message::flag_object) {
-      RTC_LOG(LS_ERROR) << "Invalid audio format info in media info";
-      return;
-    }
-    // Main audio capability.
-    std::string codec;
-    unsigned long sample_rate = 0, channel_num = 0;
-    auto sample_rate_obj = audio_format_obj->get_map()["sampleRate"];
-    auto codec_obj = audio_format_obj->get_map()["codec"];
-    auto channel_num_obj = audio_format_obj->get_map()["channelNum"];
-    if (codec_obj == nullptr ||
-        codec_obj->get_flag() != sio::message::flag_string) {
-      RTC_LOG(LS_ERROR) << "codec name in optional audio info invalid.";
-      return;
-    }
-    has_audio = true;
-    codec = codec_obj->get_string();
-    if (sample_rate_obj != nullptr)
-      sample_rate = sample_rate_obj->get_int();
-    if (channel_num_obj != nullptr)
-      channel_num = audio_format_obj->get_int();
-    AudioCodecParameters audio_codec_param(
-        MediaUtils::GetAudioCodecFromString(codec), channel_num, sample_rate);
-    AudioPublicationSettings audio_publication_settings;
-    audio_publication_settings.codec = audio_codec_param;
-    publication_settings.audio.push_back(audio_publication_settings);
-    subscription_capabilities.audio.codecs.push_back(audio_codec_param);
-    // Optional audio capabilities.
-    auto audio_format_obj_optional = audio_info->get_map()["optional"];
-    if (audio_format_obj_optional == nullptr ||
-        audio_format_obj_optional->get_flag() != sio::message::flag_object) {
-      RTC_LOG(LS_INFO) << "No optional audio info available.";
-    } else {
-      auto audio_format_optional =
-          audio_format_obj_optional->get_map()["format"];
-      if (audio_format_optional == nullptr ||
-          audio_format_optional->get_flag() != sio::message::flag_array) {
-        RTC_LOG(LS_INFO) << "Invalid optional audio info.";
-      } else {
-        auto formats = audio_format_optional->get_vector();
-        for (auto it = formats.begin(); it != formats.end(); ++it) {
-          unsigned long optional_sample_rate = 0, optional_channel_num = 0;
-          auto optional_sample_rate_obj = (*it)->get_map()["sampleRate"];
-          auto optional_codec_obj = (*it)->get_map()["codec"];
-          auto optional_channel_num_obj = (*it)->get_map()["channelNum"];
-          if (optional_codec_obj == nullptr ||
-              optional_codec_obj->get_flag() != sio::message::flag_string) {
-            RTC_LOG(LS_ERROR) << "Codec name in optional audio info invalid.";
-            return;
+  auto tracks_info = media_info->get_map()["tracks"];
+  if (tracks_info != nullptr &&
+      tracks_info->get_flag() == sio::message::flag_array) {
+    auto tracks = tracks_info->get_vector();
+    for (auto tit = tracks.begin(); tit != tracks.end(); ++tit) {
+      auto type_info = (*tit)->get_map()["type"];
+      if (type_info == nullptr)
+        continue;
+      std::string track_type = type_info->get_string();
+      if (track_type == "audio") {
+        // Parse the VideoInfo structure.
+        auto audio_source_obj = (*tit)->get_map()["source"];
+        if (audio_source_obj != nullptr &&
+            audio_source_obj->get_flag() == sio::message::flag_string) {
+          audio_source = audio_source_obj->get_string();
+        }
+        auto audio_format_obj = (*tit)->get_map()["format"];
+        if (audio_format_obj == nullptr ||
+            audio_format_obj->get_flag() != sio::message::flag_object) {
+          RTC_LOG(LS_ERROR) << "Invalid audio format info in media info";
+          return;
+        }
+        // Main audio capability.
+        std::string codec;
+        unsigned long sample_rate = 0, channel_num = 0;
+        auto sample_rate_obj = audio_format_obj->get_map()["sampleRate"];
+        auto codec_obj = audio_format_obj->get_map()["codec"];
+        auto channel_num_obj = audio_format_obj->get_map()["channelNum"];
+        if (codec_obj == nullptr ||
+            codec_obj->get_flag() != sio::message::flag_string) {
+          RTC_LOG(LS_ERROR) << "codec name in optional audio info invalid.";
+          return;
+        }
+        has_audio = true;
+        codec = codec_obj->get_string();
+        if (sample_rate_obj != nullptr)
+          sample_rate = sample_rate_obj->get_int();
+        if (channel_num_obj != nullptr)
+          channel_num = audio_format_obj->get_int();
+        AudioCodecParameters audio_codec_param(
+            MediaUtils::GetAudioCodecFromString(codec), channel_num,
+            sample_rate);
+        AudioPublicationSettings audio_publication_settings;
+        audio_publication_settings.codec = audio_codec_param;
+        publication_settings.audio.push_back(audio_publication_settings);
+        subscription_capabilities.audio.codecs.push_back(audio_codec_param);
+        // Optional audio capabilities.
+        auto audio_format_obj_optional = (*tit)->get_map()["optional"];
+        if (audio_format_obj_optional == nullptr ||
+            audio_format_obj_optional->get_flag() !=
+                sio::message::flag_object) {
+          RTC_LOG(LS_INFO) << "No optional audio info available.";
+        } else {
+          auto audio_format_optional =
+              audio_format_obj_optional->get_map()["format"];
+          if (audio_format_optional == nullptr ||
+              audio_format_optional->get_flag() != sio::message::flag_array) {
+            RTC_LOG(LS_INFO) << "Invalid optional audio info.";
+          } else {
+            auto formats = audio_format_optional->get_vector();
+            for (auto it = formats.begin(); it != formats.end(); ++it) {
+              unsigned long optional_sample_rate = 0, optional_channel_num = 0;
+              auto optional_sample_rate_obj = (*it)->get_map()["sampleRate"];
+              auto optional_codec_obj = (*it)->get_map()["codec"];
+              auto optional_channel_num_obj = (*it)->get_map()["channelNum"];
+              if (optional_codec_obj == nullptr ||
+                  optional_codec_obj->get_flag() != sio::message::flag_string) {
+                RTC_LOG(LS_ERROR)
+                    << "Codec name in optional audio info invalid.";
+                return;
+              }
+              codec = optional_codec_obj->get_string();
+              if (codec == "nellymoser") {
+                codec = "asao";
+              }
+              if (optional_sample_rate_obj != nullptr)
+                optional_sample_rate = optional_sample_rate_obj->get_int();
+              if (optional_channel_num_obj != nullptr)
+                optional_channel_num = optional_channel_num_obj->get_int();
+              subscription_capabilities.audio.codecs.push_back(
+                  AudioCodecParameters(
+                      MediaUtils::GetAudioCodecFromString(codec),
+                      optional_channel_num, optional_sample_rate));
+            }
           }
-          codec = optional_codec_obj->get_string();
-          if (codec == "nellymoser") {
-            codec = "asao";
+        }
+      } else if (track_type == "video") {
+        // Parse the VideoInfo structure.
+        auto video_source_obj = (*tit)->get_map()["source"];
+        if (video_source_obj != nullptr &&
+            video_source_obj->get_flag() == sio::message::flag_string) {
+          video_source = video_source_obj->get_string();
+        }
+        // TODO: v1.2 protocol temporarily removed simulcast support.
+        auto video_format_obj = (*tit)->get_map()["format"];
+        if (video_format_obj == nullptr ||
+            video_format_obj->get_flag() != sio::message::flag_object) {
+          RTC_LOG(LS_ERROR) << "Invalid video format info.";
+          return;
+        } else {
+          has_video = true;
+          // Parse the video publication settings.
+          std::string codec_name =
+              video_format_obj->get_map()["codec"]->get_string();
+          std::string profile_name("");
+          auto profile_name_obj = video_format_obj->get_map()["profile"];
+          if (profile_name_obj != nullptr &&
+              profile_name_obj->get_flag() == sio::message::flag_string) {
+            profile_name = profile_name_obj->get_string();
           }
-          if (optional_sample_rate_obj != nullptr)
-            optional_sample_rate = optional_sample_rate_obj->get_int();
-          if (optional_channel_num_obj != nullptr)
-            optional_channel_num = optional_channel_num_obj->get_int();
-          subscription_capabilities.audio.codecs.push_back(
-              AudioCodecParameters(MediaUtils::GetAudioCodecFromString(codec),
-                                   optional_channel_num, optional_sample_rate));
+          VideoPublicationSettings video_publication_settings;
+          VideoCodecParameters video_codec_parameters(
+              MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
+          video_publication_settings.codec = video_codec_parameters;
+          auto video_params_obj = (*tit)->get_map()["parameters"];
+          if (video_params_obj != nullptr &&
+              video_params_obj->get_flag() == sio::message::flag_object) {
+            auto main_resolution = video_params_obj->get_map()["resolution"];
+            if (main_resolution != nullptr &&
+                main_resolution->get_flag() == sio::message::flag_object) {
+              Resolution resolution =
+                  Resolution(main_resolution->get_map()["width"]->get_int(),
+                             main_resolution->get_map()["height"]->get_int());
+              video_publication_settings.resolution = resolution;
+            }
+            double frame_rate_num = 0, bitrate_num = 0,
+                   keyframe_interval_num = 0;
+            auto main_frame_rate = video_params_obj->get_map()["framerate"];
+            if (main_frame_rate != nullptr) {
+              frame_rate_num = main_frame_rate->get_int();
+              video_publication_settings.frame_rate = frame_rate_num;
+            }
+            auto main_bitrate = video_params_obj->get_map()["bitrate"];
+            if (main_bitrate != nullptr) {
+              bitrate_num = main_bitrate->get_int();
+              video_publication_settings.bitrate = bitrate_num;
+            }
+            auto main_keyframe_interval =
+                video_params_obj->get_map()["keyFrameInterval"];
+            if (main_keyframe_interval != nullptr) {
+              keyframe_interval_num = main_keyframe_interval->get_int();
+              video_publication_settings.keyframe_interval =
+                  keyframe_interval_num;
+            }
+          }
+          auto rid_obj = (*tit)->get_map()["simulcastRid"];
+          if (rid_obj != nullptr &&
+              rid_obj->get_flag() == sio::message::flag_string) {
+            video_publication_settings.rid = rid_obj->get_string();
+          }
+          publication_settings.video.push_back(video_publication_settings);
+        }
+        // Parse the video subscription capabilities.
+        auto optional_video_obj = (*tit)->get_map()["optional"];
+        if (optional_video_obj != nullptr &&
+            optional_video_obj->get_flag() == sio::message::flag_object) {
+          VideoSubscriptionCapabilities video_subscription_capabilities;
+          auto optional_video_format_obj =
+              optional_video_obj->get_map()["format"];
+          if (optional_video_format_obj != nullptr &&
+              optional_video_format_obj->get_flag() ==
+                  sio::message::flag_array) {
+            auto formats = optional_video_format_obj->get_vector();
+            for (auto it = formats.begin(); it != formats.end(); ++it) {
+              std::string optional_codec_name =
+                  (*it)->get_map()["codec"]->get_string();
+              std::string optional_profile_name("");
+              auto optional_profile_name_obj = (*it)->get_map()["profile"];
+              if (optional_profile_name_obj != nullptr &&
+                  optional_profile_name_obj->get_flag() ==
+                      sio::message::flag_string) {
+                optional_profile_name = optional_profile_name_obj->get_string();
+              }
+              video_subscription_capabilities.codecs.push_back(
+                  VideoCodecParameters(
+                      MediaUtils::GetVideoCodecFromString(optional_codec_name),
+                      optional_profile_name));
+            }
+          }
+          auto optional_video_params_obj =
+              optional_video_obj->get_map()["parameters"];
+          if (optional_video_params_obj != nullptr &&
+              optional_video_params_obj->get_flag() ==
+                  sio::message::flag_object) {
+            auto resolution_obj =
+                optional_video_params_obj->get_map()["resolution"];
+            if (resolution_obj != nullptr &&
+                resolution_obj->get_flag() == sio::message::flag_array) {
+              auto resolutions = resolution_obj->get_vector();
+              for (auto it = resolutions.begin(); it != resolutions.end();
+                   ++it) {
+                Resolution resolution =
+                    Resolution((*it)->get_map()["width"]->get_int(),
+                               (*it)->get_map()["height"]->get_int());
+                video_subscription_capabilities.resolutions.push_back(
+                    resolution);
+              }
+            }
+            auto framerate_obj =
+                optional_video_params_obj->get_map()["framerate"];
+            if (framerate_obj != nullptr &&
+                framerate_obj->get_flag() == sio::message::flag_array) {
+              auto framerates = framerate_obj->get_vector();
+              for (auto it = framerates.begin(); it != framerates.end(); ++it) {
+                double frame_rate = (*it)->get_int();
+                video_subscription_capabilities.frame_rates.push_back(
+                    frame_rate);
+              }
+            }
+            auto bitrate_obj = optional_video_params_obj->get_map()["bitrate"];
+            if (bitrate_obj != nullptr &&
+                bitrate_obj->get_flag() == sio::message::flag_array) {
+              auto bitrates = bitrate_obj->get_vector();
+              for (auto it = bitrates.begin(); it != bitrates.end(); ++it) {
+                std::string bitrate_mul = (*it)->get_string();
+                // The bitrate multiplier is in the form of "x1.0" and we need
+                // to strip the "x" here.
+                video_subscription_capabilities.bitrate_multipliers.push_back(
+                    std::stod(bitrate_mul.substr(1)));
+              }
+            }
+            auto keyframe_interval_obj =
+                optional_video_params_obj->get_map()["keyFrameInterval"];
+            if (keyframe_interval_obj != nullptr &&
+                keyframe_interval_obj->get_flag() == sio::message::flag_array) {
+              auto keyframe_intervals = keyframe_interval_obj->get_vector();
+              for (auto it = keyframe_intervals.begin();
+                   it != keyframe_intervals.end(); ++it) {
+                double keyframe_interval = (*it)->get_int();
+                video_subscription_capabilities.keyframe_intervals.push_back(
+                    keyframe_interval);
+              }
+            }
+          }
+          subscription_capabilities.video = video_subscription_capabilities;
         }
       }
     }
-  }
-  auto video_info = media_info->get_map()["video"];
-  if (video_info == nullptr ||
-      video_info->get_flag() != sio::message::flag_object) {
-    RTC_LOG(LS_INFO) << "No audio info in the media info";
-  } else {
-    // Parse the VideoInfo structure.
-    auto video_source_obj = video_info->get_map()["source"];
-    if (video_source_obj != nullptr &&
-        video_source_obj->get_flag() == sio::message::flag_string) {
-      video_source = video_source_obj->get_string();
-    }
-    // 1.1 protocol: original: [format/parameters/simulcastRid/]
-    auto video_original_obj = video_info->get_map()["original"];
-    if (video_original_obj == nullptr ||
-        video_original_obj->get_flag() != sio::message::flag_array) {
-      RTC_LOG(LS_ERROR) << "Invalid video original info";
-      return;
-    }
-
-    auto originals = video_original_obj->get_vector();
-    for (auto it = originals.begin(); it != originals.end(); ++it) {
-      auto video_format_obj = (*it)->get_map()["format"];
-      if (video_format_obj == nullptr ||
-          video_format_obj->get_flag() != sio::message::flag_object) {
-        RTC_LOG(LS_ERROR) << "Invalid video format info.";
-        return;
-      } else {
-        has_video = true;
-        // Parse the video publication settings.
-        std::string codec_name =
-            video_format_obj->get_map()["codec"]->get_string();
-        std::string profile_name("");
-        auto profile_name_obj = video_format_obj->get_map()["profile"];
-        if (profile_name_obj != nullptr &&
-            profile_name_obj->get_flag() == sio::message::flag_string) {
-          profile_name = profile_name_obj->get_string();
-        }
-        VideoPublicationSettings video_publication_settings;
-        VideoCodecParameters video_codec_parameters(
-            MediaUtils::GetVideoCodecFromString(codec_name), profile_name);
-        video_publication_settings.codec = video_codec_parameters;
-        auto video_params_obj = (*it)->get_map()["parameters"];
-        if (video_params_obj != nullptr &&
-            video_params_obj->get_flag() == sio::message::flag_object) {
-          auto main_resolution = video_params_obj->get_map()["resolution"];
-          if (main_resolution != nullptr &&
-              main_resolution->get_flag() == sio::message::flag_object) {
-            Resolution resolution =
-                Resolution(main_resolution->get_map()["width"]->get_int(),
-                           main_resolution->get_map()["height"]->get_int());
-            video_publication_settings.resolution = resolution;
-          }
-          double frame_rate_num = 0, bitrate_num = 0, keyframe_interval_num = 0;
-          auto main_frame_rate = video_params_obj->get_map()["framerate"];
-          if (main_frame_rate != nullptr) {
-            frame_rate_num = main_frame_rate->get_int();
-            video_publication_settings.frame_rate = frame_rate_num;
-          }
-          auto main_bitrate = video_params_obj->get_map()["bitrate"];
-          if (main_bitrate != nullptr) {
-            bitrate_num = main_bitrate->get_int();
-            video_publication_settings.bitrate = bitrate_num;
-          }
-          auto main_keyframe_interval =
-              video_params_obj->get_map()["keyFrameInterval"];
-          if (main_keyframe_interval != nullptr) {
-            keyframe_interval_num = main_keyframe_interval->get_int();
-            video_publication_settings.keyframe_interval =
-                keyframe_interval_num;
-          }
-        }
-        auto rid_obj = (*it)->get_map()["simulcastRid"];
-        if (rid_obj != nullptr &&
-            rid_obj->get_flag() == sio::message::flag_string) {
-          video_publication_settings.rid = rid_obj->get_string();
-        }
-        publication_settings.video.push_back(video_publication_settings);
-       }
-    }
-    // Parse the video subscription capabilities.
-    auto optional_video_obj = video_info->get_map()["optional"];
-    if (optional_video_obj != nullptr &&
-        optional_video_obj->get_flag() == sio::message::flag_object) {
-      VideoSubscriptionCapabilities video_subscription_capabilities;
-      auto optional_video_format_obj =
-          optional_video_obj->get_map()["format"];
-      if (optional_video_format_obj != nullptr &&
-          optional_video_format_obj->get_flag() == sio::message::flag_array) {
-        auto formats = optional_video_format_obj->get_vector();
-        for (auto it = formats.begin(); it != formats.end(); ++it) {
-          std::string optional_codec_name =
-              (*it)->get_map()["codec"]->get_string();
-          std::string optional_profile_name("");
-          auto optional_profile_name_obj = (*it)->get_map()["profile"];
-          if (optional_profile_name_obj != nullptr &&
-              optional_profile_name_obj->get_flag() ==
-                  sio::message::flag_string) {
-            optional_profile_name = optional_profile_name_obj->get_string();
-          }
-          video_subscription_capabilities.codecs.push_back(
-              VideoCodecParameters(
-                  MediaUtils::GetVideoCodecFromString(optional_codec_name),
-                  optional_profile_name));
-        }
-      }
-      auto optional_video_params_obj =
-          optional_video_obj->get_map()["parameters"];
-      if (optional_video_params_obj != nullptr &&
-          optional_video_params_obj->get_flag() ==
-              sio::message::flag_object) {
-        auto resolution_obj =
-            optional_video_params_obj->get_map()["resolution"];
-        if (resolution_obj != nullptr &&
-            resolution_obj->get_flag() == sio::message::flag_array) {
-          auto resolutions = resolution_obj->get_vector();
-          for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
-            Resolution resolution =
-                Resolution((*it)->get_map()["width"]->get_int(),
-                           (*it)->get_map()["height"]->get_int());
-            video_subscription_capabilities.resolutions.push_back(resolution);
-          }
-        }
-        auto framerate_obj =
-            optional_video_params_obj->get_map()["framerate"];
-        if (framerate_obj != nullptr &&
-            framerate_obj->get_flag() == sio::message::flag_array) {
-          auto framerates = framerate_obj->get_vector();
-          for (auto it = framerates.begin(); it != framerates.end(); ++it) {
-            double frame_rate = (*it)->get_int();
-            video_subscription_capabilities.frame_rates.push_back(frame_rate);
-          }
-        }
-        auto bitrate_obj = optional_video_params_obj->get_map()["bitrate"];
-        if (bitrate_obj != nullptr &&
-            bitrate_obj->get_flag() == sio::message::flag_array) {
-          auto bitrates = bitrate_obj->get_vector();
-          for (auto it = bitrates.begin(); it != bitrates.end(); ++it) {
-            std::string bitrate_mul = (*it)->get_string();
-            // The bitrate multiplier is in the form of "x1.0" and we need to
-            // strip the "x" here.
-            video_subscription_capabilities.bitrate_multipliers.push_back(
-                std::stod(bitrate_mul.substr(1)));
-          }
-        }
-        auto keyframe_interval_obj =
-            optional_video_params_obj->get_map()["keyFrameInterval"];
-        if (keyframe_interval_obj != nullptr &&
-            keyframe_interval_obj->get_flag() == sio::message::flag_array) {
-          auto keyframe_intervals = keyframe_interval_obj->get_vector();
-          for (auto it = keyframe_intervals.begin();
-               it != keyframe_intervals.end(); ++it) {
-            double keyframe_interval = (*it)->get_int();
-            video_subscription_capabilities.keyframe_intervals.push_back(
-                keyframe_interval);
-          }
-        }
-      }
-      subscription_capabilities.video = video_subscription_capabilities;
-      }
   }
   // Now that all information needed for PublicationSettings and
   // SubscriptionCapabilities have been gathered, we construct remote streams.
   bool updated = false;
   if (type == "forward") {
-    AudioSourceInfo audio_source_info(AudioSourceInfo::kUnknown);
-    VideoSourceInfo video_source_info(VideoSourceInfo::kUnknown);
-    auto audio_source_it = audio_source_names.find(audio_source);
-    if (audio_source_it != audio_source_names.end()) {
-      audio_source_info = audio_source_it->second;
-    }
-    auto video_source_it = video_source_names.find(video_source);
-    if (video_source_it != video_source_names.end()) {
-      video_source_info = video_source_it->second;
-    }
-    if (video_source != "screen-cast") {
-      auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
-      remote_stream->has_audio_ = has_audio;
-      remote_stream->has_video_ = has_video;
-      remote_stream->Attributes(attributes);
-      remote_stream->source_.audio = audio_source_info;
-      remote_stream->source_.video = video_source_info;
+    // Forward stream might be quic stream
+    if (has_data) {
+      RTC_LOG(LS_ERROR) << "Adding stream of id:" << id;
+      auto remote_stream = std::make_shared<RemoteStream>(id, owner_id);
+      remote_stream->has_audio_ = false;
+      remote_stream->has_video_ = false;
+      remote_stream->has_data_ = true;
       added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeCamera;
+      added_stream_type_[id] = StreamType::kStreamTypeData;
       {
         const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
         current_conference_info_->AddOrUpdateStream(remote_stream, updated);
@@ -1280,24 +1606,59 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
         }
       }
     } else {
-      auto remote_stream = std::make_shared<RemoteStream>(
-          id, owner_id, subscription_capabilities, publication_settings);
-      RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
-      remote_stream->has_audio_ = has_audio;
-      remote_stream->has_video_ = true;
-      remote_stream->Attributes(attributes);
-      remote_stream->source_.audio = audio_source_info;
-      remote_stream->source_.video = video_source_info;
-      added_streams_[id] = remote_stream;
-      added_stream_type_[id] = StreamType::kStreamTypeScreen;
-      {
-        const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
-        current_conference_info_->AddOrUpdateStream(remote_stream, updated);
-        if (!joining && !updated) {
-          for (auto its = observers_.begin(); its != observers_.end(); ++its) {
-            auto& o = (*its).get();
-            event_queue_->PostTask(
-                [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+      AudioSourceInfo audio_source_info(AudioSourceInfo::kUnknown);
+      VideoSourceInfo video_source_info(VideoSourceInfo::kUnknown);
+      auto audio_source_it = audio_source_names.find(audio_source);
+      if (audio_source_it != audio_source_names.end()) {
+        audio_source_info = audio_source_it->second;
+      }
+      auto video_source_it = video_source_names.find(video_source);
+      if (video_source_it != video_source_names.end()) {
+        video_source_info = video_source_it->second;
+      }
+      if (video_source != "screen-cast") {
+        auto remote_stream = std::make_shared<RemoteStream>(
+            id, owner_id, subscription_capabilities, publication_settings);
+        remote_stream->has_audio_ = has_audio;
+        remote_stream->has_video_ = has_video;
+        remote_stream->Attributes(attributes);
+        remote_stream->source_.audio = audio_source_info;
+        remote_stream->source_.video = video_source_info;
+        added_streams_[id] = remote_stream;
+        added_stream_type_[id] = StreamType::kStreamTypeCamera;
+        {
+          const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+          current_conference_info_->AddOrUpdateStream(remote_stream, updated);
+          if (!joining && !updated) {
+            for (auto its = observers_.begin(); its != observers_.end();
+                 ++its) {
+              auto& o = (*its).get();
+              event_queue_->PostTask(
+                  [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+            }
+          }
+        }
+      } else {
+        auto remote_stream = std::make_shared<RemoteStream>(
+            id, owner_id, subscription_capabilities, publication_settings);
+        RTC_LOG(LS_INFO) << "OnStreamAdded: screen stream.";
+        remote_stream->has_audio_ = has_audio;
+        remote_stream->has_video_ = true;
+        remote_stream->Attributes(attributes);
+        remote_stream->source_.audio = audio_source_info;
+        remote_stream->source_.video = video_source_info;
+        added_streams_[id] = remote_stream;
+        added_stream_type_[id] = StreamType::kStreamTypeScreen;
+        {
+          const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+          current_conference_info_->AddOrUpdateStream(remote_stream, updated);
+          if (!joining && !updated) {
+            for (auto its = observers_.begin(); its != observers_.end();
+                 ++its) {
+              auto& o = (*its).get();
+              event_queue_->PostTask(
+                  [&o, remote_stream] { o.OnStreamAdded(remote_stream); });
+            }
           }
         }
       }
@@ -1356,6 +1717,19 @@ void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
   current_conference_info_->TriggerOnParticipantLeft(user_id);
   current_conference_info_->RemoveParticipantById(user_id);
 }
+
+#ifdef OWT_ENABLE_QUIC
+void ConferenceClient::TriggerOnIncomingStream(
+    const std::string& session_id,
+                             owt::quic::QuicTransportStreamInterface* stream) {
+  const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
+  for (auto its = stream_update_observers_.begin();
+       its != stream_update_observers_.end(); ++its) {
+    (*its).get().OnIncomingStream(session_id, stream);
+  }
+}
+#endif
+
 bool ConferenceClient::ParseUser(sio::message::ptr user_message,
                                  Participant** participant) const {
   if (user_message == nullptr ||

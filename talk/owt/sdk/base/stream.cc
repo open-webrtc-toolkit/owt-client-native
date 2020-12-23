@@ -82,7 +82,13 @@ Stream::Stream()
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+#ifdef OWT_ENABLE_QUIC
+      source_(AudioSourceInfo::kUnknown,
+              VideoSourceInfo::kUnknown,
+              DataSourceInfo::kUnknown),
+#else
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
+#endif
       ended_(false),
       id_("") {}
 Stream::Stream(const std::string& id)
@@ -90,7 +96,13 @@ Stream::Stream(const std::string& id)
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
       d3d9_renderer_impl_(nullptr),
+#ifdef OWT_ENABLE_QUIC
+      source_(AudioSourceInfo::kUnknown,
+              VideoSourceInfo::kUnknown,
+              DataSourceInfo::kUnknown),
+#else
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
+#endif
       ended_(false),
       id_(id) {}
 #elif defined(WEBRTC_LINUX)
@@ -439,6 +451,21 @@ std::shared_ptr<LocalStream> LocalStream::Create(
 }
 #endif
 
+#ifdef OWT_ENABLE_QUIC
+LocalStream::LocalStream(std::shared_ptr<QuicStream> quic_stream) {
+  quic_stream_ = quic_stream;
+  has_data_ = true;
+}
+
+std::shared_ptr<LocalStream> LocalStream::Create(
+    std::shared_ptr<QuicStream> writable_stream,
+    int& error_code) {
+  std::shared_ptr<LocalStream> stream(new LocalStream(writable_stream));
+  error_code = 0;
+  return stream;
+}
+#endif
+
 LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
                          int& error_code) {
   if (!parameters.AudioEnabled() && !parameters.VideoEnabled()) {
@@ -654,6 +681,7 @@ LocalStream::LocalStream(
   media_stream_->AddRef();
 }
 #endif
+
 RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
                            const std::string& from)
     : origin_(from) {
@@ -662,6 +690,7 @@ RemoteStream::RemoteStream(MediaStreamInterface* media_stream,
   media_stream_ = media_stream;
   media_stream_->AddRef();
 }
+
 RemoteStream::RemoteStream(
     const std::string& id,
     const std::string& from,
@@ -671,14 +700,63 @@ RemoteStream::RemoteStream(
       origin_(from),
       subscription_capabilities_(subscription_capabilities),
       publication_settings_(publication_settings) {}
+
 std::string RemoteStream::Origin() {
   return origin_;
 }
+
+RemoteStream::RemoteStream(const std::string& id, const std::string& from)
+    :Stream(id),
+     origin_(from) {
+}
+
 void RemoteStream::MediaStream(MediaStreamInterface* media_stream) {
   Stream::MediaStream(media_stream);
 }
 MediaStreamInterface* RemoteStream::MediaStream() {
   return media_stream_;
 }
+
+#ifdef OWT_ENABLE_QUIC
+QuicStream::QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
+           const std::string& session_id)
+    : quic_stream_(quic_stream), session_id_(session_id), can_read_(true),
+      can_write_(true), fin_read_(false) {
+}
+
+QuicStream::~QuicStream() {
+  if (quic_stream_) {
+    delete quic_stream_;
+    quic_stream_ = nullptr;
+  }
+}
+
+size_t QuicStream::Write(uint8_t* data, size_t length) {
+  if (quic_stream_ && !fin_read_ && data != nullptr && length > 0) {
+    return quic_stream_->Write(data, length);
+  }
+  return 0;
+}
+
+size_t QuicStream::Read(uint8_t* data, size_t length) {
+  if (quic_stream_ && data != nullptr && length > 0 && !fin_read_) {
+    return quic_stream_->Read(data, length);
+  } else {
+    return 0;
+  }
+}
+
+size_t QuicStream::ReadableBytes() const {
+  if (quic_stream_ && !fin_read_) {
+    return quic_stream_->ReadableBytes();
+  } else {
+    return 0;
+  }
+}
+
+std::shared_ptr<owt::base::QuicStream> LocalStream::Stream() {
+  return quic_stream_;
+}
+#endif
 }  // namespace base
 }  // namespace owt
