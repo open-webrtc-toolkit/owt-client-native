@@ -1487,10 +1487,15 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
                   keyframe_interval_num;
             }
           }
-          auto rid_obj = (*tit)->get_map()["simulcastRid"];
+          auto rid_obj = (*tit)->get_map()["rid"];
           if (rid_obj != nullptr &&
               rid_obj->get_flag() == sio::message::flag_string) {
             video_publication_settings.rid = rid_obj->get_string();
+          }
+          auto trackid_obj = (*tit)->get_map()["id"];
+          if (trackid_obj != nullptr &&
+              trackid_obj->get_flag() == sio::message::flag_string) {
+            video_publication_settings.track_id = trackid_obj->get_string();
           }
           publication_settings.video.push_back(video_publication_settings);
         }

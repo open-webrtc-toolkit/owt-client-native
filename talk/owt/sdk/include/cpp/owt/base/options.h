@@ -39,6 +39,7 @@ struct VideoPublicationSettings {
   unsigned long bitrate;
   unsigned long keyframe_interval;
   std::string rid;
+  std::string track_id;
 };
 
 #ifdef OWT_ENABLE_QUIC

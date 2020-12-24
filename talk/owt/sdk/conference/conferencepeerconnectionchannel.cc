@@ -633,8 +633,20 @@ void ConferencePeerConnectionChannel::Subscribe(
     } else {
       video_options->get_map()["mid"] = sio::string_message::create("1");
     }
-    video_options->get_map()["from"] =
-        sio::string_message::create(stream->Id());
+    auto publication_settings = stream->Settings();
+    if (subscribe_options.video.rid != "") {
+      for (auto video_setting : publication_settings.video) {
+        if (video_setting.rid == subscribe_options.video.rid) {
+          std::string track_id = video_setting.track_id;
+          video_options->get_map()["from"] =
+              sio::string_message::create(track_id);
+          break;
+        }
+      }
+    } else {
+      video_options->get_map()["from"] =
+          sio::string_message::create(stream->Id());
+    }
     sio::message::ptr video_spec = sio::object_message::create();
     sio::message::ptr resolution_options = sio::object_message::create();
     if (subscribe_options.video.resolution.width != 0 &&
