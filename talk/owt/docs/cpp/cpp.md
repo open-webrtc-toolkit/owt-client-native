@@ -32,7 +32,7 @@ message is coming or connection is lost.
 # 7 Video codecs {#section7}
 For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
 VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
-Most of the 5th/6th/7th/8th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
+Most of the 5th-11th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
 Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
 You can turn off video encoding/decoding hardware acceleration via {@link owt.base.GlobalConfiguration GlobalConfiguration} API,
 by passing "false" to SetVideoHardwareAccelerationEnabled API before creating conferenceclient or peerclient.

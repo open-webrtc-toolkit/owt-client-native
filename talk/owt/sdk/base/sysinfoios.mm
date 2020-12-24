@@ -19,6 +19,6 @@ std::string SysInfo::OsVersion() {
   });
   return *system_version;
 }
-#endif  // WEBRTC_LINUX
+#endif  // WEBRTC_IOS
 }
 }
