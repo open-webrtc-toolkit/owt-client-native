@@ -422,7 +422,7 @@ mfxStatus D3D11FrameAllocator::AllocImpl(mfxFrameAllocRequest *request, mfxFrame
         desc.Height =  request->Info.Height;
 
         desc.MipLevels = 1;
-        //number of subresources is 1 in case of not single texture
+        // Number of subresources is 1 in case of not single texture
         desc.ArraySize = m_initParams.bUseSingleTexture ? request->NumFrameSuggested : 1;
         desc.Format = ConverColortFormat(request->Info.FourCC);
         desc.SampleDesc.Count = 1;
@@ -432,10 +432,9 @@ mfxStatus D3D11FrameAllocator::AllocImpl(mfxFrameAllocRequest *request, mfxFrame
         if ((request->Type&MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) && (request->Type & MFX_MEMTYPE_INTERNAL_FRAME))
         {
             desc.BindFlags = D3D11_BIND_DECODER | D3D11_BIND_VIDEO_ENCODER;
-        }
-        else
+        } else  // Jianlin: adds the shader resource flag so renderer can use this as staging texture.
 #endif
-            desc.BindFlags = D3D11_BIND_DECODER;
+            desc.BindFlags = D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE;
 
         if ( (MFX_MEMTYPE_FROM_VPPIN & request->Type) && (DXGI_FORMAT_YUY2 == desc.Format) ||
              (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) ||
