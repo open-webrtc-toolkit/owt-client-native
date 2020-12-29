@@ -4,11 +4,12 @@
 
 #include <string>
 #include <vector>
-#include "talk/owt/sdk/base/win/mediacapabilities.h"
 #ifdef OWT_USE_MSDK
 #include "mfxcommon.h"
 #include "mfxstructures.h"
 #endif
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
+#include "webrtc/rtc_base/logging.h"
 
 namespace owt {
 namespace base {
@@ -295,8 +296,9 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
       else if (codec == owt::base::VideoCodec::kH265) {
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_HEVC;
-
         sts = mfx_decoder->Query(nullptr, &video_param);
+        RTC_LOG(LS_ERROR) << "Johny---H265 query result:" << sts;
+
         if (sts == MFX_ERR_NONE) {
           VideoDecoderCapability h265_cap;
           h265_cap.codec_type = owt::base::VideoCodec::kH265;

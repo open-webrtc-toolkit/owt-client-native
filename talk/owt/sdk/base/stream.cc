@@ -81,7 +81,6 @@ Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
       d3d11_renderer_impl_(nullptr),
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
@@ -96,7 +95,6 @@ Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
       d3d11_renderer_impl_(nullptr),
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
