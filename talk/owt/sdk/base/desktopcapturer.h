@@ -15,10 +15,10 @@
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/platform_thread.h"
 #include "webrtc/rtc_base/stream.h"
 #include "webrtc/rtc_base/string_utils.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
@@ -41,11 +41,11 @@ class BasicDesktopCapturer : public webrtc::VideoCaptureModule,
 
   virtual void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<webrtc::VideoFrame>* dataCallback) override {
-    rtc::CritScope lock(&datacb_lock_);
+    webrtc::MutexLock lock(&datacb_lock_);
     data_callback_ = dataCallback;
   }
   virtual void DeRegisterCaptureDataCallback() override {
-    rtc::CritScope lock(&datacb_lock_);
+    webrtc::MutexLock lock(&datacb_lock_);
     data_callback_ = nullptr;
   }
 
@@ -79,7 +79,7 @@ class BasicDesktopCapturer : public webrtc::VideoCaptureModule,
 
  public:
   rtc::VideoSinkInterface<webrtc::VideoFrame>* data_callback_;
-  rtc::CriticalSection datacb_lock_;
+  webrtc::Mutex datacb_lock_;
 };
 // Capturer for capturing from local screen. Currently it uses
 // basic desktop frame instead of shared memory for storing captured frame.
@@ -117,7 +117,7 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
   std::unique_ptr<webrtc::DesktopCapturer> screen_capturer_;
   webrtc::DesktopCaptureOptions screen_capture_options_;
   bool capture_started_ = false;
-  rtc::CriticalSection lock_;
+  webrtc::Mutex lock_;
   RTC_DISALLOW_COPY_AND_ASSIGN(BasicScreenCapturer);
 };
 // Capturer for capturing from specified window. Once the capturer is created,
@@ -182,7 +182,7 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   bool stopped_;
   bool capture_started_ = false;
   bool quit_;
-  rtc::CriticalSection lock_;
+  webrtc::Mutex lock_;
   std::unique_ptr<LocalScreenStreamObserver> observer_;
   RTC_DISALLOW_COPY_AND_ASSIGN(BasicWindowCapturer);
 };

@@ -564,7 +564,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(
     // Track source information collect.
     std::pair<std::string, std::string> track_source_info;
     track_source_info = std::make_pair(id, source);
-    rtc::CritScope cs(&remote_track_source_info_crit_);
+    webrtc::MutexLock lock(&remote_track_source_info_mutex_);
     remote_track_source_info_.insert(track_source_info);
   }
 }
@@ -616,7 +616,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   Json::Value stream_tracks;
   {
-    rtc::CritScope cs(&remote_track_source_info_crit_);
+    webrtc::MutexLock lock(&remote_track_source_info_mutex_);
     for (const auto& track : stream->GetAudioTracks()) {
       stream_tracks.append(track->id());
     }
@@ -650,7 +650,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
   std::shared_ptr<RemoteStream> remote_stream = remote_streams_[stream->id()];
   remote_stream->TriggerOnStreamEnded();
   remote_streams_.erase(stream->id());
-  rtc::CritScope cs(&remote_track_source_info_crit_);
+  webrtc::MutexLock lock(&remote_track_source_info_mutex_);
   for (const auto& track : stream->GetAudioTracks())
     remote_track_source_info_.erase(track->id());
   for (const auto& track : stream->GetVideoTracks())
@@ -716,7 +716,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
         it->second->TriggerOnStreamEnded();
       remote_streams_.clear();
       {
-        rtc::CritScope cs(&remote_track_source_info_crit_);
+        webrtc::MutexLock lock(&remote_track_source_info_mutex_);
         remote_track_source_info_.clear();
       }
       break;

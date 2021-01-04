@@ -7,9 +7,9 @@
 
 #include <memory>
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/platform_thread.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 
@@ -107,7 +107,7 @@ class CustomizedAudioCapturer : public AudioDeviceGeneric {
   AudioDeviceBuffer* audio_buffer_;
   std::unique_ptr<uint8_t[], webrtc::AlignedFreeDeleter>
       recording_buffer_;  // Pointer to a useable memory for audio frames.
-  rtc::CriticalSection crit_sect_;
+  webrtc::Mutex mutex_;
   size_t recording_frames_in_10ms_;
   int recording_sample_rate_;
   int recording_channel_number_;

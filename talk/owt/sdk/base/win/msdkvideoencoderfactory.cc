@@ -61,7 +61,6 @@ MSDKVideoEncoderFactory::QueryVideoEncoder(
   // TODO(johny): Basically we need to return different CodecInfo for different
   // codec/profile combinations.
   webrtc::VideoEncoderFactory::CodecInfo info;
-  info.is_hardware_accelerated = false;
   info.has_internal_source = false;
   return info;
 }

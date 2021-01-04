@@ -21,9 +21,9 @@
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/stream.h"
 #include "webrtc/rtc_base/string_utils.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread_annotations.h"
 #include "webrtc/rtc_base/constructor_magic.h"
 #include "owt/base/framegeneratorinterface.h"
@@ -91,8 +91,8 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   rtc::scoped_refptr<webrtc::I420Buffer>
       frame_buffer_;  // Reuseable buffer for video frames.
 
-  rtc::CriticalSection lock_;
-  rtc::CriticalSection capture_lock_;
+  webrtc::Mutex lock_;
+  webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesCapturer);
 };

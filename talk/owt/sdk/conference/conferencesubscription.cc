@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <algorithm>
 #include "webrtc/rtc_base/third_party/base64/base64.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "talk/owt/sdk/base/stringutils.h"

@@ -178,7 +178,7 @@ void PeerConnectionDependencyFactory::
     task_queue_factory_ = CreateDefaultTaskQueueFactory();
     com_initializer_ = std::make_unique<webrtc::ScopedCOMInitializer>(
         webrtc::ScopedCOMInitializer::kMTA);
-    if (com_initializer_->succeeded())
+    if (com_initializer_->Succeeded())
       adm = CreateWindowsCoreAudioAudioDeviceModule(
           task_queue_factory_.get(), true);
 #endif

@@ -6,7 +6,6 @@
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
 #include "webrtc/rtc_base/third_party/base64/base64.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"

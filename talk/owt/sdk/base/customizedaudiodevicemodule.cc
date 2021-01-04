@@ -541,7 +541,7 @@ bool CustomizedAudioDeviceModule::Recording() const {
 // ----------------------------------------------------------------------------
 int32_t CustomizedAudioDeviceModule::RegisterAudioCallback(
     AudioTransport* audioCallback) {
-  rtc::CritScope cs(&_critSectAudioCb);
+  webrtc::MutexLock lock(&_critSectAudioCb);
   _ptrAudioDeviceBuffer->RegisterAudioCallback(audioCallback);
   return _outputAdm->RegisterAudioCallback(audioCallback);
 }

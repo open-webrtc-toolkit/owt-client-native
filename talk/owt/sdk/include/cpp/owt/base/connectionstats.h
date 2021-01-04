@@ -278,7 +278,7 @@ class RTCDataChannelStats final : public RTCStats {
   std::string label;
   std::string protocol;
   // The "id" attribute ofthe datachannel
-  int32_t datachannelid;
+  int32_t data_channel_identifier;
   // TODO: Support enum types? "RTCStatsMember<RTCDataChannelState>"?
   // The "readyState" of the DataChannel object
   std::string state;
