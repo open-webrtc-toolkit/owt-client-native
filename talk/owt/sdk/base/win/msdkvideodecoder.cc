@@ -321,10 +321,7 @@ dec_header:
     }
   }
 
-  if (inputImage._completeFrame) {
-    m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
-  }
-
+  m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
   mfxSyncPoint syncp;
 
   // If we get video param changed, that means we need to continue with

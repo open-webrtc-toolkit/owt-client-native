@@ -392,7 +392,7 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
               webrtc_stats.protocol.is_defined()
                   ? webrtc_stats.protocol.ValueToString()
                   : "",
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, datachannelid, int32_t,
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, data_channel_identifier, int32_t,
                                          (-1)),
               webrtc_stats.state.is_defined()
                   ? webrtc_stats.state.ValueToString()

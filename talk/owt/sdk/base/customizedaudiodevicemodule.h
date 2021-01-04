@@ -9,7 +9,7 @@
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/rtc_base/critical_section.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 
 namespace owt {
@@ -115,9 +115,9 @@ class CustomizedAudioDeviceModule : public webrtc::AudioDeviceModule {
       std::unique_ptr<AudioFrameGeneratorInterface> frame_generator);
   int32_t AttachAudioBuffer();
   void CreateOutputAdm();
-  rtc::CriticalSection _critSect;
-  rtc::CriticalSection _critSectEventCb;
-  rtc::CriticalSection _critSectAudioCb;
+  webrtc::Mutex _critSect;
+  webrtc::Mutex _critSectEventCb;
+  webrtc::Mutex _critSectAudioCb;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   AudioDeviceGeneric* _ptrAudioDevice;
   AudioDeviceBuffer* _ptrAudioDeviceBuffer;

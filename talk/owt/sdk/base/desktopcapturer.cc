@@ -6,9 +6,9 @@
 #include "libyuv/convert.h"
 #include "webrtc/rtc_base/byte_buffer.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/system_wrappers/include/clock.h"
@@ -42,7 +42,7 @@ class BasicScreenCapturer::BasicScreenCaptureThread
       rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
       rtc::Thread::Current()->ProcessMessages(kForever);
     }
-    rtc::CritScope cs(&crit_);
+    webrtc::MutexLock lock(&mutex_);
     finished_ = true;
   }
   // Override virtual method of parent MessageHandler. Context: Worker Thread.
@@ -57,12 +57,12 @@ class BasicScreenCapturer::BasicScreenCaptureThread
   }
   // Check if Run() is finished.
   bool Finished() const {
-    rtc::CritScope cs(&crit_);
+    webrtc::MutexLock lock(&mutex_);
     return finished_;
   }
  private:
   BasicScreenCapturer* capturer_;
-  mutable rtc::CriticalSection crit_;
+  mutable webrtc::Mutex mutex_;
   bool finished_;
   int waiting_time_ms_;
   RTC_DISALLOW_COPY_AND_ASSIGN(BasicScreenCaptureThread);

@@ -9,7 +9,6 @@
 #include "talk/owt/sdk/base/desktopcapturer.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/byte_buffer.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
 #include "webrtc/rtc_base/time_utils.h"
@@ -65,7 +64,7 @@ void BasicWindowCapturer::WindowCaptureThreadFunc(void* pThis) {
 bool BasicWindowCapturer::CaptureThreadProcess() {
   while (capture_started_) {
     uint64_t current_time = clock_->CurrentNtpInMilliseconds();
-    lock_.Enter();
+    lock_.Lock();
     if (last_call_record_millis_ == 0 ||
         (int64_t)(current_time - last_call_record_millis_) >= need_sleep_ms_) {
       if (source_specified_ && window_capturer_) {
@@ -73,7 +72,7 @@ bool BasicWindowCapturer::CaptureThreadProcess() {
         window_capturer_->CaptureFrame();
       }
     }
-    lock_.Leave();
+    lock_.Unlock();
     int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
     need_sleep_ms_ = 33 - cost_ms;
     if (need_sleep_ms_ > 0) {

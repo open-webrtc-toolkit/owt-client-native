@@ -77,4 +77,14 @@ declare_args() {
 
   # Some non-Chromium builds don't support building java targets.
   enable_java_templates = true
+
+  # If true, it assumes that //third_party/abseil-cpp is an available
+  # dependency for googletest.
+  gtest_enable_absl_printers = true
+
+  # WebRTC doesn't depend on //base from production code but only for testing
+  # purposes. In any case, it doesn't depend on //third_party/perfetto which
+  # is used for base tracing, so this feature is disabled.
+  enable_base_tracing = false
+  use_perfetto_client_library = false
 }

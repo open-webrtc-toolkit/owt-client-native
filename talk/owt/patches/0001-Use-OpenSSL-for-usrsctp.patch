@@ -1,6 +1,6 @@
-From 4928b9815f8063c4dd832d3a3a61355d60c5a0cc Mon Sep 17 00:00:00 2001
+From b17939a2d0c21ae5cfd6956ed98b47789d4dee8f Mon Sep 17 00:00:00 2001
 From: Qiu Jainlin <jianlin.qiu@intel.com>
-Date: Thu, 7 May 2020 09:30:40 +0800
+Date: Mon, 4 Jan 2021 15:49:43 +0800
 Subject: [PATCH] Use OpenSSL for usrsctp
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] Use OpenSSL for usrsctp
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/usrsctp/BUILD.gn b/usrsctp/BUILD.gn
-index e8a5b1f9d41..684603c4ce3 100644
+index 0c5947f1785..7aff0d50687 100644
 --- a/usrsctp/BUILD.gn
 +++ b/usrsctp/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -16,12 +16,12 @@ index e8a5b1f9d41..684603c4ce3 100644
  
  import("//build/toolchain/toolchain.gni")
 +import("//build_overrides/ssl/ssl.gni")
+ import("//testing/libfuzzer/fuzzer_test.gni")
  
- config("usrsctp_config") {
-   include_dirs = [
-@@ -145,5 +146,12 @@ static_library("usrsctp") {
-   if (is_fuchsia) {
-     defines += [ "__Userspace_os_Fuchsia" ]
+ config("usrsctp_public_config") {
+@@ -161,7 +162,14 @@ static_library("usrsctp") {
+   if (use_fuzzing_engine) {
+     defines += [ "INVARIANTS" ]
    }
 -  deps = [ "//third_party/boringssl" ]
 +
@@ -33,6 +33,8 @@ index e8a5b1f9d41..684603c4ce3 100644
 +    ]
 +  }
  }
+ 
+ fuzzer_test("usrsctp_fuzzer_listen") {
 -- 
-2.24.1.windows.2
+2.28.0.windows.1
 
