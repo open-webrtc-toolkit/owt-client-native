@@ -114,18 +114,19 @@ class Stream {
   */
   virtual StreamSourceInfo Source() const;
 
+  /// Attach the stream to an audio player that receives PCM data besides sending to
+  /// audio output device.
   virtual void AttachAudioPlayer(AudioPlayerInterface& player);
 
 #if defined(WEBRTC_LINUX)
+  /// Attach the stream to a Linux VA renderer.
+  virtual void AttachVideoRenderer(VideoRendererVaInterface& renderer);
+
+#endif
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /// Attach the stream to a renderer to receive ARGB/I420 frames for local or
   /// remote stream. Be noted if you turned hardware acceleration on, calling
   /// this API on remote stream will have no effect.
-  virtual void AttachVideoRenderer(VideoRendererVaInterface& renderer);
-  /// Attach the stream to an audio player that receives PCM data besides sending to
-  /// audio output device.
-#endif
-#if defined(WEBRTC_WIN)
-  /// Attach the stream to a Linux VA renderer.
   virtual void AttachVideoRenderer(VideoRendererInterface& renderer);
 #endif
 
