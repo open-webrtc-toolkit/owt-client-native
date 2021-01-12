@@ -86,10 +86,11 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     }
 #endif
   }
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) && !vp9_hw) {
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) /*&& !vp9_hw*/) {
     return webrtc::VP9Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) &&
              !vp8_hw) {
+    RTC_LOG(LS_ERROR) << "Not supporting HW VP8 decoder. Requesting SW:";
     return webrtc::VP8Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) && !h264_hw) {
     return webrtc::H264Decoder::Create();

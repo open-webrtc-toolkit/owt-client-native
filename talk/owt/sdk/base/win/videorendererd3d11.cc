@@ -12,6 +12,11 @@
 
 // No. of vertices to draw a 3D QUAD
 static const UINT num_vertices = 6;
+#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ | D3DFVF_TEX1)
+struct D3dCustomVertex {
+  float x, y, z;
+  float u, v;
+};
 
 using namespace rtc;
 namespace owt {
@@ -42,6 +47,12 @@ void WebrtcVideoRendererD3D11Impl::FillSwapChainDesc(
 
 void WebrtcVideoRendererD3D11Impl::OnFrame(
     const webrtc::VideoFrame& video_frame) {
+  uint16_t width = video_frame.video_frame_buffer()->width();
+  uint16_t height = video_frame.video_frame_buffer()->height();
+
+  if (width == 0 || height == 0)
+    return;
+
   if (video_frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
     D3D11ImageHandle* native_handle =
@@ -68,14 +79,9 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     else
       return;
 
-    uint16_t width = video_frame.video_frame_buffer()->width();
-    uint16_t height = video_frame.video_frame_buffer()->height();
-
-    if (width == 0 || height == 0)
-      return;
-
     width_ = width;
     height_ = height;
+
 
     if (render_device != d3d11_device_) {
       d3d11_device_ = render_device;
@@ -99,8 +105,145 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
       RenderToBackbuffer(array_slice);
     }
   } else {  // I420 frame passed.
+    if (!d3d9_inited_for_raw_) {
+      m_d3d_ = Direct3DCreate9(D3D_SDK_VERSION);
+      if (!m_d3d_)
+        return;
+
+      D3DPRESENT_PARAMETERS d3d_params = {};
+
+      d3d_params.Windowed = true;
+      d3d_params.SwapEffect = D3DSWAPEFFECT_COPY;
+
+      IDirect3DDevice9* d3d_device;
+      if (m_d3d_->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, wnd_,
+                               D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3d_params,
+                               &d3d_device) != D3D_OK) {
+        Destroy();
+        return;
+      }
+      m_d3d_device_ = d3d_device;
+      d3d_device->Release();
+
+      IDirect3DVertexBuffer9* vertex_buffer;
+      const int kRectVertices = 4;
+      if (m_d3d_device_->CreateVertexBuffer(
+              kRectVertices * sizeof(D3dCustomVertex), 0, D3DFVF_CUSTOMVERTEX,
+              D3DPOOL_MANAGED, &vertex_buffer, nullptr) != D3D_OK) {
+        Destroy();
+        return;
+      }
+      m_vertex_buffer_ = vertex_buffer;
+      vertex_buffer->Release();
+
+      m_d3d_device_->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+      m_d3d_device_->SetRenderState(D3DRS_LIGHTING, FALSE);
+      ResizeD3D9RenderPipeline(video_frame.width(), video_frame.height());
+      d3d9_inited_for_raw_ = true;
+    } else {
+      HRESULT hr = m_d3d_device_->TestCooperativeLevel();
+      if (FAILED(hr)) {
+        if (hr == D3DERR_DEVICELOST) {
+          RTC_LOG(LS_WARNING) << "Device lost.";
+        } else if (hr == D3DERR_DEVICENOTRESET) {
+          Destroy();
+          RTC_LOG(LS_WARNING) << "Device try to reinit.";
+        } else {
+          RTC_LOG(LS_WARNING) << "Device driver internal error.";
+        }
+
+        return;
+      }
+
+      if (static_cast<size_t>(video_frame.width()) != width_ ||
+          static_cast<size_t>(video_frame.height()) != height_) {
+        ResizeD3D9RenderPipeline(static_cast<size_t>(video_frame.width()),
+               static_cast<size_t>(video_frame.height()));
+      }
+      D3DLOCKED_RECT lock_rect;
+      if (m_texture_->LockRect(0, &lock_rect, nullptr, 0) != D3D_OK)
+        return;
+
+      ConvertFromI420(video_frame, webrtc::VideoType::kARGB, 0,
+                      static_cast<uint8_t*>(lock_rect.pBits));
+      m_texture_->UnlockRect(0);
+
+      m_d3d_device_->BeginScene();
+      m_d3d_device_->SetFVF(D3DFVF_CUSTOMVERTEX);
+      m_d3d_device_->SetStreamSource(0, m_vertex_buffer_, 0,
+                                     sizeof(D3dCustomVertex));
+      m_d3d_device_->SetTexture(0, m_texture_);
+      m_d3d_device_->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+      m_d3d_device_->EndScene();
+
+      m_d3d_device_->Present(nullptr, nullptr, wnd_, nullptr);
+    }
   }
   return;
+}
+
+void WebrtcVideoRendererD3D11Impl::ResizeD3D9RenderPipeline(size_t width, size_t height) {
+  width_ = width;
+  height_ = height;
+  IDirect3DTexture9* texture;
+  m_d3d_device_->CreateTexture(static_cast<UINT>(width_),
+                               static_cast<UINT>(height_), 1, 0, D3DFMT_A8R8G8B8,
+                               D3DPOOL_MANAGED, &texture, nullptr);
+  m_texture_ = texture;
+  texture->Release();
+
+  // Vertices for the video frame to be rendered to.
+  static const D3dCustomVertex rect[] = {
+      {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
+      {-1.0f, 1.0f, 0.0f, 0.0f, 0.0f},
+      {1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
+      {1.0f, 1.0f, 0.0f, 1.0f, 0.0f},
+  };
+
+  void* buf_data = nullptr;
+  if (m_vertex_buffer_->Lock(0, 0, &buf_data, 0) != D3D_OK)
+    return;
+
+  CopyMemory(buf_data, &rect, sizeof(rect));
+  m_vertex_buffer_->Unlock();
+}
+
+HRESULT WebrtcVideoRendererD3D11Impl::CreateD3D11Device() {
+  HRESULT hr = S_OK;
+
+  static D3D_FEATURE_LEVEL feature_levels[] = {
+      D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
+      D3D_FEATURE_LEVEL_10_1};
+  D3D_FEATURE_LEVEL feature_levels_out;
+
+    hr = D3D11CreateDevice(
+      nullptr, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, feature_levels,
+      sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
+      &d3d11_device_, &feature_levels_out, &d3d11_device_context_);
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to create d3d11 device for decoder";
+    return false;
+  }
+
+  // Create the surface to copy NV12 image to.
+  D3D11_TEXTURE2D_DESC texture_desc;
+  memset(&texture_desc, 0, sizeof(texture_desc));
+  texture_desc.Format = DXGI_FORMAT_NV12;
+  texture_desc.Width = width_;
+  texture_desc.Height = height_;
+  texture_desc.ArraySize = 1;
+  texture_desc.MipLevels = 1;
+  texture_desc.Usage = D3D11_USAGE_DYNAMIC;
+  texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+  texture_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  hr = d3d11_device_->CreateTexture2D(&texture_desc, nullptr,
+                                      &sw_shared_texture_);
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR)
+        << "Failed to create shared texture to copy nv12 frame to.";
+    return hr;
+  }
 }
 
 // Method to create the necessary 3D pipeline objects to render a textured 3D

@@ -91,8 +91,8 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) && !vp8_hw)
     return webrtc::VP8Encoder::Create();
   // VP9 encoding will only be enabled on ICL+;
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) &&
-           !vp9_hw)
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)/* &&
+           !vp9_hw*/)
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
   // TODO: Replace with AV1 HW encoder post TGL.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&

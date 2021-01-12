@@ -475,16 +475,6 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
         RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
-      std::vector<AudioCodec> audio_codecs;
-      for (auto& audio_enc_param : configuration_.audio) {
-        audio_codecs.push_back(audio_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-      std::vector<VideoCodec> video_codecs;
-      for (auto& video_enc_param : configuration_.video) {
-        video_codecs.push_back(video_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
       std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       // Sychronous call. After done, will invoke OnSetRemoteDescription. If
@@ -757,7 +747,24 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
           std::bind(
               &P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure,
               this, std::placeholders::_1));
-  peer_connection_->SetLocalDescription(observer, desc);
+  std::string sdp_string;
+  if (!desc->ToString(&sdp_string)) {
+    RTC_LOG(LS_ERROR) << "Error parsing local description.";
+    RTC_DCHECK(false);
+  }
+  std::vector<AudioCodec> audio_codecs;
+  for (auto& audio_enc_param : configuration_.audio) {
+    audio_codecs.push_back(audio_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
+  std::vector<VideoCodec> video_codecs;
+  for (auto& video_enc_param : configuration_.video) {
+    video_codecs.push_back(video_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  webrtc::SessionDescriptionInterface* new_desc(
+      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+  peer_connection_->SetLocalDescription(observer, new_desc);
 }
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {

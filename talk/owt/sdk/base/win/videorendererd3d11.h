@@ -8,11 +8,14 @@
 #include <windows.h>
 #include <atlbase.h>
 #include <combaseapi.h>
+#include <d3d9.h>
+#include <d3d9types.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi1_2.h>
 #include <dxgi1_4.h>
 #include <dxgi1_5.h>
+#include <dxgiformat.h>
 #include <psapi.h>
 #include "talk/owt/sdk/base/win/shader.h"
 #include <vector>
@@ -57,8 +60,11 @@ class WebrtcVideoRendererD3D11Impl
   void Destroy();
   void FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC1& scd);
   void ResetTextureViews();
+  HRESULT CreateD3D11Device();
+  void WriteNV12ToTexture();
   HRESULT CreateRenderPipeline();
   HRESULT ResizeRenderPipeline();
+  void ResizeD3D9RenderPipeline(size_t width, size_t height);
   HRESULT CreateTextureView(ID3D11Texture2D* texture, int array_slice);
   void RenderToBackbuffer(int array_slice);
   void InitializeSRVDesc(D3D11_SHADER_RESOURCE_VIEW_DESC& desc,
@@ -95,6 +101,14 @@ class WebrtcVideoRendererD3D11Impl
   ID3D11PixelShader* pixel_shader_ = nullptr;
   ID3D11InputLayout* input_layout_ = nullptr;
   ID3D11Buffer* vertex_buffer_ = nullptr;
+  ID3D11Texture2D* sw_shared_texture_ = nullptr;
+
+  // Using D3D9 for rendering SW frames.
+  bool d3d9_inited_for_raw_ = false;
+  rtc::scoped_refptr<IDirect3D9> m_d3d_;
+  rtc::scoped_refptr<IDirect3DDevice9> m_d3d_device_;
+  rtc::scoped_refptr<IDirect3DTexture9> m_texture_;
+  rtc::scoped_refptr<IDirect3DVertexBuffer9> m_vertex_buffer_;
   UINT views_count = 0;
 };
 }  // namespace base
