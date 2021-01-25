@@ -503,7 +503,17 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
                               &sdp_mline_index);
     webrtc::IceCandidateInterface* ice_candidate = webrtc::CreateIceCandidate(
         sdp_mid, sdp_mline_index, candidate, nullptr);
-    peer_connection_->AddIceCandidate(ice_candidate);
+    if(peer_connection_->remote_description()){
+      if (!peer_connection_->AddIceCandidate(ice_candidate)) {
+        RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
+      }
+    } else{
+      rtc::CritScope cs(&pending_remote_candidates_crit_);
+      pending_remote_candidates_.push_back(
+          std::unique_ptr<webrtc::IceCandidateInterface>(ice_candidate));
+      RTC_LOG(LS_VERBOSE) << "Remote candidate is stored because remote "
+                             "session description is missing.";
+    }
   }
 }
 void P2PPeerConnectionChannel::OnMessageTracksAdded(
@@ -561,44 +571,47 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(
 void P2PPeerConnectionChannel::OnMessageStreamInfo(Json::Value& stream_info) {
   // Stream information is useless in native layer.
 }
+
 void P2PPeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
-  switch (new_state) {
-    case PeerConnectionInterface::SignalingState::kStable:
-      if (pending_remote_sdp_) {
-        scoped_refptr<FunctionalSetRemoteDescriptionObserver> observer =
-            FunctionalSetRemoteDescriptionObserver::Create(std::bind(
-                &P2PPeerConnectionChannel::OnSetRemoteDescriptionComplete, this,
-                std::placeholders::_1));
-        std::string sdp_string;
-        if (!pending_remote_sdp_->ToString(&sdp_string)) {
-          RTC_LOG(LS_ERROR) << "Error parsing local description.";
-          RTC_DCHECK(false);
-        }
-        std::vector<AudioCodec> audio_codecs;
-        for (auto& audio_enc_param : configuration_.audio) {
-          audio_codecs.push_back(audio_enc_param.codec.name);
-        }
-        sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-        std::vector<VideoCodec> video_codecs;
-        for (auto& video_enc_param : configuration_.video) {
-          video_codecs.push_back(video_enc_param.codec.name);
-        }
-        sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
-        std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
-            webrtc::CreateSessionDescription(pending_remote_sdp_->type(),
-                                             sdp_string, nullptr));
-        pending_remote_sdp_.reset();
-        peer_connection_->SetRemoteDescription(std::move(new_desc), observer);
-      } else {
-        CheckWaitedList();
+  if (new_state == PeerConnectionInterface::SignalingState::kStable) {
+    if (pending_remote_sdp_) {
+      scoped_refptr<FunctionalSetRemoteDescriptionObserver> observer =
+          FunctionalSetRemoteDescriptionObserver::Create(std::bind(
+              &P2PPeerConnectionChannel::OnSetRemoteDescriptionComplete, this,
+              std::placeholders::_1));
+      std::string sdp_string;
+      if (!pending_remote_sdp_->ToString(&sdp_string)) {
+        RTC_LOG(LS_ERROR) << "Error parsing local description.";
+        RTC_DCHECK(false);
       }
-      break;
-    default:
-      break;
+      std::vector<AudioCodec> audio_codecs;
+      for (auto& audio_enc_param : configuration_.audio) {
+        audio_codecs.push_back(audio_enc_param.codec.name);
+      }
+      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
+      std::vector<VideoCodec> video_codecs;
+      for (auto& video_enc_param : configuration_.video) {
+        video_codecs.push_back(video_enc_param.codec.name);
+      }
+      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+      std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
+          webrtc::CreateSessionDescription(pending_remote_sdp_->type(),
+                                           sdp_string, nullptr));
+      pending_remote_sdp_.reset();
+      peer_connection_->SetRemoteDescription(std::move(new_desc), observer);
+    } else {
+      CheckWaitedList();
+    }
+  }
+
+  if (new_state == PeerConnectionInterface::SignalingState::kStable ||
+      new_state == PeerConnectionInterface::SignalingState::kHaveRemoteOffer) {
+    DrainPendingRemoteCandidates();
   }
 }
+
 void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   Json::Value stream_tracks;
@@ -1247,6 +1260,17 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
     pending_messages_.clear();
   }
 }
+
+void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
+  rtc::CritScope cs(&pending_remote_candidates_crit_);
+  for (auto& ice_candidate : pending_remote_candidates_) {
+    if (!peer_connection_->AddIceCandidate(ice_candidate.get())) {
+      RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
+    }
+  }
+  pending_remote_candidates_.clear();
+}
+
 Json::Value P2PPeerConnectionChannel::UaInfo() {
   Json::Value ua;
   // SDK info includes verison and type.
