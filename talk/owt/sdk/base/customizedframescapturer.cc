@@ -186,7 +186,14 @@ int CustomizedFramesCapturer::I420DataSize(int height,
 }
 
 void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
-  if (size > frame_buffer_capacity_ || !frame_buffer_) {
+  // Check if dimensions changed
+  // Need to reset buffer if this happens, even if
+  // size is not greater than frame_buffer_capacity_
+  int maybe_new_width = frame_generator_->GetWidth();
+  int maybe_new_height = frame_generator_->GetHeight();
+  bool dims_changed = (width_ != maybe_new_width) || (height_ != maybe_new_height);
+
+  if (dims_changed || size > frame_buffer_capacity_ || !frame_buffer_) {
     RTC_LOG(LS_VERBOSE) << "Allocate new memory for frame buffer.";
     width_ = frame_generator_->GetWidth();
     height_ = frame_generator_->GetHeight();
