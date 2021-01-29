@@ -158,6 +158,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Send all messages in pending message list.
   void DrainPendingMessages();
   // Cleans all variables associated with last peerconnection.
+  void DrainPendingRemoteCandidates();
   void CleanLastPeerConnection();
   // Returns user agent info as JSON object.
   Json::Value UaInfo();
@@ -211,6 +212,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       pending_messages_;
   // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
+  rtc::CriticalSection pending_remote_candidates_crit_;
+  std::vector<std::unique_ptr<webrtc::IceCandidateInterface>>
+      pending_remote_candidates_
+          RTC_GUARDED_BY(pending_remote_candidates_crit_);
   // Indicates whether remote client supports WebRTC Plan B
   // (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
   // If plan B is not supported, at most one audio/video track is supported.
