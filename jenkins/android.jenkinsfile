@@ -15,20 +15,30 @@ pipeline {
         timeout(time: 40, unit: "MINUTES")
     }
     stages {
+        stage("init parameters"){
+            steps {
+                script {
+                    if (env.CHANGE_TARGET == null){
+                        env.CHANGE_TARGET = env.GIT_BRANCH
+                    }
+                }
+            }
+        }
+
         stage('Build'){
             agent{
                 node {
-                    label "${env.androidBuldNativeServer}"
-                    customWorkspace "${env.owtClientNativePath}"
+                    label "${env.androidBuildNativeServer}"
+                    customWorkspace "${env.owtClientNativeBasePath}/${env.CHANGE_TARGET}/src"
                 }
             }
             steps {
                 script{
                     sh "gclient sync"
-                    sh "python ${env.androidBuildNativePath}"
-                    sh "cp -r ${env.andoridWebrtcLibSrcPath}/* ${env.remoteDependeceDebugPath}/libwebrtc"
+                    sh "python ${env.owtClientNativeBasePath}/${env.CHANGE_TARGET}/src/scripts/build_android.py"
+                    sh "cp -r ${env.owtClientNativeBasePath}/${env.CHANGE_TARGET}/src/out/dist/release/* ${env.remoteDependeceDebugPath}/libwebrtc"
                     if ("${GIT_BRANCH}" == 'master') { 
-                        sh "cp -r ${env.andoridWebrtcLibSrcPath}/* ${env.andoridLibWebrtcPath}"
+                        sh "cp -r ${env.owtClientNativeBasePath}/${env.CHANGE_TARGET}/src/out/dist/release/* ${env.andoridLibWebrtcPath}"
                     }
                 }
             }
