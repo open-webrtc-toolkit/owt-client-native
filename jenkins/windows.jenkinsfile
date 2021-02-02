@@ -21,12 +21,12 @@ pipeline {
                     agent{
                         node {
                             label "windows"
-                            customWorkspace "$env.windowsCIPath/src"
+                            customWorkspace "${env.windowsCIPathBranch}_${env.GIT_BRANCH}/src"
                         }
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
+                        bat "%windowsCIPathBranch%_%GIT_BRANCH%/buildSdk.bat %GIT_COMMIT%"
                     }
                 }
                 stage("startMcu") {
