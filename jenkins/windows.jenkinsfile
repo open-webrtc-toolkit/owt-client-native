@@ -15,18 +15,27 @@ pipeline {
         timeout(time: 40, unit: "MINUTES")
     }
     stages {
+        stage("init paramters"){
+            steps {
+                script {
+                    if (env.CHANGE_TARGET == null){
+                        env.CHANGE_TARGET = env.GIT_BRANCH
+                    }
+                }
+            }
+        }
         stage("BuildAndEnv"){
             parallel {
                 stage("build") {
                     agent{
                         node {
                             label "windows"
-                            customWorkspace "$env.windowsCIPath/src"
+                            customWorkspace "${env.windowsCIPathBranch}_${env.CHANGE_TARGET}/src"
                         }
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPath%/buildSdk.bat %GIT_COMMIT%"
+                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdk.bat %GIT_COMMIT%"
                     }
                 }
                 stage("startMcu") {
@@ -124,4 +133,3 @@ pipeline {
         }
     }
 }
-
