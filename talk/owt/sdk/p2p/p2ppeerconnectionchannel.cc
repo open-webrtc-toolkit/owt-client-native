@@ -508,7 +508,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
         RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
       }
     } else{
-      rtc::CritScope cs(&pending_remote_candidates_crit_);
+      webrtc::MutexLock lock(&pending_remote_candidates_crit_);
       pending_remote_candidates_.push_back(
           std::unique_ptr<webrtc::IceCandidateInterface>(ice_candidate));
       RTC_LOG(LS_VERBOSE) << "Remote candidate is stored because remote "
@@ -1262,7 +1262,7 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
 }
 
 void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
-  rtc::CritScope cs(&pending_remote_candidates_crit_);
+  webrtc::MutexLock lock(&pending_remote_candidates_crit_);
   for (auto& ice_candidate : pending_remote_candidates_) {
     if (!peer_connection_->AddIceCandidate(ice_candidate.get())) {
       RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";

@@ -211,6 +211,8 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       info.codecSpecific.H264.idr_frame = is_idr;
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
+    encodedframe._frameType = is_idr ? webrtc::VideoFrameType::kVideoFrameKey
+                                     : webrtc::VideoFrameType::kVideoFrameDelta;
   }
   const auto result = callback_->OnEncodedImage(encodedframe, &info);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
