@@ -147,7 +147,7 @@ def getsdkversion():
 
 # Run unit tests on simulator. Return True if all tests are passed.
 def runtest(ssl_root):
-  print 'Start running unit tests.'
+  print('Start running unit tests.')
   # Build app targets checks link issue.
   if not ninjabuild(TEST_ARCH, TEST_SCHEME, SDK_TARGETS + APP_TARGETS + TEST_TARGETS):
     return False
@@ -197,7 +197,7 @@ def main():
         return 1
     if not runtest(opts.ssl_root):
       return 1
-  print 'Done.'
+  print('Done.')
   return 0
 
 if __name__ == '__main__':
