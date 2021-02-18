@@ -339,7 +339,6 @@ if (is_ios) {
     ]
     include_dirs = [
       "//third_party",
-      "//third_party/webrtc/sdk/objc/Framework/Headers",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]

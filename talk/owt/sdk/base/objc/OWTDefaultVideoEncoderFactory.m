@@ -2,8 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#import "WebRTC/RTCVideoCodec.h"
-#import "WebRTC/RTCVideoCodecFactory.h"
+#import "WebRTC/RTCEncodedImage.h"
 #if defined(OWT_USE_H265)
 #import "WebRTC/RTCVideoCodecH265.h"
 #endif
