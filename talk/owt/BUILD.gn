@@ -178,7 +178,7 @@ static_library("owt_sdk_base") {
       include_dirs += [ owt_quic_header_root ]
     }
   }
-  
+
   if (is_win || is_linux) {
     # Custom audio/video input and output.
     # When rebasing libwebrtc to a new version, custom audio/video input/output
@@ -186,10 +186,6 @@ static_library("owt_sdk_base") {
     defines += [ "OWT_CUSTOM_AVIO" ]
   }
   if (is_ios) {
-    sources += [
-      "sdk/base/ios/networkmonitorios.cc",
-      "sdk/base/ios/networkmonitorios.h",
-    ]
     public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
   }
   if (is_win) {
