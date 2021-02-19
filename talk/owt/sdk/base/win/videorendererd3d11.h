@@ -60,8 +60,10 @@ class WebrtcVideoRendererD3D11Impl
   void Destroy();
   void FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC1& scd);
   void ResetTextureViews();
+#if 0
   HRESULT CreateD3D11Device();
   void WriteNV12ToTexture();
+#endif
   HRESULT CreateRenderPipeline();
   HRESULT ResizeRenderPipeline();
   void ResizeD3D9RenderPipeline(size_t width, size_t height);
@@ -81,6 +83,8 @@ class WebrtcVideoRendererD3D11Impl
   uint16_t y_offset_ = 0;
   uint16_t width_ = 0;
   uint16_t height_ = 0;
+  int window_width = 0;
+  int window_height = 0;
   bool need_swapchain_recreate_ = true;
 
   // Owner of the d3d11 device/context is decoder.
@@ -101,7 +105,6 @@ class WebrtcVideoRendererD3D11Impl
   ID3D11PixelShader* pixel_shader_ = nullptr;
   ID3D11InputLayout* input_layout_ = nullptr;
   ID3D11Buffer* vertex_buffer_ = nullptr;
-  ID3D11Texture2D* sw_shared_texture_ = nullptr;
 
   // Using D3D9 for rendering SW frames.
   bool d3d9_inited_for_raw_ = false;
@@ -110,6 +113,7 @@ class WebrtcVideoRendererD3D11Impl
   rtc::scoped_refptr<IDirect3DTexture9> m_texture_;
   rtc::scoped_refptr<IDirect3DVertexBuffer9> m_vertex_buffer_;
   UINT views_count = 0;
+
 };
 }  // namespace base
 }  // namespace owt

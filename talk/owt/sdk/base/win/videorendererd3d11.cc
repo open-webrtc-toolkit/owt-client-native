@@ -79,13 +79,24 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     else
       return;
 
-    width_ = width;
-    height_ = height;
+    if (width_ != width || height_ != height) {
+      width_ = width;
+      height_ = height;
+    }
 
+    RECT rect;
+    GetClientRect(wnd_, &rect);
+
+    if (window_width != rect.right - rect.left ||
+        window_height != rect.bottom - rect.top) {
+      need_swapchain_recreate_ = true;
+      window_width = rect.right - rect.left;
+      window_height = rect.bottom - rect.top;
+    }
 
     if (render_device != d3d11_device_) {
-      d3d11_device_ = render_device;
       need_swapchain_recreate_ = true;
+      d3d11_device_ = render_device;
     }
 
     if (need_swapchain_recreate_) {
@@ -113,7 +124,23 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
       D3DPRESENT_PARAMETERS d3d_params = {};
 
       d3d_params.Windowed = true;
-      d3d_params.SwapEffect = D3DSWAPEFFECT_COPY;
+      d3d_params.SwapEffect = D3DSWAPEFFECT_DISCARD;
+
+      // Check anti-alias support
+      static D3DMULTISAMPLE_TYPE multisample_types[] = {
+          D3DMULTISAMPLE_5_SAMPLES, D3DMULTISAMPLE_4_SAMPLES,
+          D3DMULTISAMPLE_2_SAMPLES, D3DMULTISAMPLE_NONE};
+      DWORD multisample_quality = 0;
+      for (int i = 0; i < 4; i++) {
+        HRESULT hr = m_d3d_->CheckDeviceMultiSampleType(
+            D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_A8R8G8B8, true,
+            multisample_types[i], &multisample_quality);
+        if (SUCCEEDED(hr)) {
+          d3d_params.MultiSampleType = multisample_types[i];
+          d3d_params.MultiSampleQuality = multisample_quality - 1;
+          break;
+        }
+      }
 
       IDirect3DDevice9* d3d_device;
       if (m_d3d_->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, wnd_,
@@ -138,6 +165,7 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
 
       m_d3d_device_->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
       m_d3d_device_->SetRenderState(D3DRS_LIGHTING, FALSE);
+      m_d3d_device_->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
       ResizeD3D9RenderPipeline(video_frame.width(), video_frame.height());
       d3d9_inited_for_raw_ = true;
     } else {
@@ -186,6 +214,7 @@ void WebrtcVideoRendererD3D11Impl::ResizeD3D9RenderPipeline(size_t width, size_t
   width_ = width;
   height_ = height;
   IDirect3DTexture9* texture;
+  // Texture should alwasy be created with the size of frame.
   m_d3d_device_->CreateTexture(static_cast<UINT>(width_),
                                static_cast<UINT>(height_), 1, 0, D3DFMT_A8R8G8B8,
                                D3DPOOL_MANAGED, &texture, nullptr);
@@ -208,6 +237,8 @@ void WebrtcVideoRendererD3D11Impl::ResizeD3D9RenderPipeline(size_t width, size_t
   m_vertex_buffer_->Unlock();
 }
 
+// TODO: Use D3D11 for rendering of I420 view as well.
+#if 0
 HRESULT WebrtcVideoRendererD3D11Impl::CreateD3D11Device() {
   HRESULT hr = S_OK;
 
@@ -228,23 +259,21 @@ HRESULT WebrtcVideoRendererD3D11Impl::CreateD3D11Device() {
   // Create the surface to copy NV12 image to.
   D3D11_TEXTURE2D_DESC texture_desc;
   memset(&texture_desc, 0, sizeof(texture_desc));
-  texture_desc.Format = DXGI_FORMAT_NV12;
-  texture_desc.Width = width_;
-  texture_desc.Height = height_;
+  texture_desc.Format = DXGI_FORMAT_R8_UNORM;
+  texture_desc.Width = width_;  // same as video width
+  texture_desc.Height = height_; // same as video height
   texture_desc.ArraySize = 1;
   texture_desc.MipLevels = 1;
-  texture_desc.Usage = D3D11_USAGE_DYNAMIC;
-  texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-  texture_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  texture_desc.Usage = D3D11_USAGE_DEFAULT; // We use UpdateSubresource to update the texture,
+                                            // so not setting to D3D11_USAGE_DEFAULT;
 
   hr = d3d11_device_->CreateTexture2D(&texture_desc, nullptr,
-                                      &sw_shared_texture_);
-  if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR)
-        << "Failed to create shared texture to copy nv12 frame to.";
-    return hr;
-  }
+                                      &texture_planes_[0]);
+  
+  texture_desc.Width = width_ / 2;
+  texture_desc.Height = height_ / 2;
 }
+#endif
 
 // Method to create the necessary 3D pipeline objects to render a textured 3D
 // QUAD
@@ -471,12 +500,15 @@ void WebrtcVideoRendererD3D11Impl::RenderToBackbuffer(int array_slice) {
   FLOAT clear_color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   d3d11_device_context_->ClearRenderTargetView(render_target_view_, clear_color);
 
+  RECT rect;
+  GetClientRect(wnd_, &rect);
+
   // Set viewport
   D3D11_VIEWPORT viewport = {0};
-  viewport.TopLeftX = x_offset_;
-  viewport.TopLeftY = y_offset_;
-  viewport.Width = width_;
-  viewport.Height = height_;
+  viewport.TopLeftX = 0;
+  viewport.TopLeftY = 0;
+  viewport.Width = rect.right - rect.left;
+  viewport.Height = rect.bottom - rect.top;
   d3d11_device_context_->RSSetViewports(1, &viewport);
 
   // Bind the textures

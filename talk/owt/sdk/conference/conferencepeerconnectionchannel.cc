@@ -1007,6 +1007,24 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
                   encoding.num_temporal_layers <= 4) {
                 param.num_temporal_layers = encoding.num_temporal_layers;
               }
+              if (encoding.priority != owt::base::NetworkPriority::kDefault) {
+                switch (encoding.priority) {
+                  case owt::base::NetworkPriority::kVeryLow:
+                    param.network_priority = webrtc::Priority::kVeryLow;
+                    break;
+                  case owt::base::NetworkPriority::kLow:
+                    param.network_priority = webrtc::Priority::kLow;
+                    break;
+                  case owt::base::NetworkPriority::kMedium:
+                    param.network_priority = webrtc::Priority::kMedium;
+                    break;
+                  case owt::base::NetworkPriority::kHigh:
+                    param.network_priority = webrtc::Priority::kHigh;
+                    break;
+                  default:
+                    break;
+                }
+              }
               param.active = encoding.active;
               transceiver_init.send_encodings.push_back(param);
             }

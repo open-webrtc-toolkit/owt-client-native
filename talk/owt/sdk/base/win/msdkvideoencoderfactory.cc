@@ -38,7 +38,7 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
   codecs_to_check.push_back(owt::base::VideoCodec::kVp8);
   std::vector<VideoEncoderCapability> capabilities =
       media_capability->SupportedCapabilitiesForVideoEncoder(codecs_to_check);
-
+#if 0
   for (auto& capability : capabilities) {
     if (capability.codec_type == owt::base::VideoCodec::kH264 &&
         !is_h264_hw_supported) {
@@ -65,6 +65,12 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
     }
 #endif
   }
+#endif
+  supported_codec_types.push_back(webrtc::kVideoCodecH264);
+  supported_codec_types.push_back(webrtc::kVideoCodecVP9);
+  supported_codec_types.push_back(webrtc::kVideoCodecVP8);
+  supported_codec_types.push_back(webrtc::kVideoCodecH265);
+  supported_codec_types.push_back(webrtc::kVideoCodecAV1);
 }
 
 std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncoder(
@@ -100,8 +106,9 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
     return webrtc::CreateLibaomAv1Encoder();
 #ifndef DISABLE_H265
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) &&
-           !h265_hw)
-    return nullptr;
+           !h265_hw) {
+  }
+   // return nullptr;
 #endif
   return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
 }
