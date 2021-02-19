@@ -339,6 +339,9 @@ if (is_ios) {
     }
     include_dirs = [
       "//third_party",
+      "//third_party/webrtc/sdk/objc/api/peerconnection",
+      "//third_party/webrtc/sdk/objc/api/logging",
+      "//third_party/webrtc/sdk/objc/api/video_codec",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
