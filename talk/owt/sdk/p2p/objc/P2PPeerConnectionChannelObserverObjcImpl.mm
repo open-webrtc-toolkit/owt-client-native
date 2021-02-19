@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
 #import "talk/owt/sdk/base/objc/OWTRemoteStream+Private.h"
-#import "WebRTC/RTCLogging.h"
+#import "RTCLogging.h"
 #include "talk/owt/sdk/p2p/objc/P2PPeerConnectionChannelObserverObjcImpl.h"
 namespace owt {
 namespace p2p {

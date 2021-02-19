@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_map>
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCCameraVideoCapturer.h>
-#import <WebRTC/RTCVideoSource.h>
+#import "RTCCameraVideoCapturer.h"
+#import "RTCVideoSource.h"
 #import "talk/owt/sdk/base/objc/OWTLocalStream+Private.h"
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"
 #import "talk/owt/sdk/include/objc/OWT/RTCPeerConnectionFactory+OWT.h"

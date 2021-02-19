@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import "talk/owt/sdk/include/objc/OWT/OWTRemoteStream.h"
 #import <Foundation/Foundation.h>
-#import "WebRTC/RTCMediaStream.h"
+#import "RTCMediaStream.h"
 #import "talk/owt/sdk/base/objc/OWTRemoteStream+Private.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"

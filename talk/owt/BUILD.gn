@@ -185,9 +185,6 @@ static_library("owt_sdk_base") {
     # usually need some changes to fit the latest API.
     defines += [ "OWT_CUSTOM_AVIO" ]
   }
-  if (is_ios) {
-    public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
-  }
   if (is_win) {
     sources += [
       "sdk/base/desktopcapturer.cc",
@@ -337,6 +334,9 @@ if (is_ios) {
       ":owt_sdk_p2p",
       "//third_party/jsoncpp",
     ]
+    if (is_ios) {
+      deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
+    }
     include_dirs = [
       "//third_party",
       "sdk/include/cpp",
@@ -357,8 +357,6 @@ if (is_ios) {
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.h",
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.m",
       "sdk/base/objc/OWTErrors.m",
-
-      #"sdk/base/objc/OWTGlobalConfiguration.mm",
       "sdk/base/objc/OWTLocalStream+Private.h",
       "sdk/base/objc/OWTLocalStream.mm",
       "sdk/base/objc/OWTMediaFormat+Internal.h",
@@ -377,8 +375,6 @@ if (is_ios) {
       "sdk/base/objc/RemoteStreamObserverObjcImpl.mm",
       "sdk/base/objc/public/OWTErrors.h",
       "sdk/base/objc/public/OWTFrameGeneratorProtocol.h",
-
-      #"sdk/base/objc/public/OWTGlobalConfiguration.h",
       "sdk/base/objc/public/OWTLocalCameraStream.h",
       "sdk/base/objc/public/OWTLocalCameraStreamParameters.h",
       "sdk/base/objc/public/OWTLocalCustomizedStream.h",

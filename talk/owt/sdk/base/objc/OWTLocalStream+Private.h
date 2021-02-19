@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import "talk/owt/sdk/base/objc/OWTStream+Private.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTLocalStream.h"
-#import <WebRTC/RTCVideoCapturer.h>
+#import "RTCVideoCapturer.h"
 @interface OWTLocalStream ()
 /// If capturer is nil, caller manages its capturer's lifetime.
 @property(nonatomic, strong) RTCVideoCapturer* capturer;

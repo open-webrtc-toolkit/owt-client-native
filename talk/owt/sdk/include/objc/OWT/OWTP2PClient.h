@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
-#import <WebRTC/RTCLegacyStatsReport.h>
+#import "RTCMacros.h"
+#import "RTCLegacyStatsReport.h"
 #import "OWT/OWTLocalStream.h"
 #import "OWT/OWTP2PClientConfiguration.h"
 #import "OWT/OWTP2PPeerConnectionChannelObserver.h"

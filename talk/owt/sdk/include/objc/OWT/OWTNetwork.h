@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 /// Define ICE candidate types.
 typedef NS_ENUM(NSUInteger, RTCIceCandidateType) {
   /// Host candidate.

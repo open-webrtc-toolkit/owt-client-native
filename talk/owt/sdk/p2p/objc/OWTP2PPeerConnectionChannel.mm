@@ -15,7 +15,7 @@
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/api/peerconnection/RTCIceServer+Private.h"
 #import "webrtc/sdk/objc/api/peerconnection/RTCLegacyStatsReport+Private.h"
-#import <WebRTC/RTCLogging.h>
+#import "RTCLogging.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 @implementation OWTP2PPeerConnectionChannel {
   owt::p2p::P2PPeerConnectionChannel* _nativeChannel;

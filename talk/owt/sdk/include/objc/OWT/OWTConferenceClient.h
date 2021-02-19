@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_CONFERENCE_OBJC_OWTCONFERENCECLIENT_H_
 #define OWT_CONFERENCE_OBJC_OWTCONFERENCECLIENT_H_
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 #import "OWT/OWTConferenceClientConfiguration.h"
 #import "OWT/OWTConferencePublication.h"
 #import "OWT/OWTConferenceSubscription.h"

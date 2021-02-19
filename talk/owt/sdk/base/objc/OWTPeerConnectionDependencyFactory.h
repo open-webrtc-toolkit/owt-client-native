@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #import <Foundation/Foundation.h>
-#import "WebRTC/RTCMediaStream.h"
+#import "RTCMediaStream.h"
 @class RTCMediaConstraints;
 @interface OWTPeerConnectionDependencyFactory : NSObject
 + (id)sharedOWTPeerConnectionDependencyFactory;

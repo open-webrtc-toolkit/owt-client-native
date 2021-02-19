@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import "WebRTC/RTCPeerConnectionFactory.h"
+#import "RTCPeerConnectionFactory.h"
 
 @interface RTCPeerConnectionFactory (OWT)
 
