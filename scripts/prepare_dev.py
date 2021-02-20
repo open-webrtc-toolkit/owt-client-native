@@ -20,6 +20,7 @@ LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
+CONFIG_PATH = os.path.join(BUILD_PATH, 'config')
 TOOL_PATH = os.path.join(HOME_PATH, 'tools')
 BASE_PATH = os.path.join(HOME_PATH, 'base')
 platform = os.name
@@ -50,6 +51,10 @@ def _patch(ignoreFailures=False):
                                 cwd=applyPath)
             else:
                 sys.exit(1)
+    # create empty gclient_args.gni under bulid/config if not already
+    gclientArgPath = os.path.join(CONFIG_PATH, 'gclient_args.gni')
+    if not os.path.isfile(gclientArgPath):
+        open(gclientArgPath, "w").close()
 
 def main(argv):
   _patch()
