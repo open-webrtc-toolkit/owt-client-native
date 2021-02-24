@@ -44,7 +44,7 @@ vars = {
   # By default, do not check out Google Benchmark. The library is only used by a
   # few specialized benchmarks that most developers do not interact with. Will
   # be overridden by gclient variables.
-  'checkout_google_benchmark': False,
+  'checkout_google_benchmark': True,
 
   # By default, we should check out everything needed to run on the main
   # chromium waterfalls. More info at: crbug.com/570091.
