@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
 #import "OWT/OWTFrameGeneratorProtocol.h"
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 RTC_OBJC_EXPORT
 @interface OWTGlobalConfiguration : NSObject

@@ -8,7 +8,7 @@
 #include "webrtc/sdk/objc/Framework/Native/src/objc_video_encoder_factory.h"
 #import "talk/owt/sdk/base/objc/OWTDefaultVideoDecoderFactory.h"
 #import "talk/owt/sdk/base/objc/OWTDefaultVideoEncoderFactory.h"
-#import "WebRTC/RTCVideoCodecH264.h"
+
 namespace owt {
 namespace base {
 std::unique_ptr<webrtc::VideoEncoderFactory>

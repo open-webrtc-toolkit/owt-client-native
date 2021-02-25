@@ -54,7 +54,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
       webrtc::VideoTrackSourceInterface* video_source);
   rtc::scoped_refptr<AudioSourceInterface> CreateAudioSource(
       const cricket::AudioOptions& options);
-  rtc::NetworkMonitorInterface* NetworkMonitor();
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
@@ -72,7 +71,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   CreatePeerConnectionOnCurrentThread(
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
       webrtc::PeerConnectionObserver* observer);
-  void CreateNetworkMonitorOnCurrentThread();
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
 #endif
@@ -91,9 +89,6 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
                                                // VP8, H.264 & HEVC enc/dec
 #endif
   bool encoded_frame_;
-#if defined(WEBRTC_IOS)
-  rtc::NetworkMonitorInterface* network_monitor_;
-#endif
   std::string field_trial_;
 #if defined(WEBRTC_WIN)
   std::unique_ptr<webrtc::ScopedCOMInitializer> com_initializer_;

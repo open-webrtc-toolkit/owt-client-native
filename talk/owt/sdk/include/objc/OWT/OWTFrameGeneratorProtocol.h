@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 /**
  @brief frame generator interface for audio

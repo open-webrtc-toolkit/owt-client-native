@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 #import <OWT/OWTConferenceParticipant.h>
 #import <OWT/OWTRemoteStream.h>
 NS_ASSUME_NONNULL_BEGIN

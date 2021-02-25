@@ -178,19 +178,12 @@ static_library("owt_sdk_base") {
       include_dirs += [ owt_quic_header_root ]
     }
   }
-  
+
   if (is_win || is_linux) {
     # Custom audio/video input and output.
     # When rebasing libwebrtc to a new version, custom audio/video input/output
     # usually need some changes to fit the latest API.
     defines += [ "OWT_CUSTOM_AVIO" ]
-  }
-  if (is_ios) {
-    sources += [
-      "sdk/base/ios/networkmonitorios.cc",
-      "sdk/base/ios/networkmonitorios.h",
-    ]
-    public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
   }
   if (is_win) {
     sources += [
@@ -341,9 +334,14 @@ if (is_ios) {
       ":owt_sdk_p2p",
       "//third_party/jsoncpp",
     ]
+    if (is_ios) {
+      deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
+    }
     include_dirs = [
       "//third_party",
-      "//third_party/webrtc/sdk/objc/Framework/Headers",
+      "//third_party/webrtc/sdk/objc/api/peerconnection",
+      "//third_party/webrtc/sdk/objc/api/logging",
+      "//third_party/webrtc/sdk/objc/api/video_codec",
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
@@ -362,8 +360,6 @@ if (is_ios) {
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.h",
       "sdk/base/objc/OWTDefaultVideoEncoderFactory.m",
       "sdk/base/objc/OWTErrors.m",
-
-      #"sdk/base/objc/OWTGlobalConfiguration.mm",
       "sdk/base/objc/OWTLocalStream+Private.h",
       "sdk/base/objc/OWTLocalStream.mm",
       "sdk/base/objc/OWTMediaFormat+Internal.h",
@@ -382,8 +378,6 @@ if (is_ios) {
       "sdk/base/objc/RemoteStreamObserverObjcImpl.mm",
       "sdk/base/objc/public/OWTErrors.h",
       "sdk/base/objc/public/OWTFrameGeneratorProtocol.h",
-
-      #"sdk/base/objc/public/OWTGlobalConfiguration.h",
       "sdk/base/objc/public/OWTLocalCameraStream.h",
       "sdk/base/objc/public/OWTLocalCameraStreamParameters.h",
       "sdk/base/objc/public/OWTLocalCustomizedStream.h",

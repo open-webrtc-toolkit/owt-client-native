@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 @class OWTP2PPublication;
 RTC_OBJC_EXPORT

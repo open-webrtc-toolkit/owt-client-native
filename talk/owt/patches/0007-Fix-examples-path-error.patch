@@ -1,25 +1,25 @@
-From 0b6bce6a68a44c1915d102d9636060d0fd4763a3 Mon Sep 17 00:00:00 2001
-From: Qiu Jainlin <jianlin.qiu@intel.com>
-Date: Thu, 7 May 2020 10:06:20 +0800
-Subject: [PATCH] Fix examples path error
+From 9c3dae0473f6d2f1011a0917436a536af7deec0c Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Sun, 14 Feb 2021 10:37:08 +0800
+Subject: [PATCH] Fix examples path error.
 
 ---
  config/linux/gtk/BUILD.gn | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/linux/gtk/BUILD.gn b/config/linux/gtk/BUILD.gn
-index 8bfa55924..60ca70c48 100644
+index 5491aef73..6bae2dcf0 100644
 --- a/config/linux/gtk/BUILD.gn
 +++ b/config/linux/gtk/BUILD.gn
-@@ -34,7 +34,7 @@ group("gtk") {
-     "//remoting/host/file_transfer",
-     "//remoting/host:remoting_me2me_host_static",
+@@ -38,7 +38,7 @@ group("gtk") {
+     "//remoting/host/it2me:remote_assistance_host",
+     "//remoting/host/linux",
      "//remoting/test:it2me_standalone_host_main",
 -    "//webrtc/examples:peerconnection_client",
-+    "//third_party//webrtc/examples:peerconnection_client",
++    "//third_party/webrtc/examples:peerconnection_client",
    ]
  
    public_configs = [ ":gtk_internal_config" ]
 -- 
-2.24.1.windows.2
+2.30.0
 

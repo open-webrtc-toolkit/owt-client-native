@@ -4,7 +4,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, OWTAudioCodec) {
   OWTAudioCodecPcmu = 1,

@@ -33,8 +33,19 @@
 # This file contains dependencies for Intel CS for WebRTC Client SDKs.
 # It based on Chromium project.
 
+gclient_gn_args_file = 'src/build/config/gclient_args.gni'
+gclient_gn_args = [
+  'checkout_google_benchmark',
+]
+
 vars = {
   'chromium_git': 'https://chromium.googlesource.com',
+
+  # By default, do not check out Google Benchmark. The library is only used by a
+  # few specialized benchmarks that most developers do not interact with. Will
+  # be overridden by gclient variables.
+  'checkout_google_benchmark': True,
+
   # By default, we should check out everything needed to run on the main
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
@@ -73,7 +84,7 @@ deps = {
   'src/base':
     Var('chromium_git') + '/chromium/src/base' + '@' + 'cdccd610777e3e49936c03a35b3ef7cb7d8a6794',
   'src/build':
-    Var('chromium_git') + '/chromium/src/build' + '@' + '6b0abd7198f91211eb4b6ad65636cce6b2c0308c',
+    Var('chromium_git') + '/chromium/src/build' + '@' + '57d7d0ceaed77728665884b58d60230b13906a9c',
   'src/buildtools':
     Var('chromium_git') + '/chromium/src/buildtools' + '@' + '6302c1175607a436e18947a5abe9df2209e845fc',
   # Gradle 4.3-rc4. Used for testing Android Studio project generation for WebRTC.
@@ -211,6 +222,7 @@ deps = {
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@c39ab82c90479341dcf28eaa8174af6f08c0d7ae',
   'src/third_party/google_benchmark/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/benchmark.git@ffe1342eb2faa7d2e7c35b4db2ccf99fab81ec20',
+    'condition': 'checkout_google_benchmark',
   },
   'src/third_party/gtest-parallel':
     Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + 'b0a18bc755c25e213b60868f97b72171c3601725',
@@ -319,7 +331,7 @@ deps = {
     Var('chromium_git') + '/infra/luci/client-py.git' + '@' +  Var('swarming_revision'),
   # WebRTC-only dependencies (not present in Chromium).
   'src/third_party/webrtc':
-    Var('deps_webrtc_git') + '/owt-deps-webrtc' + '@' + '2619b2535ce802ac36466a5f7141e40903691ba1',
+    Var('deps_webrtc_git') + '/owt-deps-webrtc' + '@' + '51f552a0d00e3a25e2642582a1f0ac7373013804',
  'src/third_party/accessibility_test_framework': {
       'packages': [
           {
