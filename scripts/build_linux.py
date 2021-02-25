@@ -15,6 +15,7 @@ import sys
 import subprocess
 import argparse
 import shutil
+import glob
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_PATH = os.path.join(HOME_PATH, 'out')
@@ -24,7 +25,6 @@ PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 
 GN_ARGS = [
     'rtc_use_h264=true',
-    'ffmpeg_branding="Chrome"',
     'rtc_use_h265=true',
     'is_component_build=false',
     'rtc_build_examples=false',
@@ -46,7 +46,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(HOME_PATH + r'/out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -90,6 +90,12 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
         gn_args.extend(['is_clang=false', 'use_lld=false', 'use_sysroot=false', 'treat_warnings_as_errors=false'])
     if fake_audio:
         gn_args.extend(['rtc_include_pulse_audio=false', 'rtc_include_internal_audio_device=false'])
+    if shared:
+        gn_args.extend(['rtc_enable_protobuf=false', 'is_component_build=true'])
+    else:
+        gn_args.extend(['is_component_build=false'])
+        ffmpeg_branding_name = "Chrome"
+        gn_args.append('ffmpeg_branding="%s"' % ffmpeg_branding_name)
 
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
@@ -106,13 +112,19 @@ def getoutputpath(arch, scheme):
     return obj_path
 
 
-def ninjabuild(arch, scheme):
+def ninjabuild(arch, scheme, shared):
     out_path = getoutputpath(arch, scheme)
     cmd = 'ninja -C ' + out_path
     if subprocess.call(['ninja', '-C', out_path], cwd=HOME_PATH, shell=False) != 0:
         return False
     src_lib_path = os.path.join(out_path, r'obj/talk/owt/libowt.a')
-    shutil.copy(src_lib_path, gen_lib_path(scheme))
+    if shared:
+        so_files = glob.iglob(os.path.join(out_path, '*.so'))
+        for so_file in so_files:
+           print so_file
+           shutil.copy2(so_file, gen_lib_path(scheme))
+    else:
+        shutil.copy(src_lib_path, gen_lib_path(scheme))
     return True
 
 def runtest(scheme):
@@ -134,7 +146,7 @@ def gendocs():
         return False
     return True
 
-def pack_sdk(arch, scheme, output_path):
+def pack_sdk(arch, scheme, output_path, shared):
     print('start copy out files to %s!' % output_path)
     out_path = getoutputpath(arch, scheme)
     src_lib_path = gen_lib_path(scheme)
@@ -147,7 +159,13 @@ def pack_sdk(arch, scheme, output_path):
         os.makedirs(dst_lib_path)
     if os.path.exists(dst_include_path):
         shutil.rmtree(dst_include_path)
-    shutil.copy(src_lib_path, dst_lib_path)
+    if shared:
+        so_files = glob.iglob(os.path.join(out_path, '*.so'))
+        for so_file in so_files:
+           print so_file
+           shutil.copy2(so_file, dst_lib_path)
+    else:
+        shutil.copy(src_lib_path, dst_lib_path)
     shutil.copytree(src_include_path, dst_include_path)
     if os.path.exists(src_doc_path):
         if os.path.exists(dst_doc_path):
@@ -176,13 +194,14 @@ def main():
                         help='Use fake audio device.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
     parser.add_argument('--use_gcc', help='Compile with GCC and libstdc++. Default is clang and libc++.', action='store_true')
+    parser.add_argument('--shared', default=False,  help='Build shared libraries. Default to static.', action='store_true') 
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared):
             return 1
     if opts.sdk:
-         if not ninjabuild(opts.arch, opts.scheme):
+         if not ninjabuild(opts.arch, opts.scheme, opts.shared):
             return 1
     if opts.tests:
         if not runtest(opts.scheme):
@@ -191,7 +210,7 @@ def main():
         if not gendocs():
             return 1
     if opts.output_path:
-        pack_sdk(opts.arch, opts.scheme, opts.output_path)
+        pack_sdk(opts.arch, opts.scheme, opts.output_path, opts.shared)
     print('Done')
     return 0
 
