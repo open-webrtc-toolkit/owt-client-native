@@ -1,0 +1,26 @@
+From 4c01af961bd7f4111ce24cbe884d52d46d4b2956 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Wed, 24 Feb 2021 15:06:02 +0800
+Subject: [PATCH] Restore is_ash for backward compatible.
+
+---
+ config/chromeos/ui_mode.gni | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/config/chromeos/ui_mode.gni b/config/chromeos/ui_mode.gni
+index df578bc92..12a973f84 100644
+--- a/config/chromeos/ui_mode.gni
++++ b/config/chromeos/ui_mode.gni
+@@ -31,6 +31,9 @@ declare_args() {
+ # toolchains.
+ is_chromeos_ash = is_chromeos && !chromeos_is_browser_only
+ 
++# Restore is_ash for backward compatible.
++is_ash = is_chromeos_ash
++
+ # TODO(crbug.com/1052397): Remove is_linux once lacros-chrome switches
+ # to target_os=chromeos
+ is_chromeos_lacros = (is_chromeos || is_linux) && chromeos_is_browser_only
+-- 
+2.30.1
+

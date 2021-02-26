@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import "OWT/OWTStream.h"
-#import "WebRTC/RTCMediaStream.h"
+#import "RTCMediaStream.h"
 NS_ASSUME_NONNULL_BEGIN
 @class OWTStreamConstraints;
 /// This class represent a local stream.

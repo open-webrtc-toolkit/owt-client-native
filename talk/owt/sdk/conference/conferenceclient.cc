@@ -15,7 +15,6 @@
 #include "talk/owt/sdk/include/cpp/owt/base/globalconfiguration.h"
 #include "webrtc/api/stats_types.h"
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
-#include "webrtc/rtc_base/critical_section.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/task_queue.h"

@@ -27,7 +27,6 @@
 #elif defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/linux/msdkvideodecoderfactory.h"
 #elif defined(WEBRTC_IOS)
-#include "talk/owt/sdk/base/ios/networkmonitorios.h"
 #include "talk/owt/sdk/base/objc/ObjcVideoCodecFactory.h"
 #endif
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_WIN)
@@ -58,9 +57,6 @@ PeerConnectionDependencyFactory::PeerConnectionDependencyFactory()
   } else {
     render_hardware_acceleration_enabled_ = false;
   }
-#endif
-#if defined(WEBRTC_IOS)
-  network_monitor_ = nullptr;
 #endif
   encoded_frame_ = GlobalConfiguration::GetEncodedVideoFrameEnabled();
   pc_thread_->SetName("peerconnection_dependency_factory_thread", nullptr);
@@ -178,7 +174,7 @@ void PeerConnectionDependencyFactory::
     task_queue_factory_ = CreateDefaultTaskQueueFactory();
     com_initializer_ = std::make_unique<webrtc::ScopedCOMInitializer>(
         webrtc::ScopedCOMInitializer::kMTA);
-    if (com_initializer_->succeeded())
+    if (com_initializer_->Succeeded())
       adm = CreateWindowsCoreAudioAudioDeviceModule(
           task_queue_factory_.get(), true);
 #endif
@@ -289,27 +285,6 @@ PeerConnectionDependencyFactory::CreateAudioSource(
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
 PeerConnectionDependencyFactory::PeerConnectionFactory() const {
   return pc_factory_;
-}
-rtc::NetworkMonitorInterface*
-PeerConnectionDependencyFactory::NetworkMonitor() {
-#if defined(WEBRTC_IOS)
-  pc_thread_->Invoke<void>(
-      RTC_FROM_HERE,
-      Bind(
-          &PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread,
-          this));
-  return network_monitor_;
-#else
-  return nullptr;
-#endif
-}
-void PeerConnectionDependencyFactory::CreateNetworkMonitorOnCurrentThread() {
-#if defined(WEBRTC_IOS)
-  if (!network_monitor_) {
-    network_monitor_ = new NetworkMonitorIos();
-    network_monitor_->Start();
-  }
-#endif
 }
 
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)

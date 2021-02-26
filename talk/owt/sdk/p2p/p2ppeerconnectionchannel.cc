@@ -508,7 +508,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
         RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
       }
     } else{
-      rtc::CritScope cs(&pending_remote_candidates_crit_);
+      webrtc::MutexLock lock(&pending_remote_candidates_crit_);
       pending_remote_candidates_.push_back(
           std::unique_ptr<webrtc::IceCandidateInterface>(ice_candidate));
       RTC_LOG(LS_VERBOSE) << "Remote candidate is stored because remote "
@@ -564,7 +564,7 @@ void P2PPeerConnectionChannel::OnMessageTrackSources(
     // Track source information collect.
     std::pair<std::string, std::string> track_source_info;
     track_source_info = std::make_pair(id, source);
-    rtc::CritScope cs(&remote_track_source_info_crit_);
+    webrtc::MutexLock lock(&remote_track_source_info_mutex_);
     remote_track_source_info_.insert(track_source_info);
   }
 }
@@ -616,7 +616,7 @@ void P2PPeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   Json::Value stream_tracks;
   {
-    rtc::CritScope cs(&remote_track_source_info_crit_);
+    webrtc::MutexLock lock(&remote_track_source_info_mutex_);
     for (const auto& track : stream->GetAudioTracks()) {
       stream_tracks.append(track->id());
     }
@@ -650,7 +650,7 @@ void P2PPeerConnectionChannel::OnRemoveStream(
   std::shared_ptr<RemoteStream> remote_stream = remote_streams_[stream->id()];
   remote_stream->TriggerOnStreamEnded();
   remote_streams_.erase(stream->id());
-  rtc::CritScope cs(&remote_track_source_info_crit_);
+  webrtc::MutexLock lock(&remote_track_source_info_mutex_);
   for (const auto& track : stream->GetAudioTracks())
     remote_track_source_info_.erase(track->id());
   for (const auto& track : stream->GetVideoTracks())
@@ -716,7 +716,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
         it->second->TriggerOnStreamEnded();
       remote_streams_.clear();
       {
-        rtc::CritScope cs(&remote_track_source_info_crit_);
+        webrtc::MutexLock lock(&remote_track_source_info_mutex_);
         remote_track_source_info_.clear();
       }
       break;
@@ -1262,7 +1262,7 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
 }
 
 void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
-  rtc::CritScope cs(&pending_remote_candidates_crit_);
+  webrtc::MutexLock lock(&pending_remote_candidates_crit_);
   for (auto& ice_candidate : pending_remote_candidates_) {
     if (!peer_connection_->AddIceCandidate(ice_candidate.get())) {
       RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";

@@ -20,10 +20,14 @@ import fileinput
 import re
 import distutils.dir_util
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','mac'))
-import sdk_info
-
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','mac'))
+sys.path.append(os.path.join(HOME_PATH, 'third_party', 'webrtc','tools_webrtc','apple'))
+import sdk_info
+import copy_framework_header
+
+
 OUT_PATH = os.path.join(HOME_PATH, 'out')
 # The lib contains all target architectures and external libs(OpenSSL).
 OUT_LIB_NAME = 'libowt.a'
@@ -79,7 +83,11 @@ def ninjabuild(arch, scheme, targets):
 def copyheaders(headers_target_folder):
   if os.path.exists(headers_target_folder):
     shutil.rmtree(headers_target_folder)
-  shutil.copytree(HEADER_PATH, headers_target_folder)
+    os.mkdir(headers_target_folder)
+  for _, _, file_names in os.walk(HEADER_PATH):
+    for file_name in file_names:
+      copy_framework_header.process(os.path.join(
+          HEADER_PATH, file_name), os.path.join(headers_target_folder, file_name))
 
 def getexternalliblist(ssl_root):
   libs = []
@@ -147,7 +155,7 @@ def getsdkversion():
 
 # Run unit tests on simulator. Return True if all tests are passed.
 def runtest(ssl_root):
-  print 'Start running unit tests.'
+  print('Start running unit tests.')
   # Build app targets checks link issue.
   if not ninjabuild(TEST_ARCH, TEST_SCHEME, SDK_TARGETS + APP_TARGETS + TEST_TARGETS):
     return False
@@ -197,7 +205,7 @@ def main():
         return 1
     if not runtest(opts.ssl_root):
       return 1
-  print 'Done.'
+  print('Done.')
   return 0
 
 if __name__ == '__main__':

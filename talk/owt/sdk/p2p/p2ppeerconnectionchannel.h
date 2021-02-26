@@ -15,8 +15,9 @@
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/sdk/media_constraints.h"
-#include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/message_handler.h"
+#include "webrtc/rtc_base/strings/json.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/thread_annotations.h"
 namespace owt {
@@ -175,9 +176,9 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   bool negotiation_needed_;
   // Key is remote media stream's track id, value is type ("mic", "camera",
   // "screen-cast").
-  rtc::CriticalSection remote_track_source_info_crit_;
+  mutable webrtc::Mutex remote_track_source_info_mutex_;
   std::unordered_map<std::string, std::string> remote_track_source_info_
-      RTC_GUARDED_BY(remote_track_source_info_crit_);
+      RTC_GUARDED_BY(remote_track_source_info_mutex_);
   // Key is local media stream's track id, value is media stream's label.
   std::unordered_map<std::string, std::string> local_stream_tracks_info_;
   std::mutex local_stream_tracks_info_mutex_;
@@ -212,7 +213,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
       pending_messages_;
   // Protects |pending_messages_|.
   std::mutex pending_messages_mutex_;
-  rtc::CriticalSection pending_remote_candidates_crit_;
+  webrtc::Mutex pending_remote_candidates_crit_;
   std::vector<std::unique_ptr<webrtc::IceCandidateInterface>>
       pending_remote_candidates_
           RTC_GUARDED_BY(pending_remote_candidates_crit_);

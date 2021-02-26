@@ -37,11 +37,6 @@ bool PeerConnectionChannel::InitializePeerConnection() {
     return false;
   }
   RTC_CHECK(peer_connection_);
-  rtc::NetworkMonitorInterface* network_monitor = factory_->NetworkMonitor();
-  if (network_monitor) {
-    network_monitor->SignalNetworksChanged.connect(
-        this, &PeerConnectionChannel::OnNetworksChanged);
-  }
   return true;
 }
 void PeerConnectionChannel::ApplyBitrateSettings() {

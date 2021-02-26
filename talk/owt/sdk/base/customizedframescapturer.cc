@@ -43,7 +43,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       rtc::Thread::Current()->ProcessMessages(kForever);
       capturer_->CleanupGenerator();
     }
-    rtc::CritScope cs(&crit_);
+    webrtc::MutexLock lock(&crit_);
     finished_ = true;
   }
   // Override virtual method of parent MessageHandler. Context: Worker Thread.
@@ -57,13 +57,13 @@ class CustomizedFramesCapturer::CustomizedFramesThread
   }
   // Check if Run() is finished.
   bool Finished() const {
-    rtc::CritScope cs(&crit_);
+    webrtc::MutexLock lock(&crit_);
     return finished_;
   }
 
  private:
   CustomizedFramesCapturer* capturer_;
-  mutable rtc::CriticalSection crit_;
+  mutable webrtc::Mutex crit_;
   bool finished_;
   int waiting_time_ms;
   RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesThread);
@@ -109,12 +109,12 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
 
 void CustomizedFramesCapturer::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<webrtc::VideoFrame>* dataCallback){
-  rtc::CritScope lock(&lock_);
+  webrtc::MutexLock lock(&lock_);
   data_callback_ = dataCallback;
 }
 
 void CustomizedFramesCapturer::DeRegisterCaptureDataCallback() {
-  rtc::CritScope lock(&lock_);
+  webrtc::MutexLock lock(&lock_);
   data_callback_ = nullptr;
 }
 
@@ -123,7 +123,7 @@ int32_t CustomizedFramesCapturer::StartCapture(
   if (capture_started_)
     return 0;
 
-  rtc::CritScope lock(&capture_lock_);
+  webrtc::MutexLock lock(&capture_lock_);
   if (!frames_generator_thread_) {
     quit_ = false;
     frames_generator_thread_.reset(new CustomizedFramesThread(this, fps_));
@@ -141,7 +141,7 @@ int32_t CustomizedFramesCapturer::StartCapture(
 int32_t CustomizedFramesCapturer::StopCapture() {
   if (frames_generator_thread_) {
     {
-      rtc::CritScope lock(&capture_lock_);
+      webrtc::MutexLock lock(&capture_lock_);
       quit_ = true;
     }
     frames_generator_thread_->Quit();
@@ -205,7 +205,7 @@ void CustomizedFramesCapturer::AdjustFrameBuffer(uint32_t size) {
 // Executed in the context of CustomizedFramesThread.
 void CustomizedFramesCapturer::ReadFrame() {
   // Signal the previously read frame to downstream in worker_thread.
-  rtc::CritScope lock(&lock_);
+  webrtc::MutexLock lock(&lock_);
   if (!data_callback_)
     return;
   if (frame_generator_ != nullptr) {

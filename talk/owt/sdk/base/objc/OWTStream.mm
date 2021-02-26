@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCVideoTrack.h>
+#import "RTCVideoTrack.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/api/peerconnection/RTCMediaStream+Private.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTStream.h"

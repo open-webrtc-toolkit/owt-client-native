@@ -98,7 +98,7 @@ int32_t CustomizedAudioCapturer::RecordingIsAvailable(bool& available) {
   return -1;
 }
 int32_t CustomizedAudioCapturer::InitRecording() {
-  rtc::CritScope lock(&crit_sect_);
+  webrtc::MutexLock lock(&mutex_);
   if (recording_) {
     return -1;
   }
@@ -139,7 +139,7 @@ int32_t CustomizedAudioCapturer::StartRecording() {
 }
 int32_t CustomizedAudioCapturer::StopRecording() {
   {
-    rtc::CritScope lock(&crit_sect_);
+    webrtc::MutexLock lock(&mutex_);
     recording_ = false;
   }
   if (thread_rec_) {
@@ -239,7 +239,7 @@ int32_t CustomizedAudioCapturer::PlayoutDelay(uint16_t& delayMS) const {
 }
 void CustomizedAudioCapturer::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {
-  rtc::CritScope lock(&crit_sect_);
+  webrtc::MutexLock lock(&mutex_);
   audio_buffer_ = audioBuffer;
   // Inform the AudioBuffer about default settings for this implementation.
   // Set all values to zero here since the actual settings will be done by
@@ -260,7 +260,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
   while (recording_) {
     uint64_t current_time = clock_->CurrentNtpInMilliseconds();
     uint64_t loop_cost_ms = 0;
-    crit_sect_.Enter();
+    mutex_.Lock();
     if (last_thread_rec_end_time_ > 0) {
         loop_cost_ms = current_time - last_thread_rec_end_time_;
     }
@@ -270,7 +270,7 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
               recording_buffer_.get(),
               static_cast<uint32_t>(recording_buffer_size_)) !=
           static_cast<uint32_t>(recording_buffer_size_)) {
-        crit_sect_.Leave();
+        mutex_.Unlock();
         SleepMs(1);
         RTC_LOG(LS_ERROR) << "Get audio frames failed.";
         last_thread_rec_end_time_ = clock_->CurrentNtpInMilliseconds();
@@ -280,11 +280,11 @@ bool CustomizedAudioCapturer::RecThreadProcess() {
       audio_buffer_->SetRecordedBuffer(
           recording_buffer_.get(), recording_frames_in_10ms_);  // Buffer copied here
       last_call_record_millis_ = current_time;
-      crit_sect_.Leave();
+      mutex_.Unlock();
       audio_buffer_->DeliverRecordedData();
-      crit_sect_.Enter();
+      mutex_.Lock();
     }
-    crit_sect_.Leave();
+    mutex_.Unlock();
     int64_t cost_ms = clock_->CurrentNtpInMilliseconds() - current_time;
     need_sleep_ms_ = 10 - cost_ms + need_sleep_ms_ - real_sleep_ms_ - loop_cost_ms;
     if (need_sleep_ms_ > 0) {

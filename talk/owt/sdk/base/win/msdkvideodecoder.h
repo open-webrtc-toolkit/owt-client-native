@@ -7,14 +7,12 @@
 #include <utility>
 #include <vector>
 
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"
-
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
-#include "webrtc/common_video/include/i420_buffer_pool.h"
 
 // Solve conflict in FOURCC def with libyuv
 #ifdef FOURCC
@@ -99,16 +97,15 @@ private:
     D3DPRESENT_PARAMETERS       present_params;
     UINT                        m_resetToken;
 
-    rtc::CriticalSection critical_section_;
+    webrtc::Mutex critical_section_;
     bool inited_;
     int width_;
     int height_;
     std::unique_ptr<rtc::Thread> decoder_thread_;  // Thread on which the decoder will be working on.
     webrtc::VideoCodec codec_;
 
-    webrtc::I420BufferPool decoded_frame_pool_;
     webrtc::DecodedImageCallback* callback_;
-    rtc::CriticalSection timestampCS_;
+    webrtc::Mutex timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
 #ifdef OWT_DEBUG_DEC

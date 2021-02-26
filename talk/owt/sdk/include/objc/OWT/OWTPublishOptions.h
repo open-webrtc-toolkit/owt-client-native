@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 #import <OWT/OWTMediaFormat.h>
 NS_ASSUME_NONNULL_BEGIN
 /// PublishOptions defines options for publishing a OWTLocalStream.

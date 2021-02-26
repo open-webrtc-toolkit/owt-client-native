@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import <WebRTC/RTCLogging.h>
+#import "RTCLogging.h"
 #import "talk/owt/sdk/p2p/objc/OWTP2PPublication+Private.h"
 @implementation OWTP2PPublication
 - (instancetype)initWithStop:(void (^)(void))stopMethod

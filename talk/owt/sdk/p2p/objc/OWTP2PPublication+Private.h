@@ -1,8 +1,8 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import <WebRTC/RTCLegacyStatsReport.h>
-#import <WebRTC/RTCLogging.h>
+#import "RTCLegacyStatsReport.h"
+#import "RTCLogging.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PPublication.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PPeerConnectionChannelObserver.h"
 @interface OWTP2PPublication () <OWTP2PPeerConnectionChannelObserver>

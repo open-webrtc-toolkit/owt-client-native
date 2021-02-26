@@ -4,7 +4,7 @@
 #ifndef OWT_CONFERENCE_OBJC_OWTCONFERENCEPARTICIPANT_H_
 #define OWT_CONFERENCE_OBJC_OWTCONFERENCEPARTICIPANT_H_
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
+#import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 @protocol OWTConferenceParticipantDelegate;
 

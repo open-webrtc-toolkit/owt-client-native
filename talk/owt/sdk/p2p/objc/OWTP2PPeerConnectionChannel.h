@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCLegacyStatsReport.h>
+#import "RTCLegacyStatsReport.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTLocalStream.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PSignalingSenderProtocol.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PSignalingReceiverProtocol.h"

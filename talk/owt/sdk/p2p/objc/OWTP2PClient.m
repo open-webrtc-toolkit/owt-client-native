@@ -1,7 +1,7 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#import <WebRTC/RTCLogging.h>
+#import "RTCLogging.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PClient.h"
 #import "talk/owt/sdk/include/objc/OWT/OWTP2PErrors.h"
 #import "talk/owt/sdk/p2p/objc/OWTP2PPeerConnectionChannel.h"

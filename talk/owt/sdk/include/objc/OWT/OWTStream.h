@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCMacros.h>
-#import <WebRTC/RTCVideoRenderer.h>
+#import "RTCMacros.h"
+#import "RTCVideoRenderer.h"
 NS_ASSUME_NONNULL_BEGIN
 @class OWTStreamSourceInfo;
 @class RTCMediaStream;

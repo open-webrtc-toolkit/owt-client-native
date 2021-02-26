@@ -4,8 +4,7 @@
 #include <string>
 #include <unordered_map>
 #import <Foundation/Foundation.h>
-#import <WebRTC/RTCCameraVideoCapturer.h>
-#import <WebRTC/RTCVideoSource.h>
+#import "RTCVideoSource.h"
 #import "talk/owt/sdk/base/objc/OWTLocalStream+Private.h"
 #import "talk/owt/sdk/base/objc/OWTMediaFormat+Private.h"
 #import "talk/owt/sdk/include/objc/OWT/RTCPeerConnectionFactory+OWT.h"
@@ -14,6 +13,7 @@
 #import "talk/owt/sdk/include/objc/OWT/OWTMediaFormat.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"
 #import "webrtc/sdk/objc/api/peerconnection/RTCMediaStream+Private.h"
+#import "webrtc/sdk/objc/components/capturer/RTCCameraVideoCapturer.h"
 #include "webrtc/rtc_base/helpers.h"
 @interface OWTLocalStream ()
 - (NSString*)createRandomUuid;
