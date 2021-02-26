@@ -20,7 +20,8 @@ def get_location(arch, debug):
 def gn_gen(arch, debug):
     print '\n> generating args for', arch, ('debug' if debug else 'release')
     output_location = get_location(arch, debug)
-    gn_args = '--args=target_os=\"android\" is_component_build=false rtc_include_tests=false '\
+    gn_args = '--args=target_os=\"android\" rtc_build_libevent=false rtc_enable_libevent=false '\
+              'is_component_build=false rtc_include_tests=false '\
               'target_cpu=\"' + arch +\
               '\" is_debug=' + ('true' if debug else 'false') +\
               ' rtc_use_h265=true'
