@@ -158,7 +158,11 @@ void PeerConnectionDependencyFactory::
                   std::to_string(h264_temporal_layers) + std::string("/");
   int link_mtu = GlobalConfiguration::GetLinkMTU();
   if (link_mtu > 0) {
-    field_trial_ += "OWT-LinkMTU/" + std::to_string(link_mtu) + "/";
+    field_trial_ +=
+        "OWT-LinkMTU/" + std::to_string(link_mtu) + std::string("/");
+  }
+  if (GlobalConfiguration::GetFlexFecEnabled()) {
+    field_trial_ += "OWT-FlexFEC/Enabled/";
   }
   int delay_bwe_weight = GlobalConfiguration::GetDelayBasedBweWeight();
   field_trial_ +=
