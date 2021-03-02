@@ -105,6 +105,16 @@ class GlobalConfiguration {
     d3d11_decoding_device_ = d3d11_device;
   }
 #endif
+
+  /**
+   @brief This function turn on/off Flex-FEC support. By default Flex-FEC is turned
+   off for comptability with old Android clients.
+   @param enabled Flex-FEC is turned on if true.
+   */
+  static void SetFlexFecEnabled(bool enabled) {
+    flex_fec_enabled_ = enabled;
+  }
+
   /**
    @brief Set the global bitrate limits applied to external BWE. If any of the
    value is set to 0, will use the stack default for that.
@@ -312,6 +322,12 @@ class GlobalConfiguration {
   }
   static ID3D11Device* d3d11_decoding_device_;
 #endif
+
+  static bool GetFlexFecEnabled() {
+    return flex_fec_enabled_;
+  }
+  static bool flex_fec_enabled_;
+
   static void GetBweRateLimits(int& start_bitrate_kbps,
                                int& min_bitrate_kbps,
                                int& max_bitrate_kbps) {
