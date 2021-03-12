@@ -36,7 +36,7 @@ void CameraVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
     return;
   }
 
-  if (out_height != frame.height() || out_width != frame.width()) {
+  if (false/*out_height != frame.height() || out_width != frame.width()*/) {
     // Video adapter has requested a down-scale. Allocate a new buffer and
     // return scaled version.
     rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =

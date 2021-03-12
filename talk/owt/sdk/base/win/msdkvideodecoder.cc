@@ -393,6 +393,7 @@ retry:
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
           decoded_frame.set_timestamp(inputImage.Timestamp());
           callback_->Decoded(decoded_frame);
+          RTC_LOG(LS_ERROR) << "Succeed decoding a frame.";
         }
       }
     } else if (MFX_ERR_MORE_DATA == sts) {

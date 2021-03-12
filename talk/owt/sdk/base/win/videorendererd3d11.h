@@ -21,6 +21,7 @@
 #include <vector>
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_sink_interface.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 // Holds texture coordinate of the vertex
 typedef struct _TEXCOORD {
@@ -113,6 +114,7 @@ class WebrtcVideoRendererD3D11Impl
   rtc::scoped_refptr<IDirect3DTexture9> m_texture_;
   rtc::scoped_refptr<IDirect3DVertexBuffer9> m_vertex_buffer_;
   UINT views_count = 0;
+  webrtc::Clock* clock_;
 
 };
 }  // namespace base

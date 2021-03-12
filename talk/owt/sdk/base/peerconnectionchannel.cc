@@ -4,6 +4,7 @@
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include <vector>
 #include "talk/owt/sdk/base/sdputils.h"
+#include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/thread.h"
 using namespace rtc;
@@ -30,6 +31,7 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   configuration_.media_config.enable_dscp = true;
+  configuration_.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
   peer_connection_ =
       (factory_->CreatePeerConnection(configuration_, this)).get();
   if (!peer_connection_.get()) {

@@ -990,7 +990,7 @@ void P2PPeerConnectionChannel::GetConnectionStats(
       FunctionalStatsObserver::Create(std::move(on_success));
   peer_connection_->GetStats(
       observer, nullptr,
-      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+      webrtc::PeerConnectionInterface::kStatsOutputLevelDebug);
 }
 
 void P2PPeerConnectionChannel::GetConnectionStats(
@@ -1046,7 +1046,7 @@ void P2PPeerConnectionChannel::GetStats(
       FunctionalNativeStatsObserver::Create(std::move(on_success));
   peer_connection_->GetStats(
       observer, nullptr,
-      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+      webrtc::PeerConnectionInterface::kStatsOutputLevelDebug);
 }
 bool P2PPeerConnectionChannel::HaveLocalOffer() {
   return SignalingState() == webrtc::PeerConnectionInterface::kHaveLocalOffer;

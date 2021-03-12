@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "talk/owt/sdk/base/win/videorendererd3d11.h"
+#include <cstdio>
 #include <array>
 #include "rtc_base/logging.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
@@ -18,12 +19,13 @@ struct D3dCustomVertex {
   float u, v;
 };
 
+static int frame_count = 0;
 using namespace rtc;
 namespace owt {
 namespace base {
 
 WebrtcVideoRendererD3D11Impl::WebrtcVideoRendererD3D11Impl(HWND wnd)
-    : wnd_(wnd), width_(0), height_(0) {
+    : wnd_(wnd), width_(0), height_(0), clock_(Clock::GetRealTimeClock()) {
   CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&dxgi_factory_));
 }
 
@@ -50,6 +52,7 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
   uint16_t width = video_frame.video_frame_buffer()->width();
   uint16_t height = video_frame.video_frame_buffer()->height();
 
+  RTC_LOG(LS_ERROR) << "On frame." << width << "x" << height;
   if (width == 0 || height == 0)
     return;
 
@@ -549,6 +552,11 @@ void WebrtcVideoRendererD3D11Impl::RenderToBackbuffer(int array_slice) {
   DXGI_PRESENT_PARAMETERS parameters = {0};
   swap_chain_for_hwnd_->Present1(
       0, 0, &parameters);
+  int64_t current_time = clock_->TimeInMilliseconds();
+  frame_count++;
+  FILE* f = fopen("frames.txt", "a");
+  fprintf(f, "timestamp: %lld, frames drawn: %d\r\n", current_time, frame_count);
+  fclose(f);
 }
 
 // Helper method to initialize a shader resource view
