@@ -100,9 +100,9 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
   else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)/* &&
            !vp9_hw*/)
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
-  // TODO: Replace with AV1 HW encoder post TGL.
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
-           !av1_hw)
+  // TODO: Replace with AV1 HW encoder post ADL.
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)/* &&
+           !av1_hw*/)
     return webrtc::CreateLibaomAv1Encoder();
 #ifndef DISABLE_H265
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) &&

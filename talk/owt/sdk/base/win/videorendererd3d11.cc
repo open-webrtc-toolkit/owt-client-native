@@ -51,8 +51,6 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     const webrtc::VideoFrame& video_frame) {
   uint16_t width = video_frame.video_frame_buffer()->width();
   uint16_t height = video_frame.video_frame_buffer()->height();
-
-  RTC_LOG(LS_ERROR) << "On frame." << width << "x" << height;
   if (width == 0 || height == 0)
     return;
 
@@ -554,9 +552,11 @@ void WebrtcVideoRendererD3D11Impl::RenderToBackbuffer(int array_slice) {
       0, 0, &parameters);
   int64_t current_time = clock_->TimeInMilliseconds();
   frame_count++;
+#if 0
   FILE* f = fopen("frames.txt", "a");
   fprintf(f, "timestamp: %lld, frames drawn: %d\r\n", current_time, frame_count);
   fclose(f);
+#endif
 }
 
 // Helper method to initialize a shader resource view

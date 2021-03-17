@@ -57,6 +57,8 @@ webrtc::VideoCodecType CodecUtils::ConvertSdpFormatToCodecType(webrtc::SdpVideoF
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
     return webrtc::kVideoCodecH265;
 #endif
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
+    return webrtc::kVideoCodecAV1;
   }
   else {
     return webrtc::kVideoCodecGeneric;

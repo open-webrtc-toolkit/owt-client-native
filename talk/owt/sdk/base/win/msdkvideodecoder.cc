@@ -247,7 +247,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   }
 
   m_mfxVideoParams.mfx.CodecId = codec_id;
-  if (codec_id == MFX_CODEC_VP9)
+  if (codec_id == MFX_CODEC_VP9 || codec_id == MFX_CODEC_AV1)
     m_mfxVideoParams.mfx.EnableReallocRequest = MFX_CODINGOPTION_ON;
   inited = true;
   RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread --";
@@ -332,7 +332,6 @@ dec_header:
       }
       // Finally we're done with all configurations and we're OK to init the
       // decoder.
-
       sts = m_pmfxDEC->Init(&m_mfxVideoParams);
       if (MFX_ERR_NONE != sts) {
         RTC_LOG(LS_ERROR) << "Failed to init the decoder.";
