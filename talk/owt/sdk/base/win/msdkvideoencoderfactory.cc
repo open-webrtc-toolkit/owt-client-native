@@ -108,7 +108,6 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) &&
            !h265_hw) {
   }
-   // return nullptr;
 #endif
   return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
 }

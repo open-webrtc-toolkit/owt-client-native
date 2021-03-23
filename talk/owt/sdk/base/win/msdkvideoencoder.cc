@@ -550,12 +550,7 @@ int MSDKVideoEncoder::Encode(
       }
     }
   }
-  RTC_LOG(LS_ERROR) << "Request encoding of frame size:" << input_image.height()
-                    << "x" << input_image.width();
   sts = m_pmfxENC->GetVideoParam(&m_mfxEncParams);
-  RTC_LOG(LS_ERROR) << "Current video param, width="
-                    << m_mfxEncParams.mfx.FrameInfo.CropW
-                    << ", height=" << m_mfxEncParams.mfx.FrameInfo.CropH;
   if (codec_type == webrtc::kVideoCodecVP9 && vp9_use_external_brc) {
     sts = m_pmfxENC->GetVideoParam(&m_mfxEncParams);
     if (MFX_ERR_NONE != sts) {

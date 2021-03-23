@@ -14,6 +14,7 @@
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
 
+
 namespace owt {
 namespace base {
 
@@ -90,7 +91,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return webrtc::VP9Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) &&
              !vp8_hw) {
-    RTC_LOG(LS_ERROR) << "Not supporting HW VP8 decoder. Requesting SW:";
+    RTC_LOG(LS_ERROR) << "Not supporting HW VP8 decoder. Requesting SW decoding.";
     return webrtc::VP8Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) && !h264_hw) {
     return webrtc::H264Decoder::Create();
@@ -102,7 +103,6 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
   // This should not happen.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
     RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
-    //return nullptr;
   }
 #endif
 
