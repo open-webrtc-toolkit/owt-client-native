@@ -36,7 +36,7 @@ GN_ARGS = [
 ]
 
 
-def gngen(arch, ssl_root, msdk_root, scheme, tests):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -59,6 +59,15 @@ def gngen(arch, ssl_root, msdk_root, scheme, tests):
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('msdk_root is not set.')
+    if quic_root:
+        gn_args.append('owt_quic_header_root="%s"' % (quic_root + r'\include'))
+        if scheme == 'release':
+            quic_lib = quic_root + r'\bin\release'
+        elif scheme == 'debug':
+            quic_lib = quic_root + r'\bin\debug'
+        else:
+            return False
+        gn_args.append('owt_use_quic=true')
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
@@ -113,10 +122,10 @@ def _mergelibs(arch, scheme, ssl_root):
 
 
 # Run unit tests on simulator. Return True if all tests are passed.
-def runtest(scheme):
-    test_root_path = os.path.join(OUT_PATH, '%s-x86' % scheme)
+def runtest(arch, scheme):
+    test_root_path = os.path.join(OUT_PATH, r'%s-%s' % (scheme, arch))
     for test_target in PARALLEL_TEST_TARGET_LIST:
-        if subprocess.call(['python', 'third_party\gtest-parallel\gtest-parallel',
+        if subprocess.call(['python', 'third_party\gtest-parallel\gtest_parallel.py',
                             '%s\%s.exe' % (test_root_path, test_target)],
                            cwd=HOME_PATH, shell=False):
             return False
@@ -165,6 +174,7 @@ def main():
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
+    parser.add_argument('--quic_root', help='Path to QUIC library')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -180,12 +190,16 @@ def main():
     if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
         print('Invalid ssl_root.')
         return 1
-    if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.msdk_root)):
+    if opts.msdk_root and not os.path.exists(os.path.expanduser(opts.msdk_root)):
         print('Invalid msdk_root')
+        return 1
+    if opts.quic_root and not os.path.exists(os.path.expanduser(opts.quic_root)):
+        print('Invalid quic_root')
         return 1
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
+                     opts.scheme, opts.tests):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
@@ -193,7 +207,7 @@ def main():
         else:
             _mergelibs(opts.arch, opts.scheme, opts.ssl_root)
     if opts.tests:
-        if not runtest(opts.scheme):
+        if not runtest(opts.arch, opts.scheme):
             return 1
     if opts.docs:
         if not gendocs():
