@@ -46,7 +46,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(r'out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, scheme, tests, use_gcc, fake_audio):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -70,6 +70,16 @@ def gngen(arch, ssl_root, msdk_root, scheme, tests, use_gcc, fake_audio):
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('msdk_root is not set.')
+    if quic_root:
+        gn_args.append('owt_quic_header_root="%s"' % (quic_root + r'\include'))
+        if scheme == 'release':
+            quic_lib = quic_root + r'\bin\release'
+        elif scheme == 'debug':
+            quic_lib = quic_root + r'\bin\debug'
+        else:
+            return False
+        gn_args.append('owt_use_quic=true')
+
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
@@ -149,6 +159,7 @@ def main():
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
+    parser.add_argument('--quic_root', help='Path to QUIC library')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -166,7 +177,7 @@ def main():
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme):

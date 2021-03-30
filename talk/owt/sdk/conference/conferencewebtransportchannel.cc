@@ -373,7 +373,7 @@ static std::string ConvertToUUID(uint8_t* src) {
     return "";
   char* dst = new char[UUID_TEXT_LEN_PLUS_1];
   memset(dst, 0, UUID_TEXT_LEN_PLUS_1);
-  sprintf_s(dst, UUID_TEXT_LEN_PLUS_1,
+  snprintf(dst, UUID_TEXT_LEN_PLUS_1,
             "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
             src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7],
             src[8], src[9], src[10], src[11], src[12], src[13], src[14],
