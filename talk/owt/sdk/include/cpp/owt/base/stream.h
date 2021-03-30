@@ -259,7 +259,9 @@ class LocalStream : public Stream {
  public:
 #if !defined(WEBRTC_WIN)
   LocalStream();
+#if !defined(WEBRTC_LINUX)
   LocalStream(MediaStreamInterface* media_stream, StreamSourceInfo source);
+#endif
 #endif
   virtual ~LocalStream();
   using Stream::Attributes;

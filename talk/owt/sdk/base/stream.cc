@@ -385,9 +385,11 @@ void Stream::TriggerOnStreamUnmute(TrackKind track_kind) {
 }
 #if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() {}
+#if !defined(WEBRTC_LINUX)
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
     : Stream(media_stream, source) {}
+#endif
 #endif
 LocalStream::~LocalStream() {
   RTC_LOG(LS_INFO) << "Destroy LocalCameraStream.";
