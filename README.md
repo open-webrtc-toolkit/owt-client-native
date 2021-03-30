@@ -47,11 +47,23 @@ target_os = []
 #### Windows
 - Set the environment variable `BOOST_ROOT` to your boost source tree.
 - Run `gclient sync`. It may take a long time to download a large amount of data.
-- Go to the `src/scripts` directory, and run: `python build-win.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --msdk_root /path/to/msdk --output_path /path/to/out`. The built binary will be under `output_path`, the document for sdk will also be copied to this directory if docs have been generated. If `output_path` is not set, the built binary will be under `src/out` directory. Note the first time you run this it will take a long time to pull chromium/webrtc dependencies and require network access to Google's code/storage infrastructure. Set `ssl_root` to the directory of your OpenSSL 1.1.0 binary. Set `msdk_root` to the directory of your Intel Media SDK for Windows, version 2018 R1 or higher. Use `--gn_gen` to generate args.gn during the first build or when you change the `msdk_root` or `ssl_root` paths.
+- Go to the `src/scripts` directory, and run: `python build-win.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --msdk_root /path/to/msdk --output_path /path/to/out`. 
+  The built binary will be under `output_path`, the document for sdk will also be copied to this directory if docs have been generated. If `output_path` is not set, 
+the built binary will be under `src/out` directory. Note the first time you run this it will take a long time to pull chromium/webrtc dependencies and 
+require network access to Google's code/storage infrastructure. Set `ssl_root` to the directory of your OpenSSL 1.1.0 binary. Set `msdk_root` to the 
+directory of your Intel Media SDK for Windows, version 2018 R1 or higher. Use `--gn_gen` to generate args.gn during the first build or when
+you change the `msdk_root` or `ssl_root` paths.
+- You can also specify `quic_root`  to the path containing QUIC library built from owt-deps-quic. This will build the SDK with QUIC enabled for conference mode.
 
 #### Linux
 - Run `gclient sync`. It may take a long time to download a large amount of data.
-- Go to the `src/scripts` directory, and run: `python build_linux.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --output_path /path/to/out`. The built binary will be under `output_path`, the document for sdk will also be copied to this directory if docs have been generated. If `output_path` is not set, the built binary will be under the `src/out` directory. Note the first time you run this it will take a long time to pull chromium/webrtc dependencies and require network access to Google's code/storage infrastructure. Set `ssl_root` to the directory of your OpenSSL 1.1.0 binary. Use `--gn_gen` to generate args.gn during the first build or when you change the `ssl_root` path. If `--msdk_root` is specified to correct Intel MediaSDK path, for example, '/opt/intel/mediasdk', hardware codecs will be built besides the software implementations. If `--fake_audio` is specified, the internal audio devices implementation based on alsa or pulseaudio will not be built.
+- Go to the `src/scripts` directory, and run: `python build_linux.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --output_path /path/to/out`. 
+  The built binary will be under `output_path`, the document for sdk will also be copied to this directory if docs have been generated. 
+If `output_path` is not set, the built binary will be under the `src/out` directory. Note the first time you run this it will take a 
+long time to pull chromium/webrtc dependencies and require network access to Google's code/storage infrastructure. Set `ssl_root` to the 
+directory of your OpenSSL 1.1.0 binary. Use `--gn_gen` to generate args.gn during the first build or when you change the `ssl_root` path.
+If `--msdk_root` is specified to correct Intel MediaSDK path, for example, '/opt/intel/mediasdk', hardware codecs will be built besides the
+software implementations. If `--fake_audio` is specified, the internal audio devices implementation based on alsa or pulseaudio will not be built.
 
 #### iOS
 - Run `gclient sync`. It may take a long time to download a large amount of data.
