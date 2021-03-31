@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdio>
 #include "rtc_base/logging.h"
+#include <system_error>
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"
@@ -31,6 +32,14 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     RTC_LOG(LS_ERROR) << "Invalid video frame size.";
     return;
   }
+
+  if (!wnd_ || !IsWindow(wnd_) || !IsWindowVisible(wnd_))
+    return;
+
+  RECT rect;
+  GetClientRect(wnd_, &rect);
+  int window_width_ = rect.right - rect.left;
+  int window_height_ = rect.bottom - rect.top;
 
   if (video_frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
@@ -67,29 +76,13 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     RenderNativeHandleFrame(video_frame);
   } else {  // I420 frame passed.
     // First scale down to target window size.
-    RECT rect;
-    GetClientRect(wnd_, &rect);
-    int window_width_ = rect.right - rect.left;
-    int window_height_ = rect.bottom - rect.top;
-
     webrtc::VideoFrame new_frame(video_frame);
-
-    {
-      rtc::CritScope lock(&d3d11_texture_lock_);
-      if (window_width != window_width_ || window_height != window_height_) {
-        if (swap_chain_for_hwnd_) {
-          swap_chain_for_hwnd_.Release();
-          swap_chain_for_hwnd_ = nullptr;
-        }
-        window_width = window_width_;
-        window_height = window_height_;
-      }
-    }
     rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
         I420Buffer::Create(window_width_, window_height_);
     auto i420_buffer = video_frame.video_frame_buffer()->ToI420();
     scaled_buffer->ScaleFrom(*i420_buffer);
     new_frame.set_video_frame_buffer(scaled_buffer);
+
     RenderI420Frame_DX11(new_frame);
   }
   return;
@@ -141,8 +134,8 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
   HRESULT hr = S_OK;
   RECT rect;
   GetClientRect(wnd_, &rect);
-  int window_width_ = rect.right - rect.left;
-  int window_height_ = rect.bottom - rect.top;
+  window_width = rect.right - rect.left;
+  window_height = rect.bottom - rect.top;
 
   rtc::CritScope lock(&d3d11_texture_lock_);
   if (swap_chain_for_hwnd_) {
@@ -154,9 +147,11 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
       return false;
     }
 
-    if (desc.BufferDesc.Width != (unsigned int)window_width_ ||
-        desc.BufferDesc.Height != (unsigned int)window_height_) {
-      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width_, window_height_,
+    if (desc.BufferDesc.Width != (unsigned int)window_width ||
+        desc.BufferDesc.Height != (unsigned int)window_height) {
+      d3d11_device_context_->ClearState();
+      d3d11_device_context_->Flush();
+      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
                                               DXGI_FORMAT_UNKNOWN, desc.Flags);
       if (FAILED(hr)) {
         RTC_LOG(LS_ERROR) << "failed to resize buffer for swapchain.";
@@ -171,8 +166,8 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
   ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC1));
   desc.BufferCount = 2;
   desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  desc.Height = window_height_;
-  desc.Width = window_width_;
+  desc.Height = window_height;
+  desc.Width = window_width;
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.SampleDesc.Count = 1;
@@ -184,23 +179,38 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
   CComPtr<IDXGIDevice2> dxgi_device;
   hr = d3d11_device_->QueryInterface(__uuidof(IDXGIDevice1),
                                      (void**)&dxgi_device);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to query dxgi device.";
     return false;
+  }
 
   Microsoft::WRL::ComPtr<IDXGIAdapter> adapter = nullptr;
   Microsoft::WRL::ComPtr<IDXGIFactory2> factory = nullptr;
 
   hr = dxgi_device->GetAdapter(&adapter);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to get the adatper.";
     return false;
+  }
 
   hr = adapter->GetParent(IID_PPV_ARGS(&factory));
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to get dxgi factory.";
     return false;
+  }
+
+  d3d11_device_context_->ClearState();
+  d3d11_device_context_->Flush();
+
+  if (swap_chain_for_hwnd_)
+    swap_chain_for_hwnd_.Release();
 
   hr = factory->CreateSwapChainForHwnd(d3d11_device_, wnd_, &desc, nullptr, nullptr, &swap_chain_for_hwnd_);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    std::string message = std::system_category().message(hr);
+    RTC_LOG(LS_ERROR) << "Failed to create swapchain for hwnd." << message;
     return false;
+  }
 
   return true;
 }
@@ -243,8 +253,15 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
 
   RECT rect;
   GetClientRect(wnd_, &rect);
-  int window_width = rect.right - rect.left;
-  int window_height = rect.bottom - rect.top;
+  window_width = rect.right - rect.left;
+  window_height = rect.bottom - rect.top;
+
+  if (!d3d11_video_device_) {
+    hr = d3d11_device_->QueryInterface(__uuidof(ID3D11VideoDevice),
+                                       (void**)&d3d11_video_device_);
+    if (FAILED(hr))
+      return;
+  }
 
   if (swap_chain_for_hwnd_) {
     DXGI_SWAP_CHAIN_DESC desc;
@@ -254,6 +271,10 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
 
     if (desc.BufferDesc.Width != (unsigned int)window_width ||
         desc.BufferDesc.Height != (unsigned int)window_height) {
+      // Hold the lock to avoid rendering when resizing buffer.
+      rtc::CritScope lock(&d3d11_texture_lock_);
+      d3d11_device_context_->ClearState();
+
       hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
                                                DXGI_FORMAT_UNKNOWN, desc.Flags);
       if (FAILED(hr))
@@ -262,12 +283,6 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
   }
 
   bool reset = false;
-  if (!d3d11_video_device_) {
-    hr = d3d11_device_->QueryInterface(__uuidof(ID3D11VideoDevice),
-                                       (void**)&d3d11_video_device_);
-    if (FAILED(hr))
-      return;
-  }
 
   if (!d3d11_video_context_) {
     hr = d3d11_device_context_->QueryInterface(__uuidof(ID3D11VideoContext),
@@ -345,6 +360,9 @@ bool WebrtcVideoRendererD3D11Impl::InitMPO(int width, int height) {
   int rect_width = rect.right - rect.left;
   int rect_height = rect.bottom - rect.top;
 
+  window_width = rect_width;
+  window_height = rect_height;
+
   swapChainDesc.Width = (rect_width%2) ? (rect_width + 1) : rect_width;
   swapChainDesc.Height = (rect_height%2) ? (rect_height + 1) : rect_height;
   swapChainDesc.Format = DXGI_FORMAT_NV12;
@@ -396,7 +414,7 @@ bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(int width,
   int window_height = rect.bottom - rect.top;
   D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
   ZeroMemory(&content_desc, sizeof(content_desc));
-  // Check input size to decide if
+
   if (video_processor_.p && video_processor_enum_.p) {
     hr = video_processor_enum_->GetVideoProcessorContentDesc(&content_desc);
     if (FAILED(hr))
