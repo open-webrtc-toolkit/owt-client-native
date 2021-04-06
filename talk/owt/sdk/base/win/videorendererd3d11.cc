@@ -137,6 +137,12 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
   window_width = rect.right - rect.left;
   window_height = rect.bottom - rect.top;
 
+  if (window_width % 2) {
+    window_width += 1;
+  }
+  if (window_height % 2) {
+    window_height += 1;
+  }
   rtc::CritScope lock(&d3d11_texture_lock_);
   if (swap_chain_for_hwnd_) {
     DXGI_SWAP_CHAIN_DESC desc;
@@ -151,6 +157,7 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
         desc.BufferDesc.Height != (unsigned int)window_height) {
       d3d11_device_context_->ClearState();
       d3d11_device_context_->Flush();
+
       hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
                                               DXGI_FORMAT_UNKNOWN, desc.Flags);
       if (FAILED(hr)) {
@@ -256,6 +263,12 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
   window_width = rect.right - rect.left;
   window_height = rect.bottom - rect.top;
 
+  if (window_width % 2) {
+    window_width += 1;
+  }
+  if (window_height % 2) {
+    window_height += 1;
+  }
   if (!d3d11_video_device_) {
     hr = d3d11_device_->QueryInterface(__uuidof(ID3D11VideoDevice),
                                        (void**)&d3d11_video_device_);
@@ -363,8 +376,14 @@ bool WebrtcVideoRendererD3D11Impl::InitMPO(int width, int height) {
   window_width = rect_width;
   window_height = rect_height;
 
-  swapChainDesc.Width = (rect_width%2) ? (rect_width + 1) : rect_width;
-  swapChainDesc.Height = (rect_height%2) ? (rect_height + 1) : rect_height;
+  if (window_width % 2) {
+    window_width += 1;
+  }
+  if (window_height % 2) {
+    window_height += 1;
+  }
+  swapChainDesc.Width = (rect_width % 2 != 0) ? (rect_width + 1) : rect_width;
+  swapChainDesc.Height = (rect_height % 2 != 0) ? (rect_height + 1) : rect_height;
   swapChainDesc.Format = DXGI_FORMAT_NV12;
   swapChainDesc.Stereo = false;
   swapChainDesc.SampleDesc.Count = 1;  // Don't use multi-sampling.
@@ -460,14 +479,20 @@ void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
   rtc::CritScope lock(&d3d11_texture_lock_);
   HRESULT hr = S_OK;
 
-  if (swap_chain_for_hwnd_ == nullptr)
+  if (swap_chain_for_hwnd_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Invalid swap chain.";
     return;
+  }
 
   Microsoft::WRL::ComPtr<ID3D11Texture2D> dxgi_back_buffer;
-  hr = swap_chain_for_hwnd_->GetBuffer(0, __uuidof(ID3D11Texture2D),
-                                       (void**)&dxgi_back_buffer);
-  if (FAILED(hr))
+  //hr = swap_chain_for_hwnd_->GetBuffer(0, __uuidof(ID3D11Texture2D),
+  //                                     (void**)&dxgi_back_buffer);
+  hr = swap_chain_for_hwnd_->GetBuffer(0, IID_PPV_ARGS(&dxgi_back_buffer));
+  if (FAILED(hr)) {
+    std::string message = std::system_category().message(hr);
+    RTC_LOG(LS_ERROR) << "Failed to get back buffer:" << message;
     return;
+  }
 
   D3D11_TEXTURE2D_DESC back_buffer_desc;
   dxgi_back_buffer->GetDesc(&back_buffer_desc);
@@ -480,8 +505,10 @@ void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
   hr = d3d11_video_device_->CreateVideoProcessorOutputView(
       dxgi_back_buffer.Get(), video_processor_enum_, &output_view_desc,
       &output_view);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to create output view.";
     return;
+  }
 
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC input_view_desc;
   ZeroMemory(&input_view_desc, sizeof(input_view_desc));
@@ -492,8 +519,10 @@ void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
   Microsoft::WRL::ComPtr<ID3D11VideoProcessorInputView> input_view;
   hr = d3d11_video_device_->CreateVideoProcessorInputView(
       d3d11_texture_, video_processor_enum_, &input_view_desc, &input_view);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to create input view.";
     return;
+  }
 
   D3D11_VIDEO_PROCESSOR_STREAM stream_data;
   ZeroMemory(&stream_data, sizeof(stream_data));
@@ -518,8 +547,10 @@ void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
       video_processor_, 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
   hr = d3d11_video_context_->VideoProcessorBlt(
       video_processor_, output_view.Get(), 0, 1, &stream_data);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    RTC_LOG(LS_ERROR) << "Failed to blit.";
     return;
+  }
 
   hr = swap_chain_for_hwnd_->Present(1, 0);
   if (FAILED(hr)) {
