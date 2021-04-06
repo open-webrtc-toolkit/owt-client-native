@@ -370,6 +370,7 @@ retry:
       sts = m_mfxSession->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
         mfxMemId dxMemId = pOutputSurface->Data.MemId;
+        mfxFrameInfo frame_info = pOutputSurface->Info;
         mfxHDLPair pair = {nullptr};
         // Maybe we should also send the allocator as part of the frame
         // handle for locking/unlocking purpose.
@@ -383,10 +384,12 @@ retry:
           D3D11_TEXTURE2D_DESC texture_desc;
           memset(&texture_desc, 0, sizeof(texture_desc));
           surface_handle->texture->GetDesc(&texture_desc);
-
+          // TODO(johny): we should extend the buffer structure to include
+          // not only the CropW|CropH value, but also the CropX|CropY for the
+          // renderer to correctly setup the video processor input view.
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
-                  (void*)surface_handle.get(), texture_desc.Width, texture_desc.Height);
+                  (void*)surface_handle.get(), frame_info.CropW, frame_info.CropH);
           webrtc::VideoFrame decoded_frame(buffer, inputImage.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
