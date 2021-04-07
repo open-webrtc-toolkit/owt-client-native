@@ -1,0 +1,34 @@
+From 6e42d746ec234f9a4aa1e809cb6fa9756334bd5a Mon Sep 17 00:00:00 2001
+From: Qiu Jianlin <jianlin.qiu@intel.com>
+Date: Wed, 7 Apr 2021 14:13:14 +0800
+Subject: [PATCH] Remove deprecated create_srcjar property
+
+---
+ android_deps/BUILD.gn | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/android_deps/BUILD.gn b/android_deps/BUILD.gn
+index 7e26e07797f..7dcd787fc97 100644
+--- a/android_deps/BUILD.gn
++++ b/android_deps/BUILD.gn
+@@ -803,7 +803,7 @@ android_aar_prebuilt("androidx_vectordrawable_vectordrawable_java") {
+     ":androidx_core_core_java",
+   ]
+   resource_overlay = true
+-  create_srcjar = false
++  #create_srcjar = false
+ }
+ 
+ # This is generated, do not edit. Update BuildConfigGenerator.groovy instead.
+@@ -2209,7 +2209,7 @@ android_aar_prebuilt("com_android_support_support_vector_drawable_java") {
+     ":com_android_support_support_compat_java",
+   ]
+   resource_overlay = true
+-  create_srcjar = false
++  #create_srcjar = false
+ }
+ 
+ # This is generated, do not edit. Update BuildConfigGenerator.groovy instead.
+-- 
+2.17.1
+
