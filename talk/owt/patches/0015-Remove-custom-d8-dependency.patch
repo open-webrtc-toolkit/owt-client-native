@@ -1,0 +1,157 @@
+From 0c52a2cf2a39da0f534a7b0106fe42077bec75d8 Mon Sep 17 00:00:00 2001
+From: Qiu Jianlin <jianlin.qiu@intel.com>
+Date: Wed, 7 Apr 2021 14:08:10 +0800
+Subject: [PATCH] Remove custom d8 dependency
+
+---
+ android/gyp/dex.py                | 31 +++++--------------------------
+ config/android/internal_rules.gni | 24 ------------------------
+ 2 files changed, 5 insertions(+), 50 deletions(-)
+
+diff --git a/android/gyp/dex.py b/android/gyp/dex.py
+index 0f05009b5..2b95c06a2 100755
+--- a/android/gyp/dex.py
++++ b/android/gyp/dex.py
+@@ -71,11 +71,6 @@ def _ParseArgs(args):
+                       action='store_true',
+                       help='Allow numerous dex files within output.')
+   parser.add_argument('--r8-jar-path', required=True, help='Path to R8 jar.')
+-  parser.add_argument('--custom-d8-jar-path',
+-                      required=True,
+-                      help='Path to our customized d8 jar.')
+-  parser.add_argument('--desugar-dependencies',
+-                      help='Path to store desugar dependencies.')
+   parser.add_argument('--desugar', action='store_true')
+   parser.add_argument(
+       '--bootclasspath',
+@@ -502,8 +497,6 @@ def _CreateIntermediateDexFiles(changes, options, tmp_dir, dex_cmd):
+   if class_files:
+     # Dex necessary classes into intermediate dex files.
+     dex_cmd = dex_cmd + ['--intermediate', '--file-per-class-file']
+-    if options.desugar_dependencies:
+-      dex_cmd += ['--file-tmp-prefix', tmp_extract_dir]
+     _RunD8(dex_cmd, class_files, options.incremental_dir,
+            options.warnings_as_errors,
+            options.show_desugar_default_interface_warnings)
+@@ -545,7 +538,6 @@ def main(args):
+ 
+   input_paths = options.class_inputs + options.dex_inputs
+   input_paths.append(options.r8_jar_path)
+-  input_paths.append(options.custom_d8_jar_path)
+   if options.main_dex_rules_path:
+     input_paths.extend(options.main_dex_rules_path)
+ 
+@@ -565,8 +557,8 @@ def main(args):
+ 
+   dex_cmd = build_utils.JavaCmd(options.warnings_as_errors) + [
+       '-cp',
+-      '{}:{}'.format(options.r8_jar_path, options.custom_d8_jar_path),
+-      'org.chromium.build.CustomD8',
++      options.r8_jar_path,
++      'com.android.tools.r8.D8',
+   ]
+   if options.release:
+     dex_cmd += ['--release']
+@@ -576,25 +568,12 @@ def main(args):
+   if not options.desugar:
+     dex_cmd += ['--no-desugaring']
+   elif options.classpath:
+-    # The classpath is used by D8 to for interface desugaring.
+-    if options.desugar_dependencies:
+-      dex_cmd += ['--desugar-dependencies', options.desugar_dependencies]
+-      if track_subpaths_allowlist:
+-        track_subpaths_allowlist += options.classpath
+-    depfile_deps += options.classpath
+-    input_paths += options.classpath
+-    # Still pass the entire classpath in case a new dependency is needed by
+-    # desugar, so that desugar_dependencies will be updated for the next build.
+-    for path in options.classpath:
+-      dex_cmd += ['--classpath', path]
+-
+-  if options.classpath or options.main_dex_rules_path:
+-    # --main-dex-rules requires bootclasspath.
++        # --main-dex-rules requires bootclasspath.
+     dex_cmd += ['--lib', build_utils.JAVA_HOME]
+-    for path in options.bootclasspath:
++    for path in options.classpath:
+       dex_cmd += ['--lib', path]
+     depfile_deps += options.bootclasspath
+-    input_paths += options.bootclasspath
++    input_paths += options.classpath
+ 
+ 
+   if options.desugar_jdk_libs_json:
+diff --git a/config/android/internal_rules.gni b/config/android/internal_rules.gni
+index ca50d6a26..36adc2ca9 100644
+--- a/config/android/internal_rules.gni
++++ b/config/android/internal_rules.gni
+@@ -82,7 +82,6 @@ _java_library_patterns = [
+ java_target_patterns = _java_library_patterns + _java_resource_patterns
+ 
+ _r8_path = "//third_party/r8/lib/r8.jar"
+-_custom_d8_path = "//third_party/r8/custom_d8.jar"
+ _desugar_jdk_libs_json = "//third_party/r8/desugar_jdk_libs.json"
+ _desugar_jdk_libs_jar = "//third_party/android_deps/libs/com_android_tools_desugar_jdk_libs/desugar_jdk_libs-1.0.10.jar"
+ _desugar_jdk_libs_configuration_jar = "//third_party/android_deps/libs/com_android_tools_desugar_jdk_libs_configuration/desugar_jdk_libs_configuration-1.0.10.jar"
+@@ -1572,7 +1571,6 @@ if (enable_java_templates) {
+         outputs = [ invoker.output ]
+         inputs = [
+           _r8_path,
+-          _custom_d8_path,
+         ]
+ 
+         if (!_is_library) {
+@@ -1592,8 +1590,6 @@ if (enable_java_templates) {
+           "--min-api=$_min_sdk_version",
+           "--r8-jar-path",
+           rebase_path(_r8_path, root_build_dir),
+-          "--custom-d8-jar-path",
+-          rebase_path(_custom_d8_path, root_build_dir),
+         ]
+         if (treat_warnings_as_errors) {
+           args += [ "--warnings-as-errors" ]
+@@ -1689,11 +1685,7 @@ if (enable_java_templates) {
+           }
+         }
+         if (_desugar_needs_classpath) {
+-          _desugar_dependencies_path =
+-              "$target_gen_dir/$target_name.desugardeps"
+           args += [
+-            "--desugar-dependencies",
+-            rebase_path(_desugar_dependencies_path, root_build_dir),
+             "--bootclasspath=@FileArg($_rebased_build_config:android:sdk_jars)",
+ 
+             # Pass the full classpath to find new dependencies that are not in
+@@ -3185,21 +3177,6 @@ if (enable_java_templates) {
+         args += [ "--jar-info-exclude-globs=${invoker.jar_excluded_patterns}" ]
+       }
+ 
+-      if (invoker.enable_errorprone) {
+-        # Our custom plugin pulls in the main errorprone dep transitively.
+-        _errorprone_dep = "//tools/android/errorprone_plugin:errorprone_plugin"
+-        deps += [ _errorprone_dep ]
+-        _dep_gen_dir = get_label_info(_errorprone_dep, "target_gen_dir")
+-        _dep_name = get_label_info(_errorprone_dep, "name")
+-        _rebased_errorprone_buildconfig =
+-            rebase_path("$_dep_gen_dir/$_dep_name.build_config", root_build_dir)
+-        _target_label = get_label_info(target_name, "dir")
+-        args += [
+-          "--target-name=${_target_label}",
+-          "--processorpath=@FileArg($_rebased_errorprone_buildconfig:deps_info:host_classpath)",
+-          "--enable-errorprone",
+-        ]
+-      }
+       foreach(e, _processor_args) {
+         args += [ "--processor-arg=" + e ]
+       }
+@@ -4014,7 +3991,6 @@ if (enable_java_templates) {
+                                ])
+         input_class_jars = [ _device_processed_jar_path ]
+         enable_desugar = _enable_desugar
+-        ignore_desugar_missing_deps = !_enable_bytecode_checks
+ 
+         # There's no value in per-class dexing prebuilts since they never
+         # change just one class at a time.
+-- 
+2.17.1
+
