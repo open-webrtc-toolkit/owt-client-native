@@ -22,7 +22,7 @@ static const std::unordered_map<VideoCodec, const std::string, EnumClassHash>
                          {VideoCodec::kH264, "H264"},
                          {VideoCodec::kVp9, "VP9"},
                          {VideoCodec::kH265, "H265"},
-                         {VideoCodec::kAv1, "AV1X"}};
+                         {VideoCodec::kAv1, "AV1"}};
 std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
                                           std::vector<AudioCodec>& codec) {
   std::string cur_sdp(original_sdp);
