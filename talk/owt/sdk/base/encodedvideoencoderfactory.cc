@@ -22,6 +22,7 @@ EncodedVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) ||
       absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) ||
+      absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) ||
       absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)
 #ifdef WEBRTC_USE_H265
       || absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)

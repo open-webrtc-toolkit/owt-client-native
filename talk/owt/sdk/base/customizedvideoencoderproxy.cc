@@ -74,11 +74,13 @@ int32_t CustomizedVideoEncoderProxy::Encode(
 #ifdef WEBRTC_USE_H265
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
+	codec_type_ != webrtc::kVideoCodecAV1 &&
         codec_type_ != webrtc::kVideoCodecVP9 &&
         codec_type_ != webrtc::kVideoCodecH265)
 #else
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
+	codec_type_ != webrtc::kVideoCodecAV1 &&
         codec_type_ != webrtc::kVideoCodecVP9)
 #endif
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -311,6 +313,9 @@ void CustomizedVideoEncoderProxy::OnLossNotification(
         loss_notification.dependencies_of_last_received_decodable.value();
   } else {
     notification.last_frame_dependency_unknown = true;
+  }
+  if (encoder_event_callback_) {
+    encoder_event_callback_->RequestLossNotification(notification);
   }
 }
 
