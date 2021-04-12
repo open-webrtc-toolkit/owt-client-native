@@ -12,6 +12,7 @@
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 using namespace rtc;
 namespace owt {
 namespace conference {
@@ -101,6 +102,7 @@ void ConferencePeerConnectionChannel::RemoveObserver(
       [&](std::reference_wrapper<ConferencePeerConnectionChannelObserver> o)
           -> bool { return &observer == &(o.get()); }));
 }
+
 void ConferencePeerConnectionChannel::CreateOffer() {
   RTC_LOG(LS_INFO) << "Create offer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -111,9 +113,13 @@ void ConferencePeerConnectionChannel::CreateOffer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateOffer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateOffer(observer, offer_answer_options);
 }
+
 void ConferencePeerConnectionChannel::IceRestart() {
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
     DoIceRestart();
@@ -125,13 +131,9 @@ void ConferencePeerConnectionChannel::DoIceRestart() {
   RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable);
-  // TODO: moving to offer answer options.
-  /*
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kIceRestart, true);
-  */
   this->CreateOffer();
 }
+
 void ConferencePeerConnectionChannel::CreateAnswer() {
   RTC_LOG(LS_INFO) << "Create answer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -142,9 +144,13 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateAnswer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateAnswer(observer, offer_answer_options);
 }
+
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
@@ -162,6 +168,7 @@ void ConferencePeerConnectionChannel::OnSignalingChange(
     }
   }
 }
+
 void ConferencePeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   RTC_LOG(LS_INFO) << "On add stream.";

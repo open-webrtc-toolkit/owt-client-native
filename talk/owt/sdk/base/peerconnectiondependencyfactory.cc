@@ -96,6 +96,28 @@ void PeerConnectionDependencyFactory::
       GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
   }
+  // Handle port ranges.
+  int audio_min, audio_max, video_min, video_max, screen_min, screen_max,
+      data_min, data_max;
+  GlobalConfiguration::GetPortRanges(audio_min, audio_max, video_min, video_max,
+                                     screen_min, screen_max, data_min,
+                                     data_max);
+  RTC_LOG(LS_ERROR) << "Port ranges:"
+                    << "audio_min:" << audio_min << ",audio_max:" << audio_max;
+  if ((audio_min > 0 && audio_max > audio_min) || (video_min > 0 &&
+      video_max > video_min) || (screen_min > 0 && screen_max > screen_min) ||
+      (data_min > 0 && data_max > data_min)) {
+    field_trial_ += "OWT-IceUnbundle/Enabled/";
+    field_trial_ +=
+        "OWT-Ice-PortRanges/audioMin:" + std::to_string(audio_min) +
+        ",audioMax:" + std::to_string(audio_max) +
+        ",videoMin:" + std::to_string(video_min) +
+        ",videoMax:" + std::to_string(video_max) +
+        ",screenMin:" + std::to_string(screen_min) +
+        ",screenMax:" + std::to_string(screen_max) +
+        ",dataMin:" + std::to_string(data_min) +
+        ",dataMax:" + std::to_string(data_max) + "/";
+  }
   // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
   int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
   field_trial_ +=

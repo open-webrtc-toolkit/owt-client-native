@@ -31,7 +31,8 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   configuration_.media_config.enable_dscp = true;
-  configuration_.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
+  // Johny: This must not be set if we use seperate AV channels.
+  //configuration_.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
   peer_connection_ =
       (factory_->CreatePeerConnection(configuration_, this)).get();
   if (!peer_connection_.get()) {

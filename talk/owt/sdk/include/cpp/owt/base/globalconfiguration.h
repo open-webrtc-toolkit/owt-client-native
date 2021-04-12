@@ -81,6 +81,28 @@ class GlobalConfiguration {
           audio_frame_generator_.reset(nullptr);
       }
   }
+
+  /**
+   @brief This function sets the port ranges of different payload types.
+  */
+  static void SetPortRanges(int audio_min,
+      int audio_max,
+      int video_min,
+      int video_max,
+      int screen_min,
+      int screen_max,
+      int data_min,
+      int data_max) {
+    audio_min_ = audio_min;
+    audio_max_ = audio_max;
+    video_min_ = video_min;
+    video_max_ = video_max;
+    screen_min_ = screen_min;
+    screen_max_ = screen_max;
+    data_min_ = data_min;
+    data_max_ = data_max;
+  }
+
   /**
    @brief This function sets the temporal layers for H.264.
 
@@ -176,6 +198,33 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
+  static void GetPortRanges(int& audio_min,
+      int& audio_max,
+      int& video_min,
+      int& video_max,
+      int& screen_min,
+      int& screen_max,
+      int& data_min,
+      int& data_max) {
+    audio_min = audio_min_;
+    audio_max = audio_max_;
+    video_min = video_min_;
+    video_max = video_max_;
+    screen_min = screen_min_;
+    screen_max = screen_max_;
+    video_min = video_min_;
+    video_max = video_max_;
+    data_min = data_min_;
+    data_max = data_max_;
+  }
+  static int audio_min_;
+  static int audio_max_;
+  static int video_min_;
+  static int video_max_;
+  static int screen_min_;
+  static int screen_max_;
+  static int data_min_;
+  static int data_max_;
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.
