@@ -51,6 +51,7 @@ class WebrtcVideoRendererD3D11Impl
   bool InitD3D11(int width, int height);
   bool InitSwapChain(int widht, int height, bool reset);
   bool CreateStagingTexture(int width, int height);
+  bool GetWindowSizeForSwapChain(int& width, int& height);
 
   // Render window objects
   HWND wnd_ = nullptr;
