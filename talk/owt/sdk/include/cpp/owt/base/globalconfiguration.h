@@ -104,6 +104,13 @@ class GlobalConfiguration {
   }
 
   /**
+   @brief This function enables stream dump before decoder.
+  */
+  static void SetPreDecodeDumpEnabled(bool enabled) {
+    pre_decode_dump_enabled_ = enabled;
+  }
+
+  /**
    @brief This function sets the temporal layers for H.264.
 
    This API is added as upstream has not yet passed the temporal layer setting
@@ -198,6 +205,7 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
+
   static void GetPortRanges(int& audio_min,
       int& audio_max,
       int& video_min,
@@ -217,6 +225,7 @@ class GlobalConfiguration {
     data_min = data_min_;
     data_max = data_max_;
   }
+
   static int audio_min_;
   static int audio_max_;
   static int video_min_;
@@ -225,6 +234,12 @@ class GlobalConfiguration {
   static int screen_max_;
   static int data_min_;
   static int data_max_;
+
+  static bool GetPreDecodeDumpEnabled() {
+    return pre_decode_dump_enabled_;
+  }
+
+  static bool pre_decode_dump_enabled_;
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

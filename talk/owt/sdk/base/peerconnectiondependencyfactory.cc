@@ -17,6 +17,7 @@
 #include "webrtc/modules/audio_device/include/audio_device_factory.h"
 #endif
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/p2p/client/basic_port_allocator.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssl_adapter.h"
 #include "webrtc/rtc_base/thread.h"
@@ -108,16 +109,12 @@ void PeerConnectionDependencyFactory::
       video_max > video_min) || (screen_min > 0 && screen_max > screen_min) ||
       (data_min > 0 && data_max > data_min)) {
     field_trial_ += "OWT-IceUnbundle/Enabled/";
-    field_trial_ +=
-        "OWT-Ice-PortRanges/audioMin:" + std::to_string(audio_min) +
-        ",audioMax:" + std::to_string(audio_max) +
-        ",videoMin:" + std::to_string(video_min) +
-        ",videoMax:" + std::to_string(video_max) +
-        ",screenMin:" + std::to_string(screen_min) +
-        ",screenMax:" + std::to_string(screen_max) +
-        ",dataMin:" + std::to_string(data_min) +
-        ",dataMax:" + std::to_string(data_max) + "/";
   }
+  bool pre_decode_dump = GlobalConfiguration::GetPreDecodeDumpEnabled();
+  if (pre_decode_dump) {
+    field_trial_ += "WebRTC-DecoderDataDumpDirectory/./";
+  }
+
   // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
   int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
   field_trial_ +=
@@ -140,6 +137,10 @@ void PeerConnectionDependencyFactory::
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
       << "Failed to start threads";
+
+  network_manager_ = std::make_shared<rtc::BasicNetworkManager>();
+  packet_socket_factory_ =
+      std::make_shared<rtc::BasicPacketSocketFactory>(network_thread.get());
 
   // Use webrtc::VideoEn(De)coderFactory on iOS.
   std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
@@ -216,7 +217,29 @@ scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
-  return (pc_factory_->CreatePeerConnection(config, nullptr, nullptr, observer))
+  std::unique_ptr<cricket::PortAllocator> port_allocator;
+  port_allocator.reset(new cricket::BasicPortAllocator(
+      network_manager_.get(), packet_socket_factory_.get()));
+  // Handle port ranges.
+  int audio_min, audio_max, video_min, video_max, screen_min, screen_max,
+      data_min, data_max;
+  GlobalConfiguration::GetPortRanges(audio_min, audio_max, video_min, video_max,
+                                     screen_min, screen_max, data_min,
+                                     data_max);
+  if (audio_min > 0 && audio_max > audio_min) {
+    port_allocator->SetAudioPortRange(audio_min, audio_max);
+  }
+  if (video_min > 0 && video_max > video_min) {
+    port_allocator->SetVideoPortRange(video_min, video_max);
+  }
+  if (screen_min > 0 && screen_max > screen_min) {
+    port_allocator->SetScreenPortRange(screen_min, screen_max);
+  }
+  if (data_min > 0 && data_max > data_min) {
+    port_allocator->SetDataPortRange(data_min, data_max);
+  }
+  return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
+                                            nullptr, observer))
       .get();
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {

@@ -12,6 +12,8 @@
 #endif
 #include "webrtc/sdk/media_constraints.h"
 #include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/network.h"
+#include "webrtc/p2p/base/basic_packet_socket_factory.h"
 namespace owt {
 namespace base {
 using webrtc::MediaStreamInterface;
@@ -94,6 +96,8 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   std::unique_ptr<webrtc::ScopedCOMInitializer> com_initializer_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
 #endif
+  std::shared_ptr<rtc::BasicNetworkManager> network_manager_;
+  std::shared_ptr<rtc::BasicPacketSocketFactory> packet_socket_factory_;
 };
 }
 }  // namespace owt
