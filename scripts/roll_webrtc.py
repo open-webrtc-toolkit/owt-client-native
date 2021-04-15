@@ -23,7 +23,7 @@ DEPS_PATH = os.path.join(SRC_PATH, 'DEPS')
 # Regex expression to match commit hash of owt-deps-webrtc.
 REVISION_RE = re.compile(
     r"(?<=Var\('deps_webrtc_git'\) \+ '/owt-deps-webrtc' \+ '@' \+ ')[0-9a-f]{40}(?=',)")
-TARGET_BRANCH = 'roll'
+TARGET_BRANCH = 'owt-bot:roll'
 
 
 def webrtc_revision():
