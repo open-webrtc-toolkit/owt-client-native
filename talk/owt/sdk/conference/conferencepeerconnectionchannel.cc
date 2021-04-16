@@ -307,7 +307,13 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   for (auto& video_enc_param : configuration_.video) {
     video_codecs.push_back(video_enc_param.codec.name);
   }
-  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  bool is_screen = published_stream_.get() ? (published_stream_->Source().video ==
+                          owt::base::VideoSourceInfo::kScreenCast)
+                       : (subscribed_stream_.get()
+                          ? (subscribed_stream_->Source().video ==
+                                    owt::base::VideoSourceInfo::kScreenCast)
+                          : false);
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs, is_screen);
   webrtc::SessionDescriptionInterface* new_desc(
       webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
   peer_connection_->SetLocalDescription(observer, new_desc);

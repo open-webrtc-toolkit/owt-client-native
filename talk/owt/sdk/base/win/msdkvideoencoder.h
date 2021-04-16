@@ -14,6 +14,7 @@
 #include "mfxvideo++.h"
 #include "mfxvideo.h"
 #include "sysmem_allocator.h"
+#include "modules/video_coding/utility/ivf_file_writer.h"
 #include "webrtc/api/video_codecs/video_codec.h"
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/media/base/codec.h"
@@ -113,6 +114,9 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   // Gof related information for VP9 codec specific info.
   uint8_t gof_idx;
   webrtc::GofInfoVP9 gof;
+  std::unique_ptr<webrtc::IvfFileWriter> dump_writer;
+  bool enable_bitstream_dump = false;
+  std::string encoder_dump_file_name;
 };
 }  // namespace base
 }  // namespace owt

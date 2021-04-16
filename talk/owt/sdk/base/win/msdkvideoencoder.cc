@@ -6,20 +6,23 @@
 #include <vector>
 #include "libyuv/convert_from.h"
 #include "mfxcommon.h"
+#include "absl/algorithm/container.h"
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/win/d3d_allocator.h"
 #include "talk/owt/sdk/base/win/msdkvideobase.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9_globals.h"
-#include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/thread.h"
-#include "webrtc/media/base/vp9_profile.h"
 #include "webrtc/common_video/h264/h264_common.h"
 #ifndef DISABLE_H265
 #include "webrtc/common_video/h265/h265_common.h"
 #endif
+#include "webrtc/media/base/vp9_profile.h"
+#include "webrtc/rtc_base/bind.h"
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/system/file_wrapper.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/thread.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 #include "vp9/ratectrl_rtc.h"
 
 using namespace rtc;
@@ -95,6 +98,26 @@ MSDKVideoEncoder::MSDKVideoEncoder(const cricket::VideoCodec& format)
   gof.SetGofInfoVP9(webrtc::TemporalStructureMode::kTemporalStructureMode1);
   gof_idx = 0;
   rtp_codec_parameters = format;
+
+  encoder_dump_file_name =
+      webrtc::field_trial::FindFullName("WebRTC-EncoderDataDumpDirectory");
+  // Because '/' can't be used inside a field trial parameter, we use ';'
+  // instead.
+  // This is only relevant to WebRTC-EncoderDataDumpDirectory
+  // field trial. ';' is chosen arbitrary. Even though it's a legal character
+  // in some file systems, we can sacrifice ability to use it in the path to
+  // dumped video, since it's developers-only feature for debugging.
+  absl::c_replace(encoder_dump_file_name, ';', '/');
+  if (!encoder_dump_file_name.empty()) {
+    enable_bitstream_dump = true;
+    char filename_buffer[256];
+    rtc::SimpleStringBuilder ssb(filename_buffer);
+    ssb << encoder_dump_file_name << "/webrtc_send_stream_"
+        << rtc::TimeMicros() << ".ivf";
+    dump_writer =
+        webrtc::IvfFileWriter::Wrap(webrtc::FileWrapper::OpenWriteOnly(
+            ssb.str()), /* byte_limit= */ 100000000);
+  }
 }
 
 MSDKVideoEncoder::~MSDKVideoEncoder() {
@@ -400,7 +423,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
   vp9_rate_ctrl = VP9RateControl::Create(vp9_rc_config);
   memset(&frame_params, 0, sizeof(frame_params));
 
-  // MSDK is using ExtAvcTemporalLayers for HEVC as well. This should be fixed.
+  // TODO: MSDK is using ExtAvcTemporalLayers for HEVC as well. This should be fixed.
   if ((codec_id == MFX_CODEC_AVC || codec_id == MFX_CODEC_HEVC) && num_temporal_layers > 1) {
     mfxExtAvcTemporalLayers extAvcTemporalLayers;
     MSDK_ZERO_MEMORY(extAvcTemporalLayers);
@@ -823,6 +846,11 @@ retry:
     bs.DataOffset = 0;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+
+  if (enable_bitstream_dump && dump_writer.get()) {
+    dump_writer->WriteFrame(encodedFrame, codec_type);
+  }
+
   if (pbsData != nullptr) {
     delete[] pbsData;
     pbsData = nullptr;

@@ -111,6 +111,12 @@ class GlobalConfiguration {
   }
 
   /**
+   @brief This function enables stream dump after encoder.
+  */
+  static void SetPostEncodeDumpEnabled(bool enabled) {
+    post_encode_dump_enabled_ = enabled;
+  }
+  /**
    @brief This function sets the temporal layers for H.264.
 
    This API is added as upstream has not yet passed the temporal layer setting
@@ -235,11 +241,24 @@ class GlobalConfiguration {
   static int data_min_;
   static int data_max_;
 
+  /**
+   @brief This function enables dumping of bitstream before decoding.
+  */
   static bool GetPreDecodeDumpEnabled() {
     return pre_decode_dump_enabled_;
   }
 
   static bool pre_decode_dump_enabled_;
+
+  /**
+   @brief This function enables dumping of bitstream after encoding.
+  */
+  static bool GetPostEncodeDumpEnabled() {
+    return post_encode_dump_enabled_;
+  }
+
+  static bool post_encode_dump_enabled_;
+
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

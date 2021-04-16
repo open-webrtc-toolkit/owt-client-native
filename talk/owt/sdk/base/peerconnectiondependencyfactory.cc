@@ -115,6 +115,11 @@ void PeerConnectionDependencyFactory::
     field_trial_ += "WebRTC-DecoderDataDumpDirectory/./";
   }
 
+  bool post_encode_dump = GlobalConfiguration::GetPostEncodeDumpEnabled();
+  if (post_encode_dump) {
+    field_trial_ += "WebRTC-EncoderDataDumpDirectory/./";
+  }
+
   // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
   int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
   field_trial_ +=

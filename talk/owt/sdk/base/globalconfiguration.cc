@@ -30,5 +30,6 @@ int GlobalConfiguration::screen_max_ = 0;
 int GlobalConfiguration::data_min_ = 0;
 int GlobalConfiguration::data_max_ = 0;
 bool GlobalConfiguration::pre_decode_dump_enabled_ = false;
+bool GlobalConfiguration::post_encode_dump_enabled_ = false;
 }  // namespace base
 }

@@ -14,7 +14,7 @@ class SdpUtils {
   static std::string SetPreferAudioCodecs(const std::string& sdp,
                                          std::vector<AudioCodec>& codec);
   static std::string SetPreferVideoCodecs(const std::string& sdp,
-                                         std::vector<VideoCodec>& codec);
+                                         std::vector<VideoCodec>& codec, bool set_quality = false);
  private:
   /**
    @brief Replace SDP for preferred codec.
@@ -24,7 +24,7 @@ class SdpUtils {
    */
   static std::string SetPreferCodecs(const std::string& sdp,
                                      std::vector<std::string>& codec_name,
-                                     bool is_audio);
+                                     bool is_audio, bool set_quality = false);
   static std::vector<std::string> GetCodecValues(const std::string& sdp,
                                                  std::string& codec_name,
                                                  bool is_audio);
