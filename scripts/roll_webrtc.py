@@ -23,7 +23,7 @@ DEPS_PATH = os.path.join(SRC_PATH, 'DEPS')
 # Regex expression to match commit hash of owt-deps-webrtc.
 REVISION_RE = re.compile(
     r"(?<=Var\('deps_webrtc_git'\) \+ '/owt-deps-webrtc' \+ '@' \+ ')[0-9a-f]{40}(?=',)")
-TARGET_BRANCH = 'owt-bot:roll'
+TARGET_BRANCH = 'roll'
 
 
 def webrtc_revision():
@@ -72,7 +72,8 @@ def pr(old_revision, new_revision, base_branch, token):
     '''Create a pull request. If a PR is already open for webrtc roller, do nothing.'''
     # Check if a pull request exists.
     # REST API ref: https://docs.github.com/en/rest/reference/pulls#list-pull-requests
-    params = {'base': base_branch, 'head': TARGET_BRANCH, 'state': "open"}
+    params = {'base': base_branch,
+              'head': 'owt-bot:%s' % (TARGET_BRANCH), 'state': "open"}
     url = 'https://api.github.com/repos/open-webrtc-toolkit/owt-client-native/pulls'
     headers = {
         "Authorization": "token %s" % token,
@@ -104,7 +105,7 @@ def pr(old_revision, new_revision, base_branch, token):
                 return 0
     # Create a new PR.
     create_params = {'title': commit_message(
-        old_revision, new_revision), 'head': TARGET_BRANCH, 'base': base_branch}
+        old_revision, new_revision), 'head': 'owt-bot:%s' % (TARGET_BRANCH), 'base': base_branch}
     create_response = requests.post(url, json=create_params, headers=headers)
     if create_response.status_code != 201:
         print('Failed to create pull request, REST response status code is %d.' % (
