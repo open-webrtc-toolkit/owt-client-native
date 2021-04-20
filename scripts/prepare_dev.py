@@ -44,7 +44,7 @@ patchList = [
     ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
-    ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH)
+    ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
     ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH) 
 ]
 
