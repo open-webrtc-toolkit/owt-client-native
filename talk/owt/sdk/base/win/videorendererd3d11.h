@@ -29,6 +29,7 @@
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_sink_interface.h"
 #include "webrtc/rtc_base/thread.h"
+#include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace owt {
@@ -82,7 +83,7 @@ class WebrtcVideoRendererD3D11Impl
   CComPtr<ID3D11VideoProcessorEnumerator> video_processor_enum_;
 
   // Handle of texture holding decoded image.
-  rtc::CriticalSection d3d11_texture_lock_;
+  webrtc::Mutex d3d11_texture_lock_;
   ID3D11Texture2D* d3d11_texture_ = nullptr;
   ID3D11Texture2D* d3d11_staging_texture_ = nullptr;
   D3D11_TEXTURE2D_DESC d3d11_texture_desc_;

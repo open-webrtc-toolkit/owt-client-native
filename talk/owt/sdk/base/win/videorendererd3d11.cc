@@ -160,7 +160,7 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
     return false;
   }
 
-  rtc::CritScope lock(&d3d11_texture_lock_);
+  webrtc::MutexLock lock(&d3d11_texture_lock_);
   if (swap_chain_for_hwnd_) {
     DXGI_SWAP_CHAIN_DESC desc;
     ZeroMemory(&desc, sizeof(desc));
@@ -303,7 +303,7 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
     if (desc.BufferDesc.Width != (unsigned int)window_width ||
         desc.BufferDesc.Height != (unsigned int)window_height) {
       // Hold the lock to avoid rendering when resizing buffer.
-      rtc::CritScope lock(&d3d11_texture_lock_);
+      webrtc::MutexLock lock(&d3d11_texture_lock_);
       d3d11_device_context_->ClearState();
 
       hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
@@ -489,7 +489,7 @@ bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(int width,
 }
 
 void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
-  rtc::CritScope lock(&d3d11_texture_lock_);
+  webrtc::MutexLock lock(&d3d11_texture_lock_);
   HRESULT hr = S_OK;
 
   if (swap_chain_for_hwnd_ == nullptr) {
@@ -582,7 +582,7 @@ void WebrtcVideoRendererD3D11Impl::RenderI420Frame_DX11(
     return;
   }
   {
-    rtc::CritScope lock(&d3d11_texture_lock_);
+    webrtc::MutexLock lock(&d3d11_texture_lock_);
     if (d3d11_texture_) {
       d3d11_texture_->Release();
       d3d11_texture_ = nullptr;
@@ -627,7 +627,7 @@ void WebrtcVideoRendererD3D11Impl::RenderI420Frame_DX11(
   }
 
   {
-    rtc::CritScope lock1(&d3d11_texture_lock_);
+    webrtc::MutexLock lock(&d3d11_texture_lock_);
     d3d11_device_context_->CopyResource(d3d11_texture_, d3d11_staging_texture_);
     d3d11_texture_->GetDesc(&d3d11_texture_desc_);
   }

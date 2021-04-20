@@ -103,7 +103,7 @@ void PeerConnectionDependencyFactory::
   GlobalConfiguration::GetPortRanges(audio_min, audio_max, video_min, video_max,
                                      screen_min, screen_max, data_min,
                                      data_max);
-  RTC_LOG(LS_ERROR) << "Port ranges:"
+  RTC_LOG(LS_INFO) << "Port ranges:"
                     << "audio_min:" << audio_min << ",audio_max:" << audio_max;
   if ((audio_min > 0 && audio_max > audio_min) || (video_min > 0 &&
       video_max > video_min) || (screen_min > 0 && screen_max > screen_min) ||
@@ -225,24 +225,6 @@ PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
   std::unique_ptr<cricket::PortAllocator> port_allocator;
   port_allocator.reset(new cricket::BasicPortAllocator(
       network_manager_.get(), packet_socket_factory_.get()));
-  // Handle port ranges.
-  int audio_min, audio_max, video_min, video_max, screen_min, screen_max,
-      data_min, data_max;
-  GlobalConfiguration::GetPortRanges(audio_min, audio_max, video_min, video_max,
-                                     screen_min, screen_max, data_min,
-                                     data_max);
-  if (audio_min > 0 && audio_max > audio_min) {
-    port_allocator->SetAudioPortRange(audio_min, audio_max);
-  }
-  if (video_min > 0 && video_max > video_min) {
-    port_allocator->SetVideoPortRange(video_min, video_max);
-  }
-  if (screen_min > 0 && screen_max > screen_min) {
-    port_allocator->SetScreenPortRange(screen_min, screen_max);
-  }
-  if (data_min > 0 && data_max > data_min) {
-    port_allocator->SetDataPortRange(data_min, data_max);
-  }
   return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
                                             nullptr, observer))
       .get();

@@ -50,7 +50,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'deps_webrtc_git': 'https://github.com/open-webrtc-toolkit',
+  'deps_webrtc_git': 'https://github.com/taste1981',
   'chromium_revision': '56e883537df53a3b3cbc39c264799bedb695b5f9',
   'boringssl_git': 'https://boringssl.googlesource.com',
   # Three lines of non-changing comments so that
