@@ -17,12 +17,6 @@
 namespace owt {
 namespace base {
 
-const char kAV1FmtpProfileId[] = "profile";
-const char kAV1FmtpLevelId[] = "level-idx";
-
-const char kHEVCFmtpProfileId[] = "profile-id";
-const char kHEVCFmtpLevelId[] = "level-id";
-
 static const std::map<const std::string, const Resolution> resolution_name_map = {
     {"cif", Resolution(352, 288)},
     {"vga", Resolution(640, 480)},
@@ -190,6 +184,7 @@ absl::optional<H265ProfileId> StringToH265Profile(const std::string& str) {
 
 absl::optional<AV1Profile> MediaUtils::ParseSdpForAV1Profile(
     const webrtc::SdpVideoFormat::Parameters& params) {
+  const char kAV1FmtpProfileId[] = "profile";
   const auto profile_it = params.find(kAV1FmtpProfileId);
   if (profile_it == params.end())
     return AV1Profile::kMain;
@@ -199,6 +194,7 @@ absl::optional<AV1Profile> MediaUtils::ParseSdpForAV1Profile(
 
 absl::optional<H265ProfileId> MediaUtils::ParseSdpForH265Profile(
     const webrtc::SdpVideoFormat::Parameters& params) {
+  const char kHEVCFmtpProfileId[] = "profile-id";
   const auto profile_it = params.find(kHEVCFmtpProfileId);
   if (profile_it == params.end())
     return H265ProfileId::kMain;
