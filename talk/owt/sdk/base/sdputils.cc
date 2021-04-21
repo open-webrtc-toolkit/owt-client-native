@@ -42,9 +42,9 @@ std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,
   return cur_sdp;
 }
 std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
-                                          std::vector<VideoCodec>& codec, bool set_quality) {
+                                          std::vector<VideoCodec>& codec, bool qos_mode) {
   std::string cur_sdp(original_sdp);
-  if (codec.size() == 0 && !set_quality)
+  if (codec.size() == 0 && !qos_mode)
     return cur_sdp;
   std::vector<VideoCodec> rcodecs(codec.rbegin(), codec.rend());
   std::vector<std::string> codec_names;
@@ -56,7 +56,7 @@ std::string SdpUtils::SetPreferVideoCodecs(const std::string& original_sdp,
     }
     codec_names.push_back(codec_it->second);
   }
-  cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, false, set_quality);
+  cur_sdp = SdpUtils::SetPreferCodecs(cur_sdp, codec_names, false, qos_mode);
   return cur_sdp;
 }
 
@@ -82,7 +82,7 @@ std::vector<std::string> SdpUtils::GetCodecValues(const std::string& sdp,
 // TODO: unify to std::regex impl for Linux builds.
 std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
     std::vector<std::string>& codec_names,
-    bool is_audio, bool set_quality) {
+    bool is_audio, bool qos_mode) {
   // Search all rtx maps in the sdp.
   std::regex reg_fmtp_apt(
       "a=fmtp:(\\d+) apt=(\\d+)(?=[\r]?[\n]?)",
@@ -204,7 +204,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
         std::regex_replace(sdp, reg_m_line, m_line_stream.str());
     after_strip = before_strip;
 
-    if (!is_audio && set_quality) {
+    if (!is_audio && qos_mode) {
       // Search for c-line and add a=priority line after it.
       std::regex reg_c_line("c=IN .*\\r\\n");
       std::smatch c_line_match;
@@ -243,7 +243,7 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       }
     }
   } else {
-    if (!is_audio && set_quality) {
+    if (!is_audio && qos_mode) {
       // Search for c-line and add a=priority line after it.
       std::regex reg_c_line("c=IN .*\\r\\n");
       std::smatch c_line_match;

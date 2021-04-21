@@ -276,7 +276,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           VideoDecoderCapability vp9_cap;
           vp9_cap.codec_type = owt::base::VideoCodec::kVp9;
           vp9_cap.hardware_accelerated = true;
-          vp9_cap.max_resolution = VideoResolutionMax::k8K;
+          vp9_cap.max_resolution = {7680, 4320};
           // Starting from KBL we support both 8-bit and 10-bit,so
           // not speficying profiles here. BXT/APL only supports
           // 8-bit but not enabled for Windows SDK.
@@ -291,7 +291,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           VideoDecoderCapability avc_cap;
           avc_cap.codec_type = owt::base::VideoCodec::kH264;
           avc_cap.hardware_accelerated = true;
-          avc_cap.max_resolution = VideoResolutionMax::k4K;
+          avc_cap.max_resolution = {3840, 2160};
           capabilities.push_back(avc_cap);
         }
       }
@@ -308,7 +308,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           h265_cap.hardware_accelerated = true;
           // Starting from KBL we support both 8-bit and 10-bit, so
           // not specifying profiles here.
-          h265_cap.max_resolution = VideoResolutionMax::k8K;
+          h265_cap.max_resolution = {7680, 4320};
           capabilities.push_back(h265_cap);
         }
       }
@@ -329,7 +329,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
             VideoDecoderCapability av1_cap;
             av1_cap.codec_type = owt::base::VideoCodec::kAv1;
             av1_cap.hardware_accelerated = true;
-            av1_cap.max_resolution = VideoResolutionMax::k8K;
+            av1_cap.max_resolution = {7680, 4320};
             // We support all 3 profiles so not specifying them here.
             capabilities.push_back(av1_cap);
           }
@@ -347,7 +347,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           vp8_cap.hardware_accelerated = true;
           // Starting from KBL we support both 8-bit and 10-bit, so
           // not specifying profiles here.
-          vp8_cap.max_resolution = VideoResolutionMax::k4K;
+          vp8_cap.max_resolution = {3840, 2160};
           capabilities.push_back(vp8_cap);
         }
       }

@@ -59,19 +59,19 @@ struct Resolution {
 };
 
 /// This class represents a camera capability.
-struct CameraCapability {
+struct VideoTrackCapabilities {
   /// Construct an instance with width and height equal to 0.
-  explicit CameraCapability() : width(0), height(0), fps(0) {}
+  explicit VideoTrackCapabilities() : width(0), height(0), frameRate(0) {}
   /// Construct an instance with specify width and height.
-  CameraCapability(unsigned long w, unsigned long h, int fps)
-      : width(w), height(h), fps(fps) {}
-  bool operator==(const CameraCapability& rhs) const {
+  VideoTrackCapabilities(unsigned long w, unsigned long h, int fps)
+      : width(w), height(h), frameRate(fps) {}
+  bool operator==(const VideoTrackCapabilities& rhs) const {
     return this->width == rhs.width && this->height == rhs.height &&
-           this->fps == rhs.fps ;
+           this->frameRate == rhs.frameRate;
   }
   unsigned long width;
   unsigned long height;
-  int32_t fps;
+  int32_t frameRate;
 };
 
 /// Audio codec parameters for an audio track.
@@ -119,6 +119,7 @@ struct RtpEncodingParameters {
   // Called "encodingId" in ORTC.
   std::string rid = "";
 
+  // The RTPSender/RTPReceiver's priority. Will impact the DSCP flag on Linux.
   NetworkPriority priority = NetworkPriority::kDefault;
 };
 

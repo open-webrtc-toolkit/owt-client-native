@@ -215,8 +215,7 @@ void P2PClient::OnSignalingMessage(const std::string& message,
       RTC_LOG(LS_WARNING) << "Non-existed chat cannot be stopped.";
       return;
     }
-  } 
-  else if (message.find("\"type\":\"offer\"") != std::string::npos) {
+  } else if (message.find("\"type\":\"offer\"") != std::string::npos) {
     auto pcc = GetPeerConnectionChannel(remote_id);
     if (pcc->HaveLocalOffer() && local_id_.compare(remote_id) > 0) {
       // Make the remote side as the publisher.

@@ -35,22 +35,12 @@ struct VideoEncoderCapability {
   std::vector<SamplingMode> sampling_modes;
 };
 
-enum class VideoResolutionMax : int {
-  kHD = 0,     // 720p
-  kFullHD,     // 1080p
-  k2K,
-  k4K,
-  k8K,
-  k16K,
-  k32K
-};
-
 struct VideoDecoderCapability {
   owt::base::VideoCodec codec_type;
   bool hardware_accelerated;
   // Use by decoder factory to generate a subset of
   // profiles supported for each codec.
-  VideoResolutionMax max_resolution;
+  owt::base::Resolution max_resolution;
   CodecSpecificInfoUnion codec_specific;
 };
 

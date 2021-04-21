@@ -24,7 +24,7 @@ class DeviceUtils {
   static int GetVideoCaptureDeviceIndex(const std::string& id);
   /// Get camera device's user friendly name by index.
   static std::string GetDeviceNameByIndex(int index);
-  static std::vector<CameraCapability> VideoCapturerSupportedCapabilities(
+  static std::vector<VideoTrackCapabilities> VideoCapturerSupportedCapabilities(
       const std::string& id);
 };
 }

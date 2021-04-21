@@ -21,14 +21,11 @@ AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
 AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
     true, true, true, true};
 #endif
-int GlobalConfiguration::audio_min_ = 0;
-int GlobalConfiguration::audio_max_ = 0;
-int GlobalConfiguration::video_min_ = 0;
-int GlobalConfiguration::video_max_ = 0;
-int GlobalConfiguration::screen_min_ = 0;
-int GlobalConfiguration::screen_max_ = 0;
-int GlobalConfiguration::data_min_ = 0;
-int GlobalConfiguration::data_max_ = 0;
+IcePortRanges GlobalConfiguration::ice_port_ranges_ = {
+    {0, 0},
+    {0, 0},
+    {0, 0},
+    {0, 0}};
 bool GlobalConfiguration::pre_decode_dump_enabled_ = false;
 bool GlobalConfiguration::post_encode_dump_enabled_ = false;
 }  // namespace base

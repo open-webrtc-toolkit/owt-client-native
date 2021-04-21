@@ -102,9 +102,10 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   return resolutions;
 }
 
-std::vector<CameraCapability> DeviceUtils::VideoCapturerSupportedCapabilities(
+std::vector<VideoTrackCapabilities>
+DeviceUtils::VideoCapturerSupportedCapabilities(
     const std::string& id) {
-  std::vector<CameraCapability> resolutions;
+  std::vector<VideoTrackCapabilities> resolutions;
   webrtc::VideoCaptureCapability capability;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -113,7 +114,7 @@ std::vector<CameraCapability> DeviceUtils::VideoCapturerSupportedCapabilities(
   } else {
     for (int32_t i = 0; i < info->NumberOfCapabilities(id.c_str()); i++) {
       if (info->GetCapability(id.c_str(), i, capability) == 0) {
-        resolutions.push_back(CameraCapability(
+        resolutions.push_back(VideoTrackCapabilities(
             capability.width, capability.height, capability.maxFPS));
       } else {
         RTC_LOG(LS_WARNING) << "Failed to get capability.";
@@ -141,7 +142,7 @@ std::vector<CameraCapability> DeviceUtils::VideoCapturerSupportedCapabilities(
       if (found) {
         for (int32_t i = 0; i < info->NumberOfCapabilities(vcm_id); i++) {
           if (info->GetCapability(vcm_id, i, capability) == 0) {
-            resolutions.push_back(CameraCapability(
+            resolutions.push_back(VideoTrackCapabilities(
                 capability.width, capability.height, capability.maxFPS));
           } else {
             RTC_LOG(LS_WARNING) << "Failed to get capability.";
