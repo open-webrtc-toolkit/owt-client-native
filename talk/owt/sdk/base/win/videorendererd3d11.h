@@ -56,8 +56,8 @@ class WebrtcVideoRendererD3D11Impl
 
   // Render window objects
   HWND wnd_ = nullptr;
-  int window_width = 0;
-  int window_height = 0;
+  int window_width_ = 0;
+  int window_height_ = 0;
 
   // D3D11 objects
   ID3D10Multithread* p_mt = nullptr;

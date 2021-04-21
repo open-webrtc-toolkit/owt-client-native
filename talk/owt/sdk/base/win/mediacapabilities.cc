@@ -14,8 +14,8 @@
 namespace owt {
 namespace base {
 
-std::mutex MediaCapabilities::get_singleton_mutex;
-MediaCapabilities* MediaCapabilities::singleton = nullptr;
+std::mutex MediaCapabilities::get_singleton_mutex_;
+MediaCapabilities* MediaCapabilities::singleton_ = nullptr;
 
 std::vector<VideoEncoderCapability>
 MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
@@ -53,8 +53,8 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
 
   std::vector<VideoEncoderCapability> capabilities;
   // Check platform type.
-  if (inited) {
-    unsigned short platform_code = mfx_platform.CodeName;
+  if (inited_) {
+    unsigned short platform_code = mfx_platform_.CodeName;
     if (platform_code >= MFX_PLATFORM_HASWELL) {
       support_h264 = true;
       if (platform_code > MFX_PLATFORM_BROADWELL)
@@ -74,7 +74,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
       }
 #endif
 #if (MFX_VERSION >= 1031)
-      if (mfx_platform.MediaAdapterType == MFX_MEDIA_DISCRETE)
+      if (mfx_platform_.MediaAdapterType == MFX_MEDIA_DISCRETE)
         is_discrete_graphics = true;
 #endif
       // Query platform capability for specific codec. Only check for
@@ -87,14 +87,14 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_VP9;
           video_param.mfx.CodecProfile = MFX_PROFILE_VP9_0;
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
             support_vp9_8 &= false;
 
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_VP9;
           video_param.mfx.CodecProfile = MFX_PROFILE_VP9_2;
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
             support_vp9_10 &= false;
 
@@ -144,14 +144,14 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
           // load plugins here.
           video_param.mfx.CodecId = MFX_CODEC_HEVC;
           video_param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
             support_hevc_8 &= false;
 
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_HEVC;
           video_param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
             support_hevc_10 &= false;
 
@@ -160,7 +160,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_HEVC;
           video_param.mfx.CodecProfile = MFX_PROFILE_HEVC_SCC;
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts == MFX_ERR_NONE)
             support_hevc_scc = true;
 #endif
@@ -224,7 +224,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_AVC;
           // Don't check profiles. We know we can support from CB up to High.
-          sts = mfx_encoder->Query(nullptr, &video_param);
+          sts = mfx_encoder_->Query(nullptr, &video_param);
           if (sts != MFX_ERR_NONE)
             support_h264 &= false;
 
@@ -255,11 +255,11 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
     std::vector<owt::base::VideoCodec>& codec_types) {
   std::vector<VideoDecoderCapability> capabilities;
 
-  if (inited) {
+  if (inited_) {
     mfxStatus sts = MFX_ERR_NONE;
     mfxVideoParam video_param;
 
-    unsigned short platform_code = mfx_platform.CodeName;
+    unsigned short platform_code = mfx_platform_.CodeName;
     for (auto& codec : codec_types) {
       if (codec == owt::base::VideoCodec::kVp9) {
         if (platform_code < MFX_PLATFORM_KABYLAKE)
@@ -268,7 +268,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_VP9;
 
-        sts = mfx_decoder->Query(nullptr, &video_param);
+        sts = mfx_decoder_->Query(nullptr, &video_param);
         if (sts == MFX_ERR_NONE) {
           VideoDecoderCapability vp9_cap;
           vp9_cap.codec_type = owt::base::VideoCodec::kVp9;
@@ -283,7 +283,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_AVC;
 
-        sts = mfx_decoder->Query(nullptr, &video_param);
+        sts = mfx_decoder_->Query(nullptr, &video_param);
         if (sts == MFX_ERR_NONE) {
           VideoDecoderCapability avc_cap;
           avc_cap.codec_type = owt::base::VideoCodec::kH264;
@@ -296,7 +296,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
       else if (codec == owt::base::VideoCodec::kH265) {
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_HEVC;
-        sts = mfx_decoder->Query(nullptr, &video_param);
+        sts = mfx_decoder_->Query(nullptr, &video_param);
         RTC_LOG(LS_ERROR) << "Johny---H265 query result:" << sts;
 
         if (sts == MFX_ERR_NONE) {
@@ -321,7 +321,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           memset(&video_param, 0, sizeof(video_param));
           video_param.mfx.CodecId = MFX_CODEC_AV1;
 
-          sts = mfx_decoder->Query(nullptr, &video_param);
+          sts = mfx_decoder_->Query(nullptr, &video_param);
           if (sts == MFX_ERR_NONE) {
             VideoDecoderCapability av1_cap;
             av1_cap.codec_type = owt::base::VideoCodec::kAv1;
@@ -336,7 +336,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_VP8;
 
-        sts = mfx_decoder->Query(nullptr, &video_param);
+        sts = mfx_decoder_->Query(nullptr, &video_param);
         if (sts == MFX_ERR_NONE) {
           // Consider removing this from supported list?
           VideoDecoderCapability vp8_cap;
@@ -354,59 +354,59 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
 }
 
 MediaCapabilities* MediaCapabilities::Get() {
-  std::lock_guard<std::mutex> lock(get_singleton_mutex);
+  std::lock_guard<std::mutex> lock(get_singleton_mutex_);
 
-  if (singleton == nullptr) {
-    singleton = new MediaCapabilities();
+  if (singleton_ == nullptr) {
+    singleton_ = new MediaCapabilities();
 
-    if (singleton && !singleton->Init()) {
-      delete singleton;
-      singleton = nullptr;
+    if (singleton_ && !singleton_->Init()) {
+      delete singleton_;
+      singleton_ = nullptr;
     }
   }
 
-  return singleton;
+  return singleton_;
 }
 
 MediaCapabilities::MediaCapabilities() {}
 
 MediaCapabilities::~MediaCapabilities() {
-  if (mfx_encoder) {
-    mfx_encoder->Close();
-    mfx_encoder.reset();
+  if (mfx_encoder_) {
+    mfx_encoder_->Close();
+    mfx_encoder_.reset();
   }
-  if (mfx_decoder) {
-    mfx_decoder->Close();
-    mfx_decoder.reset();
+  if (mfx_decoder_) {
+    mfx_decoder_->Close();
+    mfx_decoder_.reset();
   }
-  if (msdk_factory && mfx_session) {
-    msdk_factory->DestroySession(mfx_session);
+  if (msdk_factory_ && mfx_session_) {
+    msdk_factory_->DestroySession(mfx_session_);
   }
 }
 
 bool MediaCapabilities::Init() {
   bool res = false;
-  msdk_factory = owt::base::MSDKFactory::Get();
-  if (!msdk_factory)
+  msdk_factory_ = owt::base::MSDKFactory::Get();
+  if (!msdk_factory_)
     goto failed;
 
-  mfx_session = msdk_factory->CreateSession();
-  if (!mfx_session)
+  mfx_session_ = msdk_factory_->CreateSession();
+  if (!mfx_session_)
     goto failed;
 
   // Create the underlying MFXVideoDECODE and MFXVideoENCODE
   // instances.
-  mfx_encoder.reset(new MFXVideoENCODE(*mfx_session));
-  if (!mfx_encoder)
+  mfx_encoder_.reset(new MFXVideoENCODE(*mfx_session_));
+  if (!mfx_encoder_)
     goto failed;
 
-  mfx_decoder.reset(new MFXVideoDECODE(*mfx_session));
-  if (!mfx_decoder)
+  mfx_decoder_.reset(new MFXVideoDECODE(*mfx_session_));
+  if (!mfx_decoder_)
     goto failed;
 
-  res = msdk_factory->QueryPlatform(mfx_session, &mfx_platform);
+  res = msdk_factory_->QueryPlatform(mfx_session_, &mfx_platform_);
   if (res)
-    inited = true;
+    inited_ = true;
 
 failed:
   return res;

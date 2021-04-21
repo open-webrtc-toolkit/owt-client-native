@@ -21,47 +21,47 @@ namespace owt {
 namespace base {
 
 int32_t MSDKVideoDecoder::Release() {
-    WipeMfxBitstream(&m_mfxBS);
-    if (m_mfxSession) {
+    WipeMfxBitstream(&m_mfx_bs_);
+    if (m_mfx_session_) {
       MSDKFactory* factory = MSDKFactory::Get();
       if (factory) {
-        factory->UnloadMSDKPlugin(m_mfxSession, &m_pluginID);
-        factory->DestroySession(m_mfxSession);
+        factory->UnloadMSDKPlugin(m_mfx_session_, &m_plugin_id_);
+        factory->DestroySession(m_mfx_session_);
       }
     }
-    m_pMFXAllocator.reset();
-    MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
-    inited = false;
+    m_pmfx_allocator_.reset();
+    MSDK_SAFE_DELETE_ARRAY(m_pinput_surfaces_);
+    inited_ = false;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
 MSDKVideoDecoder::MSDKVideoDecoder()
-    : width(0),
-      height(0),
-      decoder_thread(new rtc::Thread(rtc::SocketServer::CreateDefault())) {
-  decoder_thread->SetName("MSDKVideoDecoderThread", nullptr);
-  RTC_CHECK(decoder_thread->Start())
+    : width_(0),
+      height_(0),
+      decoder_thread_(new rtc::Thread(rtc::SocketServer::CreateDefault())) {
+  decoder_thread_->SetName("MSDKVideoDecoderThread", nullptr);
+  RTC_CHECK(decoder_thread_->Start())
       << "Failed to start MSDK video decoder thread";
-  MSDK_ZERO_MEMORY(m_mfxVideoParams);
-  MSDK_ZERO_MEMORY(m_mfxResponse);
-  MSDK_ZERO_MEMORY(m_mfxBS);
-  m_pInputSurfaces = nullptr;
+  MSDK_ZERO_MEMORY(m_pmfx_video_params_);
+  MSDK_ZERO_MEMORY(m_mfx_response_);
+  MSDK_ZERO_MEMORY(m_mfx_bs_);
+  m_pinput_surfaces_ = nullptr;
   m_video_param_extracted = false;
-  m_decBsOffset = 0;
-  inited = false;
-  surface_handle.reset(new D3D11ImageHandle());
+  m_dec_bs_offset_ = 0;
+  inited_ = false;
+  surface_handle_.reset(new D3D11ImageHandle());
 }
 
 MSDKVideoDecoder::~MSDKVideoDecoder() {
   ntp_time_ms_.clear();
   timestamps_.clear();
-  if (decoder_thread.get() != nullptr){
-    decoder_thread->Stop();
+  if (decoder_thread_.get() != nullptr){
+    decoder_thread_->Stop();
   }
 }
 
 void MSDKVideoDecoder::CheckOnCodecThread() {
-  RTC_CHECK(decoder_thread.get() ==
+  RTC_CHECK(decoder_thread_.get() ==
             rtc::ThreadManager::Instance()->CurrentThread())
       << "Running on wrong thread!";
 }
@@ -98,14 +98,14 @@ bool MSDKVideoDecoder::CreateD3D11Device() {
   }
   mfxU32 adapter_idx = adapters.Adapters[0].Number;
 
-  hr = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&m_pDXGIFactory));
+  hr = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&m_pdxgi_factory_));
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR)
         << "Failed to create dxgi factory for adatper enumeration.";
     return false;
   }
 
-  hr = m_pDXGIFactory->EnumAdapters(adapter_idx, &m_pAdapter);
+  hr = m_pdxgi_factory_->EnumAdapters(adapter_idx, &m_padapter_);
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "Failed to enum adapter for specified adapter index.";
     return false;
@@ -114,24 +114,24 @@ bool MSDKVideoDecoder::CreateD3D11Device() {
   // On DG1 this setting driver type to hardware will result-in device
   // creation failure.
   hr = D3D11CreateDevice(
-      m_pAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, feature_levels,
+      m_padapter_, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, feature_levels,
       sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
-      &d3d11_device, &feature_levels_out, &d3d11_device_context);
+      &d3d11_device_, &feature_levels_out, &d3d11_device_context_);
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "Failed to create d3d11 device for decoder";
     return false;
   }
-  if (d3d11_device) {
-    hr = d3d11_device->QueryInterface(__uuidof(ID3D11VideoDevice),
-                                      (void**)&d3d11_video_device);
+  if (d3d11_device_) {
+    hr = d3d11_device_->QueryInterface(__uuidof(ID3D11VideoDevice),
+                                      (void**)&d3d11_video_device_);
     if (FAILED(hr)) {
       RTC_LOG(LS_ERROR) << "Failed to get d3d11 video device.";
       return false;
     }
   }
-  if (d3d11_device_context) {
-    hr = d3d11_device_context->QueryInterface(__uuidof(ID3D11VideoContext),
-                                              (void**)&d3d11_video_context);
+  if (d3d11_device_context_) {
+    hr = d3d11_device_context_->QueryInterface(__uuidof(ID3D11VideoContext),
+                                              (void**)&d3d11_video_context_);
     if (FAILED(hr)) {
       RTC_LOG(LS_ERROR) << "Failed to get d3d11 video context.";
       return false;
@@ -139,7 +139,7 @@ bool MSDKVideoDecoder::CreateD3D11Device() {
   }
   // Turn on multi-threading for the context
   {
-    CComQIPtr<ID3D10Multithread> p_mt(d3d11_device);
+    CComQIPtr<ID3D10Multithread> p_mt(d3d11_device_);
     if (p_mt) {
       p_mt->SetMultithreadProtected(true);
     }
@@ -155,20 +155,20 @@ int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, in
     RTC_LOG(LS_ERROR) << "Invalid codec settings passed to decoder";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  codec_type  = codecSettings->codecType;
+  codec_type_  = codecSettings->codecType;
   timestamps_.clear();
   ntp_time_ms_.clear();
 
   if (&codec_ != codecSettings)
     codec_ = *codecSettings;
 
-  return decoder_thread->Invoke<int32_t>(RTC_FROM_HERE,
+  return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
       Bind(&MSDKVideoDecoder::InitDecodeOnCodecThread, this));
 }
 
 int32_t MSDKVideoDecoder::Reset() {
-  m_pmfxDEC->Close();
-  m_pmfxDEC.reset(new MFXVideoDECODE(*m_mfxSession));
+  m_pmfx_dec_->Close();
+  m_pmfx_dec_.reset(new MFXVideoDECODE(*m_mfx_session_));
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -182,22 +182,22 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   m_video_param_extracted = false;
 
   mfxStatus sts;
-  width = codec_.width;
-  height = codec_.height;
+  width_ = codec_.width;
+  height_ = codec_.height;
   uint32_t codec_id = MFX_CODEC_AVC;
 
-  if (inited) {
-    if (m_pmfxDEC)
-      m_pmfxDEC->Close();
-    MSDK_SAFE_DELETE_ARRAY(m_pInputSurfaces);
+  if (inited_) {
+    if (m_pmfx_dec_)
+      m_pmfx_dec_->Close();
+    MSDK_SAFE_DELETE_ARRAY(m_pinput_surfaces_);
 
-    if (m_pMFXAllocator) {
-      m_pMFXAllocator->Free(m_pMFXAllocator->pthis, &m_mfxResponse);
+    if (m_pmfx_allocator_) {
+      m_pmfx_allocator_->Free(m_pmfx_allocator_->pthis, &m_mfx_response_);
     }
   } else {
     MSDKFactory* factory = MSDKFactory::Get();
-    m_mfxSession = factory->CreateSession();
-    if (!m_mfxSession) {
+    m_mfx_session_ = factory->CreateSession();
+    if (!m_mfx_session_) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
@@ -212,7 +212,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
       codec_id = MFX_CODEC_AV1;
     }
 
-    //if (!factory->LoadDecoderPlugin(codec_id, m_mfxSession, &m_pluginID)) {
+    //if (!factory->LoadDecoderPlugin(codec_id, m_mfx_session_, &m_plugin_id_)) {
     //  return WEBRTC_VIDEO_CODEC_ERROR;
     //}
 
@@ -221,35 +221,35 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     }
 
     mfxHandleType handle_type = MFX_HANDLE_D3D11_DEVICE;
-    m_mfxSession->SetHandle(handle_type, d3d11_device.p);
+    m_mfx_session_->SetHandle(handle_type, d3d11_device_.p);
 
     // Allocate and initalize the D3D11 frame allocator with current device.
-    m_pMFXAllocator = MSDKFactory::CreateD3D11FrameAllocator(d3d11_device.p);
-    if (nullptr == m_pMFXAllocator) {
+    m_pmfx_allocator_ = MSDKFactory::CreateD3D11FrameAllocator(d3d11_device_.p);
+    if (nullptr == m_pmfx_allocator_) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     // Set allocator to the session.
-    sts = m_mfxSession->SetFrameAllocator(m_pMFXAllocator.get());
+    sts = m_mfx_session_->SetFrameAllocator(m_pmfx_allocator_.get());
     if (MFX_ERR_NONE != sts) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     // Prepare the bitstream
-    MSDK_ZERO_MEMORY(m_mfxBS);
-    m_mfxBS.Data = new mfxU8[MSDK_BS_INIT_SIZE];
-    m_mfxBS.MaxLength = MSDK_BS_INIT_SIZE;
+    MSDK_ZERO_MEMORY(m_mfx_bs_);
+    m_mfx_bs_.Data = new mfxU8[MSDK_BS_INIT_SIZE];
+    m_mfx_bs_.MaxLength = MSDK_BS_INIT_SIZE;
     RTC_LOG(LS_ERROR) << "Creating underlying MSDK decoder.";
-    m_pmfxDEC.reset(new MFXVideoDECODE(*m_mfxSession));
-    if (m_pmfxDEC == nullptr) {
+    m_pmfx_dec_.reset(new MFXVideoDECODE(*m_mfx_session_));
+    if (m_pmfx_dec_ == nullptr) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
 
-  m_mfxVideoParams.mfx.CodecId = codec_id;
+  m_pmfx_video_params_.mfx.CodecId = codec_id;
   if (codec_id == MFX_CODEC_VP9 || codec_id == MFX_CODEC_AV1)
-    m_mfxVideoParams.mfx.EnableReallocRequest = MFX_CODINGOPTION_ON;
-  inited = true;
+    m_pmfx_video_params_.mfx.EnableReallocRequest = MFX_CODINGOPTION_ON;
+  inited_ = true;
   RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread --";
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -262,23 +262,23 @@ int32_t MSDKVideoDecoder::Decode(
   mfxStatus sts = MFX_ERR_NONE;
   mfxFrameSurface1 *pOutputSurface = nullptr;
 
-  m_mfxVideoParams.IOPattern =
+  m_pmfx_video_params_.IOPattern =
       MFX_IOPATTERN_OUT_VIDEO_MEMORY;
-  m_mfxVideoParams.AsyncDepth = 4;
+  m_pmfx_video_params_.AsyncDepth = 4;
 
-  ReadFromInputStream(&m_mfxBS, inputImage.data(), inputImage.size());
+  ReadFromInputStream(&m_mfx_bs_, inputImage.data(), inputImage.size());
 
 dec_header:
-  if (inited && !m_video_param_extracted) {
-    if (!m_pmfxDEC.get()) {
+  if (inited_ && !m_video_param_extracted) {
+    if (!m_pmfx_dec_.get()) {
       RTC_LOG(LS_ERROR) << "MSDK decoder not created.";
     }
-    sts = m_pmfxDEC->DecodeHeader(&m_mfxBS, &m_mfxVideoParams);
+    sts = m_pmfx_dec_->DecodeHeader(&m_mfx_bs_, &m_pmfx_video_params_);
     if (MFX_ERR_NONE == sts || MFX_WRN_PARTIAL_ACCELERATION == sts) {
       mfxU16 nSurfNum = 0;
       mfxFrameAllocRequest request;
       MSDK_ZERO_MEMORY(request);
-      sts = m_pmfxDEC->QueryIOSurf(&m_mfxVideoParams, &request);
+      sts = m_pmfx_dec_->QueryIOSurf(&m_pmfx_video_params_, &request);
       if (MFX_WRN_PARTIAL_ACCELERATION == sts) {
         sts = MFX_ERR_NONE;
       }
@@ -287,9 +287,9 @@ dec_header:
       }
 
       mfxIMPL impl = 0;
-      sts = m_mfxSession->QueryIMPL(&impl);
+      sts = m_mfx_session_->QueryIMPL(&impl);
 
-      if ((request.NumFrameSuggested < m_mfxVideoParams.AsyncDepth) &&
+      if ((request.NumFrameSuggested < m_pmfx_video_params_.AsyncDepth) &&
           (impl & MFX_IMPL_HARDWARE_ANY)) {
         RTC_LOG(LS_ERROR) << "Invalid num suggested.";
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -297,42 +297,42 @@ dec_header:
       nSurfNum = MSDK_MAX(request.NumFrameSuggested, 1);
 
       request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
-      sts = m_pMFXAllocator->Alloc(m_pMFXAllocator->pthis, &request,
-                                   &m_mfxResponse);
+      sts = m_pmfx_allocator_->Alloc(m_pmfx_allocator_->pthis, &request,
+                                   &m_mfx_response_);
       if (MFX_ERR_NONE != sts) {
         RTC_LOG(LS_ERROR) << "Failed on allocator's alloc method";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-      nSurfNum = m_mfxResponse.NumFrameActual;
+      nSurfNum = m_mfx_response_.NumFrameActual;
       // Allocate both the input and output surfaces.
-      m_pInputSurfaces = new mfxFrameSurface1[nSurfNum];
-      if (nullptr == m_pInputSurfaces) {
+      m_pinput_surfaces_ = new mfxFrameSurface1[nSurfNum];
+      if (nullptr == m_pinput_surfaces_) {
         RTC_LOG(LS_ERROR) << "Failed allocating input surfaces.";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
       for (int i = 0; i < nSurfNum; i++) {
-        memset(&(m_pInputSurfaces[i]), 0, sizeof(mfxFrameSurface1));
-        MSDK_MEMCPY_VAR(m_pInputSurfaces[i].Info, &(request.Info),
+        memset(&(m_pinput_surfaces_[i]), 0, sizeof(mfxFrameSurface1));
+        MSDK_MEMCPY_VAR(m_pinput_surfaces_[i].Info, &(request.Info),
                         sizeof(mfxFrameInfo));
-        m_pInputSurfaces[i].Data.MemId = m_mfxResponse.mids[i];
-        m_pInputSurfaces[i].Data.MemType = request.Type;
+        m_pinput_surfaces_[i].Data.MemId = m_mfx_response_.mids[i];
+        m_pinput_surfaces_[i].Data.MemType = request.Type;
       }
 
-      if (!m_mfxVideoParams.mfx.FrameInfo.FrameRateExtN ||
-          m_mfxVideoParams.mfx.FrameInfo.FrameRateExtD) {
-        m_mfxVideoParams.mfx.FrameInfo.FrameRateExtN = 30;
-        m_mfxVideoParams.mfx.FrameInfo.FrameRateExtD = 1;
+      if (!m_pmfx_video_params_.mfx.FrameInfo.FrameRateExtN ||
+          m_pmfx_video_params_.mfx.FrameInfo.FrameRateExtD) {
+        m_pmfx_video_params_.mfx.FrameInfo.FrameRateExtN = 30;
+        m_pmfx_video_params_.mfx.FrameInfo.FrameRateExtD = 1;
       }
 
-      if (!m_mfxVideoParams.mfx.FrameInfo.AspectRatioH ||
-          !m_mfxVideoParams.mfx.FrameInfo.AspectRatioW) {
-        m_mfxVideoParams.mfx.FrameInfo.AspectRatioH = 1;
-        m_mfxVideoParams.mfx.FrameInfo.AspectRatioW = 1;
+      if (!m_pmfx_video_params_.mfx.FrameInfo.AspectRatioH ||
+          !m_pmfx_video_params_.mfx.FrameInfo.AspectRatioW) {
+        m_pmfx_video_params_.mfx.FrameInfo.AspectRatioH = 1;
+        m_pmfx_video_params_.mfx.FrameInfo.AspectRatioW = 1;
       }
       // Finally we're done with all configurations and we're OK to init the
       // decoder.
-      sts = m_pmfxDEC->Init(&m_mfxVideoParams);
+      sts = m_pmfx_dec_->Init(&m_pmfx_video_params_);
       if (MFX_ERR_NONE != sts) {
         RTC_LOG(LS_ERROR) << "Failed to init the decoder.";
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -346,7 +346,7 @@ dec_header:
     }
   }
 
-  m_mfxBS.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
+  m_mfx_bs_.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
   mfxSyncPoint syncp;
 
   // If we get video param changed, that means we need to continue with
@@ -354,42 +354,42 @@ dec_header:
   while (true) {
 more_surface:
     mfxU16 moreIdx =
-        DecGetFreeSurface(m_pInputSurfaces, m_mfxResponse.NumFrameActual);
+        DecGetFreeSurface(m_pinput_surfaces_, m_mfx_response_.NumFrameActual);
     if (moreIdx == MSDK_INVALID_SURF_IDX) {
       MSDK_SLEEP(1);
       continue;
     }
-    mfxFrameSurface1* moreFreeSurf = &m_pInputSurfaces[moreIdx];
+    mfxFrameSurface1* moreFreeSurf = &m_pinput_surfaces_[moreIdx];
 
 retry:
-    m_decBsOffset = m_mfxBS.DataOffset;
-    sts = m_pmfxDEC->DecodeFrameAsync(&m_mfxBS, moreFreeSurf, &pOutputSurface,
+    m_dec_bs_offset_ = m_mfx_bs_.DataOffset;
+    sts = m_pmfx_dec_->DecodeFrameAsync(&m_mfx_bs_, moreFreeSurf, &pOutputSurface,
                                       &syncp);
 
     if (sts == MFX_ERR_NONE && syncp != nullptr) {
-      sts = m_mfxSession->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
+      sts = m_mfx_session_->SyncOperation(syncp, MSDK_DEC_WAIT_INTERVAL);
       if (sts >= MFX_ERR_NONE) {
         mfxMemId dxMemId = pOutputSurface->Data.MemId;
         mfxFrameInfo frame_info = pOutputSurface->Info;
         mfxHDLPair pair = {nullptr};
         // Maybe we should also send the allocator as part of the frame
         // handle for locking/unlocking purpose.
-        m_pMFXAllocator->GetFrameHDL(dxMemId, (mfxHDL*)&pair);
+        m_pmfx_allocator_->GetFrameHDL(dxMemId, (mfxHDL*)&pair);
         if (callback_) {
-          surface_handle->d3d11_device = d3d11_device.p;
-          surface_handle->texture =
+          surface_handle_->d3d11_device = d3d11_device_.p;
+          surface_handle_->texture =
               reinterpret_cast<ID3D11Texture2D*>(pair.first);
           // Texture_array_index not used when decoding with MSDK.
-          surface_handle->texture_array_index = 0;
+          surface_handle_->texture_array_index = 0;
           D3D11_TEXTURE2D_DESC texture_desc;
           memset(&texture_desc, 0, sizeof(texture_desc));
-          surface_handle->texture->GetDesc(&texture_desc);
+          surface_handle_->texture->GetDesc(&texture_desc);
           // TODO(johny): we should extend the buffer structure to include
           // not only the CropW|CropH value, but also the CropX|CropY for the
           // renderer to correctly setup the video processor input view.
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
               new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
-                  (void*)surface_handle.get(), frame_info.CropW, frame_info.CropH);
+                  (void*)surface_handle_.get(), frame_info.CropW, frame_info.CropH);
           webrtc::VideoFrame decoded_frame(buffer, inputImage.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);
           decoded_frame.set_ntp_time_ms(inputImage.ntp_time_ms_);
@@ -408,8 +408,8 @@ retry:
       goto retry;
     } else if (sts != MFX_ERR_NONE) {
       Reset();
-      m_mfxBS.DataLength += m_mfxBS.DataOffset - m_decBsOffset;
-      m_mfxBS.DataOffset = m_decBsOffset;
+      m_mfx_bs_.DataLength += m_mfx_bs_.DataOffset - m_dec_bs_offset_;
+      m_mfx_bs_.DataOffset = m_dec_bs_offset_;
       m_video_param_extracted = false;
       goto dec_header;
 	}
@@ -430,14 +430,14 @@ mfxStatus MSDKVideoDecoder::ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 
 }
 
 void MSDKVideoDecoder::ReadFromInputStream(mfxBitstream* pBitstream, const uint8_t *data, size_t len) {
-  if (m_mfxBS.MaxLength < len){
+  if (m_mfx_bs_.MaxLength < len){
       // Remaining BS size is not enough to hold current image, we enlarge it the gap*2.
-      mfxU32 newSize = static_cast<mfxU32>(m_mfxBS.MaxLength > len ? m_mfxBS.MaxLength * 2 : len * 2);
-      ExtendMfxBitstream(&m_mfxBS, newSize);
+      mfxU32 newSize = static_cast<mfxU32>(m_mfx_bs_.MaxLength > len ? m_mfx_bs_.MaxLength * 2 : len * 2);
+      ExtendMfxBitstream(&m_mfx_bs_, newSize);
   }
-  memmove(m_mfxBS.Data + m_mfxBS.DataLength, data, len);
-  m_mfxBS.DataLength += static_cast<mfxU32>(len);
-  m_mfxBS.DataOffset = 0;
+  memmove(m_mfx_bs_.Data + m_mfx_bs_.DataLength, data, len);
+  m_mfx_bs_.DataLength += static_cast<mfxU32>(len);
+  m_mfx_bs_.DataOffset = 0;
   return;
 }
 

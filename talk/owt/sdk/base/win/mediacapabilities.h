@@ -59,21 +59,21 @@ class MediaCapabilities {
   ~MediaCapabilities();
   std::vector<VideoEncoderCapability> SupportedCapabilitiesForVideoEncoder(
       std::vector<owt::base::VideoCodec>& codec_types);
-  std::vector<VideoDecoderCapability>  SupportedCapabilitiesForVideoDecoder(std::vector<owt::base::VideoCodec>& codec_types);
+  std::vector<VideoDecoderCapability> SupportedCapabilitiesForVideoDecoder(std::vector<owt::base::VideoCodec>& codec_types);
   static MediaCapabilities* Get();
  private:
   bool Init();
   MediaCapabilities();
-  static MediaCapabilities* singleton;
-  static std::mutex get_singleton_mutex;
+  static MediaCapabilities* singleton_;
+  static std::mutex get_singleton_mutex_;
 #ifdef OWT_USE_MSDK
-  MFXVideoSession* mfx_session;
-  std::unique_ptr<MFXVideoENCODE> mfx_encoder;
-  std::unique_ptr<MFXVideoDECODE> mfx_decoder;
-  mfxPlatform mfx_platform;
-  owt::base::MSDKFactory* msdk_factory;
+  MFXVideoSession* mfx_session_;
+  std::unique_ptr<MFXVideoENCODE> mfx_encoder_;
+  std::unique_ptr<MFXVideoDECODE> mfx_decoder_;
+  mfxPlatform mfx_platform_;
+  owt::base::MSDKFactory* msdk_factory_;
 #endif
-  bool inited = false;
+  bool inited_ = false;
 };
 }  // namespace base
 }  // namespace owt

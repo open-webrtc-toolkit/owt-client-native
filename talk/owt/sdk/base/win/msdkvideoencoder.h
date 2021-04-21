@@ -73,50 +73,50 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   int32_t width_;
   int32_t height_;
   uint32_t frame_rate;
-  webrtc::VideoCodecType codec_type;
-  cricket::VideoCodec rtp_codec_parameters;
-  uint8_t num_temporal_layers = 1;
-  uint32_t num_spatial_layers = 1;  // For MSDK this is fixed to 1;
+  webrtc::VideoCodecType codec_type_;
+  cricket::VideoCodec rtp_codec_parameters_;
+  uint8_t num_temporal_layers_ = 1;
+  uint8_t num_spatial_layers_ = 1;
   webrtc::InterLayerPredMode inter_layer_prediction_mode;
 
-  MFXVideoSession* m_mfxSession;
-  std::unique_ptr<MFXVideoENCODE> m_pmfxENC;
-  std::shared_ptr<SysMemFrameAllocator> m_pMFXAllocator;
-  mfxVideoParam m_mfxEncParams;
+  MFXVideoSession* m_mfx_session_;
+  std::unique_ptr<MFXVideoENCODE> m_pmfx_enc_;
+  std::shared_ptr<SysMemFrameAllocator> m_pmfx_allocator_;
+  mfxVideoParam m_mfx_enc_params_;
 
   // Members used by HEVC
-  mfxExtHEVCParam m_ExtHEVCParam;
+  mfxExtHEVCParam m_ext_hevc_param_;
   // H265Profile space is always 0.
-  H265ProfileId h265_profile = owt::base::H265ProfileId::kMain; 
+  H265ProfileId h265_profile_ = owt::base::H265ProfileId::kMain; 
 
   // Members used by VP9
-  mfxExtVP9Param vp9_ext_param;
-  webrtc::VP9Profile vp9_profile = webrtc::VP9Profile::kProfile0;
-  std::unique_ptr<VP9RateControl> vp9_rate_ctrl;
-  libvpx::VP9RateControlRtcConfig vp9_rc_config;
-  libvpx::VP9FrameParamsQpRTC frame_params;
-  bool vp9_use_external_brc = false;
+  mfxExtVP9Param vp9_ext_param_;
+  webrtc::VP9Profile vp9_profile_ = webrtc::VP9Profile::kProfile0;
+  std::unique_ptr<VP9RateControl> vp9_rate_ctrl_;
+  libvpx::VP9RateControlRtcConfig vp9_rc_config_;
+  libvpx::VP9FrameParamsQpRTC frame_params_;
+  bool vp9_use_external_brc_ = false;
 
   // TODO(johny): MSDK will remove the version macro usage for headers.
   // Turn this on when appropriate.
 #if (MFX_VERSION >= MFX_VERSION_NEXT)
-  mfxExtAV1Param av1_ext_param;
-  AV1Profile av1_profile = owt::base::AV1Profile::kMain;
+  mfxExtAV1Param av1_ext_param_;
+  AV1Profile av1_profile_ = owt::base::AV1Profile::kMain;
 #endif
 
-  std::vector<mfxExtBuffer*> m_EncExtParams;
-  mfxFrameAllocResponse m_EncResponse;
-  mfxFrameSurface1* m_pEncSurfaces;  // frames array for encoder
-  mfxU32 m_nFramesProcessed;
-  std::unique_ptr<rtc::Thread> encoder_thread;
-  std::atomic<bool> inited;
+  std::vector<mfxExtBuffer*> m_enc_ext_params_;
+  mfxFrameAllocResponse m_enc_response_;
+  mfxFrameSurface1* m_penc_surfaces_;  // frames array for encoder
+  mfxU32 m_frames_processed_;
+  std::unique_ptr<rtc::Thread> encoder_thread_;
+  std::atomic<bool> inited_;
 
   // Gof related information for VP9 codec specific info.
-  uint8_t gof_idx;
-  webrtc::GofInfoVP9 gof;
-  std::unique_ptr<webrtc::IvfFileWriter> dump_writer;
-  bool enable_bitstream_dump = false;
-  std::string encoder_dump_file_name;
+  uint8_t gof_idx_;
+  webrtc::GofInfoVP9 gof_;
+  std::unique_ptr<webrtc::IvfFileWriter> dump_writer_;
+  bool enable_bitstream_dump_ = false;
+  std::string encoder_dump_file_name_;
 };
 }  // namespace base
 }  // namespace owt

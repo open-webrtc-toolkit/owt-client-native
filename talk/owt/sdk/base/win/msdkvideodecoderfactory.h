@@ -29,7 +29,7 @@ class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
       const webrtc::SdpVideoFormat& format) override;
  private:
-  std::vector<webrtc::VideoCodecType> supported_codec_types;
+  std::vector<webrtc::VideoCodecType> supported_codec_types_;
 };
 }  // namespace base
 }  // namespace owt

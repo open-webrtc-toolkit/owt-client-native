@@ -19,7 +19,7 @@ namespace owt {
 namespace base {
 
 MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
-  supported_codec_types.clear();
+  supported_codec_types_.clear();
 
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
   bool is_h264_hw_supported = false, is_av1_hw_supported = false;
@@ -43,21 +43,21 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   for (auto& capability : capabilities) {
     if (capability.codec_type == owt::base::VideoCodec::kH264 && !is_h264_hw_supported) {
       is_h264_hw_supported = true;
-      supported_codec_types.push_back(webrtc::kVideoCodecH264);
+      supported_codec_types_.push_back(webrtc::kVideoCodecH264);
     } else if (capability.codec_type == owt::base::VideoCodec::kVp9 && !is_vp9_hw_supported) {
       is_vp9_hw_supported = true;
-      supported_codec_types.push_back(webrtc::kVideoCodecVP9);
+      supported_codec_types_.push_back(webrtc::kVideoCodecVP9);
     } else if (capability.codec_type == owt::base::VideoCodec::kVp8 && !is_vp8_hw_supported) {
       is_vp8_hw_supported = true;
-      supported_codec_types.push_back(webrtc::kVideoCodecVP8);
+      supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
     } else if (capability.codec_type == owt::base::VideoCodec::kAv1 && !is_av1_hw_supported) {
       is_av1_hw_supported = true;
-      supported_codec_types.push_back(webrtc::kVideoCodecAV1);
+      supported_codec_types_.push_back(webrtc::kVideoCodecAV1);
     }
 #ifndef DISABLE_H265
     else if (capability.codec_type == owt::base::VideoCodec::kH265 && !is_h265_hw_supported) {
       is_h265_hw_supported = true;
-      supported_codec_types.push_back(webrtc::kVideoCodecH265);
+      supported_codec_types_.push_back(webrtc::kVideoCodecH265);
     }
 #endif
   }
@@ -71,7 +71,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
 #ifndef DISABLE_H265
   bool h265_hw = false;
 #endif
-  for (auto& codec : supported_codec_types) {
+  for (auto& codec : supported_codec_types_) {
     if (codec == webrtc::kVideoCodecAV1)
       av1_hw = true;
     else if (codec == webrtc::kVideoCodecH264)
@@ -100,7 +100,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return webrtc::CreateLibaomAv1Decoder();
   } 
 #ifndef DISABLE_H265
-  // This should not happen.
+  // This should not happen. We do not return here but preceed with HW decoder.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
     RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
   }

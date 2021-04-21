@@ -18,7 +18,7 @@ namespace owt {
 namespace base {
 
 MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
-  supported_codec_types.clear();
+  supported_codec_types_.clear();
   MediaCapabilities* media_capability = MediaCapabilities::Get();
   std::vector<owt::base::VideoCodec> codecs_to_check;
   codecs_to_check.push_back(owt::base::VideoCodec::kH264);
@@ -31,13 +31,13 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
   std::vector<VideoEncoderCapability> capabilities =
       media_capability->SupportedCapabilitiesForVideoEncoder(codecs_to_check);
   // TODO(jianlin): use the check result from MSDK.
-  supported_codec_types.push_back(webrtc::kVideoCodecH264);
-  supported_codec_types.push_back(webrtc::kVideoCodecVP9);
-  supported_codec_types.push_back(webrtc::kVideoCodecVP8);
+  supported_codec_types_.push_back(webrtc::kVideoCodecH264);
+  supported_codec_types_.push_back(webrtc::kVideoCodecVP9);
+  supported_codec_types_.push_back(webrtc::kVideoCodecVP8);
 #ifndef DISABLE_H265
-  supported_codec_types.push_back(webrtc::kVideoCodecH265);
+  supported_codec_types_.push_back(webrtc::kVideoCodecH265);
 #endif
-  supported_codec_types.push_back(webrtc::kVideoCodecAV1);
+  supported_codec_types_.push_back(webrtc::kVideoCodecAV1);
 }
 
 std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncoder(
@@ -46,7 +46,7 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
 #ifndef DISABLE_H265
   bool h265_hw = false;
 #endif
-  for (auto& codec : supported_codec_types) {
+  for (auto& codec : supported_codec_types_) {
     if (codec == webrtc::kVideoCodecAV1)
       av1_hw = true;
     else if (codec == webrtc::kVideoCodecH264)

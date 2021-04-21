@@ -69,43 +69,42 @@ private:
     bool CreateD3D11Device();
     int32_t Reset();
 
-    // Type of video codec.
-    webrtc::VideoCodecType codec_type;
     mfxStatus ExtendMfxBitstream(mfxBitstream* pBitstream, mfxU32 nSize);
     void WipeMfxBitstream(mfxBitstream* pBitstream);
     void ReadFromInputStream(mfxBitstream* pBitstream, const uint8_t *data, size_t len);
     mfxU16 DecGetFreeSurface(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
     mfxU16 DecGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool, mfxU16 nPoolSize);
 
+    // Type of video codec.
+    webrtc::VideoCodecType codec_type_;
     // Begin MSDK variables
-    MFXVideoSession* m_mfxSession;
-    std::unique_ptr<MFXVideoDECODE> m_pmfxDEC;
-    std::shared_ptr<D3D11FrameAllocator> m_pMFXAllocator;
-    mfxVideoParam           m_mfxVideoParams;
-    mfxBitstream            m_mfxBS; // Contains encoded data
-    mfxFrameAllocResponse   m_mfxResponse; // Memory allocation response for decoder
-    mfxFrameSurface1*       m_pInputSurfaces;
-    mfxPluginUID            m_pluginID;
+    MFXVideoSession* m_mfx_session_;
+    std::unique_ptr<MFXVideoDECODE> m_pmfx_dec_;
+    std::shared_ptr<D3D11FrameAllocator> m_pmfx_allocator_;
+    mfxVideoParam m_pmfx_video_params_;
+    mfxBitstream m_mfx_bs_;
+    mfxFrameAllocResponse m_mfx_response_;
+    mfxFrameSurface1*       m_pinput_surfaces_;
+    mfxPluginUID m_plugin_id_;
     bool                    m_video_param_extracted;
-    uint32_t                m_decBsOffset;
+    uint32_t m_dec_bs_offset_;
     // End of MSDK variables
 
-    CComPtr<ID3D11Device> d3d11_device;
-    CComPtr<ID3D11DeviceContext> d3d11_device_context;
-    CComPtr<ID3D11VideoDevice> d3d11_video_device;
-    CComPtr<ID3D11VideoContext> d3d11_video_context;
-    CComQIPtr<IDXGIAdapter> m_pAdapter;
-    CComPtr<IDXGIFactory2> m_pDXGIFactory;
+    CComPtr<ID3D11Device> d3d11_device_;
+    CComPtr<ID3D11DeviceContext> d3d11_device_context_;
+    CComPtr<ID3D11VideoDevice> d3d11_video_device_;
+    CComPtr<ID3D11VideoContext> d3d11_video_context_;
+    CComQIPtr<IDXGIAdapter> m_padapter_;
+    CComPtr<IDXGIFactory2> m_pdxgi_factory_;
     // Store current decoded frame.
-    std::unique_ptr<D3D11ImageHandle> surface_handle;
+    std::unique_ptr<D3D11ImageHandle> surface_handle_;
 
-    bool inited;
-    int width;
-    int height;
-    std::unique_ptr<rtc::Thread> decoder_thread;  // Thread on which the decoder will be working on.
+    bool inited_;
+    int width_;
+    int height_;
+    std::unique_ptr<rtc::Thread> decoder_thread_;  // Thread on which the decoder will be working on.
 
     webrtc::VideoCodec codec_;
-
     webrtc::DecodedImageCallback* callback_;
     webrtc::Mutex timestampCS_;
     std::vector<int64_t> ntp_time_ms_;

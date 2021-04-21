@@ -35,7 +35,7 @@ bool WebrtcVideoRendererD3D11Impl::GetWindowSizeForSwapChain(int& width, int& he
   height = rect.bottom - rect.top;
 
   if (width % 2) {
-    window_width += 1;
+    window_width_ += 1;
   }
   if (height % 2) {
     height += 1;
@@ -60,8 +60,8 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
   // so we're not rounding it up to even number.
   RECT rect;
   GetClientRect(wnd_, &rect);
-  int window_width_ = rect.right - rect.left;
-  int window_height_ = rect.bottom - rect.top;
+  int window_width = rect.right - rect.left;
+  int window_height = rect.bottom - rect.top;
 
   if (video_frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
@@ -100,7 +100,7 @@ void WebrtcVideoRendererD3D11Impl::OnFrame(
     // First scale down to target window size.
     webrtc::VideoFrame new_frame(video_frame);
     rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
-        I420Buffer::Create(window_width_, window_height_);
+        I420Buffer::Create(window_width, window_height);
     auto i420_buffer = video_frame.video_frame_buffer()->ToI420();
     scaled_buffer->ScaleFrom(*i420_buffer);
     new_frame.set_video_frame_buffer(scaled_buffer);
@@ -155,7 +155,7 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
 
   HRESULT hr = S_OK;
 
-  if (!GetWindowSizeForSwapChain(window_width, window_height)) {
+  if (!GetWindowSizeForSwapChain(window_width_, window_height_)) {
     RTC_LOG(LS_ERROR) << "Failed to get window size for swapchian.";
     return false;
   }
@@ -170,12 +170,12 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
       return false;
     }
 
-    if (desc.BufferDesc.Width != (unsigned int)window_width ||
-        desc.BufferDesc.Height != (unsigned int)window_height) {
+    if (desc.BufferDesc.Width != (unsigned int)window_width_ ||
+        desc.BufferDesc.Height != (unsigned int)window_height_) {
       d3d11_device_context_->ClearState();
       d3d11_device_context_->Flush();
 
-      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
+      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width_, window_height_,
                                               DXGI_FORMAT_UNKNOWN, desc.Flags);
       if (FAILED(hr)) {
         RTC_LOG(LS_ERROR) << "Failed to resize buffer for swapchain.";
@@ -190,8 +190,8 @@ bool WebrtcVideoRendererD3D11Impl::InitSwapChain(int width,
   ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC1));
   desc.BufferCount = 2;
   desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  desc.Height = window_height;
-  desc.Width = window_width;
+  desc.Height = window_height_;
+  desc.Width = window_width_;
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.SampleDesc.Count = 1;
@@ -277,7 +277,7 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
       return;
   }
 
-  if (!GetWindowSizeForSwapChain(window_width, window_height)) {
+  if (!GetWindowSizeForSwapChain(window_width_, window_height_)) {
     RTC_LOG(LS_ERROR) << "Failed to get window size for swapchain.";
     return;
   }
@@ -300,13 +300,13 @@ void WebrtcVideoRendererD3D11Impl::RenderNV12DXGIMPO(int width, int height) {
       return;
     }
 
-    if (desc.BufferDesc.Width != (unsigned int)window_width ||
-        desc.BufferDesc.Height != (unsigned int)window_height) {
+    if (desc.BufferDesc.Width != (unsigned int)window_width_ ||
+        desc.BufferDesc.Height != (unsigned int)window_height_) {
       // Hold the lock to avoid rendering when resizing buffer.
       webrtc::MutexLock lock(&d3d11_texture_lock_);
       d3d11_device_context_->ClearState();
 
-      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width, window_height,
+      hr = swap_chain_for_hwnd_->ResizeBuffers(0, window_width_, window_height_,
                                                DXGI_FORMAT_UNKNOWN, desc.Flags);
       if (FAILED(hr)) {
         RTC_LOG(LS_ERROR) << "Resizing compositor swapchain failed.";
@@ -392,12 +392,12 @@ bool WebrtcVideoRendererD3D11Impl::InitMPO(int width, int height) {
   RECT rect;
   GetClientRect(wnd_, &rect);
 
-  if (!GetWindowSizeForSwapChain(window_width, window_height)) {
+  if (!GetWindowSizeForSwapChain(window_width_, window_height_)) {
     RTC_LOG(LS_ERROR) << "Failed to get window size for creating swapchain.";
     return false;
   }
-  swapChainDesc.Width = window_width;
-  swapChainDesc.Height = window_height;
+  swapChainDesc.Width = window_width_;
+  swapChainDesc.Height = window_height_;
   swapChainDesc.Format = DXGI_FORMAT_NV12;
   swapChainDesc.Stereo = false;
   swapChainDesc.SampleDesc.Count = 1;  // Don't use multi-sampling.
@@ -441,7 +441,7 @@ bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(int width,
   if (width < 0 || height < 0)
     return false;
 
-  if (!GetWindowSizeForSwapChain(window_width, window_height))
+  if (!GetWindowSizeForSwapChain(window_width_, window_height_))
     return false;
 
   D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
@@ -454,8 +454,8 @@ bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(int width,
 
     if (content_desc.InputWidth != (unsigned int)width ||
         content_desc.InputHeight != (unsigned int)height ||
-        content_desc.OutputWidth != window_width ||
-        content_desc.OutputHeight != window_height || reset) {
+        content_desc.OutputWidth != window_width_ ||
+        content_desc.OutputHeight != window_height_ || reset) {
       video_processor_enum_.Release();
       video_processor_.Release();
     } else {
@@ -469,8 +469,8 @@ bool WebrtcVideoRendererD3D11Impl::CreateVideoProcessor(int width,
   content_desc.InputFrameRate.Denominator = 1;
   content_desc.InputWidth = width;
   content_desc.InputHeight = height;
-  content_desc.OutputWidth = window_width;
-  content_desc.OutputHeight = window_height;
+  content_desc.OutputWidth = window_width_;
+  content_desc.OutputHeight = window_height_;
   content_desc.OutputFrameRate.Numerator = 30;
   content_desc.OutputFrameRate.Denominator = 1;
   content_desc.Usage = D3D11_VIDEO_USAGE_OPTIMAL_SPEED;
