@@ -4,6 +4,27 @@
 
 import("//build_overrides/webrtc.gni")
 import("//testing/test.gni")
+
+# Introduced for using libvpx config files. We only enable libvpx rate
+# controller for VP9 on Windows.
+if (is_win) {
+  os_category = current_os
+
+  if (current_cpu == "x86") {
+    cpu_arch_full = "ia32"
+  } else if (current_cpu == "x64") {
+    cpu_arch_full = "x64"
+  } else if (current_cpu == "arm") {
+    if (arm_use_neon) {
+      cpu_arch_full = "arm-neon"
+    } else if (is_android) {
+      cpu_arch_full = "arm-neon-cpu-detect"
+    } else {
+      cpu_arch_full = "arm"
+    }
+  }
+}
+
 if (is_android) {
   import("//build/config/android/config.gni")
   import("//build/config/android/rules.gni")
@@ -156,8 +177,32 @@ static_library("owt_sdk_base") {
 
   defines = [ "USE_BUILTIN_SW_CODECS" ]
 
-  if (owt_msdk_header_root != "") {
+  if (is_win && owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
+    defines += [ "OWT_USE_MSDK" ]
+    sources += [
+      "sdk/base/win/base_allocator.cc",
+      "sdk/base/win/base_allocator.h",
+      "sdk/base/win/d3d_allocator.cc",
+      "sdk/base/win/d3d_allocator.h",
+      "sdk/base/win/d3d11_allocator.cc",
+      "sdk/base/win/d3d11_allocator.h",
+      "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/mediacapabilities.cc",
+      "sdk/base/win/mediacapabilities.h",
+      "sdk/base/win/msdkvideobase.cc",
+      "sdk/base/win/msdkvideobase.h",
+      "sdk/base/win/msdkvideodecoder.cc",
+      "sdk/base/win/msdkvideodecoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
+      "sdk/base/win/msdkvideoencoder.cc",
+      "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideoencoderfactory.cc",
+      "sdk/base/win/msdkvideoencoderfactory.h",
+      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/sysmem_allocator.h",
+    ]
   }
 
   if (rtc_include_internal_audio_device) {
@@ -166,6 +211,7 @@ static_library("owt_sdk_base") {
   if (rtc_use_x11) {
     defines += [ "WEBRTC_USE_X11" ]
   }
+
   if (!rtc_use_h265) {
     defines += [ "DISABLE_H265" ]
   } else {
@@ -189,28 +235,21 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
-      "sdk/base/win/base_allocator.cc",
-      "sdk/base/win/base_allocator.h",
-      "sdk/base/win/d3d_allocator.cc",
-      "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/msdkvideobase.cc",
-      "sdk/base/win/msdkvideobase.h",
-      "sdk/base/win/msdkvideodecoder.cc",
-      "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
-      "sdk/base/win/msdkvideoencoder.cc",
-      "sdk/base/win/msdkvideoencoder.h",
-      "sdk/base/win/msdkvideoencoderfactory.cc",
-      "sdk/base/win/msdkvideoencoderfactory.h",
-      "sdk/base/win/sysmem_allocator.cc",
-      "sdk/base/win/sysmem_allocator.h",
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
+      "sdk/base/win/videorendererd3d11.cc",
+      "sdk/base/win/videorendererd3d11.h",
+      "sdk/base/win/vp9ratecontrol.cc",
+      "sdk/base/win/vp9ratecontrol.h",
       "sdk/base/windowcapturer.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
+    public_deps += [ "//third_party/libvpx" ]
+    include_dirs += [
+      "//third_party/libvpx/source/config",
+      "//third_party/libvpx/source/config/$os_category/$cpu_arch_full",
+      "//third_party/libvpx/source/libvpx",
+    ]
   }
   if (is_linux) {
     if (owt_msdk_header_root != "") {

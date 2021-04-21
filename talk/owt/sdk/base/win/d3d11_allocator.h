@@ -1,3 +1,7 @@
+// Copyright (C) <2020> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /******************************************************************************\
 Copyright (c) 2005-2018, Intel Corporation
 All rights reserved.
@@ -36,16 +40,20 @@ https://software.intel.com/en-us/intel-media-server-studio
 or https://software.intel.com/en-us/media-client-solutions-support.
 \**********************************************************************************/
 
-// Copyright (C) <2018> Intel Corporation
-//
-// SPDX-License-Identifier: Apache-2.0
-
 // This file is borrowed from MSDK sample with some minor modification.
 #ifndef OWT_BASE_WIN_D3D11ALLOCATOR_H__
 #define OWT_BASE_WIN_D3D11ALLOCATOR_H__
 
-#include "base_allocator.h"
+#include <d3d11.h>
 #include <limits>
+#include <map>
+#include <vector>
+#include <windows.h>
+#include "base_allocator.h"
+
+
+struct ID3D11VideoDevice;
+struct ID3D11VideoContext;
 
 namespace owt {
 namespace base {
@@ -133,15 +141,6 @@ private:
     mfxMedIdEx m_mid;
     mfxMemId   m_mid_to_report;
 };
-
-#if defined(WEBRTC_WIN)
-
-#include <d3d11.h>
-#include <vector>
-#include <map>
-
-struct ID3D11VideoDevice;
-struct ID3D11VideoContext;
 
 struct D3D11AllocatorParams : mfxAllocatorParams
 {
@@ -281,5 +280,5 @@ protected:
 };
 }  // namespace base
 }  // namespace owt
-#endif // #if defined(WEBRTC_WIN)
+
 #endif // OWT_BASE_WIN_D3D11ALLOCATOR_H__

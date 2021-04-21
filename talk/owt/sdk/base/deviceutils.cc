@@ -62,7 +62,8 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   } else {
     for (int32_t i = 0; i < info->NumberOfCapabilities(id.c_str()); i++) {
       if (info->GetCapability(id.c_str(), i, capability) == 0) {
-        resolutions.push_back(Resolution(capability.width, capability.height));
+        resolutions.push_back(
+            Resolution(capability.width, capability.height));
       } else {
         RTC_LOG(LS_WARNING) << "Failed to get capability.";
       }
@@ -89,8 +90,8 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
       if (found) {
         for (int32_t i = 0; i < info->NumberOfCapabilities(vcm_id); i++) {
           if (info->GetCapability(vcm_id, i, capability) == 0) {
-            resolutions.push_back(
-                Resolution(capability.width, capability.height));
+            resolutions.push_back(Resolution(
+                capability.width, capability.height));
           } else {
             RTC_LOG(LS_WARNING) << "Failed to get capability.";
           }
@@ -100,5 +101,69 @@ std::vector<Resolution> DeviceUtils::VideoCapturerSupportedResolutions(
   }
   return resolutions;
 }
+
+std::vector<VideoTrackCapabilities>
+DeviceUtils::VideoCapturerSupportedCapabilities(
+    const std::string& id) {
+  std::vector<VideoTrackCapabilities> resolutions;
+  webrtc::VideoCaptureCapability capability;
+  std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+      webrtc::VideoCaptureFactory::CreateDeviceInfo());
+  if (!info) {
+    RTC_LOG(LS_ERROR) << "CreateDeviceInfo failed";
+  } else {
+    for (int32_t i = 0; i < info->NumberOfCapabilities(id.c_str()); i++) {
+      if (info->GetCapability(id.c_str(), i, capability) == 0) {
+        resolutions.push_back(VideoTrackCapabilities(
+            capability.width, capability.height, capability.maxFPS));
+      } else {
+        RTC_LOG(LS_WARNING) << "Failed to get capability.";
+      }
+    }
+    // Try to get capabilities by device name if getting capabilities by ID is
+    // failed.
+    // TODO(jianjun): Remove this when creating stream by device name is no
+    // longer supported.
+    if (resolutions.size() == 0) {
+      // Get device ID by name.
+      int num_cams = info->NumberOfDevices();
+      char vcm_id[256] = "";
+      bool found = false;
+      for (int index = 0; index < num_cams; ++index) {
+        char vcm_name[256] = "";
+        if (info->GetDeviceName(index, vcm_name, arraysize(vcm_name), vcm_id,
+                                arraysize(vcm_id)) != -1) {
+          if (id == reinterpret_cast<char*>(vcm_name)) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) {
+        for (int32_t i = 0; i < info->NumberOfCapabilities(vcm_id); i++) {
+          if (info->GetCapability(vcm_id, i, capability) == 0) {
+            resolutions.push_back(VideoTrackCapabilities(
+                capability.width, capability.height, capability.maxFPS));
+          } else {
+            RTC_LOG(LS_WARNING) << "Failed to get capability.";
+          }
+        }
+      }
+    }
+  }
+  return resolutions;
+}
+
+std::string DeviceUtils::GetDeviceNameByIndex(int index) {
+  std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+      webrtc::VideoCaptureFactory::CreateDeviceInfo());
+  char device_name[256];
+  char unique_name[256];
+  info->GetDeviceName(static_cast<uint32_t>(index), device_name,
+                      sizeof(device_name), unique_name, sizeof(unique_name));
+  std::string name(device_name);
+  return name;
+}
+
 }
 }

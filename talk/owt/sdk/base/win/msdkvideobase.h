@@ -6,18 +6,20 @@
 #define OWT_BASE_WIN_MSDKVIDEOBASE_H_
 
 #pragma warning(disable : 4201)
-#include "d3d_allocator.h"
 #include <d3d9.h>
+#include <d3d11.h>
 #include <dxva2api.h>
 #include <dxva.h>
 #include <mfxdefs.h>
 #include <mfxvideo++.h>
 #include <mfxplugin++.h>
 #include <mfxvp8.h>
+#include <memory>
+#include <mutex>
 #include "msdkcommon.h"
-#include "sysmem_allocator.h"
-
-#define VIDEO_MAIN_FORMAT D3DFMT_YUY2
+#include "talk/owt/sdk/base/win/d3d_allocator.h"
+#include "talk/owt/sdk/base/win/d3d11_allocator.h"
+#include "talk/owt/sdk/base/win/sysmem_allocator.h"
 
 namespace owt {
 namespace base {
@@ -29,18 +31,20 @@ class MSDKFactory {
 
   static MSDKFactory* Get();
 
-  MFXVideoSession* CreateSession();
+  MFXVideoSession* CreateSession(bool use_d3d11 = true);
 
   void DestroySession(MFXVideoSession* session);
   
   MFXVideoSession* GetMainSession();
 
+  bool QueryPlatform(MFXVideoSession* session, mfxPlatform* platform);
   bool LoadDecoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
   bool LoadEncoderPlugin(uint32_t codec_id, MFXVideoSession* session, mfxPluginUID* plugin_id);
   void UnloadMSDKPlugin(MFXVideoSession* session, mfxPluginUID* plugin_id);
 
   static std::shared_ptr<D3DFrameAllocator> CreateFrameAllocator(IDirect3DDeviceManager9* d3d_manager);
   static std::shared_ptr<SysMemFrameAllocator> CreateFrameAllocator();
+  static std::shared_ptr<D3D11FrameAllocator> CreateD3D11FrameAllocator(ID3D11Device* d3d11_device);
   void MFETimeout(uint32_t timeout);
   uint32_t MFETimeout();
   struct MSDKAdapter {
@@ -95,11 +99,9 @@ class MSDKFactory {
  protected:
   MSDKFactory();
   bool Init();
-  MFXVideoSession* InternalCreateSession();
+  MFXVideoSession* InternalCreateSession(bool use_d3d11 = true);
 
  private:
-  bool CreateD3DDevice();
-  bool ResetD3DDevice() { return false;}
   static MSDKFactory* singleton;
   static std::mutex get_singleton_mutex;
   MFXVideoSession* main_session;  

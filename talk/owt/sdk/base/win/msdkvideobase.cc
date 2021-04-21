@@ -4,8 +4,11 @@
 
 #include "atlbase.h"
 #include "d3d_allocator.h"
+#include "d3d11_allocator.h"
 #include "mfxdefs.h"
 #include "msdkvideobase.h"
+
+#include "webrtc/rtc_base/logging.h"
 
 namespace owt {
 namespace base {
@@ -26,6 +29,7 @@ static bool isValidPluginUID(const mfxPluginUID* uid) {
   return (AreGuidsEqual(uid, &MFX_PLUGINID_HEVCD_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_VP8D_HW) ||
+          AreGuidsEqual(uid, &MFX_PLUGINID_VP9D_HW) ||
           AreGuidsEqual(uid, &MFX_PLUGINID_HEVCE_GACC));
 }
 
@@ -65,9 +69,11 @@ MSDKFactory* MSDKFactory::Get() {
   return singleton;
 }
 
-MFXVideoSession* MSDKFactory::InternalCreateSession() {
+MFXVideoSession* MSDKFactory::InternalCreateSession(bool use_d3d11) {
   mfxStatus sts = MFX_ERR_NONE;
   mfxIMPL impl = MFX_IMPL_HARDWARE_ANY;
+  if (use_d3d11)
+    impl |= MFX_IMPL_VIA_D3D11;
   mfxVersion version = {{3, 1}};
 
   MFXVideoSession* session = new MFXVideoSession();
@@ -84,11 +90,11 @@ MFXVideoSession* MSDKFactory::InternalCreateSession() {
   return session;
 }
 
-MFXVideoSession* MSDKFactory::CreateSession() {
+MFXVideoSession* MSDKFactory::CreateSession(bool use_d3d11) {
   mfxStatus sts = MFX_ERR_NONE;
   MFXVideoSession* session = nullptr;
 
-  session = InternalCreateSession();
+  session = InternalCreateSession(use_d3d11);
 
   if (!session) {
     return nullptr;
@@ -119,6 +125,8 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
 
   switch (codec_id) {
     case MFX_CODEC_HEVC:
+      // Actually MSDK does not support this plugin any more. Consider
+      // not loading the plugin in decoder implementation.
       sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_HEVCD_HW, 1);
       if (sts != MFX_ERR_NONE) {
         return false;
@@ -133,6 +141,13 @@ bool MSDKFactory::LoadDecoderPlugin(uint32_t codec_id,
         return false;
       }
       *plugin_id = MFX_PLUGINID_VP8D_HW;
+      break;
+    case MFX_CODEC_VP9:
+      sts = MFXVideoUSER_Load(*session, &MFX_PLUGINID_VP9D_HW, 1);
+      if (sts != MFX_ERR_NONE) {
+        return false;
+      }
+      *plugin_id = MFX_PLUGINID_VP9D_HW;
       break;
     default:
       break;
@@ -167,6 +182,20 @@ void MSDKFactory::UnloadMSDKPlugin(MFXVideoSession* session,
   }
 }
 
+bool MSDKFactory::QueryPlatform(MFXVideoSession* session, mfxPlatform* platform) {
+  if (!session || !platform)
+    return false;
+
+  mfxStatus sts = MFX_ERR_NONE;
+  sts = MFXVideoCORE_QueryPlatform(*session, platform);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_ERROR) << "Failed to qeury platform info.";
+    return false;
+  }
+
+  return true;
+}
+
 std::shared_ptr<D3DFrameAllocator> MSDKFactory::CreateFrameAllocator(
     IDirect3DDeviceManager9* d3d_manager) {
   mfxStatus sts = MFX_ERR_NONE;
@@ -195,5 +224,25 @@ std::shared_ptr<SysMemFrameAllocator> MSDKFactory::CreateFrameAllocator() {
 
   return pAllocator;
 }
+
+std::shared_ptr<D3D11FrameAllocator> MSDKFactory::CreateD3D11FrameAllocator(
+    ID3D11Device* d3d11_device) {
+  if (!d3d11_device) {
+    RTC_LOG(LS_ERROR) << "Invalid D3D11 device provided for frame allocator.";
+    return nullptr;
+  }
+  mfxStatus sts = MFX_ERR_NONE;
+  std::shared_ptr<D3D11FrameAllocator> pAllocator =
+      std::make_shared<D3D11FrameAllocator>();
+  D3D11AllocatorParams param;
+  param.pDevice = d3d11_device;
+  sts = pAllocator->Init(&param);
+  if (sts != MFX_ERR_NONE) {
+    return nullptr;
+  }
+
+  return pAllocator;
+}
+
 }  // namespace base
 }  // namespace owt

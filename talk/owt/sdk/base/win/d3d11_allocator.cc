@@ -1,5 +1,10 @@
+// Copyright (C) <2020> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
+
 /******************************************************************************\
-Copyright (c) 2005-2018, Intel Corporation
+Copyright (c) 2005-2019, Intel Corporation
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,13 +21,6 @@ This sample was distributed or derived from the Intel's Media Samples package.
 The original version of this sample may be obtained from https://software.intel.com/en-us/intel-media-server-studio
 or https://software.intel.com/en-us/media-client-solutions-support.
 \**********************************************************************************/
-
-// Copyright (C) <2018> Intel Corporation
-//
-// SPDX-License-Identifier: Apache-2.0
-
-
-#if defined(WEBRTC_WIN)
 
 #include "msdkvideobase.h"
 
@@ -62,7 +60,7 @@ struct sequence<mfxHDL> {
 
 D3D11FrameAllocator::D3D11FrameAllocator()
 {
-    m_pDeviceContext = NULL;
+    m_pDeviceContext = nullptr;
 }
 
 D3D11FrameAllocator::~D3D11FrameAllocator()
@@ -88,7 +86,7 @@ D3D11FrameAllocator::TextureSubResource  D3D11FrameAllocator::GetResourceFromMid
 mfxStatus D3D11FrameAllocator::Init(mfxAllocatorParams *pParams)
 {
     D3D11AllocatorParams *pd3d11Params = 0;
-    pd3d11Params = dynamic_cast<D3D11AllocatorParams *>(pParams);
+    pd3d11Params = static_cast<D3D11AllocatorParams *>(pParams);
 
     if (NULL == pd3d11Params ||
         NULL == pd3d11Params->pDevice)
@@ -152,7 +150,16 @@ mfxStatus D3D11FrameAllocator::LockFrame(mfxMemId mid, mfxFrameData *ptr)
                 DXGI_FORMAT_R16G16B16A16_UNORM != desc.Format &&
                 DXGI_FORMAT_P010 != desc.Format &&
                 DXGI_FORMAT_AYUV != desc.Format
-)
+#if (MFX_VERSION >= 1027)
+                && DXGI_FORMAT_Y210 != desc.Format &&
+                DXGI_FORMAT_Y410 != desc.Format
+#endif
+#if (MFX_VERSION >= 1031)
+                && DXGI_FORMAT_P016 != desc.Format &&
+                DXGI_FORMAT_Y216 != desc.Format &&
+                DXGI_FORMAT_Y416 != desc.Format
+#endif
+            )
             {
                 return MFX_ERR_LOCK_MEMORY;
             }
@@ -185,6 +192,9 @@ mfxStatus D3D11FrameAllocator::LockFrame(mfxMemId mid, mfxFrameData *ptr)
     switch (desc.Format)
     {
         case DXGI_FORMAT_P010:
+#if (MFX_VERSION >= 1031)
+        case DXGI_FORMAT_P016:
+#endif
         case DXGI_FORMAT_NV12:
             ptr->Pitch = (mfxU16)lockedRect.RowPitch;
             ptr->Y = (mfxU8 *)lockedRect.pData;
@@ -247,8 +257,35 @@ mfxStatus D3D11FrameAllocator::LockFrame(mfxMemId mid, mfxFrameData *ptr)
             ptr->Y16 = (mfxU16 *)lockedRect.pData;
             ptr->U16 = 0;
             ptr->V16 = 0;
-
             break;
+#if (MFX_VERSION >= 1031)
+        case DXGI_FORMAT_Y416:
+          ptr->PitchHigh = (mfxU16)(lockedRect.RowPitch / (1 << 16));
+          ptr->PitchLow = (mfxU16)(lockedRect.RowPitch % (1 << 16));
+          ptr->U16 = (mfxU16*)lockedRect.pData;
+          ptr->Y16 = ptr->U16 + 1;
+          ptr->V16 = ptr->Y16 + 1;
+          ptr->A = (mfxU8*)(ptr->V16 + 1);
+          break;
+        case DXGI_FORMAT_Y216:
+#endif
+#if (MFX_VERSION >= 1027)
+        case DXGI_FORMAT_Y210:
+          ptr->PitchHigh = (mfxU16)(lockedRect.RowPitch / (1 << 16));
+          ptr->PitchLow = (mfxU16)(lockedRect.RowPitch % (1 << 16));
+          ptr->Y16 = (mfxU16*)lockedRect.pData;
+          ptr->U16 = ptr->Y16 + 1;
+          ptr->V16 = ptr->Y16 + 3;
+          break;
+        case DXGI_FORMAT_Y410:
+          ptr->PitchHigh = (mfxU16)(lockedRect.RowPitch / (1 << 16));
+          ptr->PitchLow = (mfxU16)(lockedRect.RowPitch % (1 << 16));
+          ptr->Y410 = (mfxY410*)lockedRect.pData;
+          ptr->Y = 0;
+          ptr->V = 0;
+          ptr->A = 0;
+          break;
+#endif
         default:
 
             return MFX_ERR_LOCK_MEMORY;
@@ -385,7 +422,7 @@ mfxStatus D3D11FrameAllocator::AllocImpl(mfxFrameAllocRequest *request, mfxFrame
         desc.Height =  request->Info.Height;
 
         desc.MipLevels = 1;
-        //number of subresources is 1 in case of not single texture
+        // Number of subresources is 1 in case of not single texture
         desc.ArraySize = m_initParams.bUseSingleTexture ? request->NumFrameSuggested : 1;
         desc.Format = ConverColortFormat(request->Info.FourCC);
         desc.SampleDesc.Count = 1;
@@ -395,10 +432,9 @@ mfxStatus D3D11FrameAllocator::AllocImpl(mfxFrameAllocRequest *request, mfxFrame
         if ((request->Type&MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) && (request->Type & MFX_MEMTYPE_INTERNAL_FRAME))
         {
             desc.BindFlags = D3D11_BIND_DECODER | D3D11_BIND_VIDEO_ENCODER;
-        }
-        else
+        } else  // Jianlin: adds the shader resource flag so renderer can use this as staging texture.
 #endif
-            desc.BindFlags = D3D11_BIND_DECODER;
+            desc.BindFlags = D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE;
 
         if ( (MFX_MEMTYPE_FROM_VPPIN & request->Type) && (DXGI_FORMAT_YUY2 == desc.Format) ||
              (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) ||
@@ -518,10 +554,23 @@ DXGI_FORMAT D3D11FrameAllocator::ConverColortFormat(mfxU32 fourcc)
         case MFX_FOURCC_AYUV:
             return DXGI_FORMAT_AYUV;
 
+#if (MFX_VERSION >= 1027)
+        case MFX_FOURCC_Y210:
+          return DXGI_FORMAT_Y210;
+        case MFX_FOURCC_Y410:
+          return DXGI_FORMAT_Y410;
+#endif
+#if (MFX_VERSION >= 1031)
+        case MFX_FOURCC_P016:
+          return DXGI_FORMAT_P016;
+        case MFX_FOURCC_Y216:
+          return DXGI_FORMAT_Y216;
+        case MFX_FOURCC_Y416:
+          return DXGI_FORMAT_Y416;
+#endif
         default:
             return DXGI_FORMAT_UNKNOWN;
     }
 }
 }  // namespace base
 }  // namespace owt
-#endif // #if defined(WEBRTC_WIN)

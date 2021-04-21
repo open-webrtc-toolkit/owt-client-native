@@ -4,8 +4,11 @@
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include <vector>
 #include "talk/owt/sdk/base/sdputils.h"
+#include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/thread.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
+
 using namespace rtc;
 namespace owt {
 namespace base {
@@ -29,6 +32,12 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   video_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
   configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+  configuration_.media_config.enable_dscp = true;
+  // Johny: This must not be set if we use seperate AV channels.
+  if (!webrtc::field_trial::IsEnabled("OWT-IceUnbundle")) {
+     configuration_.bundle_policy =
+       webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
+  }
   peer_connection_ =
       (factory_->CreatePeerConnection(configuration_, this)).get();
   if (!peer_connection_.get()) {

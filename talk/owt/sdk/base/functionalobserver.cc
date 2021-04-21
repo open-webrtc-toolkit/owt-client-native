@@ -612,6 +612,8 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
                                          0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_decoded, uint32_t,
                                          0),
+              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_rendered, uint32_t,
+                                         0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, key_frames_decoded,
                                          uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_decode_time,

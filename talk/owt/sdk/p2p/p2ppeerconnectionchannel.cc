@@ -10,7 +10,7 @@
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/api/task_queue/default_task_queue_factory.h"
-
+#include "webrtc/system_wrappers/include/field_trial.h"
 using namespace rtc;
 namespace owt {
 namespace p2p {
@@ -284,8 +284,11 @@ void P2PPeerConnectionChannel::CreateOffer() {
           std::bind(
               &P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure,
               this, std::placeholders::_1));
-  peer_connection_->CreateOffer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateOffer(observer, offer_answer_options);
 }
 void P2PPeerConnectionChannel::CreateAnswer() {
   RTC_LOG(LS_INFO) << "Create answer.";
@@ -297,8 +300,11 @@ void P2PPeerConnectionChannel::CreateAnswer() {
           std::bind(
               &P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure,
               this, std::placeholders::_1));
-  peer_connection_->CreateAnswer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateAnswer(observer, offer_answer_options);
 }
 void P2PPeerConnectionChannel::SendSignalingMessage(
     const Json::Value& data,
@@ -475,16 +481,6 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
         RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
-      std::vector<AudioCodec> audio_codecs;
-      for (auto& audio_enc_param : configuration_.audio) {
-        audio_codecs.push_back(audio_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-      std::vector<VideoCodec> video_codecs;
-      for (auto& video_enc_param : configuration_.video) {
-        video_codecs.push_back(video_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
       std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
           webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
       // Sychronous call. After done, will invoke OnSetRemoteDescription. If
@@ -757,7 +753,24 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
           std::bind(
               &P2PPeerConnectionChannel::OnSetLocalSessionDescriptionFailure,
               this, std::placeholders::_1));
-  peer_connection_->SetLocalDescription(observer, desc);
+  std::string sdp_string;
+  if (!desc->ToString(&sdp_string)) {
+    RTC_LOG(LS_ERROR) << "Error parsing local description.";
+    RTC_DCHECK(false);
+  }
+  std::vector<AudioCodec> audio_codecs;
+  for (auto& audio_enc_param : configuration_.audio) {
+    audio_codecs.push_back(audio_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
+  std::vector<VideoCodec> video_codecs;
+  for (auto& video_enc_param : configuration_.video) {
+    video_codecs.push_back(video_enc_param.codec.name);
+  }
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  webrtc::SessionDescriptionInterface* new_desc(
+      webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
+  peer_connection_->SetLocalDescription(observer, new_desc);
 }
 void P2PPeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
@@ -983,7 +996,7 @@ void P2PPeerConnectionChannel::GetConnectionStats(
       FunctionalStatsObserver::Create(std::move(on_success));
   peer_connection_->GetStats(
       observer, nullptr,
-      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+      webrtc::PeerConnectionInterface::kStatsOutputLevelDebug);
 }
 
 void P2PPeerConnectionChannel::GetConnectionStats(
@@ -1039,7 +1052,7 @@ void P2PPeerConnectionChannel::GetStats(
       FunctionalNativeStatsObserver::Create(std::move(on_success));
   peer_connection_->GetStats(
       observer, nullptr,
-      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+      webrtc::PeerConnectionInterface::kStatsOutputLevelDebug);
 }
 bool P2PPeerConnectionChannel::HaveLocalOffer() {
   return SignalingState() == webrtc::PeerConnectionInterface::kHaveLocalOffer;

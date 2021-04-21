@@ -5,27 +5,39 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 #define OWT_BASE_WIN_MSDKVIDEOENCODER_H_
 
+#include <atomic>
+#include <cstddef>
+#include <memory>
 #include <vector>
 #include "base_allocator.h"
 #include "mfxplugin++.h"
 #include "mfxvideo++.h"
 #include "mfxvideo.h"
 #include "sysmem_allocator.h"
+#include "modules/video_coding/utility/ivf_file_writer.h"
+#include "webrtc/api/video_codecs/video_codec.h"
+#include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/media/base/codec.h"
+#include "webrtc/media/base/vp9_profile.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/rtc_base/thread.h"
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
+#include "talk/owt/sdk/base/win/vp9ratecontrol.h"
+#include "vp9/ratectrl_rtc.h"
 
 namespace owt {
 namespace base {
+
 enum MemType {
   MSDK_SYSTEM_MEMORY = 0x00,
   MSDK_D3D9_MEMORY = 0x01,
   MSDK_D3D11_MEMORY = 0x02,
 };
 
+/// Encoder with Intel MediaSDK as the backend.
 class MSDKVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit MSDKVideoEncoder();
+  explicit MSDKVideoEncoder(const cricket::VideoCodec& codec);
   virtual ~MSDKVideoEncoder();
 
   static std::unique_ptr<MSDKVideoEncoder> Create(cricket::VideoCodec format);
@@ -54,30 +66,57 @@ class MSDKVideoEncoder : public webrtc::VideoEncoder {
   mfxU16 MSDKGetFreeSurfaceIndex(mfxFrameSurface1* pSurfacesPool,
                                  mfxU16 nPoolSize);
   void WipeMfxBitstream(mfxBitstream* pBitstream);
+  libvpx::VP9RateControlRtcConfig CreateVP9RateControlConfig();
 
   webrtc::EncodedImageCallback* callback_;
   int32_t bitrate_;  // Bitrate in bits per second.
   int32_t width_;
   int32_t height_;
-  webrtc::VideoCodecType codecType_;
+  uint32_t frame_rate;
+  webrtc::VideoCodecType codec_type_;
+  cricket::VideoCodec rtp_codec_parameters_;
+  uint8_t num_temporal_layers_ = 1;
+  uint8_t num_spatial_layers_ = 1;
+  webrtc::InterLayerPredMode inter_layer_prediction_mode;
 
-  MFXVideoSession* m_mfxSession;
-  mfxPluginUID m_pluginID;
-  MFXVideoENCODE* m_pmfxENC;
-  std::shared_ptr<SysMemFrameAllocator> m_pMFXAllocator;
-  mfxVideoParam m_mfxEncParams;
-  mfxExtHEVCParam m_ExtHEVCParam;
-  std::vector<mfxExtBuffer*> m_EncExtParams;
-  mfxFrameAllocResponse m_EncResponse;
-  mfxFrameSurface1* m_pEncSurfaces;  // frames array for encoder
-  mfxU32 m_nFramesProcessed;
-  std::unique_ptr<rtc::Thread> encoder_thread_;
-  bool inited_;
-#ifdef OWT_DEBUG_MSDK_ENC
-  FILE* output;
-  FILE* input;
-  FILE* raw_in;
+  MFXVideoSession* m_mfx_session_;
+  std::unique_ptr<MFXVideoENCODE> m_pmfx_enc_;
+  std::shared_ptr<SysMemFrameAllocator> m_pmfx_allocator_;
+  mfxVideoParam m_mfx_enc_params_;
+
+  // Members used by HEVC
+  mfxExtHEVCParam m_ext_hevc_param_;
+  // H265Profile space is always 0.
+  H265ProfileId h265_profile_ = owt::base::H265ProfileId::kMain; 
+
+  // Members used by VP9
+  mfxExtVP9Param vp9_ext_param_;
+  webrtc::VP9Profile vp9_profile_ = webrtc::VP9Profile::kProfile0;
+  std::unique_ptr<VP9RateControl> vp9_rate_ctrl_;
+  libvpx::VP9RateControlRtcConfig vp9_rc_config_;
+  libvpx::VP9FrameParamsQpRTC frame_params_;
+  bool vp9_use_external_brc_ = false;
+
+  // TODO(johny): MSDK will remove the version macro usage for headers.
+  // Turn this on when appropriate.
+#if (MFX_VERSION >= MFX_VERSION_NEXT)
+  mfxExtAV1Param av1_ext_param_;
+  AV1Profile av1_profile_ = owt::base::AV1Profile::kMain;
 #endif
+
+  std::vector<mfxExtBuffer*> m_enc_ext_params_;
+  mfxFrameAllocResponse m_enc_response_;
+  mfxFrameSurface1* m_penc_surfaces_;  // frames array for encoder
+  mfxU32 m_frames_processed_;
+  std::unique_ptr<rtc::Thread> encoder_thread_;
+  std::atomic<bool> inited_;
+
+  // Gof related information for VP9 codec specific info.
+  uint8_t gof_idx_;
+  webrtc::GofInfoVP9 gof_;
+  std::unique_ptr<webrtc::IvfFileWriter> dump_writer_;
+  bool enable_bitstream_dump_ = false;
+  std::string encoder_dump_file_name_;
 };
 }  // namespace base
 }  // namespace owt

@@ -14,17 +14,19 @@ class SdpUtils {
   static std::string SetPreferAudioCodecs(const std::string& sdp,
                                          std::vector<AudioCodec>& codec);
   static std::string SetPreferVideoCodecs(const std::string& sdp,
-                                         std::vector<VideoCodec>& codec);
+                                         std::vector<VideoCodec>& codec, bool qos_mode = false);
  private:
   /**
    @brief Replace SDP for preferred codec.
    @param sdp Original SDP.
    @param codec_names Codec names in SDP.
    @param is_audio True if prefer audio codec, false if prefer video codec.
+   @param set_quality If true will configure the a=quality SDP line for all codecs. This
+   is used to differentiate a track for higher QoS.
    */
   static std::string SetPreferCodecs(const std::string& sdp,
                                      std::vector<std::string>& codec_name,
-                                     bool is_audio);
+                                     bool is_audio, bool qos_mode = false);
   static std::vector<std::string> GetCodecValues(const std::string& sdp,
                                                  std::string& codec_name,
                                                  bool is_audio);

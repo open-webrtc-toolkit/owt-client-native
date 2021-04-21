@@ -21,5 +21,12 @@ AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
 AudioProcessingSettings GlobalConfiguration::audio_processing_settings_ = {
     true, true, true, true};
 #endif
-}
+IcePortRanges GlobalConfiguration::ice_port_ranges_ = {
+    {0, 0},
+    {0, 0},
+    {0, 0},
+    {0, 0}};
+bool GlobalConfiguration::pre_decode_dump_enabled_ = false;
+bool GlobalConfiguration::post_encode_dump_enabled_ = false;
+}  // namespace base
 }

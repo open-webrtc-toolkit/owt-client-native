@@ -38,6 +38,40 @@ struct AudioProcessingSettings {
   bool AEC3Enabled;
 };
 /** @endcond */
+
+/// Port range.
+struct IcePortRange {
+  /**
+   @brief Minimum port number.
+  */
+  int min;
+  /**
+   @brief Maximum port number
+  */
+  int max;
+};
+
+/// Port range settings for different tracks.
+struct IcePortRanges {
+  /**
+   @brief Port range for audio tracks.
+  */
+  IcePortRange audio;
+  /**
+   @brief Port range for video tracks except screen tracks.
+  */
+  IcePortRange video;
+  /**
+   @brief Port range for screen tracks.
+  */
+  IcePortRange screen;
+  /**
+   @breif Port range for SCTP data channels. Be noted we do not
+   support specifying port range for QUIC streams.
+  */
+  IcePortRange data;
+};
+
 /**
  @brief configuration of global using.
  GlobalConfiguration class of setting for encoded frame and hardware accecleartion configuration.
@@ -80,6 +114,41 @@ class GlobalConfiguration {
       } else {
           audio_frame_generator_.reset(nullptr);
       }
+  }
+
+  /**
+   @brief This function sets the port ranges of different payload types.
+   If this is called with non-zero port ranges, SDK will enable ICE unbundling
+   for audio/video/screen/data tracks and use specified port ranges. Be noted
+   on some system port below 1024 needs privilege to be used.
+  */
+  static void SetPortRanges(IcePortRanges ice_port_ranges) {
+    ice_port_ranges_.audio.min = ice_port_ranges.audio.min;
+    ice_port_ranges_.audio.max = ice_port_ranges.audio.max;
+    ice_port_ranges_.video.min = ice_port_ranges.video.min;
+    ice_port_ranges_.video.max = ice_port_ranges.video.max;
+    ice_port_ranges_.screen.min = ice_port_ranges.screen.min;
+    ice_port_ranges_.screen.max = ice_port_ranges.screen.max;
+    ice_port_ranges_.data.min = ice_port_ranges.data.min;
+    ice_port_ranges_.data.max = ice_port_ranges.data.max;
+  }
+
+  /**
+   @brief This function enables stream dump before decoder to
+   application's current working directory. This API is for debugging
+   purpose and should not be called in production.
+  */
+  static void SetPreDecodeDumpEnabled(bool enabled) {
+    pre_decode_dump_enabled_ = enabled;
+  }
+
+  /**
+   @brief This function enables stream dump after encoder to
+   application's current working directory. This API is for debugging
+   purpose and should not be called in production.
+  */
+  static void SetPostEncodeDumpEnabled(bool enabled) {
+    post_encode_dump_enabled_ = enabled;
   }
   /**
    @brief This function sets the temporal layers for H.264.
@@ -176,6 +245,38 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
+
+  static void GetPortRanges(IcePortRanges& ice_port_ranges) {
+    ice_port_ranges.audio.min = ice_port_ranges_.audio.min;
+    ice_port_ranges.audio.max = ice_port_ranges_.audio.max;
+    ice_port_ranges.video.min = ice_port_ranges_.video.min;
+    ice_port_ranges.video.max = ice_port_ranges_.video.max;
+    ice_port_ranges.screen.min = ice_port_ranges_.screen.min;
+    ice_port_ranges.screen.max = ice_port_ranges_.screen.max;
+    ice_port_ranges.data.min = ice_port_ranges_.data.min;
+    ice_port_ranges.data.max = ice_port_ranges_.data.max;
+  }
+
+  static IcePortRanges ice_port_ranges_;
+
+  /**
+   @brief This function enables dumping of bitstream before decoding.
+  */
+  static bool GetPreDecodeDumpEnabled() {
+    return pre_decode_dump_enabled_;
+  }
+
+  static bool pre_decode_dump_enabled_;
+
+  /**
+   @brief This function enables dumping of bitstream after encoding.
+  */
+  static bool GetPostEncodeDumpEnabled() {
+    return post_encode_dump_enabled_;
+  }
+
+  static bool post_encode_dump_enabled_;
+
   /**
    @brief This function gets whether auto echo cancellation is enabled or not.
    @return true or false.

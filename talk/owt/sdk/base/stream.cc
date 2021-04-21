@@ -17,7 +17,7 @@
 
 #if defined(WEBRTC_WIN)
 #include "talk/owt/sdk/base/desktopcapturer.h"
-#include "talk/owt/sdk/base/win/videorendererwin.h"
+#include "talk/owt/sdk/base/win/videorendererd3d11.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #endif
 #if defined(WEBRTC_IOS)
@@ -81,7 +81,7 @@ Stream::Stream()
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
+      d3d11_renderer_impl_(nullptr),
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
               VideoSourceInfo::kUnknown,
@@ -95,7 +95,7 @@ Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
       audio_renderer_impl_(nullptr),
-      d3d9_renderer_impl_(nullptr),
+      d3d11_renderer_impl_(nullptr),
 #ifdef OWT_ENABLE_QUIC
       source_(AudioSourceInfo::kUnknown,
               VideoSourceInfo::kUnknown,
@@ -271,11 +271,11 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
         << "There are more than one video tracks, the first one "
            "will be attachecd to renderer.";
   }
-  WebrtcVideoRendererD3D9Impl* old_renderer =
-      d3d9_renderer_impl_ ? d3d9_renderer_impl_ : nullptr;
-  d3d9_renderer_impl_ =
-      new WebrtcVideoRendererD3D9Impl(render_window.GetWindowHandle());
-  video_tracks[0]->AddOrUpdateSink(d3d9_renderer_impl_, rtc::VideoSinkWants());
+  WebrtcVideoRendererD3D11Impl* old_renderer =
+      d3d11_renderer_impl_ ? d3d11_renderer_impl_ : nullptr;
+  d3d11_renderer_impl_ =
+      new WebrtcVideoRendererD3D11Impl(render_window.GetWindowHandle());
+  video_tracks[0]->AddOrUpdateSink(d3d11_renderer_impl_, rtc::VideoSinkWants());
   if (old_renderer)
     delete old_renderer;
   RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
@@ -285,7 +285,7 @@ void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
 void Stream::DetachVideoRenderer() {
 #if defined(WEBRTC_WIN)
   if (media_stream_ == nullptr ||
-      (renderer_impl_ == nullptr && d3d9_renderer_impl_ == nullptr))
+      (renderer_impl_ == nullptr && d3d11_renderer_impl_ == nullptr))
     return;
 #elif defined(WEBRTC_LINUX)
   if (media_stream_ == nullptr ||
@@ -305,10 +305,10 @@ void Stream::DetachVideoRenderer() {
     renderer_impl_ = nullptr;
   }
 #if defined(WEBRTC_WIN)
-  if (d3d9_renderer_impl_ != nullptr) {
-    video_tracks[0]->RemoveSink(d3d9_renderer_impl_);
-    delete d3d9_renderer_impl_;
-    d3d9_renderer_impl_ = nullptr;
+  if (d3d11_renderer_impl_ != nullptr) {
+    video_tracks[0]->RemoveSink(d3d11_renderer_impl_);
+    delete d3d11_renderer_impl_;
+    d3d11_renderer_impl_ = nullptr;
   }
 #endif
 #if defined(WEBRTC_LINUX)

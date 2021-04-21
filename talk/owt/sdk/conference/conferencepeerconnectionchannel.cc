@@ -12,6 +12,7 @@
 #include "talk/owt/sdk/include/cpp/owt/conference/remotemixedstream.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/task_queue.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 using namespace rtc;
 namespace owt {
 namespace conference {
@@ -101,6 +102,7 @@ void ConferencePeerConnectionChannel::RemoveObserver(
       [&](std::reference_wrapper<ConferencePeerConnectionChannelObserver> o)
           -> bool { return &observer == &(o.get()); }));
 }
+
 void ConferencePeerConnectionChannel::CreateOffer() {
   RTC_LOG(LS_INFO) << "Create offer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -111,9 +113,13 @@ void ConferencePeerConnectionChannel::CreateOffer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateOffer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateOffer(observer, offer_answer_options);
 }
+
 void ConferencePeerConnectionChannel::IceRestart() {
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
     DoIceRestart();
@@ -125,13 +131,9 @@ void ConferencePeerConnectionChannel::DoIceRestart() {
   RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
              PeerConnectionInterface::SignalingState::kStable);
-  // TODO: moving to offer answer options.
-  /*
-  media_constraints_.SetMandatory(
-      webrtc::MediaConstraintsInterface::kIceRestart, true);
-  */
   this->CreateOffer();
 }
+
 void ConferencePeerConnectionChannel::CreateAnswer() {
   RTC_LOG(LS_INFO) << "Create answer.";
   scoped_refptr<FunctionalCreateSessionDescriptionObserver> observer =
@@ -142,9 +144,13 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateAnswer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  bool rtp_no_mux = webrtc::field_trial::IsEnabled("OWT-IceUnbundle");
+  auto offer_answer_options =
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
+  offer_answer_options.use_rtp_mux = !rtp_no_mux;
+  peer_connection_->CreateAnswer(observer, offer_answer_options);
 }
+
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
@@ -162,6 +168,7 @@ void ConferencePeerConnectionChannel::OnSignalingChange(
     }
   }
 }
+
 void ConferencePeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   RTC_LOG(LS_INFO) << "On add stream.";
@@ -300,7 +307,13 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   for (auto& video_enc_param : configuration_.video) {
     video_codecs.push_back(video_enc_param.codec.name);
   }
-  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
+  bool is_screen = published_stream_.get() ? (published_stream_->Source().video ==
+                          owt::base::VideoSourceInfo::kScreenCast)
+                       : (subscribed_stream_.get()
+                          ? (subscribed_stream_->Source().video ==
+                                    owt::base::VideoSourceInfo::kScreenCast)
+                          : false);
+  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs, is_screen);
   webrtc::SessionDescriptionInterface* new_desc(
       webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
   peer_connection_->SetLocalDescription(observer, new_desc);
@@ -1006,6 +1019,24 @@ void ConferencePeerConnectionChannel::SendPublishMessage(
               if (encoding.num_temporal_layers > 0 &&
                   encoding.num_temporal_layers <= 4) {
                 param.num_temporal_layers = encoding.num_temporal_layers;
+              }
+              if (encoding.priority != owt::base::NetworkPriority::kDefault) {
+                switch (encoding.priority) {
+                  case owt::base::NetworkPriority::kVeryLow:
+                    param.network_priority = webrtc::Priority::kVeryLow;
+                    break;
+                  case owt::base::NetworkPriority::kLow:
+                    param.network_priority = webrtc::Priority::kLow;
+                    break;
+                  case owt::base::NetworkPriority::kMedium:
+                    param.network_priority = webrtc::Priority::kMedium;
+                    break;
+                  case owt::base::NetworkPriority::kHigh:
+                    param.network_priority = webrtc::Priority::kHigh;
+                    break;
+                  default:
+                    break;
+                }
               }
               param.active = encoding.active;
               transceiver_init.send_encodings.push_back(param);

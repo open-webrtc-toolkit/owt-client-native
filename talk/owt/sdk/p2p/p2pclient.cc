@@ -233,7 +233,8 @@ void P2PClient::OnSignalingMessage(const std::string& message,
       new_pcc->Publish(stream, success_callback, failure_callback);
       return;
     }
-  } else if (message.find("\"type\":\"chat-closed\"") != std::string::npos) {
+  } 
+  else if (message.find("\"type\":\"chat-closed\"") != std::string::npos) {
     int code = 0;
     std::string error = "";
     Json::Reader reader;

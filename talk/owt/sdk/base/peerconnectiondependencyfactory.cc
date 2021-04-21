@@ -17,13 +17,16 @@
 #include "webrtc/modules/audio_device/include/audio_device_factory.h"
 #endif
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/p2p/client/basic_port_allocator.h"
 #include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssl_adapter.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/field_trial.h"
 #if defined(WEBRTC_WIN)
+#ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
+#endif
 #elif defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/linux/msdkvideodecoderfactory.h"
 #elif defined(WEBRTC_IOS)
@@ -96,6 +99,29 @@ void PeerConnectionDependencyFactory::
       GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
   }
+  // Handle port ranges.
+  IcePortRanges ice_port_ranges;
+  GlobalConfiguration::GetPortRanges(ice_port_ranges);
+  if ((ice_port_ranges.audio.min > 0 &&
+       ice_port_ranges.audio.max > ice_port_ranges.audio.min) ||
+      (ice_port_ranges.video.min > 0 &&
+       ice_port_ranges.video.max > ice_port_ranges.video.min) ||
+      (ice_port_ranges.screen.min > 0 &&
+       ice_port_ranges.screen.max > ice_port_ranges.screen.min) ||
+      (ice_port_ranges.data.min > 0 &&
+       ice_port_ranges.data.max > ice_port_ranges.data.min)) {
+    field_trial_ += "OWT-IceUnbundle/Enabled/";
+  }
+  bool pre_decode_dump = GlobalConfiguration::GetPreDecodeDumpEnabled();
+  if (pre_decode_dump) {
+    field_trial_ += "WebRTC-DecoderDataDumpDirectory/./";
+  }
+
+  bool post_encode_dump = GlobalConfiguration::GetPostEncodeDumpEnabled();
+  if (post_encode_dump) {
+    field_trial_ += "WebRTC-EncoderDataDumpDirectory/./";
+  }
+
   // Set H.264 temporal layers. Ideally it should be set via RtpSenderParam
   int h264_temporal_layers = GlobalConfiguration::GetH264TemporalLayers();
   field_trial_ +=
@@ -119,6 +145,10 @@ void PeerConnectionDependencyFactory::
             network_thread->Start())
       << "Failed to start threads";
 
+  network_manager_ = std::make_shared<rtc::BasicNetworkManager>();
+  packet_socket_factory_ =
+      std::make_shared<rtc::BasicPacketSocketFactory>(network_thread.get());
+
   // Use webrtc::VideoEn(De)coderFactory on iOS.
   std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
   std::unique_ptr<webrtc::VideoDecoderFactory> decoder_factory;
@@ -136,7 +166,11 @@ void PeerConnectionDependencyFactory::
     // For Linux HW encoder pending verification.
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
 #else
+#ifdef OWT_USE_MSDK
     encoder_factory.reset(new MSDKVideoEncoderFactory());
+#else
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+#endif
 #endif
   } else {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
@@ -146,7 +180,11 @@ void PeerConnectionDependencyFactory::
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else if (render_hardware_acceleration_enabled_) {
+#ifdef OWT_USE_MSDK
     decoder_factory.reset(new MSDKVideoDecoderFactory());
+#else
+    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
   } else {
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
@@ -194,7 +232,34 @@ scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
-  return (pc_factory_->CreatePeerConnection(config, nullptr, nullptr, observer))
+  std::unique_ptr<cricket::PortAllocator> port_allocator;
+  port_allocator.reset(new cricket::BasicPortAllocator(
+      network_manager_.get(), packet_socket_factory_.get()));
+  // Handle port ranges.
+  IcePortRanges ice_port_ranges;
+  GlobalConfiguration::GetPortRanges(ice_port_ranges);
+  if (ice_port_ranges.audio.min > 0 &&
+      ice_port_ranges.audio.max > ice_port_ranges.audio.min) {
+    port_allocator->SetAudioPortRange(ice_port_ranges.audio.min,
+                                      ice_port_ranges.audio.max);
+  }
+  if (ice_port_ranges.video.min > 0 &&
+      ice_port_ranges.video.max > ice_port_ranges.video.min) {
+    port_allocator->SetVideoPortRange(ice_port_ranges.video.min,
+                                      ice_port_ranges.video.max);
+  }
+  if (ice_port_ranges.screen.min > 0 &&
+      ice_port_ranges.screen.max > ice_port_ranges.screen.min) {
+    port_allocator->SetScreenPortRange(ice_port_ranges.screen.min,
+                                       ice_port_ranges.screen.max);
+  }
+  if (ice_port_ranges.data.min > 0 &&
+      ice_port_ranges.data.max > ice_port_ranges.data.min) {
+    port_allocator->SetDataPortRange(ice_port_ranges.data.min,
+                                     ice_port_ranges.data.max);
+  }
+  return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
+                                            nullptr, observer))
       .get();
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {

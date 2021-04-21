@@ -5,11 +5,15 @@
 #ifndef OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 #define OWT_BASE_WIN_MSDKVIDEODECODERFACTORY_H_
 
+#include <memory>
 #include <vector>
 
 #include "webrtc/api/video_codecs/sdp_video_format.h"
+#include "webrtc/api/video/video_codec_type.h"
 #include "webrtc/api/video_codecs/video_decoder.h"
 #include "webrtc/api/video_codecs/video_decoder_factory.h"
+#include "talk/owt/sdk/include/cpp/owt/base/commontypes.h"
+#include "talk/owt/sdk/base/win/mediacapabilities.h"
 
 namespace owt {
 namespace base {

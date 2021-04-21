@@ -31,11 +31,19 @@ enum class VideoCodec : int {
   kUnknown
 };
 /// Track kind
-enum class TrackKind : int{
+enum class TrackKind : int {
   kAudio = 1,
   kVideo,
   kAudioAndVideo,
   kUnknown
+};
+/// Network priority
+enum class NetworkPriority : int {
+  kVeryLow,
+  kLow,
+  kMedium,
+  kHigh,
+  kDefault
 };
 /// This class represents a resolution value.
 struct Resolution {
@@ -49,6 +57,23 @@ struct Resolution {
   unsigned long width;
   unsigned long height;
 };
+
+/// This class represents a camera capability.
+struct VideoTrackCapabilities {
+  /// Construct an instance with width and height equal to 0.
+  explicit VideoTrackCapabilities() : width(0), height(0), frameRate(0) {}
+  /// Construct an instance with specify width and height.
+  VideoTrackCapabilities(unsigned long w, unsigned long h, int fps)
+      : width(w), height(h), frameRate(fps) {}
+  bool operator==(const VideoTrackCapabilities& rhs) const {
+    return this->width == rhs.width && this->height == rhs.height &&
+           this->frameRate == rhs.frameRate;
+  }
+  unsigned long width;
+  unsigned long height;
+  int32_t frameRate;
+};
+
 /// Audio codec parameters for an audio track.
 struct AudioCodecParameters {
   /// Construct an instance of AudioCodecParameters with default param.
@@ -93,6 +118,9 @@ struct RtpEncodingParameters {
   // Value to use for RID RTP header extension.
   // Called "encodingId" in ORTC.
   std::string rid = "";
+
+  // The RTPSender/RTPReceiver's priority. Will impact the DSCP flag on Linux.
+  NetworkPriority priority = NetworkPriority::kDefault;
 };
 
 /// Audio encoding parameters.
