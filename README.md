@@ -23,7 +23,7 @@ Before you start, make sure you have the following prerequisites installed/built
 The following dependencies are for Windows only:
 
 - [Boost 1.67.0 or higher](https://www.boost.org/users/download/).
-- [Intel Media SDK for Windows, version 2018 R1 or higher](https://software.intel.com/en-us/media-sdk/choose-download/client).
+- [Intel Media SDK for Windows, version 2020 R1 or higher](https://software.intel.com/en-us/media-sdk/choose-download/client).
 
 ### Get the code
 - Make sure you clone the source code to a directory named `src`.

@@ -45,13 +45,15 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
   //
   // Although hardware support it, we will not enable HW encoding for VP8/HEVC
   // with PAK + Shader.
+  std::vector<VideoEncoderCapability> capabilities;
+
+#ifdef OWT_USE_MSDK
   bool support_h264 = false, h264_lp = false, h264_argb = false;
   bool support_hevc_8 = false, support_hevc_10 = false,
        support_hevc_scc = false;
   bool support_vp9_8 = false, support_vp9_10 = false;
   bool is_discrete_graphics = false;
 
-  std::vector<VideoEncoderCapability> capabilities;
   // Check platform type.
   if (inited_) {
     unsigned short platform_code = mfx_platform_.CodeName;
@@ -247,6 +249,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
       }
     }
   }
+  #endif
   return capabilities;
 }
 
@@ -254,7 +257,7 @@ std::vector<VideoDecoderCapability>
 MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
     std::vector<owt::base::VideoCodec>& codec_types) {
   std::vector<VideoDecoderCapability> capabilities;
-
+#ifdef OWT_USE_MSDK
   if (inited_) {
     mfxStatus sts = MFX_ERR_NONE;
     mfxVideoParam video_param;
@@ -350,6 +353,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
       }
     }
   }
+#endif
   return capabilities;
 }
 
@@ -371,6 +375,7 @@ MediaCapabilities* MediaCapabilities::Get() {
 MediaCapabilities::MediaCapabilities() {}
 
 MediaCapabilities::~MediaCapabilities() {
+#ifdef OWT_USE_MSDK
   if (mfx_encoder_) {
     mfx_encoder_->Close();
     mfx_encoder_.reset();
@@ -382,9 +387,11 @@ MediaCapabilities::~MediaCapabilities() {
   if (msdk_factory_ && mfx_session_) {
     msdk_factory_->DestroySession(mfx_session_);
   }
+#endif
 }
 
 bool MediaCapabilities::Init() {
+#ifdef OWT_USE_MSDK
   bool res = false;
   msdk_factory_ = owt::base::MSDKFactory::Get();
   if (!msdk_factory_)
@@ -410,6 +417,9 @@ bool MediaCapabilities::Init() {
 
 failed:
   return res;
+#else
+  return true;
+#endif
 }
 
 

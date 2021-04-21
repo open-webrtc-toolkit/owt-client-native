@@ -23,8 +23,10 @@
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/field_trial.h"
 #if defined(WEBRTC_WIN)
+#ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
+#endif
 #elif defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/linux/msdkvideodecoderfactory.h"
 #elif defined(WEBRTC_IOS)
@@ -164,7 +166,11 @@ void PeerConnectionDependencyFactory::
     // For Linux HW encoder pending verification.
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
 #else
+#ifdef OWT_USE_MSDK
     encoder_factory.reset(new MSDKVideoEncoderFactory());
+#else
+    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+#endif
 #endif
   } else {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
@@ -174,7 +180,11 @@ void PeerConnectionDependencyFactory::
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else if (render_hardware_acceleration_enabled_) {
+#ifdef OWT_USE_MSDK
     decoder_factory.reset(new MSDKVideoDecoderFactory());
+#else
+    decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
   } else {
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }

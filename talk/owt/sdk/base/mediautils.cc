@@ -162,6 +162,7 @@ absl::optional<AV1Profile> StringToAV1Profile(const std::string& str) {
 }
 
 absl::optional<H265ProfileId> StringToH265Profile(const std::string& str) {
+#ifdef OWT_USE_MSDK
   const absl::optional<int> i = rtc::StringToNumber<int>(str);
   if (!i.has_value())
     return absl::nullopt;
@@ -183,6 +184,7 @@ absl::optional<H265ProfileId> StringToH265Profile(const std::string& str) {
     default:
       return absl::nullopt;
   }
+#endif
   return absl::nullopt;
 }
 

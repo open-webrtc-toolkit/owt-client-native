@@ -177,9 +177,32 @@ static_library("owt_sdk_base") {
 
   defines = [ "USE_BUILTIN_SW_CODECS" ]
 
-  if (owt_msdk_header_root != "") {
+  if (is_win && owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
     defines += [ "OWT_USE_MSDK" ]
+    sources += [
+      "sdk/base/win/base_allocator.cc",
+      "sdk/base/win/base_allocator.h",
+      "sdk/base/win/d3d_allocator.cc",
+      "sdk/base/win/d3d_allocator.h",
+      "sdk/base/win/d3d11_allocator.cc",
+      "sdk/base/win/d3d11_allocator.h",
+      "sdk/base/win/d3dnativeframe.h",
+      "sdk/base/win/mediacapabilities.cc",
+      "sdk/base/win/mediacapabilities.h",
+      "sdk/base/win/msdkvideobase.cc",
+      "sdk/base/win/msdkvideobase.h",
+      "sdk/base/win/msdkvideodecoder.cc",
+      "sdk/base/win/msdkvideodecoder.h",
+      "sdk/base/win/msdkvideodecoderfactory.cc",
+      "sdk/base/win/msdkvideodecoderfactory.h",
+      "sdk/base/win/msdkvideoencoder.cc",
+      "sdk/base/win/msdkvideoencoder.h",
+      "sdk/base/win/msdkvideoencoderfactory.cc",
+      "sdk/base/win/msdkvideoencoderfactory.h",
+      "sdk/base/win/sysmem_allocator.cc",
+      "sdk/base/win/sysmem_allocator.h",
+    ]
   }
 
   if (rtc_include_internal_audio_device) {
@@ -212,27 +235,6 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
-      "sdk/base/win/base_allocator.cc",
-      "sdk/base/win/base_allocator.h",
-      "sdk/base/win/d3d_allocator.cc",
-      "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/d3d11_allocator.cc",
-      "sdk/base/win/d3d11_allocator.h",
-      "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/mediacapabilities.cc",
-      "sdk/base/win/mediacapabilities.h",
-      "sdk/base/win/msdkvideobase.cc",
-      "sdk/base/win/msdkvideobase.h",
-      "sdk/base/win/msdkvideodecoder.cc",
-      "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
-      "sdk/base/win/msdkvideoencoder.cc",
-      "sdk/base/win/msdkvideoencoder.h",
-      "sdk/base/win/msdkvideoencoderfactory.cc",
-      "sdk/base/win/msdkvideoencoderfactory.h",
-      "sdk/base/win/sysmem_allocator.cc",
-      "sdk/base/win/sysmem_allocator.h",
       "sdk/base/win/videorendererwin.cc",
       "sdk/base/win/videorendererwin.h",
       "sdk/base/win/videorendererd3d11.cc",

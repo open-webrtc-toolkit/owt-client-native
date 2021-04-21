@@ -80,11 +80,8 @@ enum class H265ProfileId : int {
   kMain,
   kMain10,
   kMainStillPicture,
-  kMainRExt  // Range extension
-#if (MFX_VERSION >= 1032)
-  ,
+  kMainRExt,  // Range extension
   KScc  // Screen content extension.
-#endif
 };
 
 /// Level ID as negotiated in SDP level-id field.

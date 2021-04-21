@@ -7,8 +7,8 @@
 
 #include <mutex>
 #include <vector>
-#include "base_allocator.h"
 #ifdef OWT_USE_MSDK
+#include "base_allocator.h"
 #include "mfxvideo++.h"
 #include "talk/owt/sdk/base/win/msdkvideobase.h"
 #endif
