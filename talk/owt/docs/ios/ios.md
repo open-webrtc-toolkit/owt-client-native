@@ -29,6 +29,7 @@ Signaling channel is an implementation to transmit signaling data for creating a
 # 8 Known issues {#section8}
 Here is a list of known issues:
 - If you create multiple `OWTLocalStream`s from camera with different resolutions, previous streams will be black.
+- OWT.framework contains slices of armv7, arm64 for iOS devices and x86_64 for iOS simulators. This is an unsupported configuration. We will move to xcframework in the future (see [issue 466](https://github.com/open-webrtc-toolkit/owt-client-native/issues/466)). Depend on your target, please remove x86_64 slice or armv7 and arm64 slices if you get an error while linking the framework.
 # 9 Video codecs {#section9}
 Both VP8 and H.264 are supported. H.264 is recommended since it has hardware support.
 # 10 Video frame filter {#section10}
