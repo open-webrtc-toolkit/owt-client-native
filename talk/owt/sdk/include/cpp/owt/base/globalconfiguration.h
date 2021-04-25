@@ -88,6 +88,32 @@ class GlobalConfiguration {
     hardware_acceleration_enabled_ = enabled;
   }
 #endif
+
+#if defined(WEBRTC_WIN)
+  /**
+   @brief Enable driver-based super resolution(SR) for video rendering if underlying
+   platform supports it. This can only be enabled on Windows platform and is by default
+   turned off. Requires 11th Generation Intel(R) Core(TM) processors or above, or
+   Intel(R) discrete graphics for SR to function properly.
+   Be noted turning this on does not neccessarily enable SR on all hardwares.
+   If SR is not supported by driver, render will silently fall back to normal scaling mode
+   and no error will be prompted. It is expected when SR is effectively on, 3D
+   usage will increase, so application needs to balance accordingly.
+   @param enabled If true, D3D11 video processor in the SDK will turn on SR when approriate.
+   */
+  static void SetVideoSuperResolutionEnabled(bool enabled) {
+    video_super_resolution_enabled_ = enabled;
+  }
+
+  /**
+   @brief Get SDK setting on whether super resolution is allowed. This does not
+   neccessarily indicate if super resolution is effective on or not in render pipeline.
+   @return True if SDK allows turnning on super resolution when appropriate. False otherwise.
+  */
+  static bool GetVideoSuperResolutionEnabled() {
+    return video_super_resolution_enabled_;
+  }
+#endif
   /** @cond */
   /**
    @brief This function sets the capturing frame type to be encoded video frame.
@@ -339,6 +365,8 @@ class GlobalConfiguration {
   static std::unique_ptr<VideoDecoderInterface> video_decoder_;
 
   static AudioProcessingSettings audio_processing_settings_;
+
+  static bool video_super_resolution_enabled_;
 };
 }
 }

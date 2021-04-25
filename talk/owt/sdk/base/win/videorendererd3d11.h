@@ -26,6 +26,7 @@
 #include <wrl.h>
 #include <vector>
 
+#include "talk/owt/sdk/base/win/vpedefs.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_sink_interface.h"
 #include "webrtc/rtc_base/thread.h"
@@ -53,6 +54,7 @@ class WebrtcVideoRendererD3D11Impl
   bool InitSwapChain(int widht, int height, bool reset);
   bool CreateStagingTexture(int width, int height);
   bool GetWindowSizeForSwapChain(int& width, int& height);
+  bool SupportSuperResolution();
 
   // Render window objects
   HWND wnd_ = nullptr;
@@ -91,6 +93,8 @@ class WebrtcVideoRendererD3D11Impl
   bool d3d11_raw_inited_ = false;
   // Remote view is using MPO swapchain.
   bool d3d11_mpo_inited_ = false;
+  // Support super resolution
+  bool sr_enabled_ = false;
   webrtc::Clock* clock_;
 };
 

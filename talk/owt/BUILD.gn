@@ -202,6 +202,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/msdkvideoencoderfactory.h",
       "sdk/base/win/sysmem_allocator.cc",
       "sdk/base/win/sysmem_allocator.h",
+      "sdk/base/win/vpedefs.h",
     ]
   }
 
