@@ -9,6 +9,7 @@
 #include <system_error>
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
+#include "talk/owt/sdk/include/cpp/owt/base/globalconfiguration.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
 #include "webrtc/api/video/i420_buffer.h"
@@ -19,9 +20,23 @@ using namespace rtc;
 namespace owt {
 namespace base {
 
+// Driver specific VPE interface for SR/FRC.
+static const GUID GUID_VPE_INTERFACE = {
+    0xedd1d4b9,
+    0x8659,
+    0x4cbc,
+    {0xa4, 0xd6, 0x98, 0x31, 0xa2, 0x16, 0x3a, 0xc3}};
+
+#define VPE_FN_SCALING_MODE_PARAM 0x37
+#define VPE_FN_MODE_PARAM 0x20
+#define VPE_FN_SET_VERSION_PARAM 0x01
+#define VPE_FN_SR_SET_PARAM 0x401
+#define VPE_FN_SET_CPU_GPU_COPY_PARAM 0x2B
+
 WebrtcVideoRendererD3D11Impl::WebrtcVideoRendererD3D11Impl(HWND wnd)
     : wnd_(wnd), clock_(Clock::GetRealTimeClock()) {
   CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&dxgi_factory_));
+  sr_enabled_ = SupportSuperResolution();
 }
 
 // The swapchain needs to use window height/width of even number.
@@ -35,7 +50,7 @@ bool WebrtcVideoRendererD3D11Impl::GetWindowSizeForSwapChain(int& width, int& he
   height = rect.bottom - rect.top;
 
   if (width % 2) {
-    window_width_ += 1;
+    width += 1;
   }
   if (height % 2) {
     height += 1;
@@ -556,6 +571,61 @@ void WebrtcVideoRendererD3D11Impl::RenderD3D11Texture(int width, int height) {
                                                           true, &rect);
   d3d11_video_context_->VideoProcessorSetStreamFrameFormat(
       video_processor_, 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
+
+  // Setup VPE for SR.
+  if (sr_enabled_) {
+    VPE_FUNCTION function_params;
+    VPE_VERSION vpe_version = {};
+    VPE_MODE vpe_mode = {};
+    SR_SCALING_MODE sr_scaling_params = {};
+    VPE_SR_PARAMS sr_params = {};
+    void* p_ext_data = nullptr;
+    UINT data_size = 0;
+    const GUID* p_ext_guid = nullptr;
+
+    // Set VPE version
+    ZeroMemory(&function_params, sizeof(function_params));
+    vpe_version.Version = (UINT)VPE_VERSION_3_0;
+    function_params.Function = VPE_FN_SET_VERSION_PARAM;
+    function_params.pVPEVersion = &vpe_version;
+    p_ext_data = &function_params;
+    data_size = sizeof(function_params);
+    p_ext_guid = &GUID_VPE_INTERFACE;
+
+    hr = d3d11_video_context_->VideoProcessorSetOutputExtension(
+        video_processor_, p_ext_guid, data_size, p_ext_data);
+    if (FAILED(hr))
+      goto sr_fail;
+
+    // Clear mode
+    ZeroMemory(&function_params, sizeof(function_params));
+    vpe_mode.Mode = VPE_MODE_NONE;
+    function_params.Function = VPE_FN_MODE_PARAM;
+    function_params.pVPEMode = &vpe_mode;
+    p_ext_data = &function_params;
+    data_size = sizeof(function_params);
+    p_ext_guid = &GUID_VPE_INTERFACE;
+    hr = d3d11_video_context_->VideoProcessorSetOutputExtension(
+        video_processor_, p_ext_guid, data_size, p_ext_data);
+    if (FAILED(hr))
+      goto sr_fail;
+
+    // Set SR parameters
+    ZeroMemory(&function_params, sizeof(function_params));
+    sr_params.bEnable = true;
+    sr_params.SRMode = DEFAULT_SCENARIO_MODE;
+    function_params.Function = VPE_FN_SR_SET_PARAM;
+    function_params.pSRParams = &sr_params;
+    p_ext_data = &function_params;
+    data_size = sizeof(function_params);
+    p_ext_guid = &GUID_VPE_INTERFACE;
+    hr = d3d11_video_context_->VideoProcessorSetOutputExtension(
+        video_processor_, p_ext_guid, data_size, p_ext_data);
+    if (FAILED(hr))
+      goto sr_fail;
+  }
+
+sr_fail:
   hr = d3d11_video_context_->VideoProcessorBlt(
       video_processor_, output_view.Get(), 0, 1, &stream_data);
   if (FAILED(hr)) {
@@ -693,6 +763,11 @@ bool WebrtcVideoRendererD3D11Impl::CreateStagingTexture(int width, int height) {
   }
 
   return true;
+}
+
+// Checks support for super resolution.
+bool WebrtcVideoRendererD3D11Impl::SupportSuperResolution() {
+  return GlobalConfiguration::GetVideoSuperResolutionEnabled();
 }
 
 }  // namespace base
