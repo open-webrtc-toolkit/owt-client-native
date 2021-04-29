@@ -16,7 +16,7 @@ The release package includes two sample applications to get you started quickly 
 
 Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 # 4 Socket.IO {#section4}
-OWT iOS SDK depends on Socket.IO cpp client, which is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is 725a8e0e17ecead64574fd9879bd7029b0bf25fa. OpenSSL version is 1.1.1 with the latest patch release.
+OWT iOS SDK depends on Socket.IO cpp client, which is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93. OpenSSL version is 1.1.1 with the latest patch release.
 Please make sure your app has network access before making Socket.IO connection. As Socket.IO cpp client uses low level network APIs, iOS system may not ask user for network permission. Thus, Socket.IO connection will fail because app does not have network access.
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a.
 # 5 Background modes {#section5}

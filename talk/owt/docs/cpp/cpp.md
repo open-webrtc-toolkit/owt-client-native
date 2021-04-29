@@ -17,9 +17,8 @@ owt-debug.lib|owt-release references libraries in Windows SDK for DXVA support. 
 mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib and dxva2.lib to build. Depending on your signaling
 channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
 # 4 Socket.IO {#section4}
-Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp).
-The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure
-connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to SSL1.1.0l, so sioclient_tls.lib must be compiled using the same SSL version.
+Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93.
+The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to OpenSSL 1.1.1, so sioclient_tls.lib must be compiled using the same OpenSSL version.
 # 5 NAT and firewall traversal {#section5}
 Open WebRTC Toolkit Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 # 6 Customize signaling channel {#section6}
@@ -33,7 +32,7 @@ message is coming or connection is lost.
 For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
 VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
 Most of the 5th-11th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
-Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported. 
+Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported.
 You can turn off video encoding/decoding hardware acceleration via {@link owt.base.GlobalConfiguration GlobalConfiguration} API,
 by passing "false" to SetVideoHardwareAccelerationEnabled API before creating conferenceclient or peerclient.
 # 8 Publish streams with customized frames {#section8}
