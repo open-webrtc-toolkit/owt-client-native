@@ -31,7 +31,7 @@ DeviceInfoMF* DeviceInfoMF::Create() {
 
 DeviceInfoMF::DeviceInfoMF() {
   // Maybe we should move this to Init().
-  HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
   if (FAILED(hr)) {
     if (hr == RPC_E_CHANGED_MODE) {
       RTC_LOG(LS_WARNING)

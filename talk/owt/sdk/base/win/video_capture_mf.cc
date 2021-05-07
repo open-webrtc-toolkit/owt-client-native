@@ -167,16 +167,17 @@ bool VideoCaptureMF::Init(const char* device_unique_id_utf8, int32_t width,
   }
 
   // Set format to capture device
-  CComPtr<IMFMediaType> mediaType = nullptr;
+  CComPtr<IMFMediaType> media_type = nullptr;
   hr = reader_->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
-                                   capability_index, &mediaType);
+                                   capability_index, &media_type);
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "GetNativeMediaType failed:"
                       << std::system_category().message(hr);
     return false;
   }
 
-  hr = reader_->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, nullptr, mediaType);
+  hr = reader_->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                                    nullptr, media_type);
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "SetCurrentMediaType failed:"
                       << std::system_category().message(hr);
@@ -341,9 +342,9 @@ void VideoCaptureMF::IncomingFrame(IMFMediaBuffer*& frame, int64_t capture_time)
       int stride_uv = (width + 1) / 2;
       int target_width = width;
       int target_height = abs(height);
-      BYTE* data = NULL;
+      BYTE* data = nullptr;
 
-      if (FAILED(frame->Lock(&data, NULL, NULL))) {
+      if (FAILED(frame->Lock(&data, nullptr, nullptr))) {
         SAFE_RELEASE(frame);
         return;
       }
@@ -451,7 +452,7 @@ HRESULT VideoCaptureMF::SetCameraOutput(
   UINT32 numerator, denominator;
   MFGetAttributeRatio(media_type, MF_MT_FRAME_RATE, &numerator, &denominator);
   GUID subtype;
-  // Get the Video SubType for this media Type
+  // Get the video subType for this media type
   media_type->GetGUID(MF_MT_SUBTYPE, &subtype);
   if (subtype == MFVideoFormat_I420) {
     format = "I420";
@@ -467,6 +468,8 @@ HRESULT VideoCaptureMF::SetCameraOutput(
     format = "RGB565";
   } else if (subtype == MFVideoFormat_MJPG) {
     format = "MJPG";
+  } else {
+    format = "Others";
   }
   RTC_LOG(LS_INFO) << "VideoCapturer: Format set to camera, Width:" << width
                    << ", height:" << height
