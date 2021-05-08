@@ -81,7 +81,7 @@ enum class H265ProfileId : int {
   kMain10,
   kMainStillPicture,
   kMainRExt,  // Range extension
-  KScc  // Screen content extension.
+  kScc  // Screen content extension.
 };
 
 /// Level ID as negotiated in SDP level-id field.
