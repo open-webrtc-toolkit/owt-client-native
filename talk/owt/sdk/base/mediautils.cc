@@ -12,7 +12,6 @@
 #include "webrtc/rtc_base/string_to_number.h"
 #include "system_wrappers/include/field_trial.h"
 #include "talk/owt/sdk/base/mediautils.h"
-#include "talk/owt/sdk/base/win/mediacapabilities.h"
 
 namespace owt {
 namespace base {

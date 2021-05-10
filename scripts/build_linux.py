@@ -44,7 +44,7 @@ GN_ARGS = [
 
 def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
-    return os.path.join(r'out', out_lib)
+    return os.path.join(HOME_PATH + r'/out', out_lib)
 
 def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio):
     gn_args = list(GN_ARGS)
@@ -101,7 +101,9 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
     return False
 
 def getoutputpath(arch, scheme):
-    return 'out/%s-%s' % (scheme, arch)
+    bin_path = 'out/%s-%s' % (scheme, arch)
+    obj_path = os.path.join(HOME_PATH, bin_path)
+    return obj_path
 
 
 def ninjabuild(arch, scheme):
@@ -138,11 +140,11 @@ def pack_sdk(arch, scheme, output_path):
     src_lib_path = gen_lib_path(scheme)
     src_include_path = os.path.join(HOME_PATH, r'talk/owt/sdk/include/cpp')
     src_doc_path = os.path.join(HOME_PATH, r'talk/owt/docs/cpp/html')
-    dst_lib_path = os.path.join(output_path, 'libs')
-    dst_include_path = os.path.join(output_path, 'include')
-    dst_doc_path = os.path.join(output_path, 'docs')
+    dst_lib_path = os.path.join(os.path.abspath(output_path), 'libs')
+    dst_include_path = os.path.join(os.path.abspath(output_path), 'include')
+    dst_doc_path = os.path.join(os.path.abspath(output_path), 'docs')
     if not os.path.exists(dst_lib_path):
-        os.mkdir(dst_lib_path)
+        os.makedirs(dst_lib_path)
     if os.path.exists(dst_include_path):
         shutil.rmtree(dst_include_path)
     shutil.copy(src_lib_path, dst_lib_path)

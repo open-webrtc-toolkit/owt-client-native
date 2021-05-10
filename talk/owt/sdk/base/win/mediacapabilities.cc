@@ -209,7 +209,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             hevc_scc_cap.max_temporal_layers = 1;
             hevc_scc_cap.max_spatial_layers = 1;
             hevc_scc_cap.low_power = true;
-            hevc_scc_cap.codec_specific.H265.profile = H265ProfileId::KScc;
+            hevc_scc_cap.codec_specific.H265.profile = H265ProfileId::kScc;
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kCBR);
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kVBR);
             hevc_scc_cap.supported_brc_modes.push_back(BRCMode::kCQP);
