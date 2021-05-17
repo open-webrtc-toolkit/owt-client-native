@@ -140,6 +140,7 @@ static_library("owt_sdk_base") {
       "sdk/base/encodedvideoencoderfactory.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
+      "sdk/base/windowcapturer.cc",
       "sdk/include/cpp/owt/base/videodecoderinterface.h",
     ]
   }
@@ -242,7 +243,11 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererd3d11.h",
       "sdk/base/win/vp9ratecontrol.cc",
       "sdk/base/win/vp9ratecontrol.h",
-      "sdk/base/windowcapturer.cc",
+      "sdk/base/win/d3d11_manager.h",
+      "sdk/base/win/device_info_mf.h",
+      "sdk/base/win/device_info_mf.cc",
+      "sdk/base/win/video_capture_mf.h",
+      "sdk/base/win/video_capture_mf.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
     public_deps += [ "//third_party/libvpx" ]
