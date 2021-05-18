@@ -258,6 +258,7 @@ static_library("owt_sdk_base") {
   if (is_linux) {
     if (owt_msdk_header_root != "") {
       include_dirs += [ owt_msdk_header_root ]
+      defines += [ "OWT_USE_MSDK" ]
       sources += [
         "sdk/base/linux/displayutils.cc",
         "sdk/base/linux/displayutils.h",
