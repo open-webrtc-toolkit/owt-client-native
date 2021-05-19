@@ -3,7 +3,7 @@
 ## Introduction
 The Open WebRTC Toolkit(OWT) client SDK for native Windows/Linux/Android/iOS applications is built upon the W3C WebRTC standard to accelerate the development
 of real time communication applications on these platforms. It supports peer to peer communication, and conference mode communication working with
-Open WebRTC Toolkit MCU server.
+Open WebRTC Toolkit conference server.
 
 - Supported Windows platform: Windows 8 and above.
 - Supported Linux platform: Ubuntu 16.04 & 18.04.
