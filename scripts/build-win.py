@@ -24,7 +24,6 @@ PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 
 GN_ARGS = [
-    'is_clang=false',
     'rtc_use_h264=true',
     'ffmpeg_branding="Chrome"',
     'rtc_use_h265=true',
@@ -39,6 +38,8 @@ GN_ARGS = [
 def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
+    if arch != 'arm64':
+        gn_args.append('is_clang=false')
     if scheme == 'release':
         gn_args.append('is_debug=false')
     else:
@@ -170,8 +171,8 @@ def pack_sdk(scheme, output_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64'),
-                        help='Target architecture. Supported value: x86, x64')
+    parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64', 'arm64'),
+                        help='Target architecture. Supported value: x86, x64, arm64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
