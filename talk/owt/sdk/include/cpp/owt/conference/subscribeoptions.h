@@ -72,6 +72,7 @@ struct VideoSubscriptionUpdateConstraints {
   double frameRate;
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
+  std::string streamid;
 };
 /// Subscription update option used by subscription's ApplyOptions API.
 struct SubscriptionUpdateOptions {

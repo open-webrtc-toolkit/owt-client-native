@@ -222,6 +222,8 @@
   constrains->frameRate = _frameRate;
   constrains->bitrateMultiplier = _bitrateMultiplier;
   constrains->keyFrameInterval = _keyFrameInterval;
+  if(_streamid != nil)
+    constrains->streamid = std::string([_streamid UTF8String]);
   return constrains;
 }
 @end

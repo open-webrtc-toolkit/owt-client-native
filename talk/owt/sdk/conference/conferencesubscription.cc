@@ -146,7 +146,17 @@ void ConferenceSubscription::ApplyOptions(
       });
     }
   } else {
-    that->UpdateSubscription(id_, stream_id_, options, on_success, on_failure);
+    std::string update_stream_id = options.video.streamid;
+    if( update_stream_id.empty() ){
+      that->UpdateSubscription(id_, stream_id_, options, on_success, on_failure);
+    }
+    else{
+      std::function<void()> local_on_success = [this, &update_stream_id, on_success]() {
+         stream_id_.assign(update_stream_id);
+         on_success();
+      };
+      that->UpdateSubscription(id_, update_stream_id, options, local_on_success, on_failure);
+    }
   }
 }
 

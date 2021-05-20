@@ -82,6 +82,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) double frameRate;
 @property(nonatomic, assign) double bitrateMultiplier;
 @property(nonatomic, assign) NSUInteger keyFrameInterval;
+@property(nonatomic, strong) NSString *streamid;
 @end
 RTC_OBJC_EXPORT
 @interface OWTConferenceSubscriptionUpdateOptions : NSObject
