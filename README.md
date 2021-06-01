@@ -1,5 +1,8 @@
 # Open WebRTC Toolkit Native SDK
 
+## About this branch
+This branch is working on enabling WebAssembly build. Some WebRTC modules could be used for WebTransport and WebCodecs based streaming.
+
 ## Introduction
 The Open WebRTC Toolkit(OWT) client SDK for native Windows/Linux/Android/iOS applications is built upon the W3C WebRTC standard to accelerate the development
 of real time communication applications on these platforms. It supports peer to peer communication, and conference mode communication working with

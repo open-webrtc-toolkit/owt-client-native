@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build_overrides/webrtc.gni")
+import("//talk/owt/sdk/wasm/gn/wasm.gni")
 import("//testing/test.gni")
 
 # Introduced for using libvpx config files. We only enable libvpx rate
@@ -332,6 +333,15 @@ static_library("owt_sdk_p2p") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
+
+wasm_lib("owt_wasm") {
+  name = "owt"
+  deps = [ "//third_party/webrtc/modules/rtp_rtcp" ]
+  sources=[
+    "sdk/wasm/main.cc",
+  ]
+}
+
 static_library("owt_sdk_conf") {
   deps = [
     ":owt_sdk_base",
