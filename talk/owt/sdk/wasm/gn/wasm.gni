@@ -23,7 +23,7 @@ import("wasm_vars.gni")
 
 # Used by //gn/standalone/toolchain/BUILD.gn .
 em_config = rebase_path("/home/jianjunz/code/emsdk/.emscripten", "")
-emsdk_dir = rebase_path("//buildtools/linux64/emsdk", "")
+emsdk_dir = rebase_path("/home/jianjunz/code/emsdk/upstream", "")
 
 # Defines a WASM library target.
 # Args:
@@ -49,11 +49,13 @@ template("wasm_lib") {
       "-s",
       "INITIAL_MEMORY=33554432",
       "-s",
-      "ALLOW_MEMORY_GROWTH=1",
-      "-s",
       "ALLOW_TABLE_GROWTH=1",
       "-s",
       "WASM_ASYNC_COMPILATION=0",
+      "-s",
+      "USE_PTHREADS=1",
+      "-s",
+      "LLD_REPORT_UNDEFINED",
       "-s",
       "EXTRA_EXPORTED_RUNTIME_METHODS=" + _exports,
 
@@ -75,6 +77,8 @@ template("wasm_lib") {
       "EXPORT_NAME=${target_name}",
 
       "-lworkerfs.js",  # For FS.filesystems.WORKERFS
+
+      "--bind",
     ]
     if (is_debug) {
       _target_ldflags += [
@@ -84,7 +88,7 @@ template("wasm_lib") {
         "SAFE_HEAP=1",
         "-s",
         "STACK_OVERFLOW_CHECK=1",
-        "-g4",
+        "-gsource-map",
         "-O0",
       ]
     } else {
@@ -103,9 +107,12 @@ template("wasm_lib") {
       ]
     }
 
-    _target_cflags = ["-fno-stack-protector"]
-    if(defined(invoker.cflags)){
-      _target_cflags+=invoker.cflags
+    _target_cflags = [
+      "-fno-stack-protector",
+      "-pthread",
+    ]
+    if (defined(invoker.cflags)) {
+      _target_cflags += invoker.cflags
     }
 
     _vars_to_forward = [
@@ -122,6 +129,7 @@ template("wasm_lib") {
 
     executable("${_lib_name}.js") {
       forward_variables_from(invoker, _vars_to_forward)
+
       # Fix ldflags.
       ldflags = _target_ldflags
       cflags = _target_cflags
