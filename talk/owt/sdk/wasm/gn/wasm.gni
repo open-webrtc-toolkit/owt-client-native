@@ -23,7 +23,7 @@ import("wasm_vars.gni")
 
 # Used by //gn/standalone/toolchain/BUILD.gn .
 em_config = rebase_path("/home/jianjunz/code/emsdk/.emscripten", "")
-emsdk_dir = rebase_path("//buildtools/linux64/emsdk", "")
+emsdk_dir = rebase_path("/home/jianjunz/code/emsdk/upstream", "")
 
 # Defines a WASM library target.
 # Args:

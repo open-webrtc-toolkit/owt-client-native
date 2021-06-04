@@ -295,7 +295,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.h",
     ]
   }
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
   if (is_win && is_clang) {
@@ -329,17 +329,21 @@ static_library("owt_sdk_p2p") {
     "sdk/p2p/p2psignalingsenderimpl.cc",
     "sdk/p2p/p2psignalingsenderimpl.h",
   ]
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
 
-wasm_lib("owt_wasm") {
-  name = "owt"
-  deps = [ "//third_party/webrtc/modules/rtp_rtcp" ]
-  sources=[
-    "sdk/wasm/main.cc",
-  ]
+if (is_wasm) {
+  wasm_lib("owt_wasm") {
+    name = "owt"
+    deps = [
+      "//third_party/webrtc/modules/rtp_rtcp:rtp_rtcp",
+      "//third_party/webrtc/rtc_base:rtc_json",
+      "//third_party/boringssl",
+    ]
+    sources = [ "sdk/wasm/main.cc" ]
+  }
 }
 
 static_library("owt_sdk_conf") {
@@ -366,7 +370,7 @@ static_library("owt_sdk_conf") {
     "sdk/include/cpp/owt/conference/remotemixedstream.h",
     "sdk/include/cpp/owt/conference/user.h",
   ]
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 

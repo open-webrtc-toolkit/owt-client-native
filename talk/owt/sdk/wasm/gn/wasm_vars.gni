@@ -17,4 +17,4 @@
 # limitations under the License.
 
 wasm_toolchain = "//talk/owt/sdk/wasm/gn:wasm"
-is_wasm = current_toolchain == wasm_toolchain
+# is_wasm = current_toolchain == wasm_toolchain

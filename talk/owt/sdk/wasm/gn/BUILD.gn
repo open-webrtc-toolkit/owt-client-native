@@ -65,7 +65,7 @@ template("gcc_like_toolchain") {
 
     tool("cc") {
       depfile = "{{output}}.d"
-      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -fno-stack-protector ${external_cflags} -msimd128 -pthread -D__wasm__ -c {{source}} -o {{output}}"
+      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -fno-stack-protector ${external_cflags} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
       description = "compile {{source}}"
@@ -73,7 +73,7 @@ template("gcc_like_toolchain") {
 
     tool("cxx") {
       depfile = "{{output}}.d"
-      command = "$cc_wrapper $cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -fno-stack-protector ${external_cflags} -msimd128 -pthread -D__wasm__ ${external_cxxflags} -c {{source}} -o {{output}}"
+      command = "$cc_wrapper $cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -fno-stack-protector ${external_cflags} ${external_cxxflags} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
       description = "compile {{source}}"
@@ -173,8 +173,8 @@ gcc_like_toolchain("wasm") {
   # emsdk_dir and em_config are defined in wasm.gni.
   cpu = host_cpu
   os = host_os
-  ar = "emar --em-config $em_config"
-  cc = "emcc --em-config $em_config"
-  cxx = "em++ --em-config $em_config"
+  ar = "$emsdk_dir/emscripten/emar --em-config $em_config"
+  cc = "$emsdk_dir/emscripten/emcc --em-config $em_config"
+  cxx = "$emsdk_dir/emscripten/em++ --em-config $em_config"
   strip = ""
 }
