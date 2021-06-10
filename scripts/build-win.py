@@ -35,7 +35,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -56,6 +56,10 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
         gn_args.append('owt_use_openssl=true')
         gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
         gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\lib'))
+    if runtime == 'shared':
+        gn_args.append('owt_msvc_build_md=true')
+    else:
+        gn_args.append('owt_msvc_build_md=false')
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'\lib\win32'
@@ -179,7 +183,9 @@ def pack_sdk(scheme, output_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64', 'arm64'),
-                        help='Target architecture. Supported value: x86, x64, arm64')
+                        help='Target architecture. Supported value: x86, x64')
+    parser.add_argument('--runtime', default='shared', choices=('static', 'shared'),
+                        help='VC runtime linkage. Supported value: shared, static')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
@@ -204,10 +210,9 @@ def main():
     if opts.quic_root and not os.path.exists(os.path.expanduser(opts.quic_root)):
         print('Invalid quic_root')
         return 1
-    print(opts)
     if opts.gn_gen:
         if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests):
+                     opts.scheme, opts.tests, opts.runtime):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
