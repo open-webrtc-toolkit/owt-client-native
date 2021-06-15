@@ -490,7 +490,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
                             &sdp_mline_index);
     webrtc::IceCandidateInterface* ice_candidate = webrtc::CreateIceCandidate(
         sdp_mid, sdp_mline_index, candidate, nullptr);
-    if(temp_pc_->remote_description()){
+    if (temp_pc_->remote_description()){
       if (!temp_pc_->AddIceCandidate(ice_candidate)) {
         RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
       }
@@ -498,7 +498,7 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
       rtc::CritScope cs(&pending_remote_candidates_crit_);
       pending_remote_candidates_.push_back(
           std::unique_ptr<webrtc::IceCandidateInterface>(ice_candidate));
-      RTC_LOG(LS_VERBOSE) << "Remote candidate is stored because remote "
+      RTC_LOG(LS_INFO) << "Remote candidate is stored because remote "
                              "session description is missing.";
     }
   }
@@ -1297,12 +1297,15 @@ void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
   {
     rtc::CritScope cs(&pending_remote_candidates_crit_);
-    for (auto& ice_candidate : pending_remote_candidates_) {
-      if (!temp_pc_->AddIceCandidate(ice_candidate.get())) {
-        RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
+    if (temp_pc_->remote_description()) {
+      RTC_LOG(LS_INFO) << "Draining pending ICE Candidates, received " << pending_remote_candidates_.size();
+      for (const auto& ice_candidate : pending_remote_candidates_) {
+        if (!temp_pc_->AddIceCandidate(ice_candidate.get())) {
+          RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
+        }
       }
+      pending_remote_candidates_.clear();
     }
-    pending_remote_candidates_.clear();
   }
 }
 Json::Value P2PPeerConnectionChannel::UaInfo() {
