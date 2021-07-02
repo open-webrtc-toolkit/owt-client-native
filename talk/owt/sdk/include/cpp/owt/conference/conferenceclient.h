@@ -22,7 +22,7 @@
 #include "owt/conference/streamupdateobserver.h"
 #include "owt/conference/subscribeoptions.h"
 #ifdef OWT_ENABLE_QUIC
-#include "owt/quic/quic_transport_stream_interface.h"
+#include "owt/quic/web_transport_stream_interface.h"
 #endif
 namespace sio{
   class message;
@@ -209,7 +209,7 @@ class ConferenceWebTransportChannelObserver {
   // Called when an incoming stream is received by QUIC channel
   virtual void OnIncomingStream(
       const std::string& session_id,
-      owt::quic::QuicTransportStreamInterface* stream) = 0;
+      owt::quic::WebTransportStreamInterface* stream) = 0;
 };
 #endif
 /** @endcond */
@@ -445,7 +445,7 @@ class ConferenceClient final
   void OnConnected();
   void OnConnectionFailed();
   void OnIncomingStream(const std::string& session_id,
-                        owt::quic::QuicTransportStreamInterface* stream);
+                        owt::quic::WebTransportStreamInterface* stream);
 #endif
 
   /// Return true if |pointer| is not a null pointer, else return false and
@@ -476,7 +476,7 @@ class ConferenceClient final
                             std::shared_ptr<const Exception> exception);
 #ifdef OWT_ENABLE_QUIC
   void TriggerOnIncomingStream(const std::string& session_id,
-                               owt::quic::QuicTransportStreamInterface* stream);
+                               owt::quic::WebTransportStreamInterface* stream);
 #endif
   // Return true if |user_info| is correct, and |*participant| points to the participant
   // object
@@ -529,17 +529,19 @@ class ConferenceClient final
   mutable std::mutex stream_update_observer_mutex_;
   std::vector <std::reference_wrapper<ConferenceStreamUpdateObserver>> stream_update_observers_;
 #ifdef OWT_ENABLE_QUIC
-  // Each conference client will be associated with one quic_transport_channel_ instance.
+  // Each conference client will be associated with only one quic_transport_channel_ instance.
   std::shared_ptr<ConferenceWebTransportChannel> web_transport_channel_;
   std::atomic<bool> web_transport_channel_connected_;
   std::string webtransport_id_;  // transportId used for publish/subscribe.
-  std::string webtransport_token_; // base64 encoded webTransportToken recevied after joining. key is session_id(publication_id)
+  // base64 encoded webTransportToken recevied after joining. key is
+  // session_id(publication_id)
+  std::string webtransport_token_;
   std::map<std::string, std::shared_ptr<ConferencePublication>> quic_publications_;
   mutable std::mutex quic_publications_mutex_;
   // key is session_id(subscription_id)
   std::map<std::string, std::shared_ptr<ConferenceSubscription>> quic_subscriptions_;
   mutable std::mutex quic_subscriptions_mutex_;
-  std::unordered_map<std::string, QuicTransportStreamInterface*>
+  std::unordered_map<std::string, WebTransportStreamInterface*>
       pending_incoming_streams_;
   mutable std::mutex pending_quic_streams_mutex_;
 #endif

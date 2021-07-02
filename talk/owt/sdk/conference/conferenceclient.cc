@@ -255,7 +255,7 @@ void ConferenceClient::OnConnectionFailed() {
 }
 
 void ConferenceClient::OnIncomingStream(const std::string& session_id,
-  owt::quic::QuicTransportStreamInterface* stream) {
+  owt::quic::WebTransportStreamInterface* stream) {
   RTC_LOG(LS_INFO) << "Quic client received a stream on session:" << session_id;
   // Check if the subscription exists for this stream. Trigger immediately
   // if exists. Otherwise push to pending list.
@@ -1046,11 +1046,11 @@ void ConferenceClient::Leave(
   }
 #ifdef OWT_ENABLE_QUIC
   {
-    std::lock_guard<std::mutex> lock(quic_publications_mutex_);
+    // Do not hold the lock of quic_publications_ as only Stop
+    // will remove the publications from list.
     for (auto& publication : quic_publications_) {
       publication.second->Stop();
     }
-    quic_publications_.clear();
   }
   {
     std::lock_guard<std::mutex> lock(quic_subscriptions_mutex_);
@@ -1725,7 +1725,7 @@ void ConferenceClient::TriggerOnUserLeft(sio::message::ptr user_info) {
 #ifdef OWT_ENABLE_QUIC
 void ConferenceClient::TriggerOnIncomingStream(
     const std::string& session_id,
-                             owt::quic::QuicTransportStreamInterface* stream) {
+                             owt::quic::WebTransportStreamInterface* stream) {
   const std::lock_guard<std::mutex> lock(stream_update_observer_mutex_);
   for (auto its = stream_update_observers_.begin();
        its != stream_update_observers_.end(); ++its) {

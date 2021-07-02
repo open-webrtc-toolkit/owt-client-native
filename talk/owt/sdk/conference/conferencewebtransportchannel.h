@@ -21,9 +21,9 @@
 #include "talk/owt/sdk/include/cpp/owt/conference/subscribeoptions.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferencepublication.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
-#include "owt/quic/quic_transport_client_interface.h"
-#include "owt/quic/quic_transport_factory.h"
-#include "owt/quic/quic_transport_stream_interface.h"
+#include "owt/quic/web_transport_client_interface.h"
+#include "owt/quic/web_transport_factory.h"
+#include "owt/quic/web_transport_stream_interface.h"
 
 namespace owt {
 namespace conference {
@@ -32,7 +32,7 @@ using namespace owt::quic;
 
 // An instance of ConferenceWebTransportChannel manages a WebTransport channel with
 // MCU as well as its signaling through Socket.IO.
-class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterface::Visitor, 
+class ConferenceWebTransportChannel: public owt::quic::WebTransportClientInterface::Visitor,
     public std::enable_shared_from_this<ConferenceWebTransportChannel> {
  public:
   explicit ConferenceWebTransportChannel(
@@ -44,7 +44,7 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
       std::shared_ptr<rtc::TaskQueue> event_queue);
   ~ConferenceWebTransportChannel();
   class AuthStreamObserver
-      : public owt::quic::QuicTransportStreamInterface::Visitor {
+      : public owt::quic::WebTransportStreamInterface::Visitor {
    public:
     AuthStreamObserver(ConferenceWebTransportChannel* channel)
         : channel_(channel) {}
@@ -61,9 +61,9 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     bool authenticated_ = false;
   };
   class IncomingStreamObserver
-      : public owt::quic::QuicTransportStreamInterface::Visitor {
+      : public owt::quic::WebTransportStreamInterface::Visitor {
    public:
-    IncomingStreamObserver(ConferenceWebTransportChannel* channel, owt::quic::QuicTransportStreamInterface* stream)
+    IncomingStreamObserver(ConferenceWebTransportChannel* channel, owt::quic::WebTransportStreamInterface* stream)
         : channel_(channel)
         , stream_(stream) {}
     virtual void OnCanRead() {}
@@ -71,7 +71,7 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
     virtual void OnFinRead() {}
    public:
     ConferenceWebTransportChannel* channel_;
-    owt::quic::QuicTransportStreamInterface* stream_;
+    owt::quic::WebTransportStreamInterface* stream_;
   };
   // Connect asynchronously to WebTransport server.
   void Connect();
@@ -114,12 +114,12 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
   // TODO: define stats API
   void OnStreamError(const std::string& error_message);
  private:
-  // Implements owt::quic::QuicTransportClientInterface::Visitor
+  // Implements owt::quic::WebTransportClientInterface::Visitor
   void OnConnected();
   void OnConnectionFailed();
-  void OnIncomingStream(QuicTransportStreamInterface*);
+  void OnIncomingStream(WebTransportStreamInterface*);
   void OnStreamSessionId(const std::string& session_id,
-                         owt::quic::QuicTransportStreamInterface* stream);
+                         owt::quic::WebTransportStreamInterface* stream);
   bool CheckNullPointer(
       uintptr_t pointer,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
@@ -144,9 +144,9 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
   bool connected_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
-  std::unique_ptr<owt::quic::QuicTransportFactory> quic_transport_factory_;
-  std::unique_ptr<owt::quic::QuicTransportClientInterface> quic_transport_client_;
-  // Each conference client will be associated with one quic_transport_channel_
+  std::unique_ptr<owt::quic::WebTransportFactory> quic_transport_factory_;
+  std::unique_ptr<owt::quic::WebTransportClientInterface> quic_transport_client_;
+  // Each conference client will be associated with one web_transport_channel_
   // instance.
   std::shared_ptr<ConferenceWebTransportChannel> quic_transport_channel_;
   std::atomic<bool> quic_client_connected_;
@@ -154,14 +154,16 @@ class ConferenceWebTransportChannel: public owt::quic::QuicTransportClientInterf
   std::string transport_id_;
   std::string webtransport_token_;  // base64 encoded webTransportToken recevied
                                     // after joining.
-  QuicTransportStreamInterface* auth_stream_ = nullptr;
+  WebTransportStreamInterface* auth_stream_ = nullptr;
+  // Trusted certificates' fingerprints
+  owt::quic::CertificateFingerprint* fingerprint_ = nullptr;
+  std::vector<char*> fingerprint_sha256_values_;
+  mutable std::mutex fingerprints_mutex_;
   std::unique_ptr<AuthStreamObserver> auth_stream_observer_;
   std::vector<std::string> published_session_ids_;
   mutable std::mutex published_session_ids_mutex_;
   std::vector<std::string> subscribed_session_ids_;
   mutable std::mutex subscribed_session_ids_mutex_;
-  mutable std::mutex auth_mutex_;
-  std::unique_ptr<std::condition_variable> auth_cv_;
 };
 }
 }

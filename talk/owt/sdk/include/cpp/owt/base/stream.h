@@ -17,7 +17,7 @@
 #include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 #ifdef OWT_ENABLE_QUIC
-#include "owt/quic/quic_transport_stream_interface.h"
+#include "owt/quic/web_transport_stream_interface.h"
 #endif
 
 namespace webrtc {
@@ -178,9 +178,9 @@ class Stream {
 /// A QuicStream can be fetched from a published LocalStream for data,
 /// on which you can write to server;
 /// Or from a subscription from server for data, on which you can read.
-class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
+class QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
  public:
-  QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
+  QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
              const std::string& session_id);
   ~QuicStream();
 
@@ -207,7 +207,7 @@ class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
    @return Bytes of data available on the stream.
   */
   size_t ReadableBytes() const;
-  void SetVisitor(owt::quic::QuicTransportStreamInterface::Visitor* visitor) {
+  void SetVisitor(owt::quic::WebTransportStreamInterface::Visitor* visitor) {
     if (quic_stream_ && visitor) {
       quic_stream_->SetVisitor(visitor);
     }
@@ -228,7 +228,8 @@ class QuicStream : public owt::quic::QuicTransportStreamInterface::Visitor {
   }
   /** @endcond */
  private:
-  owt::quic::QuicTransportStreamInterface* quic_stream_;
+  // Owned by WebTransportClientImpl.
+  owt::quic::WebTransportStreamInterface* quic_stream_;
   std::string session_id_;
   std::atomic<bool> can_read_;
   std::atomic<bool> can_write_;

@@ -720,17 +720,13 @@ MediaStreamInterface* RemoteStream::MediaStream() {
 }
 
 #ifdef OWT_ENABLE_QUIC
-QuicStream::QuicStream(owt::quic::QuicTransportStreamInterface* quic_stream,
+QuicStream::QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
            const std::string& session_id)
     : quic_stream_(quic_stream), session_id_(session_id), can_read_(true),
       can_write_(true), fin_read_(false) {
 }
 
 QuicStream::~QuicStream() {
-  if (quic_stream_) {
-    delete quic_stream_;
-    quic_stream_ = nullptr;
-  }
 }
 
 size_t QuicStream::Write(uint8_t* data, size_t length) {

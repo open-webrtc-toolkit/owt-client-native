@@ -7,14 +7,14 @@ This SDK is interoperable with Open WebRTC Toolkit Client SDK for JavaScript\*, 
 Refer to the Release Notes for the latest information in the SDK release package, including features,
 bug fixes and known issues.
 # 2 Supported platforms {#section2}
-Open WebRTC Toolkit Client SDK for Windows supports Windows 7 and later versions.
+Open WebRTC Toolkit Client SDK for Windows supports Windows 8 and later versions.
 # 3 Getting started {#section3}
 Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2017 or 2019. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x64.
 The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for only x64, along with their headers:
 - owt-debug.lib - this library includes all the WebRTC features for debug usages.
 - owt-release.lib - this library includes all the WebRTC features for release usages.
 owt-debug.lib|owt-release references libraries in Windows SDK for DXVA support. Your application must statically link
-mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib and dxva2.lib to build. Depending on your signaling
+mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib, dcomp.lib and dxva2.lib to build. Depending on your signaling
 channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93.
@@ -29,8 +29,8 @@ for P2P sessions can be customized by implementing `P2PSignalingChannelInterface
 can invoke its methods to notify `PeerClient` during your customized signaling channel implementation when a new
 message is coming or connection is lost.
 # 7 Video codecs {#section7}
-For the decoder, if hardware acceleration is not enabled, only VP8/VP9 is supported. If hardware acceleration is enabled, VP8,
-VP9, H.264 and HEVC are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
+For the decoder, if hardware acceleration is not enabled, only VP8/VP9/AV1 is supported. If hardware acceleration is enabled, VP8,
+VP9, H.264, HEVC and AV1 are supported, but it will fallback to VP8 software decoder if GPU does not supports VP8 hardware decoding.
 Most of the 5th-11th Generation Intel<sup>®</sup> Core(TM) Processor platforms support VP8 hardware decoding, refer to their specific documentation for details.
 Starting from 6th Generation Intel<sup>®</sup> Core(TM) Processor platforms, hardware encoding and decoding of HEVC is supported.
 You can turn off video encoding/decoding hardware acceleration via {@link owt.base.GlobalConfiguration GlobalConfiguration} API,
