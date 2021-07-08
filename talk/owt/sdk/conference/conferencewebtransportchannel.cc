@@ -100,9 +100,9 @@ void ConferenceWebTransportChannel::Connect() {
   int fingerprint_idx = 0;
   for (auto fingerprint : trusted_fingerprints) {
     quic_params.server_certificate_fingerprints[fingerprint_idx]->fingerprint =
-        new char[fingerprint.length()];
+        new char[fingerprint.length()+1];
     memcpy((void*)(quic_params.server_certificate_fingerprints[fingerprint_idx]->fingerprint),
-           fingerprint.c_str(), fingerprint.length());
+           fingerprint.c_str(), fingerprint.length()+1);
   }
   RTC_LOG(LS_INFO) << "Creating Quic transport client.";
   quic_transport_client_.reset(quic_transport_factory_->CreateQuicTransportClient(
