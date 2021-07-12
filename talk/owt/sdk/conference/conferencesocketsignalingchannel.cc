@@ -5,6 +5,7 @@
 #include <thread>
 #include <algorithm>
 #include <ctime>
+#include <climits>
 #if defined(WEBRTC_IOS)
 #include <CoreFoundation/CFDate.h>
 #endif
@@ -25,7 +26,6 @@ const std::string kEventNameCustomMessage = "customMessage";
 const std::string kEventNameSignalingMessagePrelude = "signaling";
 const std::string kEventNameSignalingMessage = "soac"; //only for soac message
 const std::string kEventNameOnSignalingMessage = "progress";
-const std::string kEventNameOnCustomMessage = "text";
 const std::string kEventNameSubscribe = "subscribe";
 const std::string kEventNameUnsubscribe = "unsubscribe";
 const std::string kEventNamePublish = "publish";
@@ -71,7 +71,8 @@ ConferenceSocketSignalingChannel::ConferenceSocketSignalingChannel()
       participant_id_(""),
       reconnection_attempted_(0),
       is_reconnection_(false),
-      outgoing_message_id_(1) {}
+      outgoing_message_id_(1),
+      message_sequence_(0) {}
 ConferenceSocketSignalingChannel::~ConferenceSocketSignalingChannel() {
   delete socket_client_;
 }
@@ -272,8 +273,19 @@ void ConferenceSocketSignalingChannel::Connect(
             // The second element is room info, please refer to server's
             // portal implementation for detailed message format.
             sio::message::ptr message = msg.at(1);
-            if (message->get_flag() == sio::message::flag_string) {
-              OnReconnectionTicket(message->get_string());
+            if (message->get_flag() == sio::message::flag_object) {
+              OnReconnectionTicket(message->get_map()["ticket"]->get_string());
+              std::vector<sio::message::ptr> notifications =
+                  message->get_map()["messages"]->get_vector();
+              for (sio::message::ptr notification : notifications) {
+                int seq=notification->get_map()["seq"]->get_int();
+                if(seq<=message_sequence_){
+                  continue;
+                }
+                sio::message::ptr notification_data=notification->get_map()["data"];
+                std::string event_name=notification->get_map()["event"]->get_string();
+                OnNotificationFromServer(event_name, notification_data);
+              }
             }
             RTC_LOG(LS_VERBOSE) << "Reconnection success";
             DrainQueuedMessages();
@@ -430,6 +442,11 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
     for (auto it = observers_.begin(); it != observers_.end(); ++it) {
       (*it)->OnServerDisconnected();
     }
+  }
+  if (message_sequence_ < INT_MAX) {
+    message_sequence_++;
+  } else {
+    message_sequence_ = 0;
   }
 }
 
