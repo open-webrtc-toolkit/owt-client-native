@@ -37,6 +37,36 @@
 #endif
 #include "owt/base/clientconfiguration.h"
 #include "owt/base/globalconfiguration.h"
+
+#if defined(WEBRTC_WIN) && defined(_MSC_VER)
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "secur32.lib")
+#pragma comment(lib, "dmoguids.lib")
+#pragma comment(lib, "msdmo.lib")
+#pragma comment(lib, "wmcodecdspuuid.lib")
+#pragma comment(lib, "amstrmid.lib")
+#pragma comment(lib, "strmiids.lib")
+#ifdef OWT_USE_MSDK
+#pragma comment(lib, "mf.lib")
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfuuid.lib")
+#pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxva2.lib")
+#pragma comment(lib, "dcomp.lib")
+#pragma comment(lib, "libmfx_vs2015.lib")
+#endif
+#ifdef OWT_USE_OPENSSL
+#pragma comment(lib, "libssl.lib")
+#pragma comment(lib, "libcrypto.lib")
+#endif
+#ifdef OWT_ENABLE_QUIC
+#pragma comment(lib, "owt_web_transport.dll.lib")
+#endif
+#endif
+
 using namespace rtc;
 namespace owt {
 namespace base {
