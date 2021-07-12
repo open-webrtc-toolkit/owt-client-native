@@ -315,7 +315,10 @@ class ConferenceClient final
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
-    @brief Subscribe a stream from the current room.
+    @brief Subscribe a stream with transcoding from the current room.
+    @details Should only be called on stream that is published without simulcast
+    or SVC opotions. If |stream| is a simulcast stream or an SVC stream,
+    subscription will fail.
     @param stream The remote stream to be subscribed.
     @param options Options for subscribing the stream.
     @param onSuccess Success callback with a stream that contains media stream.
@@ -323,6 +326,23 @@ class ConferenceClient final
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       const SubscribeOptions& options,
+      std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+  /**
+  @brief Subscribe a simulcast or SVC stream from the current room with preferred rid
+  and/or temporal/spatial layers.
+  @details rid and temporal/spatial layer ID can be specified together. If rid in
+  |options| is not empty and |stream| is not a simulcast stream, subscribe will fail;
+  If temporalLayerId/spatialLayerId is larger than -1 in |options| and |stream| is not
+  an SVC stream, subscribe will fail; If both rid and temporal/spatialLyerId are specified,
+  temporalLayerId/spatialLayerId only applies to simulcast stream associated with rid.
+  @param stream The remote stream to be subscribed.
+  @param options Simulcast and SVC stream subscribe options for subscribing the stream.
+  @param onSuccess Success callback with a stream that contains media stream.
+*/
+  void Subscribe(
+      std::shared_ptr<RemoteStream> stream,
+      const SubscribeOptions2& options,
       std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**

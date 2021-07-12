@@ -496,15 +496,6 @@ static bool SubOptionAllowed(
   // specifies codec, though signaling allows specifying sample rate and channel
   // number.
 
-  // If rid is specified, search in publication_settings for rid;
-  if (subscribe_options.video.rid != "") {
-    for (auto video_setting : publication_settings.video) {
-      if (video_setting.rid == subscribe_options.video.rid)
-        return true;
-    }
-    return false;
-  }
-
   bool resolution_supported = (subscribe_options.video.resolution.width == 0 &&
                                subscribe_options.video.resolution.height == 0);
   bool frame_rate_supported = (subscribe_options.video.frameRate == 0);
@@ -647,19 +638,7 @@ void ConferencePeerConnectionChannel::Subscribe(
       video_options->get_map()["mid"] = sio::string_message::create("1");
     }
     auto publication_settings = stream->Settings();
-    if (subscribe_options.video.rid != "") {
-      for (auto video_setting : publication_settings.video) {
-        if (video_setting.rid == subscribe_options.video.rid) {
-          std::string track_id = video_setting.track_id;
-          video_options->get_map()["from"] =
-              sio::string_message::create(track_id);
-          break;
-        }
-      }
-    } else {
-      video_options->get_map()["from"] =
-          sio::string_message::create(stream->Id());
-    }
+    video_options->get_map()["from"] = sio::string_message::create(stream->Id());
     sio::message::ptr video_spec = sio::object_message::create();
     sio::message::ptr resolution_options = sio::object_message::create();
     if (subscribe_options.video.resolution.width != 0 &&
@@ -691,10 +670,121 @@ void ConferencePeerConnectionChannel::Subscribe(
           sio::int_message::create(subscribe_options.video.frameRate);
     }
     video_options->get_map()["parameters"] = video_spec;
-    if (subscribe_options.video.rid != "") {
-      video_options->get_map()["simulcastRid"] =
-          sio::string_message::create(subscribe_options.video.rid);
+    tracks_options->get_vector().push_back(video_options);
+  }
+
+  media_options->get_map()["tracks"] = tracks_options;
+  sio_options->get_map()["media"] = media_options;
+  sio::message::ptr transport_ptr = sio::object_message::create();
+  transport_ptr->get_map()["type"] = sio::string_message::create("webrtc");
+  sio_options->get_map()["transport"] = transport_ptr;
+
+  signaling_channel_->SendInitializationMessage(
+      sio_options, "", stream->Id(),
+      [this](std::string session_id, std::string transport_id) {
+        // Pre-set the session's ID.
+        SetSessionId(session_id);
+        CreateOffer();
+      },
+      on_failure);  // TODO: on_failure
+  subscribed_stream_ = stream;
+}
+
+void ConferencePeerConnectionChannel::Subscribe(
+    std::shared_ptr<RemoteStream> stream,
+    const SubscribeOptions2& subscribe_options,
+    std::function<void(std::string)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    RTC_LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    return;
+  }
+  if (subscribe_success_callback_) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown, "Subscribing this stream."));
+        on_failure(std::move(e));
+      });
     }
+  }
+  if ((subscribe_options.video.rid == "") &&
+      (subscribe_options.video.spatialLayerId == -1) &&
+      (subscribe_options.video.temporalLayerId == -1)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure]() {
+        std::unique_ptr<Exception> e(new Exception(
+            ExceptionType::kConferenceUnknown,
+            "Either rid/spatialLayer/temporalLayer needs to be set for subscribing."));
+        on_failure(std::move(e));
+      });
+    }
+  }
+  subscribe_success_callback_ = on_success;
+  failure_callback_ = on_failure;
+  int audio_track_count = 0, video_track_count = 0;
+  if (stream->has_audio_ && !subscribe_options.audio.disabled) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, transceiver_init);
+    audio_track_count = 1;
+  }
+  if (stream->has_video_) {
+    webrtc::RtpTransceiverInit transceiver_init;
+    transceiver_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, transceiver_init);
+    video_track_count = 1;
+  }
+  sio::message::ptr sio_options = sio::object_message::create();
+  sio::message::ptr media_options = sio::object_message::create();
+  sio::message::ptr tracks_options = sio::array_message::create();
+  if (audio_track_count > 0) {
+    sio::message::ptr audio_options = sio::object_message::create();
+    audio_options->get_map()["type"] = sio::string_message::create("audio");
+    audio_options->get_map()["mid"] = sio::string_message::create("0");
+    audio_options->get_map()["from"] =
+        sio::string_message::create(stream->Id());
+    tracks_options->get_vector().push_back(audio_options);
+  }
+  if (video_track_count > 0) {
+    sio::message::ptr video_options = sio::object_message::create();
+    video_options->get_map()["type"] = sio::string_message::create("video");
+    if (audio_track_count == 0) {
+      video_options->get_map()["mid"] = sio::string_message::create("0");
+    } else {
+      video_options->get_map()["mid"] = sio::string_message::create("1");
+    }
+    auto publication_settings = stream->Settings();
+    if (subscribe_options.video.rid != "") {
+      for (auto video_setting : publication_settings.video) {
+        if (video_setting.rid == subscribe_options.video.rid) {
+          std::string track_id = video_setting.track_id;
+          video_options->get_map()["from"] =
+              sio::string_message::create(track_id);
+          break;
+        }
+      }
+    } else {
+      video_options->get_map()["from"] =
+          sio::string_message::create(stream->Id());
+    }
+    sio::message::ptr layer_spec = sio::object_message::create();
+    if (subscribe_options.video.spatialLayerId >= 0) {
+      sio::message::ptr spatial_layer_options =
+          sio::int_message::create(subscribe_options.video.spatialLayerId);
+      layer_spec->get_map()["spatialLayer"] = spatial_layer_options;
+    }
+    if (subscribe_options.video.temporalLayerId >= 0) {
+      sio::message::ptr temporal_layer_options =
+          sio::int_message::create(subscribe_options.video.temporalLayerId);
+      layer_spec->get_map()["temporallLayer"] = temporal_layer_options;
+    }
+    if (subscribe_options.video.rid != "") {
+      sio::message::ptr rid_options =
+          sio::string_message::create(subscribe_options.video.rid);
+      layer_spec->get_map()["rid"] = rid_options;
+    }
+    video_options->get_map()["parameters"] = layer_spec;
     tracks_options->get_vector().push_back(video_options);
   }
 

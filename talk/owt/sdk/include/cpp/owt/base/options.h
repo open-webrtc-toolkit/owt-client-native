@@ -40,6 +40,7 @@ struct VideoPublicationSettings {
   unsigned long keyframe_interval;
   std::string rid;
   std::string track_id;
+  std::string scalability_mode;
 };
 
 #ifdef OWT_ENABLE_QUIC
