@@ -783,7 +783,95 @@ void ConferenceClient::Subscribe(
       },
       on_failure);
 }
-void ConferenceClient::UnPublish(
+void ConferenceClient::Subscribe(
+    std::shared_ptr<RemoteStream> stream,
+    const SubscribeOptions2& options,
+    std::function<void(std::shared_ptr<ConferenceSubscription>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+    RTC_LOG(LS_ERROR) << "Remote stream cannot be nullptr.";
+    return;
+  }
+  if (added_stream_type_.find(stream->Id()) == added_stream_type_.end()) {
+    std::string failure_message(
+        "Subscribing an invalid stream. Please check whether this stream is "
+        "removed.");
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown, failure_message));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  if (!stream->VideoEnabled()) {
+    std::string failure_message(
+        "Stream without video is not allowed to be subcribed with simulcast/SVC constraints");
+    if (on_failure != nullptr) {
+      event_queue_->PostTask([on_failure, failure_message]() {
+        std::unique_ptr<Exception> e(
+            new Exception(ExceptionType::kConferenceUnknown, failure_message));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  // Avoid subscribing the same stream twice.
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    // Search subscirbe pcs
+    auto it = std::find_if(
+        subscribe_pcs_.begin(), subscribe_pcs_.end(),
+        [&](std::shared_ptr<ConferencePeerConnectionChannel> o) -> bool {
+          return o->GetSubStreamId() == stream->Id();
+        });
+    if (it != subscribe_pcs_.end()) {
+      std::string failure_message(
+          "The same remote stream has already been subscribed. Subcribe after "
+          "it is unsubscribed");
+      if (on_failure != nullptr) {
+        event_queue_->PostTask([on_failure, failure_message]() {
+          std::unique_ptr<Exception> e(new Exception(
+              ExceptionType::kConferenceUnknown, failure_message));
+          on_failure(std::move(e));
+        });
+      }
+      return;
+    }
+  }
+  // Reorder SDP according to perference list.
+  PeerConnectionChannelConfiguration config =
+      GetPeerConnectionChannelConfiguration();
+  for (auto codec : options.audio.codecs) {
+    config.audio.push_back(AudioEncodingParameters(codec, 0));
+  }
+  std::shared_ptr<ConferencePeerConnectionChannel> pcc(
+      new ConferencePeerConnectionChannel(config, signaling_channel_,
+                                          event_queue_));
+  pcc->AddObserver(*this);
+  {
+    std::lock_guard<std::mutex> lock(subscribe_pcs_mutex_);
+    subscribe_pcs_.push_back(pcc);
+  }
+  std::weak_ptr<ConferenceClient> weak_this = shared_from_this();
+  std::string stream_id = stream->Id();
+  pcc->Subscribe(
+      stream, options,
+      [on_success, weak_this, stream_id](std::string session_id) {
+        auto that = weak_this.lock();
+        if (!that)
+          return;
+        // map current pcc
+        if (on_success != nullptr) {
+          std::shared_ptr<ConferenceSubscription> cp(
+              new ConferenceSubscription(that, session_id, stream_id));
+          on_success(cp);
+        }
+      },
+      on_failure);
+}
+  void ConferenceClient::UnPublish(
     const std::string& session_id,
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -1490,6 +1578,12 @@ void ConferenceClient::ParseStreamInfo(sio::message::ptr stream_info,
           if (rid_obj != nullptr &&
               rid_obj->get_flag() == sio::message::flag_string) {
             video_publication_settings.rid = rid_obj->get_string();
+          }
+          auto scalability_mode_obj = (*tit)->get_map()["scalabilityMode"];
+          if (scalability_mode_obj != nullptr &&
+              scalability_mode_obj->get_flag() == sio::message::flag_string) {
+            video_publication_settings.scalability_mode =
+                scalability_mode_obj->get_string();
           }
           auto trackid_obj = (*tit)->get_map()["id"];
           if (trackid_obj != nullptr &&

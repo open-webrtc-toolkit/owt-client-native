@@ -43,10 +43,15 @@ class ConferencePeerConnectionChannel
       const std::string& session_id,
       std::function<void()> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
-  // Subscribe a stream from the conference.
+  // Subscribe a non-simulcast/non-SVC stream from the conference.
   void Subscribe(
       std::shared_ptr<RemoteStream> stream,
       const SubscribeOptions& options,
+      std::function<void(std::string)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure);
+  // Subscribe a simulcast or SVC stream from the conference.
+  void Subscribe(std::shared_ptr<RemoteStream> stream,
+      const SubscribeOptions2& options,
       std::function<void(std::string)> on_success,
       std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Unsubscribe a remote stream from the conference.
