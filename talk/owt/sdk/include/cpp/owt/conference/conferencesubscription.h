@@ -78,7 +78,7 @@ class ConferenceSubscription : public ConferenceStreamUpdateObserver,
     void OnStreamRemoved(const std::string& stream_id);
     void OnStreamError(const std::string& error_msg);
 #ifdef OWT_ENABLE_QUIC
-    void OnIncomingStream(const std::string& session_id, owt::quic::QuicTransportStreamInterface* stream);
+    void OnIncomingStream(const std::string& session_id, owt::quic::WebTransportStreamInterface* stream);
 #endif
     std::string id_;
     std::string stream_id_;

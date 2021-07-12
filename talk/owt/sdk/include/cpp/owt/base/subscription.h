@@ -6,7 +6,7 @@
 #include "owt/base/commontypes.h"
 #include "owt/base/mediaconstraints.h"
 #ifdef OWT_ENABLE_QUIC
-#include "owt/quic/quic_transport_stream_interface.h"
+#include "owt/quic/web_transport_stream_interface.h"
 #endif
 namespace owt {
 namespace base {

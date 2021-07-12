@@ -32,17 +32,17 @@ The following dependencies are for Windows only:
 - Create a file named .gclient in the directory above the `src` dir, with these contents:
 
 ```
-solutions = [ 
-  {  
-     "managed": False,  
-     "name": "src",  
-     "url": "https://github.com/open-webrtc-toolkit/owt-client-native.git",  
-     "custom_deps": {},  
-     "deps_file": "DEPS",  
-     "safesync_url": "",  
-  },  
-]  
-target_os = []  
+solutions = [
+  {
+     "managed": False,
+     "name": "src",
+     "url": "https://github.com/open-webrtc-toolkit/owt-client-native.git",
+     "custom_deps": {},
+     "deps_file": "DEPS",
+     "safesync_url": "",
+  },
+]
+target_os = []
 ```
 
 ### Build
@@ -67,7 +67,8 @@ Common build options shared by Windows and Linux:
   - The built binary will be under path specified by `--output_path`. If `--output_path` is not set, the built binary will be under `src/out` directory.
   - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 1.1.1 binary. If specified, SDK will link to external openssl library instead of boringssl.
   - Use `--gn_gen` to generate args.gn during the first build or when you change either `ssl_root`/`msdk_root`/`quic_root` options.
-  - The optional `--quic_root` should point to the directory containing QUIC library pre-built from owt-sdk-quic repo. This will build the SDK with QUIC enabled for conference mode.
+  - The optional `--quic_root` should point to the directory containing WebTransport library pre-built from owt-sdk-quic repo. This will build the SDK with WebTransport enabled for 
+  conference mode. Refer to [README.webtransport](https://github.com/open-webrtc-toolkit/owt-client-native/blob/main/README.webtransport) for the version of webtransport library to be used.
   - The optional `--tests` will trigger unit tests after build.
 
 #### iOS

@@ -211,7 +211,7 @@ void ConferenceSubscription::OnStreamError(const std::string& error_msg) {
 
 #ifdef OWT_ENABLE_QUIC
 void ConferenceSubscription::OnIncomingStream(const std::string& session_id,
-    owt::quic::QuicTransportStreamInterface* stream) {
+    owt::quic::WebTransportStreamInterface* stream) {
   if (ended_ || stream_id_ != session_id)
     return;
   quic_stream_ = std::make_shared<owt::base::QuicStream>(stream, session_id);
