@@ -412,9 +412,9 @@ void ConferenceClient::Join(
           const std::lock_guard<std::mutex> lock(conference_info_mutex_);
           if (!current_conference_info_.get()) {
             current_conference_info_.reset(new ConferenceInfo);
-            current_conference_info_->self_.reset(
-                new Participant(participant_id, role, user_id));
           }
+          current_conference_info_->self_.reset(
+                new Participant(participant_id, role, user_id));
         }
         auto room_info = info->get_map()["room"];
         if (room_info == nullptr ||
