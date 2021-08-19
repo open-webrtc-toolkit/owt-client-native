@@ -730,7 +730,7 @@ QuicStream::~QuicStream() {
 }
 
 size_t QuicStream::Write(uint8_t* data, size_t length) {
-  if (quic_stream_ && !fin_read_ && data != nullptr && length > 0) {
+  if (quic_stream_ && data != nullptr && length > 0) {
     return quic_stream_->Write(data, length);
   }
   return 0;
@@ -747,6 +747,14 @@ size_t QuicStream::Read(uint8_t* data, size_t length) {
 size_t QuicStream::ReadableBytes() const {
   if (quic_stream_ && !fin_read_) {
     return quic_stream_->ReadableBytes();
+  } else {
+    return 0;
+  }
+}
+
+uint64_t QuicStream::BufferedDataBytes() const {
+  if (quic_stream_) {
+    return quic_stream_->BufferedDataBytes();
   } else {
     return 0;
   }
