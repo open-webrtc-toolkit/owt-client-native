@@ -207,6 +207,11 @@ class QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
    @return Bytes of data available on the stream.
   */
   size_t ReadableBytes() const;
+  /**
+   @brief Returns the amount of data pending to be sent on the stream.
+   @return Bytes of data pending to be sent.
+  */
+  uint64_t BufferedDataBytes() const;
   void SetVisitor(owt::quic::WebTransportStreamInterface::Visitor* visitor) {
     if (quic_stream_ && visitor) {
       quic_stream_->SetVisitor(visitor);
@@ -224,7 +229,6 @@ class QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
     // OnFinRead the stream is no longer readable/writable
     fin_read_ = true;
     can_read_ = false;
-    can_write_ = false;
   }
   /** @endcond */
  private:
