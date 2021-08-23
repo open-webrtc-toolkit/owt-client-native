@@ -32,7 +32,7 @@ GN_ARGS = [
     'enable_libaom=true',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
-]
+    ]
 
 
 def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
@@ -40,6 +40,10 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
     gn_args.append('target_cpu="%s"' % arch)
     if arch != 'arm64':
         gn_args.append('is_clang=false')
+    else:
+        gn_args.append('libcxx_abi_unstable=false')
+        gn_args.append('use_custom_libcxx_for_host=false')
+        gn_args.append('use_custom_libcxx=false')
     if scheme == 'release':
         gn_args.append('is_debug=false')
     else:
