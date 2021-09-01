@@ -38,7 +38,9 @@ GN_ARGS = [
 def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
-    if arch != 'arm64':
+    if arch == 'arm64':
+        using_llvm = True
+    if  not using_llvm:
         gn_args.append('is_clang=false')
     else:
         gn_args.append('libcxx_abi_unstable=false')
