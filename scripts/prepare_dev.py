@@ -17,6 +17,7 @@ PATCH_PATH = os.path.join(HOME_PATH, 'talk', 'owt', 'patches')
 TESTING_PATH = os.path.join(HOME_PATH, 'testing')
 THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
+LIBVPX_PATH = os.path.join(THIRD_PARTY_PATH, 'libvpx', 'source', 'libvpx')
 LIBJPEG_TURBO_PATH = os.path.join(THIRD_PARTY_PATH, 'libjpeg_turbo')
 FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
@@ -41,7 +42,8 @@ patchList = [
     ('0010-mac-make-find_sdk.py-work-when-the-sdk-goes-to-11.patch', BUILD_PATH),
     ('0011-libjpeg_turbo-fix-for-CVE-2018-20330-and-19664.patch', LIBJPEG_TURBO_PATH),
     ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
-    ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH)
+    ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
+    ('0015-Disable-x86-msvc-optimization.patch', LIBVPX_PATH)
 ]
 
 def _patch(ignoreFailures=False):

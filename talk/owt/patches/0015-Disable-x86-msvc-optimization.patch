@@ -1,0 +1,36 @@
+From c5f1fe9a592bac80bfa9fb3ff2415a61f4360b7d Mon Sep 17 00:00:00 2001
+From: JinChengShi <jincheng.shi@zealcomm.cn>
+Date: Thu, 2 Sep 2021 15:06:37 +0800
+Subject: [PATCH] Disable x86 msvc optimization.
+
+---
+ vpx_dsp/x86/variance_avx2.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/vpx_dsp/x86/variance_avx2.c b/vpx_dsp/x86/variance_avx2.c
+index 9232acbfb..a7e7abacf 100644
+--- a/vpx_dsp/x86/variance_avx2.c
++++ b/vpx_dsp/x86/variance_avx2.c
+@@ -77,6 +77,9 @@ static INLINE void variance_final_from_32bit_sum_avx2(__m256i vsse,
+   *((int *)sum) = _mm_extract_epi32(res, 1);
+ }
+ 
++#ifdef _MSC_VER
++#pragma optimize("", off)
++#endif
+ static INLINE void variance_final_from_16bit_sum_avx2(__m256i vsse,
+                                                       __m256i vsum,
+                                                       unsigned int *const sse,
+@@ -90,6 +93,9 @@ static INLINE void variance_final_from_16bit_sum_avx2(__m256i vsse,
+ 
+   variance_final_from_32bit_sum_avx2(vsse, sum_int32, sse, sum);
+ }
++#ifdef _MSC_VER
++#pragma optimize("", on)
++#endif
+ 
+ static INLINE __m256i sum_to_32bit_avx2(const __m256i sum) {
+   const __m256i sum_lo = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(sum));
+-- 
+2.29.2.windows.3
+
