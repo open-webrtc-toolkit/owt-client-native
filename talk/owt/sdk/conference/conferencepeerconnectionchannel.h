@@ -184,6 +184,7 @@ class ConferencePeerConnectionChannel
   std::function<void(std::string)> subscribe_success_callback_;
   std::function<void(std::unique_ptr<Exception>)> failure_callback_;
   std::mutex callback_mutex_;
+  std::mutex peerconnction_mutex_;
   // Stored candidates, will be send out after setting remote description.
   // Use sio::message::ptr instead of IceCandidateInterface* to avoid one more
   // deep copy.

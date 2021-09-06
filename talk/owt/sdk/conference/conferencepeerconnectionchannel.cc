@@ -111,8 +111,11 @@ void ConferencePeerConnectionChannel::CreateOffer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateOffer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+  if (peer_connection_) {
+    peer_connection_->CreateOffer(
+        observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  }
 }
 void ConferencePeerConnectionChannel::IceRestart() {
   if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
@@ -142,8 +145,11 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
           std::bind(&ConferencePeerConnectionChannel::
                         OnCreateSessionDescriptionFailure,
                     this, std::placeholders::_1));
-  peer_connection_->CreateAnswer(
-      observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+  if (peer_connection_) {
+    peer_connection_->CreateAnswer(
+        observer, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  }
 }
 void ConferencePeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
@@ -303,7 +309,10 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
   webrtc::SessionDescriptionInterface* new_desc(
       webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-  peer_connection_->SetLocalDescription(observer, new_desc);
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+  if (peer_connection_) {
+    peer_connection_->SetLocalDescription(observer, new_desc);
+  }
 }
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
@@ -364,7 +373,10 @@ void ConferencePeerConnectionChannel::SetRemoteDescription(
       FunctionalSetRemoteDescriptionObserver::Create(std::bind(
           &ConferencePeerConnectionChannel::OnSetRemoteDescriptionComplete,
                     this, std::placeholders::_1));
-  peer_connection_->SetRemoteDescription(std::move(desc), observer);
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+  if (peer_connection_) {
+    peer_connection_->SetRemoteDescription(std::move(desc), observer);
+  }
 }
 
 bool ConferencePeerConnectionChannel::CheckNullPointer(
@@ -824,9 +836,12 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
   if (subscribed_stream_ || published_stream_) {
     scoped_refptr<FunctionalStatsObserver> observer =
         FunctionalStatsObserver::Create(on_success);
-    peer_connection_->GetStats(
-        observer, nullptr,
-        webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+    std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+    if (peer_connection_) {
+      peer_connection_->GetStats(
+          observer, nullptr,
+          webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+    }
   }
 }
 
@@ -848,7 +863,10 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
     rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback> observer =
         FunctionalStandardRTCStatsCollectorCallback::Create(
             std::move(on_success));
-    peer_connection_->GetStats(observer);
+    std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+    if (peer_connection_) {
+      peer_connection_->GetStats(observer);
+    }
   }
 }
 
@@ -860,9 +878,12 @@ void ConferencePeerConnectionChannel::GetStats(
   }
   scoped_refptr<FunctionalNativeStatsObserver> observer =
       FunctionalNativeStatsObserver::Create(on_success);
-  peer_connection_->GetStats(
-      observer, nullptr,
-      webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
+  if (peer_connection_) {
+    peer_connection_->GetStats(
+        observer, nullptr,
+        webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
+  }
 }
 
 void ConferencePeerConnectionChannel::OnSignalingMessage(
@@ -1061,6 +1082,7 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
 }
 void ConferencePeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
+  std::lock_guard<std::mutex> lock(peerconnction_mutex_);
   if (peer_connection_) {
     peer_connection_->Close();
     peer_connection_ = nullptr;
