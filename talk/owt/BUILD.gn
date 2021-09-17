@@ -282,11 +282,14 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/msdkvideodecoderfactory.h",
         "sdk/base/linux/msdkvideodecoder.cc",
         "sdk/base/linux/msdkvideodecoder.h",
+        
+      ]
+    }
+    sources += [
         "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/linux/videorenderlinux.cc",
         "sdk/base/linux/videorenderlinux.h",
-      ]
-    }
+    ]
   }
   if (!is_ios) {
     sources += [
