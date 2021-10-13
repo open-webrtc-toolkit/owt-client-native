@@ -350,6 +350,8 @@ if (is_wasm) {
       "//third_party/webrtc/call",
       "//third_party/webrtc/modules/rtp_rtcp:rtp_rtcp",
       "//third_party/webrtc/rtc_base:rtc_json",
+      "//third_party/webrtc/rtc_base:rtc_task_queue_stdlib",
+      "//third_party/webrtc/api/rtc_event_log:rtc_event_log_factory",
     ]
     sources = [
       "sdk/wasm/binding.h",

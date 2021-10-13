@@ -13,9 +13,16 @@ namespace owt {
 namespace wasm {
 
 EMSCRIPTEN_BINDINGS(Owt) {
-  emscripten::class_<MediaSession>("MediaSession").constructor<>();
+  emscripten::class_<MediaSession>("MediaSession")
+      .constructor<>()
+      .function("createRtpVideoReceiver",
+                &MediaSession::CreateRtpVideoReceiver);
   emscripten::class_<RtpVideoReceiver>("RtpVideoReceiver")
-      .function("onRtpPacket", &RtpVideoReceiver::OnRtpPacket);
+      .smart_ptr<std::shared_ptr<RtpVideoReceiver>>("RtpVideoReceiver")
+      .function("onRtpPacket", &RtpVideoReceiver::OnRtpPacket,
+                emscripten::allow_raw_pointers())
+      .function("setCompleteFrameCallback",
+                &RtpVideoReceiver::SetCompleteFrameCallback);
 }
 
 }  // namespace wasm
