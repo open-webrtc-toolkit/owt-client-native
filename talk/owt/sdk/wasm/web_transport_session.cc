@@ -6,7 +6,7 @@
 
 namespace owt {
 namespace wasm {
-  
+
 bool WebTransportSession::SendRtp(const uint8_t* packet,
                                   size_t length,
                                   const webrtc::PacketOptions& options) {
@@ -15,6 +15,10 @@ bool WebTransportSession::SendRtp(const uint8_t* packet,
 bool WebTransportSession::SendRtcp(const uint8_t* packet, size_t length) {
   return false;
 }
+
+void WebTransportSession::SendNack(
+    const std::vector<uint16_t>& sequence_numbers,
+    bool buffering_allowed) {}
 
 }  // namespace wasm
 }  // namespace owt

@@ -65,7 +65,7 @@ template("gcc_like_toolchain") {
 
     tool("cc") {
       depfile = "{{output}}.d"
-      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0 --bind -fno-stack-protector ${external_cflags} -c {{source}} -o {{output}}"
+      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=1 --bind -fno-stack-protector ${external_cflags} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
       description = "compile {{source}}"
@@ -73,7 +73,7 @@ template("gcc_like_toolchain") {
 
     tool("cxx") {
       depfile = "{{output}}.d"
-      command = "$cc_wrapper $cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0 --bind -fno-stack-protector ${external_cflags} ${external_cxxflags} -c {{source}} -o {{output}}"
+      command = "$cc_wrapper $cxx -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=1 --bind -fno-stack-protector ${external_cflags} ${external_cxxflags} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
       description = "compile {{source}}"
@@ -81,7 +81,7 @@ template("gcc_like_toolchain") {
 
     tool("asm") {
       depfile = "{{output}}.d"
-      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{asmflags}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0 --bind -fno-stack-protector -c {{source}} -o {{output}}"
+      command = "$cc_wrapper $cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{asmflags}} -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=1 --bind -fno-stack-protector -c {{source}} -o {{output}}"
       depsformat = "gcc"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
       description = "assemble {{source}}"
@@ -142,7 +142,7 @@ template("gcc_like_toolchain") {
     tool("link") {
       unstripped_exe =
           "{{root_out_dir}}/{{target_output_name}}{{output_extension}}"
-      command = "$cc_wrapper $cxx $ld_arg ${external_ldflags} {{inputs}} {{solibs}} {{libs}} -o $unstripped_exe"
+      command = "$cc_wrapper $cxx $ld_arg {{ldflags}} ${external_ldflags} {{inputs}} {{solibs}} {{libs}} -o $unstripped_exe"
       outputs = [ unstripped_exe ]
       description = "link $unstripped_exe"
       if (strip != "") {
@@ -174,7 +174,7 @@ gcc_like_toolchain("wasm") {
   cpu = host_cpu
   os = host_os
   ar = "$emsdk_dir/emscripten/emar --em-config $em_config"
-  cc = "$emsdk_dir/emscripten/emcc --em-config $em_config"
-  cxx = "$emsdk_dir/emscripten/em++ --em-config $em_config  --bind -s USE_PTHREADS=1"
+  cc = "$emsdk_dir/emscripten/emcc --em-config $em_config -pthread"
+  cxx = "$emsdk_dir/emscripten/em++ --em-config $em_config --bind -pthread"
   strip = ""
 }
