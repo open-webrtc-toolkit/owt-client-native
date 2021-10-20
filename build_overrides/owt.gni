@@ -1,0 +1,5 @@
+declare_args() {
+  owt_msdk_lib_root = ""
+  owt_msdk_header_root = ""
+  owt_build_ic = false
+}

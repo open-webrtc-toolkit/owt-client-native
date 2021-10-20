@@ -19,6 +19,9 @@ LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
 void LocalCameraStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
+void LocalCameraStreamParameters::BackgroundBlur(bool enable) {
+  background_blur_ = enable;
+}
 void LocalCameraStreamParameters::CameraId(const std::string& camera_id) {
   camera_id_ = camera_id;
 }

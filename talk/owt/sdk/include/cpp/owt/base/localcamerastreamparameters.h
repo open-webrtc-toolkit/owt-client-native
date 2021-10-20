@@ -51,6 +51,11 @@ class LocalCameraStreamParameters final {
     @param fps The frame rate of the video.
   */
   void Fps(int fps);
+  /**
+    @brief Set whether to enable the background blur
+    @param enable Indicates if the background is enabled
+  */
+  void BackgroundBlur(bool enable);
   /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
@@ -59,6 +64,7 @@ class LocalCameraStreamParameters final {
   int Fps() const { return fps_; }
   bool VideoEnabled() const { return video_enabled_; }
   bool AudioEnabled() const { return audio_enabled_; }
+  bool BackgroundBlur() const { return background_blur_; }
   /** @endcond */
  private:
   std::string camera_id_;
@@ -68,6 +74,7 @@ class LocalCameraStreamParameters final {
   int fps_;
   bool video_enabled_;
   bool audio_enabled_;
+  bool background_blur_;
 };
 
 

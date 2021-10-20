@@ -11,8 +11,10 @@
 #include "webrtc/sdk/media_constraints.h"
 
 #include "talk/owt/sdk/base/customizedframescapturer.h"
+#include "talk/owt/sdk/base/icmanager.h"
 #include "talk/owt/sdk/base/webrtcaudiorendererimpl.h"
 #include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
+#include "talk/owt/sdk/ic/backgroundblur.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 
 #if defined(WEBRTC_WIN)
@@ -45,7 +47,8 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       const size_t width,
       const size_t height,
       const size_t fps,
-      int capture_device_idx) {
+      int capture_device_idx,
+      bool background_blur_enabled = false) {
     std::unique_ptr<owt::base::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -56,6 +59,9 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
     for (int i = 0; i < num_devices; ++i) {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
+      if (background_blur_enabled) {
+        capturer->AddVideoFramePostProcessing(ICManager::GetInstance()->CreatePostProcessing("background_blur"));
+      }
       if (capturer) {
         return new rtc::RefCountedObject<CapturerTrackSource>(
             std::move(capturer));
@@ -513,7 +519,8 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
         CapturerTrackSource::Create(
             parameters.ResolutionWidth(), parameters.ResolutionHeight(),
             parameters.Fps(),
-            DeviceUtils::GetVideoCaptureDeviceIndex(parameters.CameraId()));
+            DeviceUtils::GetVideoCaptureDeviceIndex(parameters.CameraId()),
+            parameters.BackgroundBlur());
 #else
     capturer_ = ObjcVideoCapturerFactory::Create(parameters);
     if (!capturer_) {

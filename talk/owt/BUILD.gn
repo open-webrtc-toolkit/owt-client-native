@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build_overrides/webrtc.gni")
+import("//build_overrides/owt.gni")
 import("//testing/test.gni")
 
 declare_args() {
   include_internal_audio_device = true
-  owt_msdk_lib_root = ""
-  owt_msdk_header_root = ""
 }
 
 # Introduced for using libvpx config files. We only enable libvpx rate
@@ -83,6 +82,11 @@ if (!is_ios) {
       "//third_party/webrtc:webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
+    if (owt_build_ic) {
+      data_deps = [
+        "sdk/ic:owt_ic",
+      ]
+    }
     complete_static_lib = true
   }
 }
@@ -99,6 +103,8 @@ static_library("owt_sdk_base") {
     "sdk/base/functionalobserver.cc",
     "sdk/base/functionalobserver.h",
     "sdk/base/globalconfiguration.cc",
+    "sdk/base/icmanager.cc",
+    "sdk/base/icmanager.h",
     "sdk/base/localcamerastreamparameters.cc",
     "sdk/base/logging.cc",
     "sdk/base/logsinks.cc",
@@ -118,6 +124,7 @@ static_library("owt_sdk_base") {
     "sdk/base/sysinfo.h",
     "sdk/base/vcmcapturer.cc",
     "sdk/base/vcmcapturer.h",
+    "sdk/base/videoframepostprocessing.h",
     "sdk/base/webrtcaudiorendererimpl.cc",
     "sdk/base/webrtcaudiorendererimpl.h",
     "sdk/include/cpp/owt/base/audioplayerinterface.h",

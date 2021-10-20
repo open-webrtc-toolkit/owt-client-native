@@ -36,18 +36,28 @@ void CameraVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
     return;
   }
 
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer = frame.video_frame_buffer();
+  
   if (out_height != frame.height() || out_width != frame.width()) {
     // Video adapter has requested a down-scale. Allocate a new buffer and
     // return scaled version.
     rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
         webrtc::I420Buffer::Create(out_width, out_height);
-    scaled_buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
+    scaled_buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());  
+    buffer = scaled_buffer;
+  }
+
+  for (auto &pp : video_frame_post_processings_) {
+    buffer = pp->Process(buffer);
+  }
+
+  if (buffer != frame.video_frame_buffer()) {
     broadcaster_.OnFrame(webrtc::VideoFrame::Builder()
-                             .set_video_frame_buffer(scaled_buffer)
+                             .set_video_frame_buffer(buffer)
                              .set_rotation(webrtc::kVideoRotation_0)
                              .set_timestamp_us(frame.timestamp_us())
                              .set_id(frame.id())
-                             .build());
+                             .build());  
   } else {
     // No adaptations needed, just return the frame as is.
     broadcaster_.OnFrame(frame);
@@ -71,9 +81,14 @@ void CameraVideoCapturer::RemoveSink(
   UpdateVideoAdapter();
 }
 
+void CameraVideoCapturer::AddVideoFramePostProcessing(
+    std::shared_ptr<VideoFramePostProcessing> post_processing) {
+  video_frame_post_processings_.emplace_back(post_processing);
+}
+
 void CameraVideoCapturer::UpdateVideoAdapter() {
   video_adapter_.OnSinkWants(broadcaster_.wants());
 }
 
-}  // namespace test
-}  // namespace webrtc
+}  // namespace base
+}  // namespace owt

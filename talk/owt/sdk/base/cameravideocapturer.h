@@ -13,11 +13,14 @@
 #include <stddef.h>
 
 #include <memory>
+#include <vector>
 
 #include "api/video/video_frame.h"
 #include "api/video/video_source_interface.h"
 #include "media/base/video_adapter.h"
 #include "media/base/video_broadcaster.h"
+
+#include "videoframepostprocessing.h"
 
 // This file is borrowed from webrtc project
 namespace owt {
@@ -32,6 +35,9 @@ class CameraVideoCapturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
 
+  void AddVideoFramePostProcessing(
+      const std::shared_ptr<VideoFramePostProcessing> post_processing);
+
  protected:
   void OnFrame(const webrtc::VideoFrame& frame);
   rtc::VideoSinkWants GetSinkWants();
@@ -41,6 +47,8 @@ class CameraVideoCapturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
 
   rtc::VideoBroadcaster broadcaster_;
   cricket::VideoAdapter video_adapter_;
+  std::vector<std::shared_ptr<owt::base::VideoFramePostProcessing>>
+      video_frame_post_processings_;
 };
 }  // namespace base
 }  // namespace owt
