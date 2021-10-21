@@ -8,26 +8,21 @@ import("//testing/test.gni")
 
 declare_args() {
   owt_openvino_root = ""
+  owt_openvino_opencv_version = ""
+  lib_suffix = ""
+  dll_suffix = ""
 }
 
 config("openvino") {
   assert(owt_openvino_root != "", "owt_openvino_root not set")
-  defines = [ "USE_OPENVINO" ]
+  defines = [ "OWT_USE_OPENVINO" ]
   include_dirs = [ 
     owt_openvino_root + "/inference_engine/include",
   ]
   if (is_debug) {
     lib_dirs = [ owt_openvino_root + "/inference_engine/lib/intel64/Debug" ]
-    libs = [ 
-      "inference_engined.lib",
-      "inference_engine_transformationsd.lib",
-    ]
   } else {
     lib_dirs = [ owt_openvino_root + "/inference_engine/lib/intel64/Release" ]
-    libs = [ 
-      "inference_engine.lib",
-      "inference_engine_transformations.lib",
-    ]
   }
   configs = [
     "//build/config/compiler:rtti",
@@ -36,26 +31,14 @@ config("openvino") {
 
 config("openvino_opencv") {
   assert(owt_openvino_root != "", "owt_openvino_root not set")
+  assert(owt_openvino_opencv_version != "", "owt_openvino_opencv_version not set")
+  defines = [ "OWT_USE_OPENCV" ]
   include_dirs = [ owt_openvino_root + "/opencv/include" ]
   lib_dirs = [ owt_openvino_root + "/opencv/lib" ]
-  if (is_debug) {
-    libs = [
-      "opencv_core453d.lib",
-      "opencv_imgproc453d.lib",
-      "opencv_imgcodecs453d.lib",
-      "opencv_highgui453d.lib",
-      "opencv_videoio453d.lib",
-    ]
-  } else {
-    libs = [
-      "opencv_core453.lib",
-      "opencv_imgproc453.lib",
-      "opencv_imgcodecs453.lib",
-      "opencv_highgui453.lib",
-      "opencv_videoio453.lib",
-    ] 
-  }
 }
+
+openvino_modules = [ "ir_reader", "lp_transformations", "preproc", "transformations" ]
+opencv_modules = ["core", "imgproc", "imgcodecs", "highgui", "videoio"]
 
 shared_library("owt_ic") {
   sources = [
@@ -71,10 +54,43 @@ shared_library("owt_ic") {
     ":openvino",
     ":openvino_opencv",
   ]
+  libs = [ 
+    "inference_engine" + lib_suffix,
+    "inference_engine_transformations" + lib_suffix,
+  ]
+  foreach(module, opencv_modules) {
+    libs += [ "opencv_" + module + owt_openvino_opencv_version + lib_suffix ]
+  }
   deps = [ 
     "//third_party/webrtc/api/video:video_frame",
     "//third_party/libyuv:libyuv",
   ]
+  data_deps = [
+    ":openvino_library",
+    ":openvino_opencv_library",
+  ]
+}
+
+copy("openvino_library") {
+  if (is_debug) {
+    bin_dir = owt_openvino_root + "/inference_engine/bin/intel64/Debug"
+  } else {
+    bin_dir = owt_openvino_root + "/inference_engine/bin/intel64/Release"
+  }
+  sources = [ bin_dir + "/inference_engine" + dll_suffix ]
+  foreach(module, openvino_modules) {
+    sources += [ bin_dir + "/inference_engine_" + module + dll_suffix ]
+  }
+  outputs = [ "$target_out_dir/{{source_file_part}}" ]
+}
+
+copy("openvino_opencv_library") {
+  bin_dir = owt_openvino_root + "/opencv/bin"
+  sources = []
+  foreach(module, opencv_modules) {
+    sources += [ bin_dir + "/opencv_" + module + owt_openvino_opencv_version + dll_suffix ]
+  }
+  outputs = [ "$target_out_dir/{{source_file_part}}" ]
 }
 
 executable("test_background_blur") {

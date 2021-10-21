@@ -14,7 +14,6 @@
 #include "talk/owt/sdk/base/icmanager.h"
 #include "talk/owt/sdk/base/webrtcaudiorendererimpl.h"
 #include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
-#include "talk/owt/sdk/ic/backgroundblur.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
 
 #if defined(WEBRTC_WIN)
@@ -60,7 +59,13 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
       if (background_blur_enabled) {
-        capturer->AddVideoFramePostProcessing(ICManager::GetInstance()->CreatePostProcessing("background_blur"));
+        auto post_processing =
+            ICManager::GetInstance()->CreatePostProcessor("background_blur");
+        if (post_processing) {
+          capturer->AddVideoFramePostProcessing(post_processing);
+        } else {
+          RTC_LOG(WARNING) << "Unable to create background blur instance.";
+        }
       }
       if (capturer) {
         return new rtc::RefCountedObject<CapturerTrackSource>(

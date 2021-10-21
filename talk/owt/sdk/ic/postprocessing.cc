@@ -1,4 +1,4 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2021> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,7 +8,7 @@
 
 #include "backgroundblur.h"
 
-owt::base::VideoFramePostProcessing* CreatePostProcessing(const char* name) {
+owt::base::VideoFramePostProcessing* CreatePostProcessor(const char* name) {
   if (strcmp(name, "background_blur") == 0) {
     return new owt::ic::BackgroundBlur;
   } else {

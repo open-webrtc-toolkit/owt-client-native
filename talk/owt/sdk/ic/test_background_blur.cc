@@ -40,7 +40,7 @@ class MainWindow : public VideoRenderWindow {
     }
   }
 
-  int exec() {
+  int Exec() {
     ShowWindow(GetWindowHandle(), SW_SHOW);
     MSG msg;
     while (GetMessage(&msg, 0, 0, 0)) {
@@ -51,7 +51,6 @@ class MainWindow : public VideoRenderWindow {
 };
 
 int main(int, char*[]) {
-  MainWindow w;
   LocalCameraStreamParameters param(false, true);
   param.CameraId(DeviceUtils::VideoCapturerIds()[0]);
   param.Resolution(1280, 720);
@@ -59,6 +58,7 @@ int main(int, char*[]) {
   param.BackgroundBlur(true);
   int error = 0;
   auto stream = LocalStream::Create(param, error);
+  MainWindow w;
   stream->AttachVideoRenderer(w);
-  return w.exec();
+  return w.Exec();
 }

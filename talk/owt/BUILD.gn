@@ -82,11 +82,6 @@ if (!is_ios) {
       "//third_party/webrtc:webrtc",
       "//third_party/webrtc/api:libjingle_peerconnection_api",
     ]
-    if (owt_build_ic) {
-      data_deps = [
-        "sdk/ic:owt_ic",
-      ]
-    }
     complete_static_lib = true
   }
 }
@@ -322,6 +317,10 @@ static_library("owt_sdk_base") {
       "-Wno-microsoft-extra-qualification",
       "-Wno-reorder",
     ]
+  }
+  if (owt_build_ic) {
+    defines += [ "OWT_BUILD_IC" ]
+    data_deps = [ "sdk/ic:owt_ic" ]
   }
 }
 static_library("owt_sdk_p2p") {

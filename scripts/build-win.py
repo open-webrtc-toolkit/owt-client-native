@@ -11,6 +11,7 @@ Output lib is located in out/owt-debug(release).lib.
 '''
 
 import os
+import re
 import sys
 import subprocess
 import argparse
@@ -49,9 +50,13 @@ def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
         gn_args.append('use_custom_libcxx=false')
     if scheme == 'release':
         gn_args.append('is_debug=false')
+        gn_args.append('lib_suffix=".lib"')
+        gn_args.append('dll_suffix=".dll"')
     else:
         gn_args.append('is_debug=true')
         gn_args.append('enable_iterator_debugging=true')
+        gn_args.append('lib_suffix="d.lib"')
+        gn_args.append('dll_suffix="d.dll"')
     if ssl_root:
         gn_args.append('owt_use_openssl=true')
         gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
@@ -77,8 +82,15 @@ def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
             return False
         gn_args.append('owt_use_quic=true')
     if openvino_root:
-        gn_args.append(f'owt_build_ic=true')
-        gn_args.append(f'owt_openvino_root="{openvino_root}"')
+        gn_args.append('owt_build_ic=true')
+        gn_args.append('owt_openvino_root="{}"'.format(openvino_root))
+        opencv_version_bin = os.path.join(openvino_root, 'opencv', 'bin', 'opencv_version.exe')
+        try:
+            output = subprocess.check_output([opencv_version_bin])
+            opencv_version = ''.join(re.findall('\d', output.decode()))
+            gn_args.append('owt_openvino_opencv_version={}'.format(opencv_version))
+        except FileNotFoundError as e:
+            print('File not found: {}'.format(opencv_version_bin))
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
