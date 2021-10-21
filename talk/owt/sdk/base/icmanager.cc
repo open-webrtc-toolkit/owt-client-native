@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "icmanager.h"
 
 #include "webrtc/rtc_base/logging.h"
@@ -22,8 +26,8 @@ std::shared_ptr<VideoFramePostProcessing> ICManager::CreatePostProcessing(
 ICManager::ICManager() {
   if (owt_ic_dll_ = LoadLibrary(L"owt_ic.dll")) {
     RTC_LOG(INFO) << "owt_ic.dll is loaded.";
-    create_post_processing_ =
-        (CREATE_POST_PROCESSING)GetProcAddress(owt_ic_dll_, "CreatePostProcessing");
+    create_post_processing_ = (CREATE_POST_PROCESSING)GetProcAddress(
+        owt_ic_dll_, "CreatePostProcessing");
   } else {
     RTC_LOG(WARNING) << "owt_ic.dll is not loaded.";
   }

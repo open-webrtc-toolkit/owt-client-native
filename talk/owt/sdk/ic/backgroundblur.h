@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_IC_BACKGROUNDBLUR_H_
 #define OWT_IC_BACKGROUNDBLUR_H_
 

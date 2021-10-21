@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "owt/base/deviceutils.h"
 #include "owt/base/globalconfiguration.h"
 #include "owt/base/localcamerastreamparameters.h"

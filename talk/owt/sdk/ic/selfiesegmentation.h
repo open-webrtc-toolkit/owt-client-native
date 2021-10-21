@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_IC_SELFIESEGMENTATION_H_
 #define OWT_IC_SELFIESEGMENTATION_H_
 
@@ -13,7 +17,7 @@ namespace ic {
 class SelfieSegmentation {
  public:
   explicit SelfieSegmentation(const std::string& xmlPath,
-                             const std::string& device = "CPU");
+                              const std::string& device = "CPU");
 
   cv::Mat predict(const cv::Mat& frame);
   void predictAsync(const cv::Mat& frame);

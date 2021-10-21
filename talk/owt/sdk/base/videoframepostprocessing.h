@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_VIDEOFRAMEPOSTPROCESSING_H_
 #define OWT_BASE_VIDEOFRAMEPOSTPROCESSING_H_
 

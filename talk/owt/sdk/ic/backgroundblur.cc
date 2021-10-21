@@ -1,3 +1,7 @@
+// Copyright (C) <2018> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "backgroundblur.h"
 
 #include "api/video/i420_buffer.h"
@@ -39,7 +43,8 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
   cv::Mat resizedMask;
   cv::resize(mask, resizedMask, {buffer->width(), buffer->height()});
   cv::Mat mask3;
-  std::vector<cv::Mat> masks{255 - resizedMask, 255 - resizedMask, 255 - resizedMask};
+  std::vector<cv::Mat> masks{255 - resizedMask, 255 - resizedMask,
+                             255 - resizedMask};
   cv::merge(masks.data(), 3, mask3);
 
   cv::Mat background;
@@ -48,7 +53,8 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
   cv::GaussianBlur(background, background, {blur_radius_, blur_radius_}, 0);
   cv::add(frame, background, frame);
 
-  auto newBuffer = webrtc::I420Buffer::Create(buffer->width(), buffer->height());
+  auto newBuffer =
+      webrtc::I420Buffer::Create(buffer->width(), buffer->height());
   libyuv::RAWToI420(frame.data, frame.cols * 3, newBuffer->MutableDataY(),
                     newBuffer->StrideY(), newBuffer->MutableDataU(),
                     newBuffer->StrideU(), newBuffer->MutableDataV(),
