@@ -6,6 +6,7 @@
 #define OWT_BASE_ICMANAGER_H_
 
 #include <memory>
+#include <string>
 
 #include "base/macros.h"
 #include "talk/owt/sdk/base/sharedobjectloader.h"
@@ -18,6 +19,8 @@ namespace base {
 class ICManager {
  public:
   static ICManager* GetInstance();
+
+  bool LoadConfig(const std::string& config_path);
   std::shared_ptr<VideoFramePostProcessor> CreatePostProcessor(
       const char* name);
 
@@ -25,10 +28,10 @@ class ICManager {
   ICManager();
   ~ICManager() = default;
 
-  typedef owt::base::VideoFramePostProcessor* (*CREATE_POST_PROCESSING)(
+  typedef owt::base::VideoFramePostProcessor* (*CREATE_POST_PROCESSOR)(
       const char* name);
   SharedObjectLoader so_;
-  CREATE_POST_PROCESSING create_post_processing_ = nullptr;
+  CREATE_POST_PROCESSOR create_post_processing_ = nullptr;
 
   DISALLOW_COPY_AND_ASSIGN(ICManager);
 };

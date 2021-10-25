@@ -11,7 +11,6 @@
 #include "webrtc/sdk/media_constraints.h"
 
 #include "talk/owt/sdk/base/customizedframescapturer.h"
-#include "talk/owt/sdk/base/icmanager.h"
 #include "talk/owt/sdk/base/webrtcaudiorendererimpl.h"
 #include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
 #include "talk/owt/sdk/include/cpp/owt/base/framegeneratorinterface.h"
@@ -35,6 +34,9 @@
 #endif
 #include "talk/owt/sdk/include/cpp/owt/base/deviceutils.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+#include "talk/owt/sdk/base/icmanager.h"
+#endif
 
 using namespace rtc;
 namespace owt {
@@ -47,7 +49,8 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       const size_t height,
       const size_t fps,
       int capture_device_idx,
-      bool background_blur_enabled = false) {
+      const IntelligentCollaborationParameters& ic_params =
+          IntelligentCollaborationParameters()) {
     std::unique_ptr<owt::base::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -58,14 +61,19 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
     for (int i = 0; i < num_devices; ++i) {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
-      if (background_blur_enabled) {
-        auto post_processing =
+      if (ic_params.BackgroundBlur()) {
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+        auto post_processor =
             ICManager::GetInstance()->CreatePostProcessor("background_blur");
-        if (post_processing) {
-          capturer->AddVideoFramePostProcessing(post_processing);
+        if (post_processor) {
+          capturer->AddVideoFramePostProcessor(post_processor);
         } else {
           RTC_LOG(WARNING) << "Unable to create background blur instance.";
         }
+#else
+        RTC_LOG(WARNING)
+            << "Background blur is not supported on this platform.";
+#endif
       }
       if (capturer) {
         return new rtc::RefCountedObject<CapturerTrackSource>(
@@ -101,7 +109,8 @@ Stream::Stream()
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
 #endif
       ended_(false),
-      id_("") {}
+      id_("") {
+}
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
@@ -115,25 +124,44 @@ Stream::Stream(const std::string& id)
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
 #endif
       ended_(false),
-      id_(id) {}
+      id_(id) {
+}
 #elif defined(WEBRTC_LINUX)
 Stream::Stream()
-    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_("") {}
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
+      va_renderer_impl_(nullptr),
+      ended_(false),
+      id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
-    : media_stream_(nullptr),   va_renderer_impl_(nullptr),source_(source) {
+    : media_stream_(nullptr), va_renderer_impl_(nullptr), source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
+      va_renderer_impl_(nullptr),
+      ended_(false),
+      id_(id) {}
 #else
 Stream::Stream()
-    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
+      ended_(false),
+      id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr), source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr),
+      renderer_impl_(nullptr),
+      audio_renderer_impl_(nullptr),
+      ended_(false),
+      id_(id) {}
 #endif
 
 MediaStreamInterface* Stream::MediaStream() const {
@@ -525,7 +553,7 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
             parameters.ResolutionWidth(), parameters.ResolutionHeight(),
             parameters.Fps(),
             DeviceUtils::GetVideoCaptureDeviceIndex(parameters.CameraId()),
-            parameters.BackgroundBlur());
+            parameters.ICParams());
 #else
     capturer_ = ObjcVideoCapturerFactory::Create(parameters);
     if (!capturer_) {
@@ -720,9 +748,7 @@ std::string RemoteStream::Origin() {
 }
 
 RemoteStream::RemoteStream(const std::string& id, const std::string& from)
-    :Stream(id),
-     origin_(from) {
-}
+    : Stream(id), origin_(from) {}
 
 void RemoteStream::MediaStream(MediaStreamInterface* media_stream) {
   Stream::MediaStream(media_stream);
@@ -733,13 +759,14 @@ MediaStreamInterface* RemoteStream::MediaStream() {
 
 #ifdef OWT_ENABLE_QUIC
 QuicStream::QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
-           const std::string& session_id)
-    : quic_stream_(quic_stream), session_id_(session_id), can_read_(true),
-      can_write_(true), fin_read_(false) {
-}
+                       const std::string& session_id)
+    : quic_stream_(quic_stream),
+      session_id_(session_id),
+      can_read_(true),
+      can_write_(true),
+      fin_read_(false) {}
 
-QuicStream::~QuicStream() {
-}
+QuicStream::~QuicStream() {}
 
 size_t QuicStream::Write(uint8_t* data, size_t length) {
   if (quic_stream_ && data != nullptr && length > 0) {

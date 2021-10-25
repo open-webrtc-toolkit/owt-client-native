@@ -35,7 +35,7 @@ class CameraVideoCapturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
 
-  void AddVideoFramePostProcessing(
+  void AddVideoFramePostProcessor(
       const std::shared_ptr<VideoFramePostProcessor> post_processing);
 
  protected:
@@ -48,7 +48,7 @@ class CameraVideoCapturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
   rtc::VideoBroadcaster broadcaster_;
   cricket::VideoAdapter video_adapter_;
   std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>
-      video_frame_post_processings_;
+      video_frame_post_processors_;
 };
 }  // namespace base
 }  // namespace owt

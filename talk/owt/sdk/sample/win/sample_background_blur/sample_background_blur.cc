@@ -1,7 +1,8 @@
-// Copyright (C) <2018> Intel Corporation
+// Copyright (C) <2021> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <Windows.h>
 #include <iostream>
 
 #include "owt/base/deviceutils.h"
@@ -60,7 +61,8 @@ int main(int, char*[]) {
       DeviceUtils::VideoCapturerSupportedCapabilities(default_id)[0];
   param.Resolution(capability.width, capability.height);
   param.Fps(capability.frameRate);
-  param.BackgroundBlur(true);
+  param.ICParams().BackgroundBlur(true);
+  param.ICParams().BlurRadius(55);
   int error = 0;
   auto stream = LocalStream::Create(param, error);
   if (error == 0) {

@@ -48,8 +48,8 @@ void CameraVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
     buffer = scaled_buffer;
   }
 
-  for (auto& post_processing : video_frame_post_processings_) {
-    buffer = post_processing->Process(buffer);
+  for (auto& post_processor : video_frame_post_processors_) {
+    buffer = post_processor->Process(buffer);
   }
 
   if (buffer != frame.video_frame_buffer()) {
@@ -82,9 +82,9 @@ void CameraVideoCapturer::RemoveSink(
   UpdateVideoAdapter();
 }
 
-void CameraVideoCapturer::AddVideoFramePostProcessing(
+void CameraVideoCapturer::AddVideoFramePostProcessor(
     std::shared_ptr<VideoFramePostProcessor> post_processing) {
-  video_frame_post_processings_.emplace_back(post_processing);
+  video_frame_post_processors_.emplace_back(post_processing);
 }
 
 void CameraVideoCapturer::UpdateVideoAdapter() {

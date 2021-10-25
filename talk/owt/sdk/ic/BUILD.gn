@@ -92,18 +92,3 @@ copy("openvino_opencv_library") {
   }
   outputs = [ "$target_out_dir/{{source_file_part}}" ]
 }
-
-executable("test_background_blur") {
-  sources = [ "test_background_blur.cc" ]
-  include_dirs = [ "//talk/owt/sdk/include/cpp" ]
-  configs += [ 
-    ":openvino",
-    ":openvino_opencv",
-  ]
-  deps = [
-    "//talk/owt:owt_sdk_base",
-  ]
-  data_deps = [
-    ":owt_ic",
-  ]
-}

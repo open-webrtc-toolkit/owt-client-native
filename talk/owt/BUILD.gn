@@ -98,8 +98,7 @@ static_library("owt_sdk_base") {
     "sdk/base/functionalobserver.cc",
     "sdk/base/functionalobserver.h",
     "sdk/base/globalconfiguration.cc",
-    "sdk/base/icmanager.cc",
-    "sdk/base/icmanager.h",
+    "sdk/base/intelligentcollaborationparameters.cc",
     "sdk/base/localcamerastreamparameters.cc",
     "sdk/base/logging.cc",
     "sdk/base/logsinks.cc",
@@ -128,6 +127,7 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/deviceutils.h",
     "sdk/include/cpp/owt/base/exception.h",
     "sdk/include/cpp/owt/base/framegeneratorinterface.h",
+    "sdk/include/cpp/owt/base/intelligentcollaborationparameters.h",
     "sdk/include/cpp/owt/base/localcamerastreamparameters.h",
     "sdk/include/cpp/owt/base/logging.h",
     "sdk/include/cpp/owt/base/stream.h",
@@ -143,6 +143,8 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideosource.h",
       "sdk/base/encodedvideoencoderfactory.cc",
       "sdk/base/encodedvideoencoderfactory.h",
+      "sdk/base/icmanager.cc",
+      "sdk/base/icmanager.h",
       "sdk/base/sharedobjectloader.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
@@ -506,7 +508,10 @@ if (owt_include_tests) {
 
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
-    deps = [ ":owt_unittests" ]
+    deps = [
+      ":owt_unittests",
+      "//talk/owt/sdk/sample",
+    ]
   }
   test("owt_unittests") {
     testonly = true

@@ -1,8 +1,8 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include <random>
 #include "talk/owt/sdk/include/cpp/owt/base/localcamerastreamparameters.h"
+#include <random>
 namespace owt {
 namespace base {
 LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
@@ -19,8 +19,12 @@ LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
 void LocalCameraStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
-void LocalCameraStreamParameters::BackgroundBlur(bool enable) {
-  background_blur_ = enable;
+IntelligentCollaborationParameters& LocalCameraStreamParameters::ICParams() {
+  return ic_params_;
+}
+const IntelligentCollaborationParameters&
+LocalCameraStreamParameters::ICParams() const {
+  return ic_params_;
 }
 void LocalCameraStreamParameters::CameraId(const std::string& camera_id) {
   camera_id_ = camera_id;
@@ -29,12 +33,11 @@ void LocalCameraStreamParameters::Resolution(int width, int height) {
   resolution_width_ = width;
   resolution_height_ = height;
 }
-void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
+void LocalCameraStreamParameters::StreamName(const std::string& stream_name) {
   stream_name_ = stream_name;
 }
-LocalDesktopStreamParameters::LocalDesktopStreamParameters(
-    bool audio_enabled,
-    bool video_enabled)
+LocalDesktopStreamParameters::LocalDesktopStreamParameters(bool audio_enabled,
+                                                           bool video_enabled)
     : video_enabled_(video_enabled),
       audio_enabled_(audio_enabled),
       fps_(30),
@@ -43,5 +46,5 @@ LocalDesktopStreamParameters::LocalDesktopStreamParameters(
 void LocalDesktopStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
-}
-}
+}  // namespace base
+}  // namespace owt

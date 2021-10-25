@@ -6,8 +6,9 @@
 #define OWT_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 #include <string>
 #include "owt/base/commontypes.h"
+#include "owt/base/intelligentcollaborationparameters.h"
 namespace owt {
-namespace base{
+namespace base {
 /**
   @brief This class contains parameters and methods that needed for creating a
   local camera stream.
@@ -52,10 +53,10 @@ class LocalCameraStreamParameters final {
   */
   void Fps(int fps);
   /**
-    @brief Set whether to enable the background blur
-    @param enable Indicates if the background is enabled
+    @brief Get the reference of intelligent collaboration parameters
   */
-  void BackgroundBlur(bool enable);
+  IntelligentCollaborationParameters& ICParams();
+  const IntelligentCollaborationParameters& ICParams() const;
   /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
@@ -64,7 +65,6 @@ class LocalCameraStreamParameters final {
   int Fps() const { return fps_; }
   bool VideoEnabled() const { return video_enabled_; }
   bool AudioEnabled() const { return audio_enabled_; }
-  bool BackgroundBlur() const { return background_blur_; }
   /** @endcond */
  private:
   std::string camera_id_;
@@ -74,9 +74,8 @@ class LocalCameraStreamParameters final {
   int fps_;
   bool video_enabled_;
   bool audio_enabled_;
-  bool background_blur_;
+  IntelligentCollaborationParameters ic_params_;
 };
-
 
 #ifdef OWT_ENABLE_QUIC
 /**
@@ -87,15 +86,11 @@ class LocalCameraStreamParameters final {
  */
 class LocalDataStreamParameters final {
  public:
-  LocalDataStreamParameters(bool data_enabled) {
-    data_enabled_ = data_enabled;
-  }
+  LocalDataStreamParameters(bool data_enabled) { data_enabled_ = data_enabled; }
   ~LocalDataStreamParameters() {}
 
   /** @cond */
-  bool DataEnabled() const {
-    return data_enabled_;
-  }
+  bool DataEnabled() const { return data_enabled_; }
   /** @endcond */
 
  private:
@@ -117,11 +112,11 @@ class LocalCustomizedStreamParameters final {
     @param video_anabled Indicates if video is enabled for this stream.
   */
   LocalCustomizedStreamParameters(bool audio_enabled, bool video_enabled) {
-     video_enabled_ = video_enabled;
-     audio_enabled_ = audio_enabled;
-     fps_ = 0;
-     bitrate_kbps_ = 0;
-     resolution_width_ = resolution_height_ = 0;
+    video_enabled_ = video_enabled;
+    audio_enabled_ = audio_enabled;
+    fps_ = 0;
+    bitrate_kbps_ = 0;
+    resolution_width_ = resolution_height_ = 0;
   }
   ~LocalCustomizedStreamParameters() {}
   /**
@@ -141,16 +136,12 @@ class LocalCustomizedStreamParameters final {
     will failed.
     @param fps The frame rate of the video.
   */
-  void Fps(int fps) {
-    fps_ = fps;
-  }
+  void Fps(int fps) { fps_ = fps; }
   /**
     @brief Set the bitrate of encoded frame.
     @param bitrate_kbps The bitrate expected for the encoded stream.
   */
-  void Bitrate(int bitrate_kbps) {
-    bitrate_kbps_ = bitrate_kbps;
-  }
+  void Bitrate(int bitrate_kbps) { bitrate_kbps_ = bitrate_kbps; }
   /** @cond */
   int ResolutionWidth() const { return resolution_width_; }
   int ResolutionHeight() const { return resolution_height_; }
@@ -211,9 +202,7 @@ class LocalDesktopStreamParameters final {
   @param soruce_type Indicates if capture from screen or an app.
   @param capture_policy the OR of any of the DesktopCapturePolicy options.
   */
-  LocalDesktopStreamParameters(
-      bool audio_enabled,
-      bool video_enabled);
+  LocalDesktopStreamParameters(bool audio_enabled, bool video_enabled);
   ~LocalDesktopStreamParameters() {}
   /**
   @brief Get video is enabled or not for this stream.
@@ -230,9 +219,7 @@ class LocalDesktopStreamParameters final {
     @param source_type Indicate if capturing the full screen
     or an application.
   */
-  void SourceType(DesktopSourceType source_type) {
-    source_type_ = source_type;
-  }
+  void SourceType(DesktopSourceType source_type) { source_type_ = source_type; }
   /**
     @brief Set the capturer features
     @params capture_policy Indicate the feature used by the capturer.
@@ -258,6 +245,6 @@ class LocalDesktopStreamParameters final {
   DesktopSourceType source_type_;
   DesktopCapturePolicy capture_policy_;
 };
-}
-}
+}  // namespace base
+}  // namespace owt
 #endif  // OWT_BASE_LOCALCAMERASTREAMPARAMETERS_H_
