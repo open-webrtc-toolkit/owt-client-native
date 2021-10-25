@@ -50,13 +50,15 @@ def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
         gn_args.append('use_custom_libcxx=false')
     if scheme == 'release':
         gn_args.append('is_debug=false')
-        gn_args.append('lib_suffix=".lib"')
-        gn_args.append('dll_suffix=".dll"')
+        if openvino_root:
+            gn_args.append('lib_suffix=".lib"')
+            gn_args.append('dll_suffix=".dll"')
     else:
         gn_args.append('is_debug=true')
         gn_args.append('enable_iterator_debugging=true')
-        gn_args.append('lib_suffix="d.lib"')
-        gn_args.append('dll_suffix="d.dll"')
+        if openvino_root:
+            gn_args.append('lib_suffix="d.lib"')
+            gn_args.append('dll_suffix="d.dll"')
     if ssl_root:
         gn_args.append('owt_use_openssl=true')
         gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
@@ -91,6 +93,7 @@ def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
             gn_args.append('owt_openvino_opencv_version={}'.format(opencv_version))
         except FileNotFoundError as e:
             print('File not found: {}'.format(opencv_version_bin))
+            return False
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
@@ -198,7 +201,7 @@ def main():
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
-    parser.add_argument('--openvino_root', default="", help='Path for OpenVINO.')
+    parser.add_argument('--openvino_root', help='Path for OpenVINO.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
