@@ -17,7 +17,7 @@
 #define OWT_IC_EXPORT
 #endif
 
-OWT_IC_EXPORT owt::base::VideoFramePostProcessing* CreatePostProcessor(
+OWT_IC_EXPORT owt::base::VideoFramePostProcessor* CreatePostProcessor(
     const char* name);
 
 #endif  // OWT_IC_POSTPROCESSING_H_

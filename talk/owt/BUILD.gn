@@ -143,6 +143,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideosource.h",
       "sdk/base/encodedvideoencoderfactory.cc",
       "sdk/base/encodedvideoencoderfactory.h",
+      "sdk/base/sharedobjectloader.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/base/windowcapturer.cc",
@@ -263,6 +264,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/device_info_mf.cc",
       "sdk/base/win/video_capture_mf.h",
       "sdk/base/win/video_capture_mf.cc",
+      "sdk/base/win/sharedobjectloader.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
     
@@ -284,10 +286,10 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/msdkvideodecoderfactory.h",
         "sdk/base/linux/msdkvideodecoder.cc",
         "sdk/base/linux/msdkvideodecoder.h",
-        
       ]
     }
     sources += [
+        "sdk/base/linux/sharedobjectloader.cc",
         "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/linux/videorenderlinux.cc",
         "sdk/base/linux/videorenderlinux.h",

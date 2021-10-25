@@ -8,10 +8,11 @@
 
 #include "backgroundblur.h"
 
-owt::base::VideoFramePostProcessing* CreatePostProcessor(const char* name) {
-  if (strcmp(name, "background_blur") == 0) {
-    return new owt::ic::BackgroundBlur;
-  } else {
-    return nullptr;
+owt::base::VideoFramePostProcessor* CreatePostProcessor(const char* name) {
+  if (name) {
+    if (strcmp(name, "background_blur") == 0) {
+      return new owt::ic::BackgroundBlur;
+    }
   }
+  return nullptr;
 }

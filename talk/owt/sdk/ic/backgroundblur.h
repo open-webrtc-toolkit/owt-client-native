@@ -13,17 +13,17 @@ namespace owt {
 namespace ic {
 class SelfieSegmentation;
 
-class BackgroundBlur : public owt::base::VideoFramePostProcessing {
+class BackgroundBlur : public owt::base::VideoFramePostProcessor {
  public:
-  BackgroundBlur(int blurRadius = 55);
-  ~BackgroundBlur() override;
+  BackgroundBlur();
+  ~BackgroundBlur() override = default;
 
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> Process(
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) override;
 
  private:
   std::unique_ptr<SelfieSegmentation> model;
-  int blur_radius_;
+  int blur_radius_ = 55;
 };
 
 }  // namespace ic

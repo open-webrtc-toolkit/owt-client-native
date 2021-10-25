@@ -11,9 +11,9 @@
 namespace owt {
 namespace base {
 
-class VideoFramePostProcessing {
+class VideoFramePostProcessor {
  public:
-  virtual ~VideoFramePostProcessing() = default;
+  virtual ~VideoFramePostProcessor() = default;
 
   virtual rtc::scoped_refptr<webrtc::VideoFrameBuffer> Process(
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) = 0;

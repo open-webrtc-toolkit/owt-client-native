@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <iostream>
+
 #include "owt/base/deviceutils.h"
 #include "owt/base/globalconfiguration.h"
 #include "owt/base/localcamerastreamparameters.h"
@@ -14,16 +16,16 @@ class MainWindow : public VideoRenderWindow {
   const wchar_t* title = L"Camera";
 
  public:
-  MainWindow() {
+  MainWindow(int width, int height) {
     WNDCLASSEX cls = {};
     cls.cbSize = sizeof(WNDCLASSEX);
     cls.lpfnWndProc = WindowProcedure;
     cls.hInstance = GetModuleHandle(nullptr);
     cls.lpszClassName = class_name;
     RegisterClassEx(&cls);
-    HWND handle = CreateWindow(
-        class_name, title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, cls.hInstance, nullptr);
+    HWND handle = CreateWindow(class_name, title, WS_OVERLAPPEDWINDOW,
+                               CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+                               nullptr, nullptr, cls.hInstance, nullptr);
     SetWindowHandle(handle);
   }
 
@@ -52,13 +54,22 @@ class MainWindow : public VideoRenderWindow {
 
 int main(int, char*[]) {
   LocalCameraStreamParameters param(false, true);
-  param.CameraId(DeviceUtils::VideoCapturerIds()[0]);
-  param.Resolution(1280, 720);
-  param.Fps(60);
+  std::string default_id = DeviceUtils::VideoCapturerIds()[0];
+  param.CameraId(default_id);
+  auto capability =
+      DeviceUtils::VideoCapturerSupportedCapabilities(default_id)[0];
+  param.Resolution(capability.width, capability.height);
+  param.Fps(capability.frameRate);
   param.BackgroundBlur(true);
   int error = 0;
   auto stream = LocalStream::Create(param, error);
-  MainWindow w;
-  stream->AttachVideoRenderer(w);
-  return w.Exec();
+  if (error == 0) {
+    MainWindow w(capability.width, capability.height);
+    stream->AttachVideoRenderer(w);
+    return w.Exec();
+  } else {
+    std::cerr << "Create local stream failed, error code " << error
+              << std::endl;
+    return 0;
+  }
 }

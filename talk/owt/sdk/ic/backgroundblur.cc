@@ -4,6 +4,8 @@
 
 #include "backgroundblur.h"
 
+#include <limits>
+
 #include "api/video/i420_buffer.h"
 #include "libyuv/convert.h"
 #include "opencv2/imgproc.hpp"
@@ -13,19 +15,10 @@
 namespace owt {
 namespace ic {
 
-BackgroundBlur::BackgroundBlur(int blurRadius)
+BackgroundBlur::BackgroundBlur()
     : model(new SelfieSegmentation(
           "C:/Users/wangzhib/Desktop/segmentation/contrib/"
-          "owt-selfie-segmentation-144x256.xml")),
-      blur_radius_(blurRadius) {
-  if (this->blur_radius_ < 0) {
-    this->blur_radius_ = 1;
-  } else if (this->blur_radius_ % 2 == 0) {
-    ++this->blur_radius_;
-  }
-}
-
-BackgroundBlur::~BackgroundBlur() {}
+          "owt-selfie-segmentation-144x256.xml")) {}
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
@@ -37,18 +30,22 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
   cv::Mat frame(buffer->height(), buffer->width(), CV_8UC3, rgb.data());
 
   cv::Mat input;
-  frame.convertTo(input, CV_32FC3, 1. / 255);
+  frame.convertTo(input, CV_32FC3,
+                  1. / std::numeric_limits<unsigned char>::max());
   cv::Mat mask = model->predict(input);  // mask is of 8UC1
 
   cv::Mat resizedMask;
   cv::resize(mask, resizedMask, {buffer->width(), buffer->height()});
   cv::Mat mask3;
-  std::vector<cv::Mat> masks{255 - resizedMask, 255 - resizedMask,
-                             255 - resizedMask};
+  std::vector<cv::Mat> masks{
+      std::numeric_limits<unsigned char>::max() - resizedMask,
+      std::numeric_limits<unsigned char>::max() - resizedMask,
+      std::numeric_limits<unsigned char>::max() - resizedMask};
   cv::merge(masks.data(), 3, mask3);
 
   cv::Mat background;
-  cv::multiply(frame, mask3, background, 1. / 255);
+  cv::multiply(frame, mask3, background,
+               1. / std::numeric_limits<unsigned char>::max());
   frame -= background;
   cv::GaussianBlur(background, background, {blur_radius_, blur_radius_}, 0);
   cv::add(frame, background, frame);

@@ -14,33 +14,30 @@ ICManager* ICManager::GetInstance() {
   return &instance;
 }
 
-std::shared_ptr<VideoFramePostProcessing> ICManager::CreatePostProcessor(
+std::shared_ptr<VideoFramePostProcessor> ICManager::CreatePostProcessor(
     const char* name) {
   return create_post_processing_
-             ? std::shared_ptr<VideoFramePostProcessing>(
+             ? std::shared_ptr<VideoFramePostProcessor>(
                    create_post_processing_(name),
-                   [](VideoFramePostProcessing* ptr) { ptr->Release(); })
+                   [](VideoFramePostProcessor* ptr) { ptr->Release(); })
              : nullptr;
 }
 
-ICManager::ICManager() {
+ICManager::ICManager()
+    : so_(
 #ifdef WEBRTC_WIN
-  if (owt_ic_dll_ = LoadLibrary(L"owt_ic.dll")) {
+          "owt_ic.dll"
+#elif WEBRTC_LINUX
+          "owt_ic.so"
+#endif
+      ) {
+  if (so_.IsLoaded()) {
     RTC_LOG(INFO) << "owt_ic.dll is loaded.";
-    create_post_processing_ = (CREATE_POST_PROCESSING)GetProcAddress(
-        owt_ic_dll_, "CreatePostProcessor");
+    create_post_processing_ = reinterpret_cast<CREATE_POST_PROCESSING>(
+        so_.GetSymbol("CreatePostProcessor"));
   } else {
     RTC_LOG(WARNING) << "owt_ic.dll is not loaded.";
   }
-#endif
-}
-
-ICManager::~ICManager() {
-#ifdef WEBRTC_WIN
-  if (owt_ic_dll_) {
-    FreeLibrary(owt_ic_dll_);
-  }
-#endif
 }
 
 }  // namespace base

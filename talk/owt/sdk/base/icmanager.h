@@ -6,13 +6,11 @@
 #define OWT_BASE_ICMANAGER_H_
 
 #include <memory>
-#ifdef WEBRTC_WIN
-#include <windows.h>
-#endif
 
 #include "base/macros.h"
+#include "talk/owt/sdk/base/sharedobjectloader.h"
+#include "talk/owt/sdk/base/videoframepostprocessing.h"
 #include "webrtc/api/scoped_refptr.h"
-#include "videoframepostprocessing.h"
 
 namespace owt {
 namespace base {
@@ -20,18 +18,16 @@ namespace base {
 class ICManager {
  public:
   static ICManager* GetInstance();
-  std::shared_ptr<VideoFramePostProcessing> CreatePostProcessor(
+  std::shared_ptr<VideoFramePostProcessor> CreatePostProcessor(
       const char* name);
 
  private:
   ICManager();
-  ~ICManager();
+  ~ICManager() = default;
 
-  typedef owt::base::VideoFramePostProcessing* (*CREATE_POST_PROCESSING)(
+  typedef owt::base::VideoFramePostProcessor* (*CREATE_POST_PROCESSING)(
       const char* name);
-#ifdef WEBRTC_WIN
-  HMODULE owt_ic_dll_ = nullptr;
-#endif
+  SharedObjectLoader so_;
   CREATE_POST_PROCESSING create_post_processing_ = nullptr;
 
   DISALLOW_COPY_AND_ASSIGN(ICManager);
