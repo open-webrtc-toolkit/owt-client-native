@@ -3,6 +3,12 @@
 
 #include "talk/owt/sdk/include/cpp/owt/ic/icmanagerinterface.h"
 
+#include <memory>
+
+namespace InferenceEngine {
+class Core;
+}
+
 namespace owt {
 namespace ic {
 
@@ -15,6 +21,14 @@ class ICManager : public ICManagerInterface {
 
   std::shared_ptr<owt::base::VideoFramePostProcessor> CreatePostProcessor(
       ICPlugin plugin) override;
+
+  static InferenceEngine::Core& InferenceEngineCore();
+
+ private:
+  static bool InitializeInferenceEngineCoreImpl(
+      const std::string& plugins_xml_path);
+
+  static std::shared_ptr<InferenceEngine::Core> core;
 };
 
 }  // namespace ic

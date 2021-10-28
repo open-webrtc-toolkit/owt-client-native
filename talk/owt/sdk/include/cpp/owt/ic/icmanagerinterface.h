@@ -15,8 +15,7 @@ namespace ic {
 
 enum class ICPlugin { BACKGROUND_BLUR };
 
-class ICManagerInterface
-    : public std::enable_shared_from_this<ICManagerInterface> {
+class ICManagerInterface {
  public:
   virtual bool InitializeInferenceEngineCore(
       const std::string& plugins_xml_path) = 0;

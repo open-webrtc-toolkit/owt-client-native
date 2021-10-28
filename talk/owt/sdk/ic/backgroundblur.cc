@@ -4,6 +4,7 @@
 
 #include "backgroundblur.h"
 
+#include <exception>
 #include <limits>
 
 #include "api/video/i420_buffer.h"
@@ -15,15 +16,17 @@
 namespace owt {
 namespace ic {
 
-BackgroundBlur::BackgroundBlur()
-    : model(new SelfieSegmentation(
-          "C:/Users/wangzhib/Desktop/segmentation/contrib/"
-          "owt-selfie-segmentation-144x256.xml")) {}
+BackgroundBlur::BackgroundBlur() {}
 
 bool BackgroundBlur::SetParameter(const std::string& key,
                                   const std::string& value) {
   if (key == "model_path") {
-
+    try {
+      model = std::make_unique<SelfieSegmentation>(value);
+      return true;
+    } catch (std::exception &e) {
+      return false;
+    }
   } else if (key == "blur_radius") {
     blur_radius_ = stoi(value);
     return true;
@@ -33,6 +36,11 @@ bool BackgroundBlur::SetParameter(const std::string& key,
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
+  if (model == nullptr) {
+    RTC_LOG(WARNING) << "Background blur model is not initialized.";
+    return buffer;
+  }
+
   auto i420 = buffer->GetI420();
   std::vector<unsigned char> rgb(3ll * i420->width() * i420->height());
   libyuv::I420ToRAW(i420->DataY(), i420->StrideY(), i420->DataU(),

@@ -12,9 +12,7 @@
 #include "owt/base/pluginmanager.h"
 #include "owt/base/stream.h"
 
-using namespace owt::base;
-
-class MainWindow : public VideoRenderWindow {
+class MainWindow : public owt::base::VideoRenderWindow {
   static constexpr const wchar_t* class_name = L"MainWindow";
 
  public:
@@ -56,43 +54,58 @@ class MainWindow : public VideoRenderWindow {
 
 int main(int, char*[]) {
   int id = 0;
-  std::string device_name = DeviceUtils::GetDeviceNameByIndex(id);
-  std::string camera_id = DeviceUtils::VideoCapturerIds()[id];
-  VideoTrackCapabilities capability =
-      DeviceUtils::VideoCapturerSupportedCapabilities(camera_id)[id];
+  std::string device_name = owt::base::DeviceUtils::GetDeviceNameByIndex(id);
+  std::string camera_id = owt::base::DeviceUtils::VideoCapturerIds()[id];
+  owt::base::VideoTrackCapabilities capability =
+      owt::base::DeviceUtils::VideoCapturerSupportedCapabilities(camera_id)[id];
 
-  LocalCameraStreamParameters param(false, true);
+  owt::base::LocalCameraStreamParameters param(false, true);
   param.CameraId(camera_id);
   param.Resolution(capability.width, capability.height);
   param.Fps(capability.frameRate);
 
-  auto &ic_plugin = PluginManager::GetInstance()->ICPlugin();
-  if (ic_plugin.IsLoaded()) {
-    ic_plugin->InitializeInferenceEngineCore("plugins.xml");
-    auto background_blur =
-        ic_plugin->CreatePostProcessor(owt::ic::ICPlugin::BACKGROUND_BLUR);
-    if (background_blur) {
-      background_blur->SetParameter("model_path",
-                                    "ic/model/background_blur.xml");
-      background_blur->SetParameter("blur_radius", "55");
-      param.ICParams().PostProcessors().push_back(background_blur);
-    } else {
-      std::cerr << "Create background blur failed." << std::endl;
-    }
-  } else {
+  // Load the owt_ic.dll and initialize ICManager
+  auto& ic_plugin = owt::base::PluginManager::GetInstance()->ICPlugin();
+  if (!ic_plugin.IsLoaded()) {
     std::cerr << "Unable to initialize IC plugin." << std::endl;
+    return 1;
   }
 
+  // Initialize global inference engine core, to prevent slow first time
+  // initialization of background blur post processor
+  if (!ic_plugin->InitializeInferenceEngineCore("plugins.xml")) {
+    std::cerr << "Unable to initialize inference engine core" << std::endl;
+    return 2;
+  }
+
+  std::shared_ptr<owt::base::VideoFramePostProcessor> background_blur =
+      ic_plugin->CreatePostProcessor(owt::ic::ICPlugin::BACKGROUND_BLUR);
+  if (!background_blur) {
+    std::cerr << "Create background blur failed." << std::endl;
+    return 3;
+  }
+  if (!background_blur->SetParameter("model_path",
+                                     "data/ic_model/background_blur.xml")) {
+    std::cerr << "Failed to load model." << std::endl;
+    return 4;
+  }
+  if (!background_blur->SetParameter("blur_radius", "55")) {
+    std::cerr << "Failed to set blur radius." << std::endl;
+    return 5;
+  }
+  param.ICParams().PostProcessors().push_back(background_blur);
+
   int error = 0;
-  std::shared_ptr<LocalStream> stream = LocalStream::Create(param, error);
-  if (error == 0) {
-    MainWindow w(capability.width, capability.height,
-                 std::wstring(device_name.begin(), device_name.end()).c_str());
-    stream->AttachVideoRenderer(w);
-    return w.Exec();
-  } else {
+  std::shared_ptr<owt::base::LocalStream> stream =
+      owt::base::LocalStream::Create(param, error);
+  if (error) {
     std::cerr << "Create local stream failed, error code " << error << "."
               << std::endl;
-    return 0;
+    return 6;
   }
+
+  MainWindow w(capability.width, capability.height,
+               std::wstring(device_name.begin(), device_name.end()).c_str());
+  stream->AttachVideoRenderer(w);
+  return w.Exec();
 }

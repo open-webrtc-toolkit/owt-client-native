@@ -24,7 +24,6 @@ class SelfieSegmentation {
   cv::Mat waitForFinished();
 
  private:
-  InferenceEngine::Core core;
   InferenceEngine::CNNNetwork network;
   InferenceEngine::ExecutableNetwork executableNetwork;
   InferenceEngine::InferRequest request;

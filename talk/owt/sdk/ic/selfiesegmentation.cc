@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "talk/owt/sdk/ic/icmanager.h"
+
 namespace IE = InferenceEngine;
 
 namespace owt {
@@ -14,8 +16,7 @@ namespace ic {
 
 SelfieSegmentation::SelfieSegmentation(const std::string& xmlPath,
                                        const std::string& device)
-    : core(),
-      network(core.ReadNetwork(xmlPath)),
+    : network(ICManager::InferenceEngineCore().ReadNetwork(xmlPath)),
       executableNetwork(),
       request() {
   assert(!network.getInputsInfo().empty());
@@ -30,7 +31,8 @@ SelfieSegmentation::SelfieSegmentation(const std::string& xmlPath,
       network.getInputsInfo()[inputName]->getPreProcess();
   preprocess.setResizeAlgorithm(IE::ResizeAlgorithm::RESIZE_BILINEAR);
 
-  executableNetwork = core.LoadNetwork(network, device);
+  executableNetwork =
+      ICManager::InferenceEngineCore().LoadNetwork(network, device);
   request = executableNetwork.CreateInferRequest();
 }
 

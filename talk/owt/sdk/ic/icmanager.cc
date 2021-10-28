@@ -4,6 +4,8 @@
 
 #include "talk/owt/sdk/ic/icmanager.h"
 
+#include "inference_engine.hpp"
+
 #include "talk/owt/sdk/ic/backgroundblur.h"
 
 namespace owt {
@@ -11,7 +13,7 @@ namespace ic {
 
 bool ICManager::InitializeInferenceEngineCore(
     const std::string& plugins_xml_path) {
-  return false;
+  return InitializeInferenceEngineCoreImpl(plugins_xml_path);
 }
 
 std::shared_ptr<owt::base::VideoFramePostProcessor>
@@ -24,6 +26,25 @@ ICManager::CreatePostProcessor(ICPlugin plugin) {
   }
   return nullptr;
 }
+
+InferenceEngine::Core& ICManager::InferenceEngineCore() {
+  if (!core) {
+    InitializeInferenceEngineCoreImpl("");
+  }
+  return *core;
+}
+
+bool ICManager::InitializeInferenceEngineCoreImpl(
+    const std::string& plugins_xml_path) {
+  try {
+    core = std::make_shared<InferenceEngine::Core>(plugins_xml_path);
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+
+std::shared_ptr<InferenceEngine::Core> ICManager::core;
 
 }  // namespace ic
 }  // namespace owt
