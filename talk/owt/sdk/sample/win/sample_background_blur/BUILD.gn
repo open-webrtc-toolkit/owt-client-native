@@ -13,10 +13,6 @@ executable("sample_background_blur") {
     "//talk/owt/sdk/ic:openvino",
     "//talk/owt/sdk/ic:openvino_opencv",
   ]
-  deps = [
-    "//talk/owt:owt_sdk_base",
-  ]
-  data_deps = [
-    "//talk/owt/sdk/ic:owt_ic",
-  ]
+  deps = [ "//talk/owt:owt_sdk_base" ]
+  data_deps = [ "//talk/owt/sdk/ic:owt_ic" ]
 }
