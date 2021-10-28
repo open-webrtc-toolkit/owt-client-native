@@ -9,21 +9,17 @@
 namespace owt {
 namespace base {
 
-SharedObjectLoader::SharedObjectLoader(const char* name)
-    : shared_object(dlopen(name, RTLD_NOW)) {}
+SharedObjectLoader::SharedObjectLoader(const char* path)
+    : shared_object(dlopen(path, RTLD_NOW), dlclose) {}
 
-SharedObjectLoader::~SharedObjectLoader() {
-  if (shared_object) {
-    dlclose(shared_object);
-  }
-}
+SharedObjectLoader::~SharedObjectLoader() {}
 
 bool SharedObjectLoader::IsLoaded() const {
-  return shared_object_;
+  return shared_object_.get();
 }
 
-void* SharedObjectLoader::get_symbol(const char* name) {
-  return shared_object_ ? dlsym(shared_object, name) : nullptr;
+void* SharedObjectLoader::get_symbol(const char* name) const {
+  return shared_object_ ? dlsym(shared_object.get(), name) : nullptr;
 }
 
 }  // namespace base

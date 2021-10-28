@@ -83,8 +83,8 @@ void CameraVideoCapturer::RemoveSink(
 }
 
 void CameraVideoCapturer::AddVideoFramePostProcessor(
-    std::shared_ptr<VideoFramePostProcessor> post_processing) {
-  video_frame_post_processors_.emplace_back(post_processing);
+    std::shared_ptr<VideoFramePostProcessor> post_processor) {
+  video_frame_post_processors_.emplace_back(post_processor);
 }
 
 void CameraVideoCapturer::UpdateVideoAdapter() {

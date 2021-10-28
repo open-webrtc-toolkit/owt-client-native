@@ -6,7 +6,7 @@
 #define OWT_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 #include <string>
 #include "owt/base/commontypes.h"
-#include "owt/base/intelligentcollaborationparameters.h"
+#include "owt/ic/intelligentcollaborationparameters.h"
 namespace owt {
 namespace base {
 /**
@@ -55,8 +55,8 @@ class LocalCameraStreamParameters final {
   /**
     @brief Get the reference of intelligent collaboration parameters
   */
-  IntelligentCollaborationParameters& ICParams();
-  const IntelligentCollaborationParameters& ICParams() const;
+  owt::ic::IntelligentCollaborationParameters& ICParams();
+  const owt::ic::IntelligentCollaborationParameters& ICParams() const;
   /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
@@ -74,7 +74,7 @@ class LocalCameraStreamParameters final {
   int fps_;
   bool video_enabled_;
   bool audio_enabled_;
-  IntelligentCollaborationParameters ic_params_;
+  owt::ic::IntelligentCollaborationParameters ic_params_;
 };
 
 #ifdef OWT_ENABLE_QUIC

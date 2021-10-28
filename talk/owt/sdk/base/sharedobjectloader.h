@@ -5,20 +5,26 @@
 #ifndef OWT_BASE_SHAREDOBJECTLOADER_H_
 #define OWT_BASE_SHAREDOBJECTLOADER_H_
 
+#include <memory>
+#include <string>
+
 namespace owt {
 namespace base {
 
+// This class is derived from openvino inference engine
 class SharedObjectLoader {
-    public:
-  explicit SharedObjectLoader(const char* name);
+ public:
+  explicit SharedObjectLoader(const char* path);
   ~SharedObjectLoader();
 
   bool IsLoaded() const;
 
-  void* GetSymbol(const char* name);
+  void* GetSymbol(const char* name) const;
+
+  void* GetSymbol(const std::string& name) const;
 
  private:
-  void* shared_object_;
+  std::shared_ptr<void> shared_object_;
 };
 
 }  // namespace base

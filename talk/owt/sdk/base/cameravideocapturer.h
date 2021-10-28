@@ -20,7 +20,7 @@
 #include "media/base/video_adapter.h"
 #include "media/base/video_broadcaster.h"
 
-#include "videoframepostprocessing.h"
+#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
 
 // This file is borrowed from webrtc project
 namespace owt {
@@ -36,7 +36,7 @@ class CameraVideoCapturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
 
   void AddVideoFramePostProcessor(
-      const std::shared_ptr<VideoFramePostProcessor> post_processing);
+      const std::shared_ptr<VideoFramePostProcessor> post_processor);
 
  protected:
   void OnFrame(const webrtc::VideoFrame& frame);

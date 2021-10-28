@@ -109,6 +109,7 @@ static_library("owt_sdk_base") {
     "sdk/base/peerconnectionchannel.h",
     "sdk/base/peerconnectiondependencyfactory.cc",
     "sdk/base/peerconnectiondependencyfactory.h",
+    "sdk/base/pluginmanager.cc",
     "sdk/base/sdputils.cc",
     "sdk/base/sdputils.h",
     "sdk/base/stream.cc",
@@ -118,7 +119,6 @@ static_library("owt_sdk_base") {
     "sdk/base/sysinfo.h",
     "sdk/base/vcmcapturer.cc",
     "sdk/base/vcmcapturer.h",
-    "sdk/base/videoframepostprocessing.h",
     "sdk/base/webrtcaudiorendererimpl.cc",
     "sdk/base/webrtcaudiorendererimpl.h",
     "sdk/include/cpp/owt/base/audioplayerinterface.h",
@@ -127,11 +127,13 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/deviceutils.h",
     "sdk/include/cpp/owt/base/exception.h",
     "sdk/include/cpp/owt/base/framegeneratorinterface.h",
-    "sdk/include/cpp/owt/base/intelligentcollaborationparameters.h",
     "sdk/include/cpp/owt/base/localcamerastreamparameters.h",
     "sdk/include/cpp/owt/base/logging.h",
+    "sdk/include/cpp/owt/base/pluginmanager.h",
     "sdk/include/cpp/owt/base/stream.h",
+    "sdk/include/cpp/owt/base/videoframepostprocessor.h",
     "sdk/include/cpp/owt/base/videorendererinterface.h",
+    "sdk/include/cpp/owt/ic/intelligentcollaborationparameters.h",
   ]
   if (is_win || is_linux) {
     sources += [
@@ -143,13 +145,13 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideosource.h",
       "sdk/base/encodedvideoencoderfactory.cc",
       "sdk/base/encodedvideoencoderfactory.h",
-      "sdk/base/icmanager.cc",
-      "sdk/base/icmanager.h",
       "sdk/base/sharedobjectloader.h",
+      "sdk/base/sharedobjectpointer.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/base/windowcapturer.cc",
       "sdk/include/cpp/owt/base/videodecoderinterface.h",
+      "sdk/include/cpp/owt/ic/icmanagerinterface.h",
     ]
   }
   public_deps = [

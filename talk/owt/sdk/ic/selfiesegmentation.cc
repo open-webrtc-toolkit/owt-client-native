@@ -18,16 +18,13 @@ SelfieSegmentation::SelfieSegmentation(const std::string& xmlPath,
       network(core.ReadNetwork(xmlPath)),
       executableNetwork(),
       request() {
-  for (auto& p : network.getInputsInfo()) {
-    inputName = p.first;
-    break;
-  }
-  for (auto& p : network.getOutputsInfo()) {
-    p.second->setPrecision(IE::Precision::U8);
-    outputName = p.first;
-    outputSize = p.second->getTensorDesc().getDims();
-    break;
-  }
+  assert(!network.getInputsInfo().empty());
+  assert(!network.getOutputsInfo().empty());
+  inputName = network.getInputsInfo().begin()->first;
+  outputName = network.getOutputsInfo().begin()->first;
+  IE::DataPtr outputData = network.getOutputsInfo().begin()->second;
+  outputData->setPrecision(IE::Precision::U8);
+  outputSize = outputData->getTensorDesc().getDims();
 
   IE::PreProcessInfo& preprocess =
       network.getInputsInfo()[inputName]->getPreProcess();

@@ -20,6 +20,17 @@ BackgroundBlur::BackgroundBlur()
           "C:/Users/wangzhib/Desktop/segmentation/contrib/"
           "owt-selfie-segmentation-144x256.xml")) {}
 
+bool BackgroundBlur::SetParameter(const std::string& key,
+                                  const std::string& value) {
+  if (key == "model_path") {
+
+  } else if (key == "blur_radius") {
+    blur_radius_ = stoi(value);
+    return true;
+  }
+  return false;
+}
+
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
   auto i420 = buffer->GetI420();
@@ -30,25 +41,31 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
   cv::Mat frame(buffer->height(), buffer->width(), CV_8UC3, rgb.data());
 
   cv::Mat input;
-  frame.convertTo(input, CV_32FC3,
-                  1. / std::numeric_limits<unsigned char>::max());
+  frame.convertTo(input, CV_32FC3, 1. / UCHAR_MAX);
   cv::Mat mask = model->predict(input);  // mask is of 8UC1
 
-  cv::Mat resizedMask;
-  cv::resize(mask, resizedMask, {buffer->width(), buffer->height()});
-  cv::Mat mask3;
-  std::vector<cv::Mat> masks{
-      std::numeric_limits<unsigned char>::max() - resizedMask,
-      std::numeric_limits<unsigned char>::max() - resizedMask,
-      std::numeric_limits<unsigned char>::max() - resizedMask};
-  cv::merge(masks.data(), 3, mask3);
+  cv::resize(mask, mask, {buffer->width(), buffer->height()});
+  cv::Mat foregroundMask;
+  cv::merge(std::vector<cv::Mat>{mask, mask, mask}, foregroundMask);
+  cv::Mat backgroundMask;
+  cv::merge(std::vector<cv::Mat>{UCHAR_MAX - mask, UCHAR_MAX - mask,
+                                 UCHAR_MAX - mask},
+            backgroundMask);
 
+  // apply a masked blur on background
+  cv::Mat maskedFrame;
+  cv::multiply(frame, backgroundMask, maskedFrame, 1. / UCHAR_MAX);
   cv::Mat background;
-  cv::multiply(frame, mask3, background,
-               1. / std::numeric_limits<unsigned char>::max());
-  frame -= background;
-  cv::GaussianBlur(background, background, {blur_radius_, blur_radius_}, 0);
-  cv::add(frame, background, frame);
+  cv::GaussianBlur(maskedFrame, background, {blur_radius_, blur_radius_}, 0);
+  cv::Mat blurredMask;
+  cv::GaussianBlur(backgroundMask, blurredMask, {blur_radius_, blur_radius_},
+                   0);
+  cv::divide(background, blurredMask, background, UCHAR_MAX);
+  cv::multiply(background, backgroundMask, background, 1. / UCHAR_MAX);
+
+  cv::Mat foreground;
+  cv::multiply(frame, foregroundMask, foreground, 1. / UCHAR_MAX);
+  frame = foreground + background;
 
   auto newBuffer =
       webrtc::I420Buffer::Create(buffer->width(), buffer->height());

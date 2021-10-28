@@ -9,23 +9,25 @@
 namespace owt {
 namespace base {
 
-SharedObjectLoader::SharedObjectLoader(const char* name)
-    : shared_object_(LoadLibraryA(name)) {}
+SharedObjectLoader::SharedObjectLoader(const char* path)
+    : shared_object_(LoadLibraryA(path), FreeLibrary) {}
 
-SharedObjectLoader::~SharedObjectLoader() {
-  if (shared_object_) {
-    FreeLibrary(reinterpret_cast<HMODULE>(shared_object_));
-  }
-}
+SharedObjectLoader::~SharedObjectLoader() {}
 
 bool SharedObjectLoader::IsLoaded() const {
-  return shared_object_;
+  return shared_object_.get();
 }
 
-void* SharedObjectLoader::GetSymbol(const char* name) {
-  return shared_object_
-             ? GetProcAddress(reinterpret_cast<HMODULE>(shared_object_), name)
-             : nullptr;
+void* SharedObjectLoader::GetSymbol(const char* name) const {
+  if (shared_object_) {
+    return GetProcAddress(reinterpret_cast<HMODULE>(shared_object_.get()),
+                          name);
+  }
+  return nullptr;
+}
+
+void* SharedObjectLoader::GetSymbol(const std::string& name) const {
+  return GetSymbol(name.c_str());
 }
 
 }  // namespace base

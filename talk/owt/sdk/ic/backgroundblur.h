@@ -7,16 +7,19 @@
 
 #include <memory>
 
-#include "talk/owt/sdk/base/videoframepostprocessing.h"
+#include "rtc_base/logging.h"
+#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
+#include "talk/owt/sdk/ic/selfiesegmentation.h"
 
 namespace owt {
 namespace ic {
-class SelfieSegmentation;
 
 class BackgroundBlur : public owt::base::VideoFramePostProcessor {
  public:
   BackgroundBlur();
   ~BackgroundBlur() override = default;
+
+  bool SetParameter(const std::string& key, const std::string& value) override;
 
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> Process(
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) override;

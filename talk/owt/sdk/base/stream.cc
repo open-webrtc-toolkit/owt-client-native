@@ -34,9 +34,6 @@
 #endif
 #include "talk/owt/sdk/include/cpp/owt/base/deviceutils.h"
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-#include "talk/owt/sdk/base/icmanager.h"
-#endif
 
 using namespace rtc;
 namespace owt {
@@ -49,8 +46,8 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       const size_t height,
       const size_t fps,
       int capture_device_idx,
-      const IntelligentCollaborationParameters& ic_params =
-          IntelligentCollaborationParameters()) {
+      const owt::ic::IntelligentCollaborationParameters& ic_params =
+          owt::ic::IntelligentCollaborationParameters()) {
     std::unique_ptr<owt::base::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -61,19 +58,8 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
     for (int i = 0; i < num_devices; ++i) {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
-      if (ic_params.BackgroundBlur()) {
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-        auto post_processor =
-            ICManager::GetInstance()->CreatePostProcessor("background_blur");
-        if (post_processor) {
+      for (auto post_processor : ic_params.PostProcessors()) {
           capturer->AddVideoFramePostProcessor(post_processor);
-        } else {
-          RTC_LOG(WARNING) << "Unable to create background blur instance.";
-        }
-#else
-        RTC_LOG(WARNING)
-            << "Background blur is not supported on this platform.";
-#endif
       }
       if (capturer) {
         return new rtc::RefCountedObject<CapturerTrackSource>(

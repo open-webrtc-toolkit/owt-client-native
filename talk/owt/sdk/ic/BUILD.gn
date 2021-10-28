@@ -44,8 +44,8 @@ shared_library("owt_ic") {
   sources = [
     "backgroundblur.cc",
     "backgroundblur.h",
-    "postprocessing.cc",
-    "postprocessing.h",
+    "icmanager.cc",
+    "icmanager.h",
     "selfiesegmentation.cc",
     "selfiesegmentation.h",
   ]

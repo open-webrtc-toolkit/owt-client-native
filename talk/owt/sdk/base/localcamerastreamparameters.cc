@@ -1,8 +1,8 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
-#include "talk/owt/sdk/include/cpp/owt/base/localcamerastreamparameters.h"
 #include <random>
+#include "talk/owt/sdk/include/cpp/owt/base/localcamerastreamparameters.h"
 namespace owt {
 namespace base {
 LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
@@ -19,10 +19,11 @@ LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
 void LocalCameraStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
-IntelligentCollaborationParameters& LocalCameraStreamParameters::ICParams() {
+owt::ic::IntelligentCollaborationParameters&
+LocalCameraStreamParameters::ICParams() {
   return ic_params_;
 }
-const IntelligentCollaborationParameters&
+const owt::ic::IntelligentCollaborationParameters&
 LocalCameraStreamParameters::ICParams() const {
   return ic_params_;
 }

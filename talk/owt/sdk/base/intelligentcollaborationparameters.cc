@@ -1,22 +1,16 @@
-#include "talk/owt/sdk/include/cpp/owt/base/intelligentcollaborationparameters.h"
+#include "talk/owt/sdk/include/cpp/owt/ic/intelligentcollaborationparameters.h"
 
 namespace owt {
-namespace base {
+namespace ic {
 
-void IntelligentCollaborationParameters::BackgroundBlur(bool enable) {
-  enable_background_blur_ = enable;
+std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>&
+IntelligentCollaborationParameters::PostProcessors() {
+  return post_processors_;
 }
 
-void IntelligentCollaborationParameters::BlurRadius(int radius) {
-  blur_radius_ = radius;
-}
-
-bool IntelligentCollaborationParameters::BackgroundBlur() const {
-  return enable_background_blur_;
-}
-
-int IntelligentCollaborationParameters::BlurRadius() const {
-  return blur_radius_;
+const std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>&
+IntelligentCollaborationParameters::PostProcessors() const {
+  return post_processors_;
 }
 
 }  // namespace base
