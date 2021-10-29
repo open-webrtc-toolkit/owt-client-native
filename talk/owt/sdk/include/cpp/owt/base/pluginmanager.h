@@ -10,12 +10,16 @@ class PluginManager {
  public:
   static PluginManager* GetInstance();
 
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   owt::base::SharedObjectPointer<owt::ic::ICManagerInterface>& ICPlugin();
+#endif
 
  private:
   PluginManager();
 
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   owt::base::SharedObjectPointer<owt::ic::ICManagerInterface> ic_plugin;
+#endif
 };
 }  // namespace base
 }  // namespace owt

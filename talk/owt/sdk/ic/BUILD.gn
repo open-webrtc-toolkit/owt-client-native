@@ -82,16 +82,15 @@ shared_library("owt_ic") {
 }
 
 copy("openvino_library") {
-  sources = []
   if (is_debug) {
     bin_dir = owt_openvino_root + "/inference_engine/bin/intel64/Debug"
-    sources += [
+    sources = [
       owt_openvino_root + "/inference_engine/external/tbb/bin/tbb_debug.dll",
       owt_openvino_root + "/deployment_tools/ngraph/lib/ngraphd.dll",
     ]
   } else {
     bin_dir = owt_openvino_root + "/inference_engine/bin/intel64/Release"
-    sources += [
+    sources = [
       owt_openvino_root + "/inference_engine/external/tbb/bin/tbb.dll",
       owt_openvino_root + "/deployment_tools/ngraph/lib/ngraph.dll",
     ]

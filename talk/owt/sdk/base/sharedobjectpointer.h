@@ -23,12 +23,12 @@ class SharedObjectPointer {
  public:
   explicit SharedObjectPointer(const char* path) : so_(path) { Load(); }
 
-  explicit SharedObjectPointer(const SharedObjectLoader& loader) : so(loader) {
+  explicit SharedObjectPointer(const SharedObjectLoader& loader) : so_(loader) {
     Load();
   }
 
   explicit SharedObjectPointer(SharedObjectLoader&& loader)
-      : so(std::move(loader)) {
+      : so_(std::move(loader)) {
     Load();
   }
 
