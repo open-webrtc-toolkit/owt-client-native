@@ -1,3 +1,7 @@
+// Copyright (C) <2021> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_IC_ICMANAGER_H_
 #define OWT_IC_ICMANAGER_H_
 

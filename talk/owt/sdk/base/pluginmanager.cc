@@ -1,3 +1,7 @@
+// Copyright (C) <2021> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "..\include\cpp\owt\base\pluginmanager.h"
 
 namespace owt {
@@ -15,18 +19,19 @@ PluginManager::ICPlugin() {
 }
 #endif
 
-PluginManager::PluginManager()
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+PluginManager::PluginManager()
     : ic_plugin(
-#ifdef WEBRTC_WIN
+#if defined(WEBRTC_WIN)
           "owt_ic.dll"
-#elif WEBRTC_LINUX
+#elif defined(WEBRTC_LINUX)
           "owt_ic.so"
 #endif
-      )
-#endif
-{
+      ) {
 }
+#else
+PluginManager::PluginManager() {}
+#endif
 
 }  // namespace base
 }  // namespace owt

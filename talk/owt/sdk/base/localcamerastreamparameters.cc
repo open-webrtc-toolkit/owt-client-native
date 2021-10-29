@@ -34,11 +34,12 @@ void LocalCameraStreamParameters::Resolution(int width, int height) {
   resolution_width_ = width;
   resolution_height_ = height;
 }
-void LocalCameraStreamParameters::StreamName(const std::string& stream_name) {
+void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
   stream_name_ = stream_name;
 }
-LocalDesktopStreamParameters::LocalDesktopStreamParameters(bool audio_enabled,
-                                                           bool video_enabled)
+LocalDesktopStreamParameters::LocalDesktopStreamParameters(
+    bool audio_enabled,
+    bool video_enabled)
     : video_enabled_(video_enabled),
       audio_enabled_(audio_enabled),
       fps_(30),
@@ -47,5 +48,5 @@ LocalDesktopStreamParameters::LocalDesktopStreamParameters(bool audio_enabled,
 void LocalDesktopStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
-}  // namespace base
-}  // namespace owt
+}
+}

@@ -1,5 +1,8 @@
-#include "talk/owt/sdk/include/cpp/owt/ic/intelligentcollaborationparameters.h"
+// Copyright (C) <2021> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/include/cpp/owt/ic/intelligentcollaborationparameters.h"
 namespace owt {
 namespace ic {
 

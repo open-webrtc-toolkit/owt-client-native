@@ -91,5 +91,5 @@ void CameraVideoCapturer::UpdateVideoAdapter() {
   video_adapter_.OnSinkWants(broadcaster_.wants());
 }
 
-}  // namespace base
-}  // namespace owt
+}  // namespace test
+}  // namespace webrtc

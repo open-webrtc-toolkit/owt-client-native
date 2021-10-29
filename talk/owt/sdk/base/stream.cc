@@ -58,7 +58,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
     for (int i = 0; i < num_devices; ++i) {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
-      for (auto post_processor : ic_params.PostProcessors()) {
+      for (auto& post_processor : ic_params.PostProcessors()) {
           capturer->AddVideoFramePostProcessor(post_processor);
       }
       if (capturer) {
@@ -95,8 +95,7 @@ Stream::Stream()
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
 #endif
       ended_(false),
-      id_("") {
-}
+      id_("") {}
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr),
       renderer_impl_(nullptr),
@@ -110,44 +109,25 @@ Stream::Stream(const std::string& id)
       source_(AudioSourceInfo::kUnknown, VideoSourceInfo::kUnknown),
 #endif
       ended_(false),
-      id_(id) {
-}
+      id_(id) {}
 #elif defined(WEBRTC_LINUX)
 Stream::Stream()
-    : media_stream_(nullptr),
-      renderer_impl_(nullptr),
-      audio_renderer_impl_(nullptr),
-      va_renderer_impl_(nullptr),
-      ended_(false),
-      id_("") {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
-    : media_stream_(nullptr), va_renderer_impl_(nullptr), source_(source) {
+    : media_stream_(nullptr),   va_renderer_impl_(nullptr),source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr),
-      renderer_impl_(nullptr),
-      audio_renderer_impl_(nullptr),
-      va_renderer_impl_(nullptr),
-      ended_(false),
-      id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #else
 Stream::Stream()
-    : media_stream_(nullptr),
-      renderer_impl_(nullptr),
-      audio_renderer_impl_(nullptr),
-      ended_(false),
-      id_("") {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
 Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
     : media_stream_(nullptr), source_(source) {
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr),
-      renderer_impl_(nullptr),
-      audio_renderer_impl_(nullptr),
-      ended_(false),
-      id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
 
 MediaStreamInterface* Stream::MediaStream() const {
@@ -734,7 +714,9 @@ std::string RemoteStream::Origin() {
 }
 
 RemoteStream::RemoteStream(const std::string& id, const std::string& from)
-    : Stream(id), origin_(from) {}
+    :Stream(id), 
+     origin_(from) {
+}
 
 void RemoteStream::MediaStream(MediaStreamInterface* media_stream) {
   Stream::MediaStream(media_stream);
@@ -745,12 +727,10 @@ MediaStreamInterface* RemoteStream::MediaStream() {
 
 #ifdef OWT_ENABLE_QUIC
 QuicStream::QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
-                       const std::string& session_id)
-    : quic_stream_(quic_stream),
-      session_id_(session_id),
-      can_read_(true),
-      can_write_(true),
-      fin_read_(false) {}
+           const std::string& session_id)
+    : quic_stream_(quic_stream), session_id_(session_id), can_read_(true),
+      can_write_(true), fin_read_(false) {
+}
 
 QuicStream::~QuicStream() {}
 

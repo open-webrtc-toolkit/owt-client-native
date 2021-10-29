@@ -18,9 +18,7 @@ class SharedObjectLoader {
   ~SharedObjectLoader();
 
   bool IsLoaded() const;
-
   void* GetSymbol(const char* name) const;
-
   void* GetSymbol(const std::string& name) const;
 
  private:

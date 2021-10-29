@@ -290,6 +290,7 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/msdkvideodecoderfactory.h",
         "sdk/base/linux/msdkvideodecoder.cc",
         "sdk/base/linux/msdkvideodecoder.h",
+
       ]
     }
     sources += [

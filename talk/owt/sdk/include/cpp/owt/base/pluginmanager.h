@@ -1,3 +1,7 @@
+// Copyright (C) <2021> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_PLUGINMANAGER_H_
 #define OWT_BASE_PLUGINMANAGER_H_
 
