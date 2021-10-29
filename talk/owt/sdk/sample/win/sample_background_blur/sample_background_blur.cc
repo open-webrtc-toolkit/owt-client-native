@@ -6,9 +6,6 @@
 #include <iostream>
 
 #include "owt/base/deviceutils.h"
-#include "owt/base/globalconfiguration.h"
-#include "owt/base/localcamerastreamparameters.h"
-#include "owt/base/logging.h"
 #include "owt/base/pluginmanager.h"
 #include "owt/base/stream.h"
 
@@ -65,8 +62,8 @@ int main(int, char*[]) {
   param.Fps(capability.frameRate);
 
   // Load the owt_ic.dll and initialize ICManager
-  auto& ic_plugin = owt::base::PluginManager::GetInstance()->ICPlugin();
-  if (!ic_plugin.IsLoaded()) {
+  auto ic_plugin = owt::base::PluginManager::ICPlugin();
+  if (!ic_plugin) {
     std::cerr << "Unable to initialize IC plugin." << std::endl;
     return 1;
   }

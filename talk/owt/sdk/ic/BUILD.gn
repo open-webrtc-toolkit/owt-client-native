@@ -64,6 +64,7 @@ shared_library("owt_ic") {
     ":openvino",
     ":openvino_opencv",
   ]
+  include_dirs = [ "//talk/owt/sdk/include/cpp" ]
   libs = [ 
     "inference_engine" + lib_suffix,
     "inference_engine_transformations" + lib_suffix,

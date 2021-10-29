@@ -10,6 +10,8 @@
 #include <memory>
 #include <string>
 
+#include "third_party/webrtc/rtc_base/logging.h"
+
 namespace owt {
 namespace base {
 
@@ -32,22 +34,30 @@ class SharedObjectPointer {
     Load();
   }
 
-  bool IsLoaded() const { return so_.IsLoaded() && ptr_.get(); }
+  bool IsLoaded() const { return so_.IsLoaded(); }
 
-  T* operator->() { return ptr_.get(); }
+  T* Get() { return ptr_.get(); }
 
  protected:
   void Load() {
-    if (so_.IsLoaded()) {
-      using Creator = T*();
-      using Destroyer = void(T*);
-      Creator* creator = reinterpret_cast<Creator*>(
-          so_.GetSymbol(std::string("Create") + SOTrait<T>::name));
-      Destroyer* destroyer = reinterpret_cast<Destroyer*>(
-          so_.GetSymbol(std::string("Destroy") + SOTrait<T>::name));
-      if (creator && destroyer) {
-        ptr_ = std::shared_ptr<T>(creator(), destroyer);
-      }
+    if (!so_.IsLoaded()) {
+      RTC_LOG(LS_WARNING) << "Shared object is not loaded.";
+      return;
+    }
+
+    using Creator = T*();
+    using Destroyer = void(T*);
+    Creator* creator = reinterpret_cast<Creator*>(
+        so_.GetSymbol(std::string("Create") + SOTrait<T>::name));
+    Destroyer* destroyer = reinterpret_cast<Destroyer*>(
+        so_.GetSymbol(std::string("Destroy") + SOTrait<T>::name));
+
+    if (creator && destroyer) {
+      ptr_ = std::shared_ptr<T>(creator(), destroyer);
+    } else {
+      RTC_LOG(LS_WARNING) << "Create" << SOTrait<T>::name  //
+                       << " or Destroy" << SOTrait<T>::name
+                       << " is missing in the shared object.";
     }
   }
 

@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
+#include "owt/base/videoframepostprocessor.h"
 
 namespace owt {
 namespace ic {

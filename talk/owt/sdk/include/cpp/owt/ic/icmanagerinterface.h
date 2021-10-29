@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
+#include "owt/base/videoframepostprocessor.h"
 
 namespace owt {
 namespace ic {
@@ -28,12 +28,6 @@ class ICManagerInterface {
 };
 
 }  // namespace ic
-
-template <>
-struct base::SOTrait<ic::ICManagerInterface> {
-  static constexpr auto name = "ICManager";
-};
-
 }  // namespace owt
 
 #endif  // OWT_IC_ICMANAGERINTERFACE_H_

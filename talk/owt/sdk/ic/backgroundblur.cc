@@ -37,7 +37,7 @@ bool BackgroundBlur::SetParameter(const std::string& key,
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
   if (model == nullptr) {
-    RTC_LOG(WARNING) << "Background blur model is not initialized.";
+    RTC_LOG(LS_WARNING) << "Background blur model is not initialized.";
     return buffer;
   }
 
