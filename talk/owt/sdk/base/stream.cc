@@ -118,7 +118,7 @@ Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #else
 Stream::Stream()
     : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
@@ -127,7 +127,7 @@ Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
   MediaStream(media_stream);
 }
 Stream::Stream(const std::string& id)
-    : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
+    : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
 
 MediaStreamInterface* Stream::MediaStream() const {
@@ -714,7 +714,7 @@ std::string RemoteStream::Origin() {
 }
 
 RemoteStream::RemoteStream(const std::string& id, const std::string& from)
-    :Stream(id), 
+    :Stream(id),
      origin_(from) {
 }
 
@@ -732,7 +732,8 @@ QuicStream::QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
       can_write_(true), fin_read_(false) {
 }
 
-QuicStream::~QuicStream() {}
+QuicStream::~QuicStream() {
+}
 
 size_t QuicStream::Write(uint8_t* data, size_t length) {
   if (quic_stream_ && data != nullptr && length > 0) {

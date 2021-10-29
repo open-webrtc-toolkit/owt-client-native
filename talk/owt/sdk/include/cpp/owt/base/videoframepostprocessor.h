@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef OWT_BASE_VIDEOFRAMEPOSTPROCESSING_H_
-#define OWT_BASE_VIDEOFRAMEPOSTPROCESSING_H_
+#ifndef OWT_BASE_VIDEOFRAMEPOSTPROCESSOR_H_
+#define OWT_BASE_VIDEOFRAMEPOSTPROCESSOR_H_
 
 #include "rtc_base/logging.h"
 #include "api/scoped_refptr.h"
@@ -33,4 +33,4 @@ struct SOTrait<VideoFramePostProcessor> {
 }  // namespace base
 }  // namespace owt
 
-#endif  // OWT_IC_VIDEOFRAMEPOSTPROCESSING_H_
+#endif  // OWT_IC_VIDEOFRAMEPOSTPROCESSOR_H_

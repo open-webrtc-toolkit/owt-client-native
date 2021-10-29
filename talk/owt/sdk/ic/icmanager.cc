@@ -20,8 +20,7 @@ std::shared_ptr<owt::base::VideoFramePostProcessor>
 ICManager::CreatePostProcessor(ICPlugin plugin) {
   switch (plugin) {
     case ICPlugin::BACKGROUND_BLUR:
-      return std::shared_ptr<owt::base::VideoFramePostProcessor>(
-          new BackgroundBlur);
+      return std::make_shared<BackgroundBlur>();
     default:;
   }
   return nullptr;
@@ -29,7 +28,7 @@ ICManager::CreatePostProcessor(ICPlugin plugin) {
 
 InferenceEngine::Core& ICManager::InferenceEngineCore() {
   if (!core) {
-    InitializeInferenceEngineCoreImpl("");
+    InitializeInferenceEngineCoreImpl({});
   }
   return *core;
 }

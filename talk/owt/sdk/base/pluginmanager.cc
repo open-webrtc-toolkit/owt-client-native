@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "..\include\cpp\owt\base\pluginmanager.h"
+#include "talk/owt/sdk/include/cpp/owt/base/pluginmanager.h"
 
 namespace owt {
 namespace base {
