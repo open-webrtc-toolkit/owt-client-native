@@ -5,8 +5,8 @@
 #ifndef OWT_BASE_VIDEOFRAMEPOSTPROCESSOR_H_
 #define OWT_BASE_VIDEOFRAMEPOSTPROCESSOR_H_
 
-#include "api/scoped_refptr.h"
-#include "api/video/video_frame_buffer.h"
+#include "third_party/webrtc/api/scoped_refptr.h"
+#include "third_party/webrtc/api/video/video_frame_buffer.h"
 
 namespace owt {
 namespace base {

@@ -17,14 +17,13 @@ enum class ICPlugin { BACKGROUND_BLUR };
 
 class ICManagerInterface {
  public:
+  virtual ~ICManagerInterface() = default;
+
   virtual bool InitializeInferenceEngineCore(
       const std::string& plugins_xml_path) = 0;
 
   virtual std::shared_ptr<owt::base::VideoFramePostProcessor>
   CreatePostProcessor(ICPlugin plugin) = 0;
-
- protected:
-  ~ICManagerInterface() = default;
 };
 
 }  // namespace ic

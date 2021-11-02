@@ -56,8 +56,8 @@ shared_library("owt_ic") {
     "backgroundblur.h",
     "icmanager.cc",
     "icmanager.h",
-    "selfiesegmentation.cc",
-    "selfiesegmentation.h",
+    "selfiesegmentationmodel.cc",
+    "selfiesegmentationmodel.h",
   ]
   defines = [ "OWT_IC_IMPL" ]
   configs += [
@@ -96,7 +96,11 @@ copy("openvino_library") {
       owt_openvino_root + "/deployment_tools/ngraph/lib/ngraph.dll",
     ]
   }
-  sources += [ bin_dir + "/inference_engine" + dll_suffix ]
+  sources += [ 
+    bin_dir + "/inference_engine" + dll_suffix,
+    bin_dir + "/plugins.xml",
+    bin_dir + "/MKLDNNPlugin" + dll_suffix,
+  ]
   foreach(module, openvino_modules) {
     sources += [ bin_dir + "/inference_engine_" + module + dll_suffix ]
   }

@@ -10,21 +10,7 @@
 #include "owt/base/stream.h"
 
 class MainWindow : public owt::base::VideoRenderWindow {
-  static constexpr const wchar_t* class_name = L"MainWindow";
-
- public:
-  MainWindow(int width, int height, const wchar_t* title) {
-    WNDCLASSEX cls = {};
-    cls.cbSize = sizeof(WNDCLASSEX);
-    cls.lpfnWndProc = WindowProcedure;
-    cls.hInstance = GetModuleHandle(nullptr);
-    cls.lpszClassName = class_name;
-    RegisterClassEx(&cls);
-    HWND handle = CreateWindow(class_name, title, WS_OVERLAPPEDWINDOW,
-                               CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-                               nullptr, nullptr, cls.hInstance, nullptr);
-    SetWindowHandle(handle);
-  }
+  static constexpr PCTSTR class_name = TEXT("MainWindow");
 
   static LRESULT WindowProcedure(HWND window,
                                  unsigned int msg,
@@ -39,8 +25,22 @@ class MainWindow : public owt::base::VideoRenderWindow {
     }
   }
 
+ public:
+  MainWindow(int width, int height, PCTSTR title) {
+    WNDCLASS cls = {};
+    cls.lpfnWndProc = WindowProcedure;
+    cls.hInstance = GetModuleHandle(nullptr);
+    cls.lpszClassName = class_name;
+    RegisterClass(&cls);
+    HWND handle = CreateWindow(class_name, title, WS_OVERLAPPEDWINDOW,
+                               CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+                               nullptr, nullptr, cls.hInstance, nullptr);
+    SetWindowHandle(handle);
+  }
+
+  void Show() { ShowWindow(GetWindowHandle(), SW_SHOW); }
+
   int Exec() {
-    ShowWindow(GetWindowHandle(), SW_SHOW);
     MSG msg;
     while (GetMessage(&msg, 0, 0, 0)) {
       DispatchMessage(&msg);
@@ -101,8 +101,9 @@ int main(int, char*[]) {
     return 6;
   }
 
-  MainWindow w(capability.width, capability.height,
-               std::wstring(device_name.begin(), device_name.end()).c_str());
+  std::basic_string<TCHAR> title(device_name.begin(), device_name.end());
+  MainWindow w(capability.width, capability.height, title.c_str());
   stream->AttachVideoRenderer(w);
+  w.Show();
   return w.Exec();
 }

@@ -25,15 +25,6 @@ class SharedObjectPointer {
  public:
   explicit SharedObjectPointer(const char* path) : so_(path) { Load(); }
 
-  explicit SharedObjectPointer(const SharedObjectLoader& loader) : so_(loader) {
-    Load();
-  }
-
-  explicit SharedObjectPointer(SharedObjectLoader&& loader)
-      : so_(std::move(loader)) {
-    Load();
-  }
-
   bool IsLoaded() const { return so_.IsLoaded(); }
 
   T* Get() { return ptr_.get(); }
@@ -41,7 +32,6 @@ class SharedObjectPointer {
  protected:
   void Load() {
     if (!so_.IsLoaded()) {
-      RTC_LOG(LS_WARNING) << "Shared object is not loaded.";
       return;
     }
 

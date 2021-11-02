@@ -18,7 +18,7 @@ namespace ic {
 
 class ICManager : public ICManagerInterface {
  public:
-  ICManager() = default;
+  ICManager();
 
   bool InitializeInferenceEngineCore(
       const std::string& plugins_xml_path) override;
@@ -26,13 +26,8 @@ class ICManager : public ICManagerInterface {
   std::shared_ptr<owt::base::VideoFramePostProcessor> CreatePostProcessor(
       ICPlugin plugin) override;
 
-  static InferenceEngine::Core& InferenceEngineCore();
-
- private:
-  static bool InitializeInferenceEngineCoreImpl(
-      const std::string& plugins_xml_path);
-
-  static std::shared_ptr<InferenceEngine::Core> core;
+ protected:
+  std::shared_ptr<InferenceEngine::Core> core;
 };
 
 }  // namespace ic

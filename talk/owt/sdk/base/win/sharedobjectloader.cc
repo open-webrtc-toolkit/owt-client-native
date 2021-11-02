@@ -6,11 +6,17 @@
 
 #include <Windows.h>
 
+#include "third_party/webrtc/rtc_base/logging.h"
+
 namespace owt {
 namespace base {
 
 SharedObjectLoader::SharedObjectLoader(const char* path)
-    : shared_object_(LoadLibraryA(path), FreeLibrary) {}
+    : shared_object_(LoadLibraryA(path), FreeLibrary) {
+  if (!shared_object_) {
+    RTC_LOG(LS_WARNING) << "Shared object " << path << " is not loaded.";
+  }
+}
 
 SharedObjectLoader::~SharedObjectLoader() {}
 

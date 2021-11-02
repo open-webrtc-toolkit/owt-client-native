@@ -5,45 +5,32 @@
 #include "talk/owt/sdk/ic/icmanager.h"
 
 #include "inference_engine.hpp"
-
 #include "talk/owt/sdk/ic/backgroundblur.h"
 
 namespace owt {
 namespace ic {
+ICManager::ICManager() : core(new InferenceEngine::Core()) {
+}
 
 bool ICManager::InitializeInferenceEngineCore(
     const std::string& plugins_xml_path) {
-  return InitializeInferenceEngineCoreImpl(plugins_xml_path);
+  try {
+    core->RegisterPlugins(plugins_xml_path);
+    return true;
+  } catch (std::exception &) {
+    return false;
+  }
 }
 
 std::shared_ptr<owt::base::VideoFramePostProcessor>
 ICManager::CreatePostProcessor(ICPlugin plugin) {
   switch (plugin) {
     case ICPlugin::BACKGROUND_BLUR:
-      return std::make_shared<BackgroundBlur>();
+      return std::make_shared<BackgroundBlur>(*core);
     default:;
   }
   return nullptr;
 }
-
-InferenceEngine::Core& ICManager::InferenceEngineCore() {
-  if (!core) {
-    InitializeInferenceEngineCoreImpl({});
-  }
-  return *core;
-}
-
-bool ICManager::InitializeInferenceEngineCoreImpl(
-    const std::string& plugins_xml_path) {
-  try {
-    core = std::make_shared<InferenceEngine::Core>(plugins_xml_path);
-    return true;
-  } catch (...) {
-    return false;
-  }
-}
-
-std::shared_ptr<InferenceEngine::Core> ICManager::core;
 
 }  // namespace ic
 }  // namespace owt
@@ -53,5 +40,5 @@ owt::ic::ICManagerInterface* CreateICManager() {
 }
 
 void DestroyICManager(owt::ic::ICManagerInterface* ic_manager) {
-  delete reinterpret_cast<owt::ic::ICManager*>(ic_manager);
+  delete ic_manager;
 }

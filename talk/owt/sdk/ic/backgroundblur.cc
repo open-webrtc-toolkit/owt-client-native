@@ -7,26 +7,22 @@
 #include <exception>
 #include <limits>
 
-#include "api/video/i420_buffer.h"
 #include "libyuv/convert.h"
 #include "opencv2/imgproc.hpp"
+#include "third_party/webrtc/api/video/i420_buffer.h"
+#include "third_party/webrtc/rtc_base/logging.h"
 
-#include "selfiesegmentation.h"
+#include "selfiesegmentationmodel.h"
 
 namespace owt {
 namespace ic {
 
-BackgroundBlur::BackgroundBlur() {}
+BackgroundBlur::BackgroundBlur(InferenceEngine::Core& core) : model(core) {}
 
 bool BackgroundBlur::SetParameter(const std::string& key,
                                   const std::string& value) {
   if (key == "model_path") {
-    try {
-      model = std::make_unique<SelfieSegmentation>(value);
-      return true;
-    } catch (std::exception &e) {
-      return false;
-    }
+    return model.LoadModel(value);
   } else if (key == "blur_radius") {
     blur_radius_ = stoi(value);
     return true;
@@ -36,7 +32,7 @@ bool BackgroundBlur::SetParameter(const std::string& key,
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
-  if (model == nullptr) {
+  if (!model.IsLoaded()) {
     RTC_LOG(LS_WARNING) << "Background blur model is not initialized.";
     return buffer;
   }
@@ -50,7 +46,7 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
 
   cv::Mat input;
   frame.convertTo(input, CV_32FC3, 1. / UCHAR_MAX);
-  cv::Mat mask = model->predict(input);  // mask is of 8UC1
+  cv::Mat mask = model.predict(input);  // mask is of 8UC1
 
   cv::resize(mask, mask, {buffer->width(), buffer->height()});
   cv::Mat foregroundMask;
