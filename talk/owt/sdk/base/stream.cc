@@ -46,8 +46,8 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       const size_t height,
       const size_t fps,
       int capture_device_idx,
-      const owt::ic::IntelligentCollaborationParameters& ic_params =
-          owt::ic::IntelligentCollaborationParameters()) {
+      const IntelligentCollaborationParameters& ic_params =
+          IntelligentCollaborationParameters()) {
     std::unique_ptr<owt::base::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());

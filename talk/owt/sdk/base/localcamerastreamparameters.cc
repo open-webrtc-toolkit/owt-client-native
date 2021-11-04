@@ -19,11 +19,11 @@ LocalCameraStreamParameters::LocalCameraStreamParameters(bool audio_enabled,
 void LocalCameraStreamParameters::Fps(int fps) {
   fps_ = fps;
 }
-owt::ic::IntelligentCollaborationParameters&
+IntelligentCollaborationParameters&
 LocalCameraStreamParameters::ICParams() {
   return ic_params_;
 }
-const owt::ic::IntelligentCollaborationParameters&
+const IntelligentCollaborationParameters&
 LocalCameraStreamParameters::ICParams() const {
   return ic_params_;
 }

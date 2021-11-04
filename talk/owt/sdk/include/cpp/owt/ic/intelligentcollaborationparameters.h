@@ -11,7 +11,7 @@
 #include "owt/base/videoframepostprocessor.h"
 
 namespace owt {
-namespace ic {
+namespace base {
 
 class IntelligentCollaborationParameters final {
  public:

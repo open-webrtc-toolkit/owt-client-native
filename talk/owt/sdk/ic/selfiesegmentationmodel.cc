@@ -15,32 +15,32 @@ namespace IE = InferenceEngine;
 namespace owt {
 namespace ic {
 SelfieSegmentationModel::SelfieSegmentationModel(InferenceEngine::Core& core)
-    : core(core) {}
+    : core_(core) {}
 
 bool SelfieSegmentationModel::LoadModel(const std::string& xmlPath,
                                         const std::string& device) {
-  InferenceEngine::CNNNetwork network = core.ReadNetwork(xmlPath);
+  InferenceEngine::CNNNetwork network = core_.ReadNetwork(xmlPath);
   if (network.getInputsInfo().empty() || network.getOutputsInfo().empty()) {
-    RTC_LOG(LS_WARNING) << "Bad segmentation model: no input / output";
+    RTC_LOG(LS_WARNING) << "Bad segmentation model_: no input / output";
     return false;
   }
-  inputName = network.getInputsInfo().begin()->first;
-  outputName = network.getOutputsInfo().begin()->first;
+  input_name_ = network.getInputsInfo().begin()->first;
+  output_name_ = network.getOutputsInfo().begin()->first;
   IE::DataPtr outputData = network.getOutputsInfo().begin()->second;
   outputData->setPrecision(IE::Precision::U8);
-  outputSize = outputData->getTensorDesc().getDims();
+  output_size_ = outputData->getTensorDesc().getDims();
 
   IE::PreProcessInfo& preprocess =
-      network.getInputsInfo()[inputName]->getPreProcess();
+      network.getInputsInfo()[input_name_]->getPreProcess();
   preprocess.setResizeAlgorithm(IE::ResizeAlgorithm::RESIZE_BILINEAR);
 
   InferenceEngine::ExecutableNetwork executableNetwork =
-      core.LoadNetwork(network, device);
-  request = executableNetwork.CreateInferRequest();
+      core_.LoadNetwork(network, device);
+  request_ = executableNetwork.CreateInferRequest();
 }
 
 bool SelfieSegmentationModel::IsLoaded() const {
-  return static_cast<bool>(request);
+  return static_cast<bool>(request_);
 }
 
 cv::Mat SelfieSegmentationModel::predict(const cv::Mat& frame) {
@@ -56,15 +56,15 @@ void SelfieSegmentationModel::predictAsync(const cv::Mat& frame) {
       IE::TensorDesc(IE::Precision::FP32, {1, 3, height, width},
                      IE::Layout::NHWC),
       (float*)frame.data);
-  request.SetBlob(inputName, blob);
-  request.StartAsync();
+  request_.SetBlob(input_name_, blob);
+  request_.StartAsync();
 }
 
 cv::Mat SelfieSegmentationModel::waitForFinished() {
-  request.Wait(IE::InferRequest::WaitMode::RESULT_READY);
-  const unsigned char* data = request.GetBlob(outputName)->buffer();
-  int height = outputSize[1];
-  int width = outputSize[2];
+  request_.Wait(IE::InferRequest::WaitMode::RESULT_READY);
+  const unsigned char* data = request_.GetBlob(output_name_)->buffer();
+  int height = output_size_[1];
+  int width = output_size_[2];
   return cv::Mat(height, width, CV_8U, (void*)data);
 }
 

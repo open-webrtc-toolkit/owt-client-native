@@ -55,8 +55,8 @@ class LocalCameraStreamParameters final {
   /**
     @brief Get the reference of intelligent collaboration parameters
   */
-  owt::ic::IntelligentCollaborationParameters& ICParams();
-  const owt::ic::IntelligentCollaborationParameters& ICParams() const;
+  IntelligentCollaborationParameters& ICParams();
+  const IntelligentCollaborationParameters& ICParams() const;
   /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
@@ -74,7 +74,7 @@ class LocalCameraStreamParameters final {
   int fps_;
   bool video_enabled_;
   bool audio_enabled_;
-  owt::ic::IntelligentCollaborationParameters ic_params_;
+  IntelligentCollaborationParameters ic_params_;
 };
 
 

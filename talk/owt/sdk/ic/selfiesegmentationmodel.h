@@ -26,11 +26,11 @@ class SelfieSegmentationModel {
   cv::Mat waitForFinished();
 
  private:
-  InferenceEngine::Core &core;
-  InferenceEngine::InferRequest request;
-  std::string inputName;
-  std::string outputName;
-  InferenceEngine::SizeVector outputSize;
+  InferenceEngine::Core &core_;
+  InferenceEngine::InferRequest request_;
+  std::string input_name_;
+  std::string output_name_;
+  InferenceEngine::SizeVector output_size_;
 };
 
 }  // namespace ic

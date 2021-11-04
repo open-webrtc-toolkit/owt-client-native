@@ -27,7 +27,7 @@ class ICManager : public ICManagerInterface {
       ICPlugin plugin) override;
 
  protected:
-  std::shared_ptr<InferenceEngine::Core> core;
+  std::shared_ptr<InferenceEngine::Core> core_;
 };
 
 }  // namespace ic

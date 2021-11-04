@@ -9,13 +9,13 @@
 
 namespace owt {
 namespace ic {
-ICManager::ICManager() : core(new InferenceEngine::Core()) {
+ICManager::ICManager() : core_(new InferenceEngine::Core()) {
 }
 
 bool ICManager::InitializeInferenceEngineCore(
     const std::string& plugins_xml_path) {
   try {
-    core->RegisterPlugins(plugins_xml_path);
+    core_->RegisterPlugins(plugins_xml_path);
     return true;
   } catch (std::exception &) {
     return false;
@@ -26,7 +26,7 @@ std::shared_ptr<owt::base::VideoFramePostProcessor>
 ICManager::CreatePostProcessor(ICPlugin plugin) {
   switch (plugin) {
     case ICPlugin::BACKGROUND_BLUR:
-      return std::make_shared<BackgroundBlur>(*core);
+      return std::make_shared<BackgroundBlur>(*core_);
     default:;
   }
   return nullptr;

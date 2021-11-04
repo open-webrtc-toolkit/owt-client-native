@@ -24,7 +24,7 @@ class BackgroundBlur : public owt::base::VideoFramePostProcessor {
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) override;
 
  private:
-  SelfieSegmentationModel model;
+  SelfieSegmentationModel model_;
   int blur_radius_ = 55;
 };
 

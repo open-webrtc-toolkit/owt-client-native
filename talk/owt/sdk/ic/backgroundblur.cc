@@ -17,12 +17,12 @@
 namespace owt {
 namespace ic {
 
-BackgroundBlur::BackgroundBlur(InferenceEngine::Core& core) : model(core) {}
+BackgroundBlur::BackgroundBlur(InferenceEngine::Core& core) : model_(core) {}
 
 bool BackgroundBlur::SetParameter(const std::string& key,
                                   const std::string& value) {
   if (key == "model_path") {
-    return model.LoadModel(value);
+    return model_.LoadModel(value);
   } else if (key == "blur_radius") {
     blur_radius_ = stoi(value);
     return true;
@@ -32,8 +32,8 @@ bool BackgroundBlur::SetParameter(const std::string& key,
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
-  if (!model.IsLoaded()) {
-    RTC_LOG(LS_WARNING) << "Background blur model is not initialized.";
+  if (!model_.IsLoaded()) {
+    RTC_LOG(LS_WARNING) << "Background blur model_ is not initialized.";
     return buffer;
   }
 
@@ -46,39 +46,39 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
 
   cv::Mat input;
   frame.convertTo(input, CV_32FC3, 1. / UCHAR_MAX);
-  cv::Mat mask = model.predict(input);  // mask is of 8UC1
+  cv::Mat mask = model_.predict(input);  // mask is of 8UC1
 
   cv::resize(mask, mask, {buffer->width(), buffer->height()});
-  cv::Mat foregroundMask;
-  cv::merge(std::vector<cv::Mat>{mask, mask, mask}, foregroundMask);
-  cv::Mat backgroundMask;
+  cv::Mat foreground_mask;
+  cv::merge(std::vector<cv::Mat>{mask, mask, mask}, foreground_mask);
+  cv::Mat background_mask;
   cv::merge(std::vector<cv::Mat>{UCHAR_MAX - mask, UCHAR_MAX - mask,
                                  UCHAR_MAX - mask},
-            backgroundMask);
+            background_mask);
 
-  // apply a masked blur on background
-  cv::Mat maskedFrame;
-  cv::multiply(frame, backgroundMask, maskedFrame, 1. / UCHAR_MAX);
+  // Apply a masked blur on background
+  cv::Mat masked_frame;
+  cv::multiply(frame, background_mask, masked_frame, 1. / UCHAR_MAX);
   cv::Mat background;
-  cv::GaussianBlur(maskedFrame, background, {blur_radius_, blur_radius_}, 0);
-  cv::Mat blurredMask;
-  cv::GaussianBlur(backgroundMask, blurredMask, {blur_radius_, blur_radius_},
+  cv::GaussianBlur(masked_frame, background, {blur_radius_, blur_radius_}, 0);
+  cv::Mat blurred_mask;
+  cv::GaussianBlur(background_mask, blurred_mask, {blur_radius_, blur_radius_},
                    0);
-  cv::divide(background, blurredMask, background, UCHAR_MAX);
-  cv::multiply(background, backgroundMask, background, 1. / UCHAR_MAX);
+  cv::divide(background, blurred_mask, background, UCHAR_MAX);
+  cv::multiply(background, background_mask, background, 1. / UCHAR_MAX);
 
   cv::Mat foreground;
-  cv::multiply(frame, foregroundMask, foreground, 1. / UCHAR_MAX);
+  cv::multiply(frame, foreground_mask, foreground, 1. / UCHAR_MAX);
   frame = foreground + background;
 
-  auto newBuffer =
+  auto new_buffer =
       webrtc::I420Buffer::Create(buffer->width(), buffer->height());
-  libyuv::RAWToI420(frame.data, frame.cols * 3, newBuffer->MutableDataY(),
-                    newBuffer->StrideY(), newBuffer->MutableDataU(),
-                    newBuffer->StrideU(), newBuffer->MutableDataV(),
-                    newBuffer->StrideV(), buffer->width(), buffer->height());
+  libyuv::RAWToI420(frame.data, frame.cols * 3, new_buffer->MutableDataY(),
+                    new_buffer->StrideY(), new_buffer->MutableDataU(),
+                    new_buffer->StrideU(), new_buffer->MutableDataV(),
+                    new_buffer->StrideV(), buffer->width(), buffer->height());
 
-  return newBuffer;
+  return new_buffer;
 }
 
 }  // namespace ic
