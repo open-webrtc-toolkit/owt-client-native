@@ -16,15 +16,15 @@ class Core;
 namespace owt {
 namespace ic {
 
-class ICManager : public ICManagerInterface {
+class ICManager final : public ICManagerInterface {
  public:
   ICManager();
 
-  bool InitializeInferenceEngineCore(
+  bool RegisterInferenceEnginePlugins(
       const std::string& plugins_xml_path) override;
 
   std::shared_ptr<owt::base::VideoFramePostProcessor> CreatePostProcessor(
-      ICPlugin plugin) override;
+      ICPostProcessor processor) override;
 
  protected:
   std::shared_ptr<InferenceEngine::Core> core_;

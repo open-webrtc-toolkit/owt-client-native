@@ -19,36 +19,41 @@ SelfieSegmentationModel::SelfieSegmentationModel(InferenceEngine::Core& core)
 
 bool SelfieSegmentationModel::LoadModel(const std::string& xmlPath,
                                         const std::string& device) {
-  InferenceEngine::CNNNetwork network = core_.ReadNetwork(xmlPath);
-  if (network.getInputsInfo().empty() || network.getOutputsInfo().empty()) {
-    RTC_LOG(LS_WARNING) << "Bad segmentation model_: no input / output";
+  try {
+    InferenceEngine::CNNNetwork network = core_.ReadNetwork(xmlPath);
+    if (network.getInputsInfo().empty() || network.getOutputsInfo().empty()) {
+      RTC_LOG(LS_WARNING) << "Bad segmentation model: no input / output";
+      return false;
+    }
+    input_name_ = network.getInputsInfo().begin()->first;
+    output_name_ = network.getOutputsInfo().begin()->first;
+    IE::DataPtr outputData = network.getOutputsInfo().begin()->second;
+    outputData->setPrecision(IE::Precision::U8);
+    output_size_ = outputData->getTensorDesc().getDims();
+
+    IE::PreProcessInfo& preprocess =
+        network.getInputsInfo()[input_name_]->getPreProcess();
+    preprocess.setResizeAlgorithm(IE::ResizeAlgorithm::RESIZE_BILINEAR);
+
+    InferenceEngine::ExecutableNetwork executableNetwork =
+        core_.LoadNetwork(network, device);
+    request_ = executableNetwork.CreateInferRequest();
+  } catch (std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Load model failed: " << e.what();
     return false;
   }
-  input_name_ = network.getInputsInfo().begin()->first;
-  output_name_ = network.getOutputsInfo().begin()->first;
-  IE::DataPtr outputData = network.getOutputsInfo().begin()->second;
-  outputData->setPrecision(IE::Precision::U8);
-  output_size_ = outputData->getTensorDesc().getDims();
-
-  IE::PreProcessInfo& preprocess =
-      network.getInputsInfo()[input_name_]->getPreProcess();
-  preprocess.setResizeAlgorithm(IE::ResizeAlgorithm::RESIZE_BILINEAR);
-
-  InferenceEngine::ExecutableNetwork executableNetwork =
-      core_.LoadNetwork(network, device);
-  request_ = executableNetwork.CreateInferRequest();
 }
 
 bool SelfieSegmentationModel::IsLoaded() const {
   return static_cast<bool>(request_);
 }
 
-cv::Mat SelfieSegmentationModel::predict(const cv::Mat& frame) {
-  predictAsync(frame);
-  return waitForFinished();
+cv::Mat SelfieSegmentationModel::Predict(const cv::Mat& frame) {
+  PredictAsync(frame);
+  return WaitForFinished();
 }
 
-void SelfieSegmentationModel::predictAsync(const cv::Mat& frame) {
+void SelfieSegmentationModel::PredictAsync(const cv::Mat& frame) {
   CV_DbgAssert(frame.type() == CV_32FC3);
   size_t height = frame.rows;
   size_t width = frame.cols;
@@ -60,7 +65,7 @@ void SelfieSegmentationModel::predictAsync(const cv::Mat& frame) {
   request_.StartAsync();
 }
 
-cv::Mat SelfieSegmentationModel::waitForFinished() {
+cv::Mat SelfieSegmentationModel::WaitForFinished() {
   request_.Wait(IE::InferRequest::WaitMode::RESULT_READY);
   const unsigned char* data = request_.GetBlob(output_name_)->buffer();
   int height = output_size_[1];

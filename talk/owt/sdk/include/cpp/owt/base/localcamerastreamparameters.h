@@ -4,9 +4,11 @@
 
 #ifndef OWT_BASE_LOCALCAMERASTREAMPARAMETERS_H_
 #define OWT_BASE_LOCALCAMERASTREAMPARAMETERS_H_
+#include <memory>
 #include <string>
+#include <vector>
 #include "owt/base/commontypes.h"
-#include "owt/ic/intelligentcollaborationparameters.h"
+#include "owt/base/videoframepostprocessor.h"
 namespace owt {
 namespace base{
 /**
@@ -53,10 +55,11 @@ class LocalCameraStreamParameters final {
   */
   void Fps(int fps);
   /**
-    @brief Get the reference of intelligent collaboration parameters
+    @brief Get the reference of video frame post processors, to be applied in
+    onFrame method.
   */
-  IntelligentCollaborationParameters& ICParams();
-  const IntelligentCollaborationParameters& ICParams() const;
+  std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>&
+  PostProcessors();
   /** @cond */
   std::string CameraId() const { return camera_id_; }
   std::string StreamName() const { return stream_name_; }
@@ -65,6 +68,10 @@ class LocalCameraStreamParameters final {
   int Fps() const { return fps_; }
   bool VideoEnabled() const { return video_enabled_; }
   bool AudioEnabled() const { return audio_enabled_; }
+  const std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>&
+  PostProcessors() const {
+    return post_processors_;
+  }
   /** @endcond */
  private:
   std::string camera_id_;
@@ -74,7 +81,8 @@ class LocalCameraStreamParameters final {
   int fps_;
   bool video_enabled_;
   bool audio_enabled_;
-  IntelligentCollaborationParameters ic_params_;
+  std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>
+      post_processors_;
 };
 
 

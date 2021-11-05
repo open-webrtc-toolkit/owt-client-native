@@ -24,7 +24,10 @@ config("openvino") {
   } else {
     lib_dirs = [ owt_openvino_root + "/inference_engine/lib/intel64/Release" ]
   }
-  configs = [ "//build/config/compiler:rtti" ]
+  configs = [
+    "//build/config/compiler:exceptions",
+    "//build/config/compiler:rtti",
+  ]
 }
 
 config("openvino_opencv") {

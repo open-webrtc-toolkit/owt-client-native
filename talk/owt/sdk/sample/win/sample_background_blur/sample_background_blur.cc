@@ -70,13 +70,13 @@ int main(int, char*[]) {
 
   // Initialize global inference engine core, to prevent slow first time
   // initialization of background blur post processor
-  if (!ic_plugin->InitializeInferenceEngineCore("plugins.xml")) {
-    std::cerr << "Unable to initialize inference engine core" << std::endl;
+  if (!ic_plugin->RegisterInferenceEnginePlugins("plugins.xml")) {
+    std::cerr << "Unable to register inference engine plugins" << std::endl;
     return 2;
   }
 
   std::shared_ptr<owt::base::VideoFramePostProcessor> background_blur =
-      ic_plugin->CreatePostProcessor(owt::ic::ICPlugin::BACKGROUND_BLUR);
+      ic_plugin->CreatePostProcessor(owt::ic::ICPostProcessor::BACKGROUND_BLUR);
   if (!background_blur) {
     std::cerr << "Create background blur failed." << std::endl;
     return 3;
@@ -90,7 +90,7 @@ int main(int, char*[]) {
     std::cerr << "Failed to set blur radius." << std::endl;
     return 5;
   }
-  param.ICParams().PostProcessors().push_back(background_blur);
+  param.PostProcessors().push_back(background_blur);
 
   int error = 0;
   std::shared_ptr<owt::base::LocalStream> stream =

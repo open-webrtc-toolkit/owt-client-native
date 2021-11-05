@@ -7,13 +7,13 @@
 
 #include <memory>
 
-#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
 #include "talk/owt/sdk/ic/selfiesegmentationmodel.h"
+#include "talk/owt/sdk/include/cpp/owt/base/videoframepostprocessor.h"
 
 namespace owt {
 namespace ic {
 
-class BackgroundBlur : public owt::base::VideoFramePostProcessor {
+class BackgroundBlur final : public owt::base::VideoFramePostProcessor {
  public:
   BackgroundBlur(InferenceEngine::Core& core);
   ~BackgroundBlur() override = default;

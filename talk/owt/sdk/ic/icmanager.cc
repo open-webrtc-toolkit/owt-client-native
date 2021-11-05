@@ -6,28 +6,42 @@
 
 #include "inference_engine.hpp"
 #include "talk/owt/sdk/ic/backgroundblur.h"
+#include "third_party/webrtc/rtc_base/logging.h"
 
 namespace owt {
 namespace ic {
-ICManager::ICManager() : core_(new InferenceEngine::Core()) {
-}
 
-bool ICManager::InitializeInferenceEngineCore(
-    const std::string& plugins_xml_path) {
+ICManager::ICManager() : core_() {
   try {
-    core_->RegisterPlugins(plugins_xml_path);
-    return true;
-  } catch (std::exception &) {
-    return false;
+    core_.reset(new InferenceEngine::Core);
+  } catch (std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to initialize inference engine core: "
+                      << e.what();
   }
 }
 
+bool ICManager::RegisterInferenceEnginePlugins(
+    const std::string& plugins_xml_path) {
+  if (core_) {
+    try {
+      core_->RegisterPlugins(plugins_xml_path);
+      return true;
+    } catch (std::exception& e) {
+      RTC_LOG(LS_ERROR) << "Failed to register inference engine plugins: "
+                        << e.what();
+    }
+  }
+  return false;
+}
+
 std::shared_ptr<owt::base::VideoFramePostProcessor>
-ICManager::CreatePostProcessor(ICPlugin plugin) {
-  switch (plugin) {
-    case ICPlugin::BACKGROUND_BLUR:
-      return std::make_shared<BackgroundBlur>(*core_);
-    default:;
+ICManager::CreatePostProcessor(ICPostProcessor processor) {
+  if (core_) {
+    switch (processor) {
+      case ICPostProcessor::BACKGROUND_BLUR:
+        return std::make_shared<BackgroundBlur>(*core_);
+      default:;
+    }
   }
   return nullptr;
 }

@@ -21,9 +21,9 @@ class SelfieSegmentationModel {
   bool LoadModel(const std::string& xmlPath, const std::string& device = "CPU");
   bool IsLoaded() const;
 
-  cv::Mat predict(const cv::Mat& frame);
-  void predictAsync(const cv::Mat& frame);
-  cv::Mat waitForFinished();
+  cv::Mat Predict(const cv::Mat& frame);
+  void PredictAsync(const cv::Mat& frame);
+  cv::Mat WaitForFinished();
 
  private:
   InferenceEngine::Core &core_;

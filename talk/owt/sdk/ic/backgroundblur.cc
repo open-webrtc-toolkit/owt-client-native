@@ -33,7 +33,12 @@ bool BackgroundBlur::SetParameter(const std::string& key,
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
   if (!model_.IsLoaded()) {
-    RTC_LOG(LS_WARNING) << "Background blur model_ is not initialized.";
+    RTC_LOG(LS_WARNING) << "Background blur model is not initialized.";
+    return buffer;
+  }
+
+  if (buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    RTC_LOG(LS_WARNING) << "Native video frame buffer is not supported.";
     return buffer;
   }
 
@@ -46,7 +51,7 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
 
   cv::Mat input;
   frame.convertTo(input, CV_32FC3, 1. / UCHAR_MAX);
-  cv::Mat mask = model_.predict(input);  // mask is of 8UC1
+  cv::Mat mask = model_.Predict(input);  // mask is of 8UC1
 
   cv::resize(mask, mask, {buffer->width(), buffer->height()});
   cv::Mat foreground_mask;

@@ -98,7 +98,6 @@ static_library("owt_sdk_base") {
     "sdk/base/functionalobserver.cc",
     "sdk/base/functionalobserver.h",
     "sdk/base/globalconfiguration.cc",
-    "sdk/base/intelligentcollaborationparameters.cc",
     "sdk/base/localcamerastreamparameters.cc",
     "sdk/base/logging.cc",
     "sdk/base/logsinks.cc",
@@ -133,7 +132,6 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/stream.h",
     "sdk/include/cpp/owt/base/videoframepostprocessor.h",
     "sdk/include/cpp/owt/base/videorendererinterface.h",
-    "sdk/include/cpp/owt/ic/intelligentcollaborationparameters.h",
   ]
   if (is_win || is_linux) {
     sources += [

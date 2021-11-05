@@ -13,17 +13,29 @@
 namespace owt {
 namespace ic {
 
-enum class ICPlugin { BACKGROUND_BLUR };
+/// The type of IC post processor
+enum class ICPostProcessor { BACKGROUND_BLUR };
 
+/// The IC plugin manager, for creating the post processor instance.
 class ICManagerInterface {
  public:
   virtual ~ICManagerInterface() = default;
 
-  virtual bool InitializeInferenceEngineCore(
+  /**
+    @brief Register inference engine plugins.
+    @param plugins_xml_path The path to plugins.xml of OpenVINO Inference
+    Engine.
+  */
+  virtual bool RegisterInferenceEnginePlugins(
       const std::string& plugins_xml_path) = 0;
 
+  /**
+    @brief Create and get the IC post processor.
+    @param processor The type of processor to be created.
+    @return The shared pointer of the post processor.
+  */
   virtual std::shared_ptr<owt::base::VideoFramePostProcessor>
-  CreatePostProcessor(ICPlugin plugin) = 0;
+  CreatePostProcessor(ICPostProcessor processor) = 0;
 };
 
 }  // namespace ic
