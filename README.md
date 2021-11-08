@@ -27,6 +27,9 @@ The following dependencies are for Windows only:
 - [Visual Studio](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/windows_build_instructions.md#visual-studio).
 - [Intel Media SDK for Windows, version 2020 R1 or higher](https://software.intel.com/en-us/media-sdk/choose-download/client).
 
+If you want intelligent collaboration video post-processor features, you need:
+- [OpenVINO Toolkit](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html).
+
 ### Get the code
 - Make sure you clone the source code to a directory named `src`.
 - Create a file named .gclient in the directory above the `src` dir, with these contents:
@@ -54,6 +57,7 @@ target_os = []
   - The optional `msdk_root` should be set to the directory of your Intel MediaSDK for Windows, version 2020 R1 or higher. This is typically
   `C:\Program Files (x86)\IntelSWTools\Intel(R) Media SDK 2020 R1\Software Development Kit`. If specified, will enable hardware accelerated video codecs for most of the video codecs.
   - The optional `--sdk` is to inform the build script to use `lib.exe` that is part of Visual Studio toolchain for merging owt libraries with external openssl libraries.
+  - To enable intelligent collaboration video post-processors (background blur, etc.), set the `openvino_root` option, which would typically be `--openvino_root "C:\Program Files (x86)\Intel\openvino_2021"`.
 
 
 #### Linux
