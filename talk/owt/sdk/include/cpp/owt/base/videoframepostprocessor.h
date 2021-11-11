@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "third_party/webrtc/rtc_base/logging.h"
+
 namespace rtc {
 template <typename>
 class scoped_refptr;
@@ -25,11 +27,18 @@ class VideoFramePostProcessor {
  public:
   virtual ~VideoFramePostProcessor() {}
 
+  virtual bool LoadModel(const std::string& modelXmlPath,
+      const std::string& device) {
+    RTC_LOG(LS_ERROR) << "LoadModel is not implemented";
+    return false;
+  }
+
   /**
     @brief Set the parameter of the processor. The content of key and value
     should follow the definition in the sub-class.
   */
-  virtual bool SetParameter(const std::string& key, const std::string& value) {
+  virtual bool SetParameter(const std::string& key, int value) {
+    RTC_LOG(LS_ERROR) << "Set parameter failed: Unknown key " << key;
     return false;
   }
 

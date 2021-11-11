@@ -18,7 +18,7 @@ namespace ic {
 
 class ICManager final : public ICManagerInterface {
  public:
-  ICManager();
+  ICManager() = default;
 
   bool RegisterInferenceEnginePlugins(
       const std::string& plugins_xml_path) override;

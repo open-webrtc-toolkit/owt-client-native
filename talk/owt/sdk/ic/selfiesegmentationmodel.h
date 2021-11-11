@@ -18,19 +18,17 @@ class SelfieSegmentationModel {
  public:
   explicit SelfieSegmentationModel(InferenceEngine::Core& core);
 
-  bool LoadModel(const std::string& xmlPath, const std::string& device = "CPU");
+  void LoadModel(const std::string& xmlPath, const std::string& device = "CPU");
   bool IsLoaded() const;
 
   cv::Mat Predict(const cv::Mat& frame);
-  void PredictAsync(const cv::Mat& frame);
-  cv::Mat WaitForFinished();
 
  private:
   InferenceEngine::Core &core_;
   InferenceEngine::InferRequest request_;
   std::string input_name_;
   std::string output_name_;
-  InferenceEngine::SizeVector output_size_;
+  InferenceEngine::SizeVector output_shape_;
 };
 
 }  // namespace ic

@@ -11,37 +11,37 @@
 namespace owt {
 namespace ic {
 
-ICManager::ICManager() : core_() {
-  try {
-    core_.reset(new InferenceEngine::Core);
-  } catch (std::exception& e) {
-    RTC_LOG(LS_ERROR) << "Failed to initialize inference engine core: "
-                      << e.what();
-  }
-}
-
 bool ICManager::RegisterInferenceEnginePlugins(
     const std::string& plugins_xml_path) {
-  if (core_) {
+  if (!core_) {
     try {
-      core_->RegisterPlugins(plugins_xml_path);
-      return true;
-    } catch (std::exception& e) {
-      RTC_LOG(LS_ERROR) << "Failed to register inference engine plugins: "
-                        << e.what();
+      core_.reset(new InferenceEngine::Core(plugins_xml_path));
+    } catch (const std::exception& e) {
+      RTC_LOG(LS_ERROR) << "Cannot initialize inference engine core: " << e.what();
+      return false;
     }
   }
-  return false;
+  try {
+    core_->RegisterPlugins(plugins_xml_path);
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to register inference engine plugins: "
+                      << e.what();
+    return false;
+  }
+  return true;
 }
 
 std::shared_ptr<owt::base::VideoFramePostProcessor>
 ICManager::CreatePostProcessor(ICPostProcessor processor) {
-  if (core_) {
-    switch (processor) {
-      case ICPostProcessor::BACKGROUND_BLUR:
-        return std::make_shared<BackgroundBlur>(*core_);
-      default:;
-    }
+  if (!core_ && !RegisterInferenceEnginePlugins({})) {
+    return nullptr;
+  }
+  switch (processor) {
+    case ICPostProcessor::BACKGROUND_BLUR:
+      return std::make_shared<BackgroundBlur>(*core_);
+    default:
+      RTC_LOG(LS_WARNING) << "CreatePostProcessor(" << processor
+                          << ") is not implemented.";
   }
   return nullptr;
 }

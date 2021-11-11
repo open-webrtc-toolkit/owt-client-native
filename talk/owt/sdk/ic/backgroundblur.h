@@ -18,7 +18,10 @@ class BackgroundBlur final : public owt::base::VideoFramePostProcessor {
   BackgroundBlur(InferenceEngine::Core& core);
   ~BackgroundBlur() override = default;
 
-  bool SetParameter(const std::string& key, const std::string& value) override;
+  bool LoadModel(const std::string& modelXmlPath,
+                 const std::string& device) override;
+
+  bool SetParameter(const std::string& key, int value) override;
 
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> Process(
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) override;

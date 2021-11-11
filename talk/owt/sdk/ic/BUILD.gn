@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import("//build_overrides/webrtc.gni")
 import("//build_overrides/owt.gni")
+import("//build_overrides/webrtc.gni")
 import("//testing/test.gni")
 
 declare_args() {
@@ -16,9 +16,7 @@ declare_args() {
 config("openvino") {
   assert(owt_openvino_root != "", "owt_openvino_root not set")
   defines = [ "OWT_USE_OPENVINO" ]
-  include_dirs = [ 
-    owt_openvino_root + "/inference_engine/include",
-  ]
+  include_dirs = [ owt_openvino_root + "/inference_engine/include" ]
   if (is_debug) {
     lib_dirs = [ owt_openvino_root + "/inference_engine/lib/intel64/Debug" ]
   } else {
@@ -32,7 +30,8 @@ config("openvino") {
 
 config("openvino_opencv") {
   assert(owt_openvino_root != "", "owt_openvino_root not set")
-  assert(owt_openvino_opencv_version != "", "owt_openvino_opencv_version not set")
+  assert(owt_openvino_opencv_version != "",
+         "owt_openvino_opencv_version not set")
   defines = [ "OWT_USE_OPENCV" ]
   include_dirs = [ owt_openvino_root + "/opencv/include" ]
   lib_dirs = [ owt_openvino_root + "/opencv/lib" ]
@@ -68,20 +67,20 @@ shared_library("owt_ic") {
     ":openvino_opencv",
   ]
   include_dirs = [ "//talk/owt/sdk/include/cpp" ]
-  libs = [ 
+  libs = [
     "inference_engine" + lib_suffix,
     "inference_engine_transformations" + lib_suffix,
   ]
   foreach(module, opencv_modules) {
     libs += [ "opencv_" + module + owt_openvino_opencv_version + lib_suffix ]
   }
-  deps = [ 
-    "//third_party/webrtc/api/video:video_frame",
+  deps = [
     "//third_party/libyuv:libyuv",
+    "//third_party/webrtc/api/video:video_frame",
   ]
   data_deps = [
-    ":openvino_library",
-    ":openvino_opencv_library",
+    # ":openvino_library",
+    # ":openvino_opencv_library",
   ]
 }
 
@@ -99,7 +98,7 @@ copy("openvino_library") {
       owt_openvino_root + "/deployment_tools/ngraph/lib/ngraph.dll",
     ]
   }
-  sources += [ 
+  sources += [
     bin_dir + "/inference_engine" + dll_suffix,
     bin_dir + "/plugins.xml",
     bin_dir + "/MKLDNNPlugin" + dll_suffix,
@@ -107,14 +106,15 @@ copy("openvino_library") {
   foreach(module, openvino_modules) {
     sources += [ bin_dir + "/inference_engine_" + module + dll_suffix ]
   }
-  outputs = [ "$target_out_dir/{{source_file_part}}" ]
+  outputs = [ "$root_build_dir/{{source_file_part}}" ]
 }
 
 copy("openvino_opencv_library") {
   bin_dir = owt_openvino_root + "/opencv/bin"
   sources = []
   foreach(module, opencv_modules) {
-    sources += [ bin_dir + "/opencv_" + module + owt_openvino_opencv_version + dll_suffix ]
+    sources += [ bin_dir + "/opencv_" + module + owt_openvino_opencv_version +
+                 dll_suffix ]
   }
-  outputs = [ "$target_out_dir/{{source_file_part}}" ]
+  outputs = [ "$root_build_dir/{{source_file_part}}" ]
 }

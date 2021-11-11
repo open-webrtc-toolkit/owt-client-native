@@ -49,7 +49,13 @@ class MainWindow : public owt::base::VideoRenderWindow {
   }
 };
 
-int main(int, char*[]) {
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cout << "Usage: sample_background_blur <model_path>" << std::endl;
+    return 0;
+  }
+  std::string model_path = argv[1];
+
   int id = 0;
   std::string device_name = owt::base::DeviceUtils::GetDeviceNameByIndex(id);
   std::string camera_id = owt::base::DeviceUtils::VideoCapturerIds()[id];
@@ -62,7 +68,7 @@ int main(int, char*[]) {
   param.Fps(capability.frameRate);
 
   // Load the owt_ic.dll and initialize ICManager
-  auto ic_plugin = owt::base::PluginManager::ICPlugin();
+  owt::ic::ICManagerInterface* ic_plugin = owt::base::PluginManager::ICPlugin();
   if (!ic_plugin) {
     std::cerr << "Unable to initialize IC plugin." << std::endl;
     return 1;
@@ -81,12 +87,11 @@ int main(int, char*[]) {
     std::cerr << "Create background blur failed." << std::endl;
     return 3;
   }
-  if (!background_blur->SetParameter("model_path",
-                                     "data/ic_model/background_blur.xml")) {
-    std::cerr << "Failed to load model." << std::endl;
+  if (!background_blur->LoadModel(model_path, "CPU")) {
+    std::cerr << "Failed to load the model." << std::endl;
     return 4;
   }
-  if (!background_blur->SetParameter("blur_radius", "55")) {
+  if (!background_blur->SetParameter("blur_radius", 55)) {
     std::cerr << "Failed to set blur radius." << std::endl;
     return 5;
   }

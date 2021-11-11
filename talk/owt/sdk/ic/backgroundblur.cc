@@ -19,21 +19,34 @@ namespace ic {
 
 BackgroundBlur::BackgroundBlur(InferenceEngine::Core& core) : model_(core) {}
 
-bool BackgroundBlur::SetParameter(const std::string& key,
-                                  const std::string& value) {
-  if (key == "model_path") {
-    return model_.LoadModel(value);
-  } else if (key == "blur_radius") {
-    blur_radius_ = stoi(value);
+bool BackgroundBlur::LoadModel(const std::string& modelXmlPath,
+                               const std::string& device) {
+  try {
+    model_.LoadModel(modelXmlPath, device);
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Load model failed: " << e.what();
+    return false;
+  }
+  return true;
+}
+
+bool BackgroundBlur::SetParameter(const std::string& key, int value) {
+  if (key == "blur_radius") {
+    try {
+      blur_radius_ = value;
+    } catch (const std::exception& e) {
+      RTC_LOG(LS_ERROR) << "Set blur_radius failed: " << e.what();
+      return false;
+    }
     return true;
   }
-  return false;
+  return owt::base::VideoFramePostProcessor::SetParameter(key, value);
 }
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
     const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer) {
   if (!model_.IsLoaded()) {
-    RTC_LOG(LS_WARNING) << "Background blur model is not initialized.";
+    RTC_LOG(LS_WARNING) << "Background blur model is not loaded.";
     return buffer;
   }
 
@@ -51,7 +64,13 @@ rtc::scoped_refptr<webrtc::VideoFrameBuffer> BackgroundBlur::Process(
 
   cv::Mat input;
   frame.convertTo(input, CV_32FC3, 1. / UCHAR_MAX);
-  cv::Mat mask = model_.Predict(input);  // mask is of 8UC1
+  cv::Mat mask;
+  try {
+    mask = model_.Predict(input);  // mask is of 8UC1
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << e.what();
+    return buffer;
+  }
 
   cv::resize(mask, mask, {buffer->width(), buffer->height()});
   cv::Mat foreground_mask;
