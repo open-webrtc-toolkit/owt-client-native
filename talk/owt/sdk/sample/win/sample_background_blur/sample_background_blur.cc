@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "owt/base/deviceutils.h"
+#include "owt/base/logging.h"
 #include "owt/base/pluginmanager.h"
 #include "owt/base/stream.h"
 
@@ -56,6 +57,8 @@ int main(int argc, char* argv[]) {
   }
   std::string model_path = argv[1];
 
+  owt::base::Logging::Severity(owt::base::LoggingSeverity::kWarning);
+
   int id = 0;
   std::string device_name = owt::base::DeviceUtils::GetDeviceNameByIndex(id);
   std::string camera_id = owt::base::DeviceUtils::VideoCapturerIds()[id];
@@ -87,13 +90,17 @@ int main(int argc, char* argv[]) {
     std::cerr << "Create background blur failed." << std::endl;
     return 3;
   }
-  if (!background_blur->LoadModel(model_path, "CPU")) {
-    std::cerr << "Failed to load the model." << std::endl;
+  if (!background_blur->ReadModel(model_path)) {
+    std::cerr << "Failed to read the model." << std::endl;
     return 4;
+  }
+  if (!background_blur->LoadModel("CPU")) {
+    std::cerr << "Failed to load the model." << std::endl;
+    return 5;
   }
   if (!background_blur->SetParameter("blur_radius", 55)) {
     std::cerr << "Failed to set blur radius." << std::endl;
-    return 5;
+    return 6;
   }
   param.PostProcessors().push_back(background_blur);
 
@@ -103,7 +110,7 @@ int main(int argc, char* argv[]) {
   if (error) {
     std::cerr << "Create local stream failed, error code " << error << "."
               << std::endl;
-    return 6;
+    return 7;
   }
 
   std::basic_string<TCHAR> title(device_name.begin(), device_name.end());

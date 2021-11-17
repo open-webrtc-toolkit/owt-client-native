@@ -10,13 +10,14 @@
 namespace owt {
 namespace base {
 
-/// Static class of managing dll plugins.
+/// Static class managing dll plugins.
 class PluginManager {
  public:
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
-    @brief Get the pointer of IC plugin. If loading owt_ic.dll is failed, a
-    nullptr will be returned.
+    @brief Get the pointer of IC plugin.
+    @return The pointer to the instance of owt::ic::ICManagerInterface. If
+    loading owt_ic.dll failed, a nullptr will be returned.
   */
   static owt::ic::ICManagerInterface* ICPlugin();
 #endif

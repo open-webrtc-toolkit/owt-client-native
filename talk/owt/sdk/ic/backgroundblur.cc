@@ -19,10 +19,19 @@ namespace ic {
 
 BackgroundBlur::BackgroundBlur(InferenceEngine::Core& core) : model_(core) {}
 
-bool BackgroundBlur::LoadModel(const std::string& modelXmlPath,
-                               const std::string& device) {
+bool BackgroundBlur::ReadModel(const std::string& modelXmlPath) {
   try {
-    model_.LoadModel(modelXmlPath, device);
+    model_.ReadModel(modelXmlPath);
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Read model failed: " << e.what();
+    return false;
+  }
+  return true;
+}
+
+bool BackgroundBlur::LoadModel(const std::string& device) {
+  try {
+    model_.LoadModel(device);
   } catch (const std::exception& e) {
     RTC_LOG(LS_ERROR) << "Load model failed: " << e.what();
     return false;
@@ -32,12 +41,7 @@ bool BackgroundBlur::LoadModel(const std::string& modelXmlPath,
 
 bool BackgroundBlur::SetParameter(const std::string& key, int value) {
   if (key == "blur_radius") {
-    try {
-      blur_radius_ = value;
-    } catch (const std::exception& e) {
-      RTC_LOG(LS_ERROR) << "Set blur_radius failed: " << e.what();
-      return false;
-    }
+    blur_radius_ = value;
     return true;
   }
   return owt::base::VideoFramePostProcessor::SetParameter(key, value);

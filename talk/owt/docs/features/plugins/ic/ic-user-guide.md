@@ -25,6 +25,7 @@ them.
 ```cpp
 std::shared_ptr<owt::base::VideoFramePostProcessor> post_processor =
     ic_plugin->CreatePostProcessor(owt::ic::ICPostProcessor::BACKGROUND_BLUR);
+// do some preparation, see below
 owt::base::LocalCameraStreamParameters param(true, true);
 param.PostProcessors().push_back(post_processor);
 ```
@@ -41,10 +42,13 @@ to get a background blur post processor instance.
 
 ### Model
 This post-processor use a neural network model, which can be found at
-[owt-selfie-segmentation-144x256.xml](https://github.com/open-webrtc-toolkit/owt-model-zoo/raw/main/selfie-segmentation/144x256/owt-selfie-segmentation-144x256.xml) and 
-[owt-selfie-segmentation-144x256.bin](https://github.com/open-webrtc-toolkit/owt-model-zoo/raw/main/selfie-segmentation/144x256/owt-selfie-segmentation-144x256.bin). Download them and save to your project, then call `SetParameter` to load
-the model. You only need to specify the path to `.xml` file, and the `.bin` file
-should be in the same directory to be automatically loaded by the framework.
+[owt-selfie-segmentation-144x256.xml](https://github.com/open-webrtc-toolkit/owt-model-zoo/raw/main/selfie-segmentation/144x256/owt-selfie-segmentation-144x256.xml)
+and 
+[owt-selfie-segmentation-144x256.bin](https://github.com/open-webrtc-toolkit/owt-model-zoo/raw/main/selfie-segmentation/144x256/owt-selfie-segmentation-144x256.bin).
+Download and save them to your project, then call `ReadModel` and `LoadModel` to
+prepare the model. When reading model, you only need to specify the path to
+`.xml` file, and the `.bin` file should be in the same directory, which will be
+automatically loaded by the framework.
 
 Note that the loading process will taken place in the function, so this may be
 time-consuming depends on the model's size. Make sure you call this in a proper
@@ -54,20 +58,18 @@ The function will return false if there is any error, and the error
 message will be printed to the log output.
 
 ```cpp
-background_blur->LoadModel("/path/to/model.xml", "CPU");
+background_blur->ReadModel("/path/to/model.xml");
+background_blur->LoadModel("CPU");
 ```
 
 ### Parameters
 **blur_radius**: A positive integer representing the blur radius used in
 Gaussian blur processing to the background. The larger the blur radius is, the
 more blurred will the frame be, and vise versa. Zero or negative blur_radius
-will making the Gaussian blur taking no effect. Default: 55.
+will lead to the Gaussian blur taking no effect. Default: 55.
 
 ### Sample
 ```cpp
-owt::ic::ICManagerInterface* ic_plugin = owt::base::PluginManager::ICPlugin();
-std::shared_ptr<owt::base::VideoFramePostProcessor> background_blur =
-    ic_plugin->CreatePostProcessor(owt::ic::ICPostProcessor::BACKGROUND_BLUR);
 background_blur->SetParameter("blur_radius", 55);
 ```
 

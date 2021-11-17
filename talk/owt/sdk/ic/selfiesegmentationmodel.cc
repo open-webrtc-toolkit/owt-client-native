@@ -4,37 +4,31 @@
 
 #include "selfiesegmentationmodel.h"
 
-#include <algorithm>
-#include <vector>
-
-#include "talk/owt/sdk/ic/icmanager.h"
-#include "third_party/webrtc/rtc_base/logging.h"
-
 namespace IE = InferenceEngine;
 
 namespace owt {
 namespace ic {
 
-SelfieSegmentationModel::SelfieSegmentationModel(InferenceEngine::Core& core)
+SelfieSegmentationModel::SelfieSegmentationModel(IE::Core& core)
     : core_(core) {}
 
-void SelfieSegmentationModel::LoadModel(const std::string& xmlPath,
-                                        const std::string& device) {
-  InferenceEngine::CNNNetwork network = core_.ReadNetwork(xmlPath);
-  IE_ASSERT(network.getInputsInfo().empty() ||
-            network.getOutputsInfo().empty());
-  input_name_ = network.getInputsInfo().begin()->first;
-  output_name_ = network.getOutputsInfo().begin()->first;
-  IE::DataPtr outputData = network.getOutputsInfo().begin()->second;
+void SelfieSegmentationModel::ReadModel(const std::string& modelXmlPath) {
+  network_ = core_.ReadNetwork(modelXmlPath);
+  auto input_info = network_.getInputsInfo();
+  auto output_info = network_.getOutputsInfo();
+  IE_ASSERT(input_info.size() == 1);
+  IE_ASSERT(output_info.size() == 1);
+  input_name_ = input_info.begin()->first;
+  output_name_ = output_info.begin()->first;
+  IE::DataPtr outputData = output_info.begin()->second;
   outputData->setPrecision(IE::Precision::U8);
   output_shape_ = outputData->getTensorDesc().getDims();
-
-  IE::PreProcessInfo& preprocess =
-      network.getInputsInfo()[input_name_]->getPreProcess();
+  IE::PreProcessInfo& preprocess = input_info[input_name_]->getPreProcess();
   preprocess.setResizeAlgorithm(IE::ResizeAlgorithm::RESIZE_BILINEAR);
+}
 
-  InferenceEngine::ExecutableNetwork executableNetwork =
-      core_.LoadNetwork(network, device);
+void SelfieSegmentationModel::LoadModel(const std::string& device) {
+  IE::ExecutableNetwork executableNetwork = core_.LoadNetwork(network_, device);
   request_ = executableNetwork.CreateInferRequest();
 }
 
@@ -43,7 +37,7 @@ bool SelfieSegmentationModel::IsLoaded() const {
 }
 
 cv::Mat SelfieSegmentationModel::Predict(const cv::Mat& frame) {
-  CV_DbgAssert(frame.type() == CV_32FC3);
+  IE_ASSERT(frame.type() == CV_32FC3);
   IE::SizeVector inputShape = {1, 3, static_cast<size_t>(frame.rows),
                                static_cast<size_t>(frame.cols)};
   auto blob = IE::make_shared_blob(

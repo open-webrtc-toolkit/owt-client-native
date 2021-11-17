@@ -27,15 +27,31 @@ class VideoFramePostProcessor {
  public:
   virtual ~VideoFramePostProcessor() {}
 
-  virtual bool LoadModel(const std::string& modelXmlPath,
-      const std::string& device) {
+  /**
+    @brief Read the model from the specific file path.
+    @param modelXmlPath The path to IR model description .xml file.
+    @return Whether the process succeeds.
+  */
+  virtual bool ReadModel(const std::string& modelXmlPath) {
+    RTC_LOG(LS_ERROR) << "ReadModel is not implemented";
+    return false;
+  }
+
+  /**
+    @brief Read the model to specific device.
+    @param device The device name. Must be "CPU" for now.
+    @return Whether the process succeeds.
+  */
+  virtual bool LoadModel(const std::string& device) {
     RTC_LOG(LS_ERROR) << "LoadModel is not implemented";
     return false;
   }
 
   /**
     @brief Set the parameter of the processor. The content of key and value
-    should follow the definition in the sub-class.
+    should follow the definition of the sub-class, see documents for more
+    detail.
+    @return Whether the process succeeds.
   */
   virtual bool SetParameter(const std::string& key, int value) {
     RTC_LOG(LS_ERROR) << "Set parameter failed: Unknown key " << key;

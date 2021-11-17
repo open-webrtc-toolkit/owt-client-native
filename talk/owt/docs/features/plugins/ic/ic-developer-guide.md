@@ -22,7 +22,7 @@ to catch and handle all exceptions. Exceptions are not expected in the main OWT.
 To make it possible for creating your post processor by `CreatePostProcessor`
 method., change the code in `talk/owt/sdk/ic/icmanager.cc`. You may get the
 inference engine core instance from the `ICManager`. You also need to add new
-enumeration item of `owt::ic::ICPostProcessor` into
+enumeration item of `owt::ic::ICPostProcessor` in
 `talk/owt/sdk/include/cpp/owt/ic/icmanagerinterface.h`.
 
 Finally, update the `ic-user-guide.md` to introduce the parameters' usage to the

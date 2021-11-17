@@ -79,8 +79,8 @@ shared_library("owt_ic") {
     "//third_party/webrtc/api/video:video_frame",
   ]
   data_deps = [
-    # ":openvino_library",
-    # ":openvino_opencv_library",
+    ":openvino_library",
+    ":openvino_opencv_library",
   ]
 }
 

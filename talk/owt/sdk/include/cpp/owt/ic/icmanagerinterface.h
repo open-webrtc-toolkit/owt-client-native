@@ -16,7 +16,7 @@ namespace ic {
 /// The type of IC post processor
 enum class ICPostProcessor { BACKGROUND_BLUR };
 
-/// The IC plugin manager, for creating the post processor instance.
+/// The IC plugin manager, which creates the post processor instance.
 class ICManagerInterface {
  public:
   virtual ~ICManagerInterface() = default;
@@ -25,6 +25,8 @@ class ICManagerInterface {
     @brief Register inference engine plugins.
     @param plugins_xml_path The path to plugins.xml of OpenVINO Inference
     Engine.
+    @return Whether the process succeeds. In case of failure, the error message
+    will be printed to RTC log.
   */
   virtual bool RegisterInferenceEnginePlugins(
       const std::string& plugins_xml_path) = 0;

@@ -30,7 +30,7 @@ SharedObjectLoader::SharedObjectLoader(const char* path)
     : shared_object_(LoadLibraryA(path), FreeLibrary) {
   if (!shared_object_) {
     DWORD message_id = GetLastError();
-    RTC_LOG(LS_WARNING) << "Shared object " << path << " is not loaded. "
+    RTC_LOG(LS_WARNING) << "Load shared library " << path << " failed. "
                         << "Error code " << message_id << ": "
                         << GetErrorAsString(message_id);
   }
