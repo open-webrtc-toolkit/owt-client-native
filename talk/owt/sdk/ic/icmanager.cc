@@ -17,14 +17,15 @@ bool ICManager::RegisterInferenceEnginePlugins(
     try {
       core_.reset(new InferenceEngine::Core(plugins_xml_path));
     } catch (const std::exception& e) {
-      RTC_LOG(LS_ERROR) << "Cannot initialize inference engine core: " << e.what();
+      RTC_LOG(LS_ERROR) << "Cannot initialize inference engine core: "
+                        << e.what();
       return false;
     }
   }
   try {
     core_->RegisterPlugins(plugins_xml_path);
   } catch (const std::exception& e) {
-    RTC_LOG(LS_ERROR) << "Failed to register inference engine plugins: "
+    RTC_LOG(LS_ERROR) << "Cannot register inference engine plugins: "
                       << e.what();
     return false;
   }
