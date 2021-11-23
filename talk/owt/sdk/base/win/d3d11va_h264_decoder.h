@@ -70,6 +70,8 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   CComPtr<ID3D11DeviceContext> d3d11_device_context_;
   CComPtr<ID3D11VideoDevice> d3d11_video_device_;
   CComPtr<ID3D11VideoContext> d3d11_video_context_;
+  CComQIPtr<IDXGIAdapter> m_padapter_;
+  CComPtr<IDXGIFactory2> m_pdxgi_factory_;
   std::unique_ptr<D3D11VAHandle> surface_handle_;
   std::vector<uint8_t> current_side_data_;
   std::unordered_map<uint32_t, std::vector<uint8_t>> side_data_list_;
