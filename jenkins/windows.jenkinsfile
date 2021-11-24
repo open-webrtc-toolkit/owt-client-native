@@ -15,7 +15,7 @@ pipeline {
         timeout(time: 40, unit: "MINUTES")
     }
     stages {
-        stage("init paramters"){
+        stage("InitParamters"){
             steps {
                 script {
                     if (env.CHANGE_TARGET == null){
@@ -35,7 +35,7 @@ pipeline {
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdk.bat %GIT_COMMIT%"
+                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdkOpenVINO.bat %GIT_COMMIT%"
                     }
                 }
                 stage("startMcu") {
@@ -65,48 +65,60 @@ pipeline {
                 }
             }
         }
-        stage("BulidConference") {
-            agent{
-                node {
-                    label "windows"
+        stage("Test") {
+            parallel {
+                stage("Conference") {
+                    stages {
+                        stage("BulidConference") {
+                            agent{
+                                node {
+                                    label "windows"
+                                }
+                            }
+                            steps {
+                                echo "Buliding.."
+                                bat "%windowsConferenceCasePath%/build.bat"
+                            }
+                        }
+                        stage("TestConference") {
+                            agent{
+                                node {
+                                    label "windows"
+                                }
+                            }
+                            steps {
+                                echo "Testing.."
+                                bat "%windowsConferenceCasePath%/runCase.bat"
+                            }
+                        }
+                    }
                 }
-            }
-            steps {
-                echo "Buliding.."
-                bat "%windowsConferenceCasePath%/build.bat"
-            }
-        }
-        stage("BulidTestP2P") {
-            agent{
-                node {
-                    label "windows"
+                stage("P2P") {
+                    stages {
+                        stage("BulidP2P") {
+                            agent{
+                                node {
+                                    label "windows"
+                                }
+                            }
+                            steps {
+                                echo "Buliding.."
+                                bat "%windowsP2PCasePath%/build.bat"
+                            }
+                        }
+                        stage("TestP2P") {
+                            agent{
+                                node {
+                                    label "windows"
+                                }
+                            }
+                            steps {
+                                echo "Testing.."
+                                bat "%windowsP2PCasePath%/runCase.bat"
+                            }
+                        }
+                    }
                 }
-            }
-            steps {
-                echo "Buliding.."
-                bat "%windowsP2PCasePath%/build.bat"
-            }
-        }
-        stage("TestConference") {
-            agent{
-                node {
-                    label "windows"
-                }
-            }
-            steps {
-                echo "Testing.."
-                bat "%windowsConferenceCasePath%/runCase.bat"
-            }
-        }
-        stage("TestP2P") {
-            agent{
-                node {
-                    label "windows"
-                }
-            }
-            steps {
-                echo "Testing.."
-                bat "%windowsP2PCasePath%/runCase.bat"
             }
         }
     }
