@@ -86,7 +86,7 @@ def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
         try:
             output = subprocess.check_output([opencv_version_bin])
             opencv_version = ''.join(re.findall('\d', output.decode()))
-            gn_args.append('owt_opencv_root={}'.format(opencv_root))
+            gn_args.append('owt_opencv_root="{}"'.format(opencv_root))
             gn_args.append('owt_opencv_version={}'.format(opencv_version))
         except FileNotFoundError as e:
             print('File not found: {}'.format(opencv_version_bin))

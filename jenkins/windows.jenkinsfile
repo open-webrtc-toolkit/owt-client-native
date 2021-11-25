@@ -26,7 +26,7 @@ pipeline {
         }
         stage("BuildAndEnv"){
             parallel {
-                stage("build") {
+                stage("Build") {
                     agent{
                         node {
                             label "windows"
@@ -38,7 +38,7 @@ pipeline {
                         bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdkOpenVINO.bat %GIT_COMMIT%"
                     }
                 }
-                stage("startMcu") {
+                stage("StartMcu") {
                     agent{
                         node {
                             label "$env.windowsServer"
@@ -51,7 +51,7 @@ pipeline {
                         }
                     }
                 }
-                stage("startP2PServer") {
+                stage("StartP2PServer") {
                     agent{
                         node {
                             label "$env.windowsServer"
@@ -66,7 +66,7 @@ pipeline {
             }
         }
         stage("Test") {
-            parallel {
+            stages {
                 stage("Conference") {
                     stages {
                         stage("BulidConference") {
