@@ -63,10 +63,10 @@ opencv_modules = [
 ]
 
 config("openvino") {
-  defines = [
-    "OWT_USE_OPENVINO",
-    "_ITERATOR_DEBUG_LEVEL=2",
-  ]
+  defines = [ "OWT_USE_OPENVINO" ]
+  if (is_debug) {
+    defines += [ "_ITERATOR_DEBUG_LEVEL=2" ]
+  }
   include_dirs = openvino_include_dirs
   lib_dirs = [ lib_dir ]
 }
