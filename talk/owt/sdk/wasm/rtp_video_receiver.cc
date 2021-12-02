@@ -10,16 +10,16 @@ namespace owt {
 namespace wasm {
 
 RtpVideoReceiver::RtpVideoReceiver(
+    webrtc::TaskQueueBase* current_queue,
     webrtc::Transport* transport,
     const webrtc::VideoReceiveStream::Config* config,
     webrtc::ReceiveStatistics* rtp_receive_statistics,
-    webrtc::ProcessThread* process_thread,
-    webrtc::NackSender* nack_sender)
+    webrtc::ProcessThread* process_thread)
     : receiver_(nullptr), complete_frame_callback_(emscripten::val::null()) {
   receiver_ = std::make_unique<webrtc::RtpVideoStreamReceiver2>(
-      nullptr, webrtc::Clock::GetRealTimeClock(), transport, nullptr, nullptr,
-      config, rtp_receive_statistics, nullptr, nullptr, process_thread,
-      nack_sender, nullptr, this, nullptr, nullptr);
+      current_queue, webrtc::Clock::GetRealTimeClock(), transport, nullptr,
+      nullptr, config, rtp_receive_statistics, nullptr, nullptr, process_thread,
+      this, nullptr, this, nullptr, nullptr);
   webrtc::VideoCodec codec;
   codec.codecType = webrtc::VideoCodecType::kVideoCodecH264;
   // TODO: Assign payload value dynamically according to server side
@@ -51,6 +51,15 @@ void RtpVideoReceiver::OnCompleteFrame(
 
 void RtpVideoReceiver::SetCompleteFrameCallback(emscripten::val callback) {
   complete_frame_callback_ = callback;
+}
+
+void RtpVideoReceiver::SendNack(const std::vector<uint16_t>& sequence_numbers,
+                                bool buffering_allowed) {
+  // Only buffering_allowed == true is supported. Same as
+  // https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/video_receive_stream2.h;l=157;bpv=1;bpt=1
+  RTC_DCHECK(buffering_allowed);
+  RTC_LOG(LS_INFO)<<"Request packet rtx";
+  receiver_->RequestPacketRetransmit(sequence_numbers);
 }
 
 }  // namespace wasm

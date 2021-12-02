@@ -66,8 +66,11 @@ template("wasm_lib") {
       "MEMFS_APPEND_TO_TYPED_ARRAYS=1",
 
       # Reduces global namespace pollution.
-      # "-s",
-      # "MODULARIZE=1",
+      "-s",
+      "MODULARIZE=1",
+
+      "-s",
+      "EXPORT_ES6=1",
 
       #"-fno-stack-protector",
 
@@ -81,7 +84,7 @@ template("wasm_lib") {
       "--bind",
 
       "-s",
-      "PTHREAD_POOL_SIZE=2",
+      "PTHREAD_POOL_SIZE=5",
 
       "-pthread",
       

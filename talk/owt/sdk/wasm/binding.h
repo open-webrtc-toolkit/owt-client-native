@@ -15,8 +15,8 @@ namespace wasm {
 EMSCRIPTEN_BINDINGS(Owt) {
   emscripten::class_<MediaSession>("MediaSession")
       .constructor<>()
-      .function("createRtpVideoReceiver",
-                &MediaSession::CreateRtpVideoReceiver);
+      .function("createRtpVideoReceiver", &MediaSession::CreateRtpVideoReceiver)
+      .function("setRtcpCallback", &MediaSession::SetRtcpCallback);
   emscripten::class_<RtpVideoReceiver>("RtpVideoReceiver")
       .smart_ptr<std::shared_ptr<RtpVideoReceiver>>("RtpVideoReceiver")
       .function("onRtpPacket", &RtpVideoReceiver::OnRtpPacket,
