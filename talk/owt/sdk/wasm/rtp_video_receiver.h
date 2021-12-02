@@ -11,13 +11,14 @@
 namespace owt {
 namespace wasm {
 class RtpVideoReceiver
-    : public webrtc::RtpVideoStreamReceiver2::OnCompleteFrameCallback {
+    : public webrtc::RtpVideoStreamReceiver2::OnCompleteFrameCallback,
+      public webrtc::NackSender {
  public:
-  explicit RtpVideoReceiver(webrtc::Transport* transport,
+  explicit RtpVideoReceiver(webrtc::TaskQueueBase* current_queue,
+                            webrtc::Transport* transport,
                             const webrtc::VideoReceiveStream::Config* config,
                             webrtc::ReceiveStatistics* rtp_receive_statistics,
-                            webrtc::ProcessThread* process_thread,
-                            webrtc::NackSender* nack_sender);
+                            webrtc::ProcessThread* process_thread);
   virtual ~RtpVideoReceiver() {}
   virtual bool OnRtpPacket(uintptr_t packet_ptr, size_t packet_size);
 
@@ -26,6 +27,10 @@ class RtpVideoReceiver
       std::unique_ptr<webrtc::video_coding::EncodedFrame> frame) override;
 
   void SetCompleteFrameCallback(emscripten::val callback);
+
+  // Overrides webrtc::NackSender.
+  void SendNack(const std::vector<uint16_t>& sequence_numbers,
+                bool buffering_allowed) override;
 
  private:
   std::unique_ptr<webrtc::RtpVideoStreamReceiver2> receiver_;
