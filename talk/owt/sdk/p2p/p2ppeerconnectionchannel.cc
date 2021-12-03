@@ -1135,22 +1135,23 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
           stream->MediaStream();
       RTC_CHECK(temp_pc_);
       for (const auto& track : media_stream->GetAudioTracks()) {
-        const auto& senders = temp_pc_->GetSenders();
-        for (auto& s : senders) {
-          const auto& t = s->track();
-          if (t != nullptr && t->id() == track->id()) {
-            temp_pc_->RemoveTrack(s);
+        const auto& transceivers = temp_pc_->GetTransceivers();
+        for (auto& transceiver : transceivers) {
+          const auto& ttrack = transceiver->sender()->track();
+          if (ttrack != nullptr && ttrack->id() == track->id()) {
+            transceiver->Stop();
+            temp_pc_->RemoveTrackNew(transceiver->sender());
             break;
           }
         }
-
       }
       for (const auto& track : media_stream->GetVideoTracks()) {
-        const auto& senders = temp_pc_->GetSenders();
-        for (auto& s : senders) {
-          const auto& t = s->track();
-          if (t != nullptr && t->id() == track->id()) {
-            temp_pc_->RemoveTrack(s);
+        const auto& transceivers = temp_pc_->GetTransceivers();
+        for (auto& transceiver : transceivers) {
+          const auto& ttrack = transceiver->sender()->track();
+          if (ttrack != nullptr && ttrack->id() == track->id()) {
+            transceiver->Stop();
+            temp_pc_->RemoveTrackNew(transceiver->sender());
             break;
           }
         }
