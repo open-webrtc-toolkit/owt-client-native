@@ -24,7 +24,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
   bool is_h264_hw_supported = false, is_av1_hw_supported = false;
 #ifdef WEBRTC_USE_H265
-// TODO: Add logic to detect plugin by MSDK.
+  // TODO: Add logic to detect plugin by MSDK.
   bool is_h265_hw_supported = true;
 #endif
 
@@ -83,7 +83,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
 #ifdef WEBRTC_USE_H265
     else if (codec == webrtc::kVideoCodecH265) {
       h265_hw = true;
-      RTC_LOG(LS_ERROR) << "Enabling hardware hevc.";
+      RTC_LOG(LS_INFO) << "Enabling hardware hevc.";
     }
 #endif
   }
@@ -91,14 +91,14 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return webrtc::VP9Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) &&
              !vp8_hw) {
-    RTC_LOG(LS_ERROR) << "Not supporting HW VP8 decoder. Requesting SW decoding.";
+    RTC_LOG(LS_INFO) << "Not supporting HW VP8 decoder. Requesting SW decoding.";
     return webrtc::VP8Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) && !h264_hw) {
     return webrtc::H264Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
              !av1_hw) {
     return webrtc::CreateLibaomAv1Decoder();
-  } 
+  }
 #ifdef WEBRTC_USE_H265
   // This should not happen. We do not return here but preceed with HW decoder.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
@@ -125,6 +125,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     supported_codecs.push_back(format);
   }
 #endif
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   return supported_codecs;
 }
 

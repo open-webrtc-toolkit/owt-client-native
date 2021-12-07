@@ -37,6 +37,7 @@ std::vector<webrtc::SdpVideoFormat>
 EncodedVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   // TODO: We should combine the codec profiles that hardware H.264 encoder
