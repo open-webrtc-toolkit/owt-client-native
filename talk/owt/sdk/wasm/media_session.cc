@@ -32,8 +32,10 @@ MediaSession::MediaSession()
   call_ = std::unique_ptr<webrtc::Call>(webrtc::Call::Create(config));
 }
 
-std::shared_ptr<RtpVideoReceiver> MediaSession::CreateRtpVideoReceiver() {
+std::shared_ptr<RtpVideoReceiver> MediaSession::CreateRtpVideoReceiver(
+    uint32_t remote_ssrc) {
   webrtc::VideoReceiveStream::Config config(this);
+  config.rtp.remote_ssrc = remote_ssrc;
   config.rtp.local_ssrc = 1;
   // Same as `kNackRtpHistoryMs` in third_party/webrtc/media/engine/webrtc_voice_engine.cc.
   config.rtp.nack.rtp_history_ms = 5000;

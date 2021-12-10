@@ -18,7 +18,8 @@ class MediaSession : public webrtc::Transport {
  public:
   explicit MediaSession();
   virtual ~MediaSession() = default;
-  std::shared_ptr<RtpVideoReceiver> CreateRtpVideoReceiver();
+  std::shared_ptr<RtpVideoReceiver> CreateRtpVideoReceiver(
+      uint32_t remote_ssrc);
   void SetRtcpCallback(emscripten::val callback);
 
   // Overrides webrtc::Transport.
