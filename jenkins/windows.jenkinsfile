@@ -15,7 +15,7 @@ pipeline {
         timeout(time: 40, unit: "MINUTES")
     }
     stages {
-        stage("InitParamters"){
+        stage("init paramters"){
             steps {
                 script {
                     if (env.CHANGE_TARGET == null){
@@ -26,7 +26,7 @@ pipeline {
         }
         stage("BuildAndEnv"){
             parallel {
-                stage("Build") {
+                stage("build") {
                     agent{
                         node {
                             label "windows"
@@ -38,7 +38,7 @@ pipeline {
                         bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdkOpenVINO.bat %GIT_COMMIT%"
                     }
                 }
-                stage("StartMcu") {
+                stage("startMcu") {
                     agent{
                         node {
                             label "$env.windowsServer"
@@ -51,7 +51,7 @@ pipeline {
                         }
                     }
                 }
-                stage("StartP2PServer") {
+                stage("startP2PServer") {
                     agent{
                         node {
                             label "$env.windowsServer"
@@ -73,7 +73,7 @@ pipeline {
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsConferenceCasePath%/buildMD.bat"
+                bat "%windowsConferenceCasePath%/build.bat --configuration Release-MD"
             }
         }        
         stage("BulidP2P") {
@@ -84,7 +84,7 @@ pipeline {
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsP2PCasePath%/buildMD.bat"
+                bat "%windowsP2PCasePath%/build.bat --configuration Release-MD"
             }
         }
         stage("TestConference") {
