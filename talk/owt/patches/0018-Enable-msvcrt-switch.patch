@@ -1,0 +1,33 @@
+From 0105cb7e2fe398e7707d19089d063d2d87418018 Mon Sep 17 00:00:00 2001
+From: Zhibo Wang <zhibo1.wang@intel.com>
+Date: Fri, 19 Nov 2021 15:04:19 +0800
+Subject: [PATCH] Enable msvcrt switch
+
+---
+ config/win/BUILD.gn | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
+index 51437c66c..1d02e0600 100644
+--- a/config/win/BUILD.gn
++++ b/config/win/BUILD.gn
+@@ -11,6 +11,7 @@ import("//build/config/win/visual_studio_version.gni")
+ import("//build/timestamp.gni")
+ import("//build/toolchain/goma.gni")
+ import("//build/toolchain/toolchain.gni")
++import("//build_overrides/owt.gni")
+ 
+ assert(is_win)
+ 
+@@ -473,7 +474,7 @@ config("delayloads_not_for_child_dll") {
+ # See https://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx for a reference of
+ # what each value does.
+ config("default_crt") {
+-  if (is_component_build) {
++  if (is_component_build || owt_msvcrt) {
+     # Component mode: dynamic CRT. Since the library is shared, it requires
+     # exceptions or will give errors about things not matching, so keep
+     # exceptions on.
+-- 
+2.33.0
+

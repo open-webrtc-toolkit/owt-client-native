@@ -1,0 +1,10 @@
+# Copyright (C) <2021> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+declare_args() {
+  owt_msdk_lib_root = ""
+  owt_msdk_header_root = ""
+  owt_build_ic = false
+  owt_msvcrt = false
+}

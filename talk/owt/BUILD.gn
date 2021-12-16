@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build_overrides/webrtc.gni")
+import("//build_overrides/owt.gni")
 import("//testing/test.gni")
 
 declare_args() {
   include_internal_audio_device = true
-  owt_msdk_lib_root = ""
-  owt_msdk_header_root = ""
 }
 
 # Introduced for using libvpx config files. We only enable libvpx rate
@@ -109,6 +108,7 @@ static_library("owt_sdk_base") {
     "sdk/base/peerconnectionchannel.h",
     "sdk/base/peerconnectiondependencyfactory.cc",
     "sdk/base/peerconnectiondependencyfactory.h",
+    "sdk/base/pluginmanager.cc",
     "sdk/base/sdputils.cc",
     "sdk/base/sdputils.h",
     "sdk/base/stream.cc",
@@ -128,7 +128,9 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp/owt/base/framegeneratorinterface.h",
     "sdk/include/cpp/owt/base/localcamerastreamparameters.h",
     "sdk/include/cpp/owt/base/logging.h",
+    "sdk/include/cpp/owt/base/pluginmanager.h",
     "sdk/include/cpp/owt/base/stream.h",
+    "sdk/include/cpp/owt/base/videoframepostprocessor.h",
     "sdk/include/cpp/owt/base/videorendererinterface.h",
   ]
   if (is_win || is_linux) {
@@ -141,10 +143,13 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideosource.h",
       "sdk/base/encodedvideoencoderfactory.cc",
       "sdk/base/encodedvideoencoderfactory.h",
+      "sdk/base/sharedobjectloader.h",
+      "sdk/base/sharedobjectpointer.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/base/windowcapturer.cc",
       "sdk/include/cpp/owt/base/videodecoderinterface.h",
+      "sdk/include/cpp/owt/ic/icmanagerinterface.h",
     ]
   }
   public_deps = [
@@ -261,6 +266,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/device_info_mf.cc",
       "sdk/base/win/video_capture_mf.h",
       "sdk/base/win/video_capture_mf.cc",
+      "sdk/base/win/sharedobjectloader.cc",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
     
@@ -286,6 +292,7 @@ static_library("owt_sdk_base") {
       ]
     }
     sources += [
+        "sdk/base/linux/sharedobjectloader.cc",
         "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/linux/videorenderlinux.cc",
         "sdk/base/linux/videorenderlinux.h",
@@ -315,6 +322,10 @@ static_library("owt_sdk_base") {
       "-Wno-microsoft-extra-qualification",
       "-Wno-reorder",
     ]
+  }
+  if (owt_build_ic) {
+    defines += [ "OWT_BUILD_IC" ]
+    data_deps = [ "sdk/ic:owt_ic" ]
   }
 }
 static_library("owt_sdk_p2p") {
@@ -498,7 +509,10 @@ if (owt_include_tests) {
 
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
-    deps = [ ":owt_unittests" ]
+    deps = [
+      ":owt_unittests",
+      "//talk/owt/sdk/sample",
+    ]
   }
   test("owt_unittests") {
     testonly = true

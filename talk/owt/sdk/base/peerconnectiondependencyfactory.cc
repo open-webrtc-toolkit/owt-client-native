@@ -47,6 +47,7 @@
 #pragma comment(lib, "wmcodecdspuuid.lib")
 #pragma comment(lib, "amstrmid.lib")
 #pragma comment(lib, "strmiids.lib")
+#pragma comment(lib, "dcomp.lib")
 #ifdef OWT_USE_MSDK
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "mfplat.lib")

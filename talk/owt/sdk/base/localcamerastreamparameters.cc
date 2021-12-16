@@ -29,6 +29,10 @@ void LocalCameraStreamParameters::Resolution(int width, int height) {
 void LocalCameraStreamParameters::StreamName(const std::string& stream_name){
   stream_name_ = stream_name;
 }
+std::vector<std::shared_ptr<owt::base::VideoFramePostProcessor>>&
+LocalCameraStreamParameters::PostProcessors() {
+  return post_processors_;
+}
 LocalDesktopStreamParameters::LocalDesktopStreamParameters(
     bool audio_enabled,
     bool video_enabled)

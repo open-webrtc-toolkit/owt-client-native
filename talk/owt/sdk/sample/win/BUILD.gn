@@ -1,0 +1,11 @@
+# Copyright (C) <2021> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+import("//build_overrides/owt.gni")
+import("//build_overrides/webrtc.gni")
+import("//testing/test.gni")
+
+group("sample_win") {
+  deps = [ "sample_background_blur" ]
+}

@@ -1,0 +1,146 @@
+# Copyright (C) <2021> Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+import("//build_overrides/owt.gni")
+import("//build_overrides/webrtc.gni")
+import("//testing/test.gni")
+
+declare_args() {
+  owt_openvino_root = ""
+  owt_openvino_source_code = false
+  owt_opencv_root = ""
+  owt_opencv_version = 0
+}
+
+# Currently OpenVINO is used only in IC plugin, so check args in file scope.
+assert(owt_openvino_root != "", "owt_openvino_root is not set")
+assert(owt_opencv_root != "" && owt_opencv_version != 0,
+       "owt_opencv_root or owt_opencv_version is not set")
+
+if (is_debug) {
+  capitalized_scheme = "Debug"
+  lib_suffix = "d.lib"
+  dll_suffix = "d.dll"
+} else {
+  capitalized_scheme = "Release"
+  lib_suffix = ".lib"
+  dll_suffix = ".dll"
+}
+
+if (owt_openvino_source_code) {
+  inference_engine_root = owt_openvino_root + "/inference-engine"
+  bin_dir = owt_openvino_root + "/bin/intel64/" + capitalized_scheme
+  lib_dir = bin_dir
+  ngraph_bin_dir = bin_dir
+  tbb_bin_dir = inference_engine_root + "/temp/tbb/bin"
+  openvino_include_dirs = [
+    inference_engine_root + "/src/inference_engine/include/ie",
+    owt_openvino_root + "/ngraph/core/include",
+  ]
+} else {
+  inference_engine_root = owt_openvino_root + "/inference_engine"
+  bin_dir = inference_engine_root + "/bin/intel64/" + capitalized_scheme
+  lib_dir = inference_engine_root + "/lib/intel64/" + capitalized_scheme
+  ngraph_bin_dir = owt_openvino_root + "/deployment_tools/ngraph/lib"
+  tbb_bin_dir = inference_engine_root + "/external/tbb/bin"
+  openvino_include_dirs = [ inference_engine_root + "/include" ]
+}
+
+openvino_modules = [
+  "ir_reader",
+  "lp_transformations",
+  "preproc",
+  "transformations",
+]
+
+opencv_modules = [
+  "core",
+  "highgui",
+  "imgcodecs",
+  "imgproc",
+  "videoio",
+]
+
+config("openvino") {
+  defines = [ "OWT_USE_OPENVINO" ]
+  if (is_debug) {
+    defines += [ "_ITERATOR_DEBUG_LEVEL=2" ]
+  }
+  include_dirs = openvino_include_dirs
+  lib_dirs = [ lib_dir ]
+}
+
+config("openvino_opencv") {
+  defines = [ "OWT_USE_OPENCV" ]
+  include_dirs = [ owt_opencv_root + "/include" ]
+  lib_dirs = [ owt_opencv_root + "/lib" ]
+}
+
+shared_library("owt_ic") {
+  sources = [
+    "backgroundblur.cc",
+    "backgroundblur.h",
+    "icmanager.cc",
+    "icmanager.h",
+    "selfiesegmentationmodel.cc",
+    "selfiesegmentationmodel.h",
+  ]
+  defines = [ "OWT_IC_IMPL" ]
+  configs -= [
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+  configs += [
+    ":openvino",
+    ":openvino_opencv",
+  ]
+  include_dirs = [ "//talk/owt/sdk/include/cpp" ]
+  libs = [
+    "inference_engine" + lib_suffix,
+    "inference_engine_transformations" + lib_suffix,
+  ]
+  foreach(module, opencv_modules) {
+    libs += [ "opencv_" + module + owt_opencv_version + lib_suffix ]
+  }
+  deps = [
+    "//third_party/libyuv:libyuv",
+    "//third_party/webrtc/api/video:video_frame",
+  ]
+  data_deps = [
+    ":openvino_library",
+    ":openvino_opencv_library",
+  ]
+}
+
+copy("openvino_library") {
+  sources = [ ngraph_bin_dir + "/ngraph" + dll_suffix ]
+  if (is_debug) {
+    sources += [ tbb_bin_dir + "/tbb_debug.dll" ]
+  } else {
+    sources += [ tbb_bin_dir + "/tbb.dll" ]
+  }
+  sources += [
+    bin_dir + "/inference_engine" + dll_suffix,
+    bin_dir + "/MKLDNNPlugin" + dll_suffix,
+  ]
+  foreach(module, openvino_modules) {
+    sources += [ bin_dir + "/inference_engine_" + module + dll_suffix ]
+  }
+  if (owt_openvino_source_code && is_debug) {
+    foreach(dll_file, sources) {
+      sources += [ string_replace(dll_file, ".dll", ".pdb") ]
+    }
+  }
+  sources += [ bin_dir + "/plugins.xml" ]
+  outputs = [ "$root_build_dir/{{source_file_part}}" ]
+}
+
+copy("openvino_opencv_library") {
+  sources = []
+  foreach(module, opencv_modules) {
+    sources += [ owt_opencv_root + "/bin/opencv_" + module +
+                 owt_opencv_version + dll_suffix ]
+  }
+  outputs = [ "$root_build_dir/{{source_file_part}}" ]
+}

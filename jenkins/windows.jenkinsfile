@@ -35,7 +35,7 @@ pipeline {
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdk.bat %GIT_COMMIT%"
+                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdk.bat %GIT_COMMIT% --with-openvino"
                     }
                 }
                 stage("startMcu") {
@@ -73,10 +73,10 @@ pipeline {
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsConferenceCasePath%/build.bat"
+                bat "%windowsConferenceCasePath%/build.bat --configuration Release-MD"
             }
         }
-        stage("BulidTestP2P") {
+        stage("BulidP2P") {
             agent{
                 node {
                     label "windows"
@@ -84,7 +84,7 @@ pipeline {
             }
             steps {
                 echo "Buliding.."
-                bat "%windowsP2PCasePath%/build.bat"
+                bat "%windowsP2PCasePath%/build.bat --configuration Release-MD"
             }
         }
         stage("TestConference") {
@@ -95,7 +95,7 @@ pipeline {
             }
             steps {
                 echo "Testing.."
-                bat "%windowsConferenceCasePath%/runCase.bat"
+                bat "%windowsConferenceCasePath%/runCase.bat --configuration Release-MD"
             }
         }
         stage("TestP2P") {
@@ -106,7 +106,7 @@ pipeline {
             }
             steps {
                 echo "Testing.."
-                bat "%windowsP2PCasePath%/runCase.bat"
+                bat "%windowsP2PCasePath%/runCase.bat --configuration Release-MD"
             }
         }
     }

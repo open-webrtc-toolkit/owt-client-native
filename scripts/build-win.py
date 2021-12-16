@@ -11,6 +11,7 @@ Output lib is located in out/owt-debug(release).lib.
 '''
 
 import os
+import re
 import sys
 import subprocess
 import argparse
@@ -35,7 +36,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
+def gngen(arch, ssl_root, msdk_root, quic_root, openvino_root, scheme, tests):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -76,6 +77,20 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests):
         else:
             return False
         gn_args.append('owt_use_quic=true')
+    if openvino_root:
+        gn_args.append('owt_build_ic=true')
+        gn_args.append('owt_msvcrt=true')
+        gn_args.append('owt_openvino_root="{}"'.format(openvino_root))
+        opencv_root = os.path.join(openvino_root, 'opencv')
+        opencv_version_bin = os.path.join(opencv_root, 'bin', 'opencv_version.exe')
+        try:
+            output = subprocess.check_output([opencv_version_bin])
+            opencv_version = ''.join(re.findall('\d', output.decode()))
+            gn_args.append('owt_opencv_root="{}"'.format(opencv_root))
+            gn_args.append('owt_opencv_version={}'.format(opencv_version))
+        except FileNotFoundError as e:
+            print('File not found: {}'.format(opencv_version_bin))
+            return False
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
@@ -183,6 +198,7 @@ def main():
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
+    parser.add_argument('--openvino_root', help='Path for OpenVINO.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -195,19 +211,16 @@ def main():
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
     opts = parser.parse_args()
-    if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
-        print('Invalid ssl_root.')
-        return 1
-    if opts.msdk_root and not os.path.exists(os.path.expanduser(opts.msdk_root)):
-        print('Invalid msdk_root')
-        return 1
-    if opts.quic_root and not os.path.exists(os.path.expanduser(opts.quic_root)):
-        print('Invalid quic_root')
-        return 1
+    for name in ['ssl', 'msdk', 'quic', 'openvino']:
+        attr = name + '_root'
+        path = getattr(opts, attr)
+        if path is not None and not os.path.exists(os.path.expanduser(path)):
+            print('Invalid {}.'.format(attr))
+            return 1
     print(opts)
     if opts.gn_gen:
         if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests):
+                     opts.openvino_root, opts.scheme, opts.tests):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
