@@ -35,7 +35,7 @@ pipeline {
                     }
                     steps {
                         echo "$GIT_COMMIT"
-                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdkOpenVINO.bat %GIT_COMMIT%"
+                        bat "%windowsCIPathBranch%_%CHANGE_TARGET%/buildSdk.bat %GIT_COMMIT% --with-openvino"
                     }
                 }
                 stage("startMcu") {
@@ -75,7 +75,7 @@ pipeline {
                 echo "Buliding.."
                 bat "%windowsConferenceCasePath%/build.bat --configuration Release-MD"
             }
-        }        
+        }
         stage("BulidP2P") {
             agent{
                 node {
