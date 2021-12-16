@@ -1139,8 +1139,8 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         for (auto& transceiver : transceivers) {
           const auto& ttrack = transceiver->sender()->track();
           if (ttrack != nullptr && ttrack->id() == track->id()) {
+            temp_pc_->RemoveTrack(transceiver->sender());
             transceiver->Stop();
-            temp_pc_->RemoveTrackNew(transceiver->sender());
             break;
           }
         }
@@ -1150,8 +1150,8 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         for (auto& transceiver : transceivers) {
           const auto& ttrack = transceiver->sender()->track();
           if (ttrack != nullptr && ttrack->id() == track->id()) {
+            temp_pc_->RemoveTrack(transceiver->sender());
             transceiver->Stop();
-            temp_pc_->RemoveTrackNew(transceiver->sender());
             break;
           }
         }
