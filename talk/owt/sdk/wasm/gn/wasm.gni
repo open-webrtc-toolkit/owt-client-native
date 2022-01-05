@@ -72,6 +72,8 @@ template("wasm_lib") {
       "-s",
       "EXPORT_ES6=1",
 
+      "--bind",
+
       #"-fno-stack-protector",
 
       # This is to prevent that two different wasm modules end up generating
@@ -79,16 +81,14 @@ template("wasm_lib") {
       # "-s",
       # "EXPORT_NAME=${target_name}",
 
-      "-lworkerfs.js",  # For FS.filesystems.WORKERFS
-
-      "--bind",
+      # "-lworkerfs.js",  # For FS.filesystems.WORKERFS
 
       "-s",
-      "PTHREAD_POOL_SIZE=5",
+      "PTHREAD_POOL_SIZE=8",
+      "-s",
+      "ALLOW_BLOCKING_ON_MAIN_THREAD=0",
 
       "-pthread",
-      
-      "--source-map-base",
     ]
     if (is_debug) {
       _target_ldflags += [
@@ -98,8 +98,10 @@ template("wasm_lib") {
         # "SAFE_HEAP=1",
         # "-s",
         # "STACK_OVERFLOW_CHECK=1",
-        # "-gsource-map",
-        # "-O0",
+        "-O0",
+        "-gsource-map",
+        "--source-map-base",
+        "http://jianjunz-nuc-ubuntu.sh.intel.com:9900/out/wasm/",
       ]
     } else {
       _target_ldflags += [
