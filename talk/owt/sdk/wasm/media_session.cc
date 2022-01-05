@@ -9,6 +9,7 @@
 
 namespace owt {
 namespace wasm {
+
 MediaSession::MediaSession()
     : task_queue_factory_(webrtc::CreateTaskQueueStdlibFactory()),
       event_log_factory_(std::make_unique<webrtc::RtcEventLogFactory>(
@@ -49,6 +50,16 @@ std::shared_ptr<RtpVideoReceiver> MediaSession::CreateRtpVideoReceiver(
       receiver_process_thread_.get());
   return video_receiver_;
 }
+
+std::once_flag create_media_session_flag;
+std::shared_ptr<MediaSession> media_session;
+
+MediaSession* MediaSession::Get() {
+  std::call_once(create_media_session_flag,
+                 [] { media_session = std::make_shared<MediaSession>(); });
+  return media_session.get();
+}
+
 
 void MediaSession::SetRtcpCallback(emscripten::val callback) {
   rtcp_callback_ = callback;
