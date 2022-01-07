@@ -10,6 +10,7 @@
 #include "talk/owt/sdk/wasm/rtp_video_receiver.h"
 #include "talk/owt/sdk/wasm/web_transport_session.h"
 #include "third_party/webrtc/api/rtc_event_log/rtc_event_log_factory_interface.h"
+#include "third_party/webrtc/rtc_base/thread.h"
 
 namespace owt {
 namespace wasm {
@@ -29,6 +30,12 @@ class MediaSession : public webrtc::Transport {
   bool SendRtcp(const uint8_t* packet, size_t length) override;
 
  private:
+  // Expected to run on main WebAssembly thread.
+  static void RunRtcpCallback(MediaSession* session,
+                              const uint8_t* packet,
+                              size_t length);
+
+  std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<webrtc::RtcEventLogFactoryInterface> event_log_factory_;
   std::unique_ptr<webrtc::RtcEventLog> event_log_;

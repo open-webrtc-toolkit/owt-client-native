@@ -14,13 +14,13 @@ class RtpVideoReceiver
     : public webrtc::RtpVideoStreamReceiver2::OnCompleteFrameCallback,
       public webrtc::NackSender {
  public:
-  explicit RtpVideoReceiver(webrtc::TaskQueueBase* current_queue,
+  explicit RtpVideoReceiver(rtc::Thread* worker_thread,
                             webrtc::Transport* transport,
                             const webrtc::VideoReceiveStream::Config* config,
                             webrtc::ReceiveStatistics* rtp_receive_statistics,
                             webrtc::ProcessThread* process_thread);
   virtual ~RtpVideoReceiver() {}
-  virtual bool OnRtpPacket(uintptr_t packet_ptr, size_t packet_size);
+  virtual void OnRtpPacket(uintptr_t packet_ptr, size_t packet_size);
 
   // Overrides webrtc::RtpVideoStreamReceiver2::OnCompleteFrameCallback.
   void OnCompleteFrame(
@@ -33,6 +33,11 @@ class RtpVideoReceiver
                 bool buffering_allowed) override;
 
  private:
+  // Run on main WebAssembly thread.
+  static void RunCompleteFrameCallback(RtpVideoReceiver* receiver,
+                                  uint8_t* buffer,
+                                  size_t size);
+  rtc::Thread* worker_thread_;
   std::unique_ptr<webrtc::RtpVideoStreamReceiver2> receiver_;
   emscripten::val complete_frame_callback_;
 };

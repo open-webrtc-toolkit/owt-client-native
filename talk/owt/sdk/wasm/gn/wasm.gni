@@ -42,18 +42,12 @@ template("wasm_lib") {
     _target_ldflags = [
       "-s",
       "WASM=1",
-      # "-s",
-      # "DISABLE_EXCEPTION_CATCHING=1",
       "-s",
       "INITIAL_MEMORY=33554432",
       "-s",
       "ALLOW_TABLE_GROWTH=1",
-      # "-s",
-      # "WASM_ASYNC_COMPILATION=0",
       "-s",
       "USE_PTHREADS=1",
-      "-s",
-      "PROXY_TO_PTHREAD=1",
       "-s",
       "LLD_REPORT_UNDEFINED",
       "-s",
@@ -74,15 +68,6 @@ template("wasm_lib") {
 
       "--bind",
 
-      #"-fno-stack-protector",
-
-      # This is to prevent that two different wasm modules end up generating
-      # JS that overrides the same global variable (var Module = ...)
-      # "-s",
-      # "EXPORT_NAME=${target_name}",
-
-      # "-lworkerfs.js",  # For FS.filesystems.WORKERFS
-
       "-s",
       "PTHREAD_POOL_SIZE=8",
       "-s",
@@ -92,16 +77,8 @@ template("wasm_lib") {
     ]
     if (is_debug) {
       _target_ldflags += [
-        # "-s",
-        # "ASSERTIONS=2",
-        # "-s",
-        # "SAFE_HEAP=1",
-        # "-s",
-        # "STACK_OVERFLOW_CHECK=1",
         "-O0",
         "-gsource-map",
-        "--source-map-base",
-        "http://jianjunz-nuc-ubuntu.sh.intel.com:9900/out/wasm/",
       ]
     } else {
       _target_ldflags += [
@@ -127,7 +104,6 @@ template("wasm_lib") {
     }
 
     _vars_to_forward = [
-      #"cflags",
       "defines",
       "deps",
       "includes",
