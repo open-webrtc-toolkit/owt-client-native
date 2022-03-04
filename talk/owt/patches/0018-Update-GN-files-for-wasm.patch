@@ -1,0 +1,63 @@
+From 5f0e3a41d44c4a5e200cb236d284ce1472f423ed Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Wed, 16 Feb 2022 13:54:38 +0800
+Subject: [PATCH] Update GN files for wasm.
+
+---
+ googletest/BUILD.gn | 6 +++++-
+ libxml/BUILD.gn     | 2 ++
+ pffft/BUILD.gn      | 6 +++++-
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/googletest/BUILD.gn b/googletest/BUILD.gn
+index e9b39c2968a..5bcc23e044d 100644
+--- a/googletest/BUILD.gn
++++ b/googletest/BUILD.gn
+@@ -5,7 +5,11 @@
+ import("//build_overrides/build.gni")
+ 
+ config("gtest_config") {
+-  visibility = [ ":*" ]  # gmock also shares this config.
++  visibility = [
++    ":*",
++    "//testing/gmock:gmock",
++    "//third_party/webrtc/test:test_support",
++  ]  # gmock also shares this config.
+ 
+   defines = [
+     # Chromium always links googletest statically, so no API qualifier is
+diff --git a/libxml/BUILD.gn b/libxml/BUILD.gn
+index 8068e573cbd..f2dc8b46c3e 100644
+--- a/libxml/BUILD.gn
++++ b/libxml/BUILD.gn
+@@ -10,6 +10,8 @@ if (is_linux || is_chromeos || is_android || is_nacl || is_fuchsia) {
+   os_include = "mac"
+ } else if (is_win) {
+   os_include = "win32"
++} else if (is_wasm) {
++  os_include = "wasm"
+ }
+ 
+ import("//third_party/libxml/libxml_visibility.gni")
+diff --git a/pffft/BUILD.gn b/pffft/BUILD.gn
+index 7d6c537f4f4..5a1278b03ac 100644
+--- a/pffft/BUILD.gn
++++ b/pffft/BUILD.gn
+@@ -17,9 +17,13 @@ config("common_config") {
+   # PFFFT doesn't support SIMD on some cpus, so build a scalar version.
+   if ((current_cpu == "arm" && !arm_use_neon) || current_cpu == "mipsel" ||
+       current_cpu == "mips64el" || current_cpu == "ppc64" ||
+-      current_cpu == "s390x") {
++      current_cpu == "s390x" || current_os == "wasm") {
+     defines = [ "PFFFT_SIMD_DISABLE" ]
+   }
++
++  if (current_os=="wasm") {
++    defines += [ "M_PI=3.14159265358979323846" ]
++  }
+ }
+ 
+ static_library("pffft") {
+-- 
+2.35.1
+
