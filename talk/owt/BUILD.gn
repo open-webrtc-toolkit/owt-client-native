@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build_overrides/webrtc.gni")
+import("//talk/owt/sdk/wasm/gn/wasm.gni")
 import("//testing/test.gni")
 
 declare_args() {
@@ -14,7 +15,6 @@ declare_args() {
 # Introduced for using libvpx config files. We only enable libvpx rate
 # controller for VP9 on Windows.
 if (is_win && owt_msdk_header_root != "") {
- 
  if (current_cpu == "x86") {
    cpu_arch_full = "ia32"
  } else if (current_cpu == "x64") {
@@ -187,10 +187,10 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/win/base_allocator.cc",
       "sdk/base/win/base_allocator.h",
-      "sdk/base/win/d3d_allocator.cc",
-      "sdk/base/win/d3d_allocator.h",
       "sdk/base/win/d3d11_allocator.cc",
       "sdk/base/win/d3d11_allocator.h",
+      "sdk/base/win/d3d_allocator.cc",
+      "sdk/base/win/d3d_allocator.h",
       "sdk/base/win/d3dnativeframe.h",
       "sdk/base/win/mediacapabilities.cc",
       "sdk/base/win/mediacapabilities.h",
@@ -206,9 +206,9 @@ static_library("owt_sdk_base") {
       "sdk/base/win/msdkvideoencoderfactory.h",
       "sdk/base/win/sysmem_allocator.cc",
       "sdk/base/win/sysmem_allocator.h",
-      "sdk/base/win/vpedefs.h",
       "sdk/base/win/vp9ratecontrol.cc",
       "sdk/base/win/vp9ratecontrol.h",
+      "sdk/base/win/vpedefs.h",
     ]
     public_deps += [ "//third_party/libvpx" ]
     include_dirs += [
@@ -230,7 +230,7 @@ static_library("owt_sdk_base") {
   } else {
     defines += [ "OWT_USE_H265" ]
   }
-  
+
   if (owt_use_quic) {
     defines += [ "OWT_ENABLE_QUIC" ]
     if (owt_quic_header_root != "") {
@@ -252,44 +252,40 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/desktopcapturer.cc",
       "sdk/base/desktopcapturer.h",
-      "sdk/base/win/videorendererwin.cc",
-      "sdk/base/win/videorendererwin.h",
+      "sdk/base/win/d3d11_manager.h",
+      "sdk/base/win/device_info_mf.cc",
+      "sdk/base/win/device_info_mf.h",
+      "sdk/base/win/video_capture_mf.cc",
+      "sdk/base/win/video_capture_mf.h",
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
-      "sdk/base/win/d3d11_manager.h",
-      "sdk/base/win/device_info_mf.h",
-      "sdk/base/win/device_info_mf.cc",
-      "sdk/base/win/video_capture_mf.h",
-      "sdk/base/win/video_capture_mf.cc",
+      "sdk/base/win/videorendererwin.cc",
+      "sdk/base/win/videorendererwin.h",
     ]
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
-    
   }
   if (is_linux) {
     if (owt_msdk_header_root != "") {
       include_dirs += [ owt_msdk_header_root ]
       defines += [ "OWT_USE_MSDK" ]
       sources += [
-        "sdk/base/linux/displayutils.cc",
-        "sdk/base/linux/displayutils.h",
         "sdk/base/linux/base_allocator.cc",
         "sdk/base/linux/base_allocator.h",
-        "sdk/base/linux/vaapi_allocator.cc",
-        "sdk/base/linux/vaapi_allocator.h",
-        "sdk/base/linux/msdkvideosession.cc",
-        "sdk/base/linux/msdkvideosession.h",
-        "sdk/base/linux/msdkvideodecoderfactory.cc",
-        "sdk/base/linux/msdkvideodecoderfactory.h",
+        "sdk/base/linux/displayutils.cc",
+        "sdk/base/linux/displayutils.h",
         "sdk/base/linux/msdkvideodecoder.cc",
         "sdk/base/linux/msdkvideodecoder.h",
-        
-      ]
-    }
-    sources += [
-        "sdk/base/linux/xwindownativeframe.h",
+        "sdk/base/linux/msdkvideodecoderfactory.cc",
+        "sdk/base/linux/msdkvideodecoderfactory.h",
+        "sdk/base/linux/msdkvideosession.cc",
+        "sdk/base/linux/msdkvideosession.h",
+        "sdk/base/linux/vaapi_allocator.cc",
+        "sdk/base/linux/vaapi_allocator.h",
         "sdk/base/linux/videorenderlinux.cc",
         "sdk/base/linux/videorenderlinux.h",
-    ]
+        "sdk/base/linux/xwindownativeframe.h",
+      ]
+    }
   }
   if (!is_ios) {
     sources += [
@@ -299,7 +295,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideodecoderproxy.h",
     ]
   }
-  if ((is_win || is_linux)) {
+  if (is_win || is_linux) {
     sources += [
       "sdk/base/customizedaudiocapturer.cc",
       "sdk/base/customizedaudiocapturer.h",
@@ -307,7 +303,7 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.h",
     ]
   }
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
   if (is_win && is_clang) {
@@ -341,10 +337,36 @@ static_library("owt_sdk_p2p") {
     "sdk/p2p/p2psignalingsenderimpl.cc",
     "sdk/p2p/p2psignalingsenderimpl.h",
   ]
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }
+
+if (is_wasm) {
+  wasm_lib("owt_wasm") {
+    name = "owt"
+    deps = [
+      "//third_party/boringssl",
+      "//third_party/webrtc/api/rtc_event_log:rtc_event_log_factory",
+      "//third_party/webrtc/call",
+      "//third_party/webrtc/logging:fake_rtc_event_log",
+      "//third_party/webrtc/modules/rtp_rtcp:rtp_rtcp",
+      "//third_party/webrtc/rtc_base:rtc_json",
+      "//third_party/webrtc/rtc_base:rtc_task_queue_stdlib",
+    ]
+    sources = [
+      "sdk/wasm/binding.h",
+      "sdk/wasm/main.cc",
+      "sdk/wasm/media_session.cc",
+      "sdk/wasm/media_session.h",
+      "sdk/wasm/rtp_video_receiver.cc",
+      "sdk/wasm/rtp_video_receiver.h",
+      "sdk/wasm/web_transport_session.cc",
+      "sdk/wasm/web_transport_session.h",
+    ]
+  }
+}
+
 static_library("owt_sdk_conf") {
   deps = [
     ":owt_sdk_base",
@@ -369,7 +391,7 @@ static_library("owt_sdk_conf") {
     "sdk/include/cpp/owt/conference/remotemixedstream.h",
     "sdk/include/cpp/owt/conference/user.h",
   ]
-  if (is_clang) {
+  if (is_clang && !is_wasm) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 

@@ -45,7 +45,9 @@ patchList = [
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
     ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
-    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH) 
+    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH),
+    ('0018-Update-GN-files-for-wasm.patch', THIRD_PARTY_PATH),
+    ('0019-Update-GN-files-for-wasm-build.patch', BUILD_PATH)
 ]
 
 def _patch(ignoreFailures=False):

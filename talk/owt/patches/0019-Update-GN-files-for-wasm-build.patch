@@ -1,0 +1,232 @@
+From 5eb6afab0d6db092f898515938840c120fd85561 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Fri, 4 Mar 2022 15:54:39 +0800
+Subject: [PATCH] Update GN files for wasm build.
+
+---
+ config/BUILDCONFIG.gn    |  7 +++++--
+ config/compiler/BUILD.gn | 39 ++++++++++++++++++++++++++++++++-------
+ config/linux/BUILD.gn    |  1 +
+ config/posix/BUILD.gn    |  2 +-
+ toolchain/toolchain.gni  |  3 +++
+ toolchain/wasm/BUILD.gn  | 30 ++++++++++++++++++++++++++++++
+ 6 files changed, 72 insertions(+), 10 deletions(-)
+ create mode 100644 toolchain/wasm/BUILD.gn
+
+diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
+index ca9614a4b..ac9a56b24 100644
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -251,6 +251,8 @@ if (target_os == "android") {
+   _default_toolchain = "//build/toolchain/win:uwp_$target_cpu"
+ } else if (target_os == "aix") {
+   _default_toolchain = "//build/toolchain/aix:$target_cpu"
++} else if (target_os == "wasm") {
++  _default_toolchain = "//talk/owt/sdk/wasm/gn:wasm"
+ } else {
+   assert(false, "Unsupported target_os: $target_os")
+ }
+@@ -288,10 +290,11 @@ is_ios = current_os == "ios"
+ is_linux = current_os == "linux"
+ is_mac = current_os == "mac"
+ is_nacl = current_os == "nacl"
++is_wasm = current_os == "wasm"
+ is_win = current_os == "win" || current_os == "winuwp"
+ 
+ is_apple = is_ios || is_mac
+-is_posix = !is_win && !is_fuchsia
++is_posix = !is_win && !is_fuchsia && !is_wasm
+ 
+ # =============================================================================
+ # TARGET DEFAULTS
+@@ -363,7 +366,7 @@ if (is_android) {
+       [ "//build/config/android:default_orderfile_instrumentation" ]
+ }
+ 
+-if (is_clang && !is_nacl) {
++if (is_clang && !is_nacl && !is_wasm) {
+   default_compiler_configs += [
+     "//build/config/clang:find_bad_constructs",
+     "//build/config/clang:extra_warnings",
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 48deb0b48..77563447c 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -70,7 +70,7 @@ declare_args() {
+   # Build with C++ RTTI enabled. Chromium builds without RTTI by default,
+   # but some sanitizers are known to require it, like CFI diagnostics
+   # and UBsan variants.
+-  use_rtti = use_cfi_diag || is_ubsan_vptr || is_ubsan_security
++  use_rtti = use_cfi_diag || is_ubsan_vptr || is_ubsan_security || is_wasm
+ 
+   # AFDO (Automatic Feedback Directed Optimizer) is a form of profile-guided
+   # optimization that GCC supports. It used by ChromeOS in their official
+@@ -602,6 +602,18 @@ config("compiler") {
+     ldflags += [ "-stdlib=libc++" ]
+   }
+ 
++  if (is_wasm) {
++    _emscripten_flags = [
++    ]
++
++    # TODO(agrieve): Figure out why this causes link to fail.
++    #if (is_official_build) {
++    #  _emscripten_flags += ["-flto=full"]
++    #}
++    cflags += _emscripten_flags
++    ldflags += _emscripten_flags
++  }
++
+   # Add flags for link-time optimization. These flags enable
+   # optimizations/transformations that require whole-program visibility at link
+   # time, so they need to be applied to all translation units, and we may end up
+@@ -723,10 +735,10 @@ config("compiler") {
+   # present. On Android this increases binary size due to more thinks for long
+   # jumps. Turn it off by default and enable selectively for targets where it's
+   # beneficial.
+-  if (use_lld && !enable_call_graph_profile_sort) {
++  if (use_lld && !enable_call_graph_profile_sort && !is_wasm) {
+     if (is_win) {
+       ldflags += [ "/call-graph-profile-sort:no" ]
+-    } else if (!is_apple) {
++    } else if (!is_apple || !is_wasm) {
+       # TODO(thakis): Once LLD's Mach-O port basically works, implement call
+       # graph profile sorting for it, add an opt-out flag, and pass it here.
+       ldflags += [ "-Wl,--no-call-graph-profile-sort" ]
+@@ -826,11 +838,11 @@ config("compiler_cpu_abi") {
+     # simplicity we always explicitly set the architecture.
+     if (current_cpu == "x64") {
+       cflags += [
+-        "-m64",
++        #"-m64",
+         "-march=$x64_arch",
+         "-msse3",
+       ]
+-      ldflags += [ "-m64" ]
++      #ldflags += [ "-m64" ]
+     } else if (current_cpu == "x86") {
+       cflags += [ "-m32" ]
+       ldflags += [ "-m32" ]
+@@ -1301,7 +1313,7 @@ config("runtime_library") {
+ 
+   # TODO(crbug.com/830987): Come up with a better name for is POSIX + Fuchsia
+   # configuration.
+-  if (is_posix || is_fuchsia) {
++  if (is_posix || is_fuchsia || is_wasm) {
+     configs += [ "//build/config/posix:runtime_library" ]
+   }
+ 
+@@ -1594,7 +1606,8 @@ config("default_warnings") {
+         cflags += [ "-Wno-nonportable-include-path" ]
+       }
+ 
+-      if (current_toolchain == host_toolchain || !use_xcode_clang) {
++      if ((current_toolchain == host_toolchain || !use_xcode_clang) &&
++          !is_wasm) {
+         # Flags NaCl (Clang 3.7) and Xcode 9.2 (Clang clang-900.0.39.2) do not
+         # recognize.
+         cflags += [
+@@ -1637,6 +1650,15 @@ config("default_warnings") {
+       }
+     }
+   }
++
++  if (is_wasm) {
++    cflags_c += [
++      # TODO(https://crbug.com/995993): Clean up and enable.
++      "-Wno-implicit-fallthrough",
++      "-pthread",
++      "-Wno-pthreads-mem-growth"
++    ]
++  }
+ }
+ 
+ # chromium_code ---------------------------------------------------------------
+@@ -2360,6 +2382,9 @@ config("symbols") {
+         "-debug-info-kind=constructor",
+       ]
+     }
++  } else if (is_wasm) {
++    cflags = [ "-gsource-map" ]
++    ldflags = [ "-gsource-map" ]
+   } else {
+     cflags = []
+     if (is_mac && enable_dsyms) {
+diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
+index 64b632538..5ec75834f 100644
+--- a/config/linux/BUILD.gn
++++ b/config/linux/BUILD.gn
+@@ -33,6 +33,7 @@ config("runtime_library") {
+   if ((!(is_chromeos_ash || is_chromeos_lacros) ||
+        default_toolchain != "//build/toolchain/cros:target") &&
+       (!use_custom_libcxx || current_cpu == "mipsel")) {
++    print("link atomic")
+     libs = [ "atomic" ]
+   }
+ }
+diff --git a/config/posix/BUILD.gn b/config/posix/BUILD.gn
+index e61554c56..a8d3979f0 100644
+--- a/config/posix/BUILD.gn
++++ b/config/posix/BUILD.gn
+@@ -5,7 +5,7 @@
+ import("//build/config/sysroot.gni")
+ 
+ # This build configuration is used by both Fuchsia and POSIX systems.
+-assert(is_posix || is_fuchsia)
++assert(is_posix || is_fuchsia || is_wasm)
+ 
+ group("posix") {
+   visibility = [ "//:optimize_gn_gen" ]
+diff --git a/toolchain/toolchain.gni b/toolchain/toolchain.gni
+index 95febfe6b..d44e4679b 100644
+--- a/toolchain/toolchain.gni
++++ b/toolchain/toolchain.gni
+@@ -64,6 +64,9 @@ if (is_apple) {
+   shlib_extension = ".so"
+ } else if (is_win) {
+   shlib_extension = ".dll"
++} else if (is_wasm) {
++  # WebAssembly does not stably support shared libraries. (as of Oct 2019)
++  shlib_extension = ".wasm"
+ } else {
+   assert(false, "Platform not supported")
+ }
+diff --git a/toolchain/wasm/BUILD.gn b/toolchain/wasm/BUILD.gn
+new file mode 100644
+index 000000000..fdc512098
+--- /dev/null
++++ b/toolchain/wasm/BUILD.gn
+@@ -0,0 +1,30 @@
++# Copyright 2019 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++import("//build/toolchain/gcc_toolchain.gni")
++
++gcc_toolchain("wasm") {
++  cc = "emcc"
++  cxx = "em++"
++  nm = "emcc"
++  ar = "emar"
++  ld = cxx
++
++  toolchain_args = {
++    current_cpu = "wasm"
++    current_os = "wasm"
++
++    is_clang = true
++    use_goma = false
++    use_debug_fission = false
++    clang_use_chrome_plugins = false
++    use_allocator_shim = false
++    is_component_build = false
++  }
++  executable_extension = ".js"
++  link_outputs = [
++    "{{output_dir}}/{{target_output_name}}.wasm",
++    "{{output_dir}}/{{target_output_name}}.wasm.map",
++  ]
++}
+-- 
+2.35.1
+
