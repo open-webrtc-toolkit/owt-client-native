@@ -108,17 +108,19 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // construct the SEI. index 0-22 is the sei overhead, and last byte is RBSP
-  std::unique_ptr<uint8_t[]> data(new uint8_t[encoder_buffer_handle->buffer_length_ + side_data_size + 24]);
+  // construct the SEI. index 0-22/23 is the sei overhead, and last byte is RBSP.
+  // Allocate the buffer to accommadate both AVC and HEVC.
+  std::unique_ptr<uint8_t[]> data(new uint8_t[encoder_buffer_handle->buffer_length_ + side_data_size + 25]);
   uint8_t* data_ptr = data.get();
   uint32_t data_size =
       static_cast<uint32_t>(encoder_buffer_handle->buffer_length_);
 
-  if (codec_type_ != webrtc::kVideoCodecH264 && side_data_size > 0) {
+  if ((codec_type_ != webrtc::kVideoCodecH264 &&
+       codec_type_ != webrtc::kVideoCodecH265) &&
+      side_data_size > 0) {
     encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
   }
 
-  // SEI prefix is only enabled for H.264.
   if (codec_type_ == webrtc::kVideoCodecH264 && side_data_ptr && side_data_size) {
     data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
     data_ptr[3] = 0x01; // start code: byte 0-3
@@ -134,6 +136,23 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     memcpy(data_ptr + side_data_size + 24, encoder_buffer_handle->buffer_,
            encoder_buffer_handle->buffer_length_);
     data_size += side_data_size + 24;
+  } else if (codec_type_ == webrtc::kVideoCodecH265 && side_data_ptr &&
+             side_data_size) {
+    data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
+    data_ptr[3] = 0x01;                 // start code: byte 0-3
+    data_ptr[4] = 0x27;                 // F: 0, nal_unit_type: prefix-SEI
+    data_ptr[5] = 0x1;                  // layerID: 0; TID: 1
+    data_ptr[6] = 0x05;                 // userdata unregistered
+    data_ptr[7] = 16 + side_data_size;  // payload size
+    for (int i = 0; i < 16; i++) {
+      data_ptr[i + 8] = frame_number_sei_guid[i];
+    }
+    memcpy(data_ptr + 24, side_data_ptr, side_data_size);
+    data_ptr[side_data_size + 24] = 0x80;
+    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+    memcpy(data_ptr + side_data_size + 25, encoder_buffer_handle->buffer_,
+           encoder_buffer_handle->buffer_length_);
+    data_size += side_data_size + 25;
   } else {
     memcpy(data_ptr, encoder_buffer_handle->buffer_,
            encoder_buffer_handle->buffer_length_);
