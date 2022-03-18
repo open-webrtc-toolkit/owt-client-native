@@ -16,6 +16,75 @@ using namespace rtc;
 #define MSDK_BS_INIT_SIZE (1024*1024)
 enum { kMSDKCodecPollMs = 10 };
 enum { MSDK_MSG_HANDLE_INPUT = 0 };
+static constexpr int kMaxSideDataListSize = 20;
+
+namespace {
+
+static const uint8_t frame_number_sei_guid[16] = {
+    0xef, 0xc8, 0xe7, 0xb0, 0x26, 0x26, 0x47, 0xfd,
+    0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
+
+int64_t GetSideData(const uint8_t* frame_data,
+                    size_t frame_size,
+                    std::vector<uint8_t>& side_data,
+                    bool is_h264) {
+  side_data.clear();
+  if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
+                        // least 24 bytes.
+    goto failed;
+
+  const uint8_t* head = frame_data;
+  unsigned int payload_size = 0;
+
+  if (head[0] != 0 || head[1] != 0 || head[2] != 0 || head[3] != 1) {
+    goto failed;
+  }
+  if (is_h264) {
+    if ((head[4] & 0x1f) == 0x06) {
+      if (head[5] == 0x05) {  // user data unregistered.
+        payload_size = head[6];
+        if (payload_size > frame_size - 4 - 4 ||
+            payload_size < 17)  //. 4-byte start code + 4 byte NAL HDR/Payload
+                                //Type/Size/RBSP
+          goto failed;
+        for (int i = 7; i < 23; i++) {
+          if (head[i] != frame_number_sei_guid[i - 7]) {
+            goto failed;
+          }
+        }
+        // Read the entire payload
+        for (unsigned int i = 0; i < payload_size - 16; i++)
+          side_data.push_back(head[i + 23]);
+        return payload_size;
+      }
+    }
+  } else {
+    // HEVC side data -prefix-sei
+    if ((head[4] & 0x7E) >> 1 == 0x27 && frame_size >= 25) {
+      // skip byte #5 and check byte #6
+      if (head[6] == 0x05) {
+        payload_size = head[7];
+        if (payload_size > frame_size - 4 - 5 ||
+            payload_size < 17) {  // 4-byte start code + 5 byte NAL HDR/Payload
+                                  // Type/Size/RBSP
+          goto failed;
+        }
+        for (int i = 8; i < 24; i++) {
+          if (head[i] != frame_number_sei_guid[i - 8]) {
+            goto failed;
+          }
+        }
+        // Read the side-data
+        for (unsigned int i = 0; i < payload_size - 16; i++)
+          side_data.push_back(head[i + 24]);
+        return payload_size;
+      }
+    }
+  }
+failed:
+  return -1;
+}
+}  // namespace
 
 namespace owt {
 namespace base {
@@ -267,6 +336,13 @@ int32_t MSDKVideoDecoder::Decode(
   m_pmfx_video_params_.AsyncDepth = 4;
 
   ReadFromInputStream(&m_mfx_bs_, inputImage.data(), inputImage.size());
+  bool is_h264 = (codec_.codecType == webrtc::kVideoCodecH264);
+  GetSideData(inputImage.mutable_data(), inputImage.size(), current_side_data_);
+              is_h264);
+  if (current_side_data_.size() > 0) {
+    side_data_list_[inputImage.Timestamp()] = current_side_data_;
+  }
+  int64_t decode_start_time = clock_->CurrentTime().ms_or(0);
 
 dec_header:
   if (inited_ && !m_video_param_extracted) {
