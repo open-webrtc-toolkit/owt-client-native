@@ -200,6 +200,7 @@ class ConferencePeerConnectionChannel
   bool sub_server_ready_;
   // Queue for callbacks and events.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
+  std::mutex release_mutex_;
 };
 }
 }
