@@ -119,12 +119,41 @@ struct EncodedImageMetaData {
       side_data_length = 0;
     }
   }
+  // Allocate cursor data. If allocated already, will free it first.
+  // For OWT, maximum allowed size is 1MB.
+  uint8_t* cursor_data_new(size_t data_length) {
+    if (data_length > OWT_CURSOR_DATA_SIZE_MAX) {  // do nothing
+      return cursor_data;
+    }
+    if (cursor_data) {
+      delete cursor_data;
+    }
+    cursor_data = new uint8_t[data_length];
+    cursor_data_length = data_length;
+    return cursor_data;
+  }
+  // Get cursor data ptr.
+  uint8_t* cursor_data_get() const { return cursor_data; }
+  // Get cursor data size.
+  size_t cursor_data_size() const { return cursor_data_length; }
+  // Free cursor data.
+  void cursor_data_free() {
+    if (cursor_data) {
+      delete cursor_data;
+      cursor_data = nullptr;
+      cursor_data_length = 0;
+    }
+  }
 
  private:
   // Side data
   uint8_t* side_data = nullptr;
   // Side data size
   size_t side_data_length = 0;
+  // Cursor data
+  uint8_t* cursor_data = nullptr;
+  // Cursor data size
+  size_t cursor_data_length = 0;
 };
 
 class EncodedStreamProviderSink {
