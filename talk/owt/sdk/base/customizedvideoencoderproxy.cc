@@ -16,6 +16,7 @@
 #include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/include/cpp/owt/base/commontypes.h"
+
 // H.264 start code length.
 #define H264_SC_LENGTH 4
 // Maximum allowed NALUs in one output frame.
@@ -27,12 +28,15 @@ static const uint8_t frame_number_sei_guid[16] = {
     0xef, 0xc8, 0xe7, 0xb0, 0x26, 0x26, 0x47, 0xfd,
     0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
 
+static const uint8_t cursor_data_sei_guid[16] = {
+    0x2f, 0x69, 0xe7, 0xb0, 0x16, 0x56, 0x87, 0xfd,
+    0x2d, 0x14, 0x26, 0x37, 0x14, 0x22, 0x23, 0x38};
+
 CustomizedVideoEncoderProxy::CustomizedVideoEncoderProxy()
     : callback_(nullptr) {
   picture_id_ = 0;
 }
-CustomizedVideoEncoderProxy::~CustomizedVideoEncoderProxy() {
-}
+CustomizedVideoEncoderProxy::~CustomizedVideoEncoderProxy() {}
 int CustomizedVideoEncoderProxy::InitEncode(
     const webrtc::VideoCodec* codec_settings,
     int number_of_cores,
@@ -74,13 +78,13 @@ int32_t CustomizedVideoEncoderProxy::Encode(
 #ifdef WEBRTC_USE_H265
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
-	codec_type_ != webrtc::kVideoCodecAV1 &&
+        codec_type_ != webrtc::kVideoCodecAV1 &&
         codec_type_ != webrtc::kVideoCodecVP9 &&
         codec_type_ != webrtc::kVideoCodecH265)
 #else
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
-	codec_type_ != webrtc::kVideoCodecAV1 &&
+        codec_type_ != webrtc::kVideoCodecAV1 &&
         codec_type_ != webrtc::kVideoCodecVP9)
 #endif
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -108,36 +112,87 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // construct the SEI. index 0-22/23 is the sei overhead, and last byte is RBSP.
-  // Allocate the buffer to accommadate both AVC and HEVC.
-  std::unique_ptr<uint8_t[]> data(new uint8_t[encoder_buffer_handle->buffer_length_ + side_data_size + 25]);
+  auto cursor_data_size = encoder_buffer_handle->meta_data_.cursor_data_size();
+  auto cursor_data_ptr = encoder_buffer_handle->meta_data_.cursor_data_get();
+  if (cursor_data_size > OWT_CURSOR_DATA_SIZE_MAX) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  // Construct the SEI. index 0-22/23 is the sei overhead, and last byte is
+  // RBSP. Allocate the buffer to accommadate both AVC and HEVC. Construct
+  // cursor data SEI and side-data SEI. Typically cursor data is larger than
+  // 1KB, so the payload size should expand multiple bytes with 0xFF.
+  int cursor_data_sei_payload__field_bytes = (cursor_data_size + 16 + 1) / 255;
+
+  // 42 = 8(7 for hevc) + 16(side-data-guid) + 1(cursor sei payload type)
+  // + 16(cursor_data-guid) + 1(rbsp trailing)
+  std::unique_ptr<uint8_t[]> data(
+      new uint8_t[encoder_buffer_handle->buffer_length_ + side_data_size +
+                  cursor_data_sei_payload__field_bytes + cursor_data_size + 42]);
   uint8_t* data_ptr = data.get();
   uint32_t data_size =
       static_cast<uint32_t>(encoder_buffer_handle->buffer_length_);
 
   if ((codec_type_ != webrtc::kVideoCodecH264 &&
-       codec_type_ != webrtc::kVideoCodecH265) &&
-      side_data_size > 0) {
-    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+       codec_type_ != webrtc::kVideoCodecH265)) {
+    if (side_data_size > 0)
+      encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+    if (cursor_data_size > 0)
+      encoder_buffer_handle->meta_data_.cursor_data_free();
   }
 
-  if (codec_type_ == webrtc::kVideoCodecH264 && side_data_ptr && side_data_size) {
+  int sei_idx = 0;
+
+  if (codec_type_ == webrtc::kVideoCodecH264 &&
+      ((side_data_ptr && side_data_size) ||
+       (cursor_data_ptr && cursor_data_size))) {
     data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
-    data_ptr[3] = 0x01; // start code: byte 0-3
-    data_ptr[4] = 0x06; // NAL-type: SEI
-    data_ptr[5] = 0x05; // userdata unregistered
-    data_ptr[6] = 16 + side_data_size; // payload size
+    data_ptr[3] = 0x01;                 // start code: byte 0-3
+    data_ptr[4] = 0x06;                 // NAL-type: SEI
+    data_ptr[5] = 0x05;                 // userdata unregistered
+    data_ptr[6] = 16 + side_data_size;  // payload size
     for (int i = 0; i < 16; i++) {
       data_ptr[i + 7] = frame_number_sei_guid[i];
     }
-    memcpy(data_ptr + 23, side_data_ptr, side_data_size);
-    data_ptr[side_data_size + 23] = 0x80;
-    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
-    memcpy(data_ptr + side_data_size + 24, encoder_buffer_handle->buffer_,
+    if (side_data_size > 0) {
+      memcpy(data_ptr + 23, side_data_ptr, side_data_size);
+      encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+    }
+    sei_idx += 23 + side_data_size;
+
+    // Done with side-data sei-message. Proceed with cursor-data sei-message.
+    if (cursor_data_ptr && cursor_data_size) {
+      data_ptr[sei_idx] = 0x05;  // userdata unregistered
+      sei_idx++;
+      if (cursor_data_sei_payload__field_bytes > 1) {
+        for (int j = 0; j < cursor_data_sei_payload__field_bytes - 1; j++) {
+          data_ptr[sei_idx] = 0xFF;
+          sei_idx++;
+        }
+        data_ptr[sei_idx] = (cursor_data_size + 16) % 255;
+        sei_idx++;
+      } else {
+        data_ptr[sei_idx] = cursor_data_size + 16;
+        sei_idx++;
+      }
+      for (int i = 0; i < 16; i++) {
+        data_ptr[sei_idx] = cursor_data_sei_guid[i];
+        sei_idx++;
+      }
+      memcpy(data_ptr + sei_idx, cursor_data_ptr, cursor_data_size);
+      sei_idx += cursor_data_size;
+      encoder_buffer_handle->meta_data_.cursor_data_free();
+    }
+
+    data_ptr[sei_idx] = 0x80;
+    sei_idx++;
+
+    memcpy(data_ptr + sei_idx, encoder_buffer_handle->buffer_,
            encoder_buffer_handle->buffer_length_);
-    data_size += side_data_size + 24;
-  } else if (codec_type_ == webrtc::kVideoCodecH265 && side_data_ptr &&
-             side_data_size) {
+    data_size += sei_idx;
+  } else if (codec_type_ == webrtc::kVideoCodecH265 &&
+             ((side_data_ptr && side_data_size) ||
+              (cursor_data_ptr && cursor_data_size))) {
     data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
     data_ptr[3] = 0x01;                 // start code: byte 0-3
     data_ptr[4] = 0x27;                 // F: 0, nal_unit_type: prefix-SEI
@@ -147,12 +202,43 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     for (int i = 0; i < 16; i++) {
       data_ptr[i + 8] = frame_number_sei_guid[i];
     }
-    memcpy(data_ptr + 24, side_data_ptr, side_data_size);
-    data_ptr[side_data_size + 24] = 0x80;
-    encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
-    memcpy(data_ptr + side_data_size + 25, encoder_buffer_handle->buffer_,
+
+    if (side_data_size > 0) {
+      memcpy(data_ptr + 24, side_data_ptr, side_data_size);
+      encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
+    }
+    sei_idx += 24 + side_data_size;
+
+    // Done with side-data sei-message. Proceed with cursor-data sei-message.
+    if (cursor_data_ptr && cursor_data_size) {
+      data_ptr[sei_idx] = 0x05;  // userdata unregistered
+      sei_idx++;
+      if (cursor_data_sei_payload__field_bytes > 1) {
+        for (int j = 0; j < cursor_data_sei_payload__field_bytes - 1; j++) {
+          data_ptr[sei_idx] = 0xFF;
+          sei_idx++;
+        }
+        data_ptr[sei_idx] = (cursor_data_size + 16) % 255;
+        sei_idx++;
+      } else {
+        data_ptr[sei_idx] = cursor_data_size + 16;
+        sei_idx++;
+      }
+      for (int i = 0; i < 16; i++) {
+        data_ptr[sei_idx] = cursor_data_sei_guid[i];
+        sei_idx++;
+      }
+      memcpy(data_ptr + sei_idx, cursor_data_ptr, cursor_data_size);
+      sei_idx += cursor_data_size;
+      encoder_buffer_handle->meta_data_.cursor_data_free();
+    }
+
+    data_ptr[sei_idx] = 0x80;
+    sei_idx++;
+
+    memcpy(data_ptr + sei_idx, encoder_buffer_handle->buffer_,
            encoder_buffer_handle->buffer_length_);
-    data_size += side_data_size + 25;
+    data_size += sei_idx;
   } else {
     memcpy(data_ptr, encoder_buffer_handle->buffer_,
            encoder_buffer_handle->buffer_length_);
@@ -217,7 +303,8 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
     picture_id_ = (picture_id_ + 1) & 0x7FFF;
   } else if (codec_type_ == webrtc::kVideoCodecVP9) {
-    bool key_frame = encoded_frame._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+    bool key_frame =
+        encoded_frame._frameType == webrtc::VideoFrameType::kVideoFrameKey;
     if (key_frame) {
       gof_idx_ = 0;
     }
@@ -230,6 +317,10 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP9.inter_layer_predicted = false;
     info.codecSpecific.VP9.gof_idx =
         static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
+<<<<<<< HEAD
+=======
+    info.codecSpecific.VP9.ss_data_available = vp9_key_frame ? true : false;
+>>>>>>> e00a359... Add interface for providing cursor information when sending frame. (#13)
     info.codecSpecific.VP9.num_spatial_layers = 1;
     info.codecSpecific.VP9.first_frame_in_picture = true;
     info.codecSpecific.VP9.end_of_picture = true;
@@ -250,7 +341,8 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
     info.codecSpecific.H264.idr_frame = is_idr;
-    info.codecSpecific.H264.picture_id = encoder_buffer_handle->meta_data_.picture_id;
+    info.codecSpecific.H264.picture_id =
+        encoder_buffer_handle->meta_data_.picture_id;
     info.codecSpecific.H264.last_fragment_in_frame =
         encoder_buffer_handle->meta_data_.last_fragment;
     encoded_frame._frameType = is_idr ? webrtc::VideoFrameType::kVideoFrameKey
@@ -267,7 +359,8 @@ int32_t CustomizedVideoEncoderProxy::Encode(
         if (encoder_buffer_handle->meta_data_.frame_descriptor.dependencies[i] >
             0)
           info.codecSpecific.H265.dependencies[i] =
-              encoder_buffer_handle->meta_data_.frame_descriptor.dependencies[i];
+              encoder_buffer_handle->meta_data_.frame_descriptor
+                  .dependencies[i];
         else
           info.codecSpecific.H265.dependencies[i] = -1;
       }
@@ -275,7 +368,56 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     }
   }
 #endif
+<<<<<<< HEAD
   const auto result = callback_->OnEncodedImage(encoded_frame, &info);
+=======
+  // Generate a header describing a single fragment.
+  webrtc::RTPFragmentationHeader header;
+  memset(&header, 0, sizeof(header));
+  if (codec_type_ == webrtc::kVideoCodecVP8 ||
+      codec_type_ ==
+          webrtc::kVideoCodecAV1 ||  // AV1 acutally does not need frag header.
+      codec_type_ == webrtc::kVideoCodecVP9) {
+    header.VerifyAndAllocateFragmentationHeader(1);
+    header.fragmentationOffset[0] = 0;
+    header.fragmentationLength[0] = encodedframe.size();
+#ifndef DISABLE_H265
+  } else if (codec_type_ == webrtc::kVideoCodecH264 ||
+             codec_type_ == webrtc::kVideoCodecH265) {
+#else
+  } else if (codec_type_ == webrtc::kVideoCodecH264) {
+#endif
+    // For H.264/H.265 search for start codes.
+    int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
+    size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
+    int32_t scPositionsLength = 0;
+    int32_t scPosition = 0;
+    while (scPositionsLength < MAX_NALUS_PERFRAME) {
+      size_t scLength = 0;
+      int32_t naluPosition = NextNaluPosition(
+          data_ptr + scPosition, data_size - scPosition, &scLength);
+      if (naluPosition < 0) {
+        break;
+      }
+      scPosition += naluPosition;
+      scPositions[scPositionsLength++] = scPosition;
+      scLengths[scPositionsLength - 1] = static_cast<int32_t>(scLength);
+      scPosition += static_cast<int32_t>(scLength);
+    }
+    if (scPositionsLength == 0) {
+      RTC_LOG(LS_ERROR) << "Start code is not found for H264/H265 codec!";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    scPositions[scPositionsLength] = data_size;
+    header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
+    for (int i = 0; i < scPositionsLength; i++) {
+      header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
+      header.fragmentationLength[i] =
+          scPositions[i + 1] - header.fragmentationOffset[i];
+    }
+  }
+  const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
+>>>>>>> e00a359... Add interface for providing cursor information when sending frame. (#13)
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: "
                       << result.error;

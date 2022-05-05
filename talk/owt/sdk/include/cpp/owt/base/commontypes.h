@@ -10,6 +10,7 @@ namespace owt {
 namespace base {
 
 #define OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX 240
+#define OWT_CURSOR_DATA_SIZE_MAX (1*1024*1024)
 
 /// Audio codec
 enum class AudioCodec : int {
