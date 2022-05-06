@@ -153,6 +153,10 @@ struct D3D11VAHandle {
   ID3D11VideoContext* context;
   uint8_t side_data[OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX];
   size_t side_data_size;
+  uint8_t cursor_data[OWT_CURSOR_DATA_SIZE_MAX];
+  size_t cursor_data_size;
+  uint64_t decode_start;
+  uint64_t decode_end;
 };
 #endif
 }  // namespace base

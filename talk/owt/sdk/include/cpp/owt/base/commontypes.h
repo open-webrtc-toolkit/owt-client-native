@@ -4,8 +4,8 @@
 #ifndef OWT_BASE_COMMONTYPES_H_
 #define OWT_BASE_COMMONTYPES_H_
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 namespace owt {
 namespace base {
 
@@ -14,15 +14,15 @@ namespace base {
 
 /// Audio codec
 enum class AudioCodec : int {
-  kPcmu = 1,   ///< g711 u-law
-  kPcma,   ///< g711 a-law
-  kOpus,   ///< opus
-  kG722,   ///< g722
-  kIsac,   ///< iSAC
-  kIlbc,   ///< iLBC
-  kAac,    ///< AAC or HE-AAC
-  kAc3,    ///< AC3
-  kAsao,   ///< Nellymoser
+  kPcmu = 1,  ///< g711 u-law
+  kPcma,      ///< g711 a-law
+  kOpus,      ///< opus
+  kG722,      ///< g722
+  kIsac,      ///< iSAC
+  kIlbc,      ///< iLBC
+  kAac,       ///< AAC or HE-AAC
+  kAc3,       ///< AC3
+  kAsao,      ///< Nellymoser
   kUnknown
 };
 /// Video codec
@@ -52,7 +52,7 @@ enum class NetworkPriority : int {
 /// This class represents a resolution value.
 struct Resolution {
   /// Construct an instance with width and height equal to 0.
-  explicit Resolution(): width(0), height(0) {}
+  explicit Resolution() : width(0), height(0) {}
   /// Construct an instance with specify width and height.
   Resolution(unsigned long w, unsigned long h) : width(w), height(h) {}
   bool operator==(const Resolution& rhs) const {
@@ -83,7 +83,8 @@ struct AudioCodecParameters {
   /// Construct an instance of AudioCodecParameters with default param.
   AudioCodecParameters()
       : name(AudioCodec::kUnknown), channel_count(0), clock_rate(0) {}
-  /// Construct an instance of AudioCodecParameters with codec name/channel count and clock rate.
+  /// Construct an instance of AudioCodecParameters with codec name/channel
+  /// count and clock rate.
   AudioCodecParameters(const AudioCodec& codec_name,
                        unsigned long channel_count,
                        unsigned long clock_rate)

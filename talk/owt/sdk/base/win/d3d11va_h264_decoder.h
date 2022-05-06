@@ -59,7 +59,10 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   // Reports statistics with histograms.
   void ReportInit();
   void ReportError();
-  int64_t GetSideData(const uint8_t* frame_data, size_t frame_length, std::vector<uint8_t>& side_data);
+  int64_t GetSideData(const uint8_t* frame_data,
+                      size_t frame_length,
+                      std::vector<uint8_t>& side_data,
+                      std::vector<uint8_t>& cursor_data);
   webrtc::DecodedImageCallback* decoded_image_callback_;
 
   bool has_reported_init_;
@@ -75,6 +78,8 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   std::unique_ptr<D3D11VAHandle> surface_handle_;
   std::vector<uint8_t> current_side_data_;
   std::unordered_map<uint32_t, std::vector<uint8_t>> side_data_list_;
+  // cursor data is allowed to be overriden, so not keeping record per-frame.
+  std::vector<uint8_t> current_cursor_data_;
   AVBufferRef* hw_device_ctx = nullptr;
   AVCodecContext* decoder_ctx = nullptr;
   AVCodec* decoder = nullptr;
