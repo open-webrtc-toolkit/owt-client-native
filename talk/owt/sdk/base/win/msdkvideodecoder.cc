@@ -24,9 +24,14 @@ static const uint8_t frame_number_sei_guid[16] = {
     0xef, 0xc8, 0xe7, 0xb0, 0x26, 0x26, 0x47, 0xfd,
     0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
 
+static const uint8_t cursor_data_sei_guid[16] = {
+    0x2f, 0x69, 0xe7, 0xb0, 0x16, 0x56, 0x87, 0xfd,
+    0x2d, 0x14, 0x26, 0x37, 0x14, 0x22, 0x23, 0x38};
+
 int64_t GetSideData(const uint8_t* frame_data,
                     size_t frame_size,
                     std::vector<uint8_t>& side_data,
+                    std::vector<uint8_t>& cursor_data,
                     bool is_h264) {
   side_data.clear();
   if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
@@ -52,9 +57,41 @@ int64_t GetSideData(const uint8_t* frame_data,
             goto failed;
           }
         }
-        // Read the entire payload
+        // Read the entire side-data payload
         for (unsigned int i = 0; i < payload_size - 16; i++)
           side_data.push_back(head[i + 23]);
+
+        // Proceed with cursor data SEI, if any.
+        unsigned int sei_idx = 23 + payload_size - 16;
+        if (head[sei_idx] != 0x05) {
+          return payload_size;
+        } else {
+          sei_idx++;
+          unsigned int cursor_data_size = 0;
+          while (head[sei_idx] == 0xFF) {
+            cursor_data_size += head[sei_idx];
+            sei_idx++;
+          }
+          cursor_data_size += head[sei_idx];
+          cursor_data_size -= 16;
+          sei_idx++;
+
+          for (int i = 0; i < 16; i++) {
+            if (head[sei_idx] != cursor_data_sei_guid[i]) {
+              goto failed;
+            }
+            sei_idx++;
+          }
+
+          if (cursor_data_size > 0) {
+            if (!cursor_data.empty()) {
+              cursor_data.clear();
+            }
+            cursor_data.insert(cursor_data.end(), head + sei_idx,
+                               head + sei_idx + cursor_data_size);
+          }
+        }
+
         return payload_size;
       }
     }
@@ -74,9 +111,40 @@ int64_t GetSideData(const uint8_t* frame_data,
             goto failed;
           }
         }
-        // Read the side-data
+        // Read the entire side-data payload
         for (unsigned int i = 0; i < payload_size - 16; i++)
           side_data.push_back(head[i + 24]);
+
+        // Proceed with cursor data SEI, if any.
+        unsigned int sei_idx = 24 + payload_size - 16;
+        if (head[sei_idx] != 0x05) {
+          return payload_size;
+        } else {
+          sei_idx++;
+          unsigned int cursor_data_size = 0;
+          while (head[sei_idx] == 0xFF) {
+            cursor_data_size += head[sei_idx];
+            sei_idx++;
+          }
+          cursor_data_size += head[sei_idx];
+          cursor_data_size -= 16;
+          sei_idx++;
+
+          for (int i = 0; i < 16; i++) {
+            if (head[sei_idx] != cursor_data_sei_guid[i]) {
+              goto failed;
+            }
+            sei_idx++;
+          }
+
+          if (cursor_data_size > 0) {
+            if (!cursor_data.empty()) {
+              cursor_data.clear();
+            }
+            cursor_data.insert(cursor_data.end(), head + sei_idx,
+                               head + sei_idx + cursor_data_size);
+          }
+        }
         return payload_size;
       }
     }
@@ -337,8 +405,8 @@ int32_t MSDKVideoDecoder::Decode(
 
   ReadFromInputStream(&m_mfx_bs_, inputImage.data(), inputImage.size());
   bool is_h264 = (codec_.codecType == webrtc::kVideoCodecH264);
-  GetSideData(inputImage.mutable_data(), inputImage.size(), current_side_data_);
-              is_h264);
+  GetSideData(inputImage.mutable_data(), inputImage.size(), current_side_data_,
+              current_cursor_data_, is_h264);
   if (current_side_data_.size() > 0) {
     side_data_list_[inputImage.Timestamp()] = current_side_data_;
   }
@@ -452,11 +520,41 @@ retry:
         // handle for locking/unlocking purpose.
         m_pmfx_allocator_->GetFrameHDL(dxMemId, (mfxHDL*)&pair);
         if (callback_) {
+          size_t side_data_size = 0;
+          RtlZeroMemory(&surface_handle_->side_data[0],
+                        OWT_ENCODED_IMAGE_SIDE_DATA_SIZE_MAX);
+          if (side_data_list_.find(inputImage.Timestamp()) !=
+              side_data_list_.end()) {
+            side_data_size = side_data_list_[inputImage.Timestamp()].size();
+            for (int i = 0; i < side_data_size; i++) {
+              surface_handle_->side_data[i] =
+                  side_data_list_[inputImage.Timestamp()][i];
+            }
+            side_data_list_.erase(inputImage.Timestamp());
+            if (side_data_list_.size() > kMaxSideDataListSize) {
+              // If side_data_list_ grows too large, clear it.
+              side_data_list_.clear();
+            }
+          }
+          size_t cursor_data_size = current_cursor_data_.size();
+          if (cursor_data_size > 0) {
+            RtlZeroMemory(&surface_handle_->cursor_data[0],
+                          OWT_CURSOR_DATA_SIZE_MAX);
+            std::copy(current_cursor_data_.begin(), current_cursor_data_.end(),
+                      &surface_handle_->side_data[0]);
+            current_cursor_data_.clear();
+          }
           surface_handle_->d3d11_device = d3d11_device_.p;
           surface_handle_->texture =
               reinterpret_cast<ID3D11Texture2D*>(pair.first);
+          surface_handle_->d3d11_video_device = d3d11_video_device_.p;
+          surface_handle_->context = d3d11_video_context_.p;
           // Texture_array_index not used when decoding with MSDK.
-          surface_handle_->texture_array_index = 0;
+          surface_handle_->array_index = 0;
+          surface_handle_->side_data_size = side_data_size;
+          surface_handle_->cursor_data_size = cursor_data_size;
+          surface_handle_->decode_start = decode_start_time;
+          surface_handle_->decode_end = clock_->CurrentTime().ms_or(0);
           D3D11_TEXTURE2D_DESC texture_desc;
           memset(&texture_desc, 0, sizeof(texture_desc));
           surface_handle_->texture->GetDesc(&texture_desc);

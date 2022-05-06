@@ -108,6 +108,7 @@ private:
     webrtc::Mutex timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
+  std::vector<uint8_t> current_cursor_data_;
 };
 }  // namespace base
 }  // namespace owt

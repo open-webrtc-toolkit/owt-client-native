@@ -57,7 +57,9 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
     if (native_handle->side_data_size > 0)
       memcpy(&render_ptr->side_data[0], &native_handle->side_data[0],
              native_handle->side_data_size);
-
+    if (native_handle->cursor_data_size > 0)
+      memcpy(&render_ptr->cursor_data[0], &native_handle->cursor_data[0],
+             native_handle->cursor_data_size);
     Resolution resolution(frame.width(), frame.height());
     std::unique_ptr<VideoBuffer> video_buffer(new VideoBuffer{
         (uint8_t*)render_ptr, resolution, VideoBufferType::kD3D11});

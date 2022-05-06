@@ -38,8 +38,14 @@ enum H264DecoderImplEvent {
 
 }  // namespace
 
-static const uint8_t frame_number_sei_guid[16] = {0xef, 0xc8, 0xe7, 0xb0, 0x26,
-    0x26, 0x47, 0xfd, 0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
+static const uint8_t frame_number_sei_guid[16] = {
+    0xef, 0xc8, 0xe7, 0xb0, 0x26, 0x26, 0x47, 0xfd,
+    0x9d, 0xa3, 0x49, 0x4f, 0x60, 0xb8, 0x5b, 0xf0};
+
+static const uint8_t cursor_data_sei_guid[16] = {
+    0x2f, 0x69, 0xe7, 0xb0, 0x16, 0x56, 0x87, 0xfd,
+    0x2d, 0x14, 0x26, 0x37, 0x14, 0x22, 0x23, 0x38};
+
 static enum AVPixelFormat hw_pix_fmt;
 static enum AVPixelFormat get_hw_format(AVCodecContext* ctx,
                                         const enum AVPixelFormat* pix_fmts) {
@@ -317,7 +323,8 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
   }
   packet.size = static_cast<int>(input_image.size());
 
-  GetSideData(input_image.mutable_data(), input_image.size(), current_side_data_);
+  GetSideData(input_image.mutable_data(), input_image.size(),
+              current_side_data_, current_cursor_data_);
   if (current_side_data_.size() > 0) {
     side_data_list_[input_image.Timestamp()] = current_side_data_;
   }
@@ -380,6 +387,14 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
             side_data_list_.clear();
           }
         }
+        size_t cursor_data_size = current_cursor_data_.size();
+        if (cursor_data_size > 0) {
+          RtlZeroMemory(&surface_handle_->cursor_data[0],
+                        OWT_CURSOR_DATA_SIZE_MAX);
+          std::copy(current_cursor_data_.begin(), current_cursor_data_.end(),
+                    &surface_handle_->side_data[0]);
+          current_cursor_data_.clear();
+        }
         // Should we only send the d3d11device, and let renderer derive video
         // device and context by itself?
         surface_handle_->texture = texture;
@@ -388,6 +403,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
         surface_handle_->context = d3d11_video_context_.p;
         surface_handle_->array_index = index;
         surface_handle_->side_data_size = side_data_size;
+        surface_handle_->cursor_data_size = cursor_data_size;
         surface_handle_->decode_start = decode_start_time;
         surface_handle_->decode_end = clock_->CurrentTime().ms_or(0);
         rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
@@ -413,9 +429,12 @@ fail:
 
 // Helper function to extract the prefix-SEI.
 int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
-  size_t frame_size, std::vector<uint8_t>& side_data) {
+                                         size_t frame_size,
+                                         std::vector<uint8_t>& side_data,
+                                         std::vector<uint8_t>& cursor_data) {
   side_data.clear();
-  if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at least 24 bytes.
+  if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
+                        // least 24 bytes.
     goto failed;
 
   const uint8_t* head = frame_data;
@@ -434,9 +453,41 @@ int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
           goto failed;
         }
       }
-      // Read the entire payload
+      // Read the entire side-data payload
       for (unsigned int i = 0; i < payload_size - 16; i++)
         side_data.push_back(head[i + 23]);
+
+      // Proceed with cursor data SEI, if any.
+      unsigned int sei_idx = 23 + payload_size - 16;
+      if (head[sei_idx] != 0x05) {
+        return payload_size;
+      } else {
+        sei_idx++;
+        unsigned int cursor_data_size = 0;
+        while (head[sei_idx] == 0xFF) {
+          cursor_data_size += head[sei_idx];
+          sei_idx++;
+        }
+        cursor_data_size += head[sei_idx];
+        cursor_data_size -= 16;
+        sei_idx++;
+
+        for (int i = 0; i < 16; i++) {
+          if (head[sei_idx] != cursor_data_sei_guid[i]) {
+            goto failed;
+          }
+          sei_idx++;
+        }
+
+        if (cursor_data_size > 0) {
+          if (!cursor_data.empty()) {
+            cursor_data.clear();
+          }
+          cursor_data.insert(cursor_data.end(), head + sei_idx,
+                             head + sei_idx + cursor_data_size);
+        }
+      }
+
       return payload_size;
     }
   }
