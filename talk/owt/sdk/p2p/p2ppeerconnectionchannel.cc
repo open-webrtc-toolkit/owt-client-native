@@ -127,8 +127,6 @@ P2PPeerConnectionChannel::P2PPeerConnectionChannel(
                                nullptr) {}
 
 P2PPeerConnectionChannel::~P2PPeerConnectionChannel() {
-  if (signaling_sender_)
-    delete signaling_sender_;
   ended_ = true;
   ClosePeerConnection();
 }
