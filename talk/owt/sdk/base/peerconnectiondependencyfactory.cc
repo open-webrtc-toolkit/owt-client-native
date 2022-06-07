@@ -242,9 +242,14 @@ void PeerConnectionDependencyFactory::
     task_queue_factory_ = CreateDefaultTaskQueueFactory();
     com_initializer_ = std::make_unique<webrtc::ScopedCOMInitializer>(
         webrtc::ScopedCOMInitializer::kMTA);
-    if (com_initializer_->Succeeded())
-      adm = CreateWindowsCoreAudioAudioDeviceModule(
-          task_queue_factory_.get(), true);
+    if (com_initializer_->Succeeded()) {
+      // Ensures that the adm is used on the same thread as it is constructed
+      adm = worker_thread->Invoke<rtc::scoped_refptr<AudioDeviceModule>>(
+          RTC_FROM_HERE, [&] {
+            return CreateWindowsCoreAudioAudioDeviceModule(
+                task_queue_factory_.get(), true);
+          });
+    }
 #endif
   }
 #endif
