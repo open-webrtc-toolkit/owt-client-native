@@ -43,53 +43,6 @@ pipeline {
                 }
             }
         }
-        stage('startMCU'){
-            agent{
-                node {
-                    label "${env.mcuServer}"
-                }
-            }
-            steps {
-                script{
-                    withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
-                        sh "python ${env.startServerScriptPath} --package-url ${env.mcuPackageBaseDir} --package-name \
-                        ${env.mcuPackageName}  --base-dir ${env.mcuServerBasePath} --git-branch ${GIT_BRANCH} \
-                        --owner open-webrtc-toolkit --repo owt-client-native --commit-id ${GIT_COMMIT} \
-                        --github-script ${env.serverGithubScriptPath} --mode mcu --workspace ${WORKSPACE}"
-                    }
-                }
-            }
-        }
-        stage('startP2PServer'){
-            agent{
-                node {
-                    label "${env.p2pServer}"
-                }
-            }
-            steps{
-                script{
-                    withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
-                        sh "python ${env.startServerScriptPath} --p2p-server-path ${env.p2pServerPath} \
-                        --owner open-webrtc-toolkit --repo owt-client-native --commit-id ${GIT_COMMIT} \
-                        --git-branch ${GIT_BRANCH} --github-script ${env.serverGithubScriptPath} --mode p2p --workspace ${WORKSPACE}"
-                    }
-                }
-            }
-        }
-        stage('runAndroidCICase'){
-            agent{
-                node {
-                    label "${env.androidRunCaseServer}"
-                }
-            }
-            steps {
-                sh "docker run -v /dev/bus/usb:/dev/bus/usb -v ${env.androidCILogPath}:/home/logs --network host --privileged --rm  ${env.androidSdkImage} \
-                python ${androidSdkTestScript} --git-branch master --git-change-id null --git-commit ${GIT_COMMIT} --owner open-webrtc-toolkit --checks-repo owt-client-native \
-                --project-repo owt-client-android --remote-dependence-host ${env.remoteDependenceHost} --remote-dependence-host-username ${env.remoteDependenceUserName} \
-                --remote-dependence-host-password ${env.remoteDependencePassword} --remote-dependence-path ${env.remoteDependeceDebugPath}  \
-                --instrumentation ${env.androidSdkCaselistPath} --unit --p2p-server ${env.p2pServerUrl} --conference-server-http ${env.mcuServerUrl}"
-            }
-        }
     }
     post {
         always {
