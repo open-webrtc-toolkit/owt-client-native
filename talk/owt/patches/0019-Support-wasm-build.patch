@@ -1,0 +1,25 @@
+From d723c37c9a9be8796036602df510fe1c16e68e92 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 9 Jun 2022 18:50:34 +0800
+Subject: [PATCH] Support wasm build.
+
+---
+ nasm_assemble.gni | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/nasm_assemble.gni b/nasm_assemble.gni
+index 902a6320..d2724feb 100644
+--- a/nasm_assemble.gni
++++ b/nasm_assemble.gni
+@@ -67,6 +67,8 @@ if (is_mac || is_ios) {
+   } else if (current_cpu == "x64") {
+     _nasm_flags = [ "-fwin64" ]
+   }
++} else {
++  _nasm_flags = []
+ }
+ 
+ if (is_win) {
+-- 
+2.36.1
+

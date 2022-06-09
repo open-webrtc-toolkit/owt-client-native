@@ -19,6 +19,8 @@ THIRD_PARTY_PATH = os.path.join(HOME_PATH, 'third_party')
 LIBSRTP_PATH = os.path.join(THIRD_PARTY_PATH, 'libsrtp')
 FFMPEG_PATH = os.path.join(THIRD_PARTY_PATH, 'ffmpeg')
 LIBVPX_PATH = os.path.join(THIRD_PARTY_PATH, 'libvpx')
+LIBJPEG_TURBO_PATH = os.path.join(THIRD_PARTY_PATH, 'libjpeg_turbo')
+NASM_PATH = os.path.join(THIRD_PARTY_PATH, 'nasm')
 LIBVPX_SOURCE_PATH = os.path.join(LIBVPX_PATH, 'source/libvpx')
 WEBRTC_OVERRIDES_PATH = os.path.join(THIRD_PARTY_PATH, 'webrtc_overrides')
 BUILD_PATH = os.path.join(HOME_PATH, 'build')
@@ -45,7 +47,9 @@ patchList = [
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
     ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
-    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH) 
+    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH), 
+    ('0018-Support-wasm-build.patch', LIBJPEG_TURBO_PATH),
+    ('0019-Support-wasm-build.patch', NASM_PATH)
 ]
 
 def _patch(ignoreFailures=False):

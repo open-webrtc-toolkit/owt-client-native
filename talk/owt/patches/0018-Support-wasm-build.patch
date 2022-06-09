@@ -1,0 +1,25 @@
+From e4850e5a4ae4eb73f7a3625b332241d7cd941c3a Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 9 Jun 2022 18:38:00 +0800
+Subject: [PATCH] Support wasm build.
+
+---
+ BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index f9c483e..e18123d 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -277,7 +277,7 @@ static_library("libjpeg") {
+ 
+   # MemorySanitizer doesn't support assembly code, so keep it disabled in
+   # MSan builds for now.
+-  if (is_msan) {
++  if (is_msan || is_wasm) {
+     sources += [ "jsimd_none.c" ]
+   } else {
+     public_deps += [ ":simd" ]
+-- 
+2.36.1
+
