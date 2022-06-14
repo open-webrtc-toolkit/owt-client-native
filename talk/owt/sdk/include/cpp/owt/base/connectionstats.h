@@ -121,7 +121,7 @@ class RTCStats {
     id = other.id;
     timestamp_us = other.timestamp_us;
   }
-  virtual ~RTCStats() {}
+  virtual ~RTCStats() = default;
 
   // Downcasts the stats object to an |RTCStats| subclass |T|. TODO: DCHECKs
   // that the object is of type |T|.
