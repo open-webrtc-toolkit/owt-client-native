@@ -31,28 +31,6 @@ pipeline {
                 }
             }
         }
-        stage("BulidConference") {
-            agent{
-                node {
-                    label "mac"
-                }
-            }
-            steps {
-                echo "Buliding.."
-                sh "${iosConferenceCasePath}/build.sh"
-            }
-        }
-        stage("BulidTestP2P") {
-            agent{
-                node {
-                    label "mac"
-                }
-            }
-            steps {
-                echo "Buliding.."
-                sh "${iosP2PCasePath}/build.sh"
-            }
-        }
     }
     post {
         success {
