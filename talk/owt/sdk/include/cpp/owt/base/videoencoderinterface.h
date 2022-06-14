@@ -72,11 +72,13 @@ struct EncodedImageMetaData {
         encoding_start(0),
         encoding_end(0),
         side_data(nullptr),
-        side_data_length(0) {}
+        side_data_length(0),
+        cursor_data(nullptr),
+        cursor_data_length(0) {}
   // dtor
   ~EncodedImageMetaData() {
     if (side_data) {
-      delete side_data;
+      delete[] side_data;
       side_data = nullptr;
     }
   }
@@ -101,7 +103,7 @@ struct EncodedImageMetaData {
       return side_data;
     }
     if (side_data) {
-      delete side_data;
+      delete[] side_data;
     }
     side_data = new uint8_t[data_length];
     side_data_length = data_length;
@@ -114,7 +116,7 @@ struct EncodedImageMetaData {
   // Free sidedata.
   void encoded_image_sidedata_free() {
     if (side_data) {
-      delete side_data;
+      delete[] side_data;
       side_data = nullptr;
       side_data_length = 0;
     }
@@ -126,7 +128,7 @@ struct EncodedImageMetaData {
       return cursor_data;
     }
     if (cursor_data) {
-      delete cursor_data;
+      delete[] cursor_data;
     }
     cursor_data = new uint8_t[data_length];
     cursor_data_length = data_length;
@@ -139,7 +141,7 @@ struct EncodedImageMetaData {
   // Free cursor data.
   void cursor_data_free() {
     if (cursor_data) {
-      delete cursor_data;
+      delete[] cursor_data;
       cursor_data = nullptr;
       cursor_data_length = 0;
     }
