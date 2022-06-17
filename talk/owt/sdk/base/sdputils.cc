@@ -239,92 +239,60 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
     RTC_LOG(LS_WARNING) << "M-line is not found. SDP: " << sdp;
     return sdp;
   }
-  std::string m_line(m_line_match[0]);
   // Split m_line into vector and put preferred codec in the first place.
   std::vector<std::string> m_line_vector;
-  std::stringstream original_m_line_stream(m_line);
-  std::string item;
-  while (std::getline(original_m_line_stream, item, ' ')) {
-    m_line_vector.push_back(item);
-  }
-  if (m_line_vector.size() < 3) {
-    RTC_LOG(LS_WARNING) << "Wrong SDP format description: " << m_line;
-    return sdp;
-  }
-  std::stringstream m_line_stream;
-  for (int i = 0; i < 3; i++) {
-    if (i < 2)
-      m_line_stream << m_line_vector[i] << " ";
-    else
-      m_line_stream << m_line_vector[i];
-  }
-  for (auto& codec_value : kept_codec_values) {
-    m_line_stream << " " << codec_value;
-  }
-
-  std::string before_strip = sdp;
-  std::string after_strip = before_strip;
-
-  if (codec_names.size() > 0) {
+  std::string before_strip;
+  // Handle each m_line separately because some of them may be inactive with
+  // port 0.
+  for (size_t m_line_index = 0; m_line_index < m_line_match.size();
+       m_line_index += 1) {
+    std::string m_line(m_line_match[m_line_index]);
+    std::stringstream original_m_line_stream(m_line);
+    std::string item;
+    while (std::getline(original_m_line_stream, item, ' ')) {
+      m_line_vector.push_back(item);
+    }
+    if (m_line_vector.size() < 3) {
+      RTC_LOG(LS_WARNING) << "Wrong SDP format description: " << m_line;
+      return sdp;
+    }
+    std::stringstream m_line_stream;
+    for (int i = 0; i < 3; i++) {
+      if (i < 2)
+        m_line_stream << m_line_vector[i] << " ";
+      else
+        m_line_stream << m_line_vector[i];
+    }
+    for (auto& codec_value : kept_codec_values) {
+      m_line_stream << " " << codec_value;
+    }
     RTC_LOG(LS_INFO) << "New m-line: " << m_line_stream.str();
+    std::regex reg_m_line_with_port("m=" + media_type + " " + m_line_vector[1] +
+                                    ".*(?=[\r]?[\n]?)");
     before_strip =
-        std::regex_replace(sdp, reg_m_line, m_line_stream.str());
-    after_strip = before_strip;
-
-    if (!is_audio && qos_mode) {
-      // Search for c-line and add a=priority line after it.
-      std::regex reg_c_line("c=IN .*\\r\\n");
-      std::smatch c_line_match;
-      auto cline_search_result =
-          std::regex_search(after_strip, c_line_match, reg_c_line);
-      if (!cline_search_result || c_line_match.size() == 0) {
-        RTC_LOG(LS_WARNING) << "c-line is not found. SDP: " << sdp;
-        return sdp;
-      }
-      std::string c_line(c_line_match[0]);
-      std::stringstream c_line_stream(c_line);
-      std::string new_cline = c_line_stream.str() + "a=quality:10\r\n";
-
-      after_strip = std::regex_replace(before_strip, reg_c_line, new_cline);
+        std::regex_replace(sdp, reg_m_line_with_port, m_line_stream.str());
+  }
+  std::string after_strip = before_strip;
+  // Remove all a=fmtp:xx, a=rtpmap:xx and a=rtcp-fb:xx where xx is not in m-line,
+  // this includes the a=fmtp:xx apt:yy lines for rtx.
+  for (size_t i = 3, m_line_vector_size = m_line_vector.size(); i < m_line_vector_size; i++) {
+    if (std::find(kept_codec_values.begin(), kept_codec_values.end(),
+      m_line_vector[i]) == kept_codec_values.end()) {
+      std::string codec_value = m_line_vector[i];
+      std::regex reg_rtp_xx_map(
+          "a=rtpmap:" + codec_value + " .*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_rtp_xx_map, "");
       before_strip = after_strip;
-    }
-    // Remove all a=fmtp:xx, a=rtpmap:xx and a=rtcp-fb:xx where xx is not in
-    // m-line, this includes the a=fmtp:xx apt:yy lines for rtx.
-    for (size_t i = 3, m_line_vector_size = m_line_vector.size();
-         i < m_line_vector_size; i++) {
-      if (std::find(kept_codec_values.begin(), kept_codec_values.end(),
-                    m_line_vector[i]) == kept_codec_values.end()) {
-        std::string codec_value = m_line_vector[i];
-        std::regex reg_rtp_xx_map("a=rtpmap:" + codec_value + " .*\\r\\n",
-                                  std::regex_constants::icase);
-        after_strip = std::regex_replace(before_strip, reg_rtp_xx_map, "");
-        before_strip = after_strip;
-        std::regex reg_fmtp_xx_map("a=fmtp:" + codec_value + " .*\\r\\n",
-                                   std::regex_constants::icase);
-        after_strip = std::regex_replace(before_strip, reg_fmtp_xx_map, "");
-        before_strip = after_strip;
-        std::regex reg_rtcp_map("a=rtcp-fb:" + codec_value + " .*\\r\\n",
-                                std::regex_constants::icase);
-        after_strip = std::regex_replace(before_strip, reg_rtcp_map, "");
-        before_strip = after_strip;
-      }
-    }
-  } else {
-    if (!is_audio && qos_mode) {
-      // Search for c-line and add a=priority line after it.
-      std::regex reg_c_line("c=IN .*\\r\\n");
-      std::smatch c_line_match;
-      auto cline_search_result =
-          std::regex_search(after_strip, c_line_match, reg_c_line);
-      if (!cline_search_result || c_line_match.size() == 0) {
-        RTC_LOG(LS_WARNING) << "c-line is not found. SDP: " << sdp;
-        return sdp;
-      }
-      std::string c_line(c_line_match[0]);
-      std::stringstream c_line_stream(c_line);
-      std::string new_cline = c_line_stream.str() + "a=quality:10\r\n";
-
-      after_strip = std::regex_replace(before_strip, reg_c_line, new_cline);
+      std::regex reg_fmtp_xx_map(
+          "a=fmtp:" + codec_value + " .*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_fmtp_xx_map, "");
+      before_strip = after_strip;
+      std::regex reg_rtcp_map(
+          "a=rtcp-fb:" + codec_value + " .*\\r\\n",
+          std::regex_constants::icase);
+      after_strip = std::regex_replace(before_strip, reg_rtcp_map, "");
       before_strip = after_strip;
     }
   }
