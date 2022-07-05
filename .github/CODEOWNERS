@@ -1,8 +1,6 @@
 # See https://help.github.com/articles/about-code-owners/ for CODEOWNERS syntax.
 
-* @taste1981 @HuaChunbo @jianjunz
-jenkins/ @yanbin7
-talk/owt/sdk/base/test @yanbin7
+* @taste1981 @jianjunz
 talk/owt/sdk/base/ios @jianjunz
 talk/owt/sdk/base/objc @jianjunz
 talk/owt/sdk/conference/objc @jianjunz

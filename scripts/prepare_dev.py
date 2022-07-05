@@ -34,6 +34,7 @@ if (platform == "nt"):
 patchList = [
     ('0001-Use-OpenSSL-for-usrsctp.patch', THIRD_PARTY_PATH),
     ('0002-Use-OpenSSL-for-libsrtp.patch', LIBSRTP_PATH),
+    ('0003-Enable-Wunused-but-set-variable.patch', BUILD_PATH),
     ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
     ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
     ('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
@@ -45,7 +46,8 @@ patchList = [
     ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
     ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
-    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH) 
+    ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH),
+    ('0018-Patch-ffmpeg-to-address-security-issues.patch', FFMPEG_PATH)
 ]
 
 def _patch(ignoreFailures=False):
