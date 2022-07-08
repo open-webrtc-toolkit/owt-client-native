@@ -1092,6 +1092,7 @@ void ConferencePeerConnectionChannel::ResetCallbacks() {
 }
 void ConferencePeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
+  std::lock_guard<std::mutex> locker(release_mutex_);
   if (peer_connection_) {
     peer_connection_->Close();
     peer_connection_ = nullptr;
