@@ -28,6 +28,11 @@ if (owt_use_openssl) {
       if (is_clang) {
         defines = [ "__GNUC__" ]
       }
+    } else if (is_linux) {
+      libs = [
+        "crypto",
+        "ssl",
+      ]
     } else {
       libs = [
         "libeay32.lib",

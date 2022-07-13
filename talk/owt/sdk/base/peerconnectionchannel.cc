@@ -31,11 +31,12 @@ bool PeerConnectionChannel::InitializePeerConnection() {
   audio_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
   video_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-  configuration_.media_config.enable_dscp = true;
+  if (configuration_.crypto_options)
+    configuration_.media_config.enable_dscp = true;
   // Johny: This must not be set if we use seperate AV channels.
   if (!webrtc::field_trial::IsEnabled("OWT-IceUnbundle")) {
-     configuration_.bundle_policy =
-       webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
+    configuration_.bundle_policy =
+        webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
   }
   peer_connection_ =
       (factory_->CreatePeerConnection(configuration_, this)).get();
