@@ -197,7 +197,9 @@ void Stream::AttachAudioPlayer(AudioPlayerInterface& player) {
   WebrtcAudioRendererImpl* old_renderer =
       audio_renderer_impl_ ? audio_renderer_impl_ : nullptr;
   audio_renderer_impl_ = new WebrtcAudioRendererImpl(player);
-  audio_tracks[0]->RemoveSink(old_renderer);
+  if (old_renderer) {
+    audio_tracks[0]->RemoveSink(old_renderer);
+  }
   audio_tracks[0]->AddSink(audio_renderer_impl_);
   if (old_renderer)
     delete old_renderer;
