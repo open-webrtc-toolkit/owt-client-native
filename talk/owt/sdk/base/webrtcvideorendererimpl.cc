@@ -54,6 +54,12 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
     render_ptr->d3d11_video_device = render_video_device;
     render_ptr->context = render_context;
     render_ptr->side_data_size = native_handle->side_data_size;
+    render_ptr->decode_start = native_handle->decode_start;
+    render_ptr->decode_end = native_handle->decode_end;
+    render_ptr->frame_size = native_handle->frame_size;
+    render_ptr->start_duration = native_handle->start_duration;
+    render_ptr->last_duration = native_handle->last_duration;
+    render_ptr->packet_loss = native_handle->packet_loss;
     if (native_handle->side_data_size > 0)
       memcpy(&render_ptr->side_data[0], &native_handle->side_data[0],
              native_handle->side_data_size);

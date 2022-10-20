@@ -555,6 +555,11 @@ retry:
           surface_handle_->cursor_data_size = cursor_data_size;
           surface_handle_->decode_start = decode_start_time;
           surface_handle_->decode_end = clock_->CurrentTime().ms_or(0);
+          surface_handle_->start_duration =
+              inputImage.bwe_stats_.start_duration_;
+          surface_handle_->last_duration = inputImage.bwe_stats_.last_duration_;
+          surface_handle_->packet_loss = inputImage.bwe_stats_.packets_lost_;
+          surface_handle_->frame_size = inputImage.size();
           D3D11_TEXTURE2D_DESC texture_desc;
           memset(&texture_desc, 0, sizeof(texture_desc));
           surface_handle_->texture->GetDesc(&texture_desc);
