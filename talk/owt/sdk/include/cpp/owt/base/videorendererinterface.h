@@ -157,6 +157,10 @@ struct D3D11VAHandle {
   size_t cursor_data_size;
   uint64_t decode_start;
   uint64_t decode_end;
+  double start_duration;
+  double last_duration;
+  uint32_t packet_loss; // percent
+  size_t frame_size;  // compressed size before decoding
 };
 #endif
 }  // namespace base
