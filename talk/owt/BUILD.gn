@@ -166,7 +166,6 @@ static_library("owt_sdk_base") {
     "//third_party/webrtc/modules/video_capture:video_capture_module",
     "//third_party/webrtc/pc:libjingle_peerconnection",
     "//third_party/webrtc/rtc_base:rtc_base",
-    "//third_party/webrtc/rtc_base:rtc_base_approved",
     "//third_party/webrtc/rtc_base:rtc_json",
     "//third_party/webrtc/system_wrappers:field_trial",
     "//third_party/webrtc/system_wrappers:metrics",

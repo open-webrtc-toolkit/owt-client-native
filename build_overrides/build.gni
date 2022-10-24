@@ -1,90 +1,71 @@
-# Copyright 2015 The Chromium Authors. All rights reserved.
+# Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#    * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-#    * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
 
-# Copyright (C) <2018> Intel Corporation
-#
-# SPDX-License-Identifier: Apache-2.0
+# Some non-Chromium builds don't support building java targets.
+enable_java_templates = true
 
-# This file is borrowed from Chromium with modifications.
-
-# Several dependencies of Chrome require a different min sdk when built
-# as stand-alone projects. If this is ever not the case, these variables
-# can be removed.
-# See https://bugs.chromium.org/p/webrtc/issues/detail?id=5453.
-mac_sdk_min_build_override = "10.10"
-
-# Variable that can be used to support multiple build scenarios, like having
-# Chromium specific targets in a client project's GN file etc.
+# Don't set this variable to true when building stadalone WebRTC, it is
+# only needed to support both WebRTC standalone and Chromium builds.
 build_with_chromium = false
 
-# Some non-Chromium builds don't use Chromium's third_party/binutils.
-linux_use_bundled_binutils_override = true
+# Use our own suppressions files.
+asan_suppressions_file = "//build/sanitizers/asan_suppressions.cc"
+lsan_suppressions_file = "//tools_webrtc/sanitizers/lsan_suppressions_webrtc.cc"
+tsan_suppressions_file = "//tools_webrtc/sanitizers/tsan_suppressions_webrtc.cc"
+msan_ignorelist_path =
+    rebase_path("//tools_webrtc/msan/suppressions.txt", root_build_dir)
+ubsan_ignorelist_path =
+    rebase_path("//tools_webrtc/ubsan/suppressions.txt", root_build_dir)
+ubsan_vptr_ignorelist_path =
+    rebase_path("//tools_webrtc/ubsan/vptr_suppressions.txt", root_build_dir)
 
-# Building with OWT client SDK.
-build_with_owt = true
+# For Chromium, Android 32-bit non-component, non-clang builds hit a 4GiB size
+# limit, making them requiring symbol_level=2. WebRTC doesn't hit that problem
+# so we just ignore that assert. See https://crbug.com/648948 for more info.
+ignore_elf32_limitations = true
+
+# Use bundled hermetic Xcode installation maintainted by Chromium,
+# except for local iOS builds where it's unsupported.
+# Allow for mac cross compile on linux machines.
+if (host_os == "mac" || host_os == "linux") {
+  _result = exec_script("//build/mac/should_use_hermetic_xcode.py",
+                        [ target_os ],
+                        "value")
+  assert(_result != 2,
+         "Do not allow building targets with the default " +
+             "hermetic toolchain if the minimum OS version is not met.")
+  use_system_xcode = _result == 0
+}
 
 declare_args() {
-  # Android 32-bit non-component, non-clang builds cannot have symbol_level=2
-  # due to 4GiB file size limit, see https://crbug.com/648948.
-  # Set this flag to true to skip the assertion.
-  ignore_elf32_limitations = false
-
-  # Use the system install of Xcode for tools like ibtool, libtool, etc.
-  # This does not affect the compiler. When this variable is false, targets will
-  # instead use a hermetic install of Xcode. [The hermetic install can be
-  # obtained with gclient sync after setting the environment variable
-  # FORCE_MAC_TOOLCHAIN].
-  use_system_xcode = true
-
-  if (is_win || is_ios || is_android) {
-    rtc_use_h265 = true
-  } else {
-    rtc_use_h265 = false
-  }
-
-  # Includes tests.
-  owt_include_tests = false
-
-  # Include quic support
-  owt_use_quic = false
-  owt_quic_header_root = ""
-  owt_quic_lib_root = ""
-
-  # Some non-Chromium builds don't support building java targets.
-  enable_java_templates = true
-
-  # If true, it assumes that //third_party/abseil-cpp is an available
-  # dependency for googletest.
-  gtest_enable_absl_printers = true
-
   # WebRTC doesn't depend on //base from production code but only for testing
   # purposes. In any case, it doesn't depend on //third_party/perfetto which
   # is used for base tracing, so this feature is disabled.
   enable_base_tracing = false
   use_perfetto_client_library = false
+
+  # Limits the defined //third_party/android_deps targets to only "buildCompile"
+  # and "buildCompileNoDeps" targets. This is useful for third-party
+  # repositories which do not use JUnit tests. For instance,
+  # limit_android_deps == true removes "gn gen" requirement for
+  # //third_party/robolectric .
+  limit_android_deps = false
+
+  # If true, it assumes that //third_party/abseil-cpp is an available
+  # dependency for googletest.
+  gtest_enable_absl_printers = true
+
+  # Build tests.
+  owt_include_tests = false
+
+  # Enable WebTransport for OWT conference.
+  owt_use_quic = false
+
+  # Enable HEVC for WebRTC.
+  rtc_use_h265 = false
 }
