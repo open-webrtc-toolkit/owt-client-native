@@ -17,9 +17,6 @@ rtc_include_internal_audio_device = true
 # Do not use X11 for Linux.
 rtc_use_x11 = false
 
-# Don't include WebRTC tests.
-rtc_include_tests = false
-
 # By default enable internal codecs.
 rtc_use_builtin_sw_codecs = true
 

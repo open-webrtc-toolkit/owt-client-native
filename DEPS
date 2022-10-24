@@ -36,6 +36,8 @@
 gclient_gn_args_file = 'src/build/config/gclient_args.gni'
 gclient_gn_args = [
   'generate_location_tags',
+  'checkout_google_benchmark',
+  'build_with_owt',
 ]
 
 vars = {
@@ -45,7 +47,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'deps_webrtc_git': 'https://github.com/open-webrtc-toolkit',
+  'deps_owt_git': 'https://github.com/open-webrtc-toolkit',
   'chromium_revision': 'f8d62f3cb78e2561e03012256719cfc98a35ab55',
 
   # Keep the Chromium default of generating location tags.
@@ -61,6 +63,11 @@ vars = {
   'checkout_fuchsia_boot_images': "qemu.x64",
   'checkout_fuchsia': False,
 
+  # By default, do not check out Google Benchmark. The library is only used by a
+  # few specialized benchmarks that most developers do not interact with. Will
+  # be overridden by gclient variables.
+  'checkout_google_benchmark': False,
+
   # By default, do not check out the re-client binaries.
   'checkout_reclient': False,
   # reclient CIPD package version
@@ -69,6 +76,8 @@ vars = {
   # ninja CIPD package version
   # https://chrome-infra-packages.appspot.com/p/infra/3pp/tools/ninja
   'ninja_version': 'version:2@1.8.2.chromium.3',
+
+  'build_with_owt': True
 }
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
@@ -79,12 +88,6 @@ deps = {
     Var('chromium_git') + '/chromium/src/build' + '@' + '917ace59aa44579682a0e7ca35a6b0d9e6b01b54',
   'src/buildtools':
     Var('chromium_git') + '/chromium/src/buildtools' + '@' + 'b47f3d62c4643b07f4254c57dd1956d66f265589',
-  # Gradle 4.3-rc4. Used for testing Android Studio project generation for WebRTC.
-  'src/third_party/webrtc/examples/androidtests/third_party/gradle': {
-    'url': Var('chromium_git') + '/external/github.com/gradle/gradle.git' + '@' +
-      'f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
-    'condition': 'checkout_android',
-  },
   'src/ios': {
     'url': Var('chromium_git') + '/chromium/src/ios' + '@' + '39784d13204a4c40e7cf543adcc954ed6eaa25c4',
     'condition': 'checkout_ios',
@@ -93,6 +96,15 @@ deps = {
     Var('chromium_git') + '/chromium/src/testing' + '@' + '58d91b67d9eabb62b22b20cede3556aafbbed441',
   'src/third_party':
     Var('chromium_git') + '/chromium/src/third_party' + '@' + 'cd30703e732f3436f72f63c13f16ebb19803ddd6',
+  # WebRTC-only dependencies (not present in Chromium).
+  'src/third_party/webrtc':
+    Var('deps_owt_git') + '/owt-deps-webrtc' + '@' + 'e1fd54d17b7797fa648fc7b8c7999b79f202db23',
+  # Gradle 4.3-rc4. Used for testing Android Studio project generation for WebRTC.
+  'src/third_party/webrtc/examples/androidtests/third_party/gradle': {
+    'url': Var('chromium_git') + '/external/github.com/gradle/gradle.git' + '@' +
+      'f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
+    'condition': 'checkout_android',
+  },
   'src/buildtools/linux64': {
     'packages': [
       {
@@ -135,7 +147,7 @@ deps = {
   },
 
   'src/buildtools/clang_format/script':
-    Var('chromium_git') + '/chromium/llvm-project/cfe/tools/clang-format.git' + '@' + '8b525d2747f2584fc35d8c7e612e66f377858df7',
+    Var('chromium_git') + '/external/github.com/llvm/llvm-project/clang/tools/clang-format.git' + '@' + '8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
     Var('chromium_git') + '/external/github.com/llvm/llvm-project/libcxx.git' + '@' + 'eddc4cee0995875d2d91a944edaa08112174a172',
   'src/buildtools/third_party/libc++abi/trunk':
@@ -226,7 +238,6 @@ deps = {
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@56c467093598ec559a7148b61e112e9de52b7076',
   'src/third_party/google_benchmark/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/benchmark.git@f730846b0a3c0dc0699978846fb14ffb2fad0bdc',
-    'condition': 'checkout_google_benchmark',
   },
   'src/third_party/gtest-parallel':
     Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + 'f4d65b555894b301699c7c3c52906f72ea052e83',
@@ -2092,7 +2103,7 @@ hooks = [
         'python3',
         'src/build/landmines.py',
         '--landmine-scripts',
-        'src/tools_webrtc/get_landmines.py',
+        'src/build/get_landmines.py',
         '--src-dir',
         'src',
     ],
@@ -2388,7 +2399,7 @@ hooks = [
     'name': 'vpython_common',
     'pattern': '.',
     'action': [ 'vpython3',
-                '-vpython-spec', 'src/.vpython3',
+                '-vpython-spec', 'src/third_party/webrtc/.vpython3',
                 '-vpython-tool', 'install',
     ],
   },
