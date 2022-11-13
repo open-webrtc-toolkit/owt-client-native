@@ -20,7 +20,7 @@ class NativeHandleBuffer : public VideoFrameBuffer{
    int width() const override { return width_; }
    int height() const override { return height_; }
    rtc::scoped_refptr<I420BufferInterface> ToI420() override {
-     RTC_NOTREACHED();
+     RTC_DCHECK_NOTREACHED();
      return nullptr;
    }
 

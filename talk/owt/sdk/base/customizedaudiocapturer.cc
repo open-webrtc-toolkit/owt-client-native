@@ -133,19 +133,19 @@ bool CustomizedAudioCapturer::Playing() const {
 int32_t CustomizedAudioCapturer::StartRecording() {
   recording_ = true;
   const char* thread_name = "owt_audio_module_capture_thread";
-  thread_rec_.reset(new rtc::PlatformThread(RecThreadFunc, this, thread_name, rtc::kRealtimePriority));
-  thread_rec_->Start();
+  thread_rec_ = rtc::PlatformThread::SpawnJoinable(
+      [this] {
+        while (RecThreadProcess()) {
+        }
+      },
+      thread_name,
+      rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kRealtime));
   return 0;
 }
 int32_t CustomizedAudioCapturer::StopRecording() {
-  {
-    webrtc::MutexLock lock(&mutex_);
-    recording_ = false;
-  }
-  if (thread_rec_) {
-    thread_rec_->Stop();
-    thread_rec_.reset();
-  }
+  webrtc::MutexLock lock(&mutex_);
+  recording_ = false;
+  thread_rec_.Finalize();
   return 0;
 }
 bool CustomizedAudioCapturer::Recording() const {

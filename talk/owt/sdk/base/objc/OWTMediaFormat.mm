@@ -30,7 +30,7 @@ static std::unordered_map<OWTAudioCodec, const owt::base::AudioCodec>
     if (it != audioCodecMap.end()) {
       _name = it->first;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       _name = OWTAudioCodecUnknown;
     }
     _channelCount = nativeAudioCodecParameters.channel_count;
@@ -64,7 +64,7 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
     if (it != videoCodecMap.end()) {
       _name = it->first;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       _name = OWTVideoCodecUnknown;
     }
     _profile =
@@ -270,7 +270,7 @@ static std::unordered_map<OWTVideoSourceInfo,const owt::base::VideoSourceInfo>
     if (it_audio != audioSourceInfoMap.end()) {
       _audio = it_audio->first;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       _audio = OWTAudioSourceInfoUnknown;
     }
     auto it_video =
@@ -281,7 +281,7 @@ static std::unordered_map<OWTVideoSourceInfo,const owt::base::VideoSourceInfo>
     if (it_video != videoSourceInfoMap.end()) {
       _video = it_video->first;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       _video = OWTVideoSourceInfoUnknown;
     }
   }
@@ -322,7 +322,7 @@ static std::unordered_map<OWTVideoSourceInfo,const owt::base::VideoSourceInfo>
     return owt::base::TrackKind::kVideo;
   }
   if (kind != OWTTrackKindUnknown) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
   return owt::base::TrackKind::kUnknown;
 }
@@ -337,7 +337,7 @@ static std::unordered_map<OWTVideoSourceInfo,const owt::base::VideoSourceInfo>
     case owt::base::TrackKind::kUnknown:
       return OWTTrackKindUnknown;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return OWTTrackKindUnknown;
   }
 }

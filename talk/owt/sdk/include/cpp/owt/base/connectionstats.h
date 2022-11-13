@@ -307,7 +307,6 @@ class RTCIceCandidatePairStats final : public RTCStats {
                            uint64_t priority,
                            bool nominated,
                            bool writable,
-                           bool readable,
                            uint64_t bytes_sent,
                            uint64_t bytes_received,
                            double total_round_trip_time,
@@ -318,12 +317,7 @@ class RTCIceCandidatePairStats final : public RTCStats {
                            uint64_t requests_sent,
                            uint64_t responses_received,
                            uint64_t responses_sent,
-                           uint64_t retransmissions_received,
-                           uint64_t retransmissions_sent,
-                           uint64_t consent_requests_received,
-                           uint64_t consent_requests_sent,
-                           uint64_t consent_responses_received,
-                           uint64_t consent_responses_sent);
+                           uint64_t consent_requests_sent);
   RTCIceCandidatePairStats(const RTCIceCandidatePairStats& other);
   ~RTCIceCandidatePairStats() override;
 
@@ -339,7 +333,6 @@ class RTCIceCandidatePairStats final : public RTCStats {
 
   // Below two are not included in spec. You can ignore them.
   bool writable;
-  bool readable;
 
   // TODO: by spec below we should populate thse two stats:
   // uint64_t packets_sent, uint64_t packets_received.
@@ -375,23 +368,7 @@ class RTCIceCandidatePairStats final : public RTCStats {
   uint64_t responses_received;
   // total number of connectivity check response sent.
   uint64_t responses_sent;
-  // total number of connectivity check request retransmissions received.
-  // TODO: Collect and populate this value.
-  uint64_t retransmissions_received;
-  // total number of connectivity check rquest retransmissions sent.
-  // TODO: Collect and populate this value.
-  uint64_t retransmissions_sent;
-  // total number of consent requests/response received/sent. Spec does not
-  // define the consent_requests_received and consent_response_received, but
-  // define the consentRequestBytesSent/...), so the implementation is quite
-  // different from spec.
-  // TODO: Collect and populate this value.
-  uint64_t consent_requests_received;
   uint64_t consent_requests_sent;
-  // TODO: Collect and populate this value.
-  uint64_t consent_responses_received;
-  // TODO: Collect and populate this value.
-  uint64_t consent_responses_sent;
 };
 
 /*!
@@ -520,15 +497,11 @@ class RTCMediaStreamTrackStats final : public RTCStats {
                            uint64_t jitter_buffer_emitted_count,
                            uint32_t frame_width,
                            uint32_t frame_height,
-                           double frames_per_second,
                            uint32_t frames_sent,
                            uint32_t huge_frames_sent,
                            uint32_t frames_received,
                            uint32_t frames_decoded,
                            uint32_t frames_dropped,
-                           uint32_t frames_corrupted,
-                           uint32_t partial_frames_lost,
-                           uint32_t full_frames_lost,
                            double audio_level,
                            double total_audio_energy,
                            double echo_return_loss,
@@ -543,7 +516,6 @@ class RTCMediaStreamTrackStats final : public RTCStats {
                            uint64_t jitter_buffer_flushes,
                            uint64_t delayed_packet_outage_samples,
                            double relative_packet_arrival_delay,
-                           double jitter_buffer_target_delay,
                            uint32_t interruption_count,
                            double total_interruption_duration,
                            uint32_t freeze_count,
@@ -575,12 +547,6 @@ class RTCMediaStreamTrackStats final : public RTCStats {
   uint32_t frames_received;
   uint32_t frames_decoded;
   uint32_t frames_dropped;
-  // TODO: Not collected by |RTCStatsCollector|.
-  uint32_t frames_corrupted;
-  // TODO: Not collected by |RTCStatsCollector|.
-  uint32_t partial_frames_lost;
-  // TODO: Not collected by |RTCStatsCollector|.
-  uint32_t full_frames_lost;
   // Audio-only members
   double audio_level;         // Receive-only
   double total_audio_energy;  // Receive-only
@@ -644,7 +610,6 @@ class RTCRTPStreamStats : public RTCStats {
                     const std::string& id,
                     int64_t timestamp,
                     uint32_t ssrc,
-                    bool is_remote,
                     const std::string& media_type,
                     const std::string& kind,
                     const std::string& track_id,
@@ -653,7 +618,6 @@ class RTCRTPStreamStats : public RTCStats {
                     uint32_t fir_count,
                     uint32_t pli_count,
                     uint32_t nack_count,
-                    uint32_t sli_count,
                     uint64_t qp_sum);
   RTCRTPStreamStats(const RTCRTPStreamStats& other);
   ~RTCRTPStreamStats() override;
@@ -686,7 +650,6 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCInboundRTPStreamStats(const std::string& id,
                            int64_t timestamp,
                            uint32_t ssrc,
-                           bool is_remote,
                            const std::string& media_type,
                            const std::string& kind,
                            const std::string& track_id,
@@ -695,7 +658,6 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
                            uint32_t fir_count,
                            uint32_t pli_count,
                            uint32_t nack_count,
-                           uint32_t sli_count,
                            uint64_t qp_sum,
                            uint32_t packets_received,
                            uint64_t fec_packets_received,
@@ -705,19 +667,8 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
                            int32_t packets_lost,
                            double last_packet_received_timestamp,
                            double jitter,
-                           double round_trip_time,
                            uint32_t packets_discarded,
-                           uint32_t packets_repaired,
-                           uint32_t burst_packets_lost,
-                           uint32_t burst_packets_discarded,
-                           uint32_t burst_loss_count,
-                           uint32_t burst_discard_count,
-                           double burst_loss_rate,
-                           double burst_discard_rate,
-                           double gap_loss_rate,
-                           double gap_discard_rate,
                            uint32_t frames_decoded,
-                           uint32_t frames_rendered,
                            uint32_t key_frames_decoded,
                            double total_decode_time,
                            double total_inter_frame_delay,
@@ -784,7 +735,6 @@ class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCOutboundRTPStreamStats(const std::string& id,
                             int64_t timestamp,
                             uint32_t ssrc,
-                            bool is_remote,
                             const std::string& media_type,
                             const std::string& kind,
                             const std::string& track_id,
@@ -793,7 +743,6 @@ class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
                             uint32_t fir_count,
                             uint32_t pli_count,
                             uint32_t nack_count,
-                            uint32_t sli_count,
                             uint64_t qp_sum,
                             const std::string& media_source_id,
                             const std::string& remote_id,

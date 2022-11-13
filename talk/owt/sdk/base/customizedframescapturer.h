@@ -20,12 +20,10 @@
 #include "webrtc/api/video/video_source_interface.h"
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/stream.h"
 #include "webrtc/rtc_base/string_utils.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread_annotations.h"
-#include "webrtc/rtc_base/constructor_magic.h"
 #include "owt/base/framegeneratorinterface.h"
 #include "owt/base/videoencoderinterface.h"
 
@@ -44,6 +42,9 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
                            VideoEncoderInterface* encoder);
   virtual ~CustomizedFramesCapturer();
 
+  CustomizedFramesCapturer(const CustomizedFramesCapturer&) = delete;
+  CustomizedFramesCapturer& operator=(const CustomizedFramesCapturer&) = delete;
+
   // Override virtual methods of parent class VideoCaptureModule.
   virtual void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<webrtc::VideoFrame>* dataCallback) override;
@@ -57,8 +58,8 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   virtual bool CaptureStarted() override;
   virtual int32_t CaptureSettings(webrtc::VideoCaptureCapability& settings) override;
   virtual int32_t SetCaptureRotation(webrtc::VideoRotation rotation) override;
-  virtual bool SetApplyRotation(bool enable) override { 
-    return false; 
+  virtual bool SetApplyRotation(bool enable) override {
+    return false;
   }
   virtual bool GetApplyRotation() override {
     return false;
@@ -94,7 +95,6 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule {
   webrtc::Mutex lock_;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
-  RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesCapturer);
 };
 }  // namespace base
 }  // namespace owt

@@ -114,7 +114,7 @@ bool VideoCaptureMF::Init(const char* device_unique_id_utf8, int32_t width,
   CComPtr<IMFMediaSourceEx> media_source_ex = nullptr;
   if (output_capability_.videoType == webrtc::VideoType::kNV12) {
     // Sharing the buffer is only when the camera output is NV12
-    manager_ = new rtc::RefCountedObject<owt::base::D3D11Manager>();
+    manager_ = rtc::make_ref_counted<owt::base::D3D11Manager>();
     if (!manager_->Init()) {
       RTC_LOG(LS_ERROR) << "Failed to initialize D3dD11 Manager.";
       return false;
@@ -321,9 +321,6 @@ void VideoCaptureMF::IncomingFrame(IMFMediaBuffer*& frame, int64_t capture_time)
     surface_handle_->d3d11_device = manager_->GetDevice();
     surface_handle_->texture = std::move(texture);
     surface_handle_->texture_array_index = 0;
-    rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
-        new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
-            (void*)surface_handle_.get(), width, height);
     SAFE_RELEASE(frame);
   } else {
     if (FAILED(frame->GetCurrentLength(&frame_length))) {

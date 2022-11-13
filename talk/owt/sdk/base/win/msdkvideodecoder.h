@@ -15,7 +15,6 @@
 #include "webrtc/media/base/codec.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"

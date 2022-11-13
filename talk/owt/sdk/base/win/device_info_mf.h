@@ -70,7 +70,6 @@ protected:
 
   int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8) override
       RTC_EXCLUSIVE_LOCKS_REQUIRED(_apiLock);
-  ;
 };
 
 }  // namespace videocapturemodule

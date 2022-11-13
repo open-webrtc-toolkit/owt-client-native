@@ -21,8 +21,7 @@ class CustomizedVideoDecoderProxy : public VideoDecoder {
   explicit CustomizedVideoDecoderProxy(VideoCodecType type,
       VideoDecoderInterface* external_video_decoder);
   virtual ~CustomizedVideoDecoderProxy();
-  int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
-                     int32_t number_of_cores) override;
+  bool Configure(const Settings& settings) override;
   int32_t Decode(const EncodedImage& input,
                  bool missing_frames,
                  int64_t render_time_ms) override;

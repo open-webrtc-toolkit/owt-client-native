@@ -22,9 +22,6 @@ class EncodedVideoEncoderFactory : public webrtc::VideoEncoderFactory {
       const webrtc::SdpVideoFormat& format) override;
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
-
-  webrtc::VideoEncoderFactory::CodecInfo QueryVideoEncoder(
-      const webrtc::SdpVideoFormat& format) const override;
 };
 
 }  // namespace base

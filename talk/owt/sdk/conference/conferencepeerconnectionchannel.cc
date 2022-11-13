@@ -117,11 +117,11 @@ void ConferencePeerConnectionChannel::CreateOffer() {
   auto offer_answer_options =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
   offer_answer_options.use_rtp_mux = !rtp_no_mux;
-  peer_connection_->CreateOffer(observer, offer_answer_options);
+  peer_connection_->CreateOffer(observer.get(), offer_answer_options);
 }
 
 void ConferencePeerConnectionChannel::IceRestart() {
-  if (SignalingState() == PeerConnectionInterface::SignalingState::kStable) {
+  if (SignalingState() == webrtc::PeerConnectionInterface::SignalingState::kStable) {
     DoIceRestart();
   } else {
     ice_restart_needed_ = true;
@@ -130,7 +130,7 @@ void ConferencePeerConnectionChannel::IceRestart() {
 void ConferencePeerConnectionChannel::DoIceRestart() {
   RTC_LOG(LS_INFO) << "ICE restart";
   RTC_DCHECK(SignalingState() ==
-             PeerConnectionInterface::SignalingState::kStable);
+             webrtc::PeerConnectionInterface::SignalingState::kStable);
   this->CreateOffer();
 }
 
@@ -148,11 +148,11 @@ void ConferencePeerConnectionChannel::CreateAnswer() {
   auto offer_answer_options =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions();
   offer_answer_options.use_rtp_mux = !rtp_no_mux;
-  peer_connection_->CreateAnswer(observer, offer_answer_options);
+  peer_connection_->CreateAnswer(observer.get(), offer_answer_options);
 }
 
 void ConferencePeerConnectionChannel::OnSignalingChange(
-    PeerConnectionInterface::SignalingState new_state) {
+    webrtc::PeerConnectionInterface::SignalingState new_state) {
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
   signaling_state_ = new_state;
   if (new_state == webrtc::PeerConnectionInterface::SignalingState::kStable) {
@@ -173,7 +173,7 @@ void ConferencePeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   RTC_LOG(LS_INFO) << "On add stream.";
   if (subscribed_stream_ != nullptr)
-    subscribed_stream_->MediaStream(stream);
+    subscribed_stream_->MediaStream(stream.get());
   std::weak_ptr<ConferencePeerConnectionChannel> weak_this = shared_from_this();
   if (subscribe_success_callback_) {
     bool server_ready = false;
@@ -202,12 +202,13 @@ void ConferencePeerConnectionChannel::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
 void ConferencePeerConnectionChannel::OnRenegotiationNeeded() {}
 void ConferencePeerConnectionChannel::OnIceConnectionChange(
-    PeerConnectionInterface::IceConnectionState new_state) {
+    webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << "Ice connection state changed: " << new_state;
-  if (new_state == PeerConnectionInterface::kIceConnectionConnected ||
-      new_state == PeerConnectionInterface::kIceConnectionCompleted) {
+  if (new_state == webrtc::PeerConnectionInterface::kIceConnectionConnected ||
+      new_state == webrtc::PeerConnectionInterface::kIceConnectionCompleted) {
     connected_ = true;
-  } else if (new_state == PeerConnectionInterface::kIceConnectionFailed) {
+  } else if (new_state ==
+             webrtc::PeerConnectionInterface::kIceConnectionFailed) {
     // TODO(jianlin): Change trigger condition back to kIceConnectionClosed
     // once conference server re-enables IceRestart and client supports it as well.
     if (connected_) {
@@ -222,7 +223,7 @@ void ConferencePeerConnectionChannel::OnIceConnectionChange(
   // requires a reply queue which is not available at this time.
 }
 void ConferencePeerConnectionChannel::OnIceGatheringChange(
-    PeerConnectionInterface::IceGatheringState new_state) {
+    webrtc::PeerConnectionInterface::IceGatheringState new_state) {
   RTC_LOG(LS_INFO) << "Ice gathering state changed: " << new_state;
 }
 // TODO(jianlin): New signaling protocol defines candidate as
@@ -316,7 +317,7 @@ void ConferencePeerConnectionChannel::OnCreateSessionDescriptionSuccess(
   sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs, is_screen);
   webrtc::SessionDescriptionInterface* new_desc(
       webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
-  peer_connection_->SetLocalDescription(observer, new_desc);
+  peer_connection_->SetLocalDescription(observer.get(), new_desc);
 }
 void ConferencePeerConnectionChannel::OnCreateSessionDescriptionFailure(
     const std::string& error) {
@@ -838,7 +839,7 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
     scoped_refptr<FunctionalStatsObserver> observer =
         FunctionalStatsObserver::Create(on_success);
     peer_connection_->GetStats(
-        observer, nullptr,
+        observer.get(), nullptr,
         webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
   }
 }
@@ -861,7 +862,7 @@ void ConferencePeerConnectionChannel::GetConnectionStats(
     rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback> observer =
         FunctionalStandardRTCStatsCollectorCallback::Create(
             std::move(on_success));
-    peer_connection_->GetStats(observer);
+    peer_connection_->GetStats(observer.get());
   }
 }
 
@@ -874,7 +875,7 @@ void ConferencePeerConnectionChannel::GetStats(
   scoped_refptr<FunctionalNativeStatsObserver> observer =
       FunctionalNativeStatsObserver::Create(on_success);
   peer_connection_->GetStats(
-      observer, nullptr,
+      observer.get(), nullptr,
       webrtc::PeerConnectionInterface::kStatsOutputLevelStandard);
 }
 

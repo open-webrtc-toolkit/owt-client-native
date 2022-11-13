@@ -2,8 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/base/desktopcapturer.h"
 #include <iostream>
 #include "libyuv/convert.h"
+#include "webrtc/api/task_queue/pending_task_safety_flag.h"
 #include "webrtc/rtc_base/byte_buffer.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
@@ -12,7 +14,6 @@
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/system_wrappers/include/clock.h"
-#include "talk/owt/sdk/base/desktopcapturer.h"
 
 using namespace rtc;
 namespace owt {
@@ -22,8 +23,7 @@ namespace base {
 // generates frames.
 ///////////////////////////////////////////////////////////////////////
 class BasicScreenCapturer::BasicScreenCaptureThread
-    : public rtc::Thread,
-      public rtc::MessageHandler {
+    : public rtc::Thread {
  public:
   explicit BasicScreenCaptureThread(BasicScreenCapturer* capturer)
       : rtc::Thread(rtc::SocketServer::CreateDefault()),
@@ -32,6 +32,9 @@ class BasicScreenCapturer::BasicScreenCaptureThread
     waiting_time_ms_ = 1000 / 30;  // For basic capturer, fix it to 30fps
   }
 
+  BasicScreenCaptureThread(const BasicScreenCaptureThread&) = delete;
+  BasicScreenCaptureThread& operator=(const BasicScreenCaptureThread&) = delete;
+
   virtual ~BasicScreenCaptureThread() { Stop(); }
   // Override virtual method of parent Thread. Context: Worker Thread.
   virtual void Run() {
@@ -39,33 +42,38 @@ class BasicScreenCapturer::BasicScreenCaptureThread
     // Stop() is called externally or Quit() is called by OnMessage().
     if (capturer_) {
       capturer_->CaptureFrame();
-      rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
+      rtc::Thread::Current()->PostTask(SafeTask(task_safety_.flag(),[this]{
+        TryCaptureFrame();
+      }));
       rtc::Thread::Current()->ProcessMessages(kForever);
     }
     webrtc::MutexLock lock(&mutex_);
     finished_ = true;
   }
-  // Override virtual method of parent MessageHandler. Context: Worker Thread.
-  virtual void OnMessage(rtc::Message* /*pmsg*/) {
-    if (capturer_) {
-      capturer_->CaptureFrame();
-      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, waiting_time_ms_,
-                                          this);
-    } else {
-      rtc::Thread::Current()->Quit();
-    }
-  }
+
   // Check if Run() is finished.
   bool Finished() const {
     webrtc::MutexLock lock(&mutex_);
     return finished_;
   }
+
+  void TryCaptureFrame() {
+    if (capturer_) {
+      capturer_->CaptureFrame();
+      rtc::Thread::Current()->PostDelayedTask(
+          SafeTask(task_safety_.flag(), [this] { TryCaptureFrame(); }),
+          webrtc::TimeDelta::Millis(waiting_time_ms_));
+    } else {
+      rtc::Thread::Current()->Quit();
+    }
+  }
+
  private:
   BasicScreenCapturer* capturer_;
   mutable webrtc::Mutex mutex_;
   bool finished_;
   int waiting_time_ms_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(BasicScreenCaptureThread);
+  webrtc::ScopedTaskSafety task_safety_;
 };
 /////////////////////////////////////////////////////////////////////
 // Implementation of class BasicScreenCapturer.

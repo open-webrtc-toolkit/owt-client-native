@@ -30,7 +30,6 @@ bool PeerConnectionChannel::InitializePeerConnection() {
     factory_ = PeerConnectionDependencyFactory::Get();
   audio_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
   video_transceiver_direction_ = webrtc::RtpTransceiverDirection::kSendRecv;
-  configuration_.enable_dtls_srtp = true;
   configuration_.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   configuration_.media_config.enable_dscp = true;
   // Johny: This must not be set if we use seperate AV channels.
@@ -106,8 +105,8 @@ PeerConnectionChannel::LocalDescription() {
   return peer_connection_->local_description();
 }
 
-PeerConnectionInterface::SignalingState PeerConnectionChannel::SignalingState()
-    const {
+webrtc::PeerConnectionInterface::SignalingState
+PeerConnectionChannel::SignalingState() const {
   RTC_CHECK(peer_connection_);
   return peer_connection_->signaling_state();
 }
@@ -154,7 +153,7 @@ void PeerConnectionChannel::OnIceCandidate(
 void PeerConnectionChannel::OnIceCandidatesRemoved(
     const std::vector<cricket::Candidate>& candidates) {}
 void PeerConnectionChannel::OnSignalingChange(
-    PeerConnectionInterface::SignalingState new_state) {}
+    webrtc::PeerConnectionInterface::SignalingState new_state) {}
 void PeerConnectionChannel::OnAddStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {}
 void PeerConnectionChannel::OnRemoveStream(
@@ -163,9 +162,9 @@ void PeerConnectionChannel::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
 void PeerConnectionChannel::OnRenegotiationNeeded() {}
 void PeerConnectionChannel::OnIceConnectionChange(
-    PeerConnectionInterface::IceConnectionState new_state) {}
+    webrtc::PeerConnectionInterface::IceConnectionState new_state) {}
 void PeerConnectionChannel::OnIceGatheringChange(
-    PeerConnectionInterface::IceGatheringState new_state) {}
+    webrtc::PeerConnectionInterface::IceGatheringState new_state) {}
 void PeerConnectionChannel::OnNetworksChanged() {
   RTC_LOG(LS_INFO) << "PeerConnectionChannel::OnNetworksChanged.";
 }

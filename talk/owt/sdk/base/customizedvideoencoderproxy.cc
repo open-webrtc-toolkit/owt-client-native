@@ -133,7 +133,8 @@ int32_t CustomizedVideoEncoderProxy::Encode(
   if (data_ptr == nullptr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  webrtc::EncodedImage encodedframe(data_ptr, data_size, data_size);
+  webrtc::EncodedImage encodedframe;
+  encodedframe.SetEncodedData(EncodedImageBuffer::Create(data_ptr, data_size));
 #else
   if (external_encoder_) {
     if (!external_encoder_->EncodeOneFrame(buffer, request_key_frame))
@@ -143,7 +144,9 @@ int32_t CustomizedVideoEncoderProxy::Encode(
   uint8_t* data_ptr = data.get();
   uint32_t data_size = static_cast<uint32_t>(buffer.size());
   std::copy(buffer.begin(), buffer.end(), data_ptr);
-  webrtc::EncodedImage encodedframe(data_ptr, buffer.size(), buffer.size());
+  webrtc::EncodedImage encodedframe;
+  encodedframe.SetEncodedData(
+      EncodedImageBuffer::Create(data_ptr, buffer.size()));
 #endif
   encodedframe._encodedWidth = input_image.width();
   encodedframe._encodedHeight = input_image.height();
@@ -301,7 +304,6 @@ webrtc::VideoEncoder::EncoderInfo CustomizedVideoEncoderProxy::GetEncoderInfo()
   EncoderInfo info;
   info.supports_native_handle = true;
   info.is_hardware_accelerated = false;
-  info.has_internal_source = false;
   info.implementation_name = "OWTPassthroughEncoder";
   info.has_trusted_rate_controller = false;
   info.scaling_settings = VideoEncoder::ScalingSettings::kOff;

@@ -22,7 +22,7 @@ import distutils.dir_util
 
 HOME_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','mac'))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'build','config','apple'))
 sys.path.append(os.path.join(HOME_PATH, 'third_party', 'webrtc','tools_webrtc','apple'))
 import sdk_info
 import copy_framework_header
@@ -55,8 +55,9 @@ TEST_SIMULATOR_DEVICE = 'iPhone X'
 
 def gngen(arch, ssl_root, scheme):
   gn_args = 'target_os="ios" target_cpu="%s" is_component_build=false '\
-      'ios_enable_code_signing=false ios_deployment_target="9.0" use_xcode_clang=true '\
-      'rtc_libvpx_build_vp9=true enable_ios_bitcode=true rtc_use_h265=true rtc_enable_protobuf=false'%arch
+      'ios_enable_code_signing=false ios_deployment_target="11.0" '\
+      'rtc_enable_symbol_export=true enable_dsyms=true use_custom_libcxx=false '\
+      'rtc_use_h265=false rtc_enable_protobuf=false'%arch
   if(scheme=='release'):
     gn_args += (' is_debug=false enable_stripping=true')
   else:
@@ -86,7 +87,7 @@ def copyheaders(headers_target_folder):
     os.mkdir(headers_target_folder)
   for _, _, file_names in os.walk(HEADER_PATH):
     for file_name in file_names:
-      copy_framework_header.process(os.path.join(
+      copy_framework_header.Process(os.path.join(
           HEADER_PATH, file_name), os.path.join(headers_target_folder, file_name))
 
 def getexternalliblist(ssl_root):

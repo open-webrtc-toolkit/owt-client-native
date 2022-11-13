@@ -8,7 +8,6 @@
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/api/video_codecs/sdp_video_format.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/thread.h"
 

@@ -1,12 +1,16 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_PUBLICATION_H_
 #define OWT_BASE_PUBLICATION_H_
+
+#include <functional>
 #include "owt/base/commontypes.h"
 #include "owt/base/connectionstats.h"
 #include "owt/base/exception.h"
 #include "owt/base/macros.h"
+
 namespace owt {
 namespace base {
 /// Observer that receives event from publication.

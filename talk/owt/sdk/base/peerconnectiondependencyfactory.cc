@@ -18,10 +18,10 @@
 #endif
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/p2p/client/basic_port_allocator.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/ssl_adapter.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/field_trial.h"
+#include "webrtc/rtc_base/physical_socket_server.h"
 #if defined(WEBRTC_WIN)
 #ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
@@ -100,17 +100,14 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface>
 PeerConnectionDependencyFactory::CreatePeerConnection(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
-  return pc_thread_
-      ->Invoke<scoped_refptr<webrtc::PeerConnectionInterface>>(
-          RTC_FROM_HERE, Bind(&PeerConnectionDependencyFactory::
-                                  CreatePeerConnectionOnCurrentThread,
-                              this, config, observer))
-      .get();
+  return pc_thread_->BlockingCall([this, &config, &observer] {
+    return CreatePeerConnectionOnCurrentThread(config, observer);
+  });
 }
 PeerConnectionDependencyFactory* PeerConnectionDependencyFactory::Get() {
   std::call_once(get_pcdf_once, []() {
     dependency_factory_ =
-        new rtc::RefCountedObject<PeerConnectionDependencyFactory>();
+        rtc::make_ref_counted<PeerConnectionDependencyFactory>();
     dependency_factory_->CreatePeerConnectionFactory();
   });
   return dependency_factory_.get();
@@ -159,7 +156,7 @@ void PeerConnectionDependencyFactory::
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
   if (!rtc::InitializeSSL()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize SSL.";
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return;
   }
   worker_thread = rtc::Thread::CreateWithSocketServer();
@@ -175,9 +172,12 @@ void PeerConnectionDependencyFactory::
             network_thread->Start())
       << "Failed to start threads";
 
-  network_manager_ = std::make_shared<rtc::BasicNetworkManager>();
+  socket_factory_ = std::make_unique<rtc::PhysicalSocketServer>();
+  // TODO: Create network manager on network thread.
+  network_manager_ =
+      std::make_shared<rtc::BasicNetworkManager>(socket_factory_.get());
   packet_socket_factory_ =
-      std::make_shared<rtc::BasicPacketSocketFactory>(network_thread.get());
+      std::make_shared<rtc::BasicPacketSocketFactory>(socket_factory_.get());
 
   // Use webrtc::VideoEn(De)coderFactory on iOS.
   std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
@@ -230,11 +230,8 @@ void PeerConnectionDependencyFactory::
   // adm.
   if (GlobalConfiguration::GetCustomizedAudioInputEnabled()) {
     // Create ADM on worker thred as RegisterAudioCallback is invoked there.
-    adm = worker_thread->Invoke<rtc::scoped_refptr<AudioDeviceModule>>(
-        RTC_FROM_HERE,
-        Bind(&PeerConnectionDependencyFactory::
-                 CreateCustomizedAudioDeviceModuleOnCurrentThread,
-             this));
+    adm = worker_thread->BlockingCall(
+        [this] { return CreateCustomizedAudioDeviceModuleOnCurrentThread(); });
   } else {
 #if defined(WEBRTC_WIN)
     // For Widnows we create the audio device with non audio_device_impl
@@ -265,63 +262,36 @@ PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
   std::unique_ptr<cricket::PortAllocator> port_allocator;
   port_allocator.reset(new cricket::BasicPortAllocator(
       network_manager_.get(), packet_socket_factory_.get()));
-  // Handle port ranges.
-  IcePortRanges ice_port_ranges;
-  GlobalConfiguration::GetPortRanges(ice_port_ranges);
-  if (ice_port_ranges.audio.min > 0 &&
-      ice_port_ranges.audio.max > ice_port_ranges.audio.min) {
-    port_allocator->SetAudioPortRange(ice_port_ranges.audio.min,
-                                      ice_port_ranges.audio.max);
-  }
-  if (ice_port_ranges.video.min > 0 &&
-      ice_port_ranges.video.max > ice_port_ranges.video.min) {
-    port_allocator->SetVideoPortRange(ice_port_ranges.video.min,
-                                      ice_port_ranges.video.max);
-  }
-  if (ice_port_ranges.screen.min > 0 &&
-      ice_port_ranges.screen.max > ice_port_ranges.screen.min) {
-    port_allocator->SetScreenPortRange(ice_port_ranges.screen.min,
-                                       ice_port_ranges.screen.max);
-  }
-  if (ice_port_ranges.data.min > 0 &&
-      ice_port_ranges.data.max > ice_port_ranges.data.min) {
-    port_allocator->SetDataPortRange(ice_port_ranges.data.min,
-                                     ice_port_ranges.data.max);
-  }
   return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
-                                            nullptr, observer))
-      .get();
+                                            nullptr, observer));
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
   RTC_CHECK(!pc_factory_.get());
   RTC_LOG(LS_INFO)
       << "PeerConnectionDependencyFactory::CreatePeerConnectionFactory()";
   RTC_CHECK(pc_thread_);
-  pc_thread_->Invoke<void>(RTC_FROM_HERE,
-                           Bind(&PeerConnectionDependencyFactory::
-                                    CreatePeerConnectionFactoryOnCurrentThread,
-                                this));
+  pc_thread_->BlockingCall(
+      [this]() { CreatePeerConnectionFactoryOnCurrentThread(); });
   RTC_CHECK(pc_factory_.get());
 }
+
 scoped_refptr<webrtc::MediaStreamInterface>
 PeerConnectionDependencyFactory::CreateLocalMediaStream(
     const std::string& label) {
   RTC_CHECK(pc_thread_);
-  return pc_thread_->Invoke<scoped_refptr<webrtc::MediaStreamInterface>>(
-      RTC_FROM_HERE,
-      Bind(&PeerConnectionFactoryInterface::CreateLocalMediaStream,
-           pc_factory_.get(), label));
+  return pc_thread_->BlockingCall(
+      [this, &label]() { return pc_factory_->CreateLocalMediaStream(label); });
 }
+
 scoped_refptr<VideoTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalVideoTrack(
     const std::string& id,
     webrtc::VideoTrackSourceInterface* video_source) {
-  return pc_thread_
-      ->Invoke<scoped_refptr<VideoTrackInterface>>(
-          RTC_FROM_HERE, Bind(&PeerConnectionFactoryInterface::CreateVideoTrack,
-                              pc_factory_.get(), id, video_source))
-      .get();
+  return pc_thread_->BlockingCall([this, &id, &video_source] {
+    return pc_factory_->CreateVideoTrack(id, video_source);
+  });
 }
+
 scoped_refptr<AudioTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
   bool aec_enabled, agc_enabled, ns_enabled;
@@ -335,48 +305,33 @@ PeerConnectionDependencyFactory::CreateLocalAudioTrack(const std::string& id) {
     options.auto_gain_control =
         absl::optional<bool>(agc_enabled ? true : false);
     options.noise_suppression = absl::optional<bool>(ns_enabled ? true : false);
-    options.residual_echo_detector =
-        absl::optional<bool>(aec_enabled ? true : false);
     scoped_refptr<webrtc::AudioSourceInterface> audio_source =
         CreateAudioSource(options);
-    return pc_thread_
-        ->Invoke<scoped_refptr<AudioTrackInterface>>(
-            RTC_FROM_HERE,
-            Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
-                 pc_factory_.get(), id, audio_source.get()))
-        .get();
+    return pc_thread_->BlockingCall([this, &id, &audio_source] {
+      return pc_factory_->CreateAudioTrack(id, audio_source.get());
+    });
   } else {
-    return pc_thread_
-        ->Invoke<scoped_refptr<AudioTrackInterface>>(
-            RTC_FROM_HERE,
-            Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
-                 pc_factory_.get(), id, nullptr))
-        .get();
+    return pc_thread_->BlockingCall(
+        [this, &id] { return pc_factory_->CreateAudioTrack(id, nullptr); });
   }
 }
+
 scoped_refptr<AudioTrackInterface>
 PeerConnectionDependencyFactory::CreateLocalAudioTrack(
     const std::string& id,
     webrtc::AudioSourceInterface* audio_source) {
-  return pc_thread_
-      ->Invoke<scoped_refptr<AudioTrackInterface>>(
-          RTC_FROM_HERE, Bind(&PeerConnectionFactoryInterface::CreateAudioTrack,
-                              pc_factory_.get(), id, audio_source))
-      .get();
+  return pc_thread_->BlockingCall([this, &id, &audio_source] {
+    return pc_factory_->CreateAudioTrack(id, audio_source);
+  });
 }
+
 rtc::scoped_refptr<AudioSourceInterface>
 PeerConnectionDependencyFactory::CreateAudioSource(
     const cricket::AudioOptions& options) {
-  return pc_thread_
-      ->Invoke<scoped_refptr<webrtc::AudioSourceInterface>>(
-          RTC_FROM_HERE,
-          Bind((rtc::scoped_refptr<AudioSourceInterface>(
-                   PeerConnectionFactoryInterface::*)(
-                   const cricket::AudioOptions&)) &
-                   PeerConnectionFactoryInterface::CreateAudioSource,
-               pc_factory_.get(), options))
-      .get();
+  return pc_thread_->BlockingCall(
+      [this, &options] { return pc_factory_->CreateAudioSource(options); });
 }
+
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
 PeerConnectionDependencyFactory::PeerConnectionFactory() const {
   return pc_factory_;

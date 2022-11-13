@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
+#import <functional>
 #import "talk/owt/sdk/base/objc/OWTStream+Private.h"
 #import "talk/owt/sdk/conference/objc/RemoteMixedStreamObserverObjcImpl.h"
 #import "webrtc/sdk/objc/Framework/Classes/Common/NSString+StdString.h"

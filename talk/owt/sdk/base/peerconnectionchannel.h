@@ -4,7 +4,6 @@
 #ifndef WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #define WOOGEEN_BASE_PEERCONNECTIONCHANNEL_H_
 #include <vector>
-#include "webrtc/rtc_base/message_handler.h"
 #include "webrtc/rtc_base/third_party/sigslot/sigslot.h"
 #include "webrtc/sdk/media_constraints.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
@@ -15,38 +14,6 @@ class NetworkMonitorInterface;
 }
 namespace owt {
 namespace base {
-using webrtc::PeerConnectionInterface;
-struct SetSessionDescriptionMessage : public rtc::MessageData {
-  explicit SetSessionDescriptionMessage(
-      FunctionalSetSessionDescriptionObserver* observer,
-      webrtc::SessionDescriptionInterface* desc)
-      : observer(observer), description(desc) {}
-  virtual ~SetSessionDescriptionMessage() {
-    delete description;
-  }
-  rtc::scoped_refptr<FunctionalSetSessionDescriptionObserver> observer;
-  webrtc::SessionDescriptionInterface* description;
-};
-struct GetStatsMessage : public rtc::MessageData {
-  explicit GetStatsMessage(
-      FunctionalStatsObserver* observer,
-      webrtc::MediaStreamInterface* stream,
-      webrtc::PeerConnectionInterface::StatsOutputLevel level)
-      : observer(observer), stream(stream), level(level) {}
-  rtc::scoped_refptr<FunctionalStatsObserver> observer;
-  webrtc::MediaStreamInterface* stream;
-  webrtc::PeerConnectionInterface::StatsOutputLevel level;
-};
-struct GetNativeStatsMessage : public rtc::MessageData {
-  explicit GetNativeStatsMessage(
-      FunctionalNativeStatsObserver* observer,
-      webrtc::MediaStreamInterface* stream,
-      webrtc::PeerConnectionInterface::StatsOutputLevel level)
-      : observer(observer), stream(stream), level(level) {}
-  rtc::scoped_refptr<FunctionalNativeStatsObserver> observer;
-  webrtc::MediaStreamInterface* stream;
-  webrtc::PeerConnectionInterface::StatsOutputLevel level;
-};
 struct PeerConnectionChannelConfiguration
     : public webrtc::PeerConnectionInterface::RTCConfiguration {
  public:
@@ -65,7 +32,7 @@ class PeerConnectionChannel : public webrtc::PeerConnectionObserver,
   virtual ~PeerConnectionChannel();
   bool InitializePeerConnection();
   const webrtc::SessionDescriptionInterface* LocalDescription();
-  PeerConnectionInterface::SignalingState SignalingState() const;
+  webrtc::PeerConnectionInterface::SignalingState SignalingState() const;
   // Apply the bitrate settings on all tracks available. Failing to set any of them
   // will result in a false return, with remaining settings applicable still applied.
   // Subclasses can override this to implementation specific bitrate allocation policies.
@@ -82,7 +49,7 @@ class PeerConnectionChannel : public webrtc::PeerConnectionObserver,
   // PeerConnectionObserver
   virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {}
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state) override;
+      webrtc::PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnRemoveStream(
@@ -91,9 +58,9 @@ class PeerConnectionChannel : public webrtc::PeerConnectionObserver,
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
   virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state) override;
+      webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state) override;
+      webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
   virtual void OnIceCandidatesRemoved(
       const std::vector<cricket::Candidate>& candidates) override;

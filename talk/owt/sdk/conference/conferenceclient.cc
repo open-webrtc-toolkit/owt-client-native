@@ -1150,7 +1150,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
       (soac_status->get_string() != "soac" &&
        soac_status->get_string() != "ready" &&
        soac_status->get_string() != "error")) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     RTC_LOG(LS_WARNING) << "Ignore signaling status except soac/ready/error.";
     return;
   }
@@ -1172,7 +1172,7 @@ void ConferenceClient::OnSignalingMessage(sio::message::ptr message) {
   auto soac_data = message->get_map()["data"];
   if (soac_data == nullptr ||
       soac_data->get_flag() != sio::message::flag_object) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     RTC_LOG(LS_WARNING)
         << "Received signaling message without offer, answer or candidate.";
     return;
@@ -1807,7 +1807,7 @@ ConferenceClient::GetPeerConnectionChannelConfiguration() const {
           : webrtc::PeerConnectionInterface::CandidateNetworkPolicy::
                 kCandidateNetworkPolicyAll;
   config.continual_gathering_policy =
-      PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
+      webrtc::PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
 void ConferenceClient::OnUserJoined(std::shared_ptr<sio::message> user) {

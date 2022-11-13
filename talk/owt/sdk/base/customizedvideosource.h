@@ -108,8 +108,7 @@ class LocalRawCaptureTrackSource : public webrtc::VideoTrackSource {
         CustomizedCapturer::Create(parameters, std::move(framer)));
 
     if (capturer)
-      return new rtc::RefCountedObject<LocalRawCaptureTrackSource>(
-          std::move(capturer));
+      return rtc::make_ref_counted<LocalRawCaptureTrackSource>(std::move(capturer));
 
     return nullptr;
   }
@@ -136,7 +135,7 @@ class LocalDesktopCaptureTrackSource : public webrtc::VideoTrackSource {
         CustomizedCapturer::Create(parameters, std::move(observer)));
 
     if (capturer)
-      return new rtc::RefCountedObject<LocalDesktopCaptureTrackSource>(
+      return rtc::make_ref_counted<LocalDesktopCaptureTrackSource>(
           std::move(capturer));
 
     return nullptr;
@@ -165,7 +164,7 @@ class LocalEncodedCaptureTrackSource : public webrtc::VideoTrackSource {
         absl::WrapUnique(CustomizedCapturer::Create(parameters, encoder));
 
     if (capturer)
-      return new rtc::RefCountedObject<LocalEncodedCaptureTrackSource>(
+      return rtc::make_ref_counted<LocalEncodedCaptureTrackSource>(
           std::move(capturer));
 
     return nullptr;
