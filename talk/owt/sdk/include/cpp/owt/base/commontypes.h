@@ -125,12 +125,11 @@ struct RtpEncodingParameters {
 
 /// Audio encoding parameters.
 struct AudioEncodingParameters {
-  explicit AudioEncodingParameters() : codec(), max_bitrate(0) {}
+  explicit AudioEncodingParameters();
   AudioEncodingParameters(const AudioCodecParameters& codec_param,
-                          unsigned long bitrate_bps)
-      : codec(codec_param), max_bitrate(bitrate_bps) {}
-  AudioEncodingParameters(const AudioEncodingParameters& aep) = default;
-  AudioEncodingParameters& operator=(const AudioEncodingParameters&) = default;
+                          unsigned long bitrate_bps);
+  AudioEncodingParameters(const AudioEncodingParameters&);
+  virtual ~AudioEncodingParameters();
   std::vector<RtpEncodingParameters> rtp_encoding_parameters;
   AudioCodecParameters codec;
   unsigned long max_bitrate;
@@ -138,10 +137,10 @@ struct AudioEncodingParameters {
 /// Video codec parameters for a video track.
 struct VideoCodecParameters {
   /// Construct an instance of VideoCodecParameters with default parameters.
-  explicit VideoCodecParameters() : name(VideoCodec::kUnknown), profile("") {}
+  explicit VideoCodecParameters();
   /// Construct an instance of VideoCodecParameter with codec name and profile.
-  VideoCodecParameters(const VideoCodec& codec, const std::string& profile)
-      : name(codec), profile(profile) {}
+  VideoCodecParameters(const VideoCodec& codec, const std::string& profile);
+  virtual ~VideoCodecParameters();
   VideoCodec name;
   std::string profile;
 };
@@ -149,17 +148,12 @@ struct VideoCodecParameters {
 /// Video encoding parameters. Used to specify the video encoding settings when
 /// publishing the video.
 struct VideoEncodingParameters {
-  explicit VideoEncodingParameters()
-      : codec(), max_bitrate(0), hardware_accelerated(false) {}
+  explicit VideoEncodingParameters();
   /// Construct an instance of VideoEncodingParameters
   VideoEncodingParameters(const VideoCodecParameters& codec_param,
                           unsigned long bitrate_bps,
-                          bool hw)
-      : codec(codec_param),
-        max_bitrate(bitrate_bps),
-        hardware_accelerated(hw) {}
-  VideoEncodingParameters(const VideoEncodingParameters& aep) = default;
-  VideoEncodingParameters& operator=(const VideoEncodingParameters&) = default;
+                          bool hw);
+  virtual ~VideoEncodingParameters();
   VideoCodecParameters codec;
   std::vector<RtpEncodingParameters> rtp_encoding_parameters;
   unsigned long max_bitrate;

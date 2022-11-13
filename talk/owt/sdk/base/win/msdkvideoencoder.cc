@@ -17,7 +17,6 @@
 #include "webrtc/common_video/h265/h265_common.h"
 #endif
 #include "webrtc/media/base/vp9_profile.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/system/file_wrapper.h"
 #include "webrtc/rtc_base/logging.h"

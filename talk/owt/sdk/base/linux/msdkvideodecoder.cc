@@ -336,7 +336,7 @@ retry:
           xwindow_context->pfnReturnBuffer = reinterpret_cast<void *>(ReturnBuffer);
          
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
-              new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
+              rtc::make_ref_counted<owt::base::NativeHandleBuffer>(
                   (void*)xwindow_context, pOutputSurface->Info.CropW,
                   pOutputSurface->Info.CropH);
           webrtc::VideoFrame decoded_frame(buffer, input_image.Timestamp(), 0,

@@ -15,7 +15,6 @@
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/sdk/media_constraints.h"
-#include "webrtc/rtc_base/message_handler.h"
 #include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/task_queue.h"
@@ -112,15 +111,15 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void OnMessageDataReceived(std::string& id);
   // PeerConnectionObserver
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state) override;
+      webrtc::PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnRemoveStream(rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state) override;
+      webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state) override;
+      webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
   // DataChannelObserver
   virtual void OnDataChannelStateChange() override;

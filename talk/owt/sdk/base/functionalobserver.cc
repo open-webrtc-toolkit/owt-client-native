@@ -17,8 +17,7 @@ rtc::scoped_refptr<FunctionalCreateSessionDescriptionObserver>
 FunctionalCreateSessionDescriptionObserver::Create(
     std::function<void(webrtc::SessionDescriptionInterface*)> on_success,
     std::function<void(const std::string&)> on_failure) {
-  return new rtc::RefCountedObject<FunctionalCreateSessionDescriptionObserver>(
-      on_success, on_failure);
+  return rtc::make_ref_counted<FunctionalCreateSessionDescriptionObserver>(on_success, on_failure);
 }
 void FunctionalCreateSessionDescriptionObserver::OnSuccess(
     webrtc::SessionDescriptionInterface* desc) {
@@ -41,8 +40,7 @@ rtc::scoped_refptr<FunctionalSetSessionDescriptionObserver>
 FunctionalSetSessionDescriptionObserver::Create(
     std::function<void()> on_success,
     std::function<void(const std::string&)> on_failure) {
-  return new rtc::RefCountedObject<FunctionalSetSessionDescriptionObserver>(
-      on_success, on_failure);
+  return rtc::make_ref_counted<FunctionalSetSessionDescriptionObserver>(on_success, on_failure);
 }
 void FunctionalSetSessionDescriptionObserver::OnSuccess() {
   if (on_success_ != nullptr) {
@@ -63,7 +61,7 @@ FunctionalSetRemoteDescriptionObserver::FunctionalSetRemoteDescriptionObserver(
 rtc::scoped_refptr<FunctionalSetRemoteDescriptionObserver>
 FunctionalSetRemoteDescriptionObserver::Create(
     std::function<void(webrtc::RTCError error)> on_complete) {
-  return new rtc::RefCountedObject<FunctionalSetRemoteDescriptionObserver>(
+  return rtc::make_ref_counted<FunctionalSetRemoteDescriptionObserver>(
       on_complete);
 }
 
@@ -79,7 +77,7 @@ FunctionalStatsObserver::FunctionalStatsObserver(
     : on_complete_(on_complete) {}
 rtc::scoped_refptr<FunctionalStatsObserver> FunctionalStatsObserver::Create(
     std::function<void(std::shared_ptr<ConnectionStats>)> on_complete) {
-  return new rtc::RefCountedObject<FunctionalStatsObserver>(on_complete);
+  return rtc::make_ref_counted<FunctionalStatsObserver>(on_complete);
 }
 void FunctionalStatsObserver::OnComplete(const webrtc::StatsReports& reports) {
   if (on_complete_ != nullptr) {
@@ -352,7 +350,7 @@ FunctionalStatsObserver::ReportType FunctionalStatsObserver::GetReportType(
 rtc::scoped_refptr<FunctionalNativeStatsObserver>
 FunctionalNativeStatsObserver::Create(
     std::function<void(const webrtc::StatsReports& reports)> on_complete) {
-  return new rtc::RefCountedObject<FunctionalNativeStatsObserver>(on_complete);
+  return rtc::make_ref_counted<FunctionalNativeStatsObserver>(on_complete);
 }
 void FunctionalNativeStatsObserver::OnComplete(
     const webrtc::StatsReports& reports) {
@@ -366,7 +364,7 @@ rtc::scoped_refptr<FunctionalStandardRTCStatsCollectorCallback>
 FunctionalStandardRTCStatsCollectorCallback::Create(
     std::function<void(std::shared_ptr<owt::base::RTCStatsReport>)>
         on_stats_delivered) {
-  return new rtc::RefCountedObject<FunctionalStandardRTCStatsCollectorCallback>(
+  return rtc::make_ref_counted<FunctionalStandardRTCStatsCollectorCallback>(
       std::move(on_stats_delivered));
 }
 
@@ -425,7 +423,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, priority, uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nominated, bool, false),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, writable, bool, false),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, readable, bool, false),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_sent, uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, bytes_received, uint64_t,
                                          0),
@@ -445,17 +442,7 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
                                          uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, responses_sent, uint64_t,
                                          0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, retransmissions_received,
-                                         uint64_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, retransmissions_sent,
-                                         uint64_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(
-                  webrtc_stats, consent_requests_received, uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, consent_requests_sent,
-                                         uint64_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(
-                  webrtc_stats, consent_responses_received, uint64_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, consent_responses_sent,
                                          uint64_t, 0));
       reports->AddStats(std::move(stat));
     } else if (strcmp(stats.type(), RTCStatsType::kTrack) == 0) {
@@ -483,8 +470,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
                                          0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frame_height, uint32_t,
                                          0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_per_second,
-                                         double, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_sent, uint32_t,
                                          0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, huge_frames_sent,
@@ -495,12 +480,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
                                          0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_dropped, uint32_t,
                                          0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_corrupted,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, partial_frames_lost,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, full_frames_lost,
-                                         uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, audio_level, double, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, total_audio_energy,
                                          double, 0),
@@ -528,8 +507,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
                   webrtc_stats, delayed_packet_outage_samples, uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(
                   webrtc_stats, relative_packet_arrival_delay, double, -1),
-              OWT_STATS_VALUE_OR_DEFAULT(
-                  webrtc_stats, jitter_buffer_target_delay, double, -1),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, interruption_count,
                                          uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(
@@ -553,7 +530,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
           std::make_unique<owt::base::RTCInboundRTPStreamStats>(
               webrtc_stats.id(), webrtc_stats.timestamp_us(),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, ssrc, uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, is_remote, bool, false),
               webrtc_stats.media_type.is_defined()
                   ? webrtc_stats.media_type.ValueToString()
                   : "",
@@ -571,7 +547,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fir_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, pli_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nack_count, uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, sli_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, qp_sum, uint64_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_received,
                                          uint32_t, 0),
@@ -588,31 +563,9 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
               OWT_STATS_VALUE_OR_DEFAULT(
                   webrtc_stats, last_packet_received_timestamp, double, -1),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, jitter, double, -1),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, round_trip_time, double,
-                                         -1),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_discarded,
                                          uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, packets_repaired,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_packets_lost,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_packets_discarded,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_loss_count,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_discard_count,
-                                         uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_loss_rate, double,
-                                         0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, burst_discard_rate,
-                                         double, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, gap_loss_rate, double,
-                                         0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, gap_discard_rate, double,
-                                         0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_decoded, uint32_t,
-                                         0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, frames_rendered, uint32_t,
                                          0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, key_frames_decoded,
                                          uint32_t, 0),
@@ -637,7 +590,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
           std::make_unique<owt::base::RTCOutboundRTPStreamStats>(
               webrtc_stats.id(), webrtc_stats.timestamp_us(),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, ssrc, uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, is_remote, bool, false),
               webrtc_stats.media_type.is_defined()
                   ? webrtc_stats.media_type.ValueToString()
                   : "",
@@ -655,7 +607,6 @@ void FunctionalStandardRTCStatsCollectorCallback::OnStatsDelivered(
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, fir_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, pli_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, nack_count, uint32_t, 0),
-              OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, sli_count, uint32_t, 0),
               OWT_STATS_VALUE_OR_DEFAULT(webrtc_stats, qp_sum, uint64_t, 0),
               webrtc_stats.media_source_id.is_defined()
                   ? webrtc_stats.media_source_id.ValueToString()

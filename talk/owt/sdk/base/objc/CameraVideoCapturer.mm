@@ -26,7 +26,7 @@ std::unique_ptr<ObjcVideoCapturerInterface> ObjcVideoCapturerFactory::Create(
     position = AVCaptureDevicePositionFront;
   } else {
     RTC_LOG(LS_ERROR) << "Cannot find suitable camera device.";
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return nullptr;
   }
   NSArray<AVCaptureDevice*>* capture_devices =

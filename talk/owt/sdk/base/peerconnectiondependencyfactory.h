@@ -11,7 +11,6 @@
 #include "webrtc/modules/audio_device/win/audio_device_core_win.h"
 #endif
 #include "webrtc/sdk/media_constraints.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/network.h"
 #include "webrtc/p2p/base/basic_packet_socket_factory.h"
 namespace owt {
@@ -26,12 +25,11 @@ using webrtc::PeerConnectionFactoryInterface;
 using webrtc::MediaConstraints;
 using rtc::scoped_refptr;
 using rtc::Thread;
-using rtc::Bind;
 // PeerConnectionThread allows blocking calls so other thread can invoke
 // synchronized methods on this thread.
 class PeerConnectionThread : public rtc::Thread {
  public:
-  virtual void Run() override;
+  void Run() override;
   ~PeerConnectionThread() override;
 };
 // Object factory for WebRTC PeerConnections.
@@ -59,7 +57,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
-  ~PeerConnectionDependencyFactory();
+  ~PeerConnectionDependencyFactory() override;
  protected:
   explicit PeerConnectionDependencyFactory();
   virtual const rtc::scoped_refptr<PeerConnectionFactoryInterface>&
@@ -96,6 +94,7 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   std::unique_ptr<webrtc::ScopedCOMInitializer> com_initializer_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
 #endif
+  std::unique_ptr<rtc::SocketFactory> socket_factory_;
   std::shared_ptr<rtc::BasicNetworkManager> network_manager_;
   std::shared_ptr<rtc::BasicPacketSocketFactory> packet_socket_factory_;
 };

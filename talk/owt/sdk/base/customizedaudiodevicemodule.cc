@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
+#include "talk/owt/sdk/base/customizedaudiocapturer.h"
+#include "webrtc/api/make_ref_counted.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/rtc_base/ref_counted_object.h"
-#include "webrtc/rtc_base/time_utils.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
-#include "talk/owt/sdk/base/customizedaudiocapturer.h"
-#include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
+#include "webrtc/rtc_base/ref_counted_object.h"
+#include "webrtc/rtc_base/time_utils.h"
 
 // Code partly borrowed from WebRTC project's audio device moudule implementation.
 #define CHECK_INITIALIZED() \
@@ -43,7 +44,7 @@ rtc::scoped_refptr<AudioDeviceModule> CustomizedAudioDeviceModule::Create(
     std::unique_ptr<AudioFrameGeneratorInterface> frame_generator) {
   // Create the generic ref counted implementation.
   rtc::scoped_refptr<CustomizedAudioDeviceModule> audioDevice(
-      new rtc::RefCountedObject<CustomizedAudioDeviceModule>());
+      rtc::make_ref_counted<CustomizedAudioDeviceModule>());
   // Create the customized implementation.
   if (audioDevice->CreateCustomizedAudioDevice(std::move(frame_generator)) ==
       -1) {
@@ -592,7 +593,7 @@ void CustomizedAudioDeviceModule::CreateOutputAdm(){
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
 #else
-    _outputAdm = new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>();
+    _outputAdm = rtc::make_ref_counted<webrtc::FakeAudioDeviceModule>();
 #endif
   }
 }

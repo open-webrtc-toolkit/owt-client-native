@@ -22,16 +22,19 @@ namespace base {
 // the priority of the capture thread.
 ///////////////////////////////////////////////////////////////////////
 class CustomizedFramesCapturer::CustomizedFramesThread
-    : public rtc::Thread,
-      public rtc::MessageHandler {
+    : public rtc::Thread {
  public:
   explicit CustomizedFramesThread(CustomizedFramesCapturer* capturer, int fps)
       : rtc::Thread(SocketServer::CreateDefault()),
         capturer_(capturer) {
     finished_ = false;
-    waiting_time_ms = 1000 / fps;
+    waiting_time_ms_ = 1000 / fps;
   }
   virtual ~CustomizedFramesThread() { Stop(); }
+
+  CustomizedFramesThread(const CustomizedFramesThread&) = delete;
+  CustomizedFramesThread& operator=(const CustomizedFramesThread&) = delete;
+
   // Override virtual method of parent Thread. Context: Worker Thread.
   virtual void Run() {
     // Read the first frame and start the message pump. The pump runs until
@@ -39,34 +42,38 @@ class CustomizedFramesCapturer::CustomizedFramesThread
     // Before returning, cleanup any thread-sensitive resources.
     if (capturer_) {
       capturer_->ReadFrame();
-      rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
+      rtc::Thread::Current()->PostTask(
+          SafeTask(task_safety_.flag(), [this] { TryReadFrame(); }));
       rtc::Thread::Current()->ProcessMessages(kForever);
       capturer_->CleanupGenerator();
     }
     webrtc::MutexLock lock(&crit_);
     finished_ = true;
   }
-  // Override virtual method of parent MessageHandler. Context: Worker Thread.
-  virtual void OnMessage(rtc::Message* /*pmsg*/) {
-    if (capturer_) {
-      capturer_->ReadFrame();
-      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, waiting_time_ms, this);
-    } else {
-      rtc::Thread::Current()->Quit();
-    }
-  }
+
   // Check if Run() is finished.
   bool Finished() const {
     webrtc::MutexLock lock(&crit_);
     return finished_;
   }
 
+  void TryReadFrame() {
+    if (capturer_) {
+      capturer_->ReadFrame();
+      rtc::Thread::Current()->PostDelayedTask(
+          SafeTask(task_safety_.flag(), [this] { TryReadFrame(); }),
+          webrtc::TimeDelta::Millis(waiting_time_ms_));
+    } else {
+      rtc::Thread::Current()->Quit();
+    }
+  }
+
  private:
   CustomizedFramesCapturer* capturer_;
   mutable webrtc::Mutex crit_;
   bool finished_;
-  int waiting_time_ms;
-  RTC_DISALLOW_COPY_AND_ASSIGN(CustomizedFramesThread);
+  int waiting_time_ms_;
+  ScopedTaskSafety task_safety_;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -239,8 +246,7 @@ void CustomizedFramesCapturer::ReadFrame() {
     encoder_context->fps = fps_;
     encoder_context->bitrate_kbps = bitrate_kbps_;
     rtc::scoped_refptr<owt::base::EncodedFrameBuffer> buffer =
-        new rtc::RefCountedObject<owt::base::EncodedFrameBuffer>(
-            encoder_context);
+        rtc::make_ref_counted<owt::base::EncodedFrameBuffer>(encoder_context);
 
     webrtc::VideoFrame pending_frame =
         webrtc::VideoFrame::Builder()

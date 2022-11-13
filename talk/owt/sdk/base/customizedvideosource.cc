@@ -13,14 +13,14 @@ rtc::scoped_refptr<webrtc::VideoCaptureModule>
 CustomizedVideoCapturerFactory::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     std::unique_ptr<VideoFrameGeneratorInterface> framer) {
-  return new rtc::RefCountedObject<CustomizedFramesCapturer>(std::move(framer));
+  return rtc::make_ref_counted<CustomizedFramesCapturer>(std::move(framer));
 }
 
 rtc::scoped_refptr<webrtc::VideoCaptureModule>
 CustomizedVideoCapturerFactory::Create(
     std::shared_ptr<LocalCustomizedStreamParameters> parameters,
     VideoEncoderInterface* encoder) {
-  return new rtc::RefCountedObject<CustomizedFramesCapturer>(
+  return rtc::make_ref_counted<CustomizedFramesCapturer>(
       parameters->ResolutionWidth(), parameters->ResolutionHeight(),
       parameters->Fps(), parameters->Bitrate(), encoder);
 }
@@ -35,10 +35,10 @@ CustomizedVideoCapturerFactory::Create(
   options.set_allow_directx_capturer(true);
   if (parameters->SourceType() ==
       LocalDesktopStreamParameters::DesktopSourceType::kApplication) {
-    return new rtc::RefCountedObject<BasicWindowCapturer>(options,
+    return rtc::make_ref_counted<BasicWindowCapturer>(options,
                                                           std::move(observer));
   } else {
-    return new rtc::RefCountedObject<BasicScreenCapturer>(options);
+    return rtc::make_ref_counted<BasicScreenCapturer>(options);
   }
 }
 #endif

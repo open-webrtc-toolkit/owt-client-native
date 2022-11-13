@@ -14,7 +14,6 @@
 #include <memory>
 
 #include "modules/video_capture/video_capture_factory.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 
@@ -44,10 +43,9 @@ bool VcmCapturer::Init(size_t width,
     return false;
   }
 
-  vcm_ = vcm_thread_->Invoke<rtc::scoped_refptr<webrtc::VideoCaptureModule>>(
-      RTC_FROM_HERE,
-      Bind(&VcmCapturer::CreateDeviceOnVCMThread, this,
-                          unique_name));
+  vcm_ = vcm_thread_->BlockingCall([this, &unique_name] {
+    return CreateDeviceOnVCMThread(unique_name);
+  });
   if (!vcm_) {
     return false;
   }
@@ -60,9 +58,8 @@ bool VcmCapturer::Init(size_t width,
   capability_.maxFPS = static_cast<int32_t>(target_fps);
   capability_.videoType = webrtc::VideoType::kI420;
 
-  if (vcm_thread_->Invoke<int32_t>(
-      RTC_FROM_HERE,
-      Bind(&VcmCapturer::StartCaptureOnVCMThread, this, capability_)) != 0) {
+  if (vcm_thread_->BlockingCall(
+          [this] { return StartCaptureOnVCMThread(capability_); }) != 0) {
     Destroy();
     return false;
   }
@@ -106,12 +103,10 @@ void VcmCapturer::Destroy() {
   if (!vcm_)
     return;
 
-  vcm_thread_->Invoke<int32_t>(RTC_FROM_HERE,
-                            Bind(&VcmCapturer::StopCaptureOnVCMThread, this));
+  vcm_thread_->BlockingCall([this] { return StopCaptureOnVCMThread(); });
   vcm_->DeRegisterCaptureDataCallback();
   // Release reference to VCM.
-  vcm_thread_->Invoke<void>(RTC_FROM_HERE,
-                            Bind(&VcmCapturer::ReleaseOnVCMThread, this));
+  vcm_thread_->BlockingCall([this] { return ReleaseOnVCMThread(); });
 }
 
 VcmCapturer::~VcmCapturer() {

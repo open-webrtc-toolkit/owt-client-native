@@ -57,8 +57,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       capturer = absl::WrapUnique(owt::base::VcmCapturer::Create(
           width, height, fps, capture_device_idx));
       if (capturer) {
-        return new rtc::RefCountedObject<CapturerTrackSource>(
-            std::move(capturer));
+        return rtc::make_ref_counted<CapturerTrackSource>(std::move(capturer));
       }
     }
 
@@ -476,7 +475,7 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
     error_code = static_cast<int>(ExceptionType::kLocalInvalidOption);
     return;
   }
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+  PeerConnectionDependencyFactory* pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   Id(media_stream_id);
@@ -532,7 +531,7 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
     }
     std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
     scoped_refptr<VideoTrackInterface> video_track =
-        pcd_factory->CreateLocalVideoTrack(video_track_id, source);
+        pcd_factory->CreateLocalVideoTrack(video_track_id, source.get());
     if (!video_track) {
       RTC_LOG(LS_ERROR)
           << "Failed to create video track. Please check device availability.";
@@ -543,7 +542,7 @@ LocalStream::LocalStream(const LocalCameraStreamParameters& parameters,
   }
   source_.video = VideoSourceInfo::kCamera;
   source_.audio = AudioSourceInfo::kMic;
-  media_stream_ = stream;
+  media_stream_ = stream.get();
   media_stream_->AddRef();
 }
 
@@ -551,7 +550,7 @@ LocalStream::LocalStream(const bool is_audio_enabled,
                          webrtc::VideoTrackSourceInterface* video_source,
                          int& error_code) {
   RTC_CHECK(video_source);
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+  PeerConnectionDependencyFactory* pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   Id(media_stream_id);
@@ -568,7 +567,7 @@ LocalStream::LocalStream(const bool is_audio_enabled,
   scoped_refptr<VideoTrackInterface> video_track =
       pcd_factory->CreateLocalVideoTrack(video_track_id, video_source);
   stream->AddTrack(video_track);
-  media_stream_ = stream;
+  media_stream_ = stream.get();
   media_stream_->AddRef();
 }
 void LocalStream::Close() {
@@ -586,7 +585,7 @@ LocalStream::LocalStream(
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     RTC_LOG(LS_WARNING) << "Create LocalScreenStream without video and audio.";
   }
-  scoped_refptr<PeerConnectionDependencyFactory> factory =
+  PeerConnectionDependencyFactory* factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   Id(media_stream_id);
@@ -599,7 +598,7 @@ LocalStream::LocalStream(
     if (video_device) {
       std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
       rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
-          factory->CreateLocalVideoTrack(video_track_id, video_device);
+          factory->CreateLocalVideoTrack(video_track_id, video_device.get());
       stream->AddTrack(video_track);
     }
   }
@@ -609,7 +608,7 @@ LocalStream::LocalStream(
         factory->CreateLocalAudioTrack(audio_track_id);
     stream->AddTrack(audio_track);
   }
-  media_stream_ = stream;
+  media_stream_ = stream.get();
   media_stream_->AddRef();
   source_.video = VideoSourceInfo::kScreenCast;
 }
@@ -623,7 +622,7 @@ LocalStream::LocalStream(
     RTC_LOG(LS_WARNING)
         << "Create Local Camera Stream without video and audio.";
   }
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+  PeerConnectionDependencyFactory* pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   Id(media_stream_id);
@@ -636,7 +635,8 @@ LocalStream::LocalStream(
     if (video_device) {
       std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
       rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
-          pcd_factory->CreateLocalVideoTrack(video_track_id, video_device);
+          pcd_factory->CreateLocalVideoTrack(video_track_id,
+                                             video_device.get());
       stream->AddTrack(video_track);
     }
   }
@@ -646,7 +646,7 @@ LocalStream::LocalStream(
         pcd_factory->CreateLocalAudioTrack(audio_track_id);
     stream->AddTrack(audio_track);
   }
-  media_stream_ = stream;
+  media_stream_ = stream.get();
   media_stream_->AddRef();
 }
 LocalStream::LocalStream(
@@ -655,7 +655,7 @@ LocalStream::LocalStream(
   if (!parameters->VideoEnabled() && !parameters->AudioEnabled()) {
     RTC_LOG(LS_WARNING) << "Create LocalStream without video and audio.";
   }
-  scoped_refptr<PeerConnectionDependencyFactory> pcd_factory =
+  PeerConnectionDependencyFactory* pcd_factory =
       PeerConnectionDependencyFactory::Get();
   std::string media_stream_id("MediaStream-" + rtc::CreateRandomUuid());
   Id(media_stream_id);
@@ -669,7 +669,8 @@ LocalStream::LocalStream(
     if (video_device) {
       std::string video_track_id("VideoTrack-" + rtc::CreateRandomUuid());
       rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
-          pcd_factory->CreateLocalVideoTrack(video_track_id, video_device);
+          pcd_factory->CreateLocalVideoTrack(video_track_id,
+                                             video_device.get());
       stream->AddTrack(video_track);
     }
   }
@@ -679,7 +680,7 @@ LocalStream::LocalStream(
         pcd_factory->CreateLocalAudioTrack(audio_track_id);
     stream->AddTrack(audio_track);
   }
-  media_stream_ = stream;
+  media_stream_ = stream.get();
   media_stream_->AddRef();
 }
 #endif

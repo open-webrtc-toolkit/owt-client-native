@@ -371,8 +371,8 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
   }
   // TODO(jianlin): For publisher, peerconnection is created before UA info is received.
   // so signaling protocol change is needed if we would like to remove this HC.
-  config.continual_gathering_policy =
-      PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
+  config.continual_gathering_policy = webrtc::PeerConnectionInterface::
+      ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
 void P2PClient::OnMessageReceived(const std::string& remote_id,

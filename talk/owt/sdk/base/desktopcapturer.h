@@ -14,7 +14,6 @@
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/platform_thread.h"
 #include "webrtc/rtc_base/stream.h"
 #include "webrtc/rtc_base/string_utils.h"
@@ -88,6 +87,10 @@ class BasicDesktopCapturer : public webrtc::VideoCaptureModule,
 class BasicScreenCapturer : public BasicDesktopCapturer {
  public:
   BasicScreenCapturer(webrtc::DesktopCaptureOptions options);
+
+  BasicScreenCapturer(const BasicScreenCapturer&) = delete;
+  BasicScreenCapturer& operator=(const BasicScreenCapturer&) = delete;
+
   virtual ~BasicScreenCapturer();
   virtual int32_t StartCapture(
       const webrtc::VideoCaptureCapability& capability) override;
@@ -118,7 +121,6 @@ class BasicScreenCapturer : public BasicDesktopCapturer {
   webrtc::DesktopCaptureOptions screen_capture_options_;
   bool capture_started_ = false;
   webrtc::Mutex lock_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(BasicScreenCapturer);
 };
 // Capturer for capturing from specified window. Once the capturer is created,
 // User has to call GetWindowList() to enumerate current available windows, and
@@ -129,6 +131,9 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   BasicWindowCapturer(webrtc::DesktopCaptureOptions options,
                       std::unique_ptr<LocalScreenStreamObserver> observer);
   virtual ~BasicWindowCapturer();
+
+  BasicWindowCapturer(const BasicWindowCapturer&) = delete;
+  BasicWindowCapturer& operator=(const BasicWindowCapturer&) = delete;
 
   // Override virtual methods of parent class VideoCapturer.
   virtual int32_t StartCapture(
@@ -168,7 +173,7 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   uint32_t frame_buffer_capacity_;
   rtc::scoped_refptr<webrtc::I420Buffer>
       frame_buffer_;  // Reuseable buffer for video frames.
-  std::unique_ptr<rtc::PlatformThread> capture_thread_;
+  rtc::PlatformThread capture_thread_;
   std::unique_ptr<owt::base::ScreenCaptureThread>
       worker_thread_;  // Set in Start(), unset in Stop();
   std::unique_ptr<webrtc::DesktopCapturer> window_capturer_;
@@ -184,7 +189,6 @@ class BasicWindowCapturer : public BasicDesktopCapturer {
   bool quit_;
   webrtc::Mutex lock_;
   std::unique_ptr<LocalScreenStreamObserver> observer_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(BasicWindowCapturer);
 };
 }  // namespace base
 }  // namespace owt

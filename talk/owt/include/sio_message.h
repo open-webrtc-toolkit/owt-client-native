@@ -199,7 +199,7 @@ namespace sio
         {
         }
         string_message(string&& v)
-            :message(flag_string),_v(move(v))
+            :message(flag_string),_v(std::move(v))
         {
         }
     public:
@@ -209,7 +209,7 @@ namespace sio
         }
         static message::ptr create(string&& v)
         {
-            return ptr(new string_message(move(v)));
+            return ptr(new string_message(std::move(v)));
         }
         
         string const& get_string() const
@@ -322,7 +322,7 @@ namespace sio
         }
         list(string&& text)
         {
-            m_vector.push_back(string_message::create(move(text)));
+            m_vector.push_back(string_message::create(std::move(text)));
         }
         list(shared_ptr<string> const& binary)
         {

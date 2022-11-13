@@ -117,7 +117,7 @@ class ConferencePeerConnectionChannel
   void CreateAnswer() override;
   // PeerConnectionObserver
   virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state) override;
+      webrtc::PeerConnectionInterface::SignalingState new_state) override;
   virtual void OnAddStream(
       rtc::scoped_refptr<MediaStreamInterface> stream) override;
   virtual void OnRemoveStream(
@@ -126,9 +126,9 @@ class ConferencePeerConnectionChannel
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
   virtual void OnRenegotiationNeeded() override;
   virtual void OnIceConnectionChange(
-      PeerConnectionInterface::IceConnectionState new_state) override;
+      webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
   virtual void OnIceGatheringChange(
-      PeerConnectionInterface::IceGatheringState new_state) override;
+      webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
   virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
   virtual void OnIceCandidatesRemoved(
       const std::vector<cricket::Candidate>& candidates) override;

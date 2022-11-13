@@ -25,7 +25,8 @@
   if (_mediaStream == nil) {
     _mediaStream = [[RTCMediaStream alloc]
           initWithFactory:[RTCPeerConnectionFactory sharedInstance]
-        nativeMediaStream:nativeStream->MediaStream()];
+        nativeMediaStream:rtc::scoped_refptr<webrtc::MediaStreamInterface>(
+                              nativeStream->MediaStream())];
   }
   if ([_mediaStream.videoTracks count] == 0)
     return;
@@ -70,7 +71,8 @@
       _nativeStream->MediaStream() != _mediaStream.nativeMediaStream) {
     _mediaStream = [[RTCMediaStream alloc]
           initWithFactory:[RTCPeerConnectionFactory sharedInstance]
-        nativeMediaStream:stream->MediaStream()];
+        nativeMediaStream:rtc::scoped_refptr<webrtc::MediaStreamInterface>(
+                              stream->MediaStream())];
   }
 }
 - (std::shared_ptr<owt::base::Stream>)nativeStream {

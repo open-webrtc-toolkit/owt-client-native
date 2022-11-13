@@ -91,6 +91,7 @@ static_library("owt_sdk_base") {
     "sdk/base/cameravideocapturer.h",
     "sdk/base/codecutils.cc",
     "sdk/base/codecutils.h",
+    "sdk/base/commontypes.cc",
     "sdk/base/connectionstats.cc",
     "sdk/base/deviceutils.cc",
     "sdk/base/eventtrigger.h",
@@ -100,8 +101,6 @@ static_library("owt_sdk_base") {
     "sdk/base/globalconfiguration.cc",
     "sdk/base/localcamerastreamparameters.cc",
     "sdk/base/logging.cc",
-    "sdk/base/logsinks.cc",
-    "sdk/base/logsinks.h",
     "sdk/base/mediautils.cc",
     "sdk/base/mediautils.h",
     "sdk/base/peerconnectionchannel.cc",
@@ -403,6 +402,7 @@ if (is_ios) {
       "//build/config/compiler:enable_arc",
       ":owt_sdk_objc_warnings_config",
     ]
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
     sources = [
       "sdk/base/objc/CameraVideoCapturer.h",
       "sdk/base/objc/CameraVideoCapturer.mm",

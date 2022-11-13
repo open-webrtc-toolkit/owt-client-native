@@ -6,7 +6,7 @@
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "webrtc/common_video/h264/profile_level_id.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "webrtc/rtc_base/string_utils.h"
 #include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/customizedvideoencoderproxy.h"
@@ -48,16 +48,6 @@ EncodedVideoEncoderFactory::GetSupportedFormats() const {
   }
 #endif
   return supported_codecs;
-}
-
-webrtc::VideoEncoderFactory::CodecInfo
-EncodedVideoEncoderFactory::QueryVideoEncoder(
-    const webrtc::SdpVideoFormat& format) const {
-  // TODO(johny): Basically we need to return different CodecInfo for different
-  // codec/profile combinations.
-  webrtc::VideoEncoderFactory::CodecInfo info;
-  info.has_internal_source = false;
-  return info;
 }
 
 } // namespace base

@@ -178,9 +178,9 @@ void WebrtcVideoRendererD3D9Impl::OnFrame(
 
       m_d3d_device_->BeginScene();
       m_d3d_device_->SetFVF(D3DFVF_CUSTOMVERTEX);
-      m_d3d_device_->SetStreamSource(0, m_vertex_buffer_, 0,
+      m_d3d_device_->SetStreamSource(0, m_vertex_buffer_.get(), 0,
                                      sizeof(D3dCustomVertex));
-      m_d3d_device_->SetTexture(0, m_texture_);
+      m_d3d_device_->SetTexture(0, m_texture_.get());
       m_d3d_device_->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
       m_d3d_device_->EndScene();
 

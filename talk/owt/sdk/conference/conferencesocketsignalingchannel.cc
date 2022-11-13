@@ -415,7 +415,7 @@ void ConferenceSocketSignalingChannel::OnNotificationFromServer(
         }
       }
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
   } else if (name == kEventNameOnSignalingMessage) {
     RTC_LOG(LS_VERBOSE) << "Received signaling message from server.";
@@ -696,7 +696,7 @@ void ConferenceSocketSignalingChannel::OnReconnectionTicket(
   Json::Value ticket_json;
   Json::Reader ticket_reader;
   if (!ticket_reader.parse(ticket_decoded, ticket_json)) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     RTC_LOG(LS_WARNING) << "Cannot parse reconnection ticket.";
     return;
   }
@@ -730,7 +730,7 @@ void ConferenceSocketSignalingChannel::RefreshReconnectionTicket() {
       kEventNameRefreshReconnectionTicket, nullptr,
       [=](sio::message::list const& ack) {
         if (ack.size() != 2) {
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
           RTC_LOG(LS_WARNING) << "Wired ack for refreshing reconnection ticket.";
           return;
         }

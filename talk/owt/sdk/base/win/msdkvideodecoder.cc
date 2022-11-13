@@ -388,7 +388,7 @@ retry:
           // not only the CropW|CropH value, but also the CropX|CropY for the
           // renderer to correctly setup the video processor input view.
           rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
-              new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
+              rtc::make_ref_counted<owt::base::NativeHandleBuffer>(
                   (void*)surface_handle_.get(), frame_info.CropW, frame_info.CropH);
           webrtc::VideoFrame decoded_frame(buffer, inputImage.Timestamp(), 0,
                                            webrtc::kVideoRotation_0);

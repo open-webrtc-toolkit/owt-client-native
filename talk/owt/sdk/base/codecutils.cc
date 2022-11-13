@@ -2,20 +2,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/base/codecutils.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "media/base/media_constants.h"
-#include "talk/owt/sdk/base/codecutils.h"
 
 namespace owt {
 namespace base {
 
-webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile,
-                                webrtc::H264::Level level,
-                                const std::string& packetization_mode) {
+webrtc::SdpVideoFormat CreateH264Format(webrtc::H264Profile profile,
+                                        webrtc::H264Level level,
+                                        const std::string& packetization_mode) {
   const absl::optional<std::string> profile_string =
-      webrtc::H264::ProfileLevelIdToString(webrtc::H264::ProfileLevelId(profile, level));
+      webrtc::H264ProfileLevelIdToString(
+          webrtc::H264ProfileLevelId(profile, level));
   return webrtc::SdpVideoFormat(
       cricket::kH264CodecName,
       {{cricket::kH264FmtpProfileLevelId, *profile_string},
@@ -24,13 +26,15 @@ webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile,
 }
 
 std::vector<webrtc::SdpVideoFormat> CodecUtils::SupportedH264Codecs() {
-  return {
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1, "1"),
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1, "0"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline, webrtc::H264::kLevel3_1, "1"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline, webrtc::H264::kLevel3_1,
-                       "0")};
-}  
+  return {CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                           webrtc::H264Level::kLevel3_1, "1"),
+          CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                           webrtc::H264Level::kLevel3_1, "0"),
+          CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                           webrtc::H264Level::kLevel3_1, "1"),
+          CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                           webrtc::H264Level::kLevel3_1, "0")};
+}
 
 #ifndef DISABLE_H265
 std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
@@ -46,7 +50,8 @@ std::vector<webrtc::SdpVideoFormat> CodecUtils::GetSupportedH265Codecs() {
                                   {cricket::kH265FmtpLevelId, "120"}})};
 }
 #endif
-webrtc::VideoCodecType CodecUtils::ConvertSdpFormatToCodecType(webrtc::SdpVideoFormat format){
+webrtc::VideoCodecType CodecUtils::ConvertSdpFormatToCodecType(
+    webrtc::SdpVideoFormat format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
     return webrtc::kVideoCodecVP8;
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
@@ -59,8 +64,7 @@ webrtc::VideoCodecType CodecUtils::ConvertSdpFormatToCodecType(webrtc::SdpVideoF
 #endif
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
     return webrtc::kVideoCodecAV1;
-  }
-  else {
+  } else {
     return webrtc::kVideoCodecGeneric;
   }
 }

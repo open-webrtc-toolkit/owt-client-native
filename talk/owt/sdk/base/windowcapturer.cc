@@ -7,7 +7,6 @@
 #include "libyuv/convert.h"
 #include "libyuv/scale_argb.h"
 #include "talk/owt/sdk/base/desktopcapturer.h"
-#include "webrtc/rtc_base/bind.h"
 #include "webrtc/rtc_base/byte_buffer.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
@@ -89,10 +88,10 @@ bool BasicWindowCapturer::CaptureThreadProcess() {
 }
 
 void BasicWindowCapturer::InitOnWorkerThread() {
-  if (!capture_thread_) {
-    capture_thread_.reset(new rtc::PlatformThread(WindowCaptureThreadFunc, this,
-                                                  "WindowCaptureThread", rtc::kHighPriority));
-    capture_thread_->Start();
+  if (capture_thread_.empty()) {
+    capture_thread_ = rtc::PlatformThread::SpawnJoinable(
+        [this] { WindowCaptureThreadFunc(this); }, "WindowCaptureThread",
+        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
   }
 }
 
@@ -109,8 +108,7 @@ int32_t BasicWindowCapturer::StartCapture(
   }
 
   capture_started_ = true;
-  worker_thread_->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&BasicWindowCapturer::InitOnWorkerThread, this));
+  worker_thread_->BlockingCall([this] { InitOnWorkerThread(); });
   if (observer_) {
     std::unordered_map<int, std::string> window_map;
     int window_id;
@@ -125,24 +123,23 @@ int32_t BasicWindowCapturer::StartCapture(
 }
 
 bool BasicWindowCapturer::IsRunning() {
-  return capture_thread_ && capture_thread_->IsRunning();
+  // TODO: Confirm it's correct.
+  return !capture_thread_.empty();
 }
 
 // Stop must be called on the same thread as Init as the underlying
 // PlatformThread require that.
 int32_t BasicWindowCapturer::StopCapture() {
   // Make sure invoke get passed through.
-  worker_thread_->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&BasicWindowCapturer::StopOnWorkerThread, this));
+  worker_thread_->BlockingCall([this] { StopOnWorkerThread(); });
   return 0;
 }
 
 void BasicWindowCapturer::StopOnWorkerThread() {
-  if (capture_thread_) {
+  if (!capture_thread_.empty()) {
     stopped_ = true;
     capture_started_ = false;
-    capture_thread_->Stop();
-    capture_thread_.reset();
+    capture_thread_.Finalize();
   }
 }
 
