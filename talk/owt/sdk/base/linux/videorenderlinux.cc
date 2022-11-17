@@ -22,11 +22,11 @@ void WebrtcVideoRendererVaImpl::OnFrame(const webrtc::VideoFrame& frame) {
   NativeXWindowSurfaceHandle* native_handle =
       reinterpret_cast<NativeXWindowSurfaceHandle*>(buffer->native_handle());
 
-  std::unique_ptr<VaSurface> va_surface(
-      new VaSurface{native_handle->display_, native_handle->surface_,
-                    native_handle->width_, native_handle->height_,
-		    native_handle->frameno, native_handle->bufferid,
-		    native_handle->data, native_handle->pfnReturnBuffer});
+  std::unique_ptr<VaSurface> va_surface(new VaSurface{
+      native_handle->display_, native_handle->surface_, native_handle->width_,
+      native_handle->height_, native_handle->frameno,
+      static_cast<int>(native_handle->bufferid), native_handle->data,
+      native_handle->pfnReturnBuffer});
   renderer_.RenderFrame(std::move(va_surface));
 }
 #endif

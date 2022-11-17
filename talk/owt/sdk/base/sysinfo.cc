@@ -69,7 +69,7 @@ std::string SysInfo::OsVersion() {
 std::string SysInfo::OsName(){
   struct utsname info;
   if (uname(&info) < 0) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return kUnknown;
   }
   return std::string(info.sysname);
@@ -77,7 +77,7 @@ std::string SysInfo::OsName(){
 std::string SysInfo::OsVersion() {
   struct utsname info;
   if (uname(&info) < 0) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return kUnknown;
   }
   return std::string(info.release);

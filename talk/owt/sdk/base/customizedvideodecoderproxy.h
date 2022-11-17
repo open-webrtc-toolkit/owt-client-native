@@ -31,7 +31,6 @@ class CustomizedVideoDecoderProxy : public VideoDecoder {
   const char* ImplementationName() const override;
  private:
   webrtc::VideoCodec codec_settings_;
-  VideoCodecType codec_type_;
   DecodedImageCallback* decoded_image_callback_;
   VideoDecoderInterface* external_decoder_;
 };

@@ -9,7 +9,7 @@ namespace base {
 
 CustomizedVideoDecoderProxy::CustomizedVideoDecoderProxy(VideoCodecType type,
   VideoDecoderInterface* external_video_decoder)
-  : codec_type_(type), decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
+  : decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
 
 CustomizedVideoDecoderProxy::~CustomizedVideoDecoderProxy() {
   if (external_decoder_) {
