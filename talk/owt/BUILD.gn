@@ -302,6 +302,9 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedaudiodevicemodule.h",
     ]
   }
+  if (is_linux) {
+    configs += ["//third_party/webrtc/modules/desktop_capture:gio"]
+  }
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
