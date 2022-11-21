@@ -26,7 +26,7 @@ namespace owt {
 namespace base {
 class ScreenCaptureThread : public rtc::Thread {
  public:
-  ScreenCaptureThread() : rtc::Thread(rtc::SocketServer::CreateDefault()) {}
+  ScreenCaptureThread();
   virtual void Run() override;
   ~ScreenCaptureThread() override;
 };

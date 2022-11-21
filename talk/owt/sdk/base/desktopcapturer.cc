@@ -10,6 +10,7 @@
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
+#include "webrtc/rtc_base/physical_socket_server.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/rtc_base/time_utils.h"
@@ -18,6 +19,11 @@
 using namespace rtc;
 namespace owt {
 namespace base {
+
+ScreenCaptureThread::ScreenCaptureThread()
+    : rtc::Thread(
+          std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer)) {}
+
 ///////////////////////////////////////////////////////////////////////
 // Definition of private class BasicScreenCaptureThread that periodically
 // generates frames.
@@ -26,7 +32,8 @@ class BasicScreenCapturer::BasicScreenCaptureThread
     : public rtc::Thread {
  public:
   explicit BasicScreenCaptureThread(BasicScreenCapturer* capturer)
-      : rtc::Thread(rtc::SocketServer::CreateDefault()),
+      : rtc::Thread(
+            std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer)),
         capturer_(capturer),
         finished_(false) {
     waiting_time_ms_ = 1000 / 30;  // For basic capturer, fix it to 30fps
