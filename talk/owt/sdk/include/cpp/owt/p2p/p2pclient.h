@@ -43,6 +43,7 @@ class P2PPeerConnectionChannel;
 /// Observer for P2PClient
 class P2PClientObserver {
  public:
+  virtual ~P2PClientObserver() = default;
   /**
    @brief This function will be invoked when received data from a remote user.
    @param remote_user_id Remote user’s ID
