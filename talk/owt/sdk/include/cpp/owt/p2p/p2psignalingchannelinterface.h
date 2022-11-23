@@ -34,6 +34,7 @@ class P2PSignalingChannelObserver {
  */
 class P2PSignalingChannelInterface {
  public:
+  virtual ~P2PSignalingChannelInterface() = default;
   /**
    @brief Add an observer for P2PSignalingChannel
    @param observer An observer instance.

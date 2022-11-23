@@ -2,15 +2,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/base/customizedframescapturer.h"
+#include "talk/owt/sdk/base/customizedencoderbufferhandle.h"
+#include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/media/base/video_common.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/memory/aligned_malloc.h"
+#include "webrtc/rtc_base/physical_socket_server.h"
 #include "webrtc/rtc_base/thread.h"
 #include "webrtc/system_wrappers/include/clock.h"
-#include "talk/owt/sdk/base/customizedframescapturer.h"
-#include "talk/owt/sdk/base/customizedencoderbufferhandle.h"
-#include "talk/owt/sdk/base/nativehandlebuffer.h"
 
 using namespace rtc;
 namespace owt {
@@ -25,7 +26,8 @@ class CustomizedFramesCapturer::CustomizedFramesThread
     : public rtc::Thread {
  public:
   explicit CustomizedFramesThread(CustomizedFramesCapturer* capturer, int fps)
-      : rtc::Thread(SocketServer::CreateDefault()),
+      : rtc::Thread(
+            std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer)),
         capturer_(capturer) {
     finished_ = false;
     waiting_time_ms_ = 1000 / fps;
