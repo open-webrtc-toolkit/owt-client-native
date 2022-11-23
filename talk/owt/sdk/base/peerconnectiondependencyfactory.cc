@@ -172,12 +172,10 @@ void PeerConnectionDependencyFactory::
             network_thread->Start())
       << "Failed to start threads";
 
-  socket_factory_ = std::make_unique<rtc::PhysicalSocketServer>();
-  // TODO: Create network manager on network thread.
-  network_manager_ =
-      std::make_shared<rtc::BasicNetworkManager>(socket_factory_.get());
-  packet_socket_factory_ =
-      std::make_shared<rtc::BasicPacketSocketFactory>(socket_factory_.get());
+  network_manager_ = std::make_shared<rtc::BasicNetworkManager>(
+      network_thread->socketserver());
+  packet_socket_factory_ = std::make_shared<rtc::BasicPacketSocketFactory>(
+      network_thread->socketserver());
 
   // Use webrtc::VideoEn(De)coderFactory on iOS.
   std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
