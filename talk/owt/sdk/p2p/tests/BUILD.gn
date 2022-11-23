@@ -1,0 +1,20 @@
+import("//third_party/webrtc/webrtc.gni")
+
+rtc_test("p2p_e2e_test") {
+  testonly = true
+  visibility = [ "//:default" ]
+  sources = [
+    "e2e_tests.cc",
+    "fake_signaling_channel.cc",
+  ]
+  include_dirs = [ "//talk/owt/sdk/include/cpp" ]
+  deps = [
+    "../../..:owt_sdk_p2p",
+    "//third_party/webrtc/test:run_loop",
+    "//third_party/webrtc/test:test_main",
+    "//third_party/webrtc/test:test_support",
+  ]
+  if (is_win) {
+    libs = [ "dcomp.lib" ]
+  }
+}
