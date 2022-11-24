@@ -7,6 +7,7 @@
 #import "RTCMacros.h"
 NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, OWTAudioCodec) {
+  OWTAudioCodecUnknown = 0,
   OWTAudioCodecPcmu = 1,
   OWTAudioCodecPcma = 2,
   OWTAudioCodecOpus = 3,
@@ -16,28 +17,28 @@ typedef NS_ENUM(NSInteger, OWTAudioCodec) {
   OWTAudioCodecAac = 7,
   OWTAudioCodecAc3 = 8,
   OWTAudioCodecAsao = 9,
-  OWTAudioCodecUnknown = 10,
 };
 typedef NS_ENUM(NSInteger, OWTVideoCodec) {
+  OWTVideoCodecUnknown = 0,
   OWTVideoCodecVP8 = 1,
   OWTVideoCodecVP9 = 2,
   OWTVideoCodecH264 = 3,
   OWTVideoCodecH265 = 4,
-  OWTVideoCodecUnknown = 5,
+  OWTVideoCodecAV1 = 5,
 };
 typedef NS_ENUM(NSInteger, OWTAudioSourceInfo) {
+  OWTAudioSourceInfoUnknown = 0,
   OWTAudioSourceInfoMic = 1,
   OWTAudioSourceInfoScreenCast = 2,
   OWTAudioSourceInfoFile = 3,
   OWTAudioSourceInfoMixed = 4,
-  OWTAudioSourceInfoUnknown = 5,
 };
 typedef NS_ENUM(NSInteger, OWTVideoSourceInfo) {
+  OWTVideoSourceInfoUnknown = 0,
   OWTVideoSourceInfoCamera = 1,
   OWTVideoSourceInfoScreenCast = 2,
   OWTVideoSourceInfoFile = 3,
   OWTVideoSourceInfoMixed = 4,
-  OWTVideoSourceInfoUnknown = 5,
 };
 typedef NS_OPTIONS(NSInteger, OWTTrackKind) {
   OWTTrackKindUnknown = 0,

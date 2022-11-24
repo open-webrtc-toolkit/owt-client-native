@@ -52,7 +52,8 @@ static std::unordered_map<OWTVideoCodec, const owt::base::VideoCodec>
     videoCodecMap = {{OWTVideoCodecVP8, owt::base::VideoCodec::kVp8},
                      {OWTVideoCodecVP9, owt::base::VideoCodec::kVp9},
                      {OWTVideoCodecH264, owt::base::VideoCodec::kH264},
-                     {OWTVideoCodecH265, owt::base::VideoCodec::kH265}};
+                     {OWTVideoCodecH265, owt::base::VideoCodec::kH265},
+                     {OWTVideoCodecAV1, owt::base::VideoCodec::kAv1}};
 - (instancetype)initWithNativeVideoCodecParameters:
     (const owt::base::VideoCodecParameters&)nativeVideoCodecParameters {
   if (self = [super init]) {
