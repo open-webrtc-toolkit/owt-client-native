@@ -23,7 +23,7 @@ EncodedVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) ||
       absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) ||
       absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
       || absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)
 #endif
   ) {
@@ -42,7 +42,7 @@ EncodedVideoEncoderFactory::GetSupportedFormats() const {
   // supports with those provided by built-in H.264 encoder
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }

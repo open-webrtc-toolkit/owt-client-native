@@ -78,7 +78,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       media_codec = VideoCodec::kH264;
     else if (codec_type_ == webrtc::kVideoCodecVP8)
       media_codec = VideoCodec::kVp8;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     else if (codec_type_ == webrtc::kVideoCodecH265)
       media_codec = VideoCodec::kH265;
 #endif
@@ -102,7 +102,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     RTC_LOG(LS_ERROR) << "Invalid native handle passed.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   } else {  // normal case.
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     if (codec_type_ != webrtc::kVideoCodecH264 &&
         codec_type_ != webrtc::kVideoCodecVP8 &&
         codec_type_ != webrtc::kVideoCodecVP9 &&

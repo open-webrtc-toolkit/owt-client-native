@@ -57,6 +57,8 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
+  // Returns |signaling_thread_| for testing.
+  rtc::Thread* SignalingThreadForTesting();
   ~PeerConnectionDependencyFactory() override;
  protected:
   explicit PeerConnectionDependencyFactory();

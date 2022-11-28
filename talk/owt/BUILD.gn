@@ -222,10 +222,8 @@ static_library("owt_sdk_base") {
     defines += [ "WEBRTC_USE_X11" ]
   }
 
-  if (!rtc_use_h265) {
-    defines += [ "DISABLE_H265" ]
-  } else {
-    defines += [ "OWT_USE_H265" ]
+  if (rtc_use_h265) {
+    defines += [ "WEBRTC_USE_H265" ]
   }
 
   if (owt_use_quic) {

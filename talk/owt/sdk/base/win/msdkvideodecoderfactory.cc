@@ -23,7 +23,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
 
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
   bool is_h264_hw_supported = false, is_av1_hw_supported = false;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 // TODO: Add logic to detect plugin by MSDK.
   bool is_h265_hw_supported = true;
 #endif
@@ -32,7 +32,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
   std::vector<owt::base::VideoCodec> codecs_to_check;
   codecs_to_check.push_back(owt::base::VideoCodec::kH264);
   codecs_to_check.push_back(owt::base::VideoCodec::kVp9);
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   codecs_to_check.push_back(owt::base::VideoCodec::kH265);
 #endif
   codecs_to_check.push_back(owt::base::VideoCodec::kAv1);
@@ -54,7 +54,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
       is_av1_hw_supported = true;
       supported_codec_types_.push_back(webrtc::kVideoCodecAV1);
     }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     else if (capability.codec_type == owt::base::VideoCodec::kH265 && !is_h265_hw_supported) {
       is_h265_hw_supported = true;
       supported_codec_types_.push_back(webrtc::kVideoCodecH265);
@@ -68,7 +68,7 @@ MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {}
 std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecoder(
     const webrtc::SdpVideoFormat& format) {
   bool vp9_hw = false, vp8_hw = false, av1_hw = false, h264_hw = false;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   bool h265_hw = false;
 #endif
   for (auto& codec : supported_codec_types_) {
@@ -80,7 +80,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
       vp8_hw = true;
     else if (codec == webrtc::kVideoCodecVP9)
       vp9_hw = true;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     else if (codec == webrtc::kVideoCodecH265) {
       h265_hw = true;
       RTC_LOG(LS_ERROR) << "Enabling hardware hevc.";
@@ -99,7 +99,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
              !av1_hw) {
     return webrtc::CreateLibaomAv1Decoder();
   } 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   // This should not happen. We do not return here but preceed with HW decoder.
   else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
     RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
@@ -120,7 +120,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
   if (webrtc::kIsLibaomAv1DecoderSupported) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }

@@ -67,7 +67,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
       }
 #if (MFX_VERSION >= 1027)
       if (platform_code >= MFX_PLATFORM_ICELAKE) {
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
         support_hevc_8 = true;
         support_hevc_10 = true;
 #endif
@@ -139,7 +139,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
             capabilities.push_back(vp9_10_cap);
           }
         }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
         else if (codec == owt::base::VideoCodec::kH265) {
           memset(&video_param, 0, sizeof(video_param));
           // We remove support of SW encoders through plugin, so never
@@ -295,7 +295,7 @@ MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
           capabilities.push_back(avc_cap);
         }
       }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
       else if (codec == owt::base::VideoCodec::kH265) {
         memset(&video_param, 0, sizeof(video_param));
         video_param.mfx.CodecId = MFX_CODEC_HEVC;

@@ -335,6 +335,10 @@ PeerConnectionDependencyFactory::PeerConnectionFactory() const {
   return pc_factory_;
 }
 
+rtc::Thread* PeerConnectionDependencyFactory::SignalingThreadForTesting() {
+  return signaling_thread.get();
+}
+
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 scoped_refptr<webrtc::AudioDeviceModule> PeerConnectionDependencyFactory::
     CreateCustomizedAudioDeviceModuleOnCurrentThread() {

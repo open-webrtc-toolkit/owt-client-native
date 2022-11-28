@@ -1153,6 +1153,7 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
     OnNegotiationNeeded();
   }
 }
+
 void P2PPeerConnectionChannel::SendStop(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -1161,6 +1162,7 @@ void P2PPeerConnectionChannel::SendStop(
   json[kMessageTypeKey] = kChatClosed;
   SendSignalingMessage(json, on_success, on_failure);
 }
+
 void P2PPeerConnectionChannel::ClosePeerConnection() {
   RTC_LOG(LS_INFO) << "Close peer connection.";
   if (peer_connection_) {
