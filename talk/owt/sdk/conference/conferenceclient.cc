@@ -410,9 +410,10 @@ void ConferenceClient::Join(
           user_id = info->get_map()["user"]->get_string();
           role = info->get_map()["role"]->get_string();
           const std::lock_guard<std::mutex> lock(conference_info_mutex_);
-          if (!current_conference_info_.get()) {
-            current_conference_info_.reset(new ConferenceInfo);
+          if (current_conference_info_.get()) {
+            current_conference_info_.reset();
           }
+          current_conference_info_.reset(new ConferenceInfo);
           current_conference_info_->self_.reset(
                 new Participant(participant_id, role, user_id));
         }
