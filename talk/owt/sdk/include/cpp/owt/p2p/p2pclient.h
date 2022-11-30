@@ -26,6 +26,9 @@ namespace base {
   struct PeerConnectionChannelConfiguration;
 }
 namespace p2p{
+
+class P2PPeerConnectionChannelObserver;
+
 /**
  @brief Configuration for P2PClient
  This configuration is used while creating P2PClient. Changing this
@@ -61,8 +64,8 @@ class P2PClientObserver {
 };
 /// An async client for P2P WebRTC sessions
 class P2PClient final
-    : protected P2PSignalingSenderInterface,
-      protected P2PSignalingChannelObserver,
+    : public P2PSignalingSenderInterface,
+      public P2PSignalingChannelObserver,
       public std::enable_shared_from_this<P2PClient> {
   friend class P2PPublication;
   friend class P2PPeerConnectionChannelObserverCppImpl;
@@ -74,6 +77,8 @@ class P2PClient final
    */
   P2PClient(P2PClientConfiguration& configuration,
             std::shared_ptr<P2PSignalingChannelInterface> signaling_channel);
+  ~P2PClient() override;
+
   /*! Add an observer for peer client.
    @param observer Add this object to observer list.
           Do not delete this object until it is removed from observer list.
@@ -239,6 +244,8 @@ class P2PClient final
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
+  std::unique_ptr<P2PSignalingSenderInterface> signaling_sender_;
+  std::unique_ptr<P2PPeerConnectionChannelObserver> pcc_observer_adapter_;
   std::unordered_map<std::string, std::shared_ptr<P2PPeerConnectionChannel>>
       pc_channels_;
   std::mutex pc_channels_mutex_;

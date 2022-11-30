@@ -22,10 +22,15 @@ namespace p2p {
 enum IcsP2PError : int {
   kWebrtcIceGatheringPolicyUnsupported = 2601,
 };
+
 P2PClient::P2PClient(
     P2PClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
-    : signaling_channel_(signaling_channel), configuration_(configuration) {
+    : signaling_channel_(signaling_channel),
+      signaling_sender_(std::make_unique<P2PSignalingSenderImpl>(this)),
+      pcc_observer_adapter_(
+          std::make_unique<P2PPeerConnectionChannelObserverCppImpl>(*this)),
+      configuration_(configuration) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->AddObserver(*this);
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
@@ -33,6 +38,9 @@ P2PClient::P2PClient(
       std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
           "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
 }
+
+P2PClient::~P2PClient() = default;
+
 void P2PClient::Connect(
     const std::string& host,
     const std::string& token,
@@ -323,14 +331,11 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
   if (pcc_it == pc_channels_.end()) {
     PeerConnectionChannelConfiguration config =
         GetPeerConnectionChannelConfiguration();
-    P2PSignalingSenderInterface* signaling_sender =
-        new P2PSignalingSenderImpl(this);
     std::shared_ptr<P2PPeerConnectionChannel> pcc =
         std::shared_ptr<P2PPeerConnectionChannel>(new P2PPeerConnectionChannel(
-            config, local_id_, target_id, signaling_sender, event_queue_));
-    P2PPeerConnectionChannelObserverCppImpl* pcc_observer =
-        new P2PPeerConnectionChannelObserverCppImpl(*this);
-    pcc->AddObserver(pcc_observer);
+            config, local_id_, target_id, signaling_sender_.get(),
+            event_queue_));
+    pcc->AddObserver(pcc_observer_adapter_.get());
     auto pcc_pair =
         std::pair<std::string, std::shared_ptr<P2PPeerConnectionChannel>>(
             target_id, pcc);
