@@ -215,13 +215,15 @@ class P2PClient final
   /** @endcond */
  protected:
   // Implement P2PSignalingSenderInterface
-  virtual void SendSignalingMessage(const std::string& message,
-                                    const std::string& remote_id,
-                                    std::function<void()> on_success,
-                                    std::function<void(std::unique_ptr<Exception>)> on_failure);
+  void SendSignalingMessage(
+      const std::string& message,
+      const std::string& remote_id,
+      std::function<void()> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) override;
   // Implement P2PSignalingChannelObserver
-  virtual void OnSignalingMessage(const std::string& message, const std::string& sender);
-  virtual void OnServerDisconnected();
+  void OnSignalingMessage(const std::string& message,
+                          const std::string& sender) override;
+  void OnServerDisconnected() override;
   // Handle events from P2PPeerConnectionChannel
   // Triggered when the WebRTC session is ended.
   virtual void OnStopped(const std::string& remote_id);
@@ -230,8 +232,8 @@ class P2PClient final
   virtual void OnMessageReceived(const std::string& remote_id,
                                  const std::string& message);
   // Triggered when a new stream is added.
-  virtual void OnStreamAdded(
-      std::shared_ptr<owt::base::RemoteStream> stream);
+  virtual void OnStreamAdded(std::shared_ptr<owt::base::RemoteStream> stream);
+
  private:
   void Unpublish(const std::string& target_id,
                  std::shared_ptr<LocalStream> stream,

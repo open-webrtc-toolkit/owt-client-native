@@ -26,6 +26,7 @@ using namespace owt::base;
 // Usually, PeerClient should implement these methods and notify application.
 class P2PPeerConnectionChannelObserver {
  public:
+  virtual ~P2PPeerConnectionChannelObserver() = default;
   // Triggered when remote user send data via data channel.
   // Currently, data is string.
   virtual void OnMessageReceived(const std::string& remote_id,
