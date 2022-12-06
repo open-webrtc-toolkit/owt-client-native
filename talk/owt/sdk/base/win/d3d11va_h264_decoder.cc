@@ -357,6 +357,8 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
     // We get one frame from the decoder.
     if (frame != nullptr && frame->format == hw_pix_fmt) {
       ID3D11Texture2D* texture = (ID3D11Texture2D*)frame->data[0];
+      int width = frame->crop_right - frame->crop_left;
+      int height = frame->crop_bottom - frame->crop_top;
       int index = (intptr_t)frame->data[1];
       D3D11_TEXTURE2D_DESC texture_desc;
 
@@ -412,8 +414,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
         surface_handle_->frame_size = input_image.size();
         rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
           new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
-          (void*)surface_handle_.get(), texture_desc.Width,
-            texture_desc.Height);
+                (void*)surface_handle_.get(), width, height);
         webrtc::VideoFrame decoded_frame(buffer, input_image.Timestamp(), 0,
           webrtc::kVideoRotation_0);
         decoded_frame.set_ntp_time_ms(input_image.ntp_time_ms_);
