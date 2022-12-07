@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <string>
 #include <unordered_map>
+#include "RTCLogging.h"
 #import <Foundation/Foundation.h>
 #import "RTCVideoSource.h"
 #import "talk/owt/sdk/base/objc/OWTLocalStream+Private.h"
@@ -147,6 +148,7 @@
   return [NSString stringForStdString:rtc::CreateRandomUuid()];
 }
 - (void)dealloc {
+  RTCLogInfo(@"Dealloc OWTLocalStream.");
   if (_capturer && [_capturer isKindOfClass:[RTCCameraVideoCapturer class]]) {
     RTCCameraVideoCapturer* cameraVideoCapturer =
         (RTCCameraVideoCapturer*)_capturer;

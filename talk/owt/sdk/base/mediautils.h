@@ -152,7 +152,7 @@ struct H265CodecCapability {
 
 union CodecSpecificInfoUnion {
   VP9CodecCapability VP9;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   H265CodecCapability H265;
 #endif
   H264CodecCapability H264;

@@ -13,7 +13,7 @@
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "webrtc/common_video/h264/h264_common.h"
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 #include "webrtc/common_video/h265/h265_common.h"
 #endif
 #include "webrtc/media/base/vp9_profile.h"
@@ -197,7 +197,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     case webrtc::kVideoCodecH264:
       codec_id = MFX_CODEC_AVC;
       break;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     case webrtc::kVideoCodecH265:
       codec_id = MFX_CODEC_HEVC;
       break;

@@ -202,7 +202,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     }
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
       codec_id = MFX_CODEC_VP8;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     } else if (codec_.codecType == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
 #endif
