@@ -536,21 +536,4 @@ if (owt_include_tests) {
       ]
     }
   }
-
-  test("owt_p2p_e2e_tests") {
-    testonly = true
-    sources = [
-      "sdk/p2p/test/p2p_end_to_end_tests.cc",
-      "sdk/p2p/test/simple_signaling_channel.cc",
-      "sdk/test/unittest_main.cc",
-    ]
-    deps = [
-      ":owt_sdk_base",
-      ":owt_sdk_p2p",
-      "//testing/gmock",
-      "//testing/gtest",
-      "//third_party/webrtc/test:test_common",
-    ]
-    include_dirs = [ "sdk/include/cpp" ]
-  }
 }
