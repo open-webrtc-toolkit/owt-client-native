@@ -107,22 +107,23 @@ Stream::Stream(const std::string& id)
 #elif defined(WEBRTC_LINUX)
 Stream::Stream()
     : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_("") {}
-Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
-    : media_stream_(nullptr),   va_renderer_impl_(nullptr),source_(source) {
-  MediaStream(media_stream);
-}
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), va_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #else
 Stream::Stream()
     : media_stream_(nullptr), renderer_impl_(nullptr), audio_renderer_impl_(nullptr), ended_(false), id_("") {}
-Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
-    : media_stream_(nullptr), source_(source) {
-  MediaStream(media_stream);
-}
 Stream::Stream(const std::string& id)
     : media_stream_(nullptr), renderer_impl_(nullptr),  audio_renderer_impl_(nullptr), ended_(false), id_(id) {}
 #endif
+
+Stream::Stream(MediaStreamInterface* media_stream, StreamSourceInfo source)
+    : media_stream_(nullptr),
+#if defined(WEBRTC_LINUX)
+      va_renderer_impl_(nullptr),
+#endif
+      source_(source) {
+  MediaStream(media_stream);
+}
 
 MediaStreamInterface* Stream::MediaStream() const {
   return media_stream_;
@@ -387,10 +388,12 @@ void Stream::TriggerOnStreamUnmute(TrackKind track_kind) {
 }
 #if !defined(WEBRTC_WIN)
 LocalStream::LocalStream() {}
+#endif
+
 LocalStream::LocalStream(MediaStreamInterface* media_stream,
                          StreamSourceInfo source)
     : Stream(media_stream, source) {}
-#endif
+
 LocalStream::~LocalStream() {
   RTC_LOG(LS_INFO) << "Destroy LocalCameraStream.";
   if (media_stream_ != nullptr) {

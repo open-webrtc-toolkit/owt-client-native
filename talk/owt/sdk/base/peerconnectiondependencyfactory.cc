@@ -232,14 +232,17 @@ void PeerConnectionDependencyFactory::
         [this] { return CreateCustomizedAudioDeviceModuleOnCurrentThread(); });
   } else {
 #if defined(WEBRTC_WIN)
-    // For Widnows we create the audio device with non audio_device_impl
+    // For Windows we create the audio device with non audio_device_impl
     // dependent factory to facilitate switching of playback devices.
     task_queue_factory_ = CreateDefaultTaskQueueFactory();
     com_initializer_ = std::make_unique<webrtc::ScopedCOMInitializer>(
         webrtc::ScopedCOMInitializer::kMTA);
-    if (com_initializer_->Succeeded())
-      adm = CreateWindowsCoreAudioAudioDeviceModule(
-          task_queue_factory_.get(), true);
+    if (com_initializer_->Succeeded()) {
+      adm = worker_thread->BlockingCall([this] {
+        return CreateWindowsCoreAudioAudioDeviceModule(
+            task_queue_factory_.get(), true);
+      });
+    }
 #endif
   }
 #endif
