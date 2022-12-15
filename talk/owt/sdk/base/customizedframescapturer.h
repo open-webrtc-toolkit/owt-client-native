@@ -58,10 +58,12 @@ class CustomizedFramesCapturer : public webrtc::VideoCaptureModule, public Encod
   }
 
   virtual bool CaptureStarted() override;
-  virtual int32_t CaptureSettings(webrtc::VideoCaptureCapability& settings) override;
-// EncodedStreamProviderSink implementation
-  virtual void OnStreamProviderFrame(const std::vector<uint8_t>& buffer,
-                                     const EncodedImageMetaData& meta_data);
+  virtual int32_t CaptureSettings(
+      webrtc::VideoCaptureCapability& settings) override;
+  // Overrides EncodedStreamProviderSink.
+  virtual void OnStreamProviderFrame(
+      const std::vector<uint8_t>& buffer,
+      const EncodedImageMetaData& meta_data) override;
   virtual int32_t SetCaptureRotation(webrtc::VideoRotation rotation) override;
   virtual bool SetApplyRotation(bool enable) override {
     return false;

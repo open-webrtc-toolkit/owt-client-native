@@ -170,6 +170,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void HandleRemoteCapability(Json::Value& ua);
   void SendUaInfo();
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  rtc::scoped_refptr<webrtc::DataChannelInterface> control_data_channel_;
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
   std::string remote_id_;
@@ -220,6 +221,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
                          std::function<void()>,
                          std::function<void(std::unique_ptr<Exception>)>>>
       pending_control_messages_;
+  std::mutex pending_control_messages_mutex_;
   webrtc::Mutex pending_remote_candidates_crit_;
   std::vector<std::unique_ptr<webrtc::IceCandidateInterface>>
       pending_remote_candidates_

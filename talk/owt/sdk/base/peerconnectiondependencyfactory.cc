@@ -26,7 +26,6 @@
 #include <d3d11.h>
 #include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
-#endif
 #elif defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/linux/msdkvideodecoderfactory.h"
 #elif defined(WEBRTC_IOS)
@@ -160,47 +159,40 @@ void PeerConnectionDependencyFactory::
     return;
   }
   worker_thread = rtc::Thread::CreateWithSocketServer();
-
   worker_thread->SetName("worker_thread", nullptr);
   signaling_thread = rtc::Thread::CreateWithSocketServer();
-
   signaling_thread->SetName("signaling_thread", nullptr);
   network_thread = rtc::Thread::CreateWithSocketServer();
-
   network_thread->SetName("network_thread", nullptr);
   RTC_CHECK(worker_thread->Start() && signaling_thread->Start() &&
             network_thread->Start())
       << "Failed to start threads";
-  network_manager_ =
-      std::make_shared<rtc::BasicNetworkManager>();
-  packet_socket_factory_ =
-      std::make_shared<rtc::BasicPacketSocketFactory>(network_thread.get());
-#if defined(WEBRTC_IOS)
-  // Use webrtc::VideoEn(De)coderFactory on iOS.
+  packet_socket_factory_ = std::make_shared<rtc::BasicPacketSocketFactory>(
+      network_thread->socketserver());
+  network_manager_ = std::make_shared<rtc::BasicNetworkManager>(
+      network_thread->socketserver());
   std::unique_ptr<VideoEncoderFactory> encoder_factory;
   std::unique_ptr<VideoDecoderFactory> decoder_factory;
+#if defined(WEBRTC_IOS)
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
 #elif defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   // Configure codec factories. MSDK factory will internally use built-in codecs
-  // if hardware acceleration is not in place. For H.265/H.264, if hardware acceleration
-  // is turned off at application level, negotiation will fail.
+  // if hardware acceleration is not in place. For H.265/H.264, if hardware
+  // acceleration is turned off at application level, negotiation will fail.
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   } else if (render_hardware_acceleration_enabled_) {
-#if defined(WEBRTC_LINUX)
-    // For Linux HW encoder pending verification.
-    encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
-#else
 #ifdef OWT_USE_MSDK
     encoder_factory.reset(new MSDKVideoEncoderFactory());
 #else
+    // For Linux HW encoder pending verification.
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
-#endif
 #endif
   } else {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
   }
+#endif
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
@@ -214,10 +206,6 @@ void PeerConnectionDependencyFactory::
   } else {
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
-
-#else
-#error "Unsupported platform."
-#endif
 
   // Raw audio frame
   // if adm is nullptr, voe_base will initilize it with the default internal
@@ -268,15 +256,16 @@ PeerConnectionDependencyFactory::CreatePeerConnectionOnCurrentThread(
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,
     webrtc::PeerConnectionObserver* observer) {
   std::unique_ptr<cricket::PortAllocator> port_allocator;
-  port_allocator.reset(new cricket::BasicPortAllocator(network_manager_.get(), packet_socket_factory_.get()));
+  port_allocator.reset(new cricket::BasicPortAllocator(
+      network_manager_.get(), packet_socket_factory_.get()));
   int min_port = 0;
   int max_port = 0;
   GlobalConfiguration::GetIcePortAllocationRanges(min_port, max_port);
   if (min_port > 0 && max_port > 0 && max_port >= min_port) {
     port_allocator->SetPortRange(min_port, max_port);
   }
-  return (pc_factory_->CreatePeerConnection(config, std::move(port_allocator), nullptr, observer))
-      .get();
+  return pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
+                                           nullptr, observer);
 }
 void PeerConnectionDependencyFactory::CreatePeerConnectionFactory() {
   RTC_CHECK(!pc_factory_.get());

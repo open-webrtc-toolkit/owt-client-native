@@ -36,14 +36,14 @@ struct D3D11ImageHandle {
 #endif
 /// Video buffer and its information
 struct VideoBuffer {
-  /// Video buffer. If is native, 
-   void* buffer;
+  /// Video buffer
+  uint8_t* buffer;
   /// Resolution for the Video buffer
   Resolution resolution;
   // Buffer type
   VideoBufferType type;
   ~VideoBuffer() {
-    if (type != VideoBufferType::kD3D11Handle)
+    if (type != VideoBufferType::kD3D11)
       delete[] buffer;
     else
       delete buffer;
