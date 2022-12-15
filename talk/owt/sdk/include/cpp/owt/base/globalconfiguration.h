@@ -92,7 +92,9 @@ class GlobalConfiguration {
   static void SetVideoHardwareAccelerationEnabled(bool enabled) {
     hardware_acceleration_enabled_ = enabled;
   }
+#endif
 
+#if defined(WEBRTC_WIN)
   /**
    @breif This function sets the d3d11 device for the decoder if hardware
    acceleration is turned on. If hardware acceleration is not turned on, this
@@ -284,7 +286,9 @@ class GlobalConfiguration {
     return hardware_acceleration_enabled_;
   }
   static bool hardware_acceleration_enabled_;
+#endif
 
+#if defined(WEBRTC_WIN)
   /**
    @brief This function gets the D3D11Device used for decoding/rendering.
    @return The D3D11Device handle sets by application.

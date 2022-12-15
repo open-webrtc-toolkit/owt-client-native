@@ -277,9 +277,10 @@ void P2PPeerConnectionChannel::Send(
                        std::function<void(std::unique_ptr<Exception>)>>{
                 data_copy, on_success, on_failure});
       }
-      if (control_data_channel_ ==
-          nullptr)  // Otherwise, wait for data channel ready.
+      if (control_data_channel_ == nullptr) {
+        // Otherwise, wait for data channel ready.
         CreateDataChannel(kDataChannelLabelForControlMessage);
+      }
     }
   }
 }
@@ -1334,6 +1335,26 @@ void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
     }
   }
   pending_remote_candidates_.clear();
+}
+
+void P2PPeerConnectionChannel::DrainPendingControlMessages() {
+  RTC_LOG(LS_INFO) << "Draining pending control messages. Message queue size: "
+                   << pending_control_messages_.size();
+  RTC_CHECK(control_data_channel_);
+  {
+    std::lock_guard<std::mutex> lock(pending_control_messages_mutex_);
+    for (auto it = pending_control_messages_.begin();
+         it != pending_control_messages_.end(); ++it) {
+      std::shared_ptr<std::string> message;
+      std::function<void()> on_success;
+      std::tie(message, on_success, std::ignore) = *it;
+      control_data_channel_->Send(CreateDataBuffer(*message));
+      if (on_success) {
+        on_success();
+      }
+    }
+    pending_control_messages_.clear();
+  }
 }
 
 Json::Value P2PPeerConnectionChannel::UaInfo() {

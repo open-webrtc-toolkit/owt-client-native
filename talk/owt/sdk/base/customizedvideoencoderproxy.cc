@@ -67,7 +67,6 @@ int32_t CustomizedVideoEncoderProxy::Encode(
   // Set encoder event callback object if not done already.
   if (encoder_event_callback_ == nullptr) {
     encoder_event_callback_ = encoder_buffer_handle->encoder_event_callback_;
-#ifndef DISABLE_H265
   }
 
   // Check codec type before proceeding.
@@ -138,27 +137,28 @@ int32_t CustomizedVideoEncoderProxy::Encode(
            encoder_buffer_handle->buffer_length_);
   }
 
-  webrtc::EncodedImage encodedframe(data_ptr, data_size, data_size);
+  webrtc::EncodedImage encoded_frame;
+  encoded_frame.SetEncodedData(EncodedImageBuffer::Create(data_ptr, data_size));
 
-  encodedframe._encodedWidth = input_image.width();
-  encodedframe._encodedHeight = input_image.height();
-  encodedframe.capture_time_ms_ =
+  encoded_frame._encodedWidth = input_image.width();
+  encoded_frame._encodedHeight = input_image.height();
+  encoded_frame.capture_time_ms_ =
       /*input_image.render_time_ms()*/ encoder_buffer_handle->meta_data_
           .capture_timestamp;
-  encodedframe.SetTimestamp(input_image.timestamp());
-  encodedframe.playout_delay_.min_ms = 0;
-  encodedframe.playout_delay_.max_ms = 0;
-  encodedframe.timing_.encode_start_ms =
+  encoded_frame.SetTimestamp(input_image.timestamp());
+  encoded_frame.playout_delay_.min_ms = 0;
+  encoded_frame.playout_delay_.max_ms = 0;
+  encoded_frame.timing_.encode_start_ms =
       encoder_buffer_handle->meta_data_.encoding_start;
-  encodedframe.timing_.encode_finish_ms =
+  encoded_frame.timing_.encode_finish_ms =
       encoder_buffer_handle->meta_data_.encoding_end;
-  encodedframe.timing_.flags = webrtc::VideoSendTiming::kTriggeredByTimer;
+  encoded_frame.timing_.flags = webrtc::VideoSendTiming::kTriggeredByTimer;
   if (!update_ts_) {
-    encodedframe.capture_time_ms_ = last_capture_timestamp_;
-    encodedframe.SetTimestamp(last_timestamp_);
+    encoded_frame.capture_time_ms_ = last_capture_timestamp_;
+    encoded_frame.SetTimestamp(last_timestamp_);
   } else {
-    last_capture_timestamp_ = encodedframe.capture_time_ms_;
-    last_timestamp_ = encodedframe.Timestamp();
+    last_capture_timestamp_ = encoded_frame.capture_time_ms_;
+    last_timestamp_ = encoded_frame.Timestamp();
   }
 
   if (encoder_buffer_handle->meta_data_.last_fragment)
@@ -182,7 +182,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     } else {
       au_key = (first_byte >> 2) & 0x1;
     }
-    encodedframe._frameType = (au_key == 0)
+    encoded_frame._frameType = (au_key == 0)
                                   ? webrtc::VideoFrameType::kVideoFrameKey
                                   : webrtc::VideoFrameType::kVideoFrameDelta;
   }
@@ -196,7 +196,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
     picture_id_ = (picture_id_ + 1) & 0x7FFF;
   } else if (codec_type_ == webrtc::kVideoCodecVP9) {
-    bool key_frame = encodedframe._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+    bool key_frame = encoded_frame._frameType == webrtc::VideoFrameType::kVideoFrameKey;
     if (key_frame) {
       gof_idx_ = 0;
     }
@@ -242,50 +242,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
         encoder_buffer_handle->meta_data_.last_fragment;
   }
 #endif
-  // Generate a header describing a single fragment.
-  webrtc::RTPFragmentationHeader header;
-  memset(&header, 0, sizeof(header));
-  if (codec_type_ == webrtc::kVideoCodecVP8 ||
-      codec_type_ == webrtc::kVideoCodecVP9) {
-    header.VerifyAndAllocateFragmentationHeader(1);
-    header.fragmentationOffset[0] = 0;
-    header.fragmentationLength[0] = encodedframe.size();
-#ifndef DISABLE_H265
-  } else if (codec_type_ == webrtc::kVideoCodecH264 ||
-             codec_type_ == webrtc::kVideoCodecH265) {
-#else
-  } else if (codec_type_ == webrtc::kVideoCodecH264) {
-#endif
-    // For H.264/H.265 search for start codes.
-    int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
-    size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
-    int32_t scPositionsLength = 0;
-    int32_t scPosition = 0;
-    while (scPositionsLength < MAX_NALUS_PERFRAME) {
-      size_t scLength = 0;
-      int32_t naluPosition = NextNaluPosition(
-          data_ptr + scPosition, data_size - scPosition, &scLength);
-      if (naluPosition < 0) {
-        break;
-      }
-      scPosition += naluPosition;
-      scPositions[scPositionsLength++] = scPosition;
-      scLengths[scPositionsLength - 1] = static_cast<int32_t>(scLength);
-      scPosition += static_cast<int32_t>(scLength);
-    }
-    if (scPositionsLength == 0) {
-      RTC_LOG(LS_ERROR) << "Start code is not found for H264/H265 codec!";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    scPositions[scPositionsLength] = data_size;
-    header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
-    for (int i = 0; i < scPositionsLength; i++) {
-      header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
-      header.fragmentationLength[i] =
-          scPositions[i + 1] - header.fragmentationOffset[i];
-    }
-  }
-  const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
+  const auto result = callback_->OnEncodedImage(encoded_frame, &info);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: "
                       << result.error;

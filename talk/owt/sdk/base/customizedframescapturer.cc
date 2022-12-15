@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 #include <algorithm>
+#include "api/make_ref_counted.h"
 #include "talk/owt/sdk/base/customizedframescapturer.h"
 #include "talk/owt/sdk/base/customizedencoderbufferhandle.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
@@ -248,7 +249,7 @@ void CustomizedFramesCapturer::OnStreamProviderFrame(
   encoder_context->buffer_length_ = buffer.size();
 
   rtc::scoped_refptr<owt::base::EncodedFrameBuffer2> rtc_buffer =
-      new rtc::RefCountedObject<owt::base::EncodedFrameBuffer2>(encoder_context);
+      rtc::make_ref_counted<owt::base::EncodedFrameBuffer2>(encoder_context);
   webrtc::VideoFrame pending_frame(rtc_buffer, 0, rtc::TimeMillis(),
                                    webrtc::kVideoRotation_0);
   data_callback_->OnFrame(pending_frame);
