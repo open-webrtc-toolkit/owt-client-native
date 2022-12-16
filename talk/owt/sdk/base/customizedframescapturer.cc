@@ -233,6 +233,7 @@ void CustomizedFramesCapturer::OnStreamProviderFrame(
   encoder_context->meta_data_.encoding_start = meta_data.encoding_start;
   encoder_context->meta_data_.last_fragment = meta_data.last_fragment;
   encoder_context->meta_data_.picture_id = meta_data.picture_id;
+  encoder_context->meta_data_.is_keyframe = meta_data.is_keyframe;
   encoder_context->meta_data_.frame_descriptor.active =
       meta_data.frame_descriptor.active;
   if (encoder_context->meta_data_.frame_descriptor.active) {

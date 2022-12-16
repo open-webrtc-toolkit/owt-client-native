@@ -9,7 +9,7 @@ namespace base {
 
 CustomizedVideoDecoderProxy::CustomizedVideoDecoderProxy(VideoCodecType type,
   VideoDecoderInterface* external_video_decoder)
-  : decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
+  : codec_type_(type),decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
 
 CustomizedVideoDecoderProxy::~CustomizedVideoDecoderProxy() {
   if (external_decoder_) {
@@ -18,9 +18,32 @@ CustomizedVideoDecoderProxy::~CustomizedVideoDecoderProxy() {
   }
 }
 
-bool CustomizedVideoDecoderProxy::Configure(const Settings& settings) {
-  // TODO: Implementation.
-  return true;
+bool CustomizedVideoDecoderProxy::Configure(const Settings& codec_settings) {
+  RTC_CHECK(codec_settings.codec_type() == codec_type_)
+      << "Unsupported codec type" << codec_settings.codec_type() << " for "
+      << codec_type_;
+  if (external_decoder_) {
+    if (codec_type_ == kVideoCodecH264 &&
+        external_decoder_->InitDecodeContext(VideoCodec::kH264)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+#ifdef WEBRTC_USE_H265
+    } else if (codec_type_ == kVideoCodecH265 &&
+               external_decoder_->InitDecodeContext(VideoCodec::kH265)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+#endif
+    } else if (codec_type_ == kVideoCodecVP8 &&
+               external_decoder_->InitDecodeContext(VideoCodec::kVp8)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+    } else if (codec_type_ == kVideoCodecVP9 &&
+               external_decoder_->InitDecodeContext(VideoCodec::kVp9)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+    } else if (codec_type_ == kVideoCodecAV1 &&
+               external_decoder_->InitDecodeContext(VideoCodec::kAv1)) {
+      return WEBRTC_VIDEO_CODEC_OK;
+    }
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t CustomizedVideoDecoderProxy::Decode(const EncodedImage& input_image,

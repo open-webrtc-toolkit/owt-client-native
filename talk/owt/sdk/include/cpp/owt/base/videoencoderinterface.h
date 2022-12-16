@@ -95,6 +95,7 @@ struct EncodedImageMetaData {
   uint64_t encoding_end;
   // Generic frame descriptor
   GenericDescriptorInfo frame_descriptor;
+  bool is_keyframe = false;
 
   // Allocate sidedata. If allocated already, will free it first.
   // For OWT, maximum allowed size is 240 bytes.

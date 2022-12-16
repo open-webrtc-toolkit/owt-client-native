@@ -201,7 +201,7 @@ int32_t H264DXVADecoderImpl::InitDecode(const webrtc::VideoCodec* codec_settings
   ReportInit();
   if (codec_settings &&
       (codec_settings->codecType != webrtc::kVideoCodecH264 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
       && codec_settings->codecType != webrtc::kVideoCodecH265)
 #endif
   ) {

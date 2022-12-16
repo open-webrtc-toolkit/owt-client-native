@@ -19,8 +19,8 @@ static const std::unordered_map<AudioCodec, const std::string, EnumClassHash>
                          {AudioCodec::kPcma, "PCMA"}};
 static const std::unordered_map<VideoCodec, const std::string, EnumClassHash>
     video_codec_names = {{VideoCodec::kVp8, "VP8"},
-                         {VideoCodec::kH264, "H264"},
                          {VideoCodec::kVp9, "VP9"},
+                         {VideoCodec::kH264, "H264"},
                          {VideoCodec::kH265, "H265"},
                          {VideoCodec::kAv1, "AV1"}};
 std::string SdpUtils::SetPreferAudioCodecs(const std::string& original_sdp,

@@ -26,6 +26,7 @@ PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 GN_ARGS = [
     'rtc_use_h264=true',
     'rtc_use_h265=true',
+    'enable_libaom=true',
     'is_component_build=false',
     'rtc_build_examples=false',
     # Disable usage of GTK.
