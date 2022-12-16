@@ -234,7 +234,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.H264.last_fragment_in_frame =
         encoder_buffer_handle->meta_data_.last_fragment;
   }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   else if (codec_type_ == webrtc::kVideoCodecH265) {
     info.codecSpecific.H265.picture_id =
         encoder_buffer_handle->meta_data_.picture_id;
