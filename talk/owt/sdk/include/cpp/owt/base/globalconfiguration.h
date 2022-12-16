@@ -106,6 +106,20 @@ class GlobalConfiguration {
   }
 #endif
   /**
+   @brief Set the global bitrate limits applied to external BWE. If any of the
+   value is set to 0, will use the stack default for that.
+   @param start_bitrate_kbps the start birate to be set to external BWE.
+   @param min_bitrate_kpbs the minimum birate to be set to external BWE.
+   @param max_bitrate_kbps the maximum bitrate to be set to external BWE.
+  */
+  static void SetBweRateLimits(int start_bitrate_kbps,
+                               int min_bitrate_kbps,
+                               int max_bitrate_kbps) {
+    start_bitrate_kbps_ = start_bitrate_kbps;
+    min_bitrate_kbps_ = min_bitrate_kbps;
+    max_bitrate_kbps_ = max_bitrate_kbps;
+  }
+  /**
    @brief This sets the link MTU
    @param mtu_size The link mtu
   */
@@ -177,7 +191,7 @@ class GlobalConfiguration {
    estimated bandwidth.
    @param weight The weight of delay based BWE result in range of [0, 100]
   */
-  static void SetDelayBasedBWEWeight(int weight) {
+  static void SetDelayBasedBweWeight(int weight) {
     delay_based_bwe_weight_ = weight;
   }
   /** @endcond */
@@ -298,6 +312,16 @@ class GlobalConfiguration {
   }
   static ID3D11Device* d3d11_decoding_device_;
 #endif
+  static void GetBweRateLimits(int& start_bitrate_kbps,
+                               int& min_bitrate_kbps,
+                               int& max_bitrate_kbps) {
+    start_bitrate_kbps = start_bitrate_kbps_;
+    min_bitrate_kbps = min_bitrate_kbps_;
+    max_bitrate_kbps = max_bitrate_kbps_;
+  }
+  static int start_bitrate_kbps_;
+  static int min_bitrate_kbps_;
+  static int max_bitrate_kbps_;
   static int GetLinkMTU() {
     return link_mtu_;
   }
