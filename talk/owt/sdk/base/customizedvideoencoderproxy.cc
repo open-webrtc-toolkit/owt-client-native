@@ -262,6 +262,10 @@ void CustomizedVideoEncoderProxy::SetRates(
     RTC_LOG(LS_WARNING) << "Unsupported framerate (must be >= 1.0";
     return;
   }
+  if (encoder_event_callback_) {
+    encoder_event_callback_->RequestRateUpdate(
+        parameters.bandwidth_allocation.bps(), parameters.framerate_fps);
+  }
 }
 
 void CustomizedVideoEncoderProxy::OnPacketLossRateUpdate(
