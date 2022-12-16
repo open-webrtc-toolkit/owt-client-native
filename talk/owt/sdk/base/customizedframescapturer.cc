@@ -122,11 +122,10 @@ CustomizedFramesCapturer::~CustomizedFramesCapturer() {
   DeRegisterCaptureDataCallback();
   StopCapture();
   frame_generator_.reset(nullptr);
-  // Encoder is created by app. And needs to be freed by
-  // application. mark it to nullptr to avoid ReadFrame
-  // passing native buffer to stack.
+  // Encoder is created by app. And needs to be freed by application. mark it to
+  // nullptr to avoid ReadFrame passing native buffer to stack.
   encoder_ = nullptr;
-    if (encoder_event_callback_ != nullptr) {
+  if (encoder_event_callback_ != nullptr) {
     delete encoder_event_callback_;
     encoder_event_callback_ = nullptr;
   }
