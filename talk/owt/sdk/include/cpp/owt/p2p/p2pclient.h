@@ -263,6 +263,7 @@ class P2PClient final
   // Queue for callbacks and events. Shared among P2PClient and all of it's
   // P2PPeerConnectionChannel.
   std::shared_ptr<rtc::TaskQueue> event_queue_;
+  std::shared_ptr<rtc::TaskQueue> signaling_queue_;
   std::shared_ptr<P2PSignalingChannelInterface> signaling_channel_;
   std::unique_ptr<P2PSignalingSenderInterface> signaling_sender_;
   std::unique_ptr<P2PPeerConnectionChannelObserver> pcc_observer_adapter_;

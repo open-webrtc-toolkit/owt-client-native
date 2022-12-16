@@ -99,6 +99,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   std::function<void()> GetLatestPublishSuccessCallback();
   std::function<void(std::unique_ptr<Exception>)> GetLatestPublishFailureCallback();
   bool IsAbandoned();
+  void SetAbandoned() { remote_side_offline_ = true;}
   void DisableSendingStop();
  protected:
   void CreateOffer() override;
