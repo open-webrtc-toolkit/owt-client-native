@@ -34,6 +34,7 @@ CustomizedVideoDecoderFactory::CreateVideoDecoder(
  std::vector<SdpVideoFormat>CustomizedVideoDecoderFactory::GetSupportedFormats() const {
   std::vector<SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(SdpVideoFormat(cricket::kAv1CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
