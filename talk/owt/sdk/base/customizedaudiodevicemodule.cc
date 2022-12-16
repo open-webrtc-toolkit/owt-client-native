@@ -590,7 +590,7 @@ int CustomizedAudioDeviceModule::GetRecordAudioParameters(
 #endif  // WEBRTC_IOS
 
 void CustomizedAudioDeviceModule::CreateOutputAdm() {
-  if(_outputAdm==nullptr){
+  if (_outputAdm == nullptr) {
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
@@ -599,6 +599,5 @@ void CustomizedAudioDeviceModule::CreateOutputAdm() {
 #endif
   }
 }
-
 }
 }  // namespace webrtc
