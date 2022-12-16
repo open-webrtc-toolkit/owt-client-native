@@ -109,6 +109,10 @@ bool ParseSlice(const uint8_t* slice, size_t length, int& temporal_id, int& prio
                                  length - webrtc::H264::kNaluTypeSize);
       break;
     }
+    case H264::NaluType::kIdr: {
+      is_idr = true;
+      break;
+    }
     // Ignore all other cases as we only care about prefix NAL.
     default:
       break;
@@ -125,13 +129,13 @@ bool ParseSlice(const uint8_t* slice, size_t length, int& temporal_id, int& prio
 bool MediaUtils::GetH264TemporalInfo(uint8_t* buffer, size_t buffer_length,
   int& temporal_id, int& priority_id, bool& is_idr) {
   bool prefix_nal_found = false;
+  bool idr_nal_found = false;
   std::vector<webrtc::H264::NaluIndex> nalu_indices =
       webrtc::H264::FindNaluIndices(buffer, buffer_length);
   for (const webrtc::H264::NaluIndex& index : nalu_indices) {
-    prefix_nal_found = ParseSlice(&buffer[index.payload_start_offset],
-      index.payload_size, temporal_id, priority_id, is_idr);
-    if (prefix_nal_found)
-      return true;
+    prefix_nal_found |= ParseSlice(&buffer[index.payload_start_offset],
+      index.payload_size, temporal_id, priority_id, idr_nal_found);
+    is_idr |= idr_nal_found;
   }
   return prefix_nal_found;
 }

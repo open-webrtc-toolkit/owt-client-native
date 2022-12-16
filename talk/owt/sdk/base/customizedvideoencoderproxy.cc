@@ -219,7 +219,6 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       info.codecSpecific.VP9.height[0] = height_;
       info.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
     }
-
   } else if (codec_type_ == webrtc::kVideoCodecH264) {
     int temporal_id = 0, priority_id = 0;
     bool is_idr = false;
@@ -227,12 +226,14 @@ int32_t CustomizedVideoEncoderProxy::Encode(
         data_ptr, data_size, temporal_id, priority_id, is_idr);
     if (need_frame_marking) {
       info.codecSpecific.H264.temporal_idx = temporal_id;
-      info.codecSpecific.H264.idr_frame = is_idr;
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
-	info.codecSpecific.H264.picture_id = encoder_buffer_handle->meta_data_.picture_id;
+    info.codecSpecific.H264.idr_frame = is_idr;
+    info.codecSpecific.H264.picture_id = encoder_buffer_handle->meta_data_.picture_id;
     info.codecSpecific.H264.last_fragment_in_frame =
         encoder_buffer_handle->meta_data_.last_fragment;
+    encodedframe._frameType = is_idr ? webrtc::VideoFrameType::kVideoFrameKey
+                                     : webrtc::VideoFrameType::kVideoFrameDelta;
   }
 #ifdef WEBRTC_USE_H265
   else if (codec_type_ == webrtc::kVideoCodecH265) {
