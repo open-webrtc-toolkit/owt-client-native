@@ -238,6 +238,32 @@ void Stream::AttachVideoRenderer(VideoRendererVaInterface& renderer) {
 
 #endif
 
+#if defined(OWT_USE_MSDK) && defined(WEBRTC_WIN)
+void Stream::AttachVideoRenderer(VideoRenderWindow& render_window) {
+  if (media_stream_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Cannot attach an audio only stream to a renderer.";
+    return;
+  }
+  auto video_tracks = media_stream_->GetVideoTracks();
+  if (video_tracks.size() == 0) {
+    RTC_LOG(LS_ERROR) << "Attach failed because of no video tracks.";
+    return;
+  } else if (video_tracks.size() > 1) {
+    RTC_LOG(LS_WARNING)
+        << "There are more than one video tracks, the first one "
+           "will be attachecd to renderer.";
+  }
+  WebrtcVideoRendererD3D11Impl* old_renderer =
+      d3d11_renderer_impl_ ? d3d11_renderer_impl_ : nullptr;
+  d3d11_renderer_impl_ =
+      new WebrtcVideoRendererD3D11Impl(render_window.GetWindowHandle());
+  video_tracks[0]->AddOrUpdateSink(d3d11_renderer_impl_, rtc::VideoSinkWants());
+  if (old_renderer)
+    delete old_renderer;
+  RTC_LOG(LS_INFO) << "Attached the stream to a renderer.";
+}
+#endif
+
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 void Stream::AttachVideoRenderer(VideoRendererInterface& renderer) {
   if (media_stream_ == nullptr) {

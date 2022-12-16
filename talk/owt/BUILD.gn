@@ -228,27 +228,6 @@ static_library("owt_sdk_base") {
     ]
     public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
   }
-  if (is_win) {
-    sources += [
-      "sdk/base/desktopcapturer.cc",
-      "sdk/base/desktopcapturer.h",
-      "sdk/base/win/base_allocator.cc",
-      "sdk/base/win/base_allocator.h",
-      "sdk/base/win/d3d11_allocator.cc",
-      "sdk/base/win/d3d11_allocator.h",
-      "sdk/base/win/d3d_allocator.cc",
-      "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/d3dnativeframe.h",
-      "sdk/base/win/mediacapabilities.cc",
-      "sdk/base/win/mediacapabilities.h",
-      "sdk/base/win/msdkvideobase.cc",
-      "sdk/base/win/msdkvideobase.h",
-      "sdk/base/win/videorendererwin.cc",
-      "sdk/base/win/videorendererwin.h",
-      "sdk/base/windowcapturer.cc",
-      "sdk/base/windowcapturer.h",
-    ]
-  }
 
   if (owt_msdk_header_root != "") {
     sources += [
@@ -313,13 +292,17 @@ static_library("owt_sdk_base") {
       "sdk/base/win/d3d11_manager.h",
       "sdk/base/win/device_info_mf.cc",
       "sdk/base/win/device_info_mf.h",
-      "sdk/base/win/msdkvideobase.cc",
-      "sdk/base/win/msdkvideobase.h",
       "sdk/base/win/video_capture_mf.cc",
       "sdk/base/win/video_capture_mf.h",
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
     ]
+    if (owt_msdk_header_root != "") {
+      sources += [
+        "sdk/base/win/msdkvideobase.cc",
+        "sdk/base/win/msdkvideobase.h",
+      ]
+    }
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
   }
   if (is_linux) {

@@ -38,7 +38,8 @@ struct D3D11ImageHandle {
 #endif
 /// Video buffer and its information
 struct VideoBuffer {
-  /// Video buffer
+  // TODO: Consider add another field for native handler.
+  /// Pointer to video buffer or native handler.
   uint8_t* buffer;
   /// Resolution for the Video buffer
   Resolution resolution;
