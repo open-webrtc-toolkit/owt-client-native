@@ -408,10 +408,17 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
     }
   }
 
+  // TODO(jianlin): switch to value in codec_settings instead of relying
+  // on global settings when upstream handles RtpEncodingParameters correctly.
+#if USE_H264_RTP_ENCODING_PARAM
   num_temporal_layers_ =
       std::min(static_cast<int>(
                    codec_settings->simulcastStream[0].numberOfTemporalLayers),
-               3);
+               4);
+#else
+  num_temporal_layers = MediaUtils::GetH264TemporalLayers().value_or(1);
+#endif
+
   // For VP9 we use codec specific temporal info.
   if (codec_id == MFX_CODEC_VP9) {
     num_temporal_layers_ = codec_settings->VP9().numberOfTemporalLayers;
@@ -736,10 +743,42 @@ retry:
 
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
-  info.codecType = codec_type_;
+  info.codecType = codecType_;
+  // Generate a header describing a single fragment.
+  webrtc::RTPFragmentationHeader header;
+  memset(&header, 0, sizeof(header));
 
+  int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
+  uint8_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
+  int32_t scPositionsLength = 0;
+  int32_t scPosition = 0;
+  while (scPositionsLength < MAX_NALUS_PERFRAME) {
+    uint8_t sc_length = 0;
+    int32_t naluPosition = NextNaluPosition(
+        encoded_data + scPosition, encoded_data_size - scPosition, &sc_length);
+    if (naluPosition < 0) {
+      break;
+    }
+    scPosition += naluPosition;
+    scLengths[scPositionsLength] = sc_length;
+    scPositions[scPositionsLength] = scPosition;
+    scPositionsLength++;
+    scPosition += sc_length;
+  }
+  if (scPositionsLength == 0) {
+    RTC_LOG(LS_ERROR) << "Start code is not found for codec!";
+    delete[] pbsData;
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  scPositions[scPositionsLength] = encoded_data_size;
+  header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
+  for (int i = 0; i < scPositionsLength; i++) {
+    header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
+    header.fragmentationLength[i] =
+        scPositions[i + 1] - header.fragmentationOffset[i];
+  }
   // Export temporal scalability information for H.264
-  if (codec_type_ == webrtc::kVideoCodecH264) {
+  if (codecType_ == webrtc::kVideoCodecH264) {
     int temporal_id = 0, priority_id = 0;
     bool is_idr = false;
     bool need_frame_marking = MediaUtils::GetH264TemporalInfo(encoded_data,
@@ -750,7 +789,7 @@ retry:
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
   }
-  const auto result = callback_->OnEncodedImage(encodedFrame, &info);
+  const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     delete[] pbsData;
     bs.DataLength = 0;  // Mark we don't need the data anymore.
@@ -874,6 +913,7 @@ int MSDKVideoEncoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+// TODO: move this to MediaUtils so it can be shared.
 int32_t MSDKVideoEncoder::NextNaluPosition(uint8_t* buffer,
                                            size_t buffer_size,
                                            uint8_t* sc_length) {
