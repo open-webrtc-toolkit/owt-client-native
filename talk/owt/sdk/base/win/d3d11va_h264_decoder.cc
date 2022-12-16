@@ -55,8 +55,9 @@ static enum AVPixelFormat get_hw_format(AVCodecContext* ctx,
 
 H264DXVADecoderImpl::H264DXVADecoderImpl(ID3D11Device* external_device)
     : decoded_image_callback_(nullptr),
-                                     has_reported_init_(false),
-                                     has_reported_error_(false) {
+      has_reported_init_(false),
+      has_reported_error_(false),
+      clock_(webrtc::Clock::GetRealTimeClock()) {
   surface_handle_.reset(new D3D11VAHandle());
 }
 
@@ -303,6 +304,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
+  int64_t decode_start_time = clock_->CurrentTime().ms_or(0);
   AVFrame* frame = nullptr;
   AVPacket packet;
   av_init_packet(&packet);
@@ -386,6 +388,8 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
         surface_handle_->context = d3d11_video_context_.p;
         surface_handle_->array_index = index;
         surface_handle_->side_data_size = side_data_size;
+        surface_handle_->decode_start = decode_start_time;
+        surface_handle_->decode_end = clock_->CurrentTime().ms_or(0);
         rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
           new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
           (void*)surface_handle_.get(), texture_desc.Width,
