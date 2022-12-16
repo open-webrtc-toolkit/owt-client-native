@@ -78,6 +78,7 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   AVBufferRef* hw_device_ctx = nullptr;
   AVCodecContext* decoder_ctx = nullptr;
   AVCodec* decoder = nullptr;
+  webrtc::Clock* clock_ = nullptr;
 };
 
 }  // namespace base
