@@ -163,6 +163,13 @@ void PeerConnectionDependencyFactory::
   int delay_bwe_weight = GlobalConfiguration::GetDelayBasedBweWeight();
   field_trial_ +=
       "OWT-DelayBweWeight/" + std::to_string(delay_bwe_weight) + "/";
+  int start_bitrate, min_bitrate, max_bitrate;
+  GlobalConfiguration::GetBWERateLimits(start_bitrate, min_bitrate,
+                                        max_bitrate);
+  if (start_bitrate > 0 || min_bitrate > 0 || max_bitrate > 0)
+  field_trial_ += "OWT-Bwe-RateLimits/start:" + std::to_string(start_bitrate) + ",min:" +
+                  std::to_string(min_bitrate) + ",max:" +
+                  std::to_string(max_bitrate) + "/";
   webrtc::field_trial::InitFieldTrialsFromString(field_trial_.c_str());
   if (!rtc::InitializeSSL()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize SSL.";
