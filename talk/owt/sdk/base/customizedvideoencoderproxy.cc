@@ -317,10 +317,6 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     info.codecSpecific.VP9.inter_layer_predicted = false;
     info.codecSpecific.VP9.gof_idx =
         static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
-<<<<<<< HEAD
-=======
-    info.codecSpecific.VP9.ss_data_available = vp9_key_frame ? true : false;
->>>>>>> e00a359... Add interface for providing cursor information when sending frame. (#13)
     info.codecSpecific.VP9.num_spatial_layers = 1;
     info.codecSpecific.VP9.first_frame_in_picture = true;
     info.codecSpecific.VP9.end_of_picture = true;
@@ -368,56 +364,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     }
   }
 #endif
-<<<<<<< HEAD
   const auto result = callback_->OnEncodedImage(encoded_frame, &info);
-=======
-  // Generate a header describing a single fragment.
-  webrtc::RTPFragmentationHeader header;
-  memset(&header, 0, sizeof(header));
-  if (codec_type_ == webrtc::kVideoCodecVP8 ||
-      codec_type_ ==
-          webrtc::kVideoCodecAV1 ||  // AV1 acutally does not need frag header.
-      codec_type_ == webrtc::kVideoCodecVP9) {
-    header.VerifyAndAllocateFragmentationHeader(1);
-    header.fragmentationOffset[0] = 0;
-    header.fragmentationLength[0] = encodedframe.size();
-#ifndef DISABLE_H265
-  } else if (codec_type_ == webrtc::kVideoCodecH264 ||
-             codec_type_ == webrtc::kVideoCodecH265) {
-#else
-  } else if (codec_type_ == webrtc::kVideoCodecH264) {
-#endif
-    // For H.264/H.265 search for start codes.
-    int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
-    size_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
-    int32_t scPositionsLength = 0;
-    int32_t scPosition = 0;
-    while (scPositionsLength < MAX_NALUS_PERFRAME) {
-      size_t scLength = 0;
-      int32_t naluPosition = NextNaluPosition(
-          data_ptr + scPosition, data_size - scPosition, &scLength);
-      if (naluPosition < 0) {
-        break;
-      }
-      scPosition += naluPosition;
-      scPositions[scPositionsLength++] = scPosition;
-      scLengths[scPositionsLength - 1] = static_cast<int32_t>(scLength);
-      scPosition += static_cast<int32_t>(scLength);
-    }
-    if (scPositionsLength == 0) {
-      RTC_LOG(LS_ERROR) << "Start code is not found for H264/H265 codec!";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    scPositions[scPositionsLength] = data_size;
-    header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
-    for (int i = 0; i < scPositionsLength; i++) {
-      header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
-      header.fragmentationLength[i] =
-          scPositions[i + 1] - header.fragmentationOffset[i];
-    }
-  }
-  const auto result = callback_->OnEncodedImage(encodedframe, &info, &header);
->>>>>>> e00a359... Add interface for providing cursor information when sending frame. (#13)
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     RTC_LOG(LS_ERROR) << "Deliver encoded frame callback failed: "
                       << result.error;
