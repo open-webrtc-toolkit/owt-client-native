@@ -229,34 +229,6 @@ static_library("owt_sdk_base") {
     public_deps += [ "//third_party/webrtc/sdk:framework_objc+link" ]
   }
 
-  if (owt_msdk_header_root != "") {
-    sources += [
-      "sdk/base/win/base_allocator.cc",
-      "sdk/base/win/base_allocator.h",
-      "sdk/base/win/d3d11_allocator.cc",
-      "sdk/base/win/d3d11_allocator.h",
-      "sdk/base/win/d3d_allocator.cc",
-      "sdk/base/win/d3d_allocator.h",
-      "sdk/base/win/msdkvideodecoder.cc",
-      "sdk/base/win/msdkvideodecoder.h",
-      "sdk/base/win/msdkvideodecoderfactory.cc",
-      "sdk/base/win/msdkvideodecoderfactory.h",
-      "sdk/base/win/msdkvideoencoder.cc",
-      "sdk/base/win/msdkvideoencoder.h",
-      "sdk/base/win/msdkvideoencoderfactory.cc",
-      "sdk/base/win/msdkvideoencoderfactory.h",
-      "sdk/base/win/sysmem_allocator.h",
-      "sdk/base/win/vp9ratecontrol.h",
-      "sdk/base/win/vpedefs.h",
-    ]
-    public_deps += [ "//third_party/libvpx" ]
-    include_dirs += [
-      "//third_party/libvpx/source/config",
-      "//third_party/libvpx/source/config/$current_os/$cpu_arch_full",
-      "//third_party/libvpx/source/libvpx",
-    ]
-  }
-
   if (rtc_include_internal_audio_device) {
     defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   }
@@ -299,8 +271,31 @@ static_library("owt_sdk_base") {
     ]
     if (owt_msdk_header_root != "") {
       sources += [
+        "sdk/base/win/base_allocator.cc",
+        "sdk/base/win/base_allocator.h",
+        "sdk/base/win/d3d11_allocator.cc",
+        "sdk/base/win/d3d11_allocator.h",
+        "sdk/base/win/d3d_allocator.cc",
+        "sdk/base/win/d3d_allocator.h",
         "sdk/base/win/msdkvideobase.cc",
         "sdk/base/win/msdkvideobase.h",
+        "sdk/base/win/msdkvideodecoder.cc",
+        "sdk/base/win/msdkvideodecoder.h",
+        "sdk/base/win/msdkvideodecoderfactory.cc",
+        "sdk/base/win/msdkvideodecoderfactory.h",
+        "sdk/base/win/msdkvideoencoder.cc",
+        "sdk/base/win/msdkvideoencoder.h",
+        "sdk/base/win/msdkvideoencoderfactory.cc",
+        "sdk/base/win/msdkvideoencoderfactory.h",
+        "sdk/base/win/sysmem_allocator.h",
+        "sdk/base/win/vp9ratecontrol.h",
+        "sdk/base/win/vpedefs.h",
+      ]
+      public_deps += [ "//third_party/libvpx" ]
+      include_dirs += [
+        "//third_party/libvpx/source/config",
+        "//third_party/libvpx/source/config/$current_os/$cpu_arch_full",
+        "//third_party/libvpx/source/libvpx",
       ]
     }
     public_deps += [ "//third_party/webrtc/modules/audio_device:audio_device_module_from_input_and_output" ]
