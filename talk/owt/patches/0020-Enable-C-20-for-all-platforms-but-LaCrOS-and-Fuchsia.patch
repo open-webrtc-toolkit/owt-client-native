@@ -1,0 +1,83 @@
+From fb5d93779895575442a1ec4acdaf391145cd253a Mon Sep 17 00:00:00 2001
+From: Peter Kasting <pkasting@chromium.org>
+Date: Fri, 21 Oct 2022 23:33:10 +0000
+Subject: [PATCH 2/3] Enable C++20 for all platforms but LaCrOS and Fuchsia.
+
+This increases the APK size by ~0.2% on Android, which is due to a
+host of small inlinining losses around the codebase. Looking into
+these more, I suspect many are due to increased inlining of things
+like vector methods in constructors/destructors (vector has become
+constexpr). It's not clear we can avoid this except by filing targeted
+bugs against Clang/libc++ for bad heuristics.
+
+Bug: 1284275
+Change-Id: Iff7f04eac9b4af09bb9239b80f9a5c8ce929f329
+Binary-Size: Size increase is unavoidable (see above).
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/3946562
+Commit-Queue: Peter Kasting <pkasting@chromium.org>
+Reviewed-by: Andrew Grieve <agrieve@chromium.org>
+Reviewed-by: Danil Chapovalov <danilchap@chromium.org>
+Cr-Commit-Position: refs/heads/main@{#1062405}
+NOKEYCHECK=True
+GitOrigin-RevId: 4d6e6bbfa187c2adfdf5d89cdb54e25e1528c308
+---
+ config/compiler/BUILD.gn | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 0f7cdade3..7acf31b37 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -589,21 +589,22 @@ config("compiler") {
+       if (is_clang) {
+         cflags_cc += [ "-fno-trigraphs" ]
+       }
+-    } else if (is_linux) {
+-      # TODO(crbug.com/1284275): Switch to C++20 on all platforms.
+-      if (is_clang) {
+-        cflags_cc += [ "-std=${standard_prefix}++20" ]
++    } else if (is_clang) {
++      if (is_chromeos_lacros) {
++        # TODO(crbug.com/1376742): LaCrOS currently triggers a strange DCHECK
++        # failure in C++20 mode. Switch to C++20 when this is resolved.
++        cflags_cc += [ "-std=${standard_prefix}++17" ]
+       } else {
+-        # The gcc bots are currently using GCC 9, which is not new enough to
+-        # support "c++20"/"gnu++20".
+-        cflags_cc += [ "-std=${standard_prefix}++2a" ]
++        cflags_cc += [ "-std=${standard_prefix}++20" ]
+       }
+     } else {
+-      cflags_cc += [ "-std=${standard_prefix}++17" ]
++      # The gcc bots are currently using GCC 9, which is not new enough to
++      # support "c++20"/"gnu++20".
++      cflags_cc += [ "-std=${standard_prefix}++2a" ]
+     }
+   } else if (is_win) {
+     cflags_c += [ "/std:c11" ]
+-    cflags_cc += [ "/std:c++17" ]
++    cflags_cc += [ "/std:c++20" ]
+   } else if (!is_nacl) {
+     # TODO(mcgrathr) - the NaCl GCC toolchain doesn't support either
+     # gnu11/gnu++11 or c11/c++11; we technically don't need this toolchain any
+@@ -611,11 +612,13 @@ config("compiler") {
+     # turned off we need the !is_nacl clause and the (is_nacl && is_clang)
+     # clause, above.
+     cflags_c += [ "-std=c11" ]
+-    if (is_apple) {
+-      # TODO(crbug.com/1284275): Switch to C++20 on all platforms.
+-      cflags_cc += [ "-std=c++20" ]
+-    } else {
++
++    if (is_fuchsia) {
++      # TODO(crbug.com/fuchsia/108751): The FIDL compiler generates code that
++      # will not compile in C++20 mode. Switch to C++20 when this is resolved.
+       cflags_cc += [ "-std=c++17" ]
++    } else {
++      cflags_cc += [ "-std=c++20" ]
+     }
+   }
+ 
+-- 
+2.37.1.windows.1
+

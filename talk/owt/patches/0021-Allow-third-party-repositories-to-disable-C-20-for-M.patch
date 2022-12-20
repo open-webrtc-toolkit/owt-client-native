@@ -1,0 +1,42 @@
+From 027e2a133fd06829705b474f8f983302187953ea Mon Sep 17 00:00:00 2001
+From: Yuly Novikov <ynovikov@chromium.org>
+Date: Wed, 2 Nov 2022 17:00:51 +0000
+Subject: [PATCH 3/3] Allow third-party repositories to disable C++20 for MSVC
+
+For example, some ANGLE targets fail to compile with MSVC and C++20,
+so allow to use C++17 instead.
+
+Bug: 1284275, 1380553, 1380455
+Change-Id: Ib60a25fe60b5fd98506264cf1dc970d731367776
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/3997254
+Auto-Submit: Yuly Novikov <ynovikov@chromium.org>
+Reviewed-by: Peter Kasting <pkasting@chromium.org>
+Reviewed-by: Bruce Dawson <brucedawson@chromium.org>
+Commit-Queue: Bruce Dawson <brucedawson@chromium.org>
+Cr-Commit-Position: refs/heads/main@{#1066541}
+NOKEYCHECK=True
+GitOrigin-RevId: 2c98c5af6539d7ffc10fbe83d3e76216b7e01186
+---
+ config/compiler/BUILD.gn | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 7acf31b37..75e3de46f 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -604,7 +604,11 @@ config("compiler") {
+     }
+   } else if (is_win) {
+     cflags_c += [ "/std:c11" ]
+-    cflags_cc += [ "/std:c++20" ]
++    if (!is_clang && defined(msvc_use_cxx17) && msvc_use_cxx17) {
++      cflags_cc += [ "/std:c++17" ]
++    } else {
++      cflags_cc += [ "/std:c++20" ]
++    }
+   } else if (!is_nacl) {
+     # TODO(mcgrathr) - the NaCl GCC toolchain doesn't support either
+     # gnu11/gnu++11 or c11/c++11; we technically don't need this toolchain any
+-- 
+2.37.1.windows.1
+
