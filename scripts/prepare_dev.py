@@ -47,7 +47,10 @@ patchList = [
     ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
     ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
     ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH),
-    ('0018-Patch-ffmpeg-to-address-security-issues.patch', FFMPEG_PATH)
+    ('0018-Patch-ffmpeg-to-address-security-issues.patch', FFMPEG_PATH),
+    ('0019-Enable-C-20-on-iOS.patch', BUILD_PATH),
+    ('0020-Enable-C-20-for-all-platforms-but-LaCrOS-and-Fuchsia.patch', BUILD_PATH),
+    ('0021-Allow-third-party-repositories-to-disable-C-20-for-M.patch', BUILD_PATH)
 ]
 
 def _patch(ignoreFailures=False):
