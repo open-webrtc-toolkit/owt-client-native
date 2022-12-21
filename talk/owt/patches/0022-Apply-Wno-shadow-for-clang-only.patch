@@ -1,0 +1,28 @@
+From 454751d8d7a5224dd53940a25ff66558e613b8be Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Wed, 21 Dec 2022 10:39:54 +0800
+Subject: [PATCH] Apply -Wno-shadow for clang only.
+
+This flag doesn't work for MSVC.
+---
+ pffft/BUILD.gn | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/pffft/BUILD.gn b/pffft/BUILD.gn
+index 0203735ac90..ce74d354e93 100644
+--- a/pffft/BUILD.gn
++++ b/pffft/BUILD.gn
+@@ -7,7 +7,9 @@ import("//testing/libfuzzer/fuzzer_test.gni")
+ import("//testing/test.gni")
+ 
+ config("common_config") {
+-  cflags = [ "-Wno-shadow" ]
++  if (is_clang) {
++    cflags = [ "-Wno-shadow" ]
++  }
+ 
+   if (is_win) {
+     defines = [
+-- 
+2.37.1.windows.1
+
