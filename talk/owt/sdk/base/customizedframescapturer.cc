@@ -30,6 +30,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
       : rtc::Thread(
             std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer)),
         capturer_(capturer) {
+    RTC_CHECK_GT(fps, 0);
     finished_ = false;
     waiting_time_ms_ = 1000 / fps;
   }
@@ -45,8 +46,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
     // Before returning, cleanup any thread-sensitive resources.
     if (capturer_) {
       capturer_->ReadFrame();
-      rtc::Thread::Current()->PostTask(
-          SafeTask(task_safety_.flag(), [this] { TryReadFrame(); }));
+      rtc::Thread::Current()->PostTask([this] { TryReadFrame(); });
       rtc::Thread::Current()->ProcessMessages(kForever);
       capturer_->CleanupGenerator();
     }
@@ -64,7 +64,7 @@ class CustomizedFramesCapturer::CustomizedFramesThread
     if (capturer_) {
       capturer_->ReadFrame();
       rtc::Thread::Current()->PostDelayedTask(
-          SafeTask(task_safety_.flag(), [this] { TryReadFrame(); }),
+          [this] { TryReadFrame(); },
           webrtc::TimeDelta::Millis(waiting_time_ms_));
     } else {
       rtc::Thread::Current()->Quit();
@@ -76,7 +76,6 @@ class CustomizedFramesCapturer::CustomizedFramesThread
   mutable webrtc::Mutex crit_;
   bool finished_;
   int waiting_time_ms_;
-  ScopedTaskSafety task_safety_;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -148,7 +147,7 @@ int32_t CustomizedFramesCapturer::StartCapture(
     return 0;
 
   webrtc::MutexLock lock(&capture_lock_);
-  if (!frames_generator_thread_) {
+  if (!frames_generator_thread_ && !encoded_stream_provider_wrapper_) {
     quit_ = false;
     frames_generator_thread_.reset(new CustomizedFramesThread(this, fps_));
 
