@@ -5,23 +5,24 @@
 #define OWT_CURSORUTILS_H_
 
 #include <string>
+#include "owt/base/export.h"
 
 namespace owt {
 namespace base {
 
-struct Point {
+struct OWT_EXPORT Point {
   long x;
   long y;
 };
 
-struct CursorRect {
+struct OWT_EXPORT CursorRect {
   long left;
   long top;
   long right;
   long bottom;
 };
 
-struct CursorInfo {
+struct OWT_EXPORT CursorInfo {
   bool visible;
   bool no_shape_update;
   bool colored;
@@ -35,7 +36,7 @@ struct CursorInfo {
   uint8_t* cursor_buffer;
 };
 
-class CursorUtils {
+class OWT_EXPORT CursorUtils {
  public:
 
   // Format is:

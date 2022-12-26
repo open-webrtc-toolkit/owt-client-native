@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_P2P_SIGNALINGRECEIVERINTERFACE_H_
 #define OWT_P2P_SIGNALINGRECEIVERINTERFACE_H_
+
+#include "owt/base/export.h"
+
 namespace owt {
 namespace p2p {
 /** @cond */
@@ -11,7 +14,7 @@ namespace p2p {
   @details The receiver may be a peerconnection instance which can deal with the
   message received.
 */
-class P2PSignalingReceiverInterface {
+class OWT_EXPORT P2PSignalingReceiverInterface {
  public:
   /// Received signaling message.
   virtual void OnIncomingSignalingMessage(const std::string& message) = 0;

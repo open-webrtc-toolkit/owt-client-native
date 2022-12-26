@@ -20,7 +20,7 @@ enum DecodingTargetIndication {
   kRequired
 };
 
-struct GenericDescriptorInfo {
+struct OWT_EXPORT GenericDescriptorInfo {
   GenericDescriptorInfo()
       : active(false), temporal_id(0), spatial_id(0) {
     std::fill(dependencies.begin(), dependencies.end(), -1);
@@ -41,7 +41,7 @@ struct GenericDescriptorInfo {
   std::array<int, 10> decoding_target_indications;
 };
 
-struct DependencyNotification {
+struct OWT_EXPORT DependencyNotification {
   // The timestamp of the last decodable frame *prior* to the last received.
   uint32_t timestamp_of_last_decodable;
   // The timestamp of the last received frame. It may be undecodable.
@@ -63,7 +63,7 @@ struct DependencyNotification {
   bool last_received_decodable;
 };
 
-struct EncodedImageMetaData {
+struct OWT_EXPORT EncodedImageMetaData {
   // ctor
   EncodedImageMetaData()
       : picture_id(0),
@@ -159,7 +159,7 @@ struct EncodedImageMetaData {
   size_t cursor_data_length = 0;
 };
 
-class EncodedStreamProviderSink {
+class OWT_EXPORT EncodedStreamProviderSink {
  public:
   // Invoked by EncodedStream
   virtual void OnStreamProviderFrame(const std::vector<uint8_t>& buffer,
@@ -167,7 +167,7 @@ class EncodedStreamProviderSink {
 };
 
 // Registered to EncodedStreamProvider to receive events from encoder.
-class EncoderObserver {
+class OWT_EXPORT EncoderObserver {
  public:
   virtual void OnStarted() = 0;
 
@@ -182,7 +182,7 @@ class EncoderObserver {
 };
 
 // Encoder event callback interface
-class EncoderEventCallback {
+class OWT_EXPORT EncoderEventCallback {
  public:
   virtual void StartStreaming() = 0;
 
@@ -198,7 +198,7 @@ class EncoderEventCallback {
 /**
   @brief Encoded stream provider
   */
-class EncodedStreamProvider final
+class OWT_EXPORT EncodedStreamProvider final
     : public std::enable_shared_from_this<EncodedStreamProvider> {
  public:
   static std::shared_ptr<EncodedStreamProvider> Create();
@@ -246,7 +246,7 @@ class EncodedStreamProvider final
   @details Internal webrtc encoder will request from this
    interface when it needs one complete encoded frame.
 */
-class VideoEncoderInterface {
+class OWT_EXPORT VideoEncoderInterface {
  public:
   /**
    @brief Destructor

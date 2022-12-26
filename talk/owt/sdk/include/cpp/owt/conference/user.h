@@ -4,10 +4,11 @@
 #ifndef OWT_CONFERENCE_USER_H_
 #define OWT_CONFERENCE_USER_H_
 #include <string>
+#include "owt/base/export.h"
 namespace owt {
 namespace conference {
 /// This class represent a user's permission.
-class Permission {
+class OWT_EXPORT Permission {
  public:
   /** @cond */
   Permission(bool publish, bool subscribe, bool record)
@@ -25,7 +26,7 @@ class Permission {
   bool subscribe_;
 };
 /// This class represent an attendee of a conference, replaced by Participant class
-class User {
+class OWT_EXPORT User {
  public:
   User(std::string id,
        std::string name,

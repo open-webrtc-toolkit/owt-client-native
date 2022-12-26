@@ -16,7 +16,7 @@ namespace owt {
 namespace p2p {
 using namespace owt::base;
 class P2PClient;
-class P2PPublication : public Publication {
+class OWT_EXPORT P2PPublication : public Publication {
  public:
   P2PPublication(std::shared_ptr<P2PClient> client, std::string target_id, std::shared_ptr<LocalStream> stream);
   virtual ~P2PPublication() {}

@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "owt/base/export.h"
 namespace owt {
 namespace base {
 
@@ -50,7 +51,7 @@ enum class NetworkPriority : int {
   kDefault
 };
 /// This class represents a resolution value.
-struct Resolution {
+struct OWT_EXPORT Resolution {
   /// Construct an instance with width and height equal to 0.
   explicit Resolution() : width(0), height(0) {}
   /// Construct an instance with specify width and height.
@@ -63,7 +64,7 @@ struct Resolution {
 };
 
 /// This class represents a camera capability.
-struct VideoTrackCapabilities {
+struct OWT_EXPORT VideoTrackCapabilities {
   /// Construct an instance with width and height equal to 0.
   explicit VideoTrackCapabilities() : width(0), height(0), frameRate(0) {}
   /// Construct an instance with specify width and height.
@@ -79,7 +80,7 @@ struct VideoTrackCapabilities {
 };
 
 /// Audio codec parameters for an audio track.
-struct AudioCodecParameters {
+struct OWT_EXPORT AudioCodecParameters {
   /// Construct an instance of AudioCodecParameters with default param.
   AudioCodecParameters()
       : name(AudioCodec::kUnknown), channel_count(0), clock_rate(0) {}
@@ -97,7 +98,7 @@ struct AudioCodecParameters {
 };
 
 /// RTP endoding settings for a stream
-struct RtpEncodingParameters {
+struct OWT_EXPORT RtpEncodingParameters {
   // number of temporal layers requested to encoder, if supported.
   int num_temporal_layers = 1;
 
@@ -129,7 +130,7 @@ struct RtpEncodingParameters {
 };
 
 /// Audio encoding parameters.
-struct AudioEncodingParameters {
+struct OWT_EXPORT AudioEncodingParameters {
   explicit AudioEncodingParameters();
   AudioEncodingParameters(const AudioCodecParameters& codec_param,
                           unsigned long bitrate_bps);
@@ -140,7 +141,7 @@ struct AudioEncodingParameters {
   unsigned long max_bitrate;
 };
 /// Video codec parameters for a video track.
-struct VideoCodecParameters {
+struct OWT_EXPORT VideoCodecParameters {
   /// Construct an instance of VideoCodecParameters with default parameters.
   explicit VideoCodecParameters();
   /// Construct an instance of VideoCodecParameter with codec name and profile.
@@ -152,7 +153,7 @@ struct VideoCodecParameters {
 
 /// Video encoding parameters. Used to specify the video encoding settings when
 /// publishing the video.
-struct VideoEncodingParameters {
+struct OWT_EXPORT VideoEncodingParameters {
   explicit VideoEncodingParameters();
   /// Construct an instance of VideoEncodingParameters
   VideoEncodingParameters(const VideoCodecParameters& codec_param,
@@ -200,7 +201,7 @@ enum class TransportType : int {
   kUnknown = 99
 };
 /// TransportContraints
-struct TransportConstraints {
+struct OWT_EXPORT TransportConstraints {
   explicit TransportConstraints()
       : type(TransportType::kWebRTC) {}
 
@@ -208,7 +209,7 @@ struct TransportConstraints {
 };
 #endif
 /// Stream source.
-struct StreamSourceInfo {
+struct OWT_EXPORT StreamSourceInfo {
   explicit StreamSourceInfo()
     : audio(AudioSourceInfo::kUnknown),
       video(VideoSourceInfo::kUnknown)
@@ -236,7 +237,7 @@ struct StreamSourceInfo {
   DataSourceInfo data;
 #endif
 };
-struct EnumClassHash {
+struct OWT_EXPORT EnumClassHash {
   template <typename T>
   std::size_t operator()(T t) const {
     return static_cast<std::size_t>(t);

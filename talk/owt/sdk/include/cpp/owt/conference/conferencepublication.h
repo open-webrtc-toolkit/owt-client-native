@@ -23,7 +23,7 @@ struct ConnectionStats;
 namespace conference {
 class ConferenceClient;
 using namespace owt::base;
-class ConferencePublication : public Publication, public ConferenceStreamUpdateObserver {
+class OWT_EXPORT ConferencePublication : public Publication, public ConferenceStreamUpdateObserver {
   public:
     ConferencePublication(std::shared_ptr<ConferenceClient> client, const std::string& pub_id,
                           const std::string& stream_id);

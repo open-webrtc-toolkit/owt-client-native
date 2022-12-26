@@ -10,7 +10,7 @@ namespace base {
 /**
  @brief Video encoded frame definition
 */
-struct VideoEncodedFrame {
+struct OWT_EXPORT VideoEncodedFrame {
   /// Encoded frame buffer
   const uint8_t* buffer;
   /// Encoded frame buffer length
@@ -24,7 +24,7 @@ struct VideoEncodedFrame {
  @brief Video decoder interface
  @details Encoded frames will be passed for further customized decoding
 */
-class VideoDecoderInterface {
+class OWT_EXPORT VideoDecoderInterface {
  public:
   /**
    @brief Destructor

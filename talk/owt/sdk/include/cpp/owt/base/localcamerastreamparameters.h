@@ -14,7 +14,7 @@ namespace base{
   When a stream is created, it will not be impacted if these parameters are
   changed.
 */
-class LocalCameraStreamParameters final {
+class OWT_EXPORT LocalCameraStreamParameters final {
  public:
   /**
     @brief Initialize a LocalCameraStreamParameters.
@@ -78,7 +78,7 @@ class LocalCameraStreamParameters final {
   Currently this only contains an |data_enabled_| field but may be extended
   later to support more settings.
  */
-class LocalDataStreamParameters final {
+class OWT_EXPORT LocalDataStreamParameters final {
  public:
   LocalDataStreamParameters(bool data_enabled) {
     data_enabled_ = data_enabled;
@@ -102,7 +102,7 @@ class LocalDataStreamParameters final {
   When a stream is created, it will not be impacted if these parameters are
   changed.
 */
-class LocalCustomizedStreamParameters final {
+class OWT_EXPORT LocalCustomizedStreamParameters final {
  public:
   /**
     @brief Initialize a LocalCustomizedStreamParameters for YUV input.
@@ -174,7 +174,7 @@ local stream with certain screen or window as source.
 When a stream is created, it will not be impacted if these parameters are
 changed.
 */
-class LocalDesktopStreamParameters final {
+class OWT_EXPORT LocalDesktopStreamParameters final {
  public:
   enum class DesktopCapturePolicy : int {
     /// Default capture policy.

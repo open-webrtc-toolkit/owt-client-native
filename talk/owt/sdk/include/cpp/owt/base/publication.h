@@ -14,7 +14,7 @@
 namespace owt {
 namespace base {
 /// Observer that receives event from publication.
-class PublicationObserver {
+class OWT_EXPORT PublicationObserver {
  public:
   /// Triggered when publication is ended.
   virtual void OnEnded() = 0;
@@ -25,7 +25,7 @@ class PublicationObserver {
   /// Triggered when an error occured on the publication.
   virtual void OnError(std::unique_ptr<Exception> failure) = 0;
 };
-class Publication {
+class OWT_EXPORT Publication {
  public:
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
   virtual void Mute(TrackKind track_kind,

@@ -14,8 +14,9 @@ using namespace owt::base;
 /**
  @brief Signaling channel will notify observer when event triggers.
  */
-class P2PSignalingChannelObserver {
+class OWT_EXPORT P2PSignalingChannelObserver {
  public:
+  virtual ~P2PSignalingChannelObserver() = default;
   /**
    @brief This function will be triggered when new message arrives.
    @param message Message received from signaling server.
@@ -32,7 +33,7 @@ class P2PSignalingChannelObserver {
  @brief Protocol for signaling channel.
  Developers may utilize their own signaling server by implmenting this protocol.
  */
-class P2PSignalingChannelInterface {
+class OWT_EXPORT P2PSignalingChannelInterface {
  public:
   virtual ~P2PSignalingChannelInterface() = default;
   /**

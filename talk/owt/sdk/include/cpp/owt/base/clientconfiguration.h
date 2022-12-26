@@ -3,14 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_CLIENTCONFIGURATION_H_
 #define OWT_BASE_CLIENTCONFIGURATION_H_
+
 #include <vector>
 #include <string>
 #include "owt/base/commontypes.h"
 #include "owt/base/network.h"
+#include "owt/base/export.h"
+
 namespace owt {
 namespace base{
 /// Client configurations
-struct ClientConfiguration {
+struct OWT_EXPORT ClientConfiguration {
   enum class CandidateNetworkPolicy : int { kAll = 1, kLowCost };
   ClientConfiguration()
        : candidate_network_policy(CandidateNetworkPolicy::kAll) {}

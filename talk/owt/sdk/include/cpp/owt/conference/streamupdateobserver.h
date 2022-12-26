@@ -11,7 +11,7 @@ namespace owt {
 namespace conference {
 /** @cond */
 /// Observer provided to publication/subscription to report mute/unmute/error/removed event.
-class ConferenceStreamUpdateObserver {
+class OWT_EXPORT ConferenceStreamUpdateObserver {
 public:
   /**
   @brief Triggers when audio or video status switched between active/inactive.

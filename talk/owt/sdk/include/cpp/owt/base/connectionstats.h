@@ -3,20 +3,21 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_CONNECTIONSTATS_H_
 #define OWT_BASE_CONNECTIONSTATS_H_
+
 #include <chrono>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 #include "owt/base/commontypes.h"
+#include "owt/base/export.h"
 #include "owt/base/network.h"
+
 namespace owt {
 namespace base {
-
-
 // RTC-spec compliant statistics interfaces.
 // https://w3c.github.io/webrtc-pc/#idl-def-rtcdatachannelstate
-struct RTCDataChannelState {
+struct OWT_EXPORT RTCDataChannelState {
   static const char* const kConnecting;
   static const char* const kOpen;
   static const char* const kClosing;
@@ -24,7 +25,7 @@ struct RTCDataChannelState {
 };
 
 // https://w3c.github.io/webrtc-stats/#dom-rtcstatsicecandidatepairstate
-struct RTCStatsIceCandidatePairState {
+struct OWT_EXPORT RTCStatsIceCandidatePairState {
   static const char* const kFrozen;
   static const char* const kWaiting;
   static const char* const kInProgress;
@@ -33,7 +34,7 @@ struct RTCStatsIceCandidatePairState {
 };
 
 // https://w3c.github.io/webrtc-pc/#rtcicecandidatetype-enum
-struct RTCIceCandidateType {
+struct OWT_EXPORT RTCIceCandidateType {
   static const char* const kHost;
   static const char* const kSrflx;
   static const char* const kPrflx;
@@ -41,7 +42,7 @@ struct RTCIceCandidateType {
 };
 
 // https://w3c.github.io/webrtc-pc/#idl-def-rtcdtlstransportstate
-struct RTCDtlsTransportState {
+struct OWT_EXPORT RTCDtlsTransportState {
   static const char* const kNew;
   static const char* const kConnecting;
   static const char* const kConnected;
@@ -52,13 +53,13 @@ struct RTCDtlsTransportState {
 // |RTCMediaStreamTrackStats::kind| is not an enum in the spec but the only
 // valid values are "audio" and "video".
 // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-kind
-struct RTCMediaStreamTrackKind {
+struct OWT_EXPORT RTCMediaStreamTrackKind {
   static const char* const kAudio;
   static const char* const kVideo;
 };
 
 // https://w3c.github.io/webrtc-stats/#dom-rtcnetworktype
-struct RTCNetworkType {
+struct OWT_EXPORT RTCNetworkType {
   static const char* const kBluetooth;
   static const char* const kCellular;
   static const char* const kEthernet;
@@ -69,7 +70,7 @@ struct RTCNetworkType {
 };
 
 // https://w3c.github.io/webrtc-stats/#dom-rtcqualitylimitationreason
-struct RTCQualityLimitationReason {
+struct OWT_EXPORT RTCQualityLimitationReason {
   static const char* const kNone;
   static const char* const kCpu;
   static const char* const kBandwidth;
@@ -77,7 +78,7 @@ struct RTCQualityLimitationReason {
 };
 
 // https://webrtc.org/experiments/rtp-hdrext/video-content-type/
-struct RTCContentType {
+struct OWT_EXPORT RTCContentType {
   static const char* const kUnspecified;
   static const char* const kScreenshare;
 };
@@ -85,7 +86,7 @@ struct RTCContentType {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#rtcstatstype-str*
  */
-struct RTCStatsType {
+struct OWT_EXPORT RTCStatsType {
   static const char* const kCodec;
   static const char* const kInboundRTP;
   static const char* const kOutboundRTP;
@@ -112,7 +113,7 @@ struct RTCStatsType {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#idl-def-rtcstats*
  */
-class RTCStats {
+class OWT_EXPORT RTCStats {
  public:
   RTCStats(const std::string& type, const std::string& id, int64_t timestamp_us)
       : type(type), id(id), timestamp_us(timestamp_us) {}
@@ -135,14 +136,14 @@ class RTCStats {
   int64_t timestamp_us;
 };
 
-class RTCStatsReport {
+class OWT_EXPORT RTCStatsReport {
  public:
   RTCStatsReport() {}
   virtual ~RTCStatsReport() {}
   typedef std::map<std::string, std::unique_ptr<const owt::base::RTCStats>>
       StatsMap;
 
-  class ConstIterator {
+  class OWT_EXPORT ConstIterator {
    public:
     ConstIterator(ConstIterator&& other);
     ~ConstIterator();
@@ -208,7 +209,7 @@ class RTCStatsReport {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#certificatestats-dict*
  */
-class RTCCertificateStats : public RTCStats {
+class OWT_EXPORT RTCCertificateStats : public RTCStats {
  public:
   RTCCertificateStats(const std::string& id,
                       int64_t timestamp,
@@ -233,7 +234,7 @@ class RTCCertificateStats : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#codec-dict*
  */
-class RTCCodecStats final : public RTCStats {
+class OWT_EXPORT RTCCodecStats final : public RTCStats {
  public:
   RTCCodecStats(const std::string& id,
                 int64_t timestamp,
@@ -259,7 +260,7 @@ class RTCCodecStats final : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#dcstats-dict*
  */
-class RTCDataChannelStats final : public RTCStats {
+class OWT_EXPORT RTCDataChannelStats final : public RTCStats {
  public:
   RTCDataChannelStats(const std::string& id,
                       int64_t timestamp,
@@ -296,7 +297,7 @@ class RTCDataChannelStats final : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#candidatepair-dict*
  */
-class RTCIceCandidatePairStats final : public RTCStats {
+class OWT_EXPORT RTCIceCandidatePairStats final : public RTCStats {
  public:
   RTCIceCandidatePairStats(const std::string& id,
                            int64_t timestamp,
@@ -378,7 +379,7 @@ class RTCIceCandidatePairStats final : public RTCStats {
 // ice candidate pairs, but there could be candidates not paired with anything.
 // TODO: Add the stats of STUN binding requests (keepalives) and collect
 // them in the new PeerConnection::GetStats.
-class RTCIceCandidateStats : public RTCStats {
+class OWT_EXPORT RTCIceCandidateStats : public RTCStats {
  public:
   RTCIceCandidateStats(const std::string& type,
                        const std::string& id,
@@ -418,7 +419,7 @@ class RTCIceCandidateStats : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#rtcstatstype-str*
  */
-class RTCLocalIceCandidateStats final : RTCIceCandidateStats {
+class OWT_EXPORT RTCLocalIceCandidateStats final : RTCIceCandidateStats {
  public:
   RTCLocalIceCandidateStats(const std::string& id,
                             int64_t timestamp,
@@ -440,7 +441,7 @@ class RTCLocalIceCandidateStats final : RTCIceCandidateStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#rtcstatstype-str*
  */
-class RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
+class OWT_EXPORT RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
  public:
   RTCRemoteIceCandidateStats(const std::string& id,
                              int64_t timestamp,
@@ -464,7 +465,7 @@ class RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
  */
 // Obsoleted due to sender/receiver/transceiver stats being better
 // fits to describe the modern RTCPeerConnection model (unified plan).
-class RTCMediaStreamStats final : public RTCStats {
+class OWT_EXPORT RTCMediaStreamStats final : public RTCStats {
  public:
   RTCMediaStreamStats(const std::string& id,
                       int64_t timestamp,
@@ -483,7 +484,7 @@ class RTCMediaStreamStats final : public RTCStats {
  */
 // This is a combined implementation of RTCInboundRtpStreamStats
 // and RTCOutboundRtpStreamStats.
-class RTCMediaStreamTrackStats final : public RTCStats {
+class OWT_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
  public:
   RTCMediaStreamTrackStats(const std::string& id,
                            int64_t timestamp,
@@ -587,7 +588,7 @@ class RTCMediaStreamTrackStats final : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#pcstats-dict
  */
-class RTCPeerConnectionStats final : public RTCStats {
+class OWT_EXPORT RTCPeerConnectionStats final : public RTCStats {
  public:
   RTCPeerConnectionStats(const std::string& id,
                          int64_t timestamp,
@@ -604,7 +605,7 @@ class RTCPeerConnectionStats final : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#streamstats-dict*
  */
-class RTCRTPStreamStats : public RTCStats {
+class OWT_EXPORT RTCRTPStreamStats : public RTCStats {
  public:
   RTCRTPStreamStats(const std::string& type,
                     const std::string& id,
@@ -645,7 +646,7 @@ class RTCRTPStreamStats : public RTCStats {
  * \sa https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*
  */
 // TODO: Support the remote case |is_remote = true|.
-class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
+class OWT_EXPORT RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
   RTCInboundRTPStreamStats(const std::string& id,
                            int64_t timestamp,
@@ -730,7 +731,7 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
  * \sa https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
  */
 // TODO: Support the remote case |is_remote = true|.
-class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
+class OWT_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
   RTCOutboundRTPStreamStats(const std::string& id,
                             int64_t timestamp,
@@ -811,7 +812,7 @@ class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
 // from RTCReceivedRtpStreamStats and include extra properties including
 // following: localId, roundTripTime, totalRoundTripTime, fractionLost,
 // reportsReceived & roundTripTimeMeasurements.)
-class RTCRemoteInboundRtpStreamStats final : public RTCStats {
+class OWT_EXPORT RTCRemoteInboundRtpStreamStats final : public RTCStats {
  public:
   RTCRemoteInboundRtpStreamStats(const std::string& id,
                                  int64_t timestamp,
@@ -851,7 +852,7 @@ class RTCRemoteInboundRtpStreamStats final : public RTCStats {
 /*!
  * \sa https://w3c.github.io/webrtc-stats/#dom-rtcmediasourcestats
  */
-class RTCMediaSourceStats : public RTCStats {
+class OWT_EXPORT RTCMediaSourceStats : public RTCStats {
  public:
   RTCMediaSourceStats(const std::string& type,
                       const std::string& id,
@@ -868,7 +869,7 @@ class RTCMediaSourceStats : public RTCStats {
 /*!
  * \sa  https://w3c.github.io/webrtc-stats/#dom-rtcaudiosourcestats
  */
-class RTCAudioSourceStats final : public RTCMediaSourceStats {
+class OWT_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
  public:
   RTCAudioSourceStats(const std::string& id,
                       int64_t timestamp,
@@ -888,7 +889,7 @@ class RTCAudioSourceStats final : public RTCMediaSourceStats {
 /*!
  * \sa  https://w3c.github.io/webrtc-stats/#dom-rtcvideosourcestats
  */
-class RTCVideoSourceStats final : public RTCMediaSourceStats {
+class OWT_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
  public:
   RTCVideoSourceStats(const std::string& id,
                       int64_t timestamp,
@@ -911,7 +912,7 @@ class RTCVideoSourceStats final : public RTCMediaSourceStats {
 /*!
  * \sa  https://w3c.github.io/webrtc-stats/#transportstats-dict*
  */
-class RTCTransportStats final : public RTCStats {
+class OWT_EXPORT RTCTransportStats final : public RTCStats {
  public:
   RTCTransportStats(const std::string& id,
                     int64_t timestamp,
@@ -944,7 +945,7 @@ class RTCTransportStats final : public RTCStats {
 };
 
 /// Define audio sender report
-struct AudioSenderReport {
+struct OWT_EXPORT AudioSenderReport {
   AudioSenderReport(int64_t bytes_sent, int32_t packets_sent,
                     int32_t packets_lost, int64_t round_trip_time, std::string codec_name)
       : bytes_sent(bytes_sent), packets_sent(packets_sent), packets_lost(packets_lost)
@@ -961,7 +962,7 @@ struct AudioSenderReport {
   std::string codec_name;
 };
 /// Define audio receiver report
-struct AudioReceiverReport {
+struct OWT_EXPORT AudioReceiverReport {
   AudioReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd,
                       int32_t packets_lost, int32_t estimated_delay, std::string codec_name)
       : bytes_rcvd(bytes_rcvd), packets_rcvd(packets_rcvd), packets_lost(packets_lost)
@@ -978,7 +979,7 @@ struct AudioReceiverReport {
   std::string codec_name;
 };
 /// Define video sender report
-struct VideoSenderReport {
+struct OWT_EXPORT VideoSenderReport {
   VideoSenderReport(int64_t bytes_sent, int32_t packets_sent, int32_t packets_lost,
                     int32_t fir_count, int32_t pli_count, int32_t nack_count, int32_t sent_frame_height,
                     int32_t sent_frame_width, int32_t framerate_sent, int32_t last_adapt_reason,
@@ -1023,7 +1024,7 @@ struct VideoSenderReport {
   std::string codec_name;
 };
 /// Define video receiver report
-struct VideoReceiverReport {
+struct OWT_EXPORT VideoReceiverReport {
   VideoReceiverReport(int64_t bytes_rcvd, int32_t packets_rcvd, int32_t packets_lost,
                       int32_t fir_count, int32_t pli_count, int32_t nack_count, int32_t rcvd_frame_height,
                       int32_t rcvd_frame_width, int32_t framerate_rcvd, int32_t framerate_output,
@@ -1059,7 +1060,7 @@ struct VideoReceiverReport {
   int32_t jitter;
 };
 /// Define video bandwidth statistoms
-struct VideoBandwidthStats {
+struct OWT_EXPORT VideoBandwidthStats {
   VideoBandwidthStats() : available_send_bandwidth(0), available_receive_bandwidth(0)
                         , transmit_bitrate(0), retransmit_bitrate(0)
                         , target_encoding_bitrate(0), actual_encoding_bitrate(0) {}
@@ -1077,7 +1078,7 @@ struct VideoBandwidthStats {
   int32_t actual_encoding_bitrate;
 };
 /// Define ICE candidate report
-struct IceCandidateReport {
+struct OWT_EXPORT IceCandidateReport {
   IceCandidateReport(const std::string& id,
                      const std::string& ip,
                      const uint16_t port,
@@ -1105,7 +1106,7 @@ struct IceCandidateReport {
   int32_t priority;
 };
 /// Define ICE candidate pair report.
-struct IceCandidatePairReport {
+struct OWT_EXPORT IceCandidatePairReport {
   IceCandidatePairReport(
       const std::string& id,
       const bool is_active,
@@ -1137,7 +1138,7 @@ typedef std::vector<IceCandidateReportPtr> IceCandidateReports;
 typedef std::shared_ptr<IceCandidatePairReport> IceCandidatePairPtr;
 typedef std::vector<IceCandidatePairPtr> IceCandidatePairReports;
 /// Connection statistoms
-struct ConnectionStats {
+struct OWT_EXPORT ConnectionStats {
   ConnectionStats() {}
   /// Time stamp of connection statistics generation
   std::chrono::system_clock::time_point time_stamp = std::chrono::system_clock::now();

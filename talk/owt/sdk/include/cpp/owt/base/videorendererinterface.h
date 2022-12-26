@@ -30,14 +30,14 @@ enum class VideoRendererType {
 
 
 #if defined(WEBRTC_WIN)
-struct D3D11ImageHandle {
+struct OWT_EXPORT D3D11ImageHandle {
   ID3D11Device* d3d11_device;
   ID3D11Texture2D* texture;     // The DX texture or texture array.
   int texture_array_index;      // When >=0, indicate the index within texture array 
 };
 #endif
 /// Video buffer and its information
-struct VideoBuffer {
+struct OWT_EXPORT VideoBuffer {
   // TODO: Consider add another field for native handler.
   /// Pointer to video buffer or native handler.
   uint8_t* buffer;
@@ -54,7 +54,7 @@ struct VideoBuffer {
 };
 /// VideoRenderWindow wraps a native Window handle
 #if defined(WEBRTC_WIN)
-class VideoRenderWindow {
+class OWT_EXPORT VideoRenderWindow {
  public:
   VideoRenderWindow() : wnd_(nullptr) {}
   virtual ~VideoRenderWindow() {}
@@ -75,7 +75,7 @@ class VideoRenderWindow {
 
 #if defined(WEBRTC_LINUX)
 #if defined(WEBRTC_USE_X11)
-class VideoRenderWindow {
+class OWT_EXPORT VideoRenderWindow {
  public:
   VideoRenderWindow() : wnd_(0) {}
   virtual ~VideoRenderWindow() {}
@@ -102,7 +102,7 @@ typedef unsigned int VASurfaceID;
 
 /// libva surface that contains a decoded image for rendering on
 /// target window system.
-struct VaSurface {
+struct OWT_EXPORT VaSurface {
   /// va display associated with decoder.
   VADisplay display;
   /// va surface ID.
@@ -123,14 +123,14 @@ struct VaSurface {
 };
 
 /// Video renderer interface for Linux using va based decoding.
-class VideoRendererVaInterface {
+class OWT_EXPORT VideoRendererVaInterface {
  public:
   virtual void RenderFrame(std::unique_ptr<VaSurface> surface) = 0;
   virtual ~VideoRendererVaInterface() {}
 };
 #endif
 /// Interface for rendering VideoFrames in ARGB/I420 format from a VideoTrack.
-class VideoRendererInterface {
+class OWT_EXPORT VideoRendererInterface {
  public:
   /// Passes video buffer to renderer.
   virtual void RenderFrame(std::unique_ptr<VideoBuffer> buffer) {}
@@ -139,13 +139,13 @@ class VideoRendererInterface {
   virtual VideoRendererType Type() = 0;
 };
 #if defined(WEBRTC_WIN)
-struct D3D11Handle {
+struct OWT_EXPORT D3D11Handle {
   ID3D11Texture2D* texture;
   ID3D11Device* d3d11_device;
   ID3D11VideoDevice* d3d11_video_device;
   ID3D11VideoContext* context;
 };
-struct D3D11VAHandle {
+struct OWT_EXPORT D3D11VAHandle {
   ID3D11Texture2D* texture;
   int array_index;
   ID3D11Device* d3d11_device;

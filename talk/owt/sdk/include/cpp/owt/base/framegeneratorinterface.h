@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_FRAMEGENERATORINTERFACE_H_
 #define OWT_BASE_FRAMEGENERATORINTERFACE_H_
+
 #include "stdint.h"
+#include "owt/base/export.h"
+
 namespace owt {
 namespace base {
 /**
@@ -11,7 +14,7 @@ namespace base {
  @details Sample rate and channel numbers cannot be changed once the generator is
  created. Currently, only 16 bit little-endian PCM is supported.
 */
-class AudioFrameGeneratorInterface {
+class OWT_EXPORT AudioFrameGeneratorInterface {
  public:
   /**
    @brief Generate frames for next 10ms.
@@ -34,7 +37,7 @@ class AudioFrameGeneratorInterface {
  @brief frame generator interface for users to generates frame.
  FrameGeneratorInterface is the virtual class to implement its own frame generator.
 */
-class VideoFrameGeneratorInterface {
+class OWT_EXPORT VideoFrameGeneratorInterface {
  public:
   enum VideoFrameCodec {
     I420,

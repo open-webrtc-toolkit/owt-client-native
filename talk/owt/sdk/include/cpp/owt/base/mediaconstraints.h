@@ -6,29 +6,29 @@
 #include "owt/base/commontypes.h"
 namespace owt {
 namespace base {
-struct MediaStreamTrackAudioConstraints {
+struct OWT_EXPORT MediaStreamTrackAudioConstraints {
   double volume;
   unsigned long sample_rate;
   unsigned long channel_num;
 };
 
-struct MediaStreamTrackDeviceConstraintsForAudio : MediaStreamTrackAudioConstraints {
+struct OWT_EXPORT MediaStreamTrackDeviceConstraintsForAudio : MediaStreamTrackAudioConstraints {
   std::string device_id;
 };
-struct MediaStreamTrackScreencastConstraintsForAudio : MediaStreamTrackAudioConstraints {
+struct OWT_EXPORT MediaStreamTrackScreencastConstraintsForAudio : MediaStreamTrackAudioConstraints {
   int source_id;  // The handle of the app/desktop
 };
-struct MediaStreamTrackVideoConstraints {
+struct OWT_EXPORT MediaStreamTrackVideoConstraints {
   Resolution resolution;
   double frame_rate;
 };
-struct MediaStreamTrackDeviceConstraintsForVideo : MediaStreamTrackVideoConstraints {
+struct OWT_EXPORT MediaStreamTrackDeviceConstraintsForVideo : MediaStreamTrackVideoConstraints {
   std::string device_id;
 };
-struct MediaStreamTrackScreencastConstraintsForVideo : MediaStreamTrackVideoConstraints {
+struct OWT_EXPORT MediaStreamTrackScreencastConstraintsForVideo : MediaStreamTrackVideoConstraints {
   int source_id;  // The handle of the app/desktop
 };
-struct MediaStreamDeviceConstraints {
+struct OWT_EXPORT MediaStreamDeviceConstraints {
   MediaStreamTrackDeviceConstraintsForAudio audio_track_constraints;
   MediaStreamTrackDeviceConstraintsForVideo video_track_constraints;
 };

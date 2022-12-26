@@ -12,27 +12,27 @@ namespace owt {
 namespace base {
 /// Audio subscription capabilities. Empty means not setting corresponding
 /// capability.
-struct AudioSubscriptionCapabilities {
+struct OWT_EXPORT AudioSubscriptionCapabilities {
   std::vector<AudioCodecParameters> codecs;
 };
 
 /// Video subscription capabilities. Empty means not setting corresponding
 /// capability.
-struct VideoSubscriptionCapabilities {
+struct OWT_EXPORT VideoSubscriptionCapabilities {
   std::vector<VideoCodecParameters> codecs;
   std::vector<Resolution> resolutions;
   std::vector<double> frame_rates;
   std::vector<double> bitrate_multipliers;
   std::vector<unsigned long> keyframe_intervals;
 };
-struct SubscriptionCapabilities {
+struct OWT_EXPORT SubscriptionCapabilities {
   AudioSubscriptionCapabilities audio;
   VideoSubscriptionCapabilities video;
 };
-struct AudioPublicationSettings {
+struct OWT_EXPORT AudioPublicationSettings {
   AudioCodecParameters codec;
 };
-struct VideoPublicationSettings {
+struct OWT_EXPORT VideoPublicationSettings {
   VideoCodecParameters codec;
   Resolution resolution;
   double frame_rate;
@@ -43,13 +43,13 @@ struct VideoPublicationSettings {
 };
 
 #ifdef OWT_ENABLE_QUIC
-struct TransportSettings {
+struct OWT_EXPORT TransportSettings {
   explicit TransportSettings() : transport_type(TransportType::kWebRTC) {}
   TransportType transport_type;
 };
 #endif
 
-struct PublicationSettings {
+struct OWT_EXPORT PublicationSettings {
   std::vector<AudioPublicationSettings> audio;
   std::vector<VideoPublicationSettings> video;
 #ifdef OWT_ENABLE_QUIC
@@ -60,7 +60,7 @@ struct PublicationSettings {
  @brief Publish options describing encoding settings.
  @details Set encoding constraint on video or video using this option.
 */
-struct PublishOptions {
+struct OWT_EXPORT PublishOptions {
   std::vector<AudioEncodingParameters> audio;
   std::vector<VideoEncodingParameters> video;
 #ifdef OWT_ENABLE_QUIC

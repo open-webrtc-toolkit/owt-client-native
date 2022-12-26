@@ -57,6 +57,13 @@ if (is_android) {
   }
 }
 
+config("owt_symbols") {
+  defines = [ "OWT_LIBRARY_IMPL" ]
+  if (is_component_build) {
+    defines += [ "OWT_ENABLE_SYMBOL_EXPORT" ]
+  }
+}
+
 static_library("owt_deps") {
   deps = [
     "//third_party/webrtc/api:create_peerconnection_factory",
@@ -86,11 +93,6 @@ if (!is_ios) {
       if (rtc_enable_protobuf) {
         deps += [ "//third_party/protobuf:protobuf_lite" ]
       }
-
-      if (rtc_enable_protobuf) {
-        deps += [ "//third_party/protobuf:protobuf_lite" ]
-      }
-      complete_static_lib = true
     }
   } else {
     static_library("owt") {
@@ -164,6 +166,8 @@ static_library("owt_sdk_base") {
       "sdk/base/customizedvideoencoderproxy.h",
       "sdk/base/customizedvideosource.cc",
       "sdk/base/customizedvideosource.h",
+      "sdk/base/desktopcapturer.cc",
+      "sdk/base/desktopcapturer.h",
       "sdk/base/webrtcvideorendererimpl.cc",
       "sdk/base/webrtcvideorendererimpl.h",
       "sdk/base/windowcapturer.cc",
@@ -200,6 +204,8 @@ static_library("owt_sdk_base") {
     "sdk/include/cpp",
     "//third_party",
   ]
+
+  configs += [ ":owt_symbols" ]
 
   defines = [ "USE_BUILTIN_SW_CODECS" ]
 
@@ -261,8 +267,6 @@ static_library("owt_sdk_base") {
   }
   if (is_win) {
     sources += [
-      "sdk/base/desktopcapturer.cc",
-      "sdk/base/desktopcapturer.h",
       "sdk/base/win/d3d11_manager.h",
       "sdk/base/win/device_info_mf.cc",
       "sdk/base/win/device_info_mf.h",
@@ -380,6 +384,7 @@ static_library("owt_sdk_p2p") {
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
+  configs += [ ":owt_symbols" ]
 }
 static_library("owt_sdk_conf") {
   deps = [

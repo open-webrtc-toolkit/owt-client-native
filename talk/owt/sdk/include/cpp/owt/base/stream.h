@@ -48,7 +48,7 @@ class VideoRenderWindow;
 class VideoRendererInterface;
 using webrtc::MediaStreamInterface;
 /// Observer for Stream
-class StreamObserver {
+class OWT_EXPORT StreamObserver {
  public:
   virtual ~StreamObserver() = default;
   /// Triggered when a stream is ended, or the stream is no longer available in
@@ -76,7 +76,7 @@ class WebrtcVideoRendererVaImpl;
 #endif
 
 /// Base class of all streams with media stream
-class Stream {
+class OWT_EXPORT Stream {
   friend class owt::conference::ConferenceClient;
 
  public:
@@ -180,7 +180,7 @@ class Stream {
 /// A QuicStream can be fetched from a published LocalStream for data,
 /// on which you can write to server;
 /// Or from a subscription from server for data, on which you can read.
-class QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
+class OWT_EXPORT QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
  public:
   QuicStream(owt::quic::WebTransportStreamInterface* quic_stream,
              const std::string& session_id);
@@ -243,7 +243,7 @@ class QuicStream : public owt::quic::WebTransportStreamInterface::Visitor {
 };
 #endif // OWT_ENABLE_QUIC
 
-class LocalScreenStreamObserver {
+class OWT_EXPORT LocalScreenStreamObserver {
  public:
   /**
   @brief Event callback for local screen stream to request for a source from
@@ -262,7 +262,7 @@ class LocalScreenStreamObserver {
   @brief This class represents a local stream.
   @details A local stream can be published to remote side.
 */
-class LocalStream : public Stream {
+class OWT_EXPORT LocalStream : public Stream {
  public:
 #if !defined(WEBRTC_WIN)
   LocalStream();
@@ -418,7 +418,7 @@ class LocalStream : public Stream {
   @details A remote is published from a remote client or server. Do not construct
   remote stream outside SDK.
 */
-class RemoteStream : public Stream {
+class OWT_EXPORT RemoteStream : public Stream {
   friend class owt::conference::ConferencePeerConnectionChannel;
   friend class owt::conference::ConferenceWebTransportChannel;
   friend class owt::conference::ConferenceClient;

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_GLOBALCONFIGURATION_H_
 #define OWT_BASE_GLOBALCONFIGURATION_H_
+
 #include <memory>
 #include "owt/base/framegeneratorinterface.h"
 #if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
@@ -12,12 +13,13 @@
 #include <windows.h>
 #include <d3d11.h>
 #endif
+#include "owt/base/export.h"
 
 namespace owt {
 namespace base {
 /** @cond */
 /// Audio processing settings.
-struct AudioProcessingSettings {
+struct OWT_EXPORT AudioProcessingSettings {
   /**
   @brief Auto echo cancellation enabling/disabling. By default enabled.
   @details If set to true, will enable auto echo cancellation.
@@ -43,7 +45,7 @@ struct AudioProcessingSettings {
 /** @endcond */
 
 /// Port range.
-struct IcePortRange {
+struct OWT_EXPORT IcePortRange {
   /**
    @brief Minimum port number.
   */
@@ -59,7 +61,7 @@ struct IcePortRange {
  GlobalConfiguration class of setting for encoded frame and hardware
  accecleartion configuration.
 */
-class GlobalConfiguration {
+class OWT_EXPORT GlobalConfiguration {
   friend class PeerConnectionDependencyFactory;
 
  public:

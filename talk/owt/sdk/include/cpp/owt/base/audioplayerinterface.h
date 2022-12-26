@@ -5,10 +5,12 @@
 #ifndef OWT_BASE_AUDIOPLAYERINTERFACE_H_
 #define OWT_BASE_AUDIOPLAYERINTERFACE_H_
 
+#include "owt/base/export.h"
+
 namespace owt {
 namespace base {
 /// Interface for rendering PCM data in a stream
-class AudioPlayerInterface {
+class OWT_EXPORT AudioPlayerInterface {
  public:
   /// Passes audio buffer to audio player.
   virtual void OnData(const void* audio_data,

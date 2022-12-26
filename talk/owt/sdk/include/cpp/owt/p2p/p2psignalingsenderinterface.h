@@ -15,7 +15,7 @@ namespace p2p {
   @details The sender may be a PeerClient/ConferenceClient instance which can
   send out signaling messages created from peerconnection.
 */
-class P2PSignalingSenderInterface {
+class OWT_EXPORT P2PSignalingSenderInterface {
  public:
   virtual ~P2PSignalingSenderInterface() {}
   /// Send a signaling message.

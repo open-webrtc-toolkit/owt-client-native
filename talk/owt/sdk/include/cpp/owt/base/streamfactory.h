@@ -4,7 +4,7 @@
 #ifndef OWT_BASE_STREAM_FACTORY_H_
 #define OWT_BASE_STREAM_FACTORY_H_
 #include <unordered_map>
-#inlcude "owt/base/stream.h"
+#include "owt/base/stream.h"
 #include "owt/base/exception.h"
 #include "owt/base/localcamerastreamparameters.h"
 #include "owt/base/macros.h"
@@ -18,7 +18,7 @@ namespace owt {
 namespace base {
 using webrtc::MediaStreamInterface;
 /// Factory class for creating all types of media streams. Not implemented for Windows.
-class StreamFactory {
+class OWT_EXPORT StreamFactory {
  public:
   static std::shared_ptr<LocalStream> CreateLocalStream(MediaStreamDeviceConstraints constraints);
   static std::shared_ptr<LocalStream> CreateLocalStream(MediaStreamScreencastConstraints constraints);
