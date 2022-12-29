@@ -14,7 +14,10 @@ group("default") {
     deps += [ "//talk/owt" ]
   }
   if (owt_include_tests) {
-    deps += [ "talk/owt:owt_tests" ]
+    deps += [
+      "talk/owt:owt_tests",
+      "//talk/owt/sdk/p2p/tests:p2p_e2e_test",
+    ]
   }
   if (rtc_include_tests) {
     deps += [
@@ -22,5 +25,4 @@ group("default") {
       "//third_party/webrtc:video_engine_tests",
     ]
   }
-  deps += [ "//talk/owt/sdk/p2p/tests:p2p_e2e_test" ]
 }

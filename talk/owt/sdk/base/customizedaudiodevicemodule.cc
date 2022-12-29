@@ -597,7 +597,8 @@ void CustomizedAudioDeviceModule::CreateOutputAdm() {
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
 #else
-    _outputAdm = rtc::make_ref_counted<webrtc::FakeAudioDeviceModule>();
+    _outputAdm = rtc::scoped_refptr<webrtc::FakeAudioDeviceModule>(
+        new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>());
 #endif
   }
 }
