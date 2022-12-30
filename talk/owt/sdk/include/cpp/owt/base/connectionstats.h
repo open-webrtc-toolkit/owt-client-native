@@ -210,6 +210,7 @@ class RTCStatsReport {
  */
 class RTCCertificateStats : public RTCStats {
  public:
+  static const char* kType;
   RTCCertificateStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& fingerprint,
@@ -235,6 +236,7 @@ class RTCCertificateStats : public RTCStats {
  */
 class RTCCodecStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCCodecStats(const std::string& id,
                 int64_t timestamp,
                 uint32_t payload_type,
@@ -261,6 +263,7 @@ class RTCCodecStats final : public RTCStats {
  */
 class RTCDataChannelStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCDataChannelStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& label,
@@ -298,6 +301,7 @@ class RTCDataChannelStats final : public RTCStats {
  */
 class RTCIceCandidatePairStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCIceCandidatePairStats(const std::string& id,
                            int64_t timestamp,
                            const std::string& transport_id,
@@ -420,6 +424,7 @@ class RTCIceCandidateStats : public RTCStats {
  */
 class RTCLocalIceCandidateStats final : RTCIceCandidateStats {
  public:
+  static const char* kType;
   RTCLocalIceCandidateStats(const std::string& id,
                             int64_t timestamp,
                             const std::string& transport_id,
@@ -442,6 +447,7 @@ class RTCLocalIceCandidateStats final : RTCIceCandidateStats {
  */
 class RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
  public:
+  static const char* kType;
   RTCRemoteIceCandidateStats(const std::string& id,
                              int64_t timestamp,
                              const std::string& transport_id,
@@ -466,6 +472,7 @@ class RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
 // fits to describe the modern RTCPeerConnection model (unified plan).
 class RTCMediaStreamStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaStreamStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& stream_identifier,
@@ -485,6 +492,7 @@ class RTCMediaStreamStats final : public RTCStats {
 // and RTCOutboundRtpStreamStats.
 class RTCMediaStreamTrackStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaStreamTrackStats(const std::string& id,
                            int64_t timestamp,
                            std::string track_identifier,
@@ -589,6 +597,7 @@ class RTCMediaStreamTrackStats final : public RTCStats {
  */
 class RTCPeerConnectionStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCPeerConnectionStats(const std::string& id,
                          int64_t timestamp,
                          uint32_t data_channels_opened,
@@ -647,6 +656,7 @@ class RTCRTPStreamStats : public RTCStats {
 // TODO: Support the remote case |is_remote = true|.
 class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
+  static const char* kType;
   RTCInboundRTPStreamStats(const std::string& id,
                            int64_t timestamp,
                            uint32_t ssrc,
@@ -732,6 +742,7 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
 // TODO: Support the remote case |is_remote = true|.
 class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
+  static const char* kType;
   RTCOutboundRTPStreamStats(const std::string& id,
                             int64_t timestamp,
                             uint32_t ssrc,
@@ -813,6 +824,7 @@ class RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
 // reportsReceived & roundTripTimeMeasurements.)
 class RTCRemoteInboundRtpStreamStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCRemoteInboundRtpStreamStats(const std::string& id,
                                  int64_t timestamp,
                                  uint32_t ssrc,
@@ -853,6 +865,7 @@ class RTCRemoteInboundRtpStreamStats final : public RTCStats {
  */
 class RTCMediaSourceStats : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaSourceStats(const std::string& type,
                       const std::string& id,
                       int64_t timestamp,
@@ -913,6 +926,7 @@ class RTCVideoSourceStats final : public RTCMediaSourceStats {
  */
 class RTCTransportStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCTransportStats(const std::string& id,
                     int64_t timestamp,
                     uint64_t bytes_sent,
