@@ -2403,6 +2403,12 @@ hooks = [
                 '-vpython-tool', 'install',
     ],
   },
+  {
+    # Prepare environment for OWT development.
+    'pattern': '.',
+    'action': ['python',
+               'src/scripts/prepare_dev.py'],
+  },
 ]
 recursedeps = []
 # Define rules for which include paths are allowed in our source.
