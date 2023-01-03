@@ -54,27 +54,6 @@ struct IcePortRange {
   int max;
 };
 
-/// Port range settings for different tracks.
-struct IcePortRanges {
-  /**
-   @brief Port range for audio tracks.
-  */
-  IcePortRange audio;
-  /**
-   @brief Port range for video tracks except screen tracks.
-  */
-  IcePortRange video;
-  /**
-   @brief Port range for screen tracks.
-  */
-  IcePortRange screen;
-  /**
-   @breif Port range for SCTP data channels. Be noted we do not
-   support specifying port range for QUIC streams.
-  */
-  IcePortRange data;
-};
-
 /**
  @brief configuration of global using.
  GlobalConfiguration class of setting for encoded frame and hardware
@@ -395,19 +374,6 @@ class GlobalConfiguration {
   static bool GetCustomizedAudioInputEnabled() {
     return audio_frame_generator_ ? true : false;
   }
-
-  static void GetPortRanges(IcePortRanges& ice_port_ranges) {
-    ice_port_ranges.audio.min = ice_port_ranges_.audio.min;
-    ice_port_ranges.audio.max = ice_port_ranges_.audio.max;
-    ice_port_ranges.video.min = ice_port_ranges_.video.min;
-    ice_port_ranges.video.max = ice_port_ranges_.video.max;
-    ice_port_ranges.screen.min = ice_port_ranges_.screen.min;
-    ice_port_ranges.screen.max = ice_port_ranges_.screen.max;
-    ice_port_ranges.data.min = ice_port_ranges_.data.min;
-    ice_port_ranges.data.max = ice_port_ranges_.data.max;
-  }
-
-  static IcePortRanges ice_port_ranges_;
 
   /**
    @brief This function enables dumping of bitstream before decoding.

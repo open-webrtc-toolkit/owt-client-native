@@ -129,19 +129,6 @@ void PeerConnectionDependencyFactory::
       GlobalConfiguration::GetAEC3Enabled()) {
     field_trial_ += "OWT-EchoCanceller3/Enabled/";
   }
-  // Handle port ranges.
-  IcePortRanges ice_port_ranges;
-  GlobalConfiguration::GetPortRanges(ice_port_ranges);
-  if ((ice_port_ranges.audio.min > 0 &&
-       ice_port_ranges.audio.max > ice_port_ranges.audio.min) ||
-      (ice_port_ranges.video.min > 0 &&
-       ice_port_ranges.video.max > ice_port_ranges.video.min) ||
-      (ice_port_ranges.screen.min > 0 &&
-       ice_port_ranges.screen.max > ice_port_ranges.screen.min) ||
-      (ice_port_ranges.data.min > 0 &&
-       ice_port_ranges.data.max > ice_port_ranges.data.min)) {
-    field_trial_ += "OWT-IceUnbundle/Enabled/";
-  }
   bool pre_decode_dump = GlobalConfiguration::GetPreDecodeDumpEnabled();
   if (pre_decode_dump) {
     field_trial_ += "WebRTC-DecoderDataDumpDirectory/./";
