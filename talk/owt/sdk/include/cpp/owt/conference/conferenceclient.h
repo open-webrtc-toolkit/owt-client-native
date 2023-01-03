@@ -51,7 +51,7 @@ typedef std::string cert_fingerprint_t;
   Changing this configuration does NOT impact ConferenceClient already
   created.
 */
-struct ConferenceClientConfiguration : public ClientConfiguration {
+struct OWT_EXPORT ConferenceClientConfiguration : public ClientConfiguration {
 #ifdef OWT_ENABLE_QUIC
  public:
   // This function sets trusted server certificate fingerprints for
@@ -68,13 +68,13 @@ class ConferencePeerConnectionChannel;
 #ifdef OWT_ENABLE_QUIC
 class ConferenceWebTransportChannel;
 #endif
-class ConferenceSocketSignalingChannel;
+class OWT_EXPORT ConferenceSocketSignalingChannel;
 /**
   @brief Observer interface for participant
   @details Provides interface for receiving events with regard to the associated
   participant.
 */
-class ParticipantObserver {
+class OWT_EXPORT ParticipantObserver {
   public:
    virtual ~ParticipantObserver() = default;
    /**
@@ -83,7 +83,7 @@ class ParticipantObserver {
    virtual void OnLeft() {}
 };
 /// Participant represents one conference client in a conference room.
-class Participant {
+class OWT_EXPORT Participant {
   friend class ConferenceInfo;
   public:
     Participant(std::string id, std::string role, std::string user_id)
@@ -121,7 +121,7 @@ class Participant {
   @brief Information about the conference.
   @details This information contains current details of the conference.
 */
-class ConferenceInfo {
+class OWT_EXPORT ConferenceInfo {
   friend class ConferenceClient;
   public:
     ConferenceInfo() {}
@@ -168,7 +168,7 @@ class ConferenceInfo {
     std::shared_ptr<Participant> self_;                           // Self participant in the conference.
 };
 /** @cond */
-class ConferenceSocketSignalingChannelObserver {
+class OWT_EXPORT ConferenceSocketSignalingChannelObserver {
  public:
   virtual ~ConferenceSocketSignalingChannelObserver(){}
   virtual void OnUserJoined(std::shared_ptr<sio::message> user) = 0;
@@ -188,7 +188,7 @@ class ConferenceSocketSignalingChannelObserver {
 // ConferencePeerConnectionChannel callback interface.
 // Usually, ConferenceClient should implement these methods and notify
 // application.
-class ConferencePeerConnectionChannelObserver {
+class OWT_EXPORT ConferencePeerConnectionChannelObserver {
  public:
   virtual ~ConferencePeerConnectionChannelObserver(){}
   // Triggered when an unrecoverable error happened. Error may reported by MCU
@@ -199,7 +199,7 @@ class ConferencePeerConnectionChannelObserver {
 };
 #ifdef OWT_ENABLE_QUIC
 // The visitor interface for QuicTransportClientInterface
-class ConferenceWebTransportChannelObserver {
+class OWT_EXPORT ConferenceWebTransportChannelObserver {
  public:
   virtual ~ConferenceWebTransportChannelObserver() = default;
   // Called when connected to a server.
@@ -214,7 +214,7 @@ class ConferenceWebTransportChannelObserver {
 #endif
 /** @endcond */
 /// Observer for OWTConferenceClient.
-class ConferenceClientObserver {
+class OWT_EXPORT ConferenceClientObserver {
  public:
   /**
     @brief Triggers when a stream is added.
@@ -250,7 +250,7 @@ class ConferenceClientObserver {
 };
 
 /// An asynchronous class for app to communicate with a conference in MCU.
-class ConferenceClient final
+class OWT_EXPORT ConferenceClient final
     : ConferenceSocketSignalingChannelObserver,
       ConferencePeerConnectionChannelObserver,
 #ifdef OWT_ENABLE_QUIC

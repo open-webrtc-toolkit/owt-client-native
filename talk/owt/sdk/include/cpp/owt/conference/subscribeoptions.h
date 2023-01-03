@@ -8,7 +8,7 @@
 namespace owt {
 namespace conference {
 /// Audio subscription contraints.
-struct AudioSubscriptionConstraints {
+struct OWT_EXPORT AudioSubscriptionConstraints {
   /**
    @brief Construct AudioSubcriptionConstraints with defaut settings.
    @details By default the audio suscription is enabled.
@@ -19,7 +19,7 @@ struct AudioSubscriptionConstraints {
   std::vector<owt::base::AudioCodecParameters> codecs;
 };
 /// Video subscription constraints.
-struct VideoSubscriptionConstraints {
+struct OWT_EXPORT VideoSubscriptionConstraints {
   /**
    @brief Construct VideoSubscriptionConstraints with default values.
    @details By default the publication settings of stream is used.
@@ -43,14 +43,14 @@ struct VideoSubscriptionConstraints {
 
 #ifdef OWT_ENABLE_QUIC
 /// Data subscription constraints.
-struct DataSubscriptionConstraints {
+struct OWT_EXPORT DataSubscriptionConstraints {
   explicit DataSubscriptionConstraints() : enabled(false) {}
   bool enabled;
 };
 #endif
 
 /// Subscribe options
-struct SubscribeOptions {
+struct OWT_EXPORT SubscribeOptions {
   AudioSubscriptionConstraints audio;
   VideoSubscriptionConstraints video;
 #ifdef OWT_ENABLE_QUIC
@@ -59,7 +59,7 @@ struct SubscribeOptions {
 };
 /// Video subscription update constrains used by subscription's ApplyOptions
 /// API.
-struct VideoSubscriptionUpdateConstraints {
+struct OWT_EXPORT VideoSubscriptionUpdateConstraints {
   /**
    @brief Construct VideoSubscriptionUpdateConstraints with default value.
    */
@@ -74,7 +74,7 @@ struct VideoSubscriptionUpdateConstraints {
   unsigned long keyFrameInterval;
 };
 /// Subscription update option used by subscription's ApplyOptions API.
-struct SubscriptionUpdateOptions {
+struct OWT_EXPORT SubscriptionUpdateOptions {
   /// Options for updating a subscription.
   VideoSubscriptionUpdateConstraints video;
 };

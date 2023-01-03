@@ -29,7 +29,7 @@ class QuicTransportStreamInterface;
 namespace conference {
 class ConferenceClient;
 using namespace owt::base;
-class ConferenceSubscription : public ConferenceStreamUpdateObserver,
+class OWT_EXPORT ConferenceSubscription : public ConferenceStreamUpdateObserver,
                                public std::enable_shared_from_this<ConferenceSubscription> {
   public:
     ConferenceSubscription(std::shared_ptr<ConferenceClient> client, const std::string& sub_id,

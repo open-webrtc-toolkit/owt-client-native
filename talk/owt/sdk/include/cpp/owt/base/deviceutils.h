@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_DEVICEUTILS_H_
 #define OWT_BASE_DEVICEUTILS_H_
+
 #include <vector>
 #include <string>
 #include "owt/base/commontypes.h"
+
 namespace owt {
 namespace base {
-class DeviceUtils {
+class OWT_EXPORT DeviceUtils {
  public:
   /// Get video capturer IDs.
   static std::vector<std::string> VideoCapturerIds();

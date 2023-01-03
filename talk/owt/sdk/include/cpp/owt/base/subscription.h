@@ -11,7 +11,7 @@
 namespace owt {
 namespace base {
 /// Observer that receives events from subscription.
-class SubscriptionObserver {
+class OWT_EXPORT SubscriptionObserver {
   public:
     /// Triggered when subscription is ended.
     virtual void OnEnded() = 0;

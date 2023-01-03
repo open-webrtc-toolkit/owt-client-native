@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_LOGGING_H_
 #define OWT_BASE_LOGGING_H_
+
+#include "owt/base/export.h"
+
 namespace owt {
 namespace base {
 enum class LoggingSeverity : int {
@@ -21,7 +24,7 @@ enum class LoggingSeverity : int {
 };
 /// Logger configuration class. Choose either LogToConsole or LogToFileRotate in
 /// your application for logging to console or file.
-class Logging final {
+class OWT_EXPORT Logging final {
  public:
   /// Set logging severity. All logging messages with higher severity will be
   /// logged.
