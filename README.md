@@ -6,7 +6,7 @@ of real time communication applications on these platforms. It supports peer to 
 Open WebRTC Toolkit conference server.
 
 - Supported Windows platform: Windows 8 and above.
-- Supported Linux platform: Ubuntu 16.04 & 18.04.
+- Supported Linux platform: Ubuntu 20.04 and above.
 - Supported iOS platform: iOS 9.0 and above.
 
 ## Documentation
@@ -20,7 +20,6 @@ You need [Doxygen](http://www.doxygen.nl/) in your path.
 Before you start, make sure you have the following prerequisites installed/configured:
 
 - [WebRTC stack build dependencies](https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/development/prerequisite-sw/index.md).
-- [OpenSSL 1.1.1k or higher](https://www.openssl.org/source/).
 - [Proxy settings](https://github.com/open-webrtc-toolkit/owt-client-native/wiki/Proxy-config-for-building-native-SDK).
 
 The following dependencies are for Windows only:
@@ -58,9 +57,11 @@ target_os = []
 
 #### Linux
 1. In `src` direcotry, run `gclient sync`. It may take long time to download large amount of data.
-1. Go to the `src/scripts` directory, and run: `python build_linux.py --gn_gen --sdk --tests --ssl_root /path/to/ssl --output_path /path/to/out`.
+1. Go to the `src/scripts` directory, and run: `python build_linux.py --gn_gen --sdk --tests --shared --output_path /path/to/out`.
   - If `--msdk_root` is specified to correct Intel MediaSDK path, for example, '/opt/intel/mediasdk', hardware decoders will be built besides the software implementations.
   - If the optional `--fake_audio` is specified, the internal audio devices implementation based on alsa or pulseaudio will not be built and a dummy implementation will be used.
+  - If you would like to build shared library instead of default static library, add `--shared` option when invoking build_linux.py. Shared library is recommend because it avoids symbol conflicts.
+  - The document for sdk will also be copied to this directory if you specify `--docs` option in above command.
 
 Common build options shared by Windows and Linux:
   - By default `x86|Debug` library will be created. Specify `--arch x64` if you want to build x64 libraries; Specify `--scheme release` if release version of library is to be built.

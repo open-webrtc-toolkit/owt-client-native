@@ -88,7 +88,7 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
         gn_args.append('rtc_include_tests=false')
         gn_args.append('owt_include_tests=false')
     if use_gcc:
-        gn_args.extend(['is_clang=false', 'use_lld=false', 'use_sysroot=false', 'treat_warnings_as_errors=false'])
+        gn_args.extend(['is_clang=false', 'use_lld=false', 'use_sysroot=false', 'use_custom_libcxx=false', 'treat_warnings_as_errors=false'])
     if fake_audio:
         gn_args.extend(['rtc_include_pulse_audio=false', 'rtc_include_internal_audio_device=false'])
     if shared:
@@ -122,7 +122,7 @@ def ninjabuild(arch, scheme, shared):
     if shared:
         so_files = glob.iglob(os.path.join(out_path, '*.so'))
         for so_file in so_files:
-           print so_file
+           print(so_file)
            shutil.copy2(so_file, gen_lib_path(scheme))
     else:
         shutil.copy(src_lib_path, gen_lib_path(scheme))
@@ -163,7 +163,7 @@ def pack_sdk(arch, scheme, output_path, shared):
     if shared:
         so_files = glob.iglob(os.path.join(out_path, '*.so'))
         for so_file in so_files:
-           print so_file
+           print(so_file)
            shutil.copy2(so_file, dst_lib_path)
     else:
         shutil.copy(src_lib_path, dst_lib_path)
