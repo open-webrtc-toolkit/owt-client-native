@@ -53,7 +53,8 @@ patchList = [
     ('0020-Enable-C-20-for-all-platforms-but-LaCrOS-and-Fuchsia.patch', BUILD_PATH),
     ('0021-Allow-third-party-repositories-to-disable-C-20-for-M.patch', BUILD_PATH),
     ('0022-Apply-Wno-shadow-for-clang-only.patch', THIRD_PARTY_PATH),
-    ('0023-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH)
+    ('0023-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH),
+    ('0024-Getting-install-build-deps-to-work-on-Ubuntu-22.04-L.patch', BUILD_PATH)
 ]
 
 def _patch(ignoreFailures=False):
