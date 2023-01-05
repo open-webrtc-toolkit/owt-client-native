@@ -111,7 +111,7 @@ int32_t BasicWindowCapturer::StartCapture(
   worker_thread_->BlockingCall([this] { InitOnWorkerThread(); });
   if (observer_) {
     std::unordered_map<int, std::string> window_map;
-    int window_id;
+    int window_id(0);
     if (GetCurrentWindowList(&window_map)) {
       observer_->OnCaptureSourceNeeded(window_map, window_id);
       SetCaptureWindow(window_id);
