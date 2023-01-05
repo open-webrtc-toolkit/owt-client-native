@@ -1,0 +1,26 @@
+From 54bdc6bfe39a0ef2d4b00a83140e2776b982efa9 Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 5 Jan 2023 13:01:26 +0800
+Subject: [PATCH] Allow ffmpeg_branding == "OWT".
+
+---
+ ffmpeg_options.gni | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ffmpeg_options.gni b/ffmpeg_options.gni
+index 14f28eeafc..b0c4080d49 100644
+--- a/ffmpeg_options.gni
++++ b/ffmpeg_options.gni
+@@ -52,7 +52,8 @@ declare_args() {
+ 
+ assert(ffmpeg_branding == "Chromium" ||
+        ffmpeg_branding == "Chrome" ||
+-       ffmpeg_branding == "ChromeOS")
++       ffmpeg_branding == "ChromeOS" ||
++       ffmpeg_branding == "OWT")
+ 
+ if (current_cpu == "x86") {
+   ffmpeg_arch = "ia32"
+-- 
+2.37.1.windows.1
+
