@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build/config/sysroot.gni")
-import("//third_party/webrtc/webrtc.gni")
 import("//testing/test.gni")
+import("//third_party/webrtc/webrtc.gni")
 
 declare_args() {
   include_internal_audio_device = true
@@ -317,6 +317,7 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/msdkvideosession.h",
         "sdk/base/linux/vaapi_allocator.cc",
         "sdk/base/linux/vaapi_allocator.h",
+        "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/windowcapturer.cc",
       ]
       defines += [ "OWT_USE_MSDK" ]
@@ -324,7 +325,6 @@ static_library("owt_sdk_base") {
     sources += [
       "sdk/base/linux/videorenderlinux.cc",
       "sdk/base/linux/videorenderlinux.h",
-      "sdk/base/linux/xwindownativeframe.h",
     ]
   }
   if (!is_ios) {
