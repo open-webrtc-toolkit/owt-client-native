@@ -63,6 +63,15 @@ class OWT_EXPORT P2PClientObserver {
    signaling server.
    */
   virtual void OnServerDisconnected(){}
+
+#ifdef OWT_CLOUD_GAMING
+  /**
+   @brief This function will be invoked when a PeerConnection with remote
+   endpoint is closed. SDK will create a new PeerConnection if publish or send
+   is called by either side.
+   */
+  virtual void OnPeerConnectionClosed(const std::string& remote_user_id) {}
+#endif
 };
 /// An async client for P2P WebRTC sessions
 class OWT_EXPORT P2PClient final

@@ -443,8 +443,11 @@ void P2PClient::OnStopped(const std::string& remote_id) {
       const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
       pc_channels_.erase(remote_id);
     }
-  })
-      .detach();
+  }).detach();
+#ifdef OWT_CLOUD_GAMING
+  EventTrigger::OnEvent1(observers_, event_queue_,
+                         &P2PClientObserver::OnPeerConnectionClosed, remote_id);
+#endif
 }
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import("//build/config/sysroot.gni")
+import("//build_overrides/build.gni")
 import("//testing/test.gni")
 import("//third_party/webrtc/webrtc.gni")
 
@@ -223,6 +224,7 @@ static_library("owt_sdk_base") {
   if (rtc_use_h265) {
     defines += [ "WEBRTC_USE_H265" ]
   }
+
   if (is_win || is_linux) {
     # Custom audio/video input and output.
     # When rebasing libwebrtc to a new version, custom audio/video input/output
@@ -385,6 +387,9 @@ static_library("owt_sdk_p2p") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
   configs += [ ":owt_symbols" ]
+  if (owt_cloud_gaming) {
+    defines = [ "OWT_CLOUD_GAMING" ]
+  }
 }
 static_library("owt_sdk_conf") {
   deps = [

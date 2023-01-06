@@ -27,6 +27,9 @@ class P2PClientMockObserver : public owt::p2p::P2PClientObserver {
   MOCK_METHOD2(OnMessageReceived, void(const std::string&, const std::string));
   MOCK_METHOD1(OnStreamAdded,
                void(std::shared_ptr<owt::base::RemoteStream> stream));
+#ifdef OWT_CLOUD_GAMING
+  MOCK_METHOD1(OnPeerConnectionClosed, void(const std::string&));
+#endif
 };
 
 // A sink dumps video frames in a given interval.
@@ -141,14 +144,14 @@ class EndToEndTest : public ::testing::Test {
   webrtc::test::RunLoop loop_;
 };
 
-// TEST_F(EndToEndTest, SendMessgeCanBeReceived) {
-//   task_queue_->PostTask([this] {
-//     client1_->Send("client2", "message", nullptr, nullptr);
-//     EXPECT_CALL(observer2_, OnMessageReceived("client1", testing::_))
-//         .WillOnce(testing::InvokeWithoutArgs([this] { loop_.Quit(); }));
-//   });
-//   loop_.Run();
-// }
+TEST_F(EndToEndTest, SendMessgeCanBeReceived) {
+  task_queue_->PostTask([this] {
+    client1_->Send("client2", "message", nullptr, nullptr);
+    EXPECT_CALL(observer2_, OnMessageReceived("client1", testing::_))
+        .WillOnce(testing::InvokeWithoutArgs([this] { loop_.Quit(); }));
+  });
+  loop_.Run();
+}
 
 rtc::scoped_refptr<MediaStreamInterface> CreateFakeMediaStream() {
   auto* pcdf = owt::base::PeerConnectionDependencyFactory::Get();
@@ -182,6 +185,21 @@ TEST_F(EndToEndTest, VideoCall) {
 
   task_queue_->PostTask([this, stream] {
     client1_->Publish("client2", stream, nullptr, nullptr);
+  });
+  loop_.Run();
+}
+
+TEST_F(EndToEndTest, OnPeerConnectionClosed) {
+  task_queue_->PostTask([this] {
+    client1_->Send("client2", "message", nullptr, nullptr);
+    EXPECT_CALL(observer2_, OnMessageReceived("client1", testing::_))
+        .WillOnce(testing::InvokeWithoutArgs([this] { loop_.Quit(); }));
+  });
+  loop_.Run();
+  task_queue_->PostTask([this] {
+    client1_->Stop("client2", nullptr, nullptr);
+    EXPECT_CALL(observer2_, OnPeerConnectionClosed("client1"))
+        .WillOnce(testing::InvokeWithoutArgs([this] { loop_.Quit(); }));
   });
   loop_.Run();
 }
