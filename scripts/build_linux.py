@@ -47,7 +47,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(HOME_PATH + r'/out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, shared, cloud_gaming):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -89,8 +89,6 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
         gn_args.append('owt_include_tests=false')
     if use_gcc:
         gn_args.extend(['is_clang=false', 'use_lld=false', 'use_sysroot=false', 'use_custom_libcxx=false', 'treat_warnings_as_errors=false'])
-    if fake_audio:
-        gn_args.extend(['rtc_include_pulse_audio=false', 'rtc_include_internal_audio_device=false'])
     if shared:
         gn_args.extend(['rtc_enable_protobuf=false', 'is_component_build=true'])
     else:
@@ -98,6 +96,7 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
     ffmpeg_branding_name = "Chrome"
     if cloud_gaming:
         ffmpeg_branding_name = "OWT"
+        gn_args.extend(['rtc_include_pulse_audio=false', 'rtc_include_internal_audio_device=false'])
     gn_args.append('ffmpeg_branding="%s"' % ffmpeg_branding_name)
 
     flattened_args = ' '.join(gn_args)
@@ -193,8 +192,6 @@ def main():
                         help='To build sdk lib.')
     parser.add_argument('--docs', default=False, action='store_true',
                         help='To generate the API document.')
-    parser.add_argument('--fake_audio', default=False, action='store_true',
-                        help='Use fake audio device.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
     parser.add_argument('--use_gcc', help='Compile with GCC and libstdc++. Default is clang and libc++.', action='store_true')
     parser.add_argument('--shared', default=False,  help='Build shared libraries. Default to static.', action='store_true')
@@ -202,7 +199,7 @@ def main():
     opts = parser.parse_args()
     print(opts)
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
+        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.shared, opts.cloud_gaming):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme, opts.shared):
