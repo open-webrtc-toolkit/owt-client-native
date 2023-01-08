@@ -238,6 +238,7 @@ class OWT_EXPORT GlobalConfiguration {
       return;
     h264_temporal_layers_ = layers;
   }
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
   /**
    @brief This function sets the customized video decoder to decode the encoded images.
    @param Customized video decoder
@@ -246,6 +247,7 @@ class OWT_EXPORT GlobalConfiguration {
       std::unique_ptr<VideoDecoderInterface> external_video_decoder) {
     video_decoder_ = std::move(external_video_decoder);
   }
+#endif
   /**
   @breif This function disables/enables auto echo cancellation.
   @details When it is enabled, SDK will turn on AEC functionality.
@@ -439,17 +441,18 @@ class OWT_EXPORT GlobalConfiguration {
   static int delay_based_bwe_weight_;
   static std::unique_ptr<AudioFrameGeneratorInterface> audio_frame_generator_;
   /**
+   @brief This function returns the weight of delay based BWE in overall
+   bandwidth estimation.
+  */
+  static int GetDelayBasedBweWeight() { return delay_based_bwe_weight_; }
+#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
+  /**
    @brief This function returns flag indicating whether customized video decoder is enabled or not
    @return Boolean flag indicating whether customized video decoder is enabled or not
    */
   static bool GetCustomizedVideoDecoderEnabled() {
     return video_decoder_ ? true : false;
   }
-  /**
-   @brief This function returns the weight of delay based BWE in overall
-   bandwidth estimation.
-  */
-  static int GetDelayBasedBweWeight() { return delay_based_bwe_weight_; }
   /**
    @brief This function gets customized video decoder
    @return Customized video decoder
@@ -461,6 +464,7 @@ class OWT_EXPORT GlobalConfiguration {
    * Customized video decoder. Default is nullptr.
    */
   static std::unique_ptr<VideoDecoderInterface> video_decoder_;
+#endif
 
   static AudioProcessingSettings audio_processing_settings_;
 

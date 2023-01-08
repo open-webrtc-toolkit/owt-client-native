@@ -2,9 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
-#endif
 #include "talk/owt/sdk/base/encodedvideoencoderfactory.h"
 #include "talk/owt/sdk/base/peerconnectiondependencyfactory.h"
 #include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
@@ -180,8 +178,8 @@ void PeerConnectionDependencyFactory::
       network_thread->socketserver());
   network_manager_ = std::make_shared<rtc::BasicNetworkManager>(
       network_thread->socketserver());
-  std::unique_ptr<VideoEncoderFactory> encoder_factory;
-  std::unique_ptr<VideoDecoderFactory> decoder_factory;
+  std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory;
+  std::unique_ptr<webrtc::VideoDecoderFactory> decoder_factory;
 #if defined(WEBRTC_IOS)
   encoder_factory = ObjcVideoCodecFactory::CreateObjcVideoEncoderFactory();
   decoder_factory = ObjcVideoCodecFactory::CreateObjcVideoDecoderFactory();
@@ -201,7 +199,6 @@ void PeerConnectionDependencyFactory::
   } else {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
   }
-#endif
 
   if (GlobalConfiguration::GetCustomizedVideoDecoderEnabled()) {
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
@@ -215,6 +212,7 @@ void PeerConnectionDependencyFactory::
   } else {
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
   }
+#endif
   // If still video factory is not in place, use internal factory.
   if (!encoder_factory.get()) {
     encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
@@ -248,7 +246,7 @@ void PeerConnectionDependencyFactory::
   }
 #if defined(WEBRTC_IOS)
   pc_factory_ = webrtc::CreatePeerConnectionFactory(
-      network_thread, worker_thread, signaling_thread, adm,
+      network_thread.get(), worker_thread.get(), signaling_thread.get(), adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(), std::move(encoder_factory),
       std::move(decoder_factory), nullptr,
@@ -365,13 +363,11 @@ rtc::Thread* PeerConnectionDependencyFactory::SignalingThreadForTesting() {
   return signaling_thread.get();
 }
 
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
 scoped_refptr<webrtc::AudioDeviceModule> PeerConnectionDependencyFactory::
     CreateCustomizedAudioDeviceModuleOnCurrentThread() {
   return CustomizedAudioDeviceModule::Create(
       GlobalConfiguration::GetAudioFrameGenerator());
 }
-#endif
 
 }  // namespace base
 }  // namespace owt

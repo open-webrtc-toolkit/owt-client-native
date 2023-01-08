@@ -73,9 +73,9 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   CreatePeerConnectionOnCurrentThread(
       const webrtc::PeerConnectionInterface::RTCConfiguration& config,
       webrtc::PeerConnectionObserver* observer);
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateCustomizedAudioDeviceModuleOnCurrentThread();
-#endif
+  rtc::scoped_refptr<webrtc::AudioDeviceModule>
+  CreateCustomizedAudioDeviceModuleOnCurrentThread();
+
   scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
   static scoped_refptr<PeerConnectionDependencyFactory>
       dependency_factory_;  // Get() always return this instance.
