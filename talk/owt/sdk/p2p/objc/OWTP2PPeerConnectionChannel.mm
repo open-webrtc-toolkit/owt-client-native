@@ -121,6 +121,7 @@
         onFailure:(void (^)(NSError*))onFailure {
   _nativeChannel->Send(
       [message UTF8String],
+      true,
       [=]() {
         if (onSuccess != nil)
           onSuccess();
