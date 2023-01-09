@@ -302,7 +302,7 @@ void VideoCaptureMF::IncomingFrame(IMFMediaBuffer*& frame, int64_t capture_time)
   rtc::scoped_refptr<VideoFrameBuffer> buffer;
 
   HRESULT hr = S_OK;
-  ID3D11Texture2D* texture = nullptr;
+  CComPtr<ID3D11Texture2D> texture;
   if (manager_) {
     CComPtr<IMFDXGIBuffer> dxgi_buffer;
     hr = frame->QueryInterface(&dxgi_buffer);
@@ -313,13 +313,14 @@ void VideoCaptureMF::IncomingFrame(IMFMediaBuffer*& frame, int64_t capture_time)
     }
 
     // Retrieves the texture from dxgi buffer
-    if (FAILED(dxgi_buffer->GetResource(IID_PPV_ARGS(&texture))) || texture == nullptr) {
+    if (FAILED(dxgi_buffer->GetResource(__uuidof(ID3D11Texture2D),
+                                        (void**)(&texture)))) {
       RTC_LOG(LS_ERROR) << "Retreiving the texture from dxgi buffer failed:"
                         << std::system_category().message(hr);
       return;
     }
     surface_handle_->d3d11_device = manager_->GetDevice();
-    surface_handle_->texture = std::move(texture);
+    surface_handle_->texture = texture.Detach();
     surface_handle_->texture_array_index = 0;
     SAFE_RELEASE(frame);
   } else {

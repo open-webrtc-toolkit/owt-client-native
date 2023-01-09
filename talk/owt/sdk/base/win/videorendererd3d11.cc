@@ -360,7 +360,8 @@ bool WebrtcVideoRendererD3D11Impl::InitMPO(int width, int height) {
     return false;
 
   CComPtr<IDCompositionDesktopDevice> desktop_device;
-  hr = DCompositionCreateDevice2(dxgi_device2_, IID_PPV_ARGS(&desktop_device));
+  hr = DCompositionCreateDevice2(dxgi_device2_,
+           __uuidof(IDCompositionDesktopDevice), (void**)(&desktop_device));
   if (FAILED(hr) || !desktop_device.p)
     return false;
 
