@@ -361,7 +361,7 @@ bool WebrtcVideoRendererD3D11Impl::InitMPO(int width, int height) {
 
   CComPtr<IDCompositionDesktopDevice> desktop_device;
   hr = DCompositionCreateDevice2(dxgi_device2_, IID_PPV_ARGS(&desktop_device));
-  if (FAILED(hr))
+  if (FAILED(hr) || !desktop_device.p)
     return false;
 
   hr = desktop_device->QueryInterface(&comp_device2_);
