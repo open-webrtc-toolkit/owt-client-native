@@ -161,7 +161,8 @@ std::string DeviceUtils::GetDeviceNameByIndex(int index) {
   char unique_name[256];
   info->GetDeviceName(static_cast<uint32_t>(index), device_name,
                       sizeof(device_name), unique_name, sizeof(unique_name));
-  return std::string(device_name);
+  const std::string device_str(device_name);
+  return device_str;
 }
 
 }

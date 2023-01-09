@@ -42,10 +42,12 @@ class BasicDesktopCapturer : public webrtc::VideoCaptureModule,
       rtc::VideoSinkInterface<webrtc::VideoFrame>* dataCallback) override {
     webrtc::MutexLock lock(&datacb_lock_);
     data_callback_ = dataCallback;
+    return;
   }
   virtual void DeRegisterCaptureDataCallback() override {
     webrtc::MutexLock lock(&datacb_lock_);
     data_callback_ = nullptr;
+    return;
   }
 
   virtual int32_t StartCapture(

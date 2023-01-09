@@ -313,7 +313,7 @@ void VideoCaptureMF::IncomingFrame(IMFMediaBuffer*& frame, int64_t capture_time)
     }
 
     // Retrieves the texture from dxgi buffer
-    if (FAILED(dxgi_buffer->GetResource(IID_PPV_ARGS(&texture)))) {
+    if (FAILED(dxgi_buffer->GetResource(IID_PPV_ARGS(&texture))) || texture == nullptr) {
       RTC_LOG(LS_ERROR) << "Retreiving the texture from dxgi buffer failed:"
                         << std::system_category().message(hr);
       return;

@@ -154,7 +154,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     for (int i = 0; i < 16; i++) {
       data_ptr[i + 7] = frame_number_sei_guid[i];
     }
-    if (side_data_size > 0) {
+    if (side_data_size > 0 && side_data_ptr) {
       memcpy(data_ptr + 23, side_data_ptr, side_data_size);
       encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
     }
@@ -203,7 +203,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
       data_ptr[i + 8] = frame_number_sei_guid[i];
     }
 
-    if (side_data_size > 0) {
+    if (side_data_size > 0 && side_data_ptr) {
       memcpy(data_ptr + 24, side_data_ptr, side_data_size);
       encoder_buffer_handle->meta_data_.encoded_image_sidedata_free();
     }
