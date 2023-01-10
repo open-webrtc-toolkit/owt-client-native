@@ -60,7 +60,9 @@ int32_t CustomizedAudioCapturer::RecordingDeviceName(
     memset(name, 0, kAdmMaxDeviceNameSize);
     memset(guid, 0, kAdmMaxGuidSize);
     memcpy(name, kName, strlen(kName));
-    memcpy(guid, kGuid, strlen(guid));
+    memcpy(guid, kGuid, strlen(kGuid));
+    name[kAdmMaxDeviceNameSize - 1] = '\0';
+    guid[kAdmMaxGuidSize - 1] = '\0';
     return 0;
   }
   return -1;
