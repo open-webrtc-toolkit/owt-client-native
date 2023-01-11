@@ -347,6 +347,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
     encoded_frame._frameType = encoder_buffer_handle->meta_data_.is_keyframe
                                   ? webrtc::VideoFrameType::kVideoFrameKey
                                   : webrtc::VideoFrameType::kVideoFrameDelta;
+    info.end_of_picture = encoder_buffer_handle->meta_data_.last_fragment;
   }
 #ifdef WEBRTC_USE_H265
   else if (codec_type_ == webrtc::kVideoCodecH265) {
