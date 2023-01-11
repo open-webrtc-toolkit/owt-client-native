@@ -25,25 +25,25 @@ bool CustomizedVideoDecoderProxy::Configure(const Settings& codec_settings) {
   if (external_decoder_) {
     if (codec_type_ == kVideoCodecH264 &&
         external_decoder_->InitDecodeContext(VideoCodec::kH264)) {
-      return WEBRTC_VIDEO_CODEC_OK;
+      return true;
 #ifdef WEBRTC_USE_H265
     } else if (codec_type_ == kVideoCodecH265 &&
                external_decoder_->InitDecodeContext(VideoCodec::kH265)) {
-      return WEBRTC_VIDEO_CODEC_OK;
+      return true;
 #endif
     } else if (codec_type_ == kVideoCodecVP8 &&
                external_decoder_->InitDecodeContext(VideoCodec::kVp8)) {
-      return WEBRTC_VIDEO_CODEC_OK;
+      return true;
     } else if (codec_type_ == kVideoCodecVP9 &&
                external_decoder_->InitDecodeContext(VideoCodec::kVp9)) {
-      return WEBRTC_VIDEO_CODEC_OK;
+      return true;
     } else if (codec_type_ == kVideoCodecAV1 &&
                external_decoder_->InitDecodeContext(VideoCodec::kAv1)) {
-      return WEBRTC_VIDEO_CODEC_OK;
+      return true;
     }
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    return false;
   }
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int32_t CustomizedVideoDecoderProxy::Decode(const EncodedImage& input_image,
