@@ -123,6 +123,8 @@ static_library("owt_sdk_base") {
     "sdk/base/customizedaudiocapturer.h",
     "sdk/base/customizedaudiodevicemodule.cc",
     "sdk/base/customizedaudiodevicemodule.h",
+    "sdk/base/customizedoutputaudiodevicemodule.cc",
+    "sdk/base/customizedoutputaudiodevicemodule.h",
     "sdk/base/deviceutils.cc",
     "sdk/base/encodedstreamproviderwrapper.cc",
     "sdk/base/encodedstreamproviderwrapper.h",
