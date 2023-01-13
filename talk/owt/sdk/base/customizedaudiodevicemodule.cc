@@ -10,6 +10,7 @@
 
 #include "talk/owt/sdk/base/customizedaudiodevicemodule.h"
 #include "talk/owt/sdk/base/customizedaudiocapturer.h"
+#include "talk/owt/sdk/base/customizedoutputaudiodevicemodule.h"
 #include "webrtc/api/make_ref_counted.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
@@ -597,8 +598,8 @@ void CustomizedAudioDeviceModule::CreateOutputAdm() {
     _outputAdm = webrtc::AudioDeviceModuleImpl::Create(
         AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_.get());
 #else
-    _outputAdm = rtc::scoped_refptr<webrtc::FakeAudioDeviceModule>(
-        new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>());
+    _outputAdm = rtc::scoped_refptr<CustomizedOutputAudioDeviceModule>(
+        new rtc::RefCountedObject<CustomizedOutputAudioDeviceModule>());
 #endif
   }
 }
