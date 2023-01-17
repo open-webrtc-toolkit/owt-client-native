@@ -5,21 +5,21 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleExecutable</key>
-  <string>Woogeen</string>
+  <string>OWT</string>
   <key>CFBundleIdentifier</key>
   <string>com.intel.webrtc</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Woogeen</string>
+  <string>OWT</string>
   <key>CFBundlePackageType</key>
   <string>FMWK</string>
   <key>CFBundleShortVersionString</key>
-  <string>3.4</string>
+  <string>5.1</string>
   <key>CFBundleSignature</key>
   <string>????</string>
   <key>CFBundleVersion</key>
-  <string>3.4.0.0</string>
+  <string>5.1.0.0</string>
   <key>NSPrincipalClass</key>
   <true/>
 </dict>
