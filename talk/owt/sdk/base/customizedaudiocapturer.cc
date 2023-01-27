@@ -224,7 +224,8 @@ int32_t CustomizedAudioCapturer::StereoPlayout(bool& enabled) const {
   return -1;
 }
 int32_t CustomizedAudioCapturer::StereoRecordingIsAvailable(bool& available) {
-  return -1;
+  available = true;
+  return 0;
 }
 int32_t CustomizedAudioCapturer::SetStereoRecording(bool enable) {
   return -1;
