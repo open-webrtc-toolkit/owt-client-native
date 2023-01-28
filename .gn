@@ -140,6 +140,10 @@ exec_script_whitelist =
       "//build_overrides/build.gni",
     ]
 
+# The python interpreter to use by default. On Windows, this will look
+# for python3.exe and python3.bat.
+script_executable = "python3"
+
 default_args = {
   # Webrtc does not support component builds because we are not using the
   # template "component" but we rely directly on "rtc_static_library" and
