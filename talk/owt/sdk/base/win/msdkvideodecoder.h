@@ -8,7 +8,6 @@
 #include <combaseapi.h>
 #include <d3d11.h>
 #include <dxgi1_2.h>
-#include <dxva2api.h>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -18,6 +17,7 @@
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
 #include "webrtc/rtc_base/thread.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 // Solve conflict in FOURCC def with libyuv
 #ifdef FOURCC
@@ -49,8 +49,7 @@ public:
 
     static std::unique_ptr<MSDKVideoDecoder> Create(cricket::VideoCodec format);
 
-    int32_t InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores)
-        override;
+    bool Configure(const Settings& settings) override;
 
     int32_t Decode(
         const webrtc::EncodedImage& inputImage, bool missingFrames,
@@ -63,7 +62,7 @@ public:
 
     const char* ImplementationName() const override;
 private:
-    int32_t InitDecodeOnCodecThread();
+    bool InitDecodeOnCodecThread();
     void CheckOnCodecThread();
     bool CreateD3D11Device();
     int32_t Reset();
@@ -103,12 +102,15 @@ private:
     int height_;
     std::unique_ptr<rtc::Thread> decoder_thread_;  // Thread on which the decoder will be working on.
 
-    webrtc::VideoCodec codec_;
+    Settings settings_;
     webrtc::DecodedImageCallback* callback_;
     webrtc::Mutex timestampCS_;
     std::vector<int64_t> ntp_time_ms_;
     std::vector<int32_t> timestamps_;
-  std::vector<uint8_t> current_cursor_data_;
+    std::vector<uint8_t> current_side_data_;
+    std::unordered_map<uint32_t, std::vector<uint8_t>> side_data_list_;
+    std::vector<uint8_t> current_cursor_data_;
+    webrtc::Clock* clock_;
 };
 }  // namespace base
 }  // namespace owt

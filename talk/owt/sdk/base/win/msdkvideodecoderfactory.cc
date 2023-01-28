@@ -5,7 +5,7 @@
 #include <vector>
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
-#include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
+#include "modules/video_coding/codecs/av1/dav1d_decoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -18,7 +18,7 @@
 namespace owt {
 namespace base {
 
-MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
+MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_external) {
   supported_codec_types_.clear();
 
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
@@ -60,6 +60,7 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
       supported_codec_types_.push_back(webrtc::kVideoCodecH265);
     }
 #endif
+    external_device_ = d3d11_device_external;
   }
 }
 
@@ -97,7 +98,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return webrtc::H264Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
              !av1_hw) {
-    return webrtc::CreateLibaomAv1Decoder();
+    return webrtc::CreateDav1dDecoder();
   }
 #ifdef WEBRTC_USE_H265
   // This should not happen. We do not return here but preceed with HW decoder.
@@ -113,19 +114,16 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-  if (webrtc::kIsLibaomAv1DecoderSupported) {
-    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
-  }
 #ifdef WEBRTC_USE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
 #endif
-  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   return supported_codecs;
 }
 

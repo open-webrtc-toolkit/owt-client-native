@@ -16,7 +16,7 @@
 #ifdef WEBRTC_USE_H265
 #include "webrtc/common_video/h265/h265_common.h"
 #endif
-#include "webrtc/media/base/vp9_profile.h"
+#include "webrtc/api/video_codecs/vp9_profile.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/system/file_wrapper.h"
 #include "webrtc/rtc_base/logging.h"
@@ -149,10 +149,11 @@ int MSDKVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   bitrate_ = codec_settings->maxBitrate * 1000;
   frame_rate = codec_settings->maxFramerate;
   codec_type_ = codec_settings->codecType;
-  return encoder_thread_->Invoke<int>(
-      RTC_FROM_HERE,
-      rtc::Bind(&MSDKVideoEncoder::InitEncodeOnEncoderThread, this,
-                codec_settings, number_of_cores, max_payload_size));
+  return encoder_thread_->BlockingCall(
+      [this, codec_settings, number_of_cores, max_payload_size] {
+        return InitEncodeOnEncoderThread(codec_settings, number_of_cores,
+                                         max_payload_size);
+      });
 }
 
 mfxStatus MSDKConvertFrameRate(mfxF64 dFrameRate,
@@ -416,7 +417,7 @@ int MSDKVideoEncoder::InitEncodeOnEncoderThread(
                    codec_settings->simulcastStream[0].numberOfTemporalLayers),
                4);
 #else
-  num_temporal_layers = MediaUtils::GetH264TemporalLayers().value_or(1);
+  num_temporal_layers_ = MediaUtils::GetH264TemporalLayers().value_or(1);
 #endif
 
   // For VP9 we use codec specific temporal info.
@@ -729,8 +730,9 @@ retry:
   uint8_t* encoded_data = static_cast<uint8_t*>(bs.Data) + bs.DataOffset;
   int encoded_data_size = bs.DataLength;
 
-  webrtc::EncodedImage encodedFrame(encoded_data, encoded_data_size,
-                                    encoded_data_size);
+  webrtc::EncodedImage encodedFrame;
+  encodedFrame.SetEncodedData(
+      webrtc::EncodedImageBuffer::Create(encoded_data, encoded_data_size));
 
   encodedFrame._encodedHeight = input_image.height();
   encodedFrame._encodedWidth = input_image.width();
@@ -743,42 +745,11 @@ retry:
 
   webrtc::CodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
-  info.codecType = codecType_;
-  // Generate a header describing a single fragment.
-  webrtc::RTPFragmentationHeader header;
-  memset(&header, 0, sizeof(header));
+  info.codecType = codec_type_;
+  info.end_of_picture = true;
 
-  int32_t scPositions[MAX_NALUS_PERFRAME + 1] = {};
-  uint8_t scLengths[MAX_NALUS_PERFRAME + 1] = {};
-  int32_t scPositionsLength = 0;
-  int32_t scPosition = 0;
-  while (scPositionsLength < MAX_NALUS_PERFRAME) {
-    uint8_t sc_length = 0;
-    int32_t naluPosition = NextNaluPosition(
-        encoded_data + scPosition, encoded_data_size - scPosition, &sc_length);
-    if (naluPosition < 0) {
-      break;
-    }
-    scPosition += naluPosition;
-    scLengths[scPositionsLength] = sc_length;
-    scPositions[scPositionsLength] = scPosition;
-    scPositionsLength++;
-    scPosition += sc_length;
-  }
-  if (scPositionsLength == 0) {
-    RTC_LOG(LS_ERROR) << "Start code is not found for codec!";
-    delete[] pbsData;
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-  scPositions[scPositionsLength] = encoded_data_size;
-  header.VerifyAndAllocateFragmentationHeader(scPositionsLength);
-  for (int i = 0; i < scPositionsLength; i++) {
-    header.fragmentationOffset[i] = scPositions[i] + scLengths[i];
-    header.fragmentationLength[i] =
-        scPositions[i + 1] - header.fragmentationOffset[i];
-  }
   // Export temporal scalability information for H.264
-  if (codecType_ == webrtc::kVideoCodecH264) {
+  if (codec_type_ == webrtc::kVideoCodecH264) {
     int temporal_id = 0, priority_id = 0;
     bool is_idr = false;
     bool need_frame_marking = MediaUtils::GetH264TemporalInfo(encoded_data,
@@ -788,8 +759,10 @@ retry:
       info.codecSpecific.H264.idr_frame = is_idr;
       info.codecSpecific.H264.base_layer_sync = (!is_idr && (temporal_id > 0));
     }
+    info.codecSpecific.H264.idr_frame = is_keyframe_required;
+    info.codecSpecific.H264.last_fragment_in_frame = true;
   }
-  const auto result = callback_->OnEncodedImage(encodedFrame, &info, &header);
+  const auto result = callback_->OnEncodedImage(encodedFrame, &info);
   if (result.error != webrtc::EncodedImageCallback::Result::Error::OK) {
     delete[] pbsData;
     bs.DataLength = 0;  // Mark we don't need the data anymore.
@@ -863,7 +836,6 @@ webrtc::VideoEncoder::EncoderInfo MSDKVideoEncoder::GetEncoderInfo() const {
   EncoderInfo info;
   info.supports_native_handle = false;
   info.is_hardware_accelerated = true;
-  info.has_internal_source = false;
   info.implementation_name = "IntelMediaSDK";
   // Disable frame-dropper for MSDK.
   info.has_trusted_rate_controller = true;

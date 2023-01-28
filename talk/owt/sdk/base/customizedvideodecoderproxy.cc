@@ -7,6 +7,17 @@
 namespace owt {
 namespace base {
 
+std::unordered_map<webrtc::VideoCodecType, owt::base::VideoCodec>
+    video_codec_map = {
+        {webrtc::VideoCodecType::kVideoCodecH264, owt::base::VideoCodec::kH264},
+#ifdef WEBRTC_USE_H265
+        {webrtc::VideoCodecType::kVideoCodecH265, owt::base::VideoCodec::kH265},
+#endif
+        {webrtc::VideoCodecType::kVideoCodecVP8, owt::base::VideoCodec::kVp8},
+        {webrtc::VideoCodecType::kVideoCodecVP9, owt::base::VideoCodec::kVp9},
+        {webrtc::VideoCodecType::kVideoCodecAV1, owt::base::VideoCodec::kAv1},
+};
+
 CustomizedVideoDecoderProxy::CustomizedVideoDecoderProxy(VideoCodecType type,
   VideoDecoderInterface* external_video_decoder)
   : codec_type_(type),decoded_image_callback_(nullptr), external_decoder_(external_video_decoder) {}
@@ -22,25 +33,9 @@ bool CustomizedVideoDecoderProxy::Configure(const Settings& codec_settings) {
   RTC_CHECK(codec_settings.codec_type() == codec_type_)
       << "Unsupported codec type" << codec_settings.codec_type() << " for "
       << codec_type_;
-  if (external_decoder_) {
-    if (codec_type_ == kVideoCodecH264 &&
-        external_decoder_->InitDecodeContext(VideoCodec::kH264)) {
-      return true;
-#ifdef WEBRTC_USE_H265
-    } else if (codec_type_ == kVideoCodecH265 &&
-               external_decoder_->InitDecodeContext(VideoCodec::kH265)) {
-      return true;
-#endif
-    } else if (codec_type_ == kVideoCodecVP8 &&
-               external_decoder_->InitDecodeContext(VideoCodec::kVp8)) {
-      return true;
-    } else if (codec_type_ == kVideoCodecVP9 &&
-               external_decoder_->InitDecodeContext(VideoCodec::kVp9)) {
-      return true;
-    } else if (codec_type_ == kVideoCodecAV1 &&
-               external_decoder_->InitDecodeContext(VideoCodec::kAv1)) {
-      return true;
-    }
+  RTC_DCHECK(video_codec_map.contains(codec_type_));
+  if (!external_decoder_ ||
+      !external_decoder_->InitDecodeContext(video_codec_map[codec_type_])) {
     return false;
   }
   return true;

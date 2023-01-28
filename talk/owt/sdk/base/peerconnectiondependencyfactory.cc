@@ -205,7 +205,7 @@ void PeerConnectionDependencyFactory::
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else if (render_hardware_acceleration_enabled_) {
 #ifdef OWT_USE_MSDK
-    decoder_factory.reset(new MSDKVideoDecoderFactory());
+    decoder_factory.reset(new MSDKVideoDecoderFactory(nullptr));
 #else
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
 #endif
