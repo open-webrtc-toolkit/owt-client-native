@@ -14,7 +14,6 @@
 #include "owt/base/macros.h"
 #include "owt/base/options.h"
 #include "owt/base/videoencoderinterface.h"
-#include "owt/base/videorendererinterface.h"
 #include "owt/base/audioplayerinterface.h"
 #ifdef OWT_ENABLE_QUIC
 #include "owt/quic/web_transport_stream_interface.h"

@@ -8,6 +8,9 @@
 #include <memory>
 #include <vector>
 
+#include <windows.h>
+#include <d3d11.h>
+
 #include "webrtc/api/video_codecs/sdp_video_format.h"
 #include "webrtc/api/video/video_codec_type.h"
 #include "webrtc/api/video_codecs/video_decoder.h"

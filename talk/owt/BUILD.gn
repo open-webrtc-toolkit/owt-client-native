@@ -58,10 +58,13 @@ if (is_android) {
   }
 }
 
-config("owt_symbols") {
+config("owt_common") {
   defines = [ "OWT_LIBRARY_IMPL" ]
   if (is_component_build) {
     defines += [ "OWT_ENABLE_SYMBOL_EXPORT" ]
+  }
+  if (owt_msdk_header_root != "") {
+    defines += [ "OWT_USE_MSDK" ]
   }
 }
 
@@ -212,7 +215,7 @@ static_library("owt_sdk_base") {
     "//third_party",
   ]
 
-  configs += [ ":owt_symbols" ]
+  configs += [ ":owt_common" ]
 
   defines = [ "USE_BUILTIN_SW_CODECS" ]
 
@@ -287,6 +290,8 @@ static_library("owt_sdk_base") {
         "sdk/base/win/d3d11_allocator.h",
         "sdk/base/win/d3d_allocator.cc",
         "sdk/base/win/d3d_allocator.h",
+        "sdk/base/win/mediacapabilities.cc",
+        "sdk/base/win/mediacapabilities.h",
         "sdk/base/win/msdkvideobase.cc",
         "sdk/base/win/msdkvideobase.h",
         "sdk/base/win/msdkvideodecoder.cc",
@@ -297,11 +302,16 @@ static_library("owt_sdk_base") {
         "sdk/base/win/msdkvideoencoder.h",
         "sdk/base/win/msdkvideoencoderfactory.cc",
         "sdk/base/win/msdkvideoencoderfactory.h",
+        "sdk/base/win/sysmem_allocator.cc",
         "sdk/base/win/sysmem_allocator.h",
+        "sdk/base/win/vp9ratecontrol.cc",
         "sdk/base/win/vp9ratecontrol.h",
         "sdk/base/win/vpedefs.h",
       ]
-      public_deps += [ "//third_party/libvpx" ]
+      public_deps += [
+        "//third_party/libvpx",
+        "//third_party/libvpx:libvpxrc",
+      ]
       include_dirs += [
         "//third_party/libvpx/source/config",
         "//third_party/libvpx/source/config/$current_os/$cpu_arch_full",
@@ -313,7 +323,6 @@ static_library("owt_sdk_base") {
   if (is_linux) {
     if (owt_msdk_header_root != "") {
       include_dirs += [ owt_msdk_header_root ]
-      defines += [ "OWT_USE_MSDK" ]
       sources += [
         "sdk/base/linux/displayutils.cc",
         "sdk/base/linux/displayutils.h",
@@ -324,7 +333,6 @@ static_library("owt_sdk_base") {
         "sdk/base/linux/xwindownativeframe.h",
         "sdk/base/windowcapturer.cc",
       ]
-      defines += [ "OWT_USE_MSDK" ]
     }
     sources += [
       "sdk/base/linux/videorenderlinux.cc",
@@ -380,7 +388,7 @@ static_library("owt_sdk_p2p") {
   if (is_clang) {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
-  configs += [ ":owt_symbols" ]
+  configs += [ ":owt_common" ]
   if (owt_cloud_gaming) {
     defines = [ "OWT_CLOUD_GAMING" ]
   }
@@ -423,6 +431,7 @@ static_library("owt_sdk_conf") {
       include_dirs += [ owt_quic_header_root ]
     }
   }
+  configs += [ ":owt_common" ]
 }
 if (is_ios) {
   static_library("owt_sdk_objc") {

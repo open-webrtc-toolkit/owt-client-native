@@ -9,13 +9,15 @@ bug fixes and known issues.
 # 2 Supported platforms {#section2}
 Open WebRTC Toolkit Client SDK for Windows supports Windows 8 and later versions.
 # 3 Getting started {#section3}
-Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2017 or 2019. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x64.
+Application on Open WebRTC Toolkit Client SDK for Windows should be built with Microsoft Visual Studio\* 2022. Running time library for linking should be `Multi-threaded Debug (/MTd)` for debug version or `Multi-threaded (/MT)` for release version. Supported platform is x64.
 The release package includes one sample application to get you started quickly with the SDK. The following two static libraries are provided in the SDK for only x64, along with their headers:
 - owt-debug.lib - this library includes all the WebRTC features for debug usages.
 - owt-release.lib - this library includes all the WebRTC features for release usages.
 owt-debug.lib|owt-release references libraries in Windows SDK for DXVA support. Your application must statically link
 mfuuid.lib, mf.lib, mfplat.lib, d3d9.lib, dxgi.lib, d3d11.lib, dcomp.lib and dxva2.lib to build. Depending on your signaling
-channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if neccessary.
+channel implementation, you can optionally link sioclient.lib or sioclient_tls.lib if necessary. When building your app with
+OWT, please define WEBRTC_WIN for Windows build. If the OWT lib was built with Intel Media SDK (msdk_root is specified for
+build-win.py, or owt_msdk_header_root is defined in GN args), your app needs to define OWT_USE_MSDK as well.
 # 4 Socket.IO {#section4}
 Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93.
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to OpenSSL 1.1.1, so sioclient_tls.lib must be compiled using the same OpenSSL version.

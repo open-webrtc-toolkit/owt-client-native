@@ -34,12 +34,13 @@ int64_t GetSideData(const uint8_t* frame_data,
                     std::vector<uint8_t>& cursor_data,
                     bool is_h264) {
   side_data.clear();
-  if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
-                        // least 24 bytes.
-    goto failed;
 
   const uint8_t* head = frame_data;
   unsigned int payload_size = 0;
+
+  if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
+                        // least 24 bytes.
+    goto failed;
 
   if (head[0] != 0 || head[1] != 0 || head[2] != 0 || head[3] != 1) {
     goto failed;
@@ -175,18 +176,19 @@ int32_t MSDKVideoDecoder::Release() {
 MSDKVideoDecoder::MSDKVideoDecoder()
     : width_(0),
       height_(0),
-      decoder_thread_(new rtc::Thread(rtc::SocketServer::CreateDefault())) {
-  decoder_thread_->SetName("MSDKVideoDecoderThread", nullptr);
-  RTC_CHECK(decoder_thread_->Start())
-      << "Failed to start MSDK video decoder thread";
-  MSDK_ZERO_MEMORY(m_pmfx_video_params_);
-  MSDK_ZERO_MEMORY(m_mfx_response_);
-  MSDK_ZERO_MEMORY(m_mfx_bs_);
-  m_pinput_surfaces_ = nullptr;
-  m_video_param_extracted = false;
-  m_dec_bs_offset_ = 0;
-  inited_ = false;
-  surface_handle_.reset(new D3D11ImageHandle());
+      decoder_thread_(rtc::Thread::Create()),
+      clock_(webrtc::Clock::GetRealTimeClock()) {
+    decoder_thread_->SetName("MSDKVideoDecoderThread", nullptr);
+    RTC_CHECK(decoder_thread_->Start())
+        << "Failed to start MSDK video decoder thread";
+    MSDK_ZERO_MEMORY(m_pmfx_video_params_);
+    MSDK_ZERO_MEMORY(m_mfx_response_);
+    MSDK_ZERO_MEMORY(m_mfx_bs_);
+    m_pinput_surfaces_ = nullptr;
+    m_video_param_extracted = false;
+    m_dec_bs_offset_ = 0;
+    inited_ = false;
+    surface_handle_.reset(new D3D11ImageHandle());
 }
 
 MSDKVideoDecoder::~MSDKVideoDecoder() {
@@ -285,22 +287,16 @@ bool MSDKVideoDecoder::CreateD3D11Device() {
   return true;
 }
 
-int32_t MSDKVideoDecoder::InitDecode(const webrtc::VideoCodec* codecSettings, int32_t numberOfCores) {
-
-  RTC_LOG(LS_INFO) << "InitDecode enter";
-  if (!codecSettings){
-    RTC_LOG(LS_ERROR) << "Invalid codec settings passed to decoder";
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-  codec_type_  = codecSettings->codecType;
+bool MSDKVideoDecoder::Configure(const Settings& settings){
+  codec_type_  = settings.codec_type();
   timestamps_.clear();
   ntp_time_ms_.clear();
 
-  if (&codec_ != codecSettings)
-    codec_ = *codecSettings;
+  settings_ = settings;
 
-  return decoder_thread_->Invoke<int32_t>(RTC_FROM_HERE,
-      Bind(&MSDKVideoDecoder::InitDecodeOnCodecThread, this));
+  return decoder_thread_->BlockingCall([this]{
+    return InitDecodeOnCodecThread();
+  });
 }
 
 int32_t MSDKVideoDecoder::Reset() {
@@ -310,7 +306,7 @@ int32_t MSDKVideoDecoder::Reset() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
+bool MSDKVideoDecoder::InitDecodeOnCodecThread() {
   RTC_LOG(LS_INFO) << "InitDecodeOnCodecThread enter";
   CheckOnCodecThread();
 
@@ -319,8 +315,8 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   m_video_param_extracted = false;
 
   mfxStatus sts;
-  width_ = codec_.width;
-  height_ = codec_.height;
+  width_ = settings_.max_render_resolution().Width();
+  height_ = settings_.max_render_resolution().Height();
   uint32_t codec_id = MFX_CODEC_AVC;
 
   if (inited_) {
@@ -335,26 +331,26 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     MSDKFactory* factory = MSDKFactory::Get();
     m_mfx_session_ = factory->CreateSession();
     if (!m_mfx_session_) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
-    if (codec_.codecType == webrtc::kVideoCodecVP8) {
+    if (settings_.codec_type() == webrtc::kVideoCodecVP8) {
       codec_id = MFX_CODEC_VP8;
 #ifdef WEBRTC_USE_H265
-    } else if (codec_.codecType == webrtc::kVideoCodecH265) {
+    } else if (settings_.codec_type() == webrtc::kVideoCodecH265) {
       codec_id = MFX_CODEC_HEVC;
 #endif
-    } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    } else if (settings_.codec_type() == webrtc::kVideoCodecVP9) {
       codec_id = MFX_CODEC_VP9;
-    } else if (codec_.codecType == webrtc::kVideoCodecAV1) {
+    } else if (settings_.codec_type() == webrtc::kVideoCodecAV1) {
       codec_id = MFX_CODEC_AV1;
     }
 
     //if (!factory->LoadDecoderPlugin(codec_id, m_mfx_session_, &m_plugin_id_)) {
-    //  return WEBRTC_VIDEO_CODEC_ERROR;
+    //  return false;
     //}
 
     if (!CreateD3D11Device()) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
 
     mfxHandleType handle_type = MFX_HANDLE_D3D11_DEVICE;
@@ -363,13 +359,13 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     // Allocate and initalize the D3D11 frame allocator with current device.
     m_pmfx_allocator_ = MSDKFactory::CreateD3D11FrameAllocator(d3d11_device_.p);
     if (nullptr == m_pmfx_allocator_) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
 
     // Set allocator to the session.
     sts = m_mfx_session_->SetFrameAllocator(m_pmfx_allocator_.get());
     if (MFX_ERR_NONE != sts) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
 
     // Prepare the bitstream
@@ -379,7 +375,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
     RTC_LOG(LS_ERROR) << "Creating underlying MSDK decoder.";
     m_pmfx_dec_.reset(new MFXVideoDECODE(*m_mfx_session_));
     if (m_pmfx_dec_ == nullptr) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
   }
 
@@ -387,8 +383,7 @@ int32_t MSDKVideoDecoder::InitDecodeOnCodecThread() {
   if (codec_id == MFX_CODEC_VP9 || codec_id == MFX_CODEC_AV1)
     m_pmfx_video_params_.mfx.EnableReallocRequest = MFX_CODINGOPTION_ON;
   inited_ = true;
-  RTC_LOG(LS_ERROR) << "InitDecodeOnCodecThread --";
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int32_t MSDKVideoDecoder::Decode(
@@ -404,8 +399,8 @@ int32_t MSDKVideoDecoder::Decode(
   m_pmfx_video_params_.AsyncDepth = 4;
 
   ReadFromInputStream(&m_mfx_bs_, inputImage.data(), inputImage.size());
-  bool is_h264 = (codec_.codecType == webrtc::kVideoCodecH264);
-  GetSideData(inputImage.mutable_data(), inputImage.size(), current_side_data_,
+  bool is_h264 = (settings_.codec_type() == webrtc::kVideoCodecH264);
+  GetSideData(inputImage.data(), inputImage.size(), current_side_data_,
               current_cursor_data_, is_h264);
   if (current_side_data_.size() > 0) {
     side_data_list_[inputImage.Timestamp()] = current_side_data_;
@@ -550,7 +545,7 @@ retry:
           surface_handle_->d3d11_video_device = d3d11_video_device_.p;
           surface_handle_->context = d3d11_video_context_.p;
           // Texture_array_index not used when decoding with MSDK.
-          surface_handle_->array_index = 0;
+          surface_handle_->texture_array_index = 0;
           surface_handle_->side_data_size = side_data_size;
           surface_handle_->cursor_data_size = cursor_data_size;
           surface_handle_->decode_start = decode_start_time;

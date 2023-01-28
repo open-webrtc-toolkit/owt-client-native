@@ -182,16 +182,6 @@ class BaseFrameAllocator : public MFXFrameAllocator {
   std::list<mfxFrameAllocResponse> m_responses;
   std::list<UniqueResponse> m_ExtResponses;
 
-  struct IsSame : public std::binary_function<mfxFrameAllocResponse,
-                                              mfxFrameAllocResponse,
-                                              bool> {
-    bool operator()(const mfxFrameAllocResponse& l,
-                    const mfxFrameAllocResponse& r) const {
-      return r.mids != 0 && l.mids != 0 && r.mids[0] == l.mids[0] &&
-             r.NumFrameActual == l.NumFrameActual;
-    }
-  };
-
   // checks if request is supported
   virtual mfxStatus CheckRequestType(mfxFrameAllocRequest* request);
 

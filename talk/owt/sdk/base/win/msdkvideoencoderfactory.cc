@@ -11,8 +11,7 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "talk/owt/sdk/base/codecutils.h"
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
-#include "webrtc/common_video/h264/profile_level_id.h"
-#include "webrtc/media/base/vp9_profile.h"
+#include "webrtc/api/video_codecs/vp9_profile.h"
 
 namespace owt {
 namespace base {
@@ -81,29 +80,19 @@ std::vector<webrtc::SdpVideoFormat>
 MSDKVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
   // TODO: We should combine the codec profiles that hardware H.264 encoder
   // supports with those provided by built-in H.264 encoder
   for (const webrtc::SdpVideoFormat& format : owt::base::CodecUtils::SupportedH264Codecs())
     supported_codecs.push_back(format);
-  if (webrtc::kIsLibaomAv1EncoderSupported) {
-    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
-  }
 #ifdef WEBRTC_USE_H265
   for (const webrtc::SdpVideoFormat& format : CodecUtils::GetSupportedH265Codecs()) {
     supported_codecs.push_back(format);
   }
 #endif
   return supported_codecs;
-}
-
-webrtc::VideoEncoderFactory::CodecInfo
-MSDKVideoEncoderFactory::QueryVideoEncoder(
-    const webrtc::SdpVideoFormat& format) const {
-  webrtc::VideoEncoderFactory::CodecInfo info;
-  info.has_internal_source = false;
-  return info;
 }
 
 }  // namespace base
