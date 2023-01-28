@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#import "RTCEncodedImage.h"
-#if defined(WEBRTC_USE_H265)
-#import "RTCVideoCodecH265.h"
-#endif
 #import "talk/owt/sdk/base/objc/OWTDefaultVideoEncoderFactory.h"
+#import "RTCEncodedImage.h"
+#import "third_party/webrtc/sdk/objc/components/video_codec/RTCH265ProfileLevelId.h"
+#import "third_party/webrtc/sdk/objc/components/video_codec/RTCVideoEncoderH265.h"
+
 @implementation OWTDefaultVideoEncoderFactory
 @synthesize preferredCodec;
 + (NSArray<RTCVideoCodecInfo*>*)supportedCodecs {
