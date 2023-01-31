@@ -45,6 +45,7 @@ class ObjcVideoCapturerInterface;
 #endif
 class VideoRenderWindow;
 class VideoRendererInterface;
+class VideoRendererVaInterface;
 using webrtc::MediaStreamInterface;
 /// Observer for Stream
 class OWT_EXPORT StreamObserver {
