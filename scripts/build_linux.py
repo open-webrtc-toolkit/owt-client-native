@@ -98,6 +98,7 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
     ffmpeg_branding_name = "Chrome"
     if cloud_gaming:
         ffmpeg_branding_name = "OWT"
+        gn_args.extend(['owt_cloud_gaming=true'])
     gn_args.append('ffmpeg_branding="%s"' % ffmpeg_branding_name)
 
     flattened_args = ' '.join(gn_args)
