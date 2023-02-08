@@ -32,6 +32,8 @@ GN_ARGS = [
     'enable_libaom=true',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
+    # <stdatomic.h> is not yet supported when compiling as C.
+    'ffmpeg_use_unsafe_atomics=true',
     ]
 
 
@@ -56,10 +58,6 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime):
         gn_args.append('owt_use_openssl=true')
         gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
         gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\lib'))
-    if runtime == 'shared':
-        gn_args.append('owt_msvc_build_md=true')
-    else:
-        gn_args.append('owt_msvc_build_md=false')
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'\lib\win32'
@@ -185,7 +183,7 @@ def main():
     parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64', 'arm64'),
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--runtime', default='shared', choices=('static', 'shared'),
-                        help='VC runtime linkage. Supported value: shared, static')
+                        help='VC runtime linkage. Currently not supported.')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
