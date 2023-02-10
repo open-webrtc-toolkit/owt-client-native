@@ -18,7 +18,6 @@ You need [Doxygen](http://www.doxygen.nl/) in your path.
 
 ### Prepare the development environment
 Before you start, make sure you have the following prerequisites installed/configured:
-
 - [WebRTC stack build dependencies](https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/development/prerequisite-sw/index.md).
 - [Proxy settings](https://github.com/open-webrtc-toolkit/owt-client-native/wiki/Proxy-config-for-building-native-SDK).
 
@@ -66,7 +65,7 @@ target_os = []
 Common build options shared by Windows and Linux:
   - By default `x86|Debug` library will be created. Specify `--arch x64` if you want to build x64 libraries; Specify `--scheme release` if release version of library is to be built.
   - The built binary will be under path specified by `--output_path`. If `--output_path` is not set, the built binary will be under `src/out` directory.
-  - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 1.1.1 binary. If specified, SDK will link to external openssl library instead of boringssl.
+  - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 3.0 series directory. If specified, build tool will search external OpenSSL headers in `ssl_root/include` and OpenSSL binaries in `ssl_root/bin`. But binaries are not included in OWT SDK, so applications still need to link libcrypto and libssl.
   - Use `--gn_gen` to generate args.gn during the first build or when you change either `ssl_root`/`msdk_root`/`quic_root` options.
   - The optional `--quic_root` should point to the directory containing WebTransport library pre-built from owt-sdk-quic repo. This will build the SDK with WebTransport enabled for 
   conference mode. Refer to [README.webtransport](https://github.com/open-webrtc-toolkit/owt-client-native/blob/main/README.webtransport) for the version of webtransport library to be used.

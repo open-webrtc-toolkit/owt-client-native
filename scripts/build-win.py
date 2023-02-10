@@ -55,9 +55,9 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime):
         gn_args.append('is_debug=true')
         gn_args.append('enable_iterator_debugging=true')
     if ssl_root:
-        gn_args.append('owt_use_openssl=true')
-        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'\include'))
-        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'\lib'))
+        gn_args.append('rtc_build_ssl=false')
+        gn_args.append('rtc_ssl_root="%s/include"' % ssl_root)
+        gn_args.append('libsrtp_ssl_root="%s/include"' % ssl_root)
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'\lib\win32'
@@ -103,32 +103,12 @@ def ninjabuild(arch, scheme):
     return True
 
 
-def _getlibs(arch, scheme, ssl_root):
-    '''Returns an array contains all .lib files' path
-    '''
-    result = []
-    owt_path = os.path.join(OUT_PATH, r'%s-%s\obj\talk\owt\owt.lib' % (scheme, arch))
-    result.append(owt_path)
-    ssl_lib_path = os.path.join(ssl_root, 'lib')
-    for root, dirs, files in os.walk(ssl_lib_path):
-        for file in files:
-            name, ext = os.path.splitext(file)
-            if ext == '.lib' and name not in LIB_BLACK_LIST and 'test' not in name:
-                result.append(os.path.abspath(os.path.join(root, file)))
-                print('Merged %s.lib' % name)
-            elif ext == '.lib':
-                print('Skip %s.lib' % name)
-    return result
-
-
-def _mergelibs(arch, scheme, ssl_root):
+def _copylibs(arch, scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     if os.path.exists(os.path.join(OUT_PATH, out_lib)):
         os.remove(os.path.join(OUT_PATH, out_lib))
-    libs = _getlibs(arch, scheme, ssl_root)
-    command = ['lib.exe', '/OUT:out\%s' % out_lib]
-    command.extend(libs)
-    subprocess.call(command, cwd=HOME_PATH)
+    owt_path = os.path.join(OUT_PATH, r'%s-%s\obj\talk\owt\owt.lib' % (scheme, arch))
+    shutil.copy(owt_path, os.path.join('out',out_lib))
 
 
 # Run unit tests on simulator. Return True if all tests are passed.
@@ -202,6 +182,8 @@ def main():
     if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
         print('Invalid ssl_root.')
         return 1
+    if opts.ssl_root:
+        print('As ssl_root is specified, please link OpenSSL binaries into your application.')
     if opts.msdk_root and not os.path.exists(os.path.expanduser(opts.msdk_root)):
         print('Invalid msdk_root')
         return 1
@@ -216,7 +198,7 @@ def main():
         if not ninjabuild(opts.arch, opts.scheme):
             return 1
         else:
-            _mergelibs(opts.arch, opts.scheme, opts.ssl_root)
+            _copylibs(opts.arch, opts.scheme)
     if opts.tests:
         if not runtest(opts.arch, opts.scheme):
             return 1

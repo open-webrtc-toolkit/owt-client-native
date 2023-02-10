@@ -1,0 +1,41 @@
+From 6daad52e10d89d820648fd017f501541dd9b6a9d Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Fri, 10 Feb 2023 16:03:37 +0800
+Subject: [PATCH] Add an GN variable for using BoringSSL.
+
+---
+ BUILD.gn | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index 0f0f9e5..18f517d 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -8,6 +8,7 @@ declare_args() {
+   # Tests may not be appropriate for some build environments, e.g. Windows.
+   # Rather than enumerate valid options, we just let clients ask for them.
+   build_libsrtp_tests = false
++  libsrtp_ssl_root = ""
+ }
+ 
+ config("libsrtp_config") {
+@@ -133,9 +134,13 @@ static_library("libsrtp") {
+     # "crypto/cipher/aes_icm_nss.c",
+   ]
+ 
+-  public_deps = [
+-    "//third_party/boringssl:boringssl",
+-  ]
++  if (libsrtp_ssl_root == "") {
++    public_deps = [
++      "//third_party/boringssl:boringssl",
++    ]
++  } else {
++    include_dirs = [ libsrtp_ssl_root ]
++  }
+ }
+ 
+ if (build_libsrtp_tests) {
+-- 
+2.37.1.windows.1
+

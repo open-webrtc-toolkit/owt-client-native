@@ -63,8 +63,8 @@ def gngen(arch, ssl_root, scheme):
   else:
     gn_args += (' is_debug=true')
   if ssl_root:
-    gn_args += (' owt_use_openssl=true owt_openssl_header_root="%s" '\
-        'owt_openssl_lib_root="%s"'%(ssl_root+'/include',ssl_root+'/lib'))
+    gn_args += (' rtc_build_ssl=false rtc_ssl_root="%s" '\
+        'libsrtp_ssl_root="%s"'%(ssl_root+'/include', ssl_root+'/include'))
   ret = subprocess.call(['gn', 'gen', getoutputpath(arch, scheme), '--args=%s' % gn_args],
                         cwd=HOME_PATH, shell=False)
   if ret == 0:
@@ -89,12 +89,6 @@ def copyheaders(headers_target_folder):
     for file_name in file_names:
       copy_framework_header.Process(os.path.join(
           HEADER_PATH, file_name), os.path.join(headers_target_folder, file_name))
-
-def getexternalliblist(ssl_root):
-  libs = []
-  libs.append('%s/lib/libcrypto.a'%ssl_root)
-  libs.append('%s/lib/libssl.a'%ssl_root)
-  return libs
 
 def buildframework():
   '''Create OWT.framework in out/'''
@@ -125,7 +119,7 @@ def buildwebrtcframework(arch_list, scheme):
     subprocess.call(cmd, cwd=HOME_PATH)
     return True
 
-def dist(arch_list, scheme, ssl_root):
+def dist(arch_list, scheme):
   buildwebrtcframework(arch_list, scheme)
   out_lib_path = os.path.join(OUT_PATH, OUT_LIB_NAME)
   if os.path.exists(out_lib_path):
@@ -136,9 +130,6 @@ def dist(arch_list, scheme, ssl_root):
   for target_arch in arch_list:
     for sdk_target in SDK_TARGETS:
       argu.append('%s/obj/talk/owt/lib%s.a'%(getoutputpath(target_arch, scheme), sdk_target))
-  # Add external libs.
-  if ssl_root:
-    argu.extend(getexternalliblist(ssl_root))
   subprocess.call(argu, cwd=HOME_PATH)
   if scheme == 'release':
     subprocess.call(['strip', '-S', '-x', '%s/out/libowt.a'%HOME_PATH],
@@ -199,7 +190,7 @@ def main():
           return 1
       if not ninjabuild(arch_item, opts.scheme, SDK_TARGETS):
         return 1
-  dist(opts.arch, opts.scheme, opts.ssl_root)
+  dist(opts.arch, opts.scheme)
   if not opts.skip_tests:
     if not opts.skip_gn_gen:
       if not gngen(TEST_ARCH, opts.ssl_root, TEST_SCHEME):
