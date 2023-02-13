@@ -97,6 +97,20 @@ if (!is_ios) {
       if (rtc_enable_protobuf) {
         deps += [ "//third_party/protobuf:protobuf_lite" ]
       }
+
+      if (!rtc_build_ssl) {
+        if (is_win) {
+          libs = [
+            "libcrypto.lib",
+            "libssl.lib",
+          ]
+        } else {
+          libs = [
+            "crypto",
+            "ssl",
+          ]
+        }
+      }
     }
   } else {
     static_library("owt") {

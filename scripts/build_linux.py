@@ -29,8 +29,6 @@ GN_ARGS = [
     'enable_libaom=true',
     'is_component_build=false',
     'rtc_build_examples=false',
-    # Disable usage of GTK.
-    'rtc_use_gtk=false',
     # When is_clang is false, we're not using sysroot in tree.
     'use_sysroot=false',
     # For Linux build we expect application built with gcc/g++. Set SDK to use
@@ -55,11 +53,11 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
     else:
         gn_args.append('is_debug=true')
     if ssl_root:
-        gn_args.append('owt_use_openssl=true')
-        gn_args.append('owt_openssl_header_root="%s"' % (ssl_root + r'/include'))
-        gn_args.append('owt_openssl_lib_root="%s"' % (ssl_root + r'/lib'))
+        gn_args.append('rtc_build_ssl=false')
+        gn_args.append('rtc_ssl_root="%s/include"' % ssl_root)
+        gn_args.append('libsrtp_ssl_root="%s/include"' % ssl_root)
     else:
-        gn_args.append('owt_use_openssl=false')
+        gn_args.append('rtc_build_ssl=true')
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'/lib32'

@@ -34,7 +34,6 @@ if (platform == "nt"):
 patchList = [
     # TODO: Update these patches for the latest branch.
     # ('0001-Use-OpenSSL-for-usrsctp.patch', THIRD_PARTY_PATH),
-    # ('0002-Use-OpenSSL-for-libsrtp.patch', LIBSRTP_PATH),
     # ('0003-Enable-Wunused-but-set-variable.patch', BUILD_PATH),
     # ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
     # ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
@@ -55,7 +54,8 @@ patchList = [
     ('0022-Apply-Wno-shadow-for-clang-only.patch', THIRD_PARTY_PATH),
     ('0023-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH),
     ('0024-Getting-install-build-deps-to-work-on-Ubuntu-22.04-L.patch', BUILD_PATH),
-    ('0025-Allow-ffmpeg_branding-OWT.patch', FFMPEG_PATH)
+    ('0025-Allow-ffmpeg_branding-OWT.patch', FFMPEG_PATH),
+    ('0026-Add-an-GN-variable-for-using-BoringSSL.patch', LIBSRTP_PATH)
 ]
 
 def _patch(ignoreFailures=False):
