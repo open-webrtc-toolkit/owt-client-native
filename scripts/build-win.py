@@ -166,7 +166,7 @@ def main():
                         help='VC runtime linkage. Currently not supported.')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
-    parser.add_argument('--quic_root', help='Path to QUIC library')
+    parser.add_argument('--quic_root', help='Path to QUIC library. Not supported yet.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
