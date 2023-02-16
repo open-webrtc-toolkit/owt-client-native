@@ -11,6 +11,7 @@ declare_args() {
   include_internal_audio_device = true
   owt_msdk_lib_root = ""
   owt_msdk_header_root = ""
+  owt_sio_header_root = ""
 }
 
 # Introduced for using libvpx config files. We only enable libvpx rate
@@ -71,6 +72,8 @@ config("owt_common") {
 static_library("owt_deps") {
   deps = [
     "//third_party/webrtc/api:create_peerconnection_factory",
+    "//third_party/webrtc/api/video_codecs:builtin_video_decoder_factory",
+    "//third_party/webrtc/api/video_codecs:builtin_video_encoder_factory",
     "//third_party/webrtc/rtc_base:rtc_json",
   ]
 
@@ -408,6 +411,7 @@ static_library("owt_sdk_p2p") {
   }
 }
 static_library("owt_sdk_conf") {
+  assert(owt_sio_header_root!="")
   deps = [
     ":owt_sdk_base",
     "//third_party/jsoncpp:jsoncpp",
@@ -417,6 +421,9 @@ static_library("owt_sdk_conf") {
     "sdk/include/cpp",
     "//third_party",
   ]
+  if (owt_sio_header_root != "") {
+    include_dirs += [ owt_sio_header_root ]
+  }
   sources = [
     "sdk/conference/conferenceclient.cc",
     "sdk/conference/conferencepeerconnectionchannel.cc",
@@ -466,6 +473,9 @@ if (is_ios) {
       "sdk/include/cpp",
       "sdk/include/objc",
     ]
+    if (owt_sio_header_root != "") {
+      include_dirs += [ owt_sio_header_root ]
+    }
     configs += [
       "//build/config/compiler:enable_arc",
       ":owt_sdk_objc_warnings_config",

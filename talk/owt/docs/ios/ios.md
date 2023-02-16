@@ -7,8 +7,8 @@ Refer to the Release Notes for the latest information in the SDK release package
 # 2 Supported platforms {#section2}
 Open WebRTC Toolkit Client SDK for iOS supports in iOS 9.0 and later versions.
 The following devices have been tested using this SDK:
-- iPhone* 6, 7 Plus and X.
-- iPad Air*
+- iPhone* X
+- iPad* Air
 # 3 Getting started {#section3}
 The release package includes two sample applications to get you started quickly with the SDK. The following three static libraries are provided in the SDK along with their respective headers:
 - OWT.framework - a framework providing the abilities to connect to conference server or another Open WebRTC Toolkit P2P endpoints.
@@ -16,7 +16,7 @@ The release package includes two sample applications to get you started quickly 
 
 Please add -ObjC to "Other Linker Flags" in the your project's build settings.
 # 4 Socket.IO {#section4}
-OWT iOS SDK depends on Socket.IO cpp client, which is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93. OpenSSL version is 1.1.1 with the latest patch release.
+OWT iOS SDK depends on Socket.IO cpp client, which is an open source project host on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version tested with OWT is 3e01111ddf9778a162c4c4bb91f795d2dd59f065. OpenSSL version is 1.1.1 with the latest patch release.
 Please make sure your app has network access before making Socket.IO connection. As Socket.IO cpp client uses low level network APIs, iOS system may not ask user for network permission. Thus, Socket.IO connection will fail because app does not have network access.
 The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application with libsioclient_tls.a; otherwise, link it with libsioclient.a.
 # 5 Background modes {#section5}

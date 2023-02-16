@@ -65,12 +65,13 @@ Common build options shared by Windows and Linux:
   - By default `x86|Debug` library will be created. Specify `--arch x64` if you want to build x64 libraries; Specify `--scheme release` if release version of library is to be built.
   - The built binary will be under path specified by `--output_path`. If `--output_path` is not set, the built binary will be under `src/out` directory.
   - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 3.0 series directory. If specified, build tool will search external OpenSSL headers in `ssl_root/include` and OpenSSL binaries in `ssl_root/lib`. But binaries are not included in OWT SDK, so applications still need to link libcrypto and libssl.
+  - The argument `--sio_root` should be set to the root directory of Socket.IO cpp 3.x SDK, with headers in `include` sub-folder, libsioclient_tls.a in `lib` sub-folder.
   - Use `--gn_gen` to generate args.gn during the first build or when you change either `ssl_root`/`msdk_root` options.
   - The optional `--tests` will trigger unit tests after build.
   - Run `build*.py` with `--help` for argument description.
 
 #### iOS
-Update to latest macOS(Big Sur) and Xcode. iOS SDK can only be built on macOS.
+Update to latest macOS and Xcode. iOS SDK can only be built on macOS.
 1. Replace the last line of .gclient with target_os=["ios"]
 1. Run `gclient sync`. It may take a long time to download a large amount of data.
 1. Run `scripts\build.py`.

@@ -19,8 +19,8 @@ channel implementation, you can optionally link sioclient.lib or sioclient_tls.l
 OWT, please define WEBRTC_WIN for Windows build. If the OWT lib was built with Intel Media SDK (msdk_root is specified for
 build-win.py, or owt_msdk_header_root is defined in GN args), your app needs to define OWT_USE_MSDK as well.
 # 4 Socket.IO {#section4}
-Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version works with OWT is b1216ee428dd7d1e72368da9b12aa43bfc487c93.
-The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library is linking to OpenSSL 1.1.1, so sioclient_tls.lib must be compiled using the same OpenSSL version.
+Socket.IO cpp client is an open source project hosted on [Github](https://github.com/socketio/socket.io-client-cpp). Please follow official guide on GitHub to build and link it. The version tested is 3e01111ddf9778a162c4c4bb91f795d2dd59f065.
+The Socket.IO TLS feature is determined at compile time and cannot be switched at runtime. If you are using secure connections, link your application statically with sioclient_tls.lib; otherwise, link it with sioclient.lib. Please be noted the SDK library and sioclient_tls.lib must be compiled using the same OpenSSL version.
 # 5 NAT and firewall traversal {#section5}
 Open WebRTC Toolkit Client SDK for Windows fully supports NAT and firewall traversal with STUN / TURN / ICE. The Coturn TURN server from https://github.com/coturn/coturn can be one choice.
 # 6 Customize signaling channel {#section6}

@@ -37,7 +37,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cloud_gaming):
+def gngen(arch, sio_root, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cloud_gaming):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -86,6 +86,9 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cloud_ga
         gn_args.append('owt_include_tests=false')
     if cloud_gaming:
         gn_args.append('owt_cloud_gaming=true')
+    if sio_root:
+        # If sio_root is not specified, conference SDK is not able to build.
+        gn_args.append('owt_sio_header_root="%s"' % (sio_root + r'\include'))
     flattened_args = ' '.join(gn_args)
     ret = subprocess.call(['gn.bat', 'gen', getoutputpath(arch, scheme), '--args=%s' % flattened_args],
                           cwd=HOME_PATH, shell=False)
@@ -100,7 +103,7 @@ def getoutputpath(arch, scheme):
 
 def ninjabuild(arch, scheme):
     out_path = getoutputpath(arch, scheme)
-    if subprocess.call(['ninja', '-C', out_path], cwd=HOME_PATH) != 0:
+    if subprocess.call(['ninja.bat', '-C', out_path], cwd=HOME_PATH) != 0:
         return False
     return True
 
@@ -169,6 +172,7 @@ def main():
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library. Not supported yet.')
+    parser.add_argument('--sio_root', help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -195,8 +199,13 @@ def main():
         print('Invalid quic_root')
         return 1
     if opts.gn_gen:
+<<<<<<< HEAD
         if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
                      opts.scheme, opts.tests, opts.runtime, opts.cloud_gaming):
+=======
+        if not gngen(opts.arch, opts.sio_root, opts.ssl_root, opts.msdk_root, opts.quic_root,
+                     opts.scheme, opts.tests, opts.runtime):
+>>>>>>> Add a new argument sio_root for Socket.IO headers.
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):

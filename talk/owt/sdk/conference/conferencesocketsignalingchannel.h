@@ -8,8 +8,16 @@
 #include <queue>
 #include <random>
 #include <unordered_map>
-#include "talk/owt/include/sio_client.h"
-#include "talk/owt/include/sio_message.h"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunqualified-std-cast-call"
+#pragma clang diagnostic ignored "-Wextra-semi"
+#endif
+#include "sio_client.h"
+#include "sio_message.h"
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 #include "talk/owt/sdk/include/cpp/owt/conference/conferenceclient.h"
 #include "talk/owt/sdk/include/cpp/owt/conference/user.h"
 namespace owt {
