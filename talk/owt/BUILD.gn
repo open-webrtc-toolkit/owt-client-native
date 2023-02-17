@@ -411,7 +411,6 @@ static_library("owt_sdk_p2p") {
   }
 }
 static_library("owt_sdk_conf") {
-  assert(owt_sio_header_root!="")
   deps = [
     ":owt_sdk_base",
     "//third_party/jsoncpp:jsoncpp",

@@ -167,7 +167,7 @@ def main():
   parser.add_argument('--arch', default='arm64', dest='target_arch',
       help='Target architectures. Could be multiple values separated by comma.')
   parser.add_argument('--ssl_root', help='Path for OpenSSL. Headers in include sub-folder, libcrypto.a and libssl.a in lib sub-folder.')
-  parser.add_argument('--sio_root', help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
+  parser.add_argument('--sio_root', required=True, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
   parser.add_argument('--scheme', default='debug',
       help='Schemes for building. Supported value: debug, release')
   parser.add_argument('--skip_gn_gen', default=False, action='store_true',
