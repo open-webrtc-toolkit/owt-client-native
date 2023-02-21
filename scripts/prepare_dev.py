@@ -32,30 +32,15 @@ if (platform == "nt"):
 
 # list each patch to be applied along with path where it should be applied
 patchList = [
-    # TODO: Update these patches for the latest branch.
-    # ('0001-Use-OpenSSL-for-usrsctp.patch', THIRD_PARTY_PATH),
-    # ('0003-Enable-Wunused-but-set-variable.patch', BUILD_PATH),
-    # ('0004-Remove-webrtc_overrides.patch', THIRD_PARTY_PATH),
-    # ('0005-Fixed-compile-issue-and-disable-thin-archive.patch', BUILD_PATH),
-    # ('0006-Adjusted-jni_generator.py-to-fit-OWT-code-structure.patch', BASE_PATH),
-    # ('0007-Fix-examples-path-error.patch', BUILD_PATH),
-    # ('0008-Disable-loop-range-analysis-when-build-with-Xcode-cl.patch', BUILD_PATH),
-    # ('0009-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
-    # ('0010-Restore-is_ash-for-backward-compatible.patch', BUILD_PATH),
-    # ('0013-Remove-unused-gni-for-av1-build.patch', THIRD_PARTY_PATH),
-    # ('0014-Fix-missing-ffmpeg-configure-item-for-msvc-build.patch', FFMPEG_PATH),
-    # ('0015-Remove-custom-d8-dependency.patch', BUILD_PATH),
-    # ('0016-Remove-deprecated-create_srcjar-property.patch', THIRD_PARTY_PATH),
-    # ('0017-Build-libvpx-with-RTC-rate-control-impl-included.patch', THIRD_PARTY_PATH),
-    # ('0018-Patch-ffmpeg-to-address-security-issues.patch', FFMPEG_PATH),
-    ('0019-Enable-C-20-on-iOS.patch', BUILD_PATH),
-    ('0020-Enable-C-20-for-all-platforms-but-LaCrOS-and-Fuchsia.patch', BUILD_PATH),
-    ('0021-Allow-third-party-repositories-to-disable-C-20-for-M.patch', BUILD_PATH),
-    ('0022-Apply-Wno-shadow-for-clang-only.patch', THIRD_PARTY_PATH),
-    ('0023-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH),
-    ('0024-Getting-install-build-deps-to-work-on-Ubuntu-22.04-L.patch', BUILD_PATH),
-    ('0025-Allow-ffmpeg_branding-OWT.patch', FFMPEG_PATH),
-    ('0026-Add-an-GN-variable-for-using-BoringSSL.patch', LIBSRTP_PATH)
+    ('0001-Export-WebRTC-symbols-on-iOS.patch', BUILD_PATH),
+    ('0002-Enable-C-20-on-iOS.patch', BUILD_PATH),
+    ('0003-Enable-C-20-for-all-platforms-but-LaCrOS-and-Fuchsia.patch', BUILD_PATH),
+    ('0004-Allow-third-party-repositories-to-disable-C-20-for-M.patch', BUILD_PATH),
+    ('0005-Apply-Wno-shadow-for-clang-only.patch', THIRD_PARTY_PATH),
+    ('0006-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH),
+    ('0007-Getting-install-build-deps-to-work-on-Ubuntu-22.04-L.patch', BUILD_PATH),
+    ('0008-Allow-ffmpeg_branding-OWT.patch', FFMPEG_PATH),
+    ('0009-Add-an-GN-variable-for-using-BoringSSL.patch', LIBSRTP_PATH)
 ]
 
 def _patch(ignoreFailures=False):
