@@ -37,7 +37,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime):
+def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cloud_gaming):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -84,6 +84,8 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, runtime):
     else:
         gn_args.append('rtc_include_tests=false')
         gn_args.append('owt_include_tests=false')
+    if cloud_gaming:
+        gn_args.append('owt_cloud_gaming=true')
     flattened_args = ' '.join(gn_args)
     ret = subprocess.call(['gn.bat', 'gen', getoutputpath(arch, scheme), '--args=%s' % flattened_args],
                           cwd=HOME_PATH, shell=False)
@@ -178,6 +180,8 @@ def main():
     parser.add_argument('--docs', default=False, action='store_true',
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
+    parser.add_argument('--cloud_gaming', default=False,
+                        help='Build for cloud gaming. Default to false.', action='store_true')
     opts = parser.parse_args()
     if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
         print('Invalid ssl_root.')
@@ -192,7 +196,7 @@ def main():
         return 1
     if opts.gn_gen:
         if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests, opts.runtime):
+                     opts.scheme, opts.tests, opts.runtime, opts.cloud_gaming):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
