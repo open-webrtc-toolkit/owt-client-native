@@ -199,13 +199,8 @@ def main():
         print('Invalid quic_root')
         return 1
     if opts.gn_gen:
-<<<<<<< HEAD
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests, opts.runtime, opts.cloud_gaming):
-=======
         if not gngen(opts.arch, opts.sio_root, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests, opts.runtime):
->>>>>>> Add a new argument sio_root for Socket.IO headers.
+                     opts.scheme, opts.tests, opts.runtime, opts.cloud_gaming):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
