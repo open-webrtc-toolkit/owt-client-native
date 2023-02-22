@@ -53,7 +53,7 @@ TEST_ARCH = 'x64'  # Tests run on simulator
 TEST_SCHEME = 'debug'
 TEST_SIMULATOR_DEVICE = 'iPhone X'
 
-def gngen(arch, ssl_root, scheme):
+def gngen(arch, sio_root, ssl_root, scheme):
   gn_args = 'target_os="ios" target_cpu="%s" is_component_build=false '\
       'ios_enable_code_signing=false ios_deployment_target="11.0" '\
       'rtc_enable_symbol_export=true enable_dsyms=true use_custom_libcxx=false '\
@@ -62,6 +62,9 @@ def gngen(arch, ssl_root, scheme):
     gn_args += (' is_debug=false enable_stripping=true')
   else:
     gn_args += (' is_debug=true')
+  if sio_root:
+    # If sio_root is not specified, conference SDK is not able to build.
+    gn_args += (' owt_sio_header_root="%s"' % (sio_root + '/include'))
   if ssl_root:
     gn_args += (' rtc_build_ssl=false rtc_ssl_root="%s" '\
         'libsrtp_ssl_root="%s"'%(ssl_root+'/include', ssl_root+'/include'))
@@ -164,6 +167,7 @@ def main():
   parser.add_argument('--arch', default='arm64', dest='target_arch',
       help='Target architectures. Could be multiple values separated by comma.')
   parser.add_argument('--ssl_root', help='Path for OpenSSL. Headers in include sub-folder, libcrypto.a and libssl.a in lib sub-folder.')
+  parser.add_argument('--sio_root', required=True, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
   parser.add_argument('--scheme', default='debug',
       help='Schemes for building. Supported value: debug, release')
   parser.add_argument('--skip_gn_gen', default=False, action='store_true',
@@ -186,14 +190,14 @@ def main():
       return 1
     else:
       if not opts.skip_gn_gen:
-        if not gngen(arch_item, opts.ssl_root, opts.scheme):
+        if not gngen(arch_item, opts.sio_root, opts.ssl_root, opts.scheme):
           return 1
       if not ninjabuild(arch_item, opts.scheme, SDK_TARGETS):
         return 1
   dist(opts.arch, opts.scheme)
   if not opts.skip_tests:
     if not opts.skip_gn_gen:
-      if not gngen(TEST_ARCH, opts.ssl_root, TEST_SCHEME):
+      if not gngen(TEST_ARCH, opts.sio_root, opts.ssl_root, TEST_SCHEME):
         return 1
     if not runtest(opts.ssl_root):
       return 1
