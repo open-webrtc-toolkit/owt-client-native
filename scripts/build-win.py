@@ -172,7 +172,7 @@ def main():
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library. Not supported yet.')
-    parser.add_argument('--sio_root', required=True, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
+    parser.add_argument('--sio_root', required=False, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
                         help='Schemes for building. Supported value: debug, release')
     parser.add_argument('--gn_gen', default=False, action='store_true',
@@ -185,8 +185,11 @@ def main():
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
     parser.add_argument('--cloud_gaming', default=False,
-                        help='Build for cloud gaming. Default to false.', action='store_true')
+                        help='Build for cloud gaming. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
     opts = parser.parse_args()
+    if not opts.sio_root and not opts.cloud_gaming:
+        print("sio_root is missing.")
+        return 1
     if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
         print('Invalid ssl_root.')
         return 1

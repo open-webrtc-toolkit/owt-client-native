@@ -90,6 +90,8 @@ static_library("owt_deps") {
 
 if (!is_ios) {
   if (is_component_build) {
+    # Component build is only supported by cloud gaming mode on Linux.
+    assert(owt_cloud_gaming)
     shared_library("owt") {
       visibility = [ "*" ]
       deps = [
@@ -100,31 +102,19 @@ if (!is_ios) {
       if (rtc_enable_protobuf) {
         deps += [ "//third_party/protobuf:protobuf_lite" ]
       }
-
-      if (!rtc_build_ssl) {
-        if (is_win) {
-          libs = [
-            "libcrypto.lib",
-            "libssl.lib",
-          ]
-        } else {
-          libs = [
-            "crypto",
-            "ssl",
-          ]
-        }
-      }
     }
   } else {
     static_library("owt") {
       deps = [
         ":owt_sdk_base",
-        ":owt_sdk_conf",
         ":owt_sdk_p2p",
         "//third_party/webrtc",
         "//third_party/webrtc:webrtc",
         "//third_party/webrtc/api:libjingle_peerconnection_api",
       ]
+      if (!owt_cloud_gaming) {
+        deps += [ ":owt_sdk_conf" ]
+      }
       complete_static_lib = true
     }
   }

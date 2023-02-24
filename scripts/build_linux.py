@@ -45,7 +45,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(HOME_PATH + r'/out', out_lib)
 
-def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
+def gngen(arch, sio_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -58,6 +58,9 @@ def gngen(arch, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_aud
         gn_args.append('libsrtp_ssl_root="%s/include"' % ssl_root)
     else:
         gn_args.append('rtc_build_ssl=true')
+    if sio_root:
+        # If sio_root is not specified, conference SDK is not able to build.
+        gn_args.append('owt_sio_header_root="%s"' % (sio_root + '/include'))
     if msdk_root:
         if arch == 'x86':
             msdk_lib = msdk_root + r'/lib32'
@@ -180,6 +183,7 @@ def main():
     parser.add_argument('--arch', default='x86', dest='arch', choices=('x86', 'x64'),
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
+    parser.add_argument('--sio_root', required=False, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
@@ -197,11 +201,13 @@ def main():
     parser.add_argument('--output_path', help='Path to copy sdk.')
     parser.add_argument('--use_gcc', help='Compile with GCC and libstdc++. Default is clang and libc++.', action='store_true')
     parser.add_argument('--shared', default=False,  help='Build shared libraries. Default to static.', action='store_true')
-    parser.add_argument('--cloud_gaming', default=False,  help='Build for cloud gaming. Default to false.', action='store_true')
+    parser.add_argument('--cloud_gaming', default=False,  help='Build for cloud gaming. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
     opts = parser.parse_args()
-    print(opts)
+    if not opts.sio_root and not opts.cloud_gaming:
+        print("sio_root is missing.")
+        return 1
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
+        if not gngen(opts.arch, opts.sio_root, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme, opts.shared):
