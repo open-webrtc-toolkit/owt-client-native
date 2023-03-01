@@ -293,23 +293,42 @@ void P2PClient::OnSignalingMessage(const std::string& message,
         rtc::GetIntFromJsonObject(stop_info, "code", &code);
         rtc::GetStringFromJsonObject(stop_info, "message", &error);
 
+        if (code == kWebrtcIceGatheringPolicyUnsupported) {
+          auto pcc = that->GetPeerConnectionChannel(remote_id);
+          std::shared_ptr<LocalStream> stream = pcc->GetLatestLocalStream();
+          std::function<void()> success_callback =
+              pcc->GetLatestPublishSuccessCallback();
+          std::function<void(std::unique_ptr<Exception>)> failure_callback =
+              pcc->GetLatestPublishFailureCallback();
+          pcc->SetAbandoned();
+          {
+            const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
+            that->pc_channels_.erase(remote_id);
+          }
+
+          auto new_pcc = that->GetPeerConnectionChannel(remote_id);
+          new_pcc->Publish(stream, success_callback, failure_callback);
+          return;
+        }
         auto pcc = that->GetPeerConnectionChannel(remote_id);
-        std::shared_ptr<LocalStream> stream = pcc->GetLatestLocalStream();
-        std::function<void()> success_callback =
-            pcc->GetLatestPublishSuccessCallback();
-        std::function<void(std::unique_ptr<Exception>)> failure_callback =
-            pcc->GetLatestPublishFailureCallback();
         // Don't send stop to remote.
         pcc->SetAbandoned();
-
         {
           const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
           that->pc_channels_.erase(remote_id);
         }
 
-        auto new_pcc = that->GetPeerConnectionChannel(remote_id);
-        new_pcc->Publish(stream, success_callback, failure_callback);
         return;
+      }
+    } else if (message.find("\"type\":\"chat-ua\"") != std::string::npos) {
+      // "chat-ua" is the 1st message of a new connection. If there is an old
+      // PCC exists, close it and create a new one.
+      auto pcc = that->GetPeerConnectionChannel(remote_id);
+      // Don't send stop to remote.
+      pcc->SetAbandoned();
+      {
+        const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
+        that->pc_channels_.erase(remote_id);
       }
     }
     // Secondly dispatch the message to pcc.
