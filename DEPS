@@ -98,7 +98,7 @@ deps = {
     Var('chromium_git') + '/chromium/src/third_party' + '@' + 'cd30703e732f3436f72f63c13f16ebb19803ddd6',
   # WebRTC-only dependencies (not present in Chromium).
   'src/third_party/webrtc':
-    Var('deps_owt_git') + '/owt-deps-webrtc' + '@' + '1f8b8174fdf33ea954ce2afcedd24f73ca0ef759',
+    Var('deps_owt_git') + '/owt-deps-webrtc' + '@' + '15bb85d7886c653bba004f2b2826bc471d07fd96',
   # Gradle 4.3-rc4. Used for testing Android Studio project generation for WebRTC.
   'src/third_party/webrtc/examples/androidtests/third_party/gradle': {
     'url': Var('chromium_git') + '/external/github.com/gradle/gradle.git' + '@' +
