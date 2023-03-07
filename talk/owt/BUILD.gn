@@ -116,6 +116,7 @@ if (!is_ios) {
         deps += [ ":owt_sdk_conf" ]
       }
       complete_static_lib = true
+      configs -= [ "//build/config/compiler:thin_archive" ]
     }
   }
 }
