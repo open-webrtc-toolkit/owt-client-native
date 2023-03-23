@@ -82,7 +82,7 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   std::vector<uint8_t> current_cursor_data_;
   AVBufferRef* hw_device_ctx = nullptr;
   AVCodecContext* decoder_ctx = nullptr;
-  AVCodec* decoder = nullptr;
+  const AVCodec* decoder = nullptr;
   webrtc::Clock* clock_ = nullptr;
 };
 

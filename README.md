@@ -64,8 +64,9 @@ target_os = []
 Common build options shared by Windows and Linux:
   - By default `x86|Debug` library will be created. Specify `--arch x64` if you want to build x64 libraries; Specify `--scheme release` if release version of library is to be built.
   - The built binary will be under path specified by `--output_path`. If `--output_path` is not set, the built binary will be under `src/out` directory.
-  - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 3.0 series directory. If specified, build tool will search external OpenSSL headers in `ssl_root/include` and OpenSSL binaries in `ssl_root/lib`. But binaries are not included in OWT SDK, so applications still need to link libcrypto and libssl.
   - The argument `--sio_root` should be set to the root directory of Socket.IO cpp 3.x SDK, with headers in `include` sub-folder, libsioclient_tls.a in `lib` sub-folder.
+  - The optional `--ssl_root` should be set to the root directory of lastest OpenSSL 3.0 series directory. If specified, build tool will search external OpenSSL headers in `ssl_root/include` and OpenSSL binaries in `ssl_root/lib`. But binaries are not included in OWT SDK, so applications still need to link libcrypto and libssl.
+  - The optional `--ffmpeg_root` should be set to the root directory of FFmpeg, with headers in `include` sub-folder, and libs in `lib` sub-folder. Binary libraries are not necessary for building OWT SDK, but it's needed by your application or tests when this argument is specified. If this argument is not specified, FFmpeg will not be used. If neither `--ffmpeg_root` nor `--msdk_root` is specified, and external decoder doesn't support H.264, GN arg `rtc_use_h264` should be set to `false`, otherwise, a runtime error will occur.
   - Use `--gn_gen` to generate args.gn during the first build or when you change either `ssl_root`/`msdk_root` options.
   - The optional `--tests` will trigger unit tests after build.
   - Run `build*.py` with `--help` for argument description.
@@ -78,7 +79,6 @@ Update to latest macOS and Xcode. iOS SDK can only be built on macOS.
 
 #### Android
 This branch doesn't support Android build. owt-client-android depends on 5.0.x branch of this repository.
-
 
 ## How to contribute
 We warmly welcome community contributions to the owt-client-native repository. If you are willing to contribute your features and ideas to OWT, follow the process below:

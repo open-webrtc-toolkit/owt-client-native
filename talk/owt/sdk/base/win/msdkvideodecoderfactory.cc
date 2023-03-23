@@ -66,7 +66,8 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_exte
 
 MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {}
 
-std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecoder(
+std::unique_ptr<webrtc::VideoDecoder>
+MSDKVideoDecoderFactory::CreateVideoDecoder(
     const webrtc::SdpVideoFormat& format) {
   bool vp9_hw = false, vp8_hw = false, av1_hw = false, h264_hw = false;
 #ifdef WEBRTC_USE_H265
@@ -92,17 +93,28 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
     return webrtc::VP9Decoder::Create();
   } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) &&
              !vp8_hw) {
-    RTC_LOG(LS_INFO) << "Not supporting HW VP8 decoder. Requesting SW decoding.";
+    RTC_LOG(LS_INFO)
+        << "Not supporting HW VP8 decoder. Requesting SW decoding.";
     return webrtc::VP8Decoder::Create();
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) && !h264_hw) {
+  }
+#ifdef OWT_USE_FFMPEG
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+    return owt::base::H264DXVADecoderImpl::Create(cricket::VideoCodec(format));
+  }
+#else
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) &&
+           !h264_hw) {
     return webrtc::H264Decoder::Create();
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
-             !av1_hw) {
+  }
+#endif
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
+           !av1_hw) {
     return webrtc::CreateDav1dDecoder();
   }
 #ifdef WEBRTC_USE_H265
   // This should not happen. We do not return here but preceed with HW decoder.
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) && !h265_hw) {
+  else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) &&
+           !h265_hw) {
     RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
   }
 #endif

@@ -408,7 +408,8 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
         surface_handle_->cursor_data_size = cursor_data_size;
         surface_handle_->decode_start = decode_start_time;
         surface_handle_->decode_end = clock_->CurrentTime().ms_or(0);
-        surface_handle_->start_duration = input_image.bwe_stats_.start_duration_;
+        surface_handle_->start_duration =
+            input_image.bwe_stats_.start_duration_;
         surface_handle_->last_duration = input_image.bwe_stats_.last_duration_;
         surface_handle_->packet_loss = input_image.bwe_stats_.packets_lost_;
         surface_handle_->frame_size = input_image.size();

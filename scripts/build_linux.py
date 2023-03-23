@@ -4,8 +4,10 @@
 
 '''Script to build WebRTC libs on Linux.
 
-It builds OWT Linux SDK library which includes WebRTC lib, OWT base, p2p and conference
-lib.
+This script is a shortcut for building OWT Linux SDK library which includes
+WebRTC lib, OWT base, p2p and conference lib. It doesn't cover all
+configurations. Please update GN args and use ninja build manually if you have
+special configurations.
 
 Output lib is located in out/owt-debug(release).a.
 '''
@@ -24,16 +26,9 @@ LIB_BLACK_LIST = ['video_capture']
 PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 
 GN_ARGS = [
-    'rtc_use_h264=true',
-    'rtc_use_h265=true',
     'enable_libaom=true',
     'is_component_build=false',
     'rtc_build_examples=false',
-    # When is_clang is false, we're not using sysroot in tree.
-    'use_sysroot=false',
-    # For Linux build we expect application built with gcc/g++. Set SDK to use
-    # the same toolchain.
-    'is_clang=false',
     # Upstream only officially supports clang, so we need to suppress warnings
     # to avoid gcc/g++ specific build errors.
     'treat_warnings_as_errors=false',
@@ -45,7 +40,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(HOME_PATH + r'/out', out_lib)
 
-def gngen(arch, sio_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
+def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -68,20 +63,19 @@ def gngen(arch, sio_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc
             msdk_lib = msdk_root + r'/lib64'
         else:
             return False
-        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + r'/include'))
+        gn_args.append('owt_msdk_header_root="%s"' % (msdk_root + '/include'))
         gn_args.append('owt_msdk_lib_root="%s"' % msdk_lib)
     else:
         print('msdk_root is not set.')
     if quic_root:
-        gn_args.append('owt_quic_header_root="%s"' % (quic_root + r'\include'))
+        gn_args.append('owt_quic_header_root="%s"' % (quic_root + '/include'))
         if scheme == 'release':
-            quic_lib = quic_root + r'\bin\release'
+            quic_lib = quic_root + '/bin/release'
         elif scheme == 'debug':
-            quic_lib = quic_root + r'\bin\debug'
+            quic_lib = quic_root + '/bin/debug'
         else:
             return False
         gn_args.append('owt_use_quic=true')
-
     if tests:
         gn_args.append('rtc_include_tests=true')
         gn_args.append('owt_include_tests=true')
@@ -96,11 +90,14 @@ def gngen(arch, sio_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc
         gn_args.extend(['rtc_enable_protobuf=false', 'is_component_build=true'])
     else:
         gn_args.extend(['is_component_build=false'])
-    ffmpeg_branding_name = "Chrome"
     if cloud_gaming:
-        ffmpeg_branding_name = "OWT"
         gn_args.extend(['owt_cloud_gaming=true'])
-    gn_args.append('ffmpeg_branding="%s"' % ffmpeg_branding_name)
+    if ffmpeg_root:
+        gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+'/include'))
+    if ffmpeg_root or msdk_root or cloud_gaming:
+        gn_args.append('rtc_use_h264=true')
+    if msdk_root or cloud_gaming:
+        gn_args.append('rtc_use_h265=true')
 
     flattened_args = ' '.join(gn_args)
     out = 'out/%s-%s' % (scheme, arch)
@@ -184,6 +181,7 @@ def main():
                         help='Target architecture. Supported value: x86, x64')
     parser.add_argument('--ssl_root', help='Path for OpenSSL.')
     parser.add_argument('--sio_root', required=False, help='Path to Socket.IO cpp. Headers in include sub-folder, libsioclient_tls.a in lib sub-folder.')
+    parser.add_argument('--ffmpeg_root', required=False, help='Path to to root directory of FFmpeg, with headers in include sub-folder, and libs in lib sub-folder. Binary libraries are not necessary for building OWT SDK, but it is needed by your application or tests when this argument is specified.')
     parser.add_argument('--msdk_root', help='Path for MSDK.')
     parser.add_argument('--quic_root', help='Path to QUIC library')
     parser.add_argument('--scheme', default='debug', choices=('debug', 'release'),
@@ -207,7 +205,7 @@ def main():
         print("sio_root is missing.")
         return 1
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.sio_root, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
+        if not gngen(opts.arch, opts.sio_root, opts.ffmpeg_root, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme, opts.shared):
