@@ -83,6 +83,7 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         gn_args.append('owt_include_tests=false')
     if cloud_gaming:
         gn_args.append('rtc_enable_protobuf=false')
+        gn_args.append('rtc_enable_win_wgc=false')
         gn_args.append('owt_cloud_gaming=true')
     if sio_root:
         # If sio_root is not specified, conference SDK is not able to build.
