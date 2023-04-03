@@ -320,16 +320,6 @@ void P2PClient::OnSignalingMessage(const std::string& message,
 
         return;
       }
-    } else if (message.find("\"type\":\"chat-ua\"") != std::string::npos) {
-      // "chat-ua" is the 1st message of a new connection. If there is an old
-      // PCC exists, close it and create a new one.
-      auto pcc = that->GetPeerConnectionChannel(remote_id);
-      // Don't send stop to remote.
-      pcc->SetAbandoned();
-      {
-        const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
-        that->pc_channels_.erase(remote_id);
-      }
     }
     // Secondly dispatch the message to pcc.
     auto pcc = that->GetPeerConnectionChannel(remote_id);
