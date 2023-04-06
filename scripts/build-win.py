@@ -28,7 +28,6 @@ NONPARALLEL_TEST_TARGET_LIST = ['webrtc_nonparallel_tests']
 GN_ARGS = [
     'is_component_build=false',
     'use_lld=false',
-    'enable_libaom=true',
     'rtc_build_examples=false',
     'treat_warnings_as_errors=false',
     ]
@@ -85,6 +84,9 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         gn_args.append('rtc_enable_protobuf=false')
         gn_args.append('rtc_enable_win_wgc=false')
         gn_args.append('owt_cloud_gaming=true')
+        gn_args.append('enable_libaom=false')
+    else:
+        gn_args.append('enable_libaom=true')
     if sio_root:
         # If sio_root is not specified, conference SDK is not able to build.
         gn_args.append('owt_sio_header_root="%s"' % (sio_root + r'\include'))

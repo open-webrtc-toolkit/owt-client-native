@@ -26,7 +26,6 @@ LIB_BLACK_LIST = ['video_capture']
 PARALLEL_TEST_TARGET_LIST = ['rtc_unittests', 'video_engine_tests']
 
 GN_ARGS = [
-    'enable_libaom=true',
     'is_component_build=false',
     'rtc_build_examples=false',
     # Upstream only officially supports clang, so we need to suppress warnings
@@ -91,7 +90,9 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
     else:
         gn_args.extend(['is_component_build=false'])
     if cloud_gaming:
-        gn_args.extend(['owt_cloud_gaming=true'])
+        gn_args.extend(['owt_cloud_gaming=true', 'enable_libaom=false'])
+    else:
+        gn_args.extend(['enable_libaom=true'])
     if ffmpeg_root:
         gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+'/include'))
     if ffmpeg_root or msdk_root or cloud_gaming:
