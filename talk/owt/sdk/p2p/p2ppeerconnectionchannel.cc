@@ -5,7 +5,6 @@
 #include <vector>
 #include "talk/owt/sdk/base/eventtrigger.h"
 #include "talk/owt/sdk/base/functionalobserver.h"
-#include "talk/owt/sdk/base/sdputils.h"
 #include "talk/owt/sdk/base/sysinfo.h"
 #include "talk/owt/sdk/p2p/p2ppeerconnectionchannel.h"
 #include "webrtc/rtc_base/logging.h"
@@ -14,6 +13,23 @@
 using namespace rtc;
 namespace owt {
 namespace p2p {
+
+static const std::
+    unordered_map<owt::base::AudioCodec, const std::string, EnumClassHash>
+        audio_codec_names = {{owt::base::AudioCodec::kOpus, "OPUS"},
+                             {owt::base::AudioCodec::kIsac, "ISAC"},
+                             {owt::base::AudioCodec::kG722, "G722"},
+                             {owt::base::AudioCodec::kPcmu, "PCMU"},
+                             {owt::base::AudioCodec::kIlbc, "ILBC"},
+                             {owt::base::AudioCodec::kPcma, "PCMA"}};
+static const std::
+    unordered_map<owt::base::VideoCodec, const std::string, EnumClassHash>
+        video_codec_names = {{owt::base::VideoCodec::kVp8, "VP8"},
+                             {owt::base::VideoCodec::kVp9, "VP9"},
+                             {owt::base::VideoCodec::kH264, "H264"},
+                             {owt::base::VideoCodec::kH265, "H265"},
+                             {owt::base::VideoCodec::kAv1, "AV1"}};
+
 using std::string;
 enum P2PPeerConnectionChannel::SessionState : int {
   kSessionStateReady = 1,   // Indicate the channel is ready. This is the initial state.
@@ -636,16 +652,6 @@ void P2PPeerConnectionChannel::OnSignalingChange(
         RTC_LOG(LS_ERROR) << "Error parsing local description.";
         RTC_DCHECK(false);
       }
-      std::vector<AudioCodec> audio_codecs;
-      for (auto& audio_enc_param : configuration_.audio) {
-        audio_codecs.push_back(audio_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-      std::vector<VideoCodec> video_codecs;
-      for (auto& video_enc_param : configuration_.video) {
-        video_codecs.push_back(video_enc_param.codec.name);
-      }
-      sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
       std::unique_ptr<webrtc::SessionDescriptionInterface> new_desc(
           webrtc::CreateSessionDescription(pending_remote_sdp_->type(),
                                            sdp_string, nullptr));
@@ -827,16 +833,6 @@ void P2PPeerConnectionChannel::OnCreateSessionDescriptionSuccess(
     RTC_LOG(LS_ERROR) << "Error parsing local description.";
     RTC_DCHECK(false);
   }
-  std::vector<AudioCodec> audio_codecs;
-  for (auto& audio_enc_param : configuration_.audio) {
-    audio_codecs.push_back(audio_enc_param.codec.name);
-  }
-  sdp_string = SdpUtils::SetPreferAudioCodecs(sdp_string, audio_codecs);
-  std::vector<VideoCodec> video_codecs;
-  for (auto& video_enc_param : configuration_.video) {
-    video_codecs.push_back(video_enc_param.codec.name);
-  }
-  sdp_string = SdpUtils::SetPreferVideoCodecs(sdp_string, video_codecs);
   webrtc::SessionDescriptionInterface* new_desc(
       webrtc::CreateSessionDescription(desc->type(), sdp_string, nullptr));
   peer_connection_->SetLocalDescription(observer.get(), new_desc);
@@ -1173,16 +1169,123 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = audio_track_source;
         track_sources.append(track_info);
-        peer_connection_->AddTrack(track, {media_stream->id()});
+
+        webrtc::RtpTransceiverInit init;
+        init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        init.stream_ids.push_back(media_stream->id());
+        if (configuration_.audio.size() > 0) {
+          // OWT APIs allow different bitrate settings for different codecs.
+          // However, this is not supported by WebRTC. We take the first
+          // codec's setting here. Consider to change OWT API in the future.
+          const auto& audio_encoding_paramters =
+              configuration_.audio[0].rtp_encoding_parameters;
+          std::vector<webrtc::RtpEncodingParameters>
+              rtp_encoding_parameters_list;
+          rtp_encoding_parameters_list.resize(audio_encoding_paramters.size());
+          std::transform(
+              audio_encoding_paramters.begin(), audio_encoding_paramters.end(),
+              rtp_encoding_parameters_list.begin(),
+              [](const RtpEncodingParameters& p) {
+                webrtc::RtpEncodingParameters encoding_paramters;
+                encoding_paramters.active = p.active;
+                if (p.max_bitrate_bps != 0) {
+                  encoding_paramters.max_bitrate_bps = p.max_bitrate_bps;
+                }
+                if (p.max_framerate != 0) {
+                  encoding_paramters.max_framerate = p.max_framerate;
+                }
+                if (p.rid != "") {
+                  encoding_paramters.rid = p.rid;
+                }
+                return encoding_paramters;
+              });
+          init.send_encodings = rtp_encoding_parameters_list;
+        }
+        auto transceiver = AddTransceiver(track, init);
+        if (!configuration_.audio.empty() && transceiver.ok()) {
+          std::vector<webrtc::RtpCodecCapability> codecs;
+          auto capabilities =
+              PeerConnectionDependencyFactory::Get()->GetSenderCapabilities(
+                  "audio");
+          for (const auto& audio : configuration_.audio) {
+            for (auto& c : capabilities->codecs) {
+              if (c.name != audio_codec_names.at(audio.codec.name)) {
+                continue;
+              }
+              if (audio.codec.channel_count != 0 &&
+                  c.num_channels !=
+                      static_cast<int>(audio.codec.channel_count)) {
+                continue;
+              }
+              codecs.push_back(c);
+            }
+          }
+          transceiver.value()->SetCodecPreferences(codecs);
+        }
       }
       for (const auto& track : media_stream->GetVideoTracks()) {
+        RTC_LOG(LS_INFO)<<"GetVideoTracks(), config empty: "<<configuration_.video.empty();
         // Signaling.
         stream_tracks.append(track->id());
         stream_sources[kStreamVideoSourceKey] = video_track_source;
         track_info[kTrackIdKey] = track->id();
         track_info[kTrackSourceKey] = video_track_source;
         track_sources.append(track_info);
-        peer_connection_->AddTrack(track, {media_stream->id()});
+
+        webrtc::RtpTransceiverInit init;
+        init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+        init.stream_ids.push_back(media_stream->id());
+        if (!configuration_.video.empty()) {
+          // OWT APIs allow different bitrate settings for different codecs.
+          // However, this is not supported by WebRTC. We take the first
+          // codec's setting here. Consider to change OWT API in the future.
+          const auto& video_encoding_paramters =
+              configuration_.video[0].rtp_encoding_parameters;
+          std::vector<webrtc::RtpEncodingParameters>
+              rtp_encoding_parameters_list;
+          rtp_encoding_parameters_list.resize(video_encoding_paramters.size());
+          std::transform(
+              video_encoding_paramters.begin(), video_encoding_paramters.end(),
+              rtp_encoding_parameters_list.begin(),
+              [](const RtpEncodingParameters& p) {
+                webrtc::RtpEncodingParameters encoding_paramters;
+                encoding_paramters.active = p.active;
+                if (p.max_bitrate_bps != 0) {
+                  encoding_paramters.max_bitrate_bps = p.max_bitrate_bps;
+                }
+                if (p.max_framerate != 0) {
+                  encoding_paramters.max_framerate = p.max_framerate;
+                }
+                if (p.rid != "") {
+                  encoding_paramters.rid = p.rid;
+                }
+                if (p.num_temporal_layers != 0) {
+                  encoding_paramters.num_temporal_layers =
+                      p.num_temporal_layers;
+                }
+                if (p.scale_resolution_down_by != 0) {
+                  encoding_paramters.scale_resolution_down_by =
+                      p.scale_resolution_down_by;
+                }
+                return encoding_paramters;
+              });
+          init.send_encodings = rtp_encoding_parameters_list;
+        }
+        auto transceiver = AddTransceiver(track, init);
+        if (!configuration_.video.empty() && transceiver.ok()) {
+          std::vector<webrtc::RtpCodecCapability> codecs;
+          auto capabilities =
+              PeerConnectionDependencyFactory::Get()->GetSenderCapabilities(
+                  "video");
+          for (const auto& video : configuration_.video) {
+            for (auto& c : capabilities->codecs) {
+              if (c.name == video_codec_names.at(video.codec.name)) {
+                codecs.push_back(c);
+              }
+            }
+          }
+          transceiver.value()->SetCodecPreferences(codecs);
+        }
       }
       // The second signaling message of track sources to remote peer.
       Json::Value json_track_sources;

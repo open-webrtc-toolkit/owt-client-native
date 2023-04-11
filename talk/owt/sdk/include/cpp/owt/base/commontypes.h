@@ -129,7 +129,8 @@ struct OWT_EXPORT RtpEncodingParameters {
   NetworkPriority priority = NetworkPriority::kDefault;
 };
 
-/// Audio encoding parameters.
+/// Audio encoding parameters. This API will be changed in the future to align
+/// with WebRTC APIs.
 struct OWT_EXPORT AudioEncodingParameters {
   explicit AudioEncodingParameters();
   AudioEncodingParameters(const AudioCodecParameters& codec_param,
@@ -148,11 +149,13 @@ struct OWT_EXPORT VideoCodecParameters {
   VideoCodecParameters(const VideoCodec& codec, const std::string& profile);
   virtual ~VideoCodecParameters();
   VideoCodec name;
+  // profile is ignore at this time.
   std::string profile;
 };
 
 /// Video encoding parameters. Used to specify the video encoding settings when
-/// publishing the video.
+/// publishing the video. This API will be changed in the future to align with
+/// WebRTC APIs.
 struct OWT_EXPORT VideoEncodingParameters {
   explicit VideoEncodingParameters();
   /// Construct an instance of VideoEncodingParameters
