@@ -5,7 +5,7 @@
 #include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
 #include <algorithm>
 #include <limits>
-#include "mfxadapter.h"
+
 #include "system_wrappers/include/metrics.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "webrtc/api/video/color_space.h"
@@ -84,44 +84,6 @@ int H264DXVADecoderImpl::InitHwContext(AVCodecContext* ctx,
       D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
       D3D_FEATURE_LEVEL_10_1 };
 
-  mfxU8 headers[] = {0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0xE0, 0x0A, 0x96,
-                     0x52, 0x85, 0x89, 0xC8, 0x00, 0x00, 0x00, 0x01, 0x68,
-                     0xC9, 0x23, 0xC8, 0x00, 0x00, 0x00, 0x01, 0x09, 0x10};
-  mfxBitstream bs = {};
-  bs.Data = headers;
-  bs.DataLength = bs.MaxLength = sizeof(headers);
-
-  mfxStatus sts = MFX_ERR_NONE;
-  mfxU32 num_adapters;
-  sts = MFXQueryAdaptersNumber(&num_adapters);
-
-  if (sts != MFX_ERR_NONE) {
-    RTC_LOG(LS_ERROR) << "Failed to query adapter numbers.";
-    return -1;
-  }
-
-  std::vector<mfxAdapterInfo> display_data(num_adapters);
-  mfxAdaptersInfo adapters = {display_data.data(), mfxU32(display_data.size()),
-                              0u};
-  sts = MFXQueryAdaptersDecode(&bs, MFX_CODEC_AVC, &adapters);
-  if (sts != MFX_ERR_NONE) {
-    RTC_LOG(LS_ERROR) << "Failed to query adapter with hardware acceleration";
-    return -1;
-  }
-  mfxU32 adapter_idx = adapters.Adapters[0].Number;
-
-  hr = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&m_pdxgi_factory_));
-  if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR)
-        << "Failed to create dxgi factory for adatper enumeration.";
-    return -1;
-  }
-
-  hr = m_pdxgi_factory_->EnumAdapters(adapter_idx, &m_padapter_);
-  if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR) << "Failed to enum adapter for specified adapter index.";
-    return -1;
-  }
   D3D_FEATURE_LEVEL feature_levels_out;
 
   device_ref = av_hwdevice_ctx_alloc(type);
@@ -134,8 +96,9 @@ int H264DXVADecoderImpl::InitHwContext(AVCodecContext* ctx,
   device_ctx = (AVHWDeviceContext*)device_ref->data;
   device_hwctx = (AVD3D11VADeviceContext*)device_ctx->hwctx;
 
-  hr = D3D11CreateDevice(m_padapter_, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-      creation_flags, feature_levels, sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
+  hr = D3D11CreateDevice(
+      nullptr, D3D_DRIVER_TYPE_UNKNOWN, nullptr, creation_flags, feature_levels,
+      sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
       &device_hwctx->device, &feature_levels_out, &d3d11_device_context_);
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "Failed to create D3d11 DEVICE for dxva decoding.";

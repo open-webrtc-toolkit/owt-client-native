@@ -7,12 +7,12 @@
 #include "talk/owt/sdk/base/win/d3d11device.h"
 #include "rtc_base/logging.h"
 
-#define MSDK_D3D11_CHECK(result) \
-  {                        \
-    if (FAILED(result)) {  \
+#define MSDK_D3D11_CHECK(result)                            \
+  {                                                         \
+    if (FAILED(result)) {                                   \
       RTC_LOG(LS_ERROR) << "Failed with result:" << result; \
-      return MFX_ERR_DEVICE_FAILED;  \
-    }  \
+      return false;                                         \
+    }                                                       \
   }
 
 namespace owt {
@@ -25,8 +25,9 @@ RTCD3D11Device::~RTCD3D11Device() {
   Close();
 }
 
-mfxStatus RTCD3D11Device::Init(mfxHDL window,
-  mfxU32 adapter_num, ID3D11Device* device) {
+bool RTCD3D11Device::Init(mfxHDL window,
+                          int adapter_num,
+                          ID3D11Device* device) {
   window_handle_ = static_cast<HWND>(window);
   HRESULT hr;
 
@@ -36,26 +37,26 @@ mfxStatus RTCD3D11Device::Init(mfxHDL window,
     // First get the immediate device context;
     device->GetImmediateContext(&external_d3d11_device_context_);
     if (external_d3d11_device_context_ == nullptr)
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
 
     // Get the ID3D11VideoDevice handle as well.
     hr = device->QueryInterface(__uuidof(ID3D11VideoDevice),
                                 (void**)&external_d3d11_video_device_);
     if (FAILED(hr))
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
 
     hr = external_d3d11_device_context_->QueryInterface(__uuidof(ID3D11VideoContext),
                                 (void**)&external_d3d11_video_context_);
     if (FAILED(hr))
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
 
     CComQIPtr<ID3D10Multithread> p_mt(external_d3d11_video_context_);
     if (p_mt) {
       p_mt->SetMultithreadProtected(true);
     } else {
-      return MFX_ERR_DEVICE_FAILED;
+      return false;
     }
-    return MFX_ERR_NONE;
+    return true;
   }
 
   RTC_LOG(LS_ERROR) << "In d3d11device: Before create the dxgi factory.";
@@ -74,10 +75,10 @@ mfxStatus RTCD3D11Device::Init(mfxHDL window,
   MSDK_D3D11_CHECK(dxgi_factory_->EnumAdapters(adapter_num, &dxgi_adapter_));
 
   RTC_LOG(LS_ERROR) << "In d3d11device: Before D3D11CreateDevice.";
-  MSDK_D3D11_CHECK(D3D11CreateDevice(dxgi_adapter_, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0,
-                           feature_levels, MSDK_ARRAY_LEN(feature_levels),
-                           D3D11_SDK_VERSION, &d3d11_device_,
-                           &feature_levels_out, &d3d11_device_context_));
+  MSDK_D3D11_CHECK(D3D11CreateDevice(
+      dxgi_adapter_, D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, feature_levels,
+      sizeof(feature_levels), D3D11_SDK_VERSION, &d3d11_device_,
+      &feature_levels_out, &d3d11_device_context_));
 
   dxgi_device_ = d3d11_device_;
   d3d11_video_device_ = d3d11_device_;
@@ -85,7 +86,7 @@ mfxStatus RTCD3D11Device::Init(mfxHDL window,
 
   if (!dxgi_device_.p || !d3d11_video_device_.p || !d3d11_video_context_.p) {
     RTC_LOG(LS_ERROR) << "d3d11 device or context nullptr";
-    return MFX_ERR_NULL_PTR;
+    return false;
   }
 
   // Turn on multi-threading for the context
@@ -94,32 +95,32 @@ mfxStatus RTCD3D11Device::Init(mfxHDL window,
     p_mt->SetMultithreadProtected(true);
   } else {
     RTC_LOG(LS_ERROR) << "Failed to turn on multi-threading for the context.";
-    return MFX_ERR_DEVICE_FAILED;
+    return false;
   }
 
-  return MFX_ERR_NONE;
+  return true;
 }
 
-mfxStatus RTCD3D11Device::Reset() {
+bool RTCD3D11Device::Reset() {
   // Currently do nothing.
-  return MFX_ERR_NONE;
+  return true;
 }
 
-mfxStatus RTCD3D11Device::SetHandle(mfxHandleType handle_type, mfxHDL handle) {
+bool RTCD3D11Device::SetHandle(mfxHandleType handle_type, mfxHDL handle) {
   if (handle != nullptr) {
     window_handle_ = static_cast<HWND>(handle);
-    return MFX_ERR_NONE;
+    return true;
   }
-  return MFX_ERR_UNSUPPORTED;
+  return false;
 }
 
-mfxStatus RTCD3D11Device::GetHandle(mfxHandleType handle_type, mfxHDL* handle) {
+bool RTCD3D11Device::GetHandle(mfxHandleType handle_type, mfxHDL* handle) {
   if (MFX_HANDLE_D3D11_DEVICE == handle_type) {
     *handle = external_d3d11_device_ != nullptr ? external_d3d11_device_
                                                 : d3d11_device_.p;
-    return MFX_ERR_NONE;
+    return true;
   }
-  return MFX_ERR_UNSUPPORTED;
+  return false;
 }
 
 void RTCD3D11Device::Close() {
