@@ -27,7 +27,7 @@ class P2PClientMockObserver : public owt::p2p::P2PClientObserver {
   MOCK_METHOD2(OnMessageReceived, void(const std::string&, const std::string));
   MOCK_METHOD1(OnStreamAdded,
                void(std::shared_ptr<owt::base::RemoteStream> stream));
-#ifdef OWT_CLOUD_GAMING
+#ifdef OWT_CG_SERVER
   MOCK_METHOD1(OnPeerConnectionClosed, void(const std::string&));
 #endif
 };

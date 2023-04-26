@@ -92,7 +92,7 @@ static_library("owt_deps") {
 if (!is_ios) {
   if (is_component_build) {
     # Component build is only supported by cloud gaming mode on Linux.
-    assert(owt_cloud_gaming)
+    assert(owt_cg_server)
     shared_library("owt") {
       visibility = [ "*" ]
       deps = [
@@ -113,7 +113,7 @@ if (!is_ios) {
         "//third_party/webrtc:webrtc",
         "//third_party/webrtc/api:libjingle_peerconnection_api",
       ]
-      if (!owt_cloud_gaming) {
+      if (!owt_cg_server && !owt_cg_client) {
         deps += [ ":owt_sdk_conf" ]
       }
       complete_static_lib = true
@@ -414,8 +414,8 @@ static_library("owt_sdk_p2p") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
   configs += [ ":owt_common" ]
-  if (owt_cloud_gaming) {
-    defines = [ "OWT_CLOUD_GAMING" ]
+  if (owt_cg_server) {
+    defines = [ "OWT_CG_SERVER" ]
   }
 }
 static_library("owt_sdk_conf") {

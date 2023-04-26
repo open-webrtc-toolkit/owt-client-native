@@ -2,20 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
 #include <algorithm>
 #include <limits>
 #include "mfxadapter.h"
+#include "system_wrappers/include/metrics.h"
+#include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "webrtc/api/video/color_space.h"
 #include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/modules/video_coding/codecs/h264/h264_color_space.h"
 #include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/critical_section.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
 #include "webrtc/rtc_base/logging.h"
-#include "system_wrappers/include/metrics.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace owt {
 namespace base {
@@ -243,32 +242,30 @@ int H264DXVADecoderImpl::PrepareHwDecoder(webrtc::VideoCodecType codec_type) {
   return 0;
 }
 
-int32_t H264DXVADecoderImpl::InitDecode(const webrtc::VideoCodec* codec_settings,
-                                    int32_t number_of_cores) {
+bool H264DXVADecoderImpl::Configure(const Settings& settings) {
   ReportInit();
-  if (codec_settings &&
-      (codec_settings->codecType != webrtc::kVideoCodecH264 
+  if (settings.codec_type() != webrtc::kVideoCodecH264
 #ifdef WEBRTC_USE_H265
-      && codec_settings->codecType != webrtc::kVideoCodecH265)
+      && settings.codec_type() != webrtc::kVideoCodecH265
 #endif
   ) {
     RTC_LOG(LS_ERROR) << "in H264DXVADecoderImpl: codec mismatch.";
-    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+    return false;
   }
 
   // Release necessary in case of re-initializing.
   int32_t ret = Release();
   if (ret != WEBRTC_VIDEO_CODEC_OK) {
     ReportError();
-    return ret;
+    return false;
   }
 
-  ret = PrepareHwDecoder(codec_settings->codecType);
+  ret = PrepareHwDecoder(settings.codec_type());
   if (ret < 0) {
     RTC_LOG(LS_ERROR) << "Failed to prepare the hw decoder.";
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    return false;
   }
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int32_t H264DXVADecoderImpl::Release() {
@@ -314,7 +311,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
   AVFrame* frame = nullptr;
   AVPacket packet;
   av_init_packet(&packet);
-  packet.data = input_image.mutable_data();
+  packet.data = input_image.GetEncodedData()->data();
 
   if (input_image.size() >
       static_cast<size_t>(std::numeric_limits<int>::max())) {
@@ -323,7 +320,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
   }
   packet.size = static_cast<int>(input_image.size());
 
-  GetSideData(input_image.mutable_data(), input_image.size(),
+  GetSideData(input_image.data(), input_image.size(),
               current_side_data_, current_cursor_data_);
   if (current_side_data_.size() > 0) {
     side_data_list_[input_image.Timestamp()] = current_side_data_;
@@ -414,7 +411,7 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
         surface_handle_->packet_loss = input_image.bwe_stats_.packets_lost_;
         surface_handle_->frame_size = input_image.size();
         rtc::scoped_refptr<owt::base::NativeHandleBuffer> buffer =
-          new rtc::RefCountedObject<owt::base::NativeHandleBuffer>(
+            rtc::make_ref_counted<owt::base::NativeHandleBuffer>(
                 (void*)surface_handle_.get(), width, height);
         webrtc::VideoFrame decoded_frame(buffer, input_image.Timestamp(), 0,
           webrtc::kVideoRotation_0);
@@ -441,22 +438,22 @@ int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
   side_data.clear();
   if (frame_size < 24)  // with prefix-frame-num sei, frame size needs to be at
                         // least 24 bytes.
-    goto failed;
+    return -1;
 
   const uint8_t* head = frame_data;
   unsigned int payload_size = 0;
 
   if (head[0] != 0 || head[1] != 0 || head[2] != 0 || head[3] != 1) {
-    goto failed;
+    return -1;
   }
   if ((head[4] & 0x1f) == 0x06) {
     if (head[5] == 0x05) { // user data unregistered.
       payload_size = head[6];
       if (payload_size > frame_size - 4 - 4 || payload_size < 17) //. 4-byte start code + 4 byte NAL HDR/Payload Type/Size/RBSP
-        goto failed;
+        return -1;
       for (int i = 7; i < 23; i++) {
         if (head[i] != frame_number_sei_guid[i - 7]) {
-          goto failed;
+          return -1;
         }
       }
       // Read the entire side-data payload
@@ -480,7 +477,7 @@ int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
 
         for (int i = 0; i < 16; i++) {
           if (head[sei_idx] != cursor_data_sei_guid[i]) {
-            goto failed;
+            return -1;
           }
           sei_idx++;
         }
@@ -497,8 +494,7 @@ int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
       return payload_size;
     }
   }
-failed:
-  return -1;
+  return payload_size;
 }
 
 const char* H264DXVADecoderImpl::ImplementationName() const {

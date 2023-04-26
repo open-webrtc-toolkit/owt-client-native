@@ -29,6 +29,10 @@ extern "C" {
 #include "talk/owt/sdk/base/win/d3dnativeframe.h"
 #include "talk/owt/sdk/include/cpp/owt/base/videorendererinterface.h"
 
+namespace webrtc {
+class Clock;
+}
+
 namespace owt {
 namespace base {
 
@@ -39,8 +43,7 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   H264DXVADecoderImpl(ID3D11Device* external_device);
   ~H264DXVADecoderImpl() override;
 
-  int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
-                     int32_t number_of_cores) override;
+  bool Configure(const Settings& settings) override;
   int32_t Release() override;
 
   int32_t RegisterDecodeCompleteCallback(
@@ -68,7 +71,6 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
   bool has_reported_init_;
   bool has_reported_error_;
 
-  // 
   CComPtr<ID3D11Device> d3d11_device_;
   CComPtr<ID3D11DeviceContext> d3d11_device_context_;
   CComPtr<ID3D11VideoDevice> d3d11_video_device_;
