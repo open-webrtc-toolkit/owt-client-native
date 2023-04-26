@@ -1,0 +1,39 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 */60 * *'
+
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - id: build-and-test
+        name: Build SDK and run tests
+        run: |
+          docker run -id native-sdk-ubuntu:108 >> container_id.out
+          container_id="$(cat container_id.out)"
+          docker exec $container_id git config --global user.name "github-actions"
+          docker exec $container_id git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          docker exec -w /workspace/owt-linux/src $container_id git fetch origin $GITHUB_REF
+          docker exec -w /workspace/owt-linux/src $container_id git checkout FETCH_HEAD
+          docker exec -w /workspace/owt-linux/src $container_id git rev-parse HEAD >> git_sha.out
+          git_sha="$(cat git_sha.out)"
+          echo "::set-output name=git_sha::$git_sha"
+          docker exec $container_id python3 scripts/ci/ci.py
+          docker stop $container_id
+          docker rm $container_id
+      - id: cleanup
+        name: Clean up
+        if: ${{ always() }}
+        run: |
+          # They should be stopped earlier in the first step, but if there are containers running, kill them.
+          if [ docker ps -q --filter ancestor=native-sdk-ubuntu ]; then
+            docker kill $(docker ps -q --filter ancestor=native-sdk-ubuntu)
+            docker rm $(docker ps -q --filter ancestor=native-sdk-ubuntu)
+          fi
+          rm container_id.out
+          rm git_sha.out
