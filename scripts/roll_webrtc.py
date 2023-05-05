@@ -83,6 +83,7 @@ def pr(old_revision, new_revision, base_branch, token):
     if response.status_code != 200:
         print('Failed to get pull request list, REST response status code is %d.' % (
             response.status_code), file=sys.stderr)
+        print('Error message: %@' % (response.text), file=sys.stderr)
         return -1
     fetched_prs = response.json()
     if len(fetched_prs) > 0:
