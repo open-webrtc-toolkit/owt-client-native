@@ -94,7 +94,7 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
     else:
         gn_args.extend(['enable_libaom=true'])
     if ffmpeg_root:
-        gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+'/include'))
+        gn_args.append('owt_ffmpeg_root="%s"'%(ffmpeg_root))
     if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h264=true')
     if msdk_root or cg_server:

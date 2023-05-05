@@ -94,7 +94,7 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         # If sio_root is not specified, conference SDK is not able to build.
         gn_args.append('owt_sio_header_root="%s"' % (sio_root + r'\include'))
     if ffmpeg_root:
-        gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+r'\include'))
+        gn_args.append('owt_ffmpeg_root="%s"'%(ffmpeg_root))
     if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h264=true')
     if msdk_root or cg_server:
