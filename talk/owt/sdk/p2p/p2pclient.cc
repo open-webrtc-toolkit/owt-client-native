@@ -453,7 +453,7 @@ void P2PClient::OnStopped(const std::string& remote_id) {
       pc_channels_.erase(remote_id);
     }
   }).detach();
-#ifdef OWT_CLOUD_GAMING
+#ifdef OWT_CG_SERVER
   EventTrigger::OnEvent1(observers_, event_queue_,
                          &P2PClientObserver::OnPeerConnectionClosed, remote_id);
 #endif

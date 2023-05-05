@@ -64,7 +64,7 @@ class OWT_EXPORT P2PClientObserver {
    */
   virtual void OnServerDisconnected(){}
 
-#ifdef OWT_CLOUD_GAMING
+#if defined(OWT_CG_SERVER) || defined(OWT_CLOUD_GAMING)
   /**
    @brief This function will be invoked when a PeerConnection with remote
    endpoint is closed. SDK will create a new PeerConnection if publish or send

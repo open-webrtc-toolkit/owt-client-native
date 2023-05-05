@@ -69,6 +69,7 @@ declare_args() {
   # Enable HEVC for WebRTC.
   rtc_use_h265 = false
 
-  # Build OWT for cloud gaming. It enables low latency features, and disables audio processing. It may break normal WebRTC features, is not intended for general use.
-  owt_cloud_gaming = false
+  # Build OWT for cloud gaming. It enables low latency features, and disables audio processing for server side. It may break normal WebRTC features, is not intended for general use.
+  owt_cg_server = false
+  owt_cg_client = false
 }

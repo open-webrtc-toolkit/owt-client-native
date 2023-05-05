@@ -33,7 +33,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cloud_gaming):
+def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cg_server, cg_client):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -80,21 +80,24 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
     else:
         gn_args.append('rtc_include_tests=false')
         gn_args.append('owt_include_tests=false')
-    if cloud_gaming:
+    if cg_server:
         gn_args.append('rtc_enable_protobuf=false')
         gn_args.append('rtc_enable_win_wgc=false')
-        gn_args.append('owt_cloud_gaming=true')
+        gn_args.append('owt_cg_server=true')
         gn_args.append('enable_libaom=false')
     else:
         gn_args.append('enable_libaom=true')
+    if cg_client:
+        gn_args.append('owt_cg_client=true')
+        gn_args.append('rtc_enable_protobuf=false')
     if sio_root:
         # If sio_root is not specified, conference SDK is not able to build.
         gn_args.append('owt_sio_header_root="%s"' % (sio_root + r'\include'))
     if ffmpeg_root:
         gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+r'\include'))
-    if ffmpeg_root or msdk_root or cloud_gaming:
+    if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h264=true')
-    if msdk_root or cloud_gaming:
+    if msdk_root or cg_server:
         gn_args.append('rtc_use_h265=true')
     flattened_args = ' '.join(gn_args)
     ret = subprocess.call(['gn.bat', 'gen', getoutputpath(arch, scheme), '--args=%s' % flattened_args],
@@ -139,7 +142,6 @@ def runtest(arch, scheme):
 
 
 def gendocs():
-    print('start ninja file generatio!')
     cmd_path = os.path.join(HOME_PATH, r'talk\owt\docs\cpp')
     doc_path = os.path.join(cmd_path, r'html')
     if os.path.exists(doc_path):
@@ -192,10 +194,19 @@ def main():
     parser.add_argument('--docs', default=False, action='store_true',
                         help='To generate the API document.')
     parser.add_argument('--output_path', help='Path to copy sdk.')
+    parser.add_argument('--cg_server', default=False,
+                        help='Build for cloud gaming server. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
     parser.add_argument('--cloud_gaming', default=False,
-                        help='Build for cloud gaming. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
+                        help='Deprecated. Please use cg_server instead.', action='store_true')
+    parser.add_argument('--cg_client', default=False,
+                        help='Build for cloud gaming client. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
     opts = parser.parse_args()
-    if not opts.sio_root and not opts.cloud_gaming:
+    if opts.cg_server and opts.cg_client:
+        print('Cannot build for both cloud gaming server and client.')
+        return 1
+    if opts.cloud_gaming:
+        opts.cg_server = True
+    if not opts.sio_root and not opts.cg_server and not opts.cg_client:
         print("sio_root is missing.")
         return 1
     if opts.ssl_root and not os.path.exists(os.path.expanduser(opts.ssl_root)):
@@ -211,7 +222,7 @@ def main():
         return 1
     if opts.gn_gen:
         if not gngen(opts.arch, opts.sio_root, opts.ffmpeg_root, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests, opts.runtime, opts.cloud_gaming):
+                     opts.scheme, opts.tests, opts.runtime, opts.cg_server, opts.cg_client):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):

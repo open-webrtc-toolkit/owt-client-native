@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include <vector>
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
@@ -9,11 +10,12 @@
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "webrtc/rtc_base/checks.h"
 #include "talk/owt/sdk/base/codecutils.h"
-#include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
-
+#include "webrtc/rtc_base/checks.h"
+#ifdef OWT_USE_FFMPEG
+#include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
+#endif
 
 namespace owt {
 namespace base {

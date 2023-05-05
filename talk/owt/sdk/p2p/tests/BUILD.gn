@@ -19,7 +19,7 @@ rtc_test("p2p_e2e_test") {
   if (is_win) {
     libs = [ "dcomp.lib" ]
   }
-  if(owt_cloud_gaming){
-    defines = [ "OWT_CLOUD_GAMING" ]
+  if(owt_cg_server){
+    defines = [ "OWT_CG_SERVER" ]
   }
 }

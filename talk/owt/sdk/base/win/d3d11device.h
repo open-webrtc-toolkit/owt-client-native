@@ -8,21 +8,37 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <windows.h>
-
+#ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideobase.h"
+#endif
 
 namespace owt {
 namespace base {
+
+#ifndef OWT_USE_MSDK
+typedef enum {
+  MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9 = 1, /* IDirect3DDeviceManager9      */
+  MFX_HANDLE_D3D9_DEVICE_MANAGER = MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9,
+  MFX_HANDLE_RESERVED1 = 2,
+  MFX_HANDLE_D3D11_DEVICE = 3,
+  MFX_HANDLE_VA_DISPLAY = 4,
+  MFX_HANDLE_RESERVED3 = 5,
+} mfxHandleType;
+
+typedef void* mfxHDL;
+typedef unsigned int mfxU32;
+typedef unsigned char mfxU8;
+#endif
 
 class RTCD3D11Device {
  public:
   RTCD3D11Device();
   virtual ~RTCD3D11Device();
 
-  mfxStatus Init(mfxHDL window, mfxU32 adapter_idx, ID3D11Device* device);
-  mfxStatus Reset();
-  mfxStatus SetHandle(mfxHandleType handle_type, mfxHDL handle);
-  mfxStatus GetHandle(mfxHandleType handle_type, mfxHDL* handle);
+  bool Init(mfxHDL window, int adapter_idx, ID3D11Device* device);
+  bool Reset();
+  bool SetHandle(mfxHandleType handle_type, mfxHDL handle);
+  bool GetHandle(mfxHandleType handle_type, mfxHDL* handle);
   void Close();
 
   ID3D11Device* GetD3D11Device() const {

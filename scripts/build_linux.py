@@ -39,7 +39,7 @@ def gen_lib_path(scheme):
     out_lib = OUT_LIB % {'scheme': scheme}
     return os.path.join(HOME_PATH + r'/out', out_lib)
 
-def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cloud_gaming):
+def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, use_gcc, fake_audio, shared, cg_server):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     if scheme == 'release':
@@ -89,15 +89,15 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         gn_args.extend(['rtc_enable_protobuf=false', 'is_component_build=true'])
     else:
         gn_args.extend(['is_component_build=false'])
-    if cloud_gaming:
-        gn_args.extend(['owt_cloud_gaming=true', 'enable_libaom=false'])
+    if cg_server:
+        gn_args.extend(['owt_cg_server=true', 'enable_libaom=false'])
     else:
         gn_args.extend(['enable_libaom=true'])
     if ffmpeg_root:
         gn_args.append('owt_ffmpeg_header_root="%s"'%(ffmpeg_root+'/include'))
-    if ffmpeg_root or msdk_root or cloud_gaming:
+    if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h264=true')
-    if msdk_root or cloud_gaming:
+    if msdk_root or cg_server:
         gn_args.append('rtc_use_h265=true')
 
     flattened_args = ' '.join(gn_args)
@@ -200,13 +200,18 @@ def main():
     parser.add_argument('--output_path', help='Path to copy sdk.')
     parser.add_argument('--use_gcc', help='Compile with GCC and libstdc++. Default is clang and libc++.', action='store_true')
     parser.add_argument('--shared', default=False,  help='Build shared libraries. Default to static.', action='store_true')
-    parser.add_argument('--cloud_gaming', default=False,  help='Build for cloud gaming. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
+    parser.add_argument('--cg_server', default=False,
+                        help='Build for cloud gaming server. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
+    parser.add_argument('--cloud_gaming', default=False,
+                        help='Deprecated. Please use cg_server instead.', action='store_true')
     opts = parser.parse_args()
-    if not opts.sio_root and not opts.cloud_gaming:
+    if opts.cloud_gaming:
+        opts.cg_server = True
+    if not opts.sio_root and not opts.cg_server:
         print("sio_root is missing.")
         return 1
     if opts.gn_gen:
-        if not gngen(opts.arch, opts.sio_root, opts.ffmpeg_root, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cloud_gaming):
+        if not gngen(opts.arch, opts.sio_root, opts.ffmpeg_root, opts.ssl_root, opts.msdk_root, opts.quic_root, opts.scheme, opts.tests, opts.use_gcc, opts.fake_audio, opts.shared, opts.cg_server):
             return 1
     if opts.sdk:
          if not ninjabuild(opts.arch, opts.scheme, opts.shared):
