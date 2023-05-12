@@ -33,7 +33,7 @@ GN_ARGS = [
     ]
 
 
-def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cg_server, cg_client):
+def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, tests, runtime, cg_server, cg_client, fake_audio):
     gn_args = list(GN_ARGS)
     gn_args.append('target_cpu="%s"' % arch)
     using_llvm = False
@@ -99,6 +99,8 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         gn_args.append('rtc_use_h264=true')
     if msdk_root or cg_server:
         gn_args.append('rtc_use_h265=true')
+    if fake_audio:
+        gn_args.append('rtc_include_internal_audio_device=false')
     flattened_args = ' '.join(gn_args)
     ret = subprocess.call(['gn.bat', 'gen', getoutputpath(arch, scheme), '--args=%s' % flattened_args],
                           cwd=HOME_PATH, shell=False)
@@ -200,6 +202,8 @@ def main():
                         help='Deprecated. Please use cg_server instead.', action='store_true')
     parser.add_argument('--cg_client', default=False,
                         help='Build for cloud gaming client. This option is not intended to be used in general purpose. Setting to true may result unexpected behaviors. Default to false.', action='store_true')
+    parser.add_argument('--fake_audio', default=False, action='store_true',
+                        help='Use fake audio device.')
     opts = parser.parse_args()
     if opts.cg_server and opts.cg_client:
         print('Cannot build for both cloud gaming server and client.')
@@ -222,7 +226,7 @@ def main():
         return 1
     if opts.gn_gen:
         if not gngen(opts.arch, opts.sio_root, opts.ffmpeg_root, opts.ssl_root, opts.msdk_root, opts.quic_root,
-                     opts.scheme, opts.tests, opts.runtime, opts.cg_server, opts.cg_client):
+                     opts.scheme, opts.tests, opts.runtime, opts.cg_server, opts.cg_client, opts.fake_audio):
             return 1
     if opts.sdk:
         if not ninjabuild(opts.arch, opts.scheme):
