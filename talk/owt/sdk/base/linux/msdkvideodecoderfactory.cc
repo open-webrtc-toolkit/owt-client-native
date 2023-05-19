@@ -15,7 +15,7 @@
 namespace owt {
 namespace base {
 
-MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
+ExternalVideoDecoderFactory::ExternalVideoDecoderFactory() {
   // TODO: Add the other codecs support
   supported_codecs_.push_back(webrtc::kVideoCodecH264);
   supported_codecs_.push_back(webrtc::kVideoCodecH265);
@@ -23,10 +23,10 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory() {
 
 
 
-MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {}
+ExternalVideoDecoderFactory::~ExternalVideoDecoderFactory() {}
 
 
-std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecoder(
+std::unique_ptr<webrtc::VideoDecoder> ExternalVideoDecoderFactory::CreateVideoDecoder(
     const webrtc::SdpVideoFormat& format) {
  
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) ||
@@ -42,7 +42,7 @@ std::unique_ptr<webrtc::VideoDecoder> MSDKVideoDecoderFactory::CreateVideoDecode
 
   return nullptr;
 }
-std::vector<webrtc::SdpVideoFormat> MSDKVideoDecoderFactory::GetSupportedFormats()
+std::vector<webrtc::SdpVideoFormat> ExternalVideoDecoderFactory::GetSupportedFormats()
     const {
   
   std::vector<webrtc::SdpVideoFormat> supported_codecs;

@@ -295,6 +295,17 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
     ]
+    if (owt_msdk_header_root != "" || owt_ffmpeg_root != "") {
+      sources += [
+        "sdk/base/win/externalvideodecoderfactory.cc",
+        "sdk/base/win/externalvideodecoderfactory.h",
+        "sdk/base/win/externalvideoencoderfactory.cc",
+        "sdk/base/win/externalvideoencoderfactory.h",
+        "sdk/base/win/mediacapabilities.cc",
+        "sdk/base/win/mediacapabilities.h",
+        "sdk/base/win/vpedefs.h",
+      ]
+    }
     if (owt_msdk_header_root != "") {
       sources += [
         "sdk/base/win/base_allocator.cc",
@@ -303,23 +314,16 @@ static_library("owt_sdk_base") {
         "sdk/base/win/d3d11_allocator.h",
         "sdk/base/win/d3d_allocator.cc",
         "sdk/base/win/d3d_allocator.h",
-        "sdk/base/win/mediacapabilities.cc",
-        "sdk/base/win/mediacapabilities.h",
         "sdk/base/win/msdkvideobase.cc",
         "sdk/base/win/msdkvideobase.h",
         "sdk/base/win/msdkvideodecoder.cc",
         "sdk/base/win/msdkvideodecoder.h",
-        "sdk/base/win/msdkvideodecoderfactory.cc",
-        "sdk/base/win/msdkvideodecoderfactory.h",
         "sdk/base/win/msdkvideoencoder.cc",
         "sdk/base/win/msdkvideoencoder.h",
-        "sdk/base/win/msdkvideoencoderfactory.cc",
-        "sdk/base/win/msdkvideoencoderfactory.h",
         "sdk/base/win/sysmem_allocator.cc",
         "sdk/base/win/sysmem_allocator.h",
         "sdk/base/win/vp9ratecontrol.cc",
         "sdk/base/win/vp9ratecontrol.h",
-        "sdk/base/win/vpedefs.h",
       ]
       public_deps += [
         "//third_party/libvpx",

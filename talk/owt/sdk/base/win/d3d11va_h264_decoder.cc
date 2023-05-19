@@ -97,7 +97,7 @@ int H264DXVADecoderImpl::InitHwContext(AVCodecContext* ctx,
   device_hwctx = (AVD3D11VADeviceContext*)device_ctx->hwctx;
 
   hr = D3D11CreateDevice(
-      nullptr, D3D_DRIVER_TYPE_UNKNOWN, nullptr, creation_flags, feature_levels,
+      nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creation_flags, feature_levels,
       sizeof(feature_levels) / sizeof(feature_levels[0]), D3D11_SDK_VERSION,
       &device_hwctx->device, &feature_levels_out, &d3d11_device_context_);
   if (FAILED(hr)) {
@@ -317,8 +317,8 @@ int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
     // We get one frame from the decoder.
     if (frame != nullptr && frame->format == hw_pix_fmt) {
       ID3D11Texture2D* texture = (ID3D11Texture2D*)frame->data[0];
-      int width = frame->crop_right - frame->crop_left;
-      int height = frame->crop_bottom - frame->crop_top;
+      int width = frame->width;
+      int height = frame->height;
       int index = (intptr_t)frame->data[1];
       D3D11_TEXTURE2D_DESC texture_desc;
 

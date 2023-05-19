@@ -14,10 +14,11 @@
 
 namespace owt {
 namespace base {
-class MSDKVideoEncoderFactory : public webrtc::VideoEncoderFactory {
+// Encoder factory for MSDK encoder and FFMPEG encoder.
+class ExternalVideoEncoderFactory : public webrtc::VideoEncoderFactory {
  public:
-  MSDKVideoEncoderFactory();
-  ~MSDKVideoEncoderFactory() {}
+  ExternalVideoEncoderFactory();
+  ~ExternalVideoEncoderFactory() {}
   std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
       const webrtc::SdpVideoFormat& format) override;
 
