@@ -14,10 +14,10 @@ namespace owt {
 namespace base {
 
 // Declaration of MSDK based decoder factory.
-class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
+class ExternalVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  public:
-  MSDKVideoDecoderFactory();
-  virtual ~MSDKVideoDecoderFactory();
+  ExternalVideoDecoderFactory();
+  virtual ~ExternalVideoDecoderFactory();
 
   // WebRtcVideoDecoderFactory implementation.
   // VideoDecoderFactory implementation

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "talk/owt/sdk/base/win/msdkvideoencoderfactory.h"
+#include "talk/owt/sdk/base/win/externalvideoencoderfactory.h"
 #include <string>
 #include "absl/strings/match.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
@@ -10,13 +10,15 @@
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "talk/owt/sdk/base/codecutils.h"
+#ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideoencoder.h"
+#endif
 #include "webrtc/api/video_codecs/vp9_profile.h"
 
 namespace owt {
 namespace base {
 
-MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
+ExternalVideoEncoderFactory::ExternalVideoEncoderFactory() {
   supported_codec_types_.clear();
   MediaCapabilities* media_capability = MediaCapabilities::Get();
   std::vector<owt::base::VideoCodec> codecs_to_check;
@@ -39,7 +41,7 @@ MSDKVideoEncoderFactory::MSDKVideoEncoderFactory() {
   supported_codec_types_.push_back(webrtc::kVideoCodecAV1);
 }
 
-std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncoder(
+std::unique_ptr<webrtc::VideoEncoder> ExternalVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   bool vp9_hw = false, vp8_hw = false, av1_hw = false, h264_hw = false;
 #ifdef WEBRTC_USE_H265
@@ -73,11 +75,11 @@ std::unique_ptr<webrtc::VideoEncoder> MSDKVideoEncoderFactory::CreateVideoEncode
            !h265_hw) {
   }
 #endif
-  return MSDKVideoEncoder::Create(cricket::VideoCodec(format));
+  RTC_CHECK_NOTREACHED();
 }
 
 std::vector<webrtc::SdpVideoFormat>
-MSDKVideoEncoderFactory::GetSupportedFormats() const {
+ExternalVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));

@@ -20,11 +20,11 @@
 
 namespace owt {
 namespace base {
-// Declaration of MSDK based decoder factory.
-class MSDKVideoDecoderFactory : public webrtc::VideoDecoderFactory {
+// Decoder factory for MSDK decoder and FFMPEG decoder.
+class ExternalVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  public:
-  MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_external);
-  virtual ~MSDKVideoDecoderFactory();
+  ExternalVideoDecoderFactory(ID3D11Device* d3d11_device_external);
+  virtual ~ExternalVideoDecoderFactory();
 
   // VideoDecoderFactory implementation
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;

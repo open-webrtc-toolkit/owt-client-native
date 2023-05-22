@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "talk/owt/sdk/base/win/msdkvideodecoderfactory.h"
+#include "talk/owt/sdk/base/win/externalvideodecoderfactory.h"
 #include <vector>
 #include "absl/strings/match.h"
 #include "media/base/codec.h"
@@ -11,16 +11,19 @@
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "talk/owt/sdk/base/codecutils.h"
-#include "talk/owt/sdk/base/win/msdkvideodecoder.h"
-#include "webrtc/rtc_base/checks.h"
 #ifdef OWT_USE_FFMPEG
 #include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
 #endif
+#ifdef OWT_USE_MSDK
+#include "talk/owt/sdk/base/win/msdkvideodecoder.h"
+#endif
+#include "webrtc/rtc_base/checks.h"
+#include "webrtc/rtc_base/logging.h"
 
 namespace owt {
 namespace base {
 
-MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_external) {
+ExternalVideoDecoderFactory::ExternalVideoDecoderFactory(ID3D11Device* d3d11_device_external) {
   supported_codec_types_.clear();
 
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
@@ -66,10 +69,10 @@ MSDKVideoDecoderFactory::MSDKVideoDecoderFactory(ID3D11Device* d3d11_device_exte
   }
 }
 
-MSDKVideoDecoderFactory::~MSDKVideoDecoderFactory() {}
+ExternalVideoDecoderFactory::~ExternalVideoDecoderFactory() {}
 
 std::unique_ptr<webrtc::VideoDecoder>
-MSDKVideoDecoderFactory::CreateVideoDecoder(
+ExternalVideoDecoderFactory::CreateVideoDecoder(
     const webrtc::SdpVideoFormat& format) {
   bool vp9_hw = false, vp8_hw = false, av1_hw = false, h264_hw = false;
 #ifdef WEBRTC_USE_H265
@@ -121,10 +124,10 @@ MSDKVideoDecoderFactory::CreateVideoDecoder(
   }
 #endif
 
-  return MSDKVideoDecoder::Create(cricket::VideoCodec(format));
+  RTC_CHECK_NOTREACHED();
 }
 
- std::vector<webrtc::SdpVideoFormat> MSDKVideoDecoderFactory::GetSupportedFormats()
+ std::vector<webrtc::SdpVideoFormat> ExternalVideoDecoderFactory::GetSupportedFormats()
     const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
