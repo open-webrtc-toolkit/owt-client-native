@@ -190,7 +190,7 @@ void PeerConnectionDependencyFactory::
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   } else if (render_hardware_acceleration_enabled_) {
-#if defined(OWT_USE_MSDK) || defined(OWT_USE_FFMPEG)
+#if defined(WEBRTC_WIN)
     encoder_factory.reset(new ExternalVideoEncoderFactory());
 #else
     // For Linux HW encoder pending verification.
@@ -205,7 +205,11 @@ void PeerConnectionDependencyFactory::
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else if (render_hardware_acceleration_enabled_) {
 #if defined(OWT_USE_MSDK) || defined(OWT_USE_FFMPEG)
+#if defined(WEBRTC_WIN)
     decoder_factory.reset(new ExternalVideoDecoderFactory(nullptr));
+#else
+    decoder_factory.reset(new ExternalVideoDecoderFactory());
+#endif
 #else
     decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
 #endif
