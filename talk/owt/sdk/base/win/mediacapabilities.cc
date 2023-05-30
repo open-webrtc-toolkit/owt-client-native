@@ -8,6 +8,14 @@
 #include "mfxcommon.h"
 #include "mfxstructures.h"
 #endif
+#ifdef OWT_USE_FFMPEG
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/hwcontext.h>
+#include <libavutil/error.h>
+}  // extern "C"
+#endif
 #include "talk/owt/sdk/base/win/mediacapabilities.h"
 #include "webrtc/rtc_base/logging.h"
 
@@ -253,9 +261,86 @@ MediaCapabilities::SupportedCapabilitiesForVideoEncoder(
   return capabilities;
 }
 
+#ifdef OWT_USE_FFMPEG
+bool IsHardwareCodec(const AVCodec* decoder) {
+  enum AVHWDeviceType type = av_hwdevice_find_type_by_name("d3d11va");
+  for (int i = 0;; i++) {
+    const AVCodecHWConfig* config = avcodec_get_hw_config(decoder, i);
+    if (!config) {
+      RTC_LOG(LS_ERROR) << "Decoder " << decoder->name
+                        << " does not support device type: "
+                        << av_hwdevice_get_type_name(type);
+      return false;
+    }
+    if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+        config->device_type == type) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::vector<VideoDecoderCapability> FfmpegSupportedCapabilitiesForVideoDecoder(
+    std::vector<owt::base::VideoCodec>& codec_types) {
+  std::vector<VideoDecoderCapability> capabilities;
+  for (auto& codec : codec_types) {
+    auto codec_id=MediaUtils::GetFfmpegCodecId(codec);
+    if (!codec_id.has_value()) {
+      RTC_LOG(LS_WARNING) << "Codec not supported: " << codec;
+      continue;
+    }
+    const AVCodec* decoder = avcodec_find_decoder(codec_id.value());
+    if (!decoder)
+      continue;
+    if (!IsHardwareCodec(decoder))
+      continue;
+    if (codec == owt::base::VideoCodec::kVp9) {
+      VideoDecoderCapability vp9_cap;
+      vp9_cap.codec_type = owt::base::VideoCodec::kVp9;
+      vp9_cap.hardware_accelerated = true;
+      vp9_cap.max_resolution = {7680, 4320};
+      capabilities.push_back(vp9_cap);
+    } else if (codec == owt::base::VideoCodec::kH264) {
+      VideoDecoderCapability avc_cap;
+      avc_cap.codec_type = owt::base::VideoCodec::kH264;
+      avc_cap.hardware_accelerated = true;
+      avc_cap.max_resolution = {3840, 2160};
+      capabilities.push_back(avc_cap);
+    }
+#ifdef WEBRTC_USE_H265
+    else if (codec == owt::base::VideoCodec::kH265) {
+      VideoDecoderCapability h265_cap;
+      h265_cap.codec_type = owt::base::VideoCodec::kH265;
+      h265_cap.hardware_accelerated = true;
+      h265_cap.max_resolution = {7680, 4320};
+      capabilities.push_back(h265_cap);
+    }
+#endif
+    else if (codec == owt::base::VideoCodec::kAv1) {
+      VideoDecoderCapability av1_cap;
+      av1_cap.codec_type = owt::base::VideoCodec::kAv1;
+      av1_cap.hardware_accelerated = true;
+      av1_cap.max_resolution = {7680, 4320};
+      capabilities.push_back(av1_cap);
+    } else if (codec == owt::base::VideoCodec::kVp8) {
+      VideoDecoderCapability vp8_cap;
+      vp8_cap.codec_type = owt::base::VideoCodec::kVp8;
+      vp8_cap.hardware_accelerated = true;
+      vp8_cap.max_resolution = {3840, 2160};
+      capabilities.push_back(vp8_cap);
+    }
+  }
+  RTC_LOG(LS_INFO) << "Decoder capabilities size: " << capabilities.size();
+  return capabilities;
+}
+#endif
+
 std::vector<VideoDecoderCapability>
 MediaCapabilities::SupportedCapabilitiesForVideoDecoder(
     std::vector<owt::base::VideoCodec>& codec_types) {
+#ifdef OWT_USE_FFMPEG
+  return FfmpegSupportedCapabilitiesForVideoDecoder(codec_types);
+#endif
   std::vector<VideoDecoderCapability> capabilities;
 #ifdef OWT_USE_MSDK
   if (inited_) {

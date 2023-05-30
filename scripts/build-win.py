@@ -97,7 +97,7 @@ def gngen(arch, sio_root, ffmpeg_root, ssl_root, msdk_root, quic_root, scheme, t
         gn_args.append('owt_ffmpeg_root="%s"'%(ffmpeg_root))
     if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h264=true')
-    if msdk_root or cg_server:
+    if ffmpeg_root or msdk_root or cg_server:
         gn_args.append('rtc_use_h265=true')
     if fake_audio:
         gn_args.append('rtc_include_internal_audio_device=false')

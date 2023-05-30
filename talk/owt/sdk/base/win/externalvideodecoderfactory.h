@@ -20,7 +20,8 @@
 
 namespace owt {
 namespace base {
-// Decoder factory for MSDK decoder and FFMPEG decoder.
+// Decoder factory for MSDK decoder and FFMPEG decoder. Only hardware decoders
+// will be created.
 class ExternalVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  public:
   ExternalVideoDecoderFactory(ID3D11Device* d3d11_device_external);
