@@ -5,10 +5,16 @@
 #ifndef OWT_BASE_MEDIAUTILS_H_
 #define OWT_BASE_MEDIAUTILS_H_
 
-#include "absl/types/optional.h"
-#include "api/video_codecs/sdp_video_format.h"
 #include <string>
+#include "absl/types/optional.h"
+#include "api/video/video_codec_type.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "talk/owt/sdk/include/cpp/owt/base/commontypes.h"
+#ifdef OWT_USE_FFMPEG
+extern "C" {
+#include <libavcodec/avcodec.h>
+}  // extern "C"
+#endif
 
 namespace owt {
 namespace base {
@@ -179,6 +185,12 @@ class MediaUtils {
       const webrtc::SdpVideoFormat::Parameters& params);
   static absl::optional<H265ProfileId> ParseSdpForH265Profile(
       const webrtc::SdpVideoFormat::Parameters& params);
+#ifdef OWT_USE_FFMPEG
+  static absl::optional<AVCodecID> GetFfmpegCodecId(
+      const owt::base::VideoCodec& video_codec);
+  static absl::optional<AVCodecID> GetFfmpegCodecId(
+      const webrtc::VideoCodecType& video_codec);
+#endif
 };
 }
 }

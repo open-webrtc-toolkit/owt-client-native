@@ -2,11 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
+#include "talk/owt/sdk/base/win/d3d11_video_decoder.h"
 #include <algorithm>
 #include <limits>
 
 #include "system_wrappers/include/metrics.h"
+#include "talk/owt/sdk/base/mediautils.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "webrtc/api/video/color_space.h"
 #include "webrtc/api/video/i420_buffer.h"
@@ -29,10 +30,10 @@ const size_t kVPlaneIndex = 2;
 static const int kMaxSideDataListSize = 20;
 
 // Used by histograms. Values of entries should not be changed.
-enum H264DecoderImplEvent {
-  kH264DecoderEventInit = 0,
-  kH264DecoderEventError = 1,
-  kH264DecoderEventMax = 16,
+enum D3D11VideoDecoderEvent {
+  kD3D11VideoDecoderEventInit = 0,
+  kD3D11VideoDecoderEventError = 1,
+  kD3D11VideoDecoderEventMax = 16,
 };
 
 }  // namespace
@@ -58,7 +59,7 @@ static enum AVPixelFormat get_hw_format(AVCodecContext* ctx,
   return AV_PIX_FMT_NONE;
 }
 
-H264DXVADecoderImpl::H264DXVADecoderImpl(ID3D11Device* external_device)
+D3D11VideoDecoder::D3D11VideoDecoder(ID3D11Device* external_device)
     : decoded_image_callback_(nullptr),
       has_reported_init_(false),
       has_reported_error_(false),
@@ -66,11 +67,11 @@ H264DXVADecoderImpl::H264DXVADecoderImpl(ID3D11Device* external_device)
   surface_handle_.reset(new D3D11VAHandle());
 }
 
-H264DXVADecoderImpl::~H264DXVADecoderImpl() {
+D3D11VideoDecoder::~D3D11VideoDecoder() {
   Release();
 }
 
-int H264DXVADecoderImpl::InitHwContext(AVCodecContext* ctx,
+int D3D11VideoDecoder::InitHwContext(AVCodecContext* ctx,
                                        const enum AVHWDeviceType type) {
   int err = 0;
   AVBufferRef* device_ref = NULL;
@@ -148,7 +149,7 @@ fail:
   return err;
 }
 
-int H264DXVADecoderImpl::PrepareHwDecoder(webrtc::VideoCodecType codec_type) {
+int D3D11VideoDecoder::PrepareHwDecoder(webrtc::VideoCodecType codec_type) {
   int ret = 0;
   enum AVHWDeviceType type;
 
@@ -161,11 +162,13 @@ int H264DXVADecoderImpl::PrepareHwDecoder(webrtc::VideoCodecType codec_type) {
     }
   }
 
-  AVCodecID codec_id = codec_type == webrtc::VideoCodecType::kVideoCodecH264
-                           ? AV_CODEC_ID_H264
-                           : AV_CODEC_ID_HEVC;
+  auto codec_id = MediaUtils::GetFfmpegCodecId(codec_type);
+  if (!codec_id.has_value()) {
+    RTC_LOG(LS_ERROR) << "Unsupported codec type.";
+    return -1;
+  }
 
-  decoder = avcodec_find_decoder(codec_id);
+  decoder = avcodec_find_decoder(codec_id.value());
   if (!decoder) {
     RTC_LOG(LS_ERROR) << "Decoder not found by avcodec_find_decoder.";
     return -1;
@@ -205,16 +208,8 @@ int H264DXVADecoderImpl::PrepareHwDecoder(webrtc::VideoCodecType codec_type) {
   return 0;
 }
 
-bool H264DXVADecoderImpl::Configure(const Settings& settings) {
+bool D3D11VideoDecoder::Configure(const Settings& settings) {
   ReportInit();
-  if (settings.codec_type() != webrtc::kVideoCodecH264
-#ifdef WEBRTC_USE_H265
-      && settings.codec_type() != webrtc::kVideoCodecH265
-#endif
-  ) {
-    RTC_LOG(LS_ERROR) << "in H264DXVADecoderImpl: codec mismatch.";
-    return false;
-  }
 
   // Release necessary in case of re-initializing.
   int32_t ret = Release();
@@ -231,7 +226,7 @@ bool H264DXVADecoderImpl::Configure(const Settings& settings) {
   return true;
 }
 
-int32_t H264DXVADecoderImpl::Release() {
+int32_t D3D11VideoDecoder::Release() {
   // Do we need to flush the decoder? Currently we don't.
   if (decoder_ctx != nullptr) {
     avcodec_free_context(&decoder_ctx);
@@ -244,13 +239,13 @@ int32_t H264DXVADecoderImpl::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t H264DXVADecoderImpl::RegisterDecodeCompleteCallback(
+int32_t D3D11VideoDecoder::RegisterDecodeCompleteCallback(
     webrtc::DecodedImageCallback* callback) {
   decoded_image_callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t H264DXVADecoderImpl::Decode(const webrtc::EncodedImage& input_image,
+int32_t D3D11VideoDecoder::Decode(const webrtc::EncodedImage& input_image,
                                 bool /*missing_frames*/,
                                 int64_t /*render_time_ms*/) {
   if (!IsInitialized()) {
@@ -394,7 +389,7 @@ fail:
 }
 
 // Helper function to extract the prefix-SEI.
-int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
+int64_t D3D11VideoDecoder::GetSideData(const uint8_t* frame_data,
                                          size_t frame_size,
                                          std::vector<uint8_t>& side_data,
                                          std::vector<uint8_t>& cursor_data) {
@@ -460,35 +455,35 @@ int64_t H264DXVADecoderImpl::GetSideData(const uint8_t* frame_data,
   return payload_size;
 }
 
-const char* H264DXVADecoderImpl::ImplementationName() const {
+const char* D3D11VideoDecoder::ImplementationName() const {
   return "OWTD3D11VA";
 }
 
-bool H264DXVADecoderImpl::IsInitialized() const {
+bool D3D11VideoDecoder::IsInitialized() const {
   return decoder_ctx != nullptr;
 }
 
-void H264DXVADecoderImpl::ReportInit() {
+void D3D11VideoDecoder::ReportInit() {
   if (has_reported_init_)
     return;
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.H264DXVADecoderImpl.Event",
-                            kH264DecoderEventInit,
-                            kH264DecoderEventMax);
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.D3D11VideoDecoder.Event",
+                            kD3D11VideoDecoderEventInit,
+                            kD3D11VideoDecoderEventMax);
   has_reported_init_ = true;
 }
 
-void H264DXVADecoderImpl::ReportError() {
+void D3D11VideoDecoder::ReportError() {
   if (has_reported_error_)
     return;
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.H264DXVADecoderImpl.Event",
-                            kH264DecoderEventError,
-                            kH264DecoderEventMax);
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.D3D11VideoDecoder.Event",
+                            kD3D11VideoDecoderEventError,
+                            kD3D11VideoDecoderEventMax);
   has_reported_error_ = true;
 }
 
-std::unique_ptr<H264DXVADecoderImpl> H264DXVADecoderImpl::Create(
+std::unique_ptr<D3D11VideoDecoder> D3D11VideoDecoder::Create(
     cricket::VideoCodec format) {
-  return absl::make_unique<H264DXVADecoderImpl>(nullptr);
+  return absl::make_unique<D3D11VideoDecoder>(nullptr);
 }
 
 }  // namespace base

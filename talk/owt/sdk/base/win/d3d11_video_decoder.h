@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef OWT_BASE_WIN_D3D11VA_H264_DECODER_H_
-#define OWT_BASE_WIN_D3D11VA_H264_DECODER_H_
+#ifndef OWT_BASE_WIN_D3D11VA_DECODER_H_
+#define OWT_BASE_WIN_D3D11VA_DECODER_H_
 
 #include <map>
 #include <memory>
@@ -36,12 +36,12 @@ class Clock;
 namespace owt {
 namespace base {
 
-class H264DXVADecoderImpl : public webrtc::H264Decoder {
+class D3D11VideoDecoder : public webrtc::VideoDecoder {
  public:
-  static std::unique_ptr<H264DXVADecoderImpl> Create(
+  static std::unique_ptr<D3D11VideoDecoder> Create(
       cricket::VideoCodec format);
-  H264DXVADecoderImpl(ID3D11Device* external_device);
-  ~H264DXVADecoderImpl() override;
+  D3D11VideoDecoder(ID3D11Device* external_device);
+  ~D3D11VideoDecoder() override;
 
   bool Configure(const Settings& settings) override;
   int32_t Release() override;
@@ -91,4 +91,4 @@ class H264DXVADecoderImpl : public webrtc::H264Decoder {
 }  // namespace base
 }  // namespace owt
 
-#endif  // OWT_BASE_WIN_D3D11VA_H264_DECODER_H_
+#endif  // OWT_BASE_WIN_D3D11VA_DECODER_H_

@@ -360,8 +360,8 @@ static_library("owt_sdk_base") {
   if (owt_ffmpeg_root != "") {
     if (is_win) {
       sources += [
-        "sdk/base/win/d3d11va_h264_decoder.cc",
-        "sdk/base/win/d3d11va_h264_decoder.h",
+        "sdk/base/win/d3d11_video_decoder.cc",
+        "sdk/base/win/d3d11_video_decoder.h",
       ]
     }
     defines += [ "OWT_USE_FFMPEG" ]

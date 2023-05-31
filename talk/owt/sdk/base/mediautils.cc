@@ -38,6 +38,22 @@ static const std::map<const std::string, const VideoCodec>
                          {"h264", VideoCodec::kH264},
                          {"h265", VideoCodec::kH265}};
 
+#ifdef OWT_USE_FFMPEG
+static const std::map<const owt::base::VideoCodec, AVCodecID>
+    video_codec_id_map = {{owt::base::VideoCodec::kVp8, AV_CODEC_ID_VP8},
+                          {owt::base::VideoCodec::kVp9, AV_CODEC_ID_VP9},
+                          {owt::base::VideoCodec::kH264, AV_CODEC_ID_H264},
+                          {owt::base::VideoCodec::kH265, AV_CODEC_ID_HEVC},
+                          {owt::base::VideoCodec::kAv1, AV_CODEC_ID_AV1}};
+static const std::map<const webrtc::VideoCodecType, AVCodecID>
+    webrtc_video_codec_id_map = {
+        {webrtc::VideoCodecType::kVideoCodecVP8, AV_CODEC_ID_VP8},
+        {webrtc::VideoCodecType::kVideoCodecVP9, AV_CODEC_ID_VP9},
+        {webrtc::VideoCodecType::kVideoCodecH264, AV_CODEC_ID_H264},
+        {webrtc::VideoCodecType::kVideoCodecH265, AV_CODEC_ID_HEVC},
+        {webrtc::VideoCodecType::kVideoCodecAV1, AV_CODEC_ID_AV1}};
+#endif
+
 std::string MediaUtils::GetResolutionName(const Resolution& resolution) {
   for (auto it = resolution_name_map.begin(); it != resolution_name_map.end();
        ++it) {
@@ -203,6 +219,26 @@ absl::optional<H265ProfileId> MediaUtils::ParseSdpForH265Profile(
   const std::string& profile_str = profile_it->second;
   return StringToH265Profile(profile_str);
 }
+
+#ifdef OWT_USE_FFMPEG
+absl::optional<AVCodecID> MediaUtils::GetFfmpegCodecId(
+    const owt::base::VideoCodec& video_codec) {
+  auto it = video_codec_id_map.find(video_codec);
+  if (it == video_codec_id_map.end()) {
+    return absl::nullopt;
+  }
+  return absl::make_optional(it->second);
+}
+
+absl::optional<AVCodecID> MediaUtils::GetFfmpegCodecId(
+    const webrtc::VideoCodecType& video_codec) {
+  auto it = webrtc_video_codec_id_map.find(video_codec);
+  if (it == webrtc_video_codec_id_map.end()) {
+    return absl::nullopt;
+  }
+  return absl::make_optional(it->second);
+}
+#endif
 
 }  // namespace base
 }  // namespace owt

@@ -12,7 +12,7 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "talk/owt/sdk/base/codecutils.h"
 #ifdef OWT_USE_FFMPEG
-#include "talk/owt/sdk/base/win/d3d11va_h264_decoder.h"
+#include "talk/owt/sdk/base/win/d3d11_video_decoder.h"
 #endif
 #ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
@@ -90,7 +90,6 @@ ExternalVideoDecoderFactory::CreateVideoDecoder(
 #ifdef WEBRTC_USE_H265
     else if (codec == webrtc::kVideoCodecH265) {
       h265_hw = true;
-      RTC_LOG(LS_INFO) << "Enabling hardware hevc.";
     }
 #endif
   }
@@ -101,28 +100,21 @@ ExternalVideoDecoderFactory::CreateVideoDecoder(
     RTC_LOG(LS_INFO)
         << "Not supporting HW VP8 decoder. Requesting SW decoding.";
     return webrtc::VP8Decoder::Create();
-  }
-#ifdef OWT_USE_FFMPEG
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-    return owt::base::H264DXVADecoderImpl::Create(cricket::VideoCodec(format));
-  }
-#else
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) &&
+  }  else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) &&
            !h264_hw) {
     return webrtc::H264Decoder::Create();
-  }
-#endif
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
            !av1_hw) {
     return webrtc::CreateDav1dDecoder();
   }
-#ifdef WEBRTC_USE_H265
-  // This should not happen. We do not return here but preceed with HW decoder.
-  else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName) &&
-           !h265_hw) {
-    RTC_LOG(LS_ERROR) << "Returning null hevc encoder.";
-  }
+  if (vp8_hw || vp9_hw || h264_hw || h265_hw || av1_hw) {
+#if defined(OWT_USE_FFMPEG)
+    return owt::base::D3D11VideoDecoder::Create(cricket::VideoCodec(format));
 #endif
+#if defined(OWT_USE_MSDK)
+    return owt::base::MSDKVideoDecoder::Create(cricket::VideoCodec(format));
+#endif
+  }
 
   RTC_CHECK_NOTREACHED();
 }
