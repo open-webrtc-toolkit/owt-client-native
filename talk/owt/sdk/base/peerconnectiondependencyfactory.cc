@@ -190,7 +190,7 @@ void PeerConnectionDependencyFactory::
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   } else if (render_hardware_acceleration_enabled_) {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && defined(OWT_USE_MSDK)
     encoder_factory.reset(new ExternalVideoEncoderFactory());
 #else
     // For Linux HW encoder pending verification.
