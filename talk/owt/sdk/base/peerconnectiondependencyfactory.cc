@@ -190,7 +190,11 @@ void PeerConnectionDependencyFactory::
   if (encoded_frame_) {
     encoder_factory.reset(new EncodedVideoEncoderFactory());
   } else if (render_hardware_acceleration_enabled_) {
-#if defined(WEBRTC_WIN) && defined(OWT_USE_MSDK)
+#if defined(OWT_CG_CLIENT)
+    // CG client app takes care of external encoder. If it's expected to receive
+    // video streams, an encoder must be provided.
+    encoder_factory.reset(new ExternalVideoEncoderFactory());
+#elif defined(WEBRTC_WIN) && defined(OWT_USE_MSDK)
     encoder_factory.reset(new ExternalVideoEncoderFactory());
 #else
     // For Linux HW encoder pending verification.
@@ -204,10 +208,12 @@ void PeerConnectionDependencyFactory::
     decoder_factory.reset(new CustomizedVideoDecoderFactory(
         GlobalConfiguration::GetCustomizedVideoDecoder()));
   } else if (render_hardware_acceleration_enabled_) {
-#if defined(OWT_USE_MSDK) || defined(OWT_USE_FFMPEG)
+#if defined(OWT_USE_MSDK) || defined(OWT_USE_FFMPEG) || defined(OWT_CG_SERVER)
 #if defined(WEBRTC_WIN)
     decoder_factory.reset(new ExternalVideoDecoderFactory(nullptr));
-#else
+#elif !defined(OWT_CG_SERVER)
+    // Linux CG server is supposed to have external decoder so it can receives
+    // video streams from client.
     decoder_factory.reset(new ExternalVideoDecoderFactory());
 #endif
 #else
