@@ -227,6 +227,13 @@ static_library("owt_sdk_base") {
 
   defines = [ "USE_BUILTIN_SW_CODECS" ]
 
+  if (owt_cg_server) {
+    defines += [ "OWT_CG_SERVER" ]
+  }
+  if (owt_cg_client) {
+    defines += [ "OWT_CG_CLIENT" ]
+  }
+
   if (owt_msdk_header_root != "") {
     include_dirs += [ owt_msdk_header_root ]
   }
@@ -295,7 +302,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
     ]
-    if (owt_msdk_header_root != "" || owt_ffmpeg_root != "") {
+    if (owt_msdk_header_root != "" || owt_ffmpeg_root != ""||owt_cg_server) {
       sources += [
         "sdk/base/win/externalvideodecoderfactory.cc",
         "sdk/base/win/externalvideodecoderfactory.h",
@@ -419,6 +426,9 @@ static_library("owt_sdk_p2p") {
   configs += [ ":owt_common" ]
   if (owt_cg_server) {
     defines = [ "OWT_CG_SERVER" ]
+  }
+  if (owt_cg_client) {
+    defines = [ "OWT_CG_CLIENT" ]
   }
 }
 static_library("owt_sdk_conf") {
