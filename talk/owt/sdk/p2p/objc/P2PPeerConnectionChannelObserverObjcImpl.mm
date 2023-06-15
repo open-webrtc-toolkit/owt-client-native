@@ -37,6 +37,12 @@ void P2PPeerConnectionChannelObserverObjcImpl::OnStopped(
   [_observer onStoppedFrom:[NSString stringWithUTF8String:remote_id.c_str()]];
 }
 
+void P2PPeerConnectionChannelObserverObjcImpl::OnPeerConnectionClosed(
+    const std::string& remote_id) {
+  // This method is provided for CG server only. It doesn't have an iOS client,
+  // so we leave it empty here.
+}
+
 void P2PPeerConnectionChannelObserverObjcImpl::TriggerStreamRemoved(
     std::shared_ptr<owt::base::RemoteStream> stream) {
   if (remote_streams_.find(stream->Id()) == remote_streams_.end()) {
