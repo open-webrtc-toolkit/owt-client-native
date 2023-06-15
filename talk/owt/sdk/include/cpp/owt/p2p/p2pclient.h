@@ -260,6 +260,8 @@ class OWT_EXPORT P2PClient final
                                  const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(std::shared_ptr<owt::base::RemoteStream> stream);
+  // Triggered when the PeerConnection is closed.
+  virtual void OnPeerConnectionClosed(const std::string& remote_id);
 
  private:
   void Unpublish(const std::string& target_id,

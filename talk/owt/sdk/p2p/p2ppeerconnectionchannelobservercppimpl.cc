@@ -17,5 +17,9 @@ void P2PPeerConnectionChannelObserverCppImpl::OnStopped(
     const std::string& remote_id) {
   peer_client_.OnStopped(remote_id);
 }
+void P2PPeerConnectionChannelObserverCppImpl::OnPeerConnectionClosed(
+    const std::string& remote_id) {
+  peer_client_.OnPeerConnectionClosed(remote_id);
+}
 }
 }

@@ -34,8 +34,10 @@ class P2PPeerConnectionChannelObserver {
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(
       std::shared_ptr<RemoteStream> stream) = 0;
-  // Triggered when the WebRTC session is ended.
+  // Triggered when the PeerConnectionChannel is stopped.
   virtual void OnStopped(const std::string& remote_id) = 0;
+  // Triggered when the PeerConnection is closed.
+  virtual void OnPeerConnectionClosed(const std::string& remote_id) = 0;
 };
 // An instance of P2PPeerConnectionChannel manages a session for a specified
 // remote client.
@@ -148,6 +150,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Publish and/or unpublish all streams in pending stream list.
   void DrainPendingStreams();
   void TriggerOnStopped();
+  void TriggerOnPeerConnectionClosed();
   void CheckWaitedList();  // Check pending streams and negotiation requests.
   void SendStop(std::function<void()> on_success,
                 std::function<void(std::unique_ptr<Exception>)> on_failure);
