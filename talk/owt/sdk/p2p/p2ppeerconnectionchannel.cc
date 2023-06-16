@@ -546,7 +546,10 @@ void P2PPeerConnectionChannel::OnMessageStreamInfo(Json::Value& stream_info) {
 void P2PPeerConnectionChannel::OnSignalingChange(
     PeerConnectionInterface::SignalingState new_state) {
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_;
+  // TODO @sam: We probably want to keep the peer_connection_ alive for this method,
+  // like the other methods that need the peer_connection_.
+  // Investigate uncommenting the below.
+  // rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
   switch (new_state) {
     case PeerConnectionInterface::SignalingState::kStable:
       if (pending_remote_sdp_) {
@@ -1296,17 +1299,17 @@ void P2PPeerConnectionChannel::DrainPendingMessages() {
 }
 void P2PPeerConnectionChannel::DrainPendingRemoteCandidates() {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
-  {
+  // If we didn't get a connection ref, that means that the connection already got closed
+  // and pending remote candidates have already been cleared.
+  if (temp_pc_ && temp_pc_->remote_description()) {
     rtc::CritScope cs(&pending_remote_candidates_crit_);
-    if (temp_pc_->remote_description()) {
-      RTC_LOG(LS_INFO) << "Draining pending ICE Candidates, received " << pending_remote_candidates_.size();
-      for (const auto& ice_candidate : pending_remote_candidates_) {
-        if (!temp_pc_->AddIceCandidate(ice_candidate.get())) {
-          RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
-        }
+    RTC_LOG(LS_INFO) << "Draining pending ICE Candidates, received " << pending_remote_candidates_.size();
+    for (const auto& ice_candidate : pending_remote_candidates_) {
+      if (!temp_pc_->AddIceCandidate(ice_candidate.get())) {
+        RTC_LOG(LS_WARNING) << "Failed to add remote candidate.";
       }
-      pending_remote_candidates_.clear();
     }
+    pending_remote_candidates_.clear();
   }
 }
 Json::Value P2PPeerConnectionChannel::UaInfo() {
