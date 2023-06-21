@@ -2,7 +2,7 @@
 /base
 /build
 /buildtools
-/out*/
+/out
 /testing
 /third_party
 /tools
