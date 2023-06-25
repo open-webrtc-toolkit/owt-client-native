@@ -375,17 +375,9 @@ void P2PPeerConnectionChannel::SendSignalingMessage(
       });
 }
 void P2PPeerConnectionChannel::OnIncomingSignalingMessage(
-    const std::string& message) {
+    const Json::Value& json_message) {
   if (ended_)
     return;
-  RTC_LOG(LS_INFO) << "OnIncomingMessage: " << message;
-  RTC_DCHECK(!message.empty());
-  Json::Reader reader;
-  Json::Value json_message;
-  if (!reader.parse(message, json_message)) {
-    RTC_LOG(LS_WARNING) << "Cannot parse incoming message.";
-    return;
-  }
   std::string message_type;
   rtc::GetStringFromJsonObject(json_message, kMessageTypeKey, &message_type);
   if (message_type.empty()) {

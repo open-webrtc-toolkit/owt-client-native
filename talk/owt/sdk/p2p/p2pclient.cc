@@ -23,9 +23,13 @@
 using namespace rtc;
 namespace owt {
 namespace p2p {
-enum IcsP2PError : int {
-  kWebrtcIceGatheringPolicyUnsupported = 2601,
-};
+
+const std::string kMessageTypeKey = "type";
+const std::string kMessageDataKey = "data";
+const std::string kSessionDescriptionTypeKey = "type";
+const std::string kChatClosed = "chat-closed";
+const std::string kChatSignal = "chat-signal";
+const std::string kSdpTypeOffer = "offer";
 
 P2PClient::P2PClient(
     P2PClientConfiguration& configuration,
@@ -239,7 +243,7 @@ void P2PClient::SetLocalId(const std::string& local_id) {
 }
 void P2PClient::OnSignalingMessage(const std::string& message,
                                    const std::string& remote_id) {
-  RTC_LOG(LS_WARNING) << "Receiving signaling message from remote:" << message;
+  RTC_LOG(LS_VERBOSE) << "Receiving signaling message from remote:" << message;
   std::weak_ptr<P2PClient> weak_this = shared_from_this();
   signaling_queue_->PostTask([weak_this, remote_id, message]() {
     auto that = weak_this.lock();
@@ -251,79 +255,52 @@ void P2PClient::OnSignalingMessage(const std::string& message,
           << "Chat cannot be setup since the remote user is not allowed.";
       return;
     }
+    Json::Reader reader;
+    Json::Value json_message;
+    if (!reader.parse(message, json_message)) {
+      RTC_LOG(LS_WARNING) << "Cannot parse incoming message.";
+      return;
+    }
+    std::string message_type;
+    rtc::GetStringFromJsonObject(json_message, kMessageTypeKey, &message_type);
     if (!that->IsPeerConnectionChannelCreated(remote_id)) {
-      if (message.find("\"type\":\"chat-closed\"") != std::string::npos) {
+      if (message_type == kChatClosed) {
         RTC_LOG(LS_WARNING) << "Non-existed chat cannot be stopped.";
         return;
       }
-    } else if (message.find("\"type\":\"offer\"") != std::string::npos) {
-      RTC_LOG(LS_ERROR) << "Received offer from remote.";
-      // If we don't have a PC before we receive an offer.
-      auto pcc = that->GetPeerConnectionChannel(remote_id);
-      if (pcc->HaveLocalOffer() && that->local_id_.compare(remote_id) > 0) {
-        // If our ID is larger than remote, make the remote side as the
-        // publisher (offerer) In case we already have an offer. So we
-        // remove current PCC and create answer.
-        std::shared_ptr<LocalStream> stream = pcc->GetLatestLocalStream();
-        std::function<void()> success_callback =
-            pcc->GetLatestPublishSuccessCallback();
-        std::function<void(std::unique_ptr<Exception>)> failure_callback =
-            pcc->GetLatestPublishFailureCallback();
-        pcc->Stop(nullptr, nullptr);
-        {
-          // If we already created offer,
-          const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
-          that->pc_channels_.erase(remote_id);
-        }
-        auto new_pcc = that->GetPeerConnectionChannel(remote_id);
-        new_pcc->OnIncomingSignalingMessage(message);
-        new_pcc->Publish(stream, success_callback, failure_callback);
-        return;
-      }
-    } else if (message.find("\"type\":\"chat-closed\"") != std::string::npos) {
-      RTC_LOG(LS_ERROR) << "Handle the situation that PCC is created by "
-                           "received Chat-closed.";
-      int code = 0;
-      std::string error = "";
-      Json::Reader reader;
-      Json::Value json_message;
-      if (reader.parse(message, json_message)) {
-        Json::Value stop_info;
-        rtc::GetValueFromJsonObject(json_message, "data", &stop_info);
-        rtc::GetIntFromJsonObject(stop_info, "code", &code);
-        rtc::GetStringFromJsonObject(stop_info, "message", &error);
-
-        if (code == kWebrtcIceGatheringPolicyUnsupported) {
-          auto pcc = that->GetPeerConnectionChannel(remote_id);
+    } else if (message_type == kChatSignal){
+      Json::Value signal;
+      rtc::GetValueFromJsonObject(json_message, kMessageDataKey, &signal);
+      std::string sdp_type;
+      rtc::GetStringFromJsonObject(signal, kSessionDescriptionTypeKey, &sdp_type);
+      if (sdp_type == kSdpTypeOffer) {
+        // If we don't have a PC before we receive an offer.
+        auto pcc = that->GetPeerConnectionChannel(remote_id);
+        if (pcc->HaveLocalOffer() && that->local_id_.compare(remote_id) > 0) {
+          // If our ID is larger than remote, make the remote side as the
+          // publisher (offerer) In case we already have an offer. So we
+          // remove current PCC and create answer.
           std::shared_ptr<LocalStream> stream = pcc->GetLatestLocalStream();
           std::function<void()> success_callback =
               pcc->GetLatestPublishSuccessCallback();
           std::function<void(std::unique_ptr<Exception>)> failure_callback =
               pcc->GetLatestPublishFailureCallback();
-          pcc->SetAbandoned();
+          pcc->Stop(nullptr, nullptr);
           {
+            // If we already created offer,
             const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
             that->pc_channels_.erase(remote_id);
           }
-
           auto new_pcc = that->GetPeerConnectionChannel(remote_id);
+          new_pcc->OnIncomingSignalingMessage(json_message);
           new_pcc->Publish(stream, success_callback, failure_callback);
           return;
         }
-        auto pcc = that->GetPeerConnectionChannel(remote_id);
-        // Don't send stop to remote.
-        pcc->SetAbandoned();
-        {
-          const std::lock_guard<std::mutex> lock(that->pc_channels_mutex_);
-          that->pc_channels_.erase(remote_id);
-        }
-
-        return;
       }
     }
     // Secondly dispatch the message to pcc.
     auto pcc = that->GetPeerConnectionChannel(remote_id);
-    pcc->OnIncomingSignalingMessage(message);
+    pcc->OnIncomingSignalingMessage(json_message);
   });
 }
 void P2PClient::OnServerDisconnected() {

@@ -409,7 +409,6 @@ static_library("owt_sdk_p2p") {
     "sdk/include/cpp/owt/p2p/p2pclient.h",
     "sdk/include/cpp/owt/p2p/p2ppublication.h",
     "sdk/include/cpp/owt/p2p/p2psignalingchannelinterface.h",
-    "sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h",
     "sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h",
     "sdk/p2p/p2pclient.cc",
     "sdk/p2p/p2ppeerconnectionchannel.cc",
