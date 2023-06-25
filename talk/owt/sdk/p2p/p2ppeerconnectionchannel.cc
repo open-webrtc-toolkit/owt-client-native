@@ -767,6 +767,7 @@ void P2PPeerConnectionChannel::OnIceConnectionChange(
       }).detach();
       break;
     case webrtc::PeerConnectionInterface::kIceConnectionClosed:
+      TriggerOnPeerConnectionClosed();
       TriggerOnStopped();
       CleanLastPeerConnection();
       break;
@@ -960,6 +961,14 @@ void P2PPeerConnectionChannel::TriggerOnStopped() {
   for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
        observers_.begin(); it != observers_.end(); it++) {
     (*it)->OnStopped(remote_id_);
+  }
+}
+
+void P2PPeerConnectionChannel::TriggerOnPeerConnectionClosed() {
+  for (std::vector<P2PPeerConnectionChannelObserver*>::iterator it =
+           observers_.begin();
+       it != observers_.end(); it++) {
+    (*it)->OnPeerConnectionClosed(remote_id_);
   }
 }
 

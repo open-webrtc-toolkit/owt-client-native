@@ -244,6 +244,11 @@ static_library("owt_sdk_base") {
 
   if (owt_ffmpeg_root != "") {
     include_dirs += [ owt_ffmpeg_root + "/include" ]
+    lib_dirs = [ owt_ffmpeg_root + "/lib" ]
+    libs = [
+      "avcodec",
+      "avutil",
+    ]
   }
 
   if (rtc_use_x11) {
@@ -302,7 +307,7 @@ static_library("owt_sdk_base") {
       "sdk/base/win/videorendererd3d11.cc",
       "sdk/base/win/videorendererd3d11.h",
     ]
-    if (owt_msdk_header_root != "" || owt_ffmpeg_root != ""||owt_cg_server) {
+    if (owt_msdk_header_root != "" || owt_ffmpeg_root != "" || owt_cg_server) {
       sources += [
         "sdk/base/win/externalvideodecoderfactory.cc",
         "sdk/base/win/externalvideodecoderfactory.h",

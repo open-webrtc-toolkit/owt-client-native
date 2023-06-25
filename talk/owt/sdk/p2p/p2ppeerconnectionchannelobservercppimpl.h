@@ -20,12 +20,14 @@ class P2PPeerConnectionChannelObserverCppImpl
       : peer_client_(peer_client) {}
   // Triggered when remote user send data via data channel.
   // Currently, data is string type.
-  virtual void OnMessageReceived(const std::string& remote_id,
+  void OnMessageReceived(const std::string& remote_id,
                                  const std::string& message) override;
   // Triggered when a new stream is added.
-  virtual void OnStreamAdded(std::shared_ptr<RemoteStream> stream) override;
-  // Triggered when the WebRTC session is ended.
-  virtual void OnStopped(const std::string& remote_id) override;
+  void OnStreamAdded(std::shared_ptr<RemoteStream> stream) override;
+  // Triggered when the PeerConnectionChannel is stopped.
+  void OnStopped(const std::string& remote_id) override;
+  // Triggered when the PeerConnection is closed.
+  void OnPeerConnectionClosed(const std::string& remote_id) override;
 
  private:
   P2PClient& peer_client_;
