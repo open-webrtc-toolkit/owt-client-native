@@ -13,7 +13,6 @@
 #include "talk/owt/sdk/include/cpp/owt/base/stream.h"
 #include "talk/owt/sdk/include/cpp/owt/base/exception.h"
 #include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingsenderinterface.h"
-#include "talk/owt/sdk/include/cpp/owt/p2p/p2psignalingreceiverinterface.h"
 #include "webrtc/sdk/media_constraints.h"
 #include "webrtc/rtc_base/strings/json.h"
 #include "webrtc/rtc_base/synchronization/mutex.h"
@@ -41,8 +40,7 @@ class P2PPeerConnectionChannelObserver {
 };
 // An instance of P2PPeerConnectionChannel manages a session for a specified
 // remote client.
-class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
-                                 public PeerConnectionChannel {
+class P2PPeerConnectionChannel : public PeerConnectionChannel {
  public:
   explicit P2PPeerConnectionChannel(
       PeerConnectionChannelConfiguration configuration,
@@ -66,9 +64,8 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Remove a P2PPeerConnectionChannel observer. If the observer doesn't exist,
   // it will do nothing.
   void RemoveObserver(P2PPeerConnectionChannelObserver* observer);
-  // Implementation of P2PSignalingReceiverInterface. Handle signaling message
-  // received from remote side.
-  void OnIncomingSignalingMessage(const std::string& message) override;
+  // Handle signaling message received from remote side.
+  void OnIncomingSignalingMessage(const Json::Value& json_message);
   // Publish a local stream to remote user.
   void Publish(std::shared_ptr<LocalStream> stream,
                std::function<void()> on_success,
