@@ -256,6 +256,10 @@ std::string SdpUtils::SetPreferCodecs(const std::string& sdp,
       RTC_LOG(LS_WARNING) << "Wrong SDP format description: " << m_line;
       return sdp;
     }
+    if (m_line_vector[1] == "0") {
+      RTC_LOG(LS_WARNING) << "Ignore rejected section: " << m_line;
+      return sdp;
+    }
     std::stringstream m_line_stream;
     for (int i = 0; i < 3; i++) {
       if (i < 2)
