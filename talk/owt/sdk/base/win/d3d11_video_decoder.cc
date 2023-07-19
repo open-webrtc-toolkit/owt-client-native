@@ -223,6 +223,7 @@ bool D3D11VideoDecoder::Configure(const Settings& settings) {
     RTC_LOG(LS_ERROR) << "Failed to prepare the hw decoder.";
     return false;
   }
+  settings_ = settings;
   return true;
 }
 
@@ -404,7 +405,9 @@ int64_t D3D11VideoDecoder::GetSideData(const uint8_t* frame_data,
   if (head[0] != 0 || head[1] != 0 || head[2] != 0 || head[3] != 1) {
     return -1;
   }
-  if ((head[4] & 0x1f) == 0x06) {
+
+  if (settings_.codec_type() == webrtc::kVideoCodecH264 &&
+      (head[4] & 0x1f) == 0x06) {
     if (head[5] == 0x05) { // user data unregistered.
       payload_size = head[6];
       if (payload_size > frame_size - 4 - 4 || payload_size < 17) //. 4-byte start code + 4 byte NAL HDR/Payload Type/Size/RBSP
@@ -448,7 +451,58 @@ int64_t D3D11VideoDecoder::GetSideData(const uint8_t* frame_data,
                              head + sei_idx + cursor_data_size);
         }
       }
+      return payload_size;
+    }
+  } else if (settings_.codec_type() == webrtc::kVideoCodecH265 &&
+             (head[4] & 0x7E) >> 1 == 0x27 && frame_size >= 25) {
+    // skip byte #5 and check byte #6
+    if (head[6] == 0x05) {
+      payload_size = head[7];
+      if (payload_size > frame_size - 4 - 5 ||
+          payload_size < 17) {  // 4-byte start code + 5 byte NAL HDR/Payload
+                                // Type/Size/RBSP
+        RTC_LOG(LS_INFO) << "Invalid payload size.";
+        return -1;
+      }
+      for (int i = 8; i < 24; i++) {
+        if (head[i] != frame_number_sei_guid[i - 8]) {
+          return -1;
+        }
+      }
+      // Read the entire side-data payload
+      for (unsigned int i = 0; i < payload_size - 16; i++)
+        side_data.push_back(head[i + 24]);
 
+      // Proceed with cursor data SEI, if any.
+      unsigned int sei_idx = 24 + payload_size - 16;
+      if (head[sei_idx] != 0x05) {
+        return payload_size;
+      } else {
+        sei_idx++;
+        unsigned int cursor_data_size = 0;
+        while (head[sei_idx] == 0xFF) {
+          cursor_data_size += head[sei_idx];
+          sei_idx++;
+        }
+        cursor_data_size += head[sei_idx];
+        cursor_data_size -= 16;
+        sei_idx++;
+
+        for (int i = 0; i < 16; i++) {
+          if (head[sei_idx] != cursor_data_sei_guid[i]) {
+            return -1;
+          }
+          sei_idx++;
+        }
+
+        if (cursor_data_size > 0) {
+          if (!cursor_data.empty()) {
+            cursor_data.clear();
+          }
+          cursor_data.insert(cursor_data.end(), head + sei_idx,
+                             head + sei_idx + cursor_data_size);
+        }
+      }
       return payload_size;
     }
   }

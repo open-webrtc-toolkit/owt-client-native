@@ -195,7 +195,7 @@ int32_t CustomizedVideoEncoderProxy::Encode(
               (cursor_data_ptr && cursor_data_size))) {
     data_ptr[0] = data_ptr[1] = data_ptr[2] = 0;
     data_ptr[3] = 0x01;                 // start code: byte 0-3
-    data_ptr[4] = 0x27;                 // F: 0, nal_unit_type: prefix-SEI
+    data_ptr[4] = 0x4e;                 // F: 0, nal_unit_type: prefix-SEI
     data_ptr[5] = 0x1;                  // layerID: 0; TID: 1
     data_ptr[6] = 0x05;                 // userdata unregistered
     data_ptr[7] = 16 + side_data_size;  // payload size
