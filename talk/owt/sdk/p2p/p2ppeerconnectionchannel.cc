@@ -158,6 +158,11 @@ void P2PPeerConnectionChannel::Publish(
   RTC_LOG(LS_INFO) << "Publishing a local stream.";
   // Add reference to peer connection until end of function.
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    return;
+  }
+
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
@@ -431,7 +436,11 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "Received message type: " << type;
   // Store reference so peer_connection_ is not deleted until function ends
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
-  if (!temp_pc_) { return; }
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    return;
+  }
+
   if (type == "offer" || type == "answer") {
     if (type == "offer" && session_state_ == kSessionStateMatched) {
       ChangeSessionState(kSessionStateConnecting);
@@ -548,6 +557,10 @@ void P2PPeerConnectionChannel::OnSignalingChange(
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
 
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    return;
+  }
 
   switch (new_state) {
     case PeerConnectionInterface::SignalingState::kStable:
@@ -841,6 +854,11 @@ void P2PPeerConnectionChannel::Unpublish(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    return;
+  }
+
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     RTC_LOG(LS_WARNING) << "Local stream cannot be nullptr.";
     return;
