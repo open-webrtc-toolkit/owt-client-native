@@ -151,6 +151,18 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> P2PPeerConnectionChannel::Ge
   return temp_pc_;
 }
 
+void P2PPeerConnectionChannel::ClearPendingStreams() {
+  RTC_LOG(LS_INFO) << "Clearing pending streams.";
+  {
+    std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
+    pending_publish_streams_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
+    pending_unpublish_streams_.clear();
+  }
+}
+
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
@@ -158,6 +170,19 @@ void P2PPeerConnectionChannel::Publish(
   RTC_LOG(LS_INFO) << "Publishing a local stream.";
   // Add reference to peer connection until end of function.
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    // Skip on_success callback because we haven't published anything.
+    ClearPendingStreams();
+    if (on_failure) {
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientRemoteNotExisted,
+                        "Peer connection closed."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
     return;
@@ -431,7 +456,11 @@ void P2PPeerConnectionChannel::OnMessageSignal(Json::Value& message) {
   RTC_LOG(LS_INFO) << "Received message type: " << type;
   // Store reference so peer_connection_ is not deleted until function ends
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
-  if (!temp_pc_) { return; }
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    return;
+  }
+
   if (type == "offer" || type == "answer") {
     if (type == "offer" && session_state_ == kSessionStateMatched) {
       ChangeSessionState(kSessionStateConnecting);
@@ -548,6 +577,11 @@ void P2PPeerConnectionChannel::OnSignalingChange(
   RTC_LOG(LS_INFO) << "Signaling state changed: " << new_state;
 
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    ClearPendingStreams();
+    return;
+  }
 
   switch (new_state) {
     case PeerConnectionInterface::SignalingState::kStable:
@@ -841,6 +875,19 @@ void P2PPeerConnectionChannel::Unpublish(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  if (!temp_pc_) {
+    RTC_LOG(LS_INFO) << "Peer connection closed, returning.";
+    // Skip on_success callback because technically we did not unpublish anything.
+    ClearPendingStreams();
+    if (on_failure) {
+      std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientRemoteNotExisted,
+                        "Peer connection closed."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+
   if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
     RTC_LOG(LS_WARNING) << "Local stream cannot be nullptr.";
     return;
@@ -1091,7 +1138,6 @@ void P2PPeerConnectionChannel::DrainPendingStreams() {
       if (stream->Source().video == owt::base::VideoSourceInfo::kScreenCast) {
         video_track_source = "screen-cast";
       }
-      RTC_CHECK(temp_pc_);
       // Collect stream and tracks information.
       rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream =
           stream->MediaStream();

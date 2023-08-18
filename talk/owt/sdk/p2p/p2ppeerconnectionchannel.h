@@ -171,6 +171,7 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   // Set remote capability flags based on UA.
   void HandleRemoteCapability(Json::Value& ua);
   void SendUaInfo();
+  void ClearPendingStreams();
   rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
   P2PSignalingSenderInterface* signaling_sender_;
   std::string local_id_;
