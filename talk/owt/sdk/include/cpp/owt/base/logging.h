@@ -35,6 +35,13 @@ class OWT_EXPORT Logging final {
   static void LogToConsole(LoggingSeverity severity);
   /// Set logging to files under provided dir rotately.
   static void LogToFileRotate(LoggingSeverity severity, std::string& dir, size_t max_log_size);
+  /// Set logging to files under provided dir rotately, with file name starting
+  /// with the 'prefix`.
+  static void LogToFileRotate(LoggingSeverity severity,
+                              const std::string& dir,
+                              const std::string& prefix,
+                              size_t max_log_size);
+
  private:
   static LoggingSeverity min_severity_;
 };

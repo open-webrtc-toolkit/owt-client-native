@@ -35,6 +35,7 @@ void Logging::LogToConsole(LoggingSeverity severity) {
   min_severity_ = severity;
   rtc::LogMessage::ConfigureLogging(logging_param_map[static_cast<int>(severity)].c_str());
 }
+
 void Logging::LogToFileRotate(LoggingSeverity severity, std::string& dir, size_t max_log_size) {
   min_severity_ = severity;
   static std::shared_ptr<rtc::CallSessionFileRotatingLogSink> log_sink =
@@ -42,6 +43,20 @@ void Logging::LogToFileRotate(LoggingSeverity severity, std::string& dir, size_t
   log_sink->Init();
   rtc::LogMessage::AddLogToStream(log_sink.get(), logging_severity_map[static_cast<int>(severity)]);
 }
+
+void Logging::LogToFileRotate(LoggingSeverity severity,
+                              const std::string& dir,
+                              const std::string& prefix,
+                              size_t max_log_size) {
+  min_severity_ = severity;
+  static std::shared_ptr<rtc::CallSessionFileRotatingLogSink> log_sink =
+      std::make_shared<rtc::CallSessionFileRotatingLogSink>(dir, prefix,
+                                                            max_log_size);
+  log_sink->Init();
+  rtc::LogMessage::AddLogToStream(
+      log_sink.get(), logging_severity_map[static_cast<int>(severity)]);
+}
+
 LoggingSeverity Logging::Severity() {
   return min_severity_;
 }
