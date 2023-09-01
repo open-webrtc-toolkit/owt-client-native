@@ -145,6 +145,10 @@ int32_t CustomizedAudioCapturer::StopRecording() {
   recording_ = false;
   mutex_.Unlock();
   thread_rec_.Finalize();
+  last_call_record_millis_ = 0;
+  last_thread_rec_end_time_ = 0;
+  need_sleep_ms_ = 0;
+  real_sleep_ms_ = 0;
   return 0;
 }
 bool CustomizedAudioCapturer::Recording() const {
