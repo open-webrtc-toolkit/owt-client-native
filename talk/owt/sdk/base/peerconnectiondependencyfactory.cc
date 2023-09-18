@@ -149,6 +149,9 @@ void PeerConnectionDependencyFactory::
   if (GlobalConfiguration::GetFlexFecEnabled()) {
     field_trial_ += "OWT-FlexFEC/Enabled/";
   }
+  if (GlobalConfiguration::GetRangeExtensionEnabled()) {
+    field_trial_ += "OWT-RangeExtension/Enabled/";
+  }
   int delay_bwe_weight = GlobalConfiguration::GetDelayBasedBweWeight();
   field_trial_ +=
       "OWT-DelayBweWeight/" + std::to_string(delay_bwe_weight) + "/";

@@ -97,6 +97,14 @@ class OWT_EXPORT GlobalConfiguration {
   }
 
   /**
+   @brief This enables decoding of HEVC range extensionb video. By default
+   disabled. When this is enabled, will use ffmpeg software decoder for HEVC.
+  */
+  static void SetRangeExtensionEnabled(bool enabled) {
+    range_extension_enabled_ = enabled;
+  }
+
+  /**
    @brief Set the global bitrate limits applied to external BWE. If any of the
    value is set to 0, will use the stack default for that.
    @param start_bitrate_kbps the start birate to be set to external BWE.
@@ -310,6 +318,9 @@ class OWT_EXPORT GlobalConfiguration {
     return flex_fec_enabled_;
   }
   static bool flex_fec_enabled_;
+
+  static bool GetRangeExtensionEnabled() { return range_extension_enabled_; }
+  static bool range_extension_enabled_;
 
   static void GetBweRateLimits(int& start_bitrate_kbps,
                                int& min_bitrate_kbps,
