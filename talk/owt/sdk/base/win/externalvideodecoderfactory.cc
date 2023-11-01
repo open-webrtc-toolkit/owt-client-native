@@ -13,10 +13,12 @@
 #include "talk/owt/sdk/base/codecutils.h"
 #ifdef OWT_USE_FFMPEG
 #include "talk/owt/sdk/base/win/d3d11_video_decoder.h"
+#include "talk/owt/sdk/base/win/ffmpeg_decoder_impl.h"
 #endif
 #ifdef OWT_USE_MSDK
 #include "talk/owt/sdk/base/win/msdkvideodecoder.h"
 #endif
+#include "system_wrappers/include/field_trial.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 
@@ -24,6 +26,8 @@ namespace owt {
 namespace base {
 
 ExternalVideoDecoderFactory::ExternalVideoDecoderFactory(ID3D11Device* d3d11_device_external) {
+  range_extension_enabled_ =
+      webrtc::field_trial::IsEnabled("OWT-RangeExtension");
   supported_codec_types_.clear();
 
   bool is_vp8_hw_supported = false, is_vp9_hw_supported = false;
@@ -109,7 +113,11 @@ ExternalVideoDecoderFactory::CreateVideoDecoder(
   }
   if (vp8_hw || vp9_hw || h264_hw || h265_hw || av1_hw) {
 #if defined(OWT_USE_FFMPEG)
-    return owt::base::D3D11VideoDecoder::Create(cricket::VideoCodec(format));
+    if (range_extension_enabled_) {
+      return std::make_unique<FFMpegDecoderImpl>();
+    } else {
+      return owt::base::D3D11VideoDecoder::Create(cricket::VideoCodec(format));
+    }
 #endif
 #if defined(OWT_USE_MSDK)
     return owt::base::MSDKVideoDecoder::Create(cricket::VideoCodec(format));

@@ -35,6 +35,7 @@ class ExternalVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  private:
   std::vector<webrtc::VideoCodecType> supported_codec_types_;
   ID3D11Device* external_device_ = nullptr;
+  bool range_extension_enabled_ = false;
 };
 }  // namespace base
 }  // namespace owt

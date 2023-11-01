@@ -12,6 +12,7 @@ bool GlobalConfiguration::hardware_acceleration_enabled_ = true;
 ID3D11Device* GlobalConfiguration::d3d11_decoding_device_ = nullptr;
 #endif
 bool GlobalConfiguration::flex_fec_enabled_ = false;
+bool GlobalConfiguration::range_extension_enabled_ = false;
 int GlobalConfiguration::link_mtu_ = 0; // not set;
 int GlobalConfiguration::min_port_ = 0; // not set;
 int GlobalConfiguration::max_port_ = 0; // not set;

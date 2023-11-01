@@ -374,6 +374,8 @@ static_library("owt_sdk_base") {
       sources += [
         "sdk/base/win/d3d11_video_decoder.cc",
         "sdk/base/win/d3d11_video_decoder.h",
+        "sdk/base/win/ffmpeg_decoder_impl.cc",
+        "sdk/base/win/ffmpeg_decoder_impl.h",
       ]
     }
     defines += [ "OWT_USE_FFMPEG" ]
