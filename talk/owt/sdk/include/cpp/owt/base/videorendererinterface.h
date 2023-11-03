@@ -21,14 +21,13 @@ enum class VideoBufferType {
   kI420,
   kARGB,
   kD3D11,  // Format self-described.
-  kI444,
 };
 enum class VideoRendererType {
   kI420,
   kARGB,
   kD3D11,  // Format self-described.
-  kI444,
 };
+
 
 #if defined(WEBRTC_WIN)
 struct OWT_EXPORT D3D11ImageHandle {
