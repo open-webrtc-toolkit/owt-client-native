@@ -310,24 +310,11 @@ int32_t D3D11VideoDecoder::Decode(const webrtc::EncodedImage& input_image,
       goto fail;
     }
 
-    if (!frame) {
-      RTC_LOG(LS_ERROR) << "Failed to decode current frame.";
-      goto fail;
-    }
-
-    int width = frame->width;
-    int height = frame->height;
-
-    VideoFrame* input_frame =
-        static_cast<VideoFrame*>(av_buffer_get_opaque(frame->buf[0]));
-    RTC_DCHECK(input_frame);
-
-    rtc::scoped_refptr<VideoFrameBuffer> frame_buffer =
-        input_frame->video_frame_buffer();
-
     // We get one frame from the decoder.
-    if (frame->format != AV_PIX_FMT_YUV444P) {
+    if (frame != nullptr && frame->format == hw_pix_fmt) {
       ID3D11Texture2D* texture = (ID3D11Texture2D*)frame->data[0];
+      int width = frame->width;
+      int height = frame->height;
       int index = (intptr_t)frame->data[1];
       D3D11_TEXTURE2D_DESC texture_desc;
 
@@ -391,20 +378,6 @@ int32_t D3D11VideoDecoder::Decode(const webrtc::EncodedImage& input_image,
         decoded_frame.set_timestamp(input_image.Timestamp());
         decoded_image_callback_->Decoded(decoded_frame);
 
-      }
-      av_frame_free(&frame);
-    } else {  // YUV444P. Which will be a software frame.
-      rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer;
-      dst_buffer =
-          WrapI444Buffer(width, height, frame->data[0], frame->linesize[0],
-                         frame->data[1], frame->linesize[1], frame->data[2],
-                         frame->linesize[2], [frame_buffer] {});
-      webrtc::VideoFrame decoded_frame(dst_buffer, input_image.Timestamp(), 0,
-                                       webrtc::kVideoRotation_0);
-      decoded_frame.set_ntp_time_ms(input_image.ntp_time_ms_);
-      decoded_frame.set_timestamp(input_image.Timestamp());
-      if (decoded_image_callback_) {
-        decoded_image_callback_->Decoded(decoded_frame);
       }
       av_frame_free(&frame);
     }

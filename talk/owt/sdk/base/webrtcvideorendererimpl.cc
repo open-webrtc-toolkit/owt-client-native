@@ -9,7 +9,6 @@
 #include <d3d9.h>
 #include <dxva2api.h>
 #endif
-#include "rtc_base/logging.h"
 #include "talk/owt/sdk/base/nativehandlebuffer.h"
 #include "talk/owt/sdk/base/webrtcvideorendererimpl.h"
 #if defined(WEBRTC_WIN)
@@ -72,18 +71,13 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
         (uint8_t*)render_ptr, resolution, VideoBufferType::kD3D11});
 
     renderer_.RenderFrame(std::move(video_buffer));
-    return;
 #else
     return;
 #endif
   }
-
-  // Non-native buffer. Only for I444 buffer and I444 renderer, we do a
-  // direct copy. Otherwise we convert to renderer type.
   VideoRendererType renderer_type = renderer_.Type();
   if (renderer_type != VideoRendererType::kI420 &&
-      renderer_type != VideoRendererType::kARGB &&
-      renderer_type != VideoRendererType::kI444)
+      renderer_type != VideoRendererType::kARGB)
     return;
   Resolution resolution(frame.width(), frame.height());
   if (renderer_type == VideoRendererType::kARGB) {
@@ -92,28 +86,6 @@ void WebrtcVideoRendererImpl::OnFrame(const webrtc::VideoFrame& frame) {
                             static_cast<uint8_t*>(buffer));
     std::unique_ptr<VideoBuffer> video_buffer(
         new VideoBuffer{buffer, resolution, VideoBufferType::kARGB});
-    renderer_.RenderFrame(std::move(video_buffer));
-  } else if (renderer_type == VideoRendererType::kI444 &&
-             frame.video_frame_buffer()->type() ==
-                 webrtc::VideoFrameBuffer::Type::kI444) {
-    // Assume stride equals to width(might not stand here?)
-    uint8_t* buffer = new uint8_t[resolution.width * resolution.height * 3];
-    rtc::scoped_refptr<VideoFrameBuffer> frame_buffer =
-        frame.video_frame_buffer();
-    const webrtc::PlanarYuv8Buffer* planar_yuv_buffer =
-        reinterpret_cast<const webrtc::PlanarYuv8Buffer*>(
-            frame_buffer->GetI444());
-    size_t data_ptr = 0;
-    memcpy(buffer, planar_yuv_buffer->DataY(),
-           planar_yuv_buffer->StrideY() * planar_yuv_buffer->height());
-    data_ptr += planar_yuv_buffer->StrideY() * planar_yuv_buffer->height();
-    memcpy(buffer + data_ptr, planar_yuv_buffer->DataU(),
-           planar_yuv_buffer->StrideU() * planar_yuv_buffer->height());
-    data_ptr += planar_yuv_buffer->StrideU() * planar_yuv_buffer->height();
-    memcpy(buffer + data_ptr, planar_yuv_buffer->DataV(),
-           planar_yuv_buffer->StrideV() * planar_yuv_buffer->height());
-    std::unique_ptr<VideoBuffer> video_buffer(
-        new VideoBuffer{buffer, resolution, VideoBufferType::kI444});
     renderer_.RenderFrame(std::move(video_buffer));
   } else {
     uint8_t* buffer = new uint8_t[resolution.width * resolution.height * 3 / 2];
