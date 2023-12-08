@@ -1,0 +1,49 @@
+From 418bcfe0e92e30ab8f2e5528363f7d456ef8c67b Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 7 Dec 2023 10:18:43 +0800
+Subject: [PATCH] Suppress some warnings for clang 18.
+
+---
+ config/compiler/BUILD.gn | 12 ++++++++++++
+ toolchain/toolchain.gni  |  2 +-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 75e3de46f..e0f215acf 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1576,6 +1576,18 @@ config("default_warnings") {
+ 
+           # TODO(crbug.com/1352183) Evaluate and possibly enable.
+           "-Wno-bitfield-constant-conversion",
++
++          # TODO(crbug.com/1412713) Evaluate and possibly enable.
++          "-Wno-deprecated-this-capture",
++
++          # TODO(https://crbug.com/1491833): Fix and re-enable.
++          "-Wno-invalid-offsetof",
++
++          # TODO(crbug.com/1494809): Evaluate and possibly enable.
++          "-Wno-vla-extension",
++
++          # TODO(https://crbug.com/1490607): Fix and re-enable.
++          "-Wno-thread-safety-reference-return",
+         ]
+       }
+     }
+diff --git a/toolchain/toolchain.gni b/toolchain/toolchain.gni
+index 6a49c399e..3b8c7e2e4 100644
+--- a/toolchain/toolchain.gni
++++ b/toolchain/toolchain.gni
+@@ -33,7 +33,7 @@ if (generate_linker_map) {
+ }
+ 
+ declare_args() {
+-  clang_version = "16.0.0"
++  clang_version = "18"
+ }
+ 
+ # Extension for shared library files (including leading dot).
+-- 
+2.43.0
+

@@ -1,0 +1,30 @@
+From bcf270ff675649edabbf2389d62ae0ea22886e3b Mon Sep 17 00:00:00 2001
+From: Jianjun Zhu <jianjun.zhu@intel.com>
+Date: Thu, 7 Dec 2023 09:58:10 +0800
+Subject: [PATCH] Roll clang llvmorg-18-init-12938-geb1d5065.
+
+---
+ clang/scripts/update.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/clang/scripts/update.py b/clang/scripts/update.py
+index 2e56c78afd..5d37c5e7a4 100755
+--- a/clang/scripts/update.py
++++ b/clang/scripts/update.py
+@@ -35,11 +35,11 @@ import zlib
+ # https://chromium.googlesource.com/chromium/src/+/main/docs/updating_clang.md
+ # Reverting problematic clang rolls is safe, though.
+ # This is the output of `git describe` and is usable as a commit-ish.
+-CLANG_REVISION = 'llvmorg-16-init-6578-g0d30e92f'
++CLANG_REVISION = 'llvmorg-18-init-12938-geb1d5065'
+ CLANG_SUB_REVISION = 1
+ 
+ PACKAGE_VERSION = '%s-%s' % (CLANG_REVISION, CLANG_SUB_REVISION)
+-RELEASE_VERSION = '16.0.0'
++RELEASE_VERSION = '18'
+ 
+ CDS_URL = os.environ.get('CDS_CLANG_BUCKET_OVERRIDE',
+     'https://commondatastorage.googleapis.com/chromium-browser-clang')
+-- 
+2.43.0
+

@@ -40,7 +40,9 @@ patchList = [
     ('0006-Fix-FFMPEG-config-for-MSVC-build.patch', FFMPEG_PATH),
     ('0007-Getting-install-build-deps-to-work-on-Ubuntu-22.04-L.patch', BUILD_PATH),
     ('0008-Allow-ffmpeg_branding-OWT.patch', FFMPEG_PATH),
-    ('0009-Add-an-GN-variable-for-using-BoringSSL.patch', LIBSRTP_PATH)
+    ('0009-Add-an-GN-variable-for-using-BoringSSL.patch', LIBSRTP_PATH),
+    ('0010-Roll-clang-llvmorg-18-init-12938-geb1d5065.patch', TOOL_PATH),
+    ('0011-Suppress-some-warnings-for-clang-18.patch', BUILD_PATH),
 ]
 
 def _patch(ignoreFailures=False):
