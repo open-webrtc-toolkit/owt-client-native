@@ -211,6 +211,7 @@ class OWT_EXPORT RTCStatsReport {
  */
 class OWT_EXPORT RTCCertificateStats : public RTCStats {
  public:
+  static const char* kType;
   RTCCertificateStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& fingerprint,
@@ -236,6 +237,7 @@ class OWT_EXPORT RTCCertificateStats : public RTCStats {
  */
 class OWT_EXPORT RTCCodecStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCCodecStats(const std::string& id,
                 int64_t timestamp,
                 uint32_t payload_type,
@@ -262,6 +264,7 @@ class OWT_EXPORT RTCCodecStats final : public RTCStats {
  */
 class OWT_EXPORT RTCDataChannelStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCDataChannelStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& label,
@@ -299,6 +302,7 @@ class OWT_EXPORT RTCDataChannelStats final : public RTCStats {
  */
 class OWT_EXPORT RTCIceCandidatePairStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCIceCandidatePairStats(const std::string& id,
                            int64_t timestamp,
                            const std::string& transport_id,
@@ -421,6 +425,7 @@ class OWT_EXPORT RTCIceCandidateStats : public RTCStats {
  */
 class OWT_EXPORT RTCLocalIceCandidateStats final : RTCIceCandidateStats {
  public:
+  static const char* kType;
   RTCLocalIceCandidateStats(const std::string& id,
                             int64_t timestamp,
                             const std::string& transport_id,
@@ -443,6 +448,7 @@ class OWT_EXPORT RTCLocalIceCandidateStats final : RTCIceCandidateStats {
  */
 class OWT_EXPORT RTCRemoteIceCandidateStats final : public RTCIceCandidateStats {
  public:
+  static const char* kType;
   RTCRemoteIceCandidateStats(const std::string& id,
                              int64_t timestamp,
                              const std::string& transport_id,
@@ -467,6 +473,7 @@ class OWT_EXPORT RTCRemoteIceCandidateStats final : public RTCIceCandidateStats 
 // fits to describe the modern RTCPeerConnection model (unified plan).
 class OWT_EXPORT RTCMediaStreamStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaStreamStats(const std::string& id,
                       int64_t timestamp,
                       const std::string& stream_identifier,
@@ -486,6 +493,7 @@ class OWT_EXPORT RTCMediaStreamStats final : public RTCStats {
 // and RTCOutboundRtpStreamStats.
 class OWT_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaStreamTrackStats(const std::string& id,
                            int64_t timestamp,
                            std::string track_identifier,
@@ -590,6 +598,7 @@ class OWT_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
  */
 class OWT_EXPORT RTCPeerConnectionStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCPeerConnectionStats(const std::string& id,
                          int64_t timestamp,
                          uint32_t data_channels_opened,
@@ -648,6 +657,7 @@ class OWT_EXPORT RTCRTPStreamStats : public RTCStats {
 // TODO: Support the remote case |is_remote = true|.
 class OWT_EXPORT RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
+  static const char* kType;
   RTCInboundRTPStreamStats(const std::string& id,
                            int64_t timestamp,
                            uint32_t ssrc,
@@ -733,6 +743,7 @@ class OWT_EXPORT RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
 // TODO: Support the remote case |is_remote = true|.
 class OWT_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
  public:
+  static const char* kType;
   RTCOutboundRTPStreamStats(const std::string& id,
                             int64_t timestamp,
                             uint32_t ssrc,
@@ -814,6 +825,7 @@ class OWT_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
 // reportsReceived & roundTripTimeMeasurements.)
 class OWT_EXPORT RTCRemoteInboundRtpStreamStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCRemoteInboundRtpStreamStats(const std::string& id,
                                  int64_t timestamp,
                                  uint32_t ssrc,
@@ -854,6 +866,7 @@ class OWT_EXPORT RTCRemoteInboundRtpStreamStats final : public RTCStats {
  */
 class OWT_EXPORT RTCMediaSourceStats : public RTCStats {
  public:
+  static const char* kType;
   RTCMediaSourceStats(const std::string& type,
                       const std::string& id,
                       int64_t timestamp,
@@ -914,6 +927,7 @@ class OWT_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
  */
 class OWT_EXPORT RTCTransportStats final : public RTCStats {
  public:
+  static const char* kType;
   RTCTransportStats(const std::string& id,
                     int64_t timestamp,
                     uint64_t bytes_sent,
