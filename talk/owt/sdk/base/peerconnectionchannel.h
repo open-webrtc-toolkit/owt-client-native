@@ -41,11 +41,14 @@ class PeerConnectionChannel : public webrtc::PeerConnectionObserver,
   // message to PeerConnectionChannel.
   virtual void CreateOffer() = 0;
   virtual void CreateAnswer() = 0;
-  virtual void AddTransceiver(
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
-      const webrtc::RtpTransceiverInit& init);
-  virtual void AddTransceiver(cricket::MediaType media_type,
-                              const webrtc::RtpTransceiverInit& init);
+  virtual webrtc::RTCErrorOr<
+      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+  AddTransceiver(rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+                 const webrtc::RtpTransceiverInit& init);
+  virtual webrtc::RTCErrorOr<
+      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+  AddTransceiver(cricket::MediaType media_type,
+                 const webrtc::RtpTransceiverInit& init);
   // PeerConnectionObserver
   virtual void OnStateChange(webrtc::StatsReport::StatsType state_changed) {}
   virtual void OnSignalingChange(

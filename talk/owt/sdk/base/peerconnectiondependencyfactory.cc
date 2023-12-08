@@ -382,5 +382,22 @@ scoped_refptr<webrtc::AudioDeviceModule> PeerConnectionDependencyFactory::
       GlobalConfiguration::GetAudioFrameGenerator());
 }
 
+std::unique_ptr<webrtc::RtpCapabilities>
+PeerConnectionDependencyFactory::GetSenderCapabilities(
+    const std::string& kind) {
+  if (kind == "audio") {
+    return pc_thread_->BlockingCall([this] {
+      return std::make_unique<webrtc::RtpCapabilities>(
+          pc_factory_->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_AUDIO));
+    });
+  } else if (kind == "video") {
+    return pc_thread_->BlockingCall([this] {
+      return std::make_unique<webrtc::RtpCapabilities>(
+          pc_factory_->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO));
+    });
+  }
+  return nullptr;
+}
+
 }  // namespace base
 }  // namespace owt
