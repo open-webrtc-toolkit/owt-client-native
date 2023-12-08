@@ -655,8 +655,7 @@ void WebrtcVideoRendererD3D11Impl::RenderI420Frame_DX11(
   {
     webrtc::MutexLock lock(&d3d11_texture_lock_);
     if (d3d11_texture_) {
-      d3d11_texture_->Release();
-      d3d11_texture_ = nullptr;
+      d3d11_texture_.Release();
     }
   }
 
@@ -737,8 +736,7 @@ bool WebrtcVideoRendererD3D11Impl::CreateStagingTexture(int width, int height) {
     d3d11_staging_texture_->GetDesc(&desc);
     if (desc.Width != (unsigned int)width ||
         desc.Height != (unsigned int)height) {
-      d3d11_staging_texture_->Release();
-      d3d11_staging_texture_ = nullptr;
+      d3d11_staging_texture_.Release();
     } else
       return true;
   }
