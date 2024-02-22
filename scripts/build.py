@@ -55,7 +55,7 @@ TEST_SIMULATOR_DEVICE = 'iPhone X'
 
 def gngen(arch, sio_root, ssl_root, scheme):
   gn_args = 'target_os="ios" target_cpu="%s" is_component_build=false '\
-      'ios_enable_code_signing=false ios_deployment_target="11.0" '\
+      'ios_enable_code_signing=false ios_deployment_target="15.0" '\
       'rtc_enable_symbol_export=true enable_dsyms=true use_custom_libcxx=false '\
       'rtc_use_h265=false rtc_enable_protobuf=false'%arch
   if(scheme=='release'):
@@ -68,7 +68,7 @@ def gngen(arch, sio_root, ssl_root, scheme):
   if ssl_root:
     gn_args += (' rtc_build_ssl=false rtc_ssl_root="%s" '\
         'libsrtp_ssl_root="%s"'%(ssl_root+'/include', ssl_root+'/include'))
-  ret = subprocess.call(['gn', 'gen', getoutputpath(arch, scheme), '--args=%s' % gn_args],
+  ret = subprocess.call(['gn', 'gen', getoutputpath(arch, scheme), '--args=%s' % gn_args, '--ide=xcode'],
                         cwd=HOME_PATH, shell=False)
   if ret == 0:
     return True
