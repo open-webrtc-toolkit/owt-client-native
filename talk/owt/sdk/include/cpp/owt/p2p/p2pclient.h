@@ -162,6 +162,22 @@ class P2PClient final
                std::function<void(std::shared_ptr<P2PPublication>)> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
+   @brief Publish a batch of streams to the remote client.
+   @param streams The streams which will be published.
+   @param target_id Target user's ID.
+   @param on_success Success callback will be invoked (per stream) if the stream is
+   published, passing in P2PPublication and the newly created Stream's ID.
+   @param on_failure Failure callback will be invoked (per stream) if one of these cases
+   happened:
+                    1. P2PClient is disconnected from server.
+                    2. Target ID is null or user is offline.
+                    3. Haven't connected to remote client.
+   */
+  void PublishBatch(const std::string& target_id,
+               std::vector<std::shared_ptr<owt::base::LocalStream>> streams,
+               std::function<void(std::shared_ptr<P2PPublication>, std::string)> on_success,
+               std::function<void(std::unique_ptr<Exception>)> on_failure);
+  /**
    @brief Send a message to remote client
    @param target_id Remote user's ID.
    @param message The message to be sent.

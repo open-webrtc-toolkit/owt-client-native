@@ -151,6 +151,93 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> P2PPeerConnectionChannel::Ge
   return temp_pc_;
 }
 
+void P2PPeerConnectionChannel::PublishBatch(std::vector<std::shared_ptr<LocalStream>> streams,
+    std::function<void(std::shared_ptr<LocalStream>)> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure)
+{
+  // Add reference to peer connection until end of function.
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+
+  for (auto stream : streams) {
+    RTC_LOG(LS_INFO) << "Publishing a local stream.";
+    if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+      RTC_LOG(LS_INFO) << "Local stream cannot be nullptr.";
+      return;
+    }
+    RTC_CHECK(stream->MediaStream());
+    std::string stream_label = stream->MediaStream()->id();
+    {
+      std::lock_guard<std::mutex> lock(published_streams_mutex_);
+      if (published_streams_.find(stream_label) != published_streams_.end() ||
+          publishing_streams_.find(stream_label) != publishing_streams_.end()) {
+        if (on_failure) {
+          std::unique_ptr<Exception> e(
+              new Exception(ExceptionType::kP2PClientInvalidArgument,
+                            "The stream is already published."));
+          on_failure(std::move(e));
+        }
+        return;
+      }
+    }
+    // Send chat-closed to workaround known browser bugs, together with
+    // user agent information once and once only.
+    {
+      std::lock_guard<std::mutex> lock(stop_send_mutex_);
+      if (stop_send_needed_) {
+        SendStop(nullptr, nullptr);
+        stop_send_needed_ = false;
+      }
+      if (!ua_sent_) {
+        SendUaInfo();
+        ua_sent_ = true;
+      }
+    }
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream =
+        stream->MediaStream();
+    // Calling [stream|track]->id() runs on signaling_thread, so call outside of locks
+    std::string stream_id = media_stream->id();
+    std::pair<std::string, std::string> stream_track_info;
+    for (const auto& track : media_stream->GetAudioTracks()) {
+      std::string track_id = track->id();
+      {
+        std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
+        if (local_stream_tracks_info_.find(track_id) ==
+            local_stream_tracks_info_.end()) {
+          stream_track_info = std::make_pair(track_id, stream_id);
+          local_stream_tracks_info_.insert(stream_track_info);
+        }
+      }
+    }
+    for (const auto& track : media_stream->GetVideoTracks()) {
+      std::string track_id = track->id();
+      {
+        std::lock_guard<std::mutex> lock(local_stream_tracks_info_mutex_);
+        if (local_stream_tracks_info_.find(track_id) ==
+            local_stream_tracks_info_.end()) {
+          stream_track_info = std::make_pair(track_id, stream_id);
+          local_stream_tracks_info_.insert(stream_track_info);
+        }
+      }
+    }
+    {
+      std::lock_guard<std::mutex> lock(pending_publish_streams_mutex_);
+      pending_publish_streams_.push_back(stream);
+    }
+    {
+      std::lock_guard<std::mutex> lock(published_streams_mutex_);
+      publishing_streams_.insert(stream_label);
+    }
+    RTC_LOG(LS_INFO) << "Session state: " << session_state_;
+    if (on_success) {
+      on_success(stream);
+    }
+  }
+
+  // With the batched call, we make a single call to DrainPendingStreams() for
+  // the entire batch. This saves a lot of chatter on the signaling channel.
+  DrainPendingStreams();
+}
+
 void P2PPeerConnectionChannel::Publish(
     std::shared_ptr<LocalStream> stream,
     std::function<void()> on_success,
@@ -231,6 +318,7 @@ void P2PPeerConnectionChannel::Publish(
   }
   DrainPendingStreams();
 }
+
 void P2PPeerConnectionChannel::Send(
     const std::string& message,
     std::function<void()> on_success,

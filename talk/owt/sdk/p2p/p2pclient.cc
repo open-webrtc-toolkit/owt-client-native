@@ -23,6 +23,7 @@ namespace p2p {
 enum IcsP2PError : int {
   kWebrtcIceGatheringPolicyUnsupported = 2601,
 };
+
 P2PClient::P2PClient(
     P2PClientConfiguration& configuration,
     std::shared_ptr<P2PSignalingChannelInterface> signaling_channel)
@@ -34,9 +35,11 @@ P2PClient::P2PClient(
       std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
           "P2PClientEventQueue", webrtc::TaskQueueFactory::Priority::NORMAL));
 }
+
 P2PClient::~P2PClient() {
   signaling_channel_->RemoveObserver(*this);
 }
+
 void P2PClient::Connect(
     const std::string& host,
     const std::string& token,
@@ -54,12 +57,14 @@ void P2PClient::Connect(
       },
       on_failure);
 }
+
 void P2PClient::Disconnect(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
   RTC_CHECK(signaling_channel_);
   signaling_channel_->Disconnect(on_success, on_failure);
 }
+
 void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
   const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
   if (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) !=
@@ -69,6 +74,7 @@ void P2PClient::AddAllowedRemoteId(const std::string& target_id) {
   }
   allowed_remote_ids_.push_back(target_id);
 }
+
 void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
                                       std::function<void()> on_success,
                                       std::function<void(std::unique_ptr<Exception>)> on_failure) {
@@ -82,6 +88,45 @@ void P2PClient::RemoveAllowedRemoteId(const std::string& target_id,
   }
   Stop(target_id, on_success, on_failure);
 }
+
+void P2PClient::PublishBatch(const std::string& target_id,
+               std::vector<std::shared_ptr<owt::base::LocalStream>> streams,
+               std::function<void(std::shared_ptr<P2PPublication>, std::string)> on_success,
+               std::function<void(std::unique_ptr<Exception>)> on_failure)
+{
+  // Firstly check whether target_id is in the allowed_remote_ids_ list.
+  bool not_allowed = false;
+  {
+    const std::lock_guard<std::mutex> lock(remote_ids_mutex_);
+    not_allowed = (std::find(allowed_remote_ids_.begin(), allowed_remote_ids_.end(), target_id) ==
+      allowed_remote_ids_.end());
+  }
+  if (not_allowed) {
+    if (on_failure) {
+      std::unique_ptr<Exception> e(
+        new Exception(ExceptionType::kP2PClientRemoteNotAllowed,
+        "Publishing a stream cannot be done since the remote user is not allowed."));
+      on_failure(std::move(e));
+    }
+    return;
+  }
+
+  // Secondly use pcc to publish the streams.
+  auto pcc = GetPeerConnectionChannel(target_id);
+  std::weak_ptr<P2PClient> weak_this = shared_from_this();
+  pcc->PublishBatch(streams, [on_success, weak_this, target_id] (std::shared_ptr<LocalStream> stream) {
+    if (!on_success)
+      return;
+    auto that = weak_this.lock();
+    if (!that)
+      return;
+    std::shared_ptr<P2PPublication> publication(new P2PPublication(that, target_id, stream));
+    auto stream_id = stream->Id();
+    on_success(publication, stream_id);
+    //that->event_queue_->PostTask([on_success, publication] {on_success(publication); });
+  }, on_failure);
+}
+
 void P2PClient::Publish(
     const std::string& target_id,
     std::shared_ptr<LocalStream> stream,
@@ -118,6 +163,7 @@ void P2PClient::Publish(
     //that->event_queue_->PostTask([on_success, publication] {on_success(publication); });
   }, on_failure);
 }
+
 void P2PClient::Send(
     const std::string& target_id,
     const std::string& message,
@@ -143,6 +189,7 @@ void P2PClient::Send(
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Send(message, on_success, on_failure);
 }
+
 void P2PClient::Stop(
     const std::string& target_id,
     std::function<void()> on_success,
@@ -159,6 +206,7 @@ void P2PClient::Stop(
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Stop(on_success, on_failure);
 }
+
 void P2PClient::GetConnectionStats(
     const std::string& target_id,
     std::function<void(std::shared_ptr<owt::base::ConnectionStats>)> on_success,
@@ -196,10 +244,12 @@ void P2PClient::GetConnectionStats(
 void P2PClient::SetLocalId(const std::string& local_id) {
   local_id_ = local_id;
 }
+
 void P2PClient::UpdateClientConfiguration(const P2PClientConfiguration& configuration) {
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   configuration_ = configuration;
 }
+
 void P2PClient::OnSignalingMessage(const std::string& message,
                                    const std::string& remote_id) {
   // First to check whether remote_id is in the allowed_remote_ids_ list.
@@ -267,19 +317,23 @@ void P2PClient::OnSignalingMessage(const std::string& message,
   auto pcc = GetPeerConnectionChannel(remote_id);
   pcc->OnIncomingSignalingMessage(message);
 }
+
 void P2PClient::OnServerDisconnected() {
   EventTrigger::OnEvent0(observers_, event_queue_,
                          &P2PClientObserver::OnServerDisconnected);
 }
+
 void P2PClient::SendSignalingMessage(const std::string& message,
                                      const std::string& remote_id,
                                      std::function<void()> on_success,
                                      std::function<void(std::unique_ptr<Exception>)> on_failure) {
   signaling_channel_->SendMessage(message, remote_id, on_success, on_failure);
 }
+
 void P2PClient::AddObserver(P2PClientObserver& observer) {
   observers_.push_back(observer);
 }
+
 void P2PClient::RemoveObserver(P2PClientObserver& observer) {
   observers_.erase(std::find_if(
       observers_.begin(), observers_.end(),
@@ -287,6 +341,7 @@ void P2PClient::RemoveObserver(P2PClientObserver& observer) {
         return &observer == &(o.get());
       }));
 }
+
 void P2PClient::Unpublish(
     const std::string& target_id,
     std::shared_ptr<LocalStream> stream,
@@ -306,12 +361,14 @@ void P2PClient::Unpublish(
   auto pcc = GetPeerConnectionChannel(target_id);
   pcc->Unpublish(stream, on_success, on_failure);
 }
+
 bool P2PClient::IsPeerConnectionChannelCreated(const std::string& target_id) {
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   if (pc_channels_.find(target_id) == pc_channels_.end())
     return false;
   return true;
 }
+
 bool P2PClient::IsPeerConnectionStale(const std::string& target_id) {
   // Try to find peer connection
   std::shared_ptr<P2PPeerConnectionChannel> temp_pcc_;
@@ -331,6 +388,7 @@ bool P2PClient::IsPeerConnectionStale(const std::string& target_id) {
     return true;
   }
 }
+
 std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     const std::string& target_id) {
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
@@ -361,6 +419,7 @@ std::shared_ptr<P2PPeerConnectionChannel> P2PClient::GetPeerConnectionChannel(
     return pcc_it->second;
   }
 }
+
 PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfiguration() {
   PeerConnectionChannelConfiguration config;
   std::vector<webrtc::PeerConnectionInterface::IceServer> ice_servers;
@@ -391,12 +450,14 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
       PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
   return config;
 }
+
 void P2PClient::OnMessageReceived(const std::string& remote_id,
                                   const std::string& message) {
   EventTrigger::OnEvent2(observers_, event_queue_,
                          &P2PClientObserver::OnMessageReceived,
                          remote_id, message);
 }
+
 // Does not remove final reference to channel until the next channel stops, so connections
 // are fully closed and all methods return before cleanup.
 void P2PClient::OnStopped(const std::string& remote_id) {
@@ -420,6 +481,7 @@ void P2PClient::OnStopped(const std::string& remote_id) {
     }
   });
 }
+
 void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
   EventTrigger::OnEvent1(
       observers_, event_queue_,
@@ -427,5 +489,6 @@ void P2PClient::OnStreamAdded(std::shared_ptr<RemoteStream> stream) {
           &P2PClientObserver::OnStreamAdded),
       stream);
 }
+
 }
 }
