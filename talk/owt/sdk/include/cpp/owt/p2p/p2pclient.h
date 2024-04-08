@@ -178,6 +178,18 @@ class P2PClient final
                std::function<void(std::shared_ptr<P2PPublication>, std::string)> on_success,
                std::function<void(std::unique_ptr<Exception>)> on_failure);
   /**
+  @brief Triggered on batch hangups, when old streams are removed.
+  @param target_id Remote user's ID.
+  @param streams The streams which will be unpublished.
+  @param on_success Success callback will be invoked if the stream is successfully removed.
+  @param on_failure Failure callback will be invoked if an exception is encountered. Currently unused.
+  */
+  void UnpublishBatch(const std::string& target_id,
+                 std::vector<std::shared_ptr<LocalStream>> streams,
+                 std::function<void()> on_success,
+                 std::function<void(std::unique_ptr<Exception>)> on_failure);
+
+  /**
    @brief Send a message to remote client
    @param target_id Remote user's ID.
    @param message The message to be sent.

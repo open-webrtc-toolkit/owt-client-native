@@ -79,6 +79,10 @@ class P2PPeerConnectionChannel : public P2PSignalingReceiverInterface,
   void Unpublish(std::shared_ptr<LocalStream> stream,
                  std::function<void()> on_success,
                  std::function<void(std::unique_ptr<Exception>)> on_failure);
+  // Unpublish a batch of local streams to remote user.
+  void UnpublishBatch(std::vector<std::shared_ptr<LocalStream>> streams,
+                      std::function<void()> on_success,
+                      std::function<void(std::unique_ptr<Exception>)> on_failure);
   // Send message to remote user.
   void Send(const std::string& message,
             std::function<void()> on_success,

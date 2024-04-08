@@ -972,6 +972,41 @@ void P2PPeerConnectionChannel::Unpublish(
   }
   DrainPendingStreams();
 }
+
+void P2PPeerConnectionChannel::UnpublishBatch(std::vector<std::shared_ptr<LocalStream>> streams,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> temp_pc_ = GetPeerConnectionRef();
+  for (auto stream : streams) {
+    if (!CheckNullPointer((uintptr_t)stream.get(), on_failure)) {
+      RTC_LOG(LS_WARNING) << "Local stream cannot be nullptr. Continuing";
+      continue;
+    }
+
+    RTC_CHECK(stream->MediaStream());
+    // Calling MediaStream->id() runs on signaling_thread, so must be outside locks.
+    std::string stream_id = stream->MediaStream()->id();
+    {
+      std::lock_guard<std::mutex> lock(published_streams_mutex_);
+      auto it = published_streams_.find(stream_id);
+      if (it == published_streams_.end()) {
+        RTC_LOG(LS_ERROR) << "Did not find published stream.";
+      } else {
+        RTC_LOG(LS_ERROR) << "Found published stream.";
+        published_streams_.erase(it);
+      }
+    }
+    {
+      std::lock_guard<std::mutex> lock(pending_unpublish_streams_mutex_);
+      pending_unpublish_streams_.push_back(stream);
+    }
+    if (on_success) {
+      on_success();
+    }
+  }
+  DrainPendingStreams();
+}
+
 void P2PPeerConnectionChannel::Stop(
     std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {

@@ -362,6 +362,26 @@ void P2PClient::Unpublish(
   pcc->Unpublish(stream, on_success, on_failure);
 }
 
+void P2PClient::UnpublishBatch(
+    const std::string& target_id,
+    std::vector<std::shared_ptr<LocalStream>> streams,
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<Exception>)> on_failure) {
+  if (!IsPeerConnectionChannelCreated(target_id)) {
+    if (on_failure) {
+      event_queue_->PostTask([on_failure] {
+        std::unique_ptr<Exception> e(
+          new Exception(ExceptionType::kP2PClientInvalidState,
+            "Non-existed chat need not be unpublished."));
+        on_failure(std::move(e));
+      });
+    }
+    return;
+  }
+  auto pcc = GetPeerConnectionChannel(target_id);
+  pcc->UnpublishBatch(streams, on_success, on_failure);
+}
+
 bool P2PClient::IsPeerConnectionChannelCreated(const std::string& target_id) {
   const std::lock_guard<std::mutex> lock(pc_channels_mutex_);
   if (pc_channels_.find(target_id) == pc_channels_.end())

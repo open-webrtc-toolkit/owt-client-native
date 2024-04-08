@@ -32,8 +32,11 @@ class P2PPublication : public Publication {
       std::function<void(std::unique_ptr<Exception>)> on_failure) override;
   /// Stop current publication.
   void Stop() override;
+  // Stop the unpublished stream. Called when batch removing streams.
+  void StopUnpublishedStream();
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
   /// Not supported in P2P yet.
+  std::shared_ptr<LocalStream> GetLocalStream() const { return local_stream_; }
   void Mute(TrackKind track_kind,
             std::function<void()> on_success,
             std::function<void(std::unique_ptr<Exception>)> on_failure) override {}

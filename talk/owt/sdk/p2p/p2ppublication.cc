@@ -72,6 +72,23 @@ void P2PPublication::Stop() {
       (*its).get().OnEnded();
   }
 }
+
+// Stop current publication for an unpublished stream.
+void P2PPublication::StopUnpublishedStream() {
+  auto that = p2p_client_.lock();
+  if (that == nullptr || ended_) {
+    return;
+  } else {
+    // Caller is responsible for unpublishing the stream before calling this method.
+    // Caller should do the equivalent of the following:
+    // that->Unpublish(target_id_, local_stream_, nullptr, nullptr);
+    ended_ = true;
+    const std::lock_guard<std::mutex> lock(observer_mutex_);
+    for (auto its = observers_.begin(); its != observers_.end(); ++its)
+      (*its).get().OnEnded();
+  }
+}
+
 void P2PPublication::AddObserver(PublicationObserver& observer) {
   const std::lock_guard<std::mutex> lock(observer_mutex_);
   std::vector<std::reference_wrapper<PublicationObserver>>::iterator it =
