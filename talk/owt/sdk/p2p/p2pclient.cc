@@ -382,13 +382,24 @@ PeerConnectionChannelConfiguration P2PClient::GetPeerConnectionChannelConfigurat
   for (auto codec : configuration_.video_encodings) {
     config.video.push_back(VideoEncodingParameters(codec));
   }
-  for (auto codec : configuration_.audio_encodings) {
-    config.audio.push_back(AudioEncodingParameters(codec));
-  }
+  // sam: This is unused for Ambient. We don't support audio.
+  // for (auto codec : configuration_.audio_encodings) {
+  //   config.audio.push_back(AudioEncodingParameters(codec));
+  // }
   // TODO(jianlin): For publisher, peerconnection is created before UA info is received.
   // so signaling protocol change is needed if we would like to remove this HC.
   config.continual_gathering_policy =
       PeerConnectionInterface::ContinualGatheringPolicy::GATHER_CONTINUALLY;
+
+  // See webrtc/api/peer_connection_interface.h for details on the options
+  // https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+  config.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle;
+
+  // If set to true, candidate pairs will be pinged in order of most likely
+  // to work (which means using a TURN server, generally), rather than in
+  // standard priority order.
+  config.prioritize_most_likely_ice_candidate_pairs = true;
+
   return config;
 }
 void P2PClient::OnMessageReceived(const std::string& remote_id,
