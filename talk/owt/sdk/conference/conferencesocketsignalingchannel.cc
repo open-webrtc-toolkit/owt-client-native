@@ -480,7 +480,7 @@ void ConferenceSocketSignalingChannel::SendInitializationMessage(
            return;
          }
          if (message->get_string() == "ok") {
-           if (msg.at(1)->get_flag() != sio::message::flag_object) {
+           if (msg.size() < 2 || msg.at(1)->get_flag() != sio::message::flag_object) {
              RTC_DCHECK(false);
              return;
            }
