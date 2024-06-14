@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "talk/owt/sdk/base/peerconnectionchannel.h"
 #include <vector>
-#include "talk/owt/sdk/base/sdputils.h"
 #include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/thread.h"
@@ -83,16 +82,17 @@ void PeerConnectionChannel::ApplyBitrateSettings() {
   return;
 }
 
-void PeerConnectionChannel::AddTransceiver(
+webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+PeerConnectionChannel::AddTransceiver(
     rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
     const webrtc::RtpTransceiverInit& init) {
-  peer_connection_->AddTransceiver(track, init);
+  return peer_connection_->AddTransceiver(track, init);
 }
 
-void PeerConnectionChannel::AddTransceiver(
-    cricket::MediaType media_type,
-    const webrtc::RtpTransceiverInit& init) {
-  peer_connection_->AddTransceiver(media_type, init);
+webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+PeerConnectionChannel::AddTransceiver(cricket::MediaType media_type,
+                                      const webrtc::RtpTransceiverInit& init) {
+  return peer_connection_->AddTransceiver(media_type, init);
 }
 
 const webrtc::SessionDescriptionInterface*
