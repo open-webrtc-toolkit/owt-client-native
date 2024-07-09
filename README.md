@@ -18,7 +18,7 @@ You need [Doxygen](http://www.doxygen.nl/) in your path.
 
 ### Prepare the development environment
 Before you start, make sure you have the following prerequisites installed/configured:
-- [WebRTC stack build dependencies](https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/development/prerequisite-sw/index.md), except the Visual Studio part.
+- [WebRTC stack build dependencies](https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/development/prerequisite-sw/README.md), except the Visual Studio part.
 - [Proxy settings](https://github.com/open-webrtc-toolkit/owt-client-native/wiki/Proxy-config-for-building-native-SDK).
 
 The following dependencies are for Windows only:
