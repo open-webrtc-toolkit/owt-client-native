@@ -78,6 +78,21 @@ const char* const RTCStatsType::kRemoteCandidate = "remote-candidate";
 const char* const RTCStatsType::kCertificate = "certificate";
 const char* const RTCStatsType::kIceServer = "ice-server";
 
+const char* RTCCertificateStats::kType = RTCStatsType::kCertificate;
+const char* RTCCodecStats::kType = RTCStatsType::kCodec;
+const char* RTCDataChannelStats::kType = RTCStatsType::kDataChannel;
+const char* RTCIceCandidatePairStats::kType = RTCStatsType::kCandidatePair;
+const char* RTCInboundRTPStreamStats::kType = RTCStatsType::kInboundRTP;
+const char* RTCOutboundRTPStreamStats::kType = RTCStatsType::kOutboundRTP;
+const char* RTCLocalIceCandidateStats::kType = RTCStatsType::kLocalCandidate;
+const char* RTCRemoteIceCandidateStats::kType = RTCStatsType::kRemoteCandidate;
+const char* RTCMediaStreamStats::kType = RTCStatsType::kStream;
+const char* RTCMediaStreamTrackStats::kType = RTCStatsType::kTrack;
+const char* RTCPeerConnectionStats::kType = RTCStatsType::kPeerConnection;
+const char* RTCRemoteInboundRtpStreamStats::kType = RTCStatsType::kRemoteInboundRTP;
+const char* RTCMediaSourceStats::kType = RTCStatsType::kMediaSource;
+const char* RTCTransportStats::kType = RTCStatsType::kTransport;
+
 RTCStatsReport::ConstIterator::ConstIterator(
     owt::base::RTCStatsReport* report,
     StatsMap::const_iterator it)
