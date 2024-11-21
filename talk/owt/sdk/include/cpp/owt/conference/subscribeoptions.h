@@ -30,15 +30,21 @@ struct OWT_EXPORT VideoSubscriptionConstraints {
         resolution(0, 0),
         frameRate(0),
         bitrateMultiplier(0),
-        keyFrameInterval(0),
-        rid("") {}
+        keyFrameInterval(0) {}
   bool disabled;
   std::vector<owt::base::VideoCodecParameters> codecs;
   owt::base::Resolution resolution;
   double frameRate;
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
+};
+/// Simulcast and SVC stream subscription constranits.
+struct VideoSubscriptionConstraints2 {
+  explicit VideoSubscriptionConstraints2()
+      : rid(""), spatialLayerId(-1), temporalLayerId(-1) {}
   std::string rid;
+  int spatialLayerId;
+  int temporalLayerId;
 };
 
 #ifdef OWT_ENABLE_QUIC
@@ -57,6 +63,12 @@ struct OWT_EXPORT SubscribeOptions {
   DataSubscriptionConstraints data;
 #endif
 };
+
+/// SVC and Simulcast stream subscribe options
+struct SubscribeOptions2 {
+  AudioSubscriptionConstraints audio;
+  VideoSubscriptionConstraints2 video;
+};
 /// Video subscription update constrains used by subscription's ApplyOptions
 /// API.
 struct OWT_EXPORT VideoSubscriptionUpdateConstraints {
@@ -73,10 +85,27 @@ struct OWT_EXPORT VideoSubscriptionUpdateConstraints {
   double bitrateMultiplier;
   unsigned long keyFrameInterval;
 };
+/// Simulcast and SVC stream subscription update constraints
+struct VideoSubscriptionUpdateConstraints2 {
+  /**
+   @brief Construct VideoSubscriptionUpdateConstraints with default value.
+   */
+  explicit VideoSubscriptionUpdateConstraints2()
+      : rid(""), spatialLayerId(-1), temporalLayerId(-1) {}
+  std::string rid;
+  int spatialLayerId;
+  int temporalLayerId;
+};
 /// Subscription update option used by subscription's ApplyOptions API.
 struct OWT_EXPORT SubscriptionUpdateOptions {
   /// Options for updating a subscription.
   VideoSubscriptionUpdateConstraints video;
+};
+/// Simulcast and SVC stream subcription update option used by subscription's
+/// ApplyOptions API.
+struct SubscriptionUpdateOptions2 {
+  /// Options for updating a subscription.
+  VideoSubscriptionUpdateConstraints2 video;
 };
 }  // namespace conference
 }  // namespace owt
