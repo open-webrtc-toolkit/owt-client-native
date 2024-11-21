@@ -62,13 +62,13 @@ class WebrtcVideoRendererD3D11Impl
   int window_height_ = 0;
 
   // D3D11 objects
-  ID3D10Multithread* p_mt = nullptr;
-  ID3D11Device* d3d11_device_ = nullptr;
-  ID3D11Device2* d3d11_device2_ = nullptr;
-  ID3D11VideoDevice* d3d11_video_device_ = nullptr;
-  ID3D11DeviceContext* d3d11_device_context_ = nullptr;
-  ID3D11VideoContext* d3d11_video_context_ = nullptr;
-  ID3D11DeviceContext1* dx11_device_context1_ = nullptr;
+  CComPtr<ID3D10Multithread> p_mt;
+  CComPtr<ID3D11Device> d3d11_device_;
+  CComPtr<ID3D11Device2> d3d11_device2_;
+  CComPtr<ID3D11VideoDevice> d3d11_video_device_;
+  CComPtr<ID3D11DeviceContext> d3d11_device_context_;
+  CComPtr<ID3D11VideoContext> d3d11_video_context_;
+  CComPtr<ID3D11DeviceContext1> dx11_device_context1_;
 
   CComPtr<IDXGIFactory2> dxgi_factory_;
   CComPtr<IDXGISwapChain1> swap_chain_for_hwnd_;
@@ -86,8 +86,8 @@ class WebrtcVideoRendererD3D11Impl
 
   // Handle of texture holding decoded image.
   webrtc::Mutex d3d11_texture_lock_;
-  ID3D11Texture2D* d3d11_texture_ = nullptr;
-  ID3D11Texture2D* d3d11_staging_texture_ = nullptr;
+  CComPtr<ID3D11Texture2D> d3d11_texture_;
+  CComPtr<ID3D11Texture2D> d3d11_staging_texture_;
   D3D11_TEXTURE2D_DESC d3d11_texture_desc_;
   // Local view is using normal d3d11 swapchain.
   bool d3d11_raw_inited_ = false;
