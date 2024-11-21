@@ -35,6 +35,7 @@ class PeerConnectionThread : public rtc::Thread {
 // Object factory for WebRTC PeerConnections.
 class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
  public:
+  ~PeerConnectionDependencyFactory() override;
   // Get a PeerConnectionDependencyFactory instance. It doesn't create a new
   // instance. It always return the same instance.
   static PeerConnectionDependencyFactory* Get();
@@ -57,9 +58,12 @@ class PeerConnectionDependencyFactory : public rtc::RefCountInterface {
   // Returns current |pc_factory_|.
   rtc::scoped_refptr<PeerConnectionFactoryInterface> PeerConnectionFactory()
       const;
+  std::unique_ptr<webrtc::RtpCapabilities> GetSenderCapabilities(
+      const std::string& kind);
+
   // Returns |signaling_thread_| for testing.
   rtc::Thread* SignalingThreadForTesting();
-  ~PeerConnectionDependencyFactory() override;
+
  protected:
   explicit PeerConnectionDependencyFactory();
   virtual const rtc::scoped_refptr<PeerConnectionFactoryInterface>&
